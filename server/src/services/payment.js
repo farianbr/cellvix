@@ -1,0 +1,72 @@
+import ApiError from '../utils/ApiError.js';
+import env from '../config/env.js';
+
+/**
+ * Payment gateway — MOCK.
+ *
+ * The client chose a mock at kickoff (PROJECT_INSTRUCTIONS.md §0), and the
+ * default is still "every charge succeeds". Nothing anywhere else in the
+ * codebase knows that: controllers call `charge()` and read
+ * `{ status, reference }`, so swapping in Stripe, Moneris or anything else is a
+ * change to this file alone.
+ *
+ * DECLINES ARE OPT-IN. A payment-failure page that cannot be reached is a page
+ * nobody can review, so there are two deliberate ways to make this decline:
+ *
+ *   - `MOCK_PAYMENT_DECLINE=true` in the environment — declines everything,
+ *     which is what the smoke test and the screenshot runner use;
+ *   - a PO number starting with `DECLINE` — one order at a time, no restart,
+ *     which is how the failure page is demonstrated to the client.
+ *
+ * Neither is reachable by accident on a normal order, so the locked "mock always
+ * succeeds" decision still holds for every buyer who is not asking for a decline.
+ *
+ * When a real gateway swaps in:
+ *   - keep the `{ status, reference, processedAt }` shape;
+ *   - keep throwing `PAYMENT_DECLINED` on a decline — the checkout page routes
+ *     on that code, not on the message;
+ *   - move the secret key into config/env.js so it is validated at boot.
+ */
+
+const DECLINE_PREFIX = 'DECLINE';
+
+const DECLINE_REASONS = {
+  forced: 'The payment was declined by the card issuer. No charge was made.',
+  po: 'Test decline: this order carried a DECLINE purchase-order number. No charge was made.',
+};
+
+function declineReason({ poNumber }) {
+  if (env.MOCK_PAYMENT_DECLINE) return 'forced';
+  if (String(poNumber ?? '').trim().toUpperCase().startsWith(DECLINE_PREFIX)) return 'po';
+  return null;
+}
+
+/**
+ * @param {object} params
+ * @param {number} params.amount   total in integer cents
+ * @param {'card'|'terms'} params.method
+ * @param {string} params.orderNumber
+ * @param {string} [params.poNumber]
+ * @returns {Promise<{ status: 'paid'|'pending', reference: string, processedAt: Date }>}
+ * @throws {ApiError} 402 PAYMENT_DECLINED
+ */
+export async function charge({ amount, method, orderNumber, poNumber }) {
+  // A little latency so the checkout's loading state is exercised in dev.
+  await new Promise((resolve) => setTimeout(resolve, 350));
+
+  if (!Number.isInteger(amount) || amount <= 0) {
+    throw new Error(`Refusing to charge a non-positive amount: ${amount}`);
+  }
+
+  const reason = declineReason({ poNumber });
+  if (reason) throw ApiError.paymentDeclined(DECLINE_REASONS[reason]);
+
+  return {
+    // Buying on terms does not move money now — the invoice does that later.
+    status: method === 'terms' ? 'pending' : 'paid',
+    reference: `mock_${method}_${orderNumber}_${Date.now().toString(36)}`,
+    processedAt: new Date(),
+  };
+}
+
+export default { charge };

@@ -1,0 +1,303 @@
+import Order from '../models/Order.js';
+import Invoice from '../models/Invoice.js';
+import Product from '../models/Product.js';
+import Cart from '../models/Cart.js';
+import User from '../models/User.js';
+import ApiError from '../utils/ApiError.js';
+import * as storeCredit from './storeCreditService.js';
+import { serializeOrder } from './orderService.js';
+import { serialize as serializeProduct } from './productService.js';
+
+/**
+ * The dashboard payload (brief §8.3).
+ *
+ * One request, because an ERP-style overview that fires six is a slow overview.
+ */
+export async function summary(user) {
+  const [recentOrders, invoices, reorderRows, savedCarts] = await Promise.all([
+    Order.find({ user: user._id }).sort({ createdAt: -1 }).limit(5).lean(),
+
+    Invoice.find({ user: user._id }).sort({ issuedAt: -1 }).lean(),
+
+    // Most-ordered SKUs across this account's history — the "quick reorder"
+    // shortcut is only useful if it reflects what they actually buy.
+    Order.aggregate([
+      { $match: { user: user._id } },
+      { $unwind: '$items' },
+      {
+        $group: {
+          _id: '$items.product',
+          totalQty: { $sum: '$items.qty' },
+          orders: { $sum: 1 },
+          lastOrdered: { $max: '$createdAt' },
+        },
+      },
+      { $sort: { orders: -1, totalQty: -1 } },
+      { $limit: 6 },
+    ]),
+
+    Cart.find({ user: user._id, savedForLater: true }).sort({ createdAt: -1 }).limit(5).lean(),
+  ]);
+
+  const reorderProducts = await Product.find({
+    _id: { $in: reorderRows.map((row) => row._id).filter(Boolean) },
+    isActive: true,
+  }).lean();
+  const productById = new Map(reorderProducts.map((product) => [product._id.toString(), product]));
+
+  const now = Date.now();
+  const outstanding = invoices.filter((invoice) => invoice.status !== 'paid');
+  const overdue = outstanding.filter(
+    (invoice) => invoice.dueDate && new Date(invoice.dueDate).getTime() < now,
+  );
+
+  return {
+    recentOrders: recentOrders.map(serializeOrder),
+
+    // Money the business already holds with us. Separate from the line of
+    // credit below on purpose — see models/CreditTransaction.js.
+    storeCredit: user.storeCredit ?? 0,
+
+    credit: {
+      limit: user.creditLimit ?? 0,
+      balance: user.balance ?? 0,
+      available: Math.max(0, (user.creditLimit ?? 0) - (user.balance ?? 0)),
+      terms: user.terms,
+      // Percentage of the limit already drawn — drives the dashboard meter.
+      utilisation:
+        user.creditLimit > 0 ? Math.min(100, Math.round((user.balance / user.creditLimit) * 100)) : 0,
+    },
+
+    invoices: {
+      outstandingCount: outstanding.length,
+      outstandingAmount: outstanding.reduce(
+        (sum, invoice) => sum + (invoice.amount - invoice.amountPaid),
+        0,
+      ),
+      overdueCount: overdue.length,
+      overdueAmount: overdue.reduce((sum, invoice) => sum + (invoice.amount - invoice.amountPaid), 0),
+    },
+
+    stats: {
+      orderCount: await Order.countDocuments({ user: user._id }),
+      lifetimeSpend: invoices.reduce((sum, invoice) => sum + invoice.amount, 0),
+      openOrders: await Order.countDocuments({
+        user: user._id,
+        status: { $in: ['placed', 'processing', 'shipped', 'out_for_delivery'] },
+      }),
+    },
+
+    quickReorder: reorderRows
+      .map((row) => {
+        const product = productById.get(row._id?.toString());
+        if (!product) return null;
+        return {
+          ...serializeProduct(product, user),
+          timesOrdered: row.orders,
+          totalQty: row.totalQty,
+          lastOrdered: row.lastOrdered,
+        };
+      })
+      .filter(Boolean),
+
+    savedCarts: savedCarts.map((cart) => ({
+      id: cart._id.toString(),
+      name: cart.name,
+      itemCount: cart.items.reduce((sum, item) => sum + item.qty, 0),
+      lineCount: cart.items.length,
+      createdAt: cart.createdAt,
+    })),
+
+    rep: user.accountRep ?? null,
+  };
+}
+
+export async function updateProfile(user, data) {
+  Object.assign(user, data);
+  await user.save();
+  return user;
+}
+
+// ---- addresses --------------------------------------------------------------
+
+/** Promotes one address to default, demoting the rest. Only for flags actually requested. */
+function enforceSingleDefault(user, addressId, { shipping, billing }) {
+  for (const address of user.addresses) {
+    const isTarget = address._id.toString() === addressId.toString();
+    if (shipping) address.isDefaultShipping = isTarget;
+    if (billing) address.isDefaultBilling = isTarget;
+  }
+}
+
+/**
+ * Guarantees the account always has one default of each kind while it has any
+ * addresses at all.
+ *
+ * Every path can break this — deleting the default, or simply un-ticking it on
+ * the only address that had it — and checkout autofill silently degrades when it
+ * does. So the invariant is restored after every mutation rather than patched
+ * at each call site.
+ */
+function ensureDefaults(user) {
+  if (user.addresses.length === 0) return;
+
+  if (!user.addresses.some((address) => address.isDefaultShipping)) {
+    user.addresses[0].isDefaultShipping = true;
+  }
+  if (!user.addresses.some((address) => address.isDefaultBilling)) {
+    user.addresses[0].isDefaultBilling = true;
+  }
+}
+
+export async function addAddress(user, data) {
+  // The first address a business saves is its default, whatever they ticked.
+  const isFirst = user.addresses.length === 0;
+  user.addresses.push({ ...data, country: data.country ?? 'Canada' });
+  const added = user.addresses[user.addresses.length - 1];
+
+  enforceSingleDefault(user, added._id, {
+    shipping: isFirst || data.isDefaultShipping,
+    billing: isFirst || data.isDefaultBilling,
+  });
+
+  ensureDefaults(user);
+  await user.save();
+  return user;
+}
+
+export async function updateAddress(user, addressId, data) {
+  const address = user.addresses.id(addressId);
+  if (!address) throw ApiError.notFound('Address not found.', 'ADDRESS_NOT_FOUND');
+
+  Object.assign(address, data);
+  enforceSingleDefault(user, addressId, {
+    shipping: data.isDefaultShipping,
+    billing: data.isDefaultBilling,
+  });
+
+  ensureDefaults(user);
+  await user.save();
+  return user;
+}
+
+export async function removeAddress(user, addressId) {
+  const address = user.addresses.id(addressId);
+  if (!address) throw ApiError.notFound('Address not found.', 'ADDRESS_NOT_FOUND');
+
+  address.deleteOne();
+  ensureDefaults(user);
+
+  await user.save();
+  return user;
+}
+
+// ---- payment methods --------------------------------------------------------
+
+export async function addPaymentMethod(user, data) {
+  const isFirst = user.paymentMethods.length === 0;
+  user.paymentMethods.push(data);
+  const added = user.paymentMethods[user.paymentMethods.length - 1];
+
+  if (isFirst || data.isDefault) {
+    for (const method of user.paymentMethods) {
+      method.isDefault = method._id.toString() === added._id.toString();
+    }
+  }
+
+  await user.save();
+  return user;
+}
+
+export async function removePaymentMethod(user, methodId) {
+  const method = user.paymentMethods.id(methodId);
+  if (!method) throw ApiError.notFound('Payment method not found.', 'PAYMENT_METHOD_NOT_FOUND');
+
+  const wasDefault = method.isDefault;
+  method.deleteOne();
+  if (wasDefault && user.paymentMethods.length > 0) user.paymentMethods[0].isDefault = true;
+
+  await user.save();
+  return user;
+}
+
+export async function changePassword(user, { currentPassword, newPassword }) {
+  const withHash = await User.findById(user._id).select('+passwordHash');
+  const ok = await withHash.verifyPassword(currentPassword);
+  if (!ok) {
+    throw ApiError.badRequest('That is not your current password.', 'INVALID_PASSWORD', {
+      currentPassword: 'Incorrect password.',
+    });
+  }
+
+  await withHash.setPassword(newPassword);
+  await withHash.save();
+}
+
+// ---- invoices ---------------------------------------------------------------
+
+function serializeInvoice(invoice) {
+  const overdue =
+    invoice.status !== 'paid' && invoice.dueDate && new Date(invoice.dueDate) < new Date();
+
+  return {
+    id: invoice._id.toString(),
+    number: invoice.number,
+    orderNumber: invoice.order?.orderNumber ?? null,
+    amount: invoice.amount,
+    amountPaid: invoice.amountPaid,
+    balance: invoice.amount - invoice.amountPaid,
+    issuedAt: invoice.issuedAt,
+    dueDate: invoice.dueDate,
+    terms: invoice.terms,
+    // Derived rather than stored: an unpaid invoice becomes overdue by the
+    // passage of time, with nothing writing to the database.
+    status: overdue ? 'overdue' : invoice.status,
+    payments: invoice.payments ?? [],
+  };
+}
+
+export async function listInvoices(userId) {
+  const invoices = await Invoice.find({ user: userId })
+    .sort({ issuedAt: -1 })
+    .populate('order', 'orderNumber')
+    .lean();
+
+  const shaped = invoices.map(serializeInvoice);
+
+  return {
+    invoices: shaped,
+    totals: {
+      count: shaped.length,
+      billed: shaped.reduce((sum, invoice) => sum + invoice.amount, 0),
+      paid: shaped.reduce((sum, invoice) => sum + invoice.amountPaid, 0),
+      outstanding: shaped.reduce((sum, invoice) => sum + invoice.balance, 0),
+      overdue: shaped
+        .filter((invoice) => invoice.status === 'overdue')
+        .reduce((sum, invoice) => sum + invoice.balance, 0),
+    },
+  };
+}
+
+export async function getInvoice(userId, number) {
+  const invoice = await Invoice.findOne({ number, user: userId })
+    .populate('order')
+    .lean();
+  if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');
+
+  return {
+    ...serializeInvoice(invoice),
+    order: invoice.order ? serializeOrder(invoice.order) : null,
+  };
+}
+
+/** The store-credit statement for the signed-in account. */
+export async function storeCreditStatement(userId) {
+  return storeCredit.statement(userId);
+}
+
+/** Advance recharge — prepay and hold the money as store credit. */
+export async function rechargeStoreCredit(user, { amountDollars, poNumber }) {
+  const amount = Math.round(Number(amountDollars) * 100);
+  const posted = await storeCredit.recharge(user, { amount, poNumber });
+  return { ...posted, message: 'Top-up added to your store credit.' };
+}

@@ -1,0 +1,452 @@
+import Offer from '../models/Offer.js';
+import Order from '../models/Order.js';
+import Product from '../models/Product.js';
+import ApiError from '../utils/ApiError.js';
+import { offerStatus } from './offerService.js';
+import { DELIVERY_METHODS, TAX_RATE } from '../../../shared/schemas/checkout.js';
+
+/**
+ * THE ONE PLACE A DISCOUNT IS DECIDED.
+ *
+ * Cart totals, the checkout quote and the placed order all come through
+ * `priceCart`, so the number a buyer is shown and the number they are charged
+ * are produced by the same function from the same live documents. The client
+ * never sends a price and never sends a discount.
+ *
+ * The rules, in the order they bite:
+ *
+ *   1. **Offers never stack.** A cart carries at most one promo code, and at
+ *      most one offer is applied to it. A typed code always wins; only when
+ *      there is none does an automatic (codeless) offer get a chance.
+ *   2. **One offer per product.** Falls out of (1): with a single offer in play,
+ *      no line can be discounted twice.
+ *   3. **Bundles are sealed.** A combo is already a discount. Its member
+ *      products are excluded from every promo code's base, so a code cannot be
+ *      layered on top of bundle pricing.
+ *   4. **Redemption is checked against order history, not a counter.** A
+ *      single-use code is refused once the account has an order carrying it.
+ *      A counter would drift the first time an order was cancelled.
+ *   5. **Eligibility is a hard gate.** An account-restricted offer is invisible
+ *      to everyone else — the code comes back "not recognised", not "not for
+ *      you", because listing who an offer belongs to is not the buyer's
+ *      business.
+ */
+
+// ---- offer resolution -------------------------------------------------------
+
+/** Failures are named so the client can decide what to say, per §5.1. */
+export class OfferRejection extends Error {
+  constructor(code, message) {
+    super(message);
+    this.code = code;
+  }
+}
+
+function matchesTarget(product, target = {}) {
+  if (target.deviceTypeSlug && product.deviceTypeSlug !== target.deviceTypeSlug) return false;
+  if (target.brandSlug && product.brandSlug !== target.brandSlug) return false;
+  if (target.partType && product.partType !== target.partType) return false;
+  if (target.grade && product.grade !== target.grade) return false;
+  return true;
+}
+
+function isEligible(offer, user) {
+  if (offer.eligibility !== 'accounts') return true;
+  return (offer.allowedUsers ?? []).some((id) => id.toString() === user._id.toString());
+}
+
+/**
+ * Has this account already redeemed a single-use offer?
+ *
+ * Read from the order history rather than a stored counter: an order that was
+ * cancelled never consumed anything, and a counter cannot know that.
+ */
+async function alreadyRedeemed(offer, user) {
+  if (offer.redemption !== 'single') return false;
+  const existing = await Order.exists({
+    user: user._id,
+    'promo.offer': offer._id,
+    status: { $ne: 'cancelled' },
+  });
+  return Boolean(existing);
+}
+
+/**
+ * Turns a typed code into an offer, or explains why not.
+ *
+ * Every rejection that would reveal something about another account's offers
+ * answers with the same `OFFER_NOT_FOUND` — an account-restricted code must not
+ * be distinguishable from a code that never existed.
+ */
+export async function resolveCode(code, user) {
+  const trimmed = String(code ?? '').trim().toUpperCase();
+  if (!trimmed) throw new OfferRejection('OFFER_NOT_FOUND', 'Enter a promo code.');
+
+  const offer = await Offer.findOne({ code: trimmed }).lean();
+
+  if (!offer || offer.kind !== 'deal' || !isEligible(offer, user)) {
+    throw new OfferRejection('OFFER_NOT_FOUND', `“${trimmed}” is not a valid promo code.`);
+  }
+
+  const status = offerStatus(offer);
+  if (status === 'scheduled') {
+    throw new OfferRejection('OFFER_NOT_STARTED', `“${trimmed}” has not started yet.`);
+  }
+  if (status !== 'live') {
+    throw new OfferRejection('OFFER_EXPIRED', `“${trimmed}” is no longer running.`);
+  }
+
+  if (offer.usageLimit > 0 && offer.usageCount >= offer.usageLimit) {
+    throw new OfferRejection('OFFER_EXHAUSTED', `“${trimmed}” has been fully redeemed.`);
+  }
+
+  if (await alreadyRedeemed(offer, user)) {
+    throw new OfferRejection(
+      'OFFER_ALREADY_USED',
+      `“${trimmed}” is single-use and your account has already redeemed it.`,
+    );
+  }
+
+  return offer;
+}
+
+/** Live, codeless deals this account qualifies for — the automatic candidates. */
+async function automaticCandidates(user) {
+  const now = new Date();
+  const offers = await Offer.find({
+    kind: 'deal',
+    isActive: true,
+    $or: [{ code: '' }, { code: null }, { code: { $exists: false } }],
+  }).lean();
+
+  return offers.filter(
+    (offer) =>
+      offerStatus(offer, now) === 'live' &&
+      isEligible(offer, user) &&
+      (offer.usageLimit === 0 || offer.usageCount < offer.usageLimit),
+  );
+}
+
+// ---- discount arithmetic ----------------------------------------------------
+
+/**
+ * What one offer is worth against a set of lines.
+ *
+ * Returns `null` when the offer does not bite — nothing qualifies, the minimum
+ * is not met, or the arithmetic comes out at zero. A caller getting `null` for a
+ * typed code must tell the buyer why, which is what `explain` carries.
+ */
+function evaluate(offer, { lines, itemsSubtotal, orderSubtotal, shippingCost }) {
+  const eligible = lines.filter((line) => matchesTarget(line.product, offer.target));
+  const eligibleQty = eligible.reduce((sum, line) => sum + line.qty, 0);
+  const eligibleSubtotal = eligible.reduce((sum, line) => sum + line.lineTotal, 0);
+
+  if (eligible.length === 0) {
+    return { discount: 0, freeShipping: false, explain: 'NOTHING_QUALIFIES' };
+  }
+  if (offer.minQty > 0 && eligibleQty < offer.minQty) {
+    return { discount: 0, freeShipping: false, explain: 'MIN_QTY', need: offer.minQty, have: eligibleQty };
+  }
+  // Minimum spend is judged on the whole order, not just the qualifying slice:
+  // "on orders over $750" is a statement about the order.
+  if (offer.minSpend > 0 && orderSubtotal < offer.minSpend) {
+    return { discount: 0, freeShipping: false, explain: 'MIN_SPEND', need: offer.minSpend, have: orderSubtotal };
+  }
+
+  if (offer.discountType === 'free-shipping') {
+    if (shippingCost === 0) {
+      return { discount: 0, freeShipping: true, explain: 'SHIPPING_ALREADY_FREE' };
+    }
+    return { discount: 0, freeShipping: true, explain: null, eligibleSubtotal };
+  }
+
+  const raw =
+    offer.discountType === 'percent'
+      ? Math.round((eligibleSubtotal * offer.discountPercent) / 100)
+      : offer.discountAmount;
+
+  // Never discount more than the qualifying lines are worth — a $40-off code on
+  // a $12 line must not turn into a credit.
+  const discount = Math.min(raw, eligibleSubtotal);
+
+  if (discount <= 0) return { discount: 0, freeShipping: false, explain: 'NO_VALUE' };
+  return { discount, freeShipping: false, explain: null, eligibleSubtotal };
+}
+
+/** Human copy for a rejection the buyer can act on. */
+function explainRejection(offer, result) {
+  switch (result.explain) {
+    case 'MIN_QTY':
+      return `“${offer.code}” needs ${result.need} qualifying units — your cart has ${result.have}.`;
+    case 'MIN_SPEND':
+      return `“${offer.code}” applies to orders over ${formatCents(result.need)}.`;
+    case 'SHIPPING_ALREADY_FREE':
+      return `“${offer.code}” is free shipping, and this order already ships free.`;
+    case 'NOTHING_QUALIFIES':
+    default:
+      return `“${offer.code}” does not apply to anything in your cart.`;
+  }
+}
+
+function formatCents(cents) {
+  return `$${(cents / 100).toFixed(2)}`;
+}
+
+function shapeApplied(offer, result, { automatic }) {
+  return {
+    offerId: offer._id.toString(),
+    slug: offer.slug,
+    code: offer.code || '',
+    title: offer.title,
+    label:
+      offer.discountType === 'free-shipping'
+        ? 'Free shipping'
+        : offer.discountType === 'percent'
+          ? `${offer.discountPercent}% off`
+          : `${formatCents(offer.discountAmount)} off`,
+    discountType: offer.discountType,
+    amount: result.discount,
+    freeShipping: result.freeShipping,
+    // An automatic offer was not asked for, so the UI presents it differently:
+    // there is nothing for the buyer to remove.
+    automatic,
+    terms: offer.terms || '',
+  };
+}
+
+// ---- the entry point --------------------------------------------------------
+
+/**
+ * Prices a cart end to end: lines, bundles, the one applicable offer, shipping,
+ * tax and total.
+ *
+ * `subtotal` is always the LIST value of everything in the cart. Savings are
+ * reported separately as `bundleDiscount` and `promoDiscount` rather than folded
+ * into line prices, so an order and its invoice can show what a part costs and
+ * what was taken off it — which is what a trade buyer reconciles against.
+ */
+export async function priceCart(cart, user, { deliveryCode = 'ground' } = {}) {
+  // ---- individual lines ---------------------------------------------------
+  const productIds = cart.items.map((item) => item.product);
+  const products = await Product.find({ _id: { $in: productIds } }).lean();
+  const byId = new Map(products.map((product) => [product._id.toString(), product]));
+
+  const items = [];
+  for (const cartItem of cart.items) {
+    const product = byId.get(cartItem.product.toString());
+    if (!product || !product.isActive) continue;
+
+    items.push({
+      product: product._id,
+      sku: product.sku,
+      name: product.name,
+      slug: product.slug,
+      image: product.image ?? null,
+      grade: product.grade,
+      partType: product.partType,
+      partTypeLabel: product.partTypeLabel,
+      modelName: product.modelName,
+      qty: cartItem.qty,
+      unitPrice: product.price,
+      lineTotal: product.price * cartItem.qty,
+      stock: product.stock,
+      inStock: product.stock > 0,
+      exceedsStock: cartItem.qty > product.stock,
+      priceAtAdd: cartItem.priceAtAdd,
+      priceChanged: cartItem.priceAtAdd !== product.price,
+      // Carried only so `evaluate` can match targeting without a second lookup.
+      product_: product,
+    });
+  }
+
+  // ---- bundles ------------------------------------------------------------
+  const bundles = await expandBundles(cart, user);
+
+  const itemsSubtotal = items.reduce((sum, line) => sum + line.lineTotal, 0);
+  const bundlesListTotal = bundles.reduce((sum, bundle) => sum + bundle.listTotal, 0);
+  const bundlesCharged = bundles.reduce((sum, bundle) => sum + bundle.lineTotal, 0);
+
+  const subtotal = itemsSubtotal + bundlesListTotal;
+  const bundleDiscount = bundlesListTotal - bundlesCharged;
+
+  // ---- shipping, before any offer touches it ------------------------------
+  const method = DELIVERY_METHODS.find((m) => m.code === deliveryCode) ?? DELIVERY_METHODS[0];
+  const afterBundles = subtotal - bundleDiscount;
+  const baseShipping = method.freeOver && afterBundles >= method.freeOver ? 0 : method.cost;
+
+  // ---- the one offer ------------------------------------------------------
+  // Rule 3: only loose lines can carry a code. Bundle members are sealed.
+  const evaluationInput = {
+    lines: items.map((line) => ({ ...line, product: line.product_ })),
+    itemsSubtotal,
+    orderSubtotal: afterBundles,
+    shippingCost: baseShipping,
+  };
+
+  let promo = null;
+  let promoNotice = null;
+
+  if (cart.promoCode) {
+    try {
+      const offer = await resolveCode(cart.promoCode, user);
+      const result = evaluate(offer, evaluationInput);
+
+      if (result.discount > 0 || result.freeShipping) {
+        promo = shapeApplied(offer, result, { automatic: false });
+      } else {
+        // The code is real and this account may use it — it just does not bite
+        // on this cart. Say which, and leave it attached so it starts working
+        // the moment the cart qualifies.
+        promoNotice = { code: 'OFFER_NOT_APPLICABLE', message: explainRejection(offer, result) };
+      }
+    } catch (error) {
+      if (!(error instanceof OfferRejection)) throw error;
+      promoNotice = { code: error.code, message: error.message };
+    }
+  }
+
+  // Rule 1: an automatic offer only gets a look when no code is in play.
+  if (!promo) {
+    const candidates = await automaticCandidates(user);
+    let best = null;
+
+    for (const offer of candidates) {
+      const result = evaluate(offer, evaluationInput);
+      if (result.discount <= 0 && !result.freeShipping) continue;
+
+      // Free shipping is worth the shipping it removes, so the comparison is
+      // like for like rather than "a dollar discount always wins".
+      const worth = result.discount + (result.freeShipping ? baseShipping : 0);
+      if (!best || worth > best.worth) best = { offer, result, worth };
+    }
+
+    if (best) promo = shapeApplied(best.offer, best.result, { automatic: true });
+  }
+
+  const promoDiscount = promo?.amount ?? 0;
+  const shipping = promo?.freeShipping ? 0 : baseShipping;
+  const discount = bundleDiscount + promoDiscount;
+
+  // Tax follows the money actually changing hands.
+  const taxable = subtotal - discount + shipping;
+  const tax = Math.round(taxable * TAX_RATE);
+  const total = taxable + tax;
+
+  return {
+    // `product_` is an implementation detail of the offer matcher.
+    items: items.map(({ product_, ...line }) => line),
+    bundles,
+    subtotal,
+    bundleDiscount,
+    promoDiscount,
+    discount,
+    promo,
+    promoNotice,
+    promoCode: cart.promoCode || '',
+    shipping,
+    tax,
+    total,
+    deliveryMethod: {
+      code: method.code,
+      label: `${method.label} — ${method.detail}`,
+      cost: shipping,
+      etaDays: method.etaDays,
+    },
+  };
+}
+
+/**
+ * Turns a cart's bundle references into priced, expanded lines.
+ *
+ * A bundle whose offer has expired, been paused, or lost a SKU is returned with
+ * `available: false` rather than dropped: silently removing something a buyer
+ * put in their cart is worse than showing it and refusing to check out.
+ */
+export async function expandBundles(cart, _user) {
+  if (!cart.bundles?.length) return [];
+
+  const offers = await Offer.find({ _id: { $in: cart.bundles.map((b) => b.offer) } }).lean();
+  const byId = new Map(offers.map((offer) => [offer._id.toString(), offer]));
+
+  const skus = offers.flatMap((offer) => (offer.items ?? []).map((item) => item.sku));
+  const products = await Product.find({ sku: { $in: skus } }).lean();
+  const bySku = new Map(products.map((product) => [product.sku, product]));
+
+  const now = new Date();
+  const out = [];
+
+  for (const cartBundle of cart.bundles) {
+    const offer = byId.get(cartBundle.offer.toString());
+    if (!offer) continue; // the offer was deleted outright
+
+    const status = offerStatus(offer, now);
+    const lines = [];
+    let listTotal = 0;
+    let complete = true;
+
+    for (const member of offer.items ?? []) {
+      const product = bySku.get(member.sku);
+      if (!product || !product.isActive) {
+        complete = false;
+        continue;
+      }
+
+      const qty = member.qty * cartBundle.qty;
+      listTotal += product.price * qty;
+      lines.push({
+        product: product._id,
+        sku: product.sku,
+        name: product.name,
+        slug: product.slug,
+        image: product.image ?? null,
+        grade: product.grade,
+        partType: product.partType,
+        partTypeLabel: product.partTypeLabel,
+        qty,
+        unitPrice: product.price,
+        lineTotal: product.price * qty,
+        inStock: product.stock > 0,
+        exceedsStock: qty > product.stock,
+      });
+    }
+
+    const unavailable =
+      !complete || status !== 'live' || lines.some((line) => line.exceedsStock);
+
+    out.push({
+      offerId: offer._id.toString(),
+      slug: offer.slug,
+      title: offer.title,
+      subtitle: offer.subtitle || '',
+      accent: offer.accent || 'brand',
+      qty: cartBundle.qty,
+      bundlePrice: offer.bundlePrice,
+      lineTotal: offer.bundlePrice * cartBundle.qty,
+      listTotal,
+      savings: Math.max(0, listTotal - offer.bundlePrice * cartBundle.qty),
+      products: lines,
+      status,
+      available: !unavailable,
+      reason: !complete
+        ? 'A part in this bundle is no longer listed.'
+        : status !== 'live'
+          ? 'This bundle is no longer running.'
+          : lines.some((line) => line.exceedsStock)
+            ? 'A part in this bundle is short on stock.'
+            : null,
+    });
+  }
+
+  return out;
+}
+
+/** Refuses checkout on a bundle that cannot be honoured, with the reason. */
+export function assertBundlesOrderable(bundles) {
+  const broken = bundles.find((bundle) => !bundle.available);
+  if (broken) {
+    throw ApiError.conflict(
+      `${broken.title}: ${broken.reason} Remove it to continue.`,
+      'BUNDLE_UNAVAILABLE',
+    );
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "name": "cellvix",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Cellvix — B2B wholesale electronics parts marketplace",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,client -c magenta,cyan \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:client": "npm run dev --workspace client",
+    "dev:server": "npm run dev --workspace server",
+    "build": "npm run build --workspace client",
+    "seed": "npm run seed --workspace server",
+    "seed:content": "npm run seed:content --workspace server",
+    "shoot": "node scripts/shoot.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "a11y": "node scripts/a11y.mjs"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "axe-core": "^4.13.0",
+    "concurrently": "^9.1.2",
+    "playwright": "^1.62.1",
+    "sharp": "^0.35.3"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
