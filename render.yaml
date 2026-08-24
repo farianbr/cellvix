@@ -1,0 +1,38 @@
+# Render Blueprint. Dashboard -> New -> Blueprint, point it at this repo.
+# One service: Express serves the API and the built React app from one origin,
+# which is what keeps the session cookie on `sameSite: 'lax'`.
+services:
+  - type: web
+    name: cellvix
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      # `engines` only says >=20. Pin it so a Render default bump cannot move it.
+      - key: NODE_VERSION
+        value: "22"
+
+      # `--include=dev` above installs the root `playwright` devDependency, whose
+      # postinstall downloads ~300 MB of browsers this service never runs.
+      - key: PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD
+        value: "1"
+
+      # Render generates this once and keeps it. config/env.js refuses to boot in
+      # production if the value still contains the `dev-only` placeholder.
+      - key: JWT_SECRET
+        generateValue: true
+
+      # `sync: false` = Render prompts for the value and never stores it in git.
+      # Point this at a PRODUCTION database, not the one the test scripts write to.
+      - key: MONGODB_URI
+        sync: false
+
+      # https://<your-service>.onrender.com
+      - key: CLIENT_ORIGIN
+        sync: false
