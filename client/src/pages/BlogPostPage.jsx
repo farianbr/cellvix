@@ -1,12 +1,14 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Link, useParams } from 'react-router';
 import { ArrowLeft, ArrowRight, Clock, Tag } from 'lucide-react';
 import { date } from '@/lib/format';
 import { BLOG_CATEGORIES } from '@shared/schemas/content';
-import RichText from '@/lib/richText';
+import RichText, { extractHeadings } from '@/lib/richText';
 import Skeleton from '@/components/ui/Skeleton';
 import PostCover from '@/components/blog/PostCover';
+import TableOfContents from '@/components/blog/TableOfContents';
 import WhyCellvix from '@/components/product/WhyCellvix';
+import useActiveSection from '@/hooks/useActiveSection';
 import useScrollProgress from '@/hooks/useScrollProgress';
 import { useBlogPost } from '@/hooks/useContent';
 
@@ -18,6 +20,12 @@ export function BlogPostPage() {
   const { progress } = useScrollProgress();
 
   const post = data?.post;
+
+  // The contents come out of the body itself, so an author who renames a
+  // heading renames the entry that points at it and nothing drifts.
+  const headings = useMemo(() => (post ? extractHeadings(post.body) : []), [post]);
+  const headingIds = useMemo(() => headings.map((heading) => heading.id), [headings]);
+  const activeHeading = useActiveSection(headingIds);
 
   // The document title is the one piece of chrome a single-page router will not
   // update on its own, and it is what a shared link shows in a tab strip.
@@ -78,107 +86,127 @@ export function BlogPostPage() {
         />
       </div>
 
-      <article className="mx-auto max-w-[760px] px-3 py-6 sm:px-4 lg:py-10">
-        <Link
-          to="/blog"
-          className="mb-5 inline-flex items-center gap-1.5 text-[13px] font-semibold text-ink-400 transition-colors hover:text-brand"
-        >
-          <ArrowLeft className="size-4" strokeWidth={2} aria-hidden="true" />
-          Journal
-        </Link>
+      {/* The column stays 760px whatever the window does — a measure that grows
+          with the viewport is what makes long-form unreadable at 1440. The
+          extra width a large desktop has goes to the contents rail instead, and
+          the grid collapses back to the single centred column below `xl`.
 
-        <header>
-          <p className="eyebrow mb-3 text-brand">{LABELS[post.category] ?? post.category}</p>
-          <h1 className="text-[28px] leading-tight sm:text-[36px]">{post.title}</h1>
-          <p className="mt-4 text-[15.5px] leading-relaxed text-ink-500">{post.excerpt}</p>
+          The rail sits on the LEFT, and it is first in the DOM too: it is
+          navigation for the page below it, so reaching it before the prose is
+          the right order for a screen reader and for a Tab key as much as it is
+          for the eye. */}
+      <div className="mx-auto grid max-w-[760px] gap-10 px-3 py-6 sm:px-4 lg:py-10 xl:max-w-[1060px] xl:grid-cols-[220px_minmax(0,760px)] xl:gap-10">
+        <TableOfContents headings={headings} activeId={activeHeading} variant="rail" />
 
-          <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 border-y border-line py-3.5 text-[12.5px] text-ink-400">
-            <span className="flex size-8 items-center justify-center rounded-full bg-brand-gradient font-display text-[12px] font-bold text-white">
-              {post.author.name
-                .split(' ')
-                .map((word) => word[0])
-                .slice(0, 2)
-                .join('')}
-            </span>
-            <span>
-              <span className="block font-medium text-ink-900">{post.author.name}</span>
-              {post.author.role && <span className="block text-[11.5px]">{post.author.role}</span>}
-            </span>
-            <span className="ml-auto flex items-center gap-3">
-              <time dateTime={post.publishedAt ?? undefined}>{date(post.publishedAt)}</time>
-              <span className="inline-flex items-center gap-1">
-                <Clock className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
-                {post.readMinutes} min read
+        <article className="min-w-0">
+          <Link
+            to="/blog"
+            className="mb-5 inline-flex items-center gap-1.5 text-[13px] font-semibold text-ink-400 transition-colors hover:text-brand"
+          >
+            <ArrowLeft className="size-4" strokeWidth={2} aria-hidden="true" />
+            Journal
+          </Link>
+
+          <header>
+            <p className="eyebrow mb-3 text-brand">{LABELS[post.category] ?? post.category}</p>
+            <h1 className="text-[28px] leading-tight sm:text-[36px]">{post.title}</h1>
+            <p className="mt-4 text-[15.5px] leading-relaxed text-ink-500">{post.excerpt}</p>
+
+            <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 border-y border-line py-3.5 text-[12.5px] text-ink-400">
+              <span className="flex size-8 items-center justify-center rounded-full bg-brand-gradient font-display text-[12px] font-bold text-white">
+                {post.author.name
+                  .split(' ')
+                  .map((word) => word[0])
+                  .slice(0, 2)
+                  .join('')}
               </span>
-            </span>
+              <span>
+                <span className="block font-medium text-ink-900">{post.author.name}</span>
+                {post.author.role && <span className="block text-[11.5px]">{post.author.role}</span>}
+              </span>
+              <span className="ml-auto flex items-center gap-3">
+                <time dateTime={post.publishedAt ?? undefined}>{date(post.publishedAt)}</time>
+                <span className="inline-flex items-center gap-1">
+                  <Clock className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+                  {post.readMinutes} min read
+                </span>
+              </span>
+            </div>
+          </header>
+
+          <PostCover post={post} className="mt-7 rounded-[14px] border border-line" />
+
+          <TableOfContents
+            headings={headings}
+            activeId={activeHeading}
+            variant="inline"
+            className="mt-7"
+          />
+
+          <div className="mt-8">
+            <RichText headingIds>{post.body}</RichText>
           </div>
-        </header>
 
-        <PostCover post={post} className="mt-7 rounded-[14px] border border-line" />
-
-        <div className="mt-8">
-          <RichText>{post.body}</RichText>
-        </div>
-
-        {post.tags?.length > 0 && (
-          <ul className="mt-9 flex flex-wrap items-center gap-2 border-t border-line pt-6">
-            <li className="text-ink-300">
-              <Tag className="size-4" strokeWidth={1.75} aria-hidden="true" />
-              <span className="sr-only">Tags</span>
-            </li>
-            {post.tags.map((tag) => (
-              <li key={tag}>
-                <Link
-                  to={`/blog?tag=${encodeURIComponent(tag)}`}
-                  className="inline-flex h-7 items-center rounded-full border border-line bg-surface px-3 text-[12.5px] text-ink-500 transition-colors hover:border-brand hover:text-brand"
-                >
-                  {tag}
-                </Link>
+          {post.tags?.length > 0 && (
+            <ul className="mt-9 flex flex-wrap items-center gap-2 border-t border-line pt-6">
+              <li className="text-ink-300">
+                <Tag className="size-4" strokeWidth={1.75} aria-hidden="true" />
+                <span className="sr-only">Tags</span>
               </li>
-            ))}
-          </ul>
-        )}
-
-        <WhyCellvix className="mt-10" />
-
-        {data.related?.length > 0 && (
-          <section className="mt-10">
-            <h2 className="mb-4 text-[18px]">Read next</h2>
-            <ul className="divide-y divide-line overflow-hidden rounded-[14px] border border-line bg-surface">
-              {data.related.map((item) => (
-                <li key={item.id}>
+              {post.tags.map((tag) => (
+                <li key={tag}>
                   <Link
-                    to={`/blog/${item.slug}`}
-                    className="group flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-surface-2 sm:px-5"
+                    to={`/blog?tag=${encodeURIComponent(tag)}`}
+                    className="inline-flex h-7 items-center rounded-full border border-line bg-surface px-3 text-[12.5px] text-ink-500 transition-colors hover:border-brand hover:text-brand"
                   >
-                    <PostCover
-                      post={item}
-                      ratio="aspect-4/3"
-                      className="w-20 shrink-0 rounded-[10px] border border-line"
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="eyebrow mb-1 block text-ink-300">
-                        {LABELS[item.category] ?? item.category}
-                      </span>
-                      <span className="block text-[14px] font-semibold leading-snug text-ink-900 group-hover:text-brand">
-                        {item.title}
-                      </span>
-                      <span className="mt-0.5 block text-[12px] text-ink-400">
-                        {date(item.publishedAt)} · {item.readMinutes} min read
-                      </span>
-                    </span>
-                    <ArrowRight
-                      className="size-4 shrink-0 text-ink-300 transition-transform group-hover:translate-x-0.5 group-hover:text-brand"
-                      strokeWidth={2}
-                      aria-hidden="true"
-                    />
+                    {tag}
                   </Link>
                 </li>
               ))}
             </ul>
-          </section>
-        )}
-      </article>
+          )}
+
+          <WhyCellvix className="mt-10" />
+
+          {data.related?.length > 0 && (
+            <section className="mt-10">
+              <h2 className="mb-4 text-[18px]">Read next</h2>
+              <ul className="divide-y divide-line overflow-hidden rounded-[14px] border border-line bg-surface">
+                {data.related.map((item) => (
+                  <li key={item.id}>
+                    <Link
+                      to={`/blog/${item.slug}`}
+                      className="group flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-surface-2 sm:px-5"
+                    >
+                      <PostCover
+                        post={item}
+                        ratio="aspect-4/3"
+                        className="w-20 shrink-0 rounded-[10px] border border-line"
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="eyebrow mb-1 block text-ink-300">
+                          {LABELS[item.category] ?? item.category}
+                        </span>
+                        <span className="block text-[14px] font-semibold leading-snug text-ink-900 group-hover:text-brand">
+                          {item.title}
+                        </span>
+                        <span className="mt-0.5 block text-[12px] text-ink-400">
+                          {date(item.publishedAt)} · {item.readMinutes} min read
+                        </span>
+                      </span>
+                      <ArrowRight
+                        className="size-4 shrink-0 text-ink-300 transition-transform group-hover:translate-x-0.5 group-hover:text-brand"
+                        strokeWidth={2}
+                        aria-hidden="true"
+                      />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </article>
+      </div>
     </>
   );
 }

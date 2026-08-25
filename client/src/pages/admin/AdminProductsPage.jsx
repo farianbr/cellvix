@@ -8,7 +8,8 @@ import { optionsFor } from '@/lib/taxonomy';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
-import Select from '@/components/ui/Select';
+import SelectMenu from '@/components/ui/SelectMenu';
+import SelectField from '@/components/ui/SelectField';
 import Checkbox from '@/components/ui/Checkbox';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -39,7 +40,7 @@ const GRADE_OPTIONS = GRADE_ORDER.map((grade) => ({
  * filter hierarchy, which reads the same four slugs.
  */
 function ProductForm({ product, tree, onSubmit, onCancel, isPending, error }) {
-  const { register, handleSubmit, watch, setValue, formState } = useForm({
+  const { register, handleSubmit, watch, setValue, formState, control } = useForm({
     defaultValues: {
       sku: product?.sku ?? '',
       name: product?.name ?? '',
@@ -110,7 +111,7 @@ function ProductForm({ product, tree, onSubmit, onCancel, isPending, error }) {
           data-autofocus
           {...register('sku', { required: 'Enter a SKU.' })}
         />
-        <Select label="Grade" options={GRADE_OPTIONS} {...register('grade')} />
+        <SelectField control={control} name="grade" label="Grade" options={GRADE_OPTIONS} />
       </div>
 
       <Input
@@ -137,32 +138,40 @@ function ProductForm({ product, tree, onSubmit, onCancel, isPending, error }) {
       <fieldset className="rounded-[11px] border border-line p-3.5">
         <legend className="eyebrow px-1 text-ink-400">Fitment</legend>
         <div className="grid gap-3 sm:grid-cols-2">
-          <Select
+          <SelectMenu
             label="Device type"
+            size="md"
+            align="left"
             options={toOptions(deviceTypes, 'Select…')}
             value={path.deviceType}
-            onChange={(event) => pick('deviceTypeSlug', event.target.value)}
+            onChange={(next) => pick('deviceTypeSlug', next)}
           />
-          <Select
+          <SelectMenu
             label="Brand"
+            size="md"
+            align="left"
             options={toOptions(brands, path.deviceType ? 'Select…' : 'Pick a device type first')}
             value={path.brand}
             disabled={!path.deviceType}
-            onChange={(event) => pick('brandSlug', event.target.value)}
+            onChange={(next) => pick('brandSlug', next)}
           />
-          <Select
+          <SelectMenu
             label="Series"
+            size="md"
+            align="left"
             options={toOptions(seriesList, path.brand ? 'Select…' : 'Pick a brand first')}
             value={path.series}
             disabled={!path.brand}
-            onChange={(event) => pick('seriesSlug', event.target.value)}
+            onChange={(next) => pick('seriesSlug', next)}
           />
-          <Select
+          <SelectMenu
             label="Model"
+            size="md"
+            align="left"
             options={toOptions(models, path.series ? 'Select…' : 'Pick a series first')}
             value={path.model}
             disabled={!path.series}
-            onChange={(event) => pick('modelSlug', event.target.value)}
+            onChange={(next) => pick('modelSlug', next)}
           />
         </div>
       </fieldset>
@@ -254,12 +263,12 @@ export function AdminProductsPage() {
             icon={Search}
             containerClassName="min-w-[200px] flex-1"
           />
-          <Select
+          <SelectMenu
             options={STOCK_FILTERS}
             value={stock}
-            onChange={(event) => setStock(event.target.value)}
-            aria-label="Filter by stock"
-            containerClassName="w-auto"
+            onChange={setStock}
+            srLabel="Filter by stock"
+            size="md"
             className="w-[170px]"
           />
         </div>

@@ -6,6 +6,7 @@ import { date } from '@/lib/format';
 import { BLOG_CATEGORIES } from '@shared/schemas/content';
 import Input from '@/components/ui/Input';
 import Chip from '@/components/ui/Chip';
+import SelectMenu from '@/components/ui/SelectMenu';
 import Skeleton from '@/components/ui/Skeleton';
 import Pagination from '@/components/ui/Pagination';
 import PostCover from '@/components/blog/PostCover';
@@ -190,9 +191,36 @@ export function BlogPage() {
         </p>
       </header>
 
-      {/* ---- filters ------------------------------------------------------- */}
-      <div className="mb-7 flex flex-col gap-3 border-y border-line py-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="scroll-slim -mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1 lg:pb-0">
+      {/* ---- filters -------------------------------------------------------
+          Two presentations of one control. From `lg` the categories are a
+          wrapping row of pills — wrapping, not scrolling, so a sixth category
+          drops to a second line instead of off the edge. Below that they are a
+          `SelectMenu`: on a 320px screen the pill row could only ever be a
+          sideways scroll, which hides most of the categories behind a gesture
+          nobody makes (§3.1). The menu is the one we draw ourselves rather than
+          a native `<select>` — the platform sizes that popup itself and clips
+          it against the viewport edge on a narrow screen, which is exactly what
+          this control does not have room for. */}
+      <div className="mb-7 flex flex-col gap-3 border-y border-line py-3 lg:flex-row lg:items-center lg:justify-between lg:gap-6">
+        <div className="lg:hidden">
+          <SelectMenu
+            size="md"
+            align="left"
+            srLabel="Filter by category"
+            value={category}
+            onChange={setCategory}
+            options={[{ value: '', label: 'All posts' }, ...BLOG_CATEGORIES].map((option) => ({
+              value: option.value,
+              label: option.label,
+              // A category with nothing published is absent from `counts`, and
+              // a blank where every other row has a number reads as a loading
+              // state rather than as "none".
+              count: option.value ? (counts[option.value] ?? 0) : data?.total,
+            }))}
+          />
+        </div>
+
+        <div className="hidden gap-1.5 lg:flex lg:flex-wrap">
           {[{ value: '', label: 'All posts' }, ...BLOG_CATEGORIES].map((option) => {
             const isActive = category === option.value;
             const count = option.value ? counts[option.value] : data?.total;
@@ -217,7 +245,7 @@ export function BlogPage() {
           })}
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 lg:shrink-0">
           {tag && (
             <Chip label="Tag" value={tag} onRemove={clearTag} className="shrink-0" />
           )}

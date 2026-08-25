@@ -22,7 +22,8 @@ import Modal from '@/components/ui/Modal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
-import Select from '@/components/ui/Select';
+import SelectMenu from '@/components/ui/SelectMenu';
+import SelectField from '@/components/ui/SelectField';
 import Checkbox from '@/components/ui/Checkbox';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -70,7 +71,7 @@ function toDateInput(value) {
 function PostForm({ post, onSubmit, onCancel, isPending, error }) {
   const [tab, setTab] = useState('write');
 
-  const { register, handleSubmit, watch, formState } = useForm({
+  const { register, handleSubmit, watch, formState, control } = useForm({
     defaultValues: {
       title: post?.title ?? '',
       excerpt: post?.excerpt ?? '',
@@ -183,7 +184,12 @@ function PostForm({ post, onSubmit, onCancel, isPending, error }) {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Select label="Category" options={CATEGORY_OPTIONS} {...register('category')} />
+        <SelectField
+          control={control}
+          name="category"
+          label="Category"
+          options={CATEGORY_OPTIONS}
+        />
         <Input
           label="Tags"
           placeholder="grading, screens, quality"
@@ -209,7 +215,7 @@ function PostForm({ post, onSubmit, onCancel, isPending, error }) {
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Select label="Status" options={STATUS_OPTIONS} {...register('status')} />
+        <SelectField control={control} name="status" label="Status" options={STATUS_OPTIONS} />
         <Input
           label="Publish date"
           type="date"
@@ -312,12 +318,12 @@ export function AdminBlogPage() {
             icon={Search}
             containerClassName="min-w-[200px] flex-1"
           />
-          <Select
+          <SelectMenu
             options={STATUS_FILTERS}
             value={status}
-            onChange={(event) => setStatus(event.target.value)}
-            aria-label="Filter by status"
-            containerClassName="w-auto"
+            onChange={setStatus}
+            srLabel="Filter by status"
+            size="md"
             className="w-[160px]"
           />
         </div>

@@ -21,13 +21,22 @@ function AccountControl() {
   const accountMenuOpen = useUiStore((s) => s.accountMenuOpen);
   const { user, isAuthenticated, isApproved, isPending, isAdmin } = useAuth();
 
-  const className =
-    'flex items-center gap-2.5 rounded-[10px] px-3 py-2 transition-colors hover:bg-surface-2';
+  // Open, the trigger takes the accent rather than the hover grey: three panels
+  // hang off this cluster and the lit button is what says which one you opened.
+  const open = isAuthenticated && accountMenuOpen;
+  const className = cn(
+    'flex items-center gap-2.5 rounded-[10px] px-3 py-2 transition-colors',
+    open ? 'bg-brand-50' : 'hover:bg-surface-2',
+  );
 
   const content = (
     <>
       <span className="relative shrink-0">
-        <User className="size-5 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
+        <User
+          className={cn('size-5', open ? 'text-brand' : 'text-ink-400')}
+          strokeWidth={1.75}
+          aria-hidden="true"
+        />
         {isPending && (
           <span
             className="absolute -right-0.5 -top-0.5 size-2 rounded-full bg-warn ring-2 ring-surface"
@@ -59,8 +68,8 @@ function AccountControl() {
         {content}
         <ChevronDown
           className={cn(
-            'size-4 shrink-0 text-ink-300 transition-transform duration-200',
-            accountMenuOpen && 'rotate-180',
+            'size-4 shrink-0 transition-transform duration-200',
+            open ? 'rotate-180 text-brand' : 'text-ink-300',
           )}
           strokeWidth={2}
           aria-hidden="true"
@@ -145,11 +154,18 @@ export function HeaderDesktop() {
             onClick={toggleCart}
             aria-expanded={cartOpen}
             aria-haspopup="dialog"
-            className="flex items-center gap-2.5 rounded-[10px] px-3 py-2 transition-colors hover:bg-surface-2"
+            className={cn(
+              'flex items-center gap-2.5 rounded-[10px] px-3 py-2 transition-colors',
+              cartOpen ? 'bg-brand-50' : 'hover:bg-surface-2',
+            )}
             aria-label={`Cart, ${cartCount} items`}
           >
             <span className="relative shrink-0">
-              <ShoppingCart className="size-5 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
+              <ShoppingCart
+                className={cn('size-5', cartOpen ? 'text-brand' : 'text-ink-400')}
+                strokeWidth={1.75}
+                aria-hidden="true"
+              />
               {cartCount > 0 && (
                 <span className="tnum absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 font-display text-[10px] font-bold text-white ring-2 ring-surface">
                   {cartCount}

@@ -62,13 +62,13 @@ export function Accordion({
             viewport={reveal ? { once: true, amount: 0.2 } : undefined}
             transition={{ duration: 0.5, delay: index * 0.06, ease: [0.22, 1, 0.36, 1] }}
             className={cn(
-              'rounded-[24px] p-[2px] transition-[background-color,background-image] duration-200',
+              'rounded-[24px] p-[2px] transition-[background-color,background-image] duration-300',
               isOpen ? 'bg-brand-gradient' : 'bg-line hover:bg-line-strong',
             )}
           >
             <div
               className={cn(
-                'rounded-[22px] bg-surface transition-shadow duration-200',
+                'rounded-[22px] bg-surface transition-shadow duration-300',
                 isOpen && 'shadow-card',
               )}
             >
@@ -112,20 +112,24 @@ export function Accordion({
                       changes and nothing reflows under the cursor. The circle
                       uses the same two-element trick as the row — a gradient
                       edge appears around a white face once it is open. */}
+                  {/* Sized down on phones: at 44px it was the loudest thing in
+                      a 320px row and crowded the question off two lines. 32px
+                      still clears the 24px minimum target with the row's own
+                      padding around it, and it grows back at `sm`. */}
                   <span
                     className={cn(
-                      'flex size-11 shrink-0 rounded-full p-[2px] transition-[background-color,background-image] duration-200',
+                      'flex size-8 shrink-0 rounded-full p-[2px] transition-[background-color,background-image] duration-300 sm:size-11',
                       isOpen ? 'bg-brand-gradient' : 'bg-ink-900 group-hover:bg-ink-700',
                     )}
                     aria-hidden="true"
                   >
                     <span
                       className={cn(
-                        'flex size-full items-center justify-center rounded-full transition-[transform,background-color,color] duration-200',
+                        'flex size-full items-center justify-center rounded-full transition-[transform,background-color,color] duration-300 ease-entrance',
                         isOpen ? 'rotate-45 bg-surface text-ink-900' : 'bg-ink-900 text-white',
                       )}
                     >
-                      <Plus className="size-4" strokeWidth={2.25} />
+                      <Plus className="size-3.5 sm:size-4" strokeWidth={2.25} />
                     </span>
                   </span>
                 </button>
@@ -140,7 +144,19 @@ export function Accordion({
                     initial={reduce ? { opacity: 0 } : { height: 0, opacity: 0 }}
                     animate={reduce ? { opacity: 1 } : { height: 'auto', opacity: 1 }}
                     exit={reduce ? { opacity: 0 } : { height: 0, opacity: 0 }}
-                    transition={{ duration: 0.26, ease: [0.22, 1, 0.36, 1] }}
+                    /* The height runs long and eased; the fade is deliberately
+                       shorter and offset so the text is not still ghosting in
+                       while the panel is nearly open, and is gone before the
+                       panel finishes collapsing. One duration for both made the
+                       slower drawer read as laggy rather than as considered. */
+                    transition={
+                      reduce
+                        ? { duration: 0.2 }
+                        : {
+                            height: { duration: 0.44, ease: [0.22, 1, 0.36, 1] },
+                            opacity: { duration: 0.28, ease: 'linear' },
+                          }
+                    }
                     className="overflow-hidden"
                   >
                     {/* Indented to the question's text, not to the number — the

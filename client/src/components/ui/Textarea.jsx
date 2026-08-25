@@ -39,7 +39,7 @@ export const Textarea = forwardRef(function Textarea(
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy}
         className={cn(
-          'w-full rounded-[10px] border bg-surface px-3.5 py-2.5 text-[14px] leading-relaxed text-ink-900',
+          'w-full rounded-[10px] border bg-surface px-3.5 py-2.5 text-[16px] leading-relaxed text-ink-900 sm:text-[14px]',
           'placeholder:text-ink-300',
           'transition-[border-color,box-shadow] duration-[120ms]',
           'hover:border-line-strong',

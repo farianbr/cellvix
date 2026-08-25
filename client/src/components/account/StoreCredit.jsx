@@ -1,0 +1,193 @@
+import { useState } from 'react';
+import { ArrowDownLeft, ArrowUpRight, Check, Plus, WalletCards } from 'lucide-react';
+import cn from '@/lib/cn';
+import { money, date } from '@/lib/format';
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import Skeleton from '@/components/ui/Skeleton';
+import { useAccountMutations } from '@/hooks/useAccount';
+
+/**
+ * Store credit — money the account already holds with Cellvix.
+ *
+ * Lives here rather than on the credit page because two pages show it: the
+ * credit page, where it sits beside the line of credit, and payment methods,
+ * where it is a way to pay like a card is. One implementation, so a top-up
+ * cannot behave differently depending on which page it was made from.
+ *
+ * Never confuse this with the line of credit — see PROJECT_INSTRUCTIONS.md and
+ * services/storeCreditService.js on the server.
+ */
+
+/** How each movement reads on the statement. */
+const MOVEMENTS = {
+  refund: { label: 'Refund', icon: ArrowDownLeft },
+  recharge: { label: 'Top-up', icon: Plus },
+  grant: { label: 'Added by Cellvix', icon: ArrowDownLeft },
+  adjustment: { label: 'Adjustment', icon: ArrowUpRight },
+  redemption: { label: 'Applied to order', icon: ArrowUpRight },
+};
+
+const TOP_UPS = [250, 500, 1000];
+
+/** The balance, as the one card on the dashboard that carries the gradient. */
+export function StoreCreditCard({ balance, added, spent, className }) {
+  return (
+    <div className={cn('rounded-[14px] bg-brand-gradient p-5 text-white', className)}>
+      <span className="flex size-10 items-center justify-center rounded-[11px] bg-white/15">
+        <WalletCards className="size-5" strokeWidth={1.75} aria-hidden="true" />
+      </span>
+      <p className="tnum mt-4 font-display text-[34px] font-bold leading-none">{money(balance)}</p>
+      <p className="mt-2 text-[12.5px] text-white/75">Store credit available to spend</p>
+
+      {(added > 0 || spent > 0) && (
+        <dl className="mt-4 grid grid-cols-2 gap-2 border-t border-white/20 pt-3 text-[12px]">
+          <div>
+            <dt className="text-white/65">Added</dt>
+            <dd className="tnum mt-0.5 font-medium">{money(added)}</dd>
+          </div>
+          <div>
+            <dt className="text-white/65">Used</dt>
+            <dd className="tnum mt-0.5 font-medium">{money(spent)}</dd>
+          </div>
+        </dl>
+      )}
+    </div>
+  );
+}
+
+/** Prepay and hold the money as store credit. */
+export function RechargeForm({ onDone, className }) {
+  const { rechargeStoreCredit } = useAccountMutations();
+  const [amount, setAmount] = useState('500');
+
+  const dollars = Number(amount);
+  const invalid = !Number.isFinite(dollars) || dollars < 25 || dollars > 25_000;
+
+  return (
+    <form
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (invalid) return;
+        rechargeStoreCredit.mutate({ amountDollars: dollars }, { onSuccess: () => onDone?.() });
+      }}
+      className={cn('rounded-[14px] border border-line bg-surface-2 p-4', className)}
+    >
+      <p className="font-display text-[13.5px] font-bold text-ink-900">Add funds</p>
+      <p className="mt-1 text-[12.5px] leading-relaxed text-ink-500">
+        Prepay now and the balance comes off your next order automatically. Minimum $25.
+      </p>
+
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {TOP_UPS.map((value) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setAmount(String(value))}
+            className={cn(
+              'tnum h-9 rounded-full border px-3.5 text-[13px] font-medium transition-colors',
+              Number(amount) === value
+                ? 'border-brand bg-brand-50 text-brand-700'
+                : 'border-line bg-surface text-ink-500 hover:border-line-strong',
+            )}
+          >
+            {money(value * 100)}
+          </button>
+        ))}
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-end gap-2">
+        <Input
+          label="Amount"
+          inputMode="decimal"
+          suffix="CAD"
+          value={amount}
+          onChange={(event) => setAmount(event.target.value)}
+          containerClassName="max-w-[180px]"
+        />
+        <Button type="submit" loading={rechargeStoreCredit.isPending} disabled={invalid}>
+          Add funds
+        </Button>
+      </div>
+
+      {rechargeStoreCredit.isError && (
+        <p className="mt-2.5 text-[12.5px] text-danger">{rechargeStoreCredit.error.message}</p>
+      )}
+      {rechargeStoreCredit.isSuccess && (
+        <p className="mt-2.5 flex items-center gap-1.5 text-[12.5px] text-ok">
+          <Check className="size-3.5" strokeWidth={2.5} aria-hidden="true" />
+          {rechargeStoreCredit.data.message}
+        </p>
+      )}
+    </form>
+  );
+}
+
+/** The movements behind the balance. */
+export function StoreCreditActivity({ movements = [], isLoading }) {
+  if (isLoading) {
+    return (
+      <div className="space-y-2">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <Skeleton key={index} className="h-12" />
+        ))}
+      </div>
+    );
+  }
+
+  if (movements.length === 0) {
+    return (
+      <p className="rounded-[12px] bg-surface-2 px-4 py-6 text-center text-[13px] text-ink-400">
+        No store credit on this account yet. Refunds, top-ups and anything your rep allocates will
+        show here.
+      </p>
+    );
+  }
+
+  return (
+    <ul className="divide-y divide-line overflow-hidden rounded-[12px] border border-line">
+      {movements.map((row) => {
+        const meta = MOVEMENTS[row.type] ?? MOVEMENTS.adjustment;
+        const Icon = meta.icon;
+        const added = row.amount > 0;
+
+        return (
+          <li key={row.id} className="flex items-center gap-3 bg-surface px-4 py-3">
+            <span
+              className={cn(
+                'flex size-8 shrink-0 items-center justify-center rounded-full',
+                added ? 'bg-ok-50 text-ok' : 'bg-surface-3 text-ink-500',
+              )}
+              aria-hidden="true"
+            >
+              <Icon className="size-4" strokeWidth={2} />
+            </span>
+
+            <div className="min-w-0 flex-1">
+              <p className="text-[13px] font-medium text-ink-900">{meta.label}</p>
+              <p className="mt-0.5 truncate text-[12px] text-ink-500">
+                {row.note}
+                {row.orderNumber ? ` · ${row.orderNumber}` : ''}
+              </p>
+            </div>
+
+            <div className="shrink-0 text-right">
+              <p
+                className={cn(
+                  'tnum font-display text-[13.5px] font-bold',
+                  added ? 'text-ok' : 'text-ink-900',
+                )}
+              >
+                {added ? '+' : '−'}
+                {money(Math.abs(row.amount))}
+              </p>
+              <p className="mt-0.5 text-[11.5px] text-ink-400">{date(row.createdAt)}</p>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+export default StoreCreditCard;

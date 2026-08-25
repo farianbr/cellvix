@@ -1,4 +1,5 @@
 import { Fragment } from 'react';
+import cn from '@/lib/cn';
 
 /**
  * A very small markup renderer for admin-authored copy (blog bodies, offer
@@ -51,6 +52,58 @@ export function renderInline(text, keyPrefix = 'i') {
 
       return <Fragment key={key}>{part}</Fragment>;
     });
+}
+
+/** Authored text with the inline markers removed — for slugs and TOC labels. */
+export function stripInline(text) {
+  return String(text ?? '')
+    .replace(/\*\*([^*]+)\*\*/g, '$1')
+    .replace(/`([^`]+)`/g, '$1');
+}
+
+function slugify(text) {
+  const slug = stripInline(text)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+  return slug || 'section';
+}
+
+/**
+ * Stamps a stable, unique id onto every heading block, in document order.
+ *
+ * Both `extractHeadings` and `RichText` run it over the same parsed blocks, so
+ * a table of contents and the headings it points at cannot disagree — the ids
+ * are derived from the body, not stored alongside it. Duplicate titles get a
+ * numeric suffix rather than silently sharing an anchor.
+ */
+function withHeadingIds(blocks) {
+  const seen = new Map();
+
+  return blocks.map((block) => {
+    if (block.type !== 'h2' && block.type !== 'h3') return block;
+
+    const base = slugify(block.text);
+    const count = (seen.get(base) ?? 0) + 1;
+    seen.set(base, count);
+    return { ...block, id: count === 1 ? base : `${base}-${count}` };
+  });
+}
+
+/**
+ * The headings of an authored body, for a table of contents.
+ *
+ * `levels` defaults to h2 only: a TOC that lists every subheading stops being a
+ * map and becomes a second copy of the article.
+ */
+export function extractHeadings(source, { levels = ['h2'] } = {}) {
+  return withHeadingIds(toBlocks(source))
+    .filter((block) => levels.includes(block.type))
+    .map((block) => ({
+      id: block.id,
+      text: stripInline(block.text),
+      level: block.type === 'h3' ? 3 : 2,
+    }));
 }
 
 /** Groups raw lines into blocks so lists survive as one element, not many. */
@@ -131,10 +184,19 @@ function toBlocks(source) {
  * `tone="prose"` is the article treatment; `tone="compact"` is for FAQ answers
  * and offer descriptions, where the same vocabulary appears at body size inside
  * a card and must not open up a magazine's worth of vertical rhythm.
+ *
+ * `headingIds` gives every heading an anchor, matching `extractHeadings`. It is
+ * opt-in because two bodies rendered on one page would otherwise mint the same
+ * ids twice; only the article view, which renders exactly one, turns it on.
  */
-export function RichText({ children, tone = 'prose', className }) {
-  const blocks = toBlocks(children);
+export function RichText({ children, tone = 'prose', headingIds = false, className }) {
+  const parsed = toBlocks(children);
+  const blocks = headingIds ? withHeadingIds(parsed) : parsed;
   const compact = tone === 'compact';
+
+  // A jumped-to heading has to clear the sticky header and the reading-progress
+  // rule sitting under it.
+  const anchor = headingIds ? 'scroll-mt-[calc(var(--header-h,72px)+20px)]' : undefined;
 
   return (
     <div className={className}>
@@ -146,7 +208,11 @@ export function RichText({ children, tone = 'prose', className }) {
             return (
               <h2
                 key={key}
-                className={compact ? 'mt-4 text-[15px]' : 'mt-9 text-[19px] sm:text-[22px]'}
+                id={block.id}
+                className={cn(
+                  compact ? 'mt-4 text-[15px]' : 'mt-9 text-[19px] sm:text-[22px]',
+                  block.id && anchor,
+                )}
               >
                 {renderInline(block.text, key)}
               </h2>
@@ -156,7 +222,11 @@ export function RichText({ children, tone = 'prose', className }) {
             return (
               <h3
                 key={key}
-                className={compact ? 'mt-3.5 text-[14px]' : 'mt-7 text-[16px] sm:text-[17px]'}
+                id={block.id}
+                className={cn(
+                  compact ? 'mt-3.5 text-[14px]' : 'mt-7 text-[16px] sm:text-[17px]',
+                  block.id && anchor,
+                )}
               >
                 {renderInline(block.text, key)}
               </h3>

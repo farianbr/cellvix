@@ -60,7 +60,7 @@ export function ActiveFilterChips({ facetMeta }) {
     chips.push({
       key: 'stock',
       label: null,
-      value: 'In stock only',
+      value: 'In stock',
       onRemove: () => setFacet('inStockOnly', false),
     });
   }

@@ -46,7 +46,10 @@ export function ShopPage() {
       <div className="lg:grid lg:grid-cols-[264px_minmax(0,1fr)] lg:gap-6">
         {/* ---- sidebar (desktop) ----------------------------------------- */}
         <div className="hidden lg:block">
-          <div className="sticky top-[132px] max-h-[calc(100vh-152px)] overflow-y-auto scroll-slim">
+          {/* pb-4 inside the scroller: the rail is taller than this box on most
+              screens, so scrolling it to the end used to butt its rounded bottom
+              border straight against the clip edge with nothing under it. */}
+          <div className="sticky top-[132px] max-h-[calc(100vh-152px)] overflow-y-auto pb-4 scroll-slim">
             <SidebarFilter facets={data?.facets} />
           </div>
         </div>
@@ -83,7 +86,7 @@ export function ShopPage() {
                 options={SORT_OPTIONS}
                 value={sort}
                 onChange={setSort}
-                label="Sort products"
+                srLabel="Sort products"
                 align="right"
                 className="min-w-0 flex-1 basis-0 sm:w-[170px] sm:flex-none sm:basis-auto"
               />

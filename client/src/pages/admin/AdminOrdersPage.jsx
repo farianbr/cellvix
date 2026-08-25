@@ -8,7 +8,8 @@ import { ORDER_STATUSES } from '@/lib/constants';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
-import Select from '@/components/ui/Select';
+import SelectMenu from '@/components/ui/SelectMenu';
+import SelectField from '@/components/ui/SelectField';
 import Button from '@/components/ui/Button';
 import Skeleton from '@/components/ui/Skeleton';
 import { OrderStatusBadge } from '@/components/account/OrderStatusBadge';
@@ -31,7 +32,7 @@ function StatusForm({ order, onSubmit, onCancel, isPending, error }) {
   const currentIndex = ORDER_STATUS_FLOW.indexOf(order.status);
   const nextStatus = ORDER_STATUS_FLOW[currentIndex + 1] ?? order.status;
 
-  const { register, handleSubmit, watch, setValue } = useForm({
+  const { register, handleSubmit, watch, control } = useForm({
     defaultValues: {
       status: nextStatus,
       note: '',
@@ -41,7 +42,6 @@ function StatusForm({ order, onSubmit, onCancel, isPending, error }) {
   });
 
   const status = watch('status');
-  const carrier = watch('carrier');
   // Shipping is exactly when the buyer expects a tracking number to appear.
   const needsTracking = status === 'shipped' && !order.tracking?.number;
 
@@ -88,7 +88,7 @@ function StatusForm({ order, onSubmit, onCancel, isPending, error }) {
         </p>
       )}
 
-      <Select label="Move to" options={options} {...register('status')} />
+      <SelectField control={control} name="status" label="Move to" options={options} />
 
       <fieldset
         className={cn(
@@ -101,11 +101,11 @@ function StatusForm({ order, onSubmit, onCancel, isPending, error }) {
         </legend>
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <Select
+          <SelectField
+            control={control}
+            name="carrier"
             label="Carrier"
             options={[{ value: '', label: 'Select a carrier…' }, ...CARRIERS]}
-            value={carrier}
-            onChange={(event) => setValue('carrier', event.target.value)}
           />
           <Input label="Tracking number" placeholder="CVX9107311" {...register('number')} />
         </div>
@@ -219,12 +219,12 @@ export function AdminOrdersPage() {
             icon={Search}
             containerClassName="min-w-[200px] flex-1"
           />
-          <Select
+          <SelectMenu
             options={FILTERS}
             value={status}
-            onChange={(event) => setStatus(event.target.value)}
-            aria-label="Filter by status"
-            containerClassName="w-auto"
+            onChange={setStatus}
+            srLabel="Filter by status"
+            size="md"
             className="w-[180px]"
           />
         </div>

@@ -9,7 +9,8 @@ import Modal from '@/components/ui/Modal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
-import Select from '@/components/ui/Select';
+import SelectMenu from '@/components/ui/SelectMenu';
+import SelectField from '@/components/ui/SelectField';
 import Checkbox from '@/components/ui/Checkbox';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -40,7 +41,7 @@ const CATEGORY_LABELS = Object.fromEntries(FAQ_CATEGORIES.map((c) => [c.value, c
  * be filtered by part type, which it cannot.
  */
 function FaqForm({ faq, deviceTypes, partTypes, onSubmit, onCancel, isPending, error }) {
-  const { register, handleSubmit, watch, formState } = useForm({
+  const { register, handleSubmit, watch, formState, control } = useForm({
     defaultValues: {
       question: faq?.question ?? '',
       answer: faq?.answer ?? '',
@@ -84,8 +85,13 @@ function FaqForm({ faq, deviceTypes, partTypes, onSubmit, onCancel, isPending, e
       />
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <Select label="Shows on" options={SCOPE_OPTIONS} {...register('scope')} />
-        <Select label="Category" options={CATEGORY_OPTIONS} {...register('category')} />
+        <SelectField control={control} name="scope" label="Shows on" options={SCOPE_OPTIONS} />
+        <SelectField
+          control={control}
+          name="category"
+          label="Category"
+          options={CATEGORY_OPTIONS}
+        />
       </div>
 
       {scope === 'product' && (
@@ -96,15 +102,17 @@ function FaqForm({ faq, deviceTypes, partTypes, onSubmit, onCancel, isPending, e
             the narrower entries sort above the general ones.
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
-            <Select
+            <SelectField
+              control={control}
+              name="deviceTypeSlug"
               label="Device type"
               options={[{ value: '', label: 'Every device type' }, ...deviceTypes]}
-              {...register('deviceTypeSlug')}
             />
-            <Select
+            <SelectField
+              control={control}
+              name="partType"
               label="Part type"
               options={[{ value: '', label: 'Every part type' }, ...partTypes]}
-              {...register('partType')}
             />
           </div>
           <p className="mt-3 px-1 text-[12px] text-ink-300">
@@ -190,12 +198,12 @@ export function AdminFaqPage() {
             icon={Search}
             containerClassName="min-w-[200px] flex-1"
           />
-          <Select
+          <SelectMenu
             options={SCOPE_FILTERS}
             value={scope}
-            onChange={(event) => setScope(event.target.value)}
-            aria-label="Filter by where the entry shows"
-            containerClassName="w-auto"
+            onChange={setScope}
+            srLabel="Filter by where the entry shows"
+            size="md"
             className="w-[170px]"
           />
         </div>

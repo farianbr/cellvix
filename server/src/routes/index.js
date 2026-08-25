@@ -142,10 +142,13 @@ router.post('/account/password', requireAuth, validate(changePasswordSchema), ac
 
 // Store credit: the statement, and the advance recharge that adds to it.
 router.get('/account/store-credit', ...account, accountController.storeCredit);
+// Line-of-credit movements, reconstructed from the invoices behind them.
+router.get('/account/credit-activity', ...account, accountController.creditActivity);
 router.post('/account/store-credit/recharge', ...account, validate(rechargeSchema), accountController.rechargeStoreCredit);
 
 router.get('/invoices', ...account, accountController.listInvoices);
 router.get('/invoices/:number', ...account, accountController.getInvoice);
+router.get('/invoices/:number/document', ...account, accountController.invoiceDocument);
 
 // --- admin -----------------------------------------------------------------
 const admin = [requireAuth, requireAdmin];

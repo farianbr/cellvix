@@ -3,7 +3,6 @@ import {
   ArrowRight,
   Bookmark,
   FileText,
-  Headphones,
   Package,
   RotateCcw,
   Wallet,
@@ -71,7 +70,7 @@ export function AccountOverviewPage() {
   if (isLoading || !data) {
     return (
       <div className="space-y-4">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, index) => (
             <Skeleton key={index} className="h-28" />
           ))}
@@ -82,12 +81,12 @@ export function AccountOverviewPage() {
     );
   }
 
-  const { credit, invoices, stats, recentOrders, quickReorder, savedCarts, rep } = data;
+  const { credit, invoices, stats, recentOrders, quickReorder, savedCarts } = data;
 
   return (
     <div className="space-y-4">
       {/* ---- stat row ----------------------------------------------------- */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <StatTile
           label="Open orders"
           value={formatCount(stats.openOrders)}
@@ -103,13 +102,13 @@ export function AccountOverviewPage() {
         />
         <StatTile
           label="Outstanding"
-          value={money(invoices.outstandingAmount)}
+          value={moneyCompact(invoices.outstandingAmount)}
           hint={`${invoices.outstandingCount} open ${invoices.outstandingCount === 1 ? 'invoice' : 'invoices'}`}
           icon={FileText}
         />
         <StatTile
           label="Overdue"
-          value={money(invoices.overdueAmount)}
+          value={moneyCompact(invoices.overdueAmount)}
           hint={
             invoices.overdueCount > 0
               ? `${invoices.overdueCount} past due date`
@@ -181,36 +180,6 @@ export function AccountOverviewPage() {
           <Panel title="Credit">
             <CreditMeter credit={credit} />
           </Panel>
-
-          {rep?.name && (
-            <Panel title="Your account rep">
-              <div className="flex items-start gap-3">
-                <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-brand-gradient font-display text-[13px] font-bold text-white">
-                  {rep.name
-                    .split(' ')
-                    .map((part) => part[0])
-                    .join('')
-                    .slice(0, 2)}
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[13.5px] font-semibold text-ink-900">{rep.name}</p>
-                  <a
-                    href={`mailto:${rep.email}`}
-                    className="mt-0.5 block truncate text-[12.5px] text-brand hover:underline"
-                  >
-                    {rep.email}
-                  </a>
-                  <a
-                    href={`tel:${rep.phone?.replace(/[^\d+]/g, '')}`}
-                    className="mt-0.5 flex items-center gap-1.5 text-[12.5px] text-ink-500 hover:text-brand"
-                  >
-                    <Headphones className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
-                    {rep.phone}
-                  </a>
-                </div>
-              </div>
-            </Panel>
-          )}
 
           {savedCarts.length > 0 && (
             <Panel title="Saved carts" flush>

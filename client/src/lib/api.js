@@ -79,6 +79,12 @@ async function request(path, { method = 'GET', body, params, signal } = {}) {
   return payload;
 }
 
+/**
+ * The absolute URL of an API path, for the places a browser has to fetch it
+ * rather than this wrapper — a link the user opens in a new tab, an <img src>.
+ */
+export const apiUrl = (path) => `${BASE}${path}`;
+
 export const api = {
   get: (path, params, options) => request(path, { ...options, params }),
   post: (path, body, options) => request(path, { ...options, method: 'POST', body }),

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, SlidersHorizontal } from 'lucide-react';
+import { ChevronDown, ChevronLeft, ChevronRight, SlidersHorizontal } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import cn from '@/lib/cn';
 import { count as formatCount } from '@/lib/format';
@@ -11,64 +11,182 @@ import { useTaxonomy } from '@/hooks/useCatalog';
 
 const LEVEL_BY_DEPTH = ['deviceType', 'brand', 'series', 'model'];
 
+/** Facet rows shown before the list folds behind "See more". */
+const FACET_PREVIEW = 8;
+
 /**
- * The nested hierarchy accordion (brief §5.1).
+ * Walks the tree down the currently selected path.
  *
- * Rendered from the same tree the mega menu and wizard use, and it writes
- * through the same store actions — selecting "Samsung" here flips the wizard's
- * Brand tab to completed in the same tick.
+ * Returns the trail of selected nodes and the choices sitting at the bottom of
+ * it — the roots when nothing is picked, otherwise the deepest selection's
+ * children. Tolerates a slug that no longer exists in the tree (a stale deep
+ * link) by stopping where it loses the thread.
  */
-function TreeBranch({ nodes, depth, path, onSelect }) {
-  const level = LEVEL_BY_DEPTH[depth];
-  const selectedSlug = path[level];
+function drillDown(tree, path) {
+  const trail = [];
+  let options = tree ?? [];
+
+  for (const level of LEVEL_BY_DEPTH) {
+    const slug = path[level];
+    if (!slug) break;
+    const node = options.find((entry) => entry.slug === slug);
+    if (!node) break;
+    trail.push({ level, node });
+    options = node.children ?? [];
+  }
+
+  return { trail, options };
+}
+
+/**
+ * The category filter, as a drill-down (brief §5.1).
+ *
+ * Was a nested accordion that rendered every root with an indented, rule-ruled
+ * sub-tree hanging off whichever one was open. At four levels and 177 nodes it
+ * gave a 264px rail a horizontal structure it had no room for: by the model
+ * level the labels were indented into a 120px gutter and truncating.
+ *
+ * Amazon's department rail is the shape that fits — one level at a time. What
+ * is chosen is a breadcrumb at the top, what is choosable is a flat list of
+ * plain links below it, and every crumb goes back up. Nothing indents past one
+ * step, so the deepest level reads at the same width as the shallowest.
+ *
+ * It still writes through the same store actions as the mega menu and the
+ * wizard, and `setPathLevel` still cascades — so going back up a crumb clears
+ * every level under it in the same tick.
+ */
+function CategoryTree({ tree, path, onSelect }) {
+  const { trail, options } = drillDown(tree, path);
 
   return (
-    <ul className={cn(depth > 0 && 'ml-3 border-l border-line pl-2')}>
-      {nodes.map((node) => {
-        const isSelected = selectedSlug === node.slug;
-        const hasChildren = (node.children?.length ?? 0) > 0;
-        // Expand the selected branch only — the tree is 177 nodes deep in total.
-        const isExpanded = isSelected && hasChildren;
+    <div className="px-2 pb-1">
+      {trail.length > 0 && (
+        <>
+          <button
+            type="button"
+            onClick={() => onSelect('deviceType', null, null)}
+            className="flex w-full items-center gap-1 rounded-lg px-2 py-1.5 text-left text-[13px] font-medium text-brand transition-colors hover:bg-brand-50"
+          >
+            <ChevronLeft className="size-3.5 shrink-0" strokeWidth={2.5} aria-hidden="true" />
+            All categories
+          </button>
 
-        return (
-          <li key={node.slug}>
-            <button
-              type="button"
-              onClick={() => onSelect(level, isSelected ? null : node.slug, isSelected ? null : node.name)}
-              aria-expanded={hasChildren ? isExpanded : undefined}
-              className={cn(
-                'flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-[13.5px] transition-colors',
-                isSelected
-                  ? 'bg-brand-50 font-semibold text-brand-700'
-                  : 'text-ink-700 hover:bg-surface-2',
-              )}
-            >
-              {hasChildren ? (
-                <ChevronDown
-                  className={cn(
-                    'size-3.5 shrink-0 text-ink-300 transition-transform duration-200',
-                    !isExpanded && '-rotate-90',
+          <ul className="mt-0.5">
+            {trail.map(({ level, node }, index) => {
+              const isCurrent = index === trail.length - 1;
+
+              return (
+                <li key={level} style={{ paddingLeft: index * 10 }}>
+                  {isCurrent ? (
+                    // The bottom of the trail is where you are, so it is a
+                    // heading, not a link back to itself.
+                    <p className="flex items-center gap-2 px-2 py-1.5 text-[13.5px] font-bold text-ink-900">
+                      <span className="min-w-0 flex-1 truncate">{node.name}</span>
+                      <span className="tnum shrink-0 text-[11.5px] font-medium text-ink-300">
+                        {formatCount(node.count)}
+                      </span>
+                    </p>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => onSelect(level, node.slug, node.name)}
+                      className="flex w-full items-center gap-1 rounded-lg px-2 py-1.5 text-left text-[13px] text-ink-500 transition-colors hover:bg-surface-2 hover:text-ink-900"
+                    >
+                      <ChevronLeft className="size-3.5 shrink-0 text-ink-300" strokeWidth={2.5} aria-hidden="true" />
+                      <span className="min-w-0 flex-1 truncate">{node.name}</span>
+                    </button>
                   )}
-                  strokeWidth={2.25}
-                  aria-hidden="true"
-                />
-              ) : (
-                <span className="size-3.5 shrink-0" aria-hidden="true" />
-              )}
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      )}
 
-              <span className="min-w-0 flex-1 truncate">{node.name}</span>
-              <span className="tnum shrink-0 text-[11.5px] text-ink-300">
-                {formatCount(node.count)}
-              </span>
-            </button>
+      {options.length > 0 && (
+        <ul className={cn(trail.length > 0 && 'mt-0.5 pl-2.5')}>
+          {options.map((node) => {
+            const level = LEVEL_BY_DEPTH[trail.length];
+            const hasChildren = (node.children?.length ?? 0) > 0;
 
-            {isExpanded && (
-              <TreeBranch nodes={node.children} depth={depth + 1} path={path} onSelect={onSelect} />
-            )}
-          </li>
-        );
-      })}
-    </ul>
+            return (
+              <li key={node.slug}>
+                <button
+                  type="button"
+                  onClick={() => onSelect(level, node.slug, node.name)}
+                  className="group flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-[13.5px] text-ink-700 transition-colors hover:bg-surface-2 hover:text-brand-700"
+                >
+                  <span className="min-w-0 flex-1 truncate">{node.name}</span>
+                  <span className="tnum shrink-0 text-[11.5px] text-ink-300">
+                    {formatCount(node.count)}
+                  </span>
+                  {/* A chevron only where there is another level under it, so
+                      the list says which rows drill and which just filter. */}
+                  {hasChildren && (
+                    <ChevronRight
+                      className="size-3.5 shrink-0 text-ink-200 transition-colors group-hover:text-brand"
+                      strokeWidth={2.25}
+                      aria-hidden="true"
+                    />
+                  )}
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      {trail.length > 0 && options.length === 0 && (
+        <p className="px-2 py-1.5 text-[12.5px] text-ink-300">Narrowed to a single model.</p>
+      )}
+    </div>
+  );
+}
+
+/**
+ * A checkbox facet list.
+ *
+ * Part types run past twenty options on a broad result set, which pushed grade
+ * and availability under the fold on a laptop. Everything past `FACET_PREVIEW`
+ * folds behind a "See more" — the same trade Amazon makes — with anything
+ * already ticked pulled up into the preview so a live filter is never hidden.
+ */
+function FacetList({ options, isChecked, onToggle, renderLabel }) {
+  const [expanded, setExpanded] = useState(false);
+
+  const ordered = expanded
+    ? options
+    : [...options].sort((a, b) => Number(isChecked(b.value)) - Number(isChecked(a.value)));
+  const shown = expanded ? ordered : ordered.slice(0, FACET_PREVIEW);
+  const hidden = options.length - shown.length;
+
+  return (
+    <>
+      {shown.map((option) => (
+        <Checkbox
+          key={option.value}
+          label={renderLabel ? renderLabel(option) : option.label}
+          count={option.count}
+          checked={isChecked(option.value)}
+          onChange={() => onToggle(option.value)}
+        />
+      ))}
+
+      {(hidden > 0 || expanded) && (
+        <button
+          type="button"
+          onClick={() => setExpanded((value) => !value)}
+          className="mt-0.5 flex items-center gap-1 px-2 py-1 text-[12.5px] font-medium text-brand transition-colors hover:text-brand-700"
+        >
+          <ChevronDown
+            className={cn('size-3.5 transition-transform duration-200', expanded && 'rotate-180')}
+            strokeWidth={2.25}
+            aria-hidden="true"
+          />
+          {expanded ? 'See less' : `See ${hidden} more`}
+        </button>
+      )}
+    </>
   );
 }
 
@@ -83,7 +201,10 @@ function Section({ title, children, defaultOpen = true }) {
         aria-expanded={open}
         className="mb-1 flex w-full items-center justify-between gap-2 px-2 py-1 text-left"
       >
-        <span className="eyebrow text-ink-500">{title}</span>
+        {/* Amazon's rail headings are dark and bold rather than a grey
+            eyebrow: they are the labels you scan the column by, and at
+            uppercase-11px-grey they sat quieter than the options under them. */}
+        <span className="font-display text-[13.5px] font-bold text-ink-900">{title}</span>
         <ChevronDown
           className={cn(
             'size-4 text-ink-300 transition-transform duration-200',
@@ -111,6 +232,13 @@ export function SidebarFilter({ facets, className }) {
     })),
   );
 
+  const gradeOptions = GRADE_ORDER.filter((grade) =>
+    facets?.grade?.some((entry) => entry.value === grade),
+  ).map((grade) => {
+    const option = facets.grade.find((entry) => entry.value === grade);
+    return { value: grade, label: GRADES[grade]?.label ?? grade, count: option.count };
+  });
+
   return (
     <aside className={cn('rounded-[14px] border border-line bg-surface', className)}>
       <header className="flex items-center gap-2 border-b border-line px-4 py-3">
@@ -118,7 +246,9 @@ export function SidebarFilter({ facets, className }) {
         <h2 className="font-display text-[14px] font-bold">Filters</h2>
       </header>
 
-      <div className="px-2 py-1">
+      {/* pb-4, not py-1: the last section drops its bottom rule, so without it
+          the closing row of options sits on the rail's own border. */}
+      <div className="px-2 pb-4 pt-1">
         <Section title="Category">
           {isLoading ? (
             <div className="space-y-2 px-2 py-1">
@@ -127,48 +257,33 @@ export function SidebarFilter({ facets, className }) {
               ))}
             </div>
           ) : (
-            <TreeBranch nodes={tree ?? []} depth={0} path={path} onSelect={setPathLevel} />
+            <CategoryTree tree={tree} path={path} onSelect={setPathLevel} />
           )}
         </Section>
 
         {facets?.partType?.length > 0 && (
           <Section title="Part Type">
-            <div className="max-h-64 overflow-y-auto scroll-slim">
-              {facets.partType.map((option) => (
-                <Checkbox
-                  key={option.value}
-                  label={option.label}
-                  count={option.count}
-                  checked={facetState.partType.includes(option.value)}
-                  onChange={() => toggleFacet('partType', option.value)}
-                />
-              ))}
-            </div>
+            <FacetList
+              options={facets.partType}
+              isChecked={(value) => facetState.partType.includes(value)}
+              onToggle={(value) => toggleFacet('partType', value)}
+            />
           </Section>
         )}
 
-        {facets?.grade?.length > 0 && (
+        {gradeOptions.length > 0 && (
           <Section title="Condition Grade">
-            {GRADE_ORDER.filter((grade) => facets.grade.some((g) => g.value === grade)).map(
-              (grade) => {
-                const option = facets.grade.find((g) => g.value === grade);
-                return (
-                  <Checkbox
-                    key={grade}
-                    label={GRADES[grade]?.label ?? grade}
-                    count={option.count}
-                    checked={facetState.grade.includes(grade)}
-                    onChange={() => toggleFacet('grade', grade)}
-                  />
-                );
-              },
-            )}
+            <FacetList
+              options={gradeOptions}
+              isChecked={(value) => facetState.grade.includes(value)}
+              onToggle={(value) => toggleFacet('grade', value)}
+            />
           </Section>
         )}
 
         <Section title="Availability">
           <Checkbox
-            label="In stock only"
+            label="In stock"
             count={facets?.availability?.inStock}
             checked={facetState.inStockOnly}
             onChange={(event) => setFacet('inStockOnly', event.target.checked)}

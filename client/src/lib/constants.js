@@ -1,38 +1,13 @@
 /**
  * Shared display constants.
  *
- * BUSINESS_INFO is PLACEHOLDER DATA. Cellvix has not supplied real contact
- * details yet — see "Open questions" #1 in PROGRESS.md. Replace here only;
- * every surface (footer, contact tab, contact page) reads from this object.
+ * BUSINESS_INFO now lives in shared/business.js — the server renders it onto
+ * the invoice it emails, so client and server have to read one object. It is
+ * re-exported here because every client surface already imports it from this
+ * module.
  */
 
-export const BUSINESS_INFO = {
-  name: 'Cellvix',
-  tagline: 'Repair with confidence',
-  domain: 'cellvix.ca',
-  // TODO(client): replace with real details
-  phone: '+1 (000) 000-0000',
-  email: 'sales@cellvix.ca',
-  supportEmail: 'support@cellvix.ca',
-  address: {
-    line1: '000 Placeholder Rd, Unit 0',
-    city: 'Toronto',
-    region: 'ON',
-    postal: 'M0M 0M0',
-    country: 'Canada',
-  },
-  hours: [
-    { days: 'Mon – Fri', time: '9:00 AM – 6:00 PM ET' },
-    { days: 'Saturday', time: '10:00 AM – 4:00 PM ET' },
-    { days: 'Sunday', time: 'Closed' },
-  ],
-  social: {
-    facebook: '#',
-    instagram: '#',
-    linkedin: '#',
-    youtube: '#',
-  },
-};
+export { BUSINESS_INFO } from '@shared/business';
 
 /** Condition grades, in the order they should ever be listed. */
 export const GRADES = {
@@ -47,6 +22,17 @@ export const GRADES = {
 };
 
 export const GRADE_ORDER = ['NEW', 'OEM', 'PULL-A', 'PULL-B', 'AFTERMARKET'];
+
+/**
+ * Scroll depth at which the phone/tablet layout hands search over.
+ *
+ * Above it, the mobile header carries the search bar. Below it, that row folds
+ * away — it is a full row of chrome sitting over a grid the buyer is scrolling —
+ * and the bottom bar rises with the search button that unfolds it again. One
+ * number so the handoff has no gap: the bar cannot leave before the button that
+ * replaces it has arrived.
+ */
+export const BOTTOM_NAV_REVEAL_AT = 160;
 
 /**
  * Low-stock threshold. ADMIN ONLY — it colours the inventory column in the

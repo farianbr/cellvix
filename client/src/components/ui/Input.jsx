@@ -56,7 +56,11 @@ export const Input = forwardRef(function Input(
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
           className={cn(
-            'h-11 w-full rounded-[10px] border bg-surface px-3.5 text-[14px] text-ink-900',
+            // 16px on a phone, 14 from sm up. Mobile Safari zooms the page in
+            // when a focused input's text is under 16px and never zooms back
+            // out, which leaves the sticky header wider than the viewport for
+            // the rest of the visit. Same rule in Textarea, Select and LiveSearch.
+            'h-11 w-full rounded-[10px] border bg-surface px-3.5 text-[16px] text-ink-900 sm:text-[14px]',
             'placeholder:text-ink-300',
             'transition-[border-color,box-shadow] duration-[120ms]',
             'hover:border-line-strong',

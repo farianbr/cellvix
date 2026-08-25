@@ -9,6 +9,16 @@ import useUiStore from '@/store/uiStore';
 import { useAuth, useSignOut } from '@/hooks/useAuth';
 
 /**
+ * Panel width. Was 320, which left a band of empty surface down the right of
+ * every row — the longest label in ACCOUNT_NAV is "Payment methods" and the
+ * account line above it truncates anyway, so the extra 40px was width the panel
+ * had no content for.
+ */
+const PANEL_W = 280;
+
+const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+/**
  * Props for any button that opens the account menu.
  *
  * Marking the pressed button is what lets the panel anchor to the control the
@@ -75,11 +85,20 @@ export function AccountMenu() {
       // panel above it; hanging it below would put it off-screen.
       const below = rect.top < window.innerHeight / 2;
 
+      // Clamped so a trigger near the screen edge cannot push the panel off it.
+      const right = Math.max(12, window.innerWidth - rect.right);
+
       setAnchor({
-        top: below ? rect.bottom + 10 : undefined,
-        bottom: below ? undefined : window.innerHeight - rect.top + 10,
-        // Clamped so a trigger near the screen edge cannot push the panel off it.
-        right: Math.max(12, window.innerWidth - rect.right),
+        top: below ? rect.bottom + 9 : undefined,
+        bottom: below ? undefined : window.innerHeight - rect.top + 9,
+        right,
+        // Where the tail sits, measured in from the panel's right edge, so it
+        // lands under the middle of the button that was pressed. Right-aligning
+        // the panel is not enough on its own: the account button has the cart
+        // button to its right, so the panel hangs off-centre and reads as
+        // belonging to the header rather than to a control. The tail says which.
+        // Kept off both corners so it never fouls the panel's rounding.
+        caret: clamp(window.innerWidth - (rect.left + rect.width / 2) - right, 16, PANEL_W - 16),
       });
     }
 
@@ -127,17 +146,30 @@ export function AccountMenu() {
             style={{ top: anchor?.top, bottom: anchor?.bottom, right: anchor?.right ?? 12 }}
             className={cn('fixed z-40', anchor?.bottom ? 'origin-bottom-right' : 'origin-top-right')}
           >
-            <div className="flex justify-end">
+            <div className="relative flex justify-end">
+              {/* The tail. Sits outside the panel's own box, which is clipped. */}
+              <span
+                style={{ right: anchor?.caret ?? 24 }}
+                className={cn(
+                  'absolute z-10 size-3 rotate-45 rounded-[2px] border-line bg-surface',
+                  anchor?.bottom
+                    ? '-bottom-[6px] border-b border-r'
+                    : '-top-[6px] border-l border-t',
+                )}
+                aria-hidden="true"
+              />
+
               <div
                 role="dialog"
                 aria-labelledby={titleId}
-                className="flex max-h-[min(72vh,620px)] w-[min(320px,calc(100vw-24px))] flex-col overflow-hidden rounded-[16px] border border-line bg-surface shadow-flyout"
+                style={{ width: `min(${PANEL_W}px, calc(100vw - 24px))` }}
+                className="flex max-h-[min(72vh,620px)] flex-col overflow-hidden rounded-[16px] border border-line bg-surface shadow-flyout"
               >
-                <header id={titleId} className="shrink-0 border-b border-line px-4 py-3.5">
-                  <p className="truncate font-display text-[15px] font-bold text-ink-900">
+                <header id={titleId} className="shrink-0 border-b border-line px-3.5 py-3">
+                  <p className="truncate font-display text-[14.5px] font-bold text-ink-900">
                     {user.businessName}
                   </p>
-                  <p className="mt-0.5 truncate text-[12.5px] text-ink-400">{user.email}</p>
+                  <p className="mt-0.5 truncate text-[12px] text-ink-400">{user.email}</p>
 
                   <span
                     className={cn(
@@ -154,14 +186,14 @@ export function AccountMenu() {
                   </span>
                 </header>
 
-                <div className="scroll-slim flex-1 overflow-y-auto overscroll-contain p-2">
+                <div className="scroll-slim flex-1 overflow-y-auto overscroll-contain p-1.5">
                   {isAdmin ? (
                     // Staff have no buyer orders, invoices or credit — the buyer
                     // nav would be eight dead ends.
                     <Link
                       to="/admin"
                       onClick={close}
-                      className="flex items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-[13.5px] font-medium text-ink-700 transition-colors hover:bg-surface-2 hover:text-ink-900"
+                      className="flex items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-[13px] font-medium text-ink-700 transition-colors hover:bg-surface-2 hover:text-ink-900"
                     >
                       Admin console
                     </Link>
@@ -177,7 +209,7 @@ export function AccountMenu() {
                               onClick={close}
                               className={({ isActive }) =>
                                 cn(
-                                  'flex items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-[13.5px] font-medium transition-colors',
+                                  'flex items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-[13px] font-medium transition-colors',
                                   isActive
                                     ? 'bg-brand-50 text-brand-700'
                                     : 'text-ink-700 hover:bg-surface-2 hover:text-ink-900',
@@ -194,14 +226,14 @@ export function AccountMenu() {
                   )}
                 </div>
 
-                <footer className="shrink-0 border-t border-line p-2">
+                <footer className="shrink-0 border-t border-line p-1.5">
                   <button
                     type="button"
                     onClick={() => {
                       close();
                       signOut();
                     }}
-                    className="flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-left text-[13.5px] font-medium text-ink-500 transition-colors hover:bg-danger-50 hover:text-danger"
+                    className="flex w-full items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-left text-[13px] font-medium text-ink-500 transition-colors hover:bg-danger-50 hover:text-danger"
                   >
                     <LogOut className="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
                     Sign out

@@ -5,17 +5,112 @@ import { ArrowRight, Headphones, MessageCircleQuestion, Search } from 'lucide-re
 import cn from '@/lib/cn';
 import { BUSINESS_INFO } from '@/lib/constants';
 import Input from '@/components/ui/Input';
+import SelectMenu from '@/components/ui/SelectMenu';
 import Skeleton from '@/components/ui/Skeleton';
 import Accordion from '@/components/ui/Accordion';
+import { EyebrowPill } from '@/components/ui/Slab';
+import scrollToSection from '@/lib/scrollToSection';
 import { useFaqs } from '@/hooks/useContent';
+import useActiveSection from '@/hooks/useActiveSection';
 import useDebouncedValue from '@/hooks/useDebouncedValue';
+
+/**
+ * The category jump list.
+ *
+ * Two presentations of one nav, chosen by width rather than one layout squeezed
+ * into both. From `lg` it is a sticky rail beside the answers — a help page's
+ * sections are a permanent map, and a map belongs in the margin. Below that it
+ * is the same `SelectMenu` the shop toolbar sorts with: the row of pills it
+ * replaces scrolled sideways on a phone, and a native `<select>` was no better
+ * — the platform draws that popup wider than its trigger and clips it against
+ * the viewport edge.
+ *
+ * Both go through `scrollToSection` rather than letting the browser follow the
+ * anchor, because a native smooth scroll gets cancelled here — see that file.
+ */
+function CategoryNav({ groups, activeId }) {
+  if (groups.length < 2) return null;
+
+  return (
+    <>
+      {/* --- phone / tablet ------------------------------------------------ */}
+      <div className="lg:hidden">
+        <p className="mb-1.5 text-[13px] font-medium text-ink-700">Jump to a section</p>
+        <SelectMenu
+          size="md"
+          align="left"
+          srLabel="Jump to a section"
+          value={activeId ?? groups[0].value}
+          onChange={(value) => scrollToSection(`faq-${value}`)}
+          options={groups.map((group) => ({
+            value: group.value,
+            label: group.label,
+            count: group.faqs.length,
+          }))}
+        />
+      </div>
+
+      {/* --- laptop and up -------------------------------------------------- */}
+      <nav aria-label="FAQ sections" className="hidden lg:block">
+        <div className="sticky top-[calc(var(--header-h,72px)+24px)]">
+          <p className="eyebrow mb-3 px-3 text-ink-300">Sections</p>
+          <ul className="flex flex-col gap-0.5">
+            {groups.map((group) => {
+              const isActive = activeId === group.value;
+
+              return (
+                <li key={group.value}>
+                  <a
+                    href={`#faq-${group.value}`}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      scrollToSection(`faq-${group.value}`);
+                    }}
+                    aria-current={isActive ? 'true' : undefined}
+                    className={cn(
+                      'relative flex items-center gap-2 rounded-[10px] py-2 pl-3 pr-2.5',
+                      'text-[13.5px] font-medium transition-colors duration-200',
+                      isActive
+                        ? 'bg-brand-50 text-brand-700'
+                        : 'text-ink-500 hover:bg-surface-2 hover:text-ink-900',
+                    )}
+                  >
+                    {/* The accent arrives as a 2px rule on the active item, not
+                        as a filled tab (§2.2). */}
+                    <span
+                      className={cn(
+                        'absolute inset-y-1.5 left-0 w-[2px] rounded-full transition-opacity duration-200',
+                        isActive ? 'rule-brand-gradient opacity-100' : 'opacity-0',
+                      )}
+                      aria-hidden="true"
+                    />
+                    <span className="min-w-0 flex-1">{group.label}</span>
+                    <span
+                      className={cn(
+                        'tnum text-[11.5px]',
+                        isActive ? 'text-brand-700' : 'text-ink-300',
+                      )}
+                    >
+                      {group.faqs.length}
+                    </span>
+                  </a>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      </nav>
+    </>
+  );
+}
 
 /**
  * The general FAQ.
  *
- * Centred column, oversized heading, and the questions as a stack of rounded
- * pills that open one at a time — the reading order a help page wants, with
- * nothing in the margins competing with the answer.
+ * Centred header over a two-column body: the categories hold the left rail from
+ * `lg` up, the questions stack beside them as rounded pills that open one at a
+ * time. Below `lg` the rail becomes a picker and the questions take the full
+ * width.
  *
  * Search filters on the client rather than round-tripping: the whole published
  * set is a few dozen short entries and arrives in one request, so filtering
@@ -45,7 +140,12 @@ export function FaqPage() {
   }, [groups, debounced]);
 
   const matchCount = filtered.reduce((total, group) => total + group.faqs.length, 0);
-  const totalCount = groups.reduce((total, group) => total + group.faqs.length, 0);
+
+  // The rail tracks the groups actually on the page, so a search that hides
+  // three of them does not leave the nav pointing at anchors that are gone.
+  const sectionIds = useMemo(() => filtered.map((group) => `faq-${group.value}`), [filtered]);
+  const activeSection = useActiveSection(sectionIds);
+  const activeGroup = activeSection?.replace(/^faq-/, '') ?? null;
 
   const headerMotion = reduce
     ? { initial: { opacity: 0 }, animate: { opacity: 1 } }
@@ -55,20 +155,16 @@ export function FaqPage() {
       };
 
   return (
-    <div className="mx-auto max-w-[1100px] px-3 py-10 sm:px-4 lg:px-6 lg:py-16">
+    <div className="mx-auto max-w-[1180px] px-3 py-10 sm:px-4 lg:px-6 lg:py-16">
       {/* ---- header ------------------------------------------------------- */}
       <motion.header
         {...headerMotion}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         className="mx-auto max-w-2xl text-center"
       >
-        <p className="eyebrow inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3.5 py-2 text-ink-400">
-          <span className="tnum font-mono text-brand">
-            {totalCount ? String(totalCount).padStart(3, '0') : '···'}
-          </span>
-          <span className="size-1 rounded-full bg-brand" aria-hidden="true" />
-          Help centre
-        </p>
+        {/* No count in the pill: "047 · Help centre" read as a statistic about
+            the page rather than as a label for it. */}
+        <EyebrowPill>Help centre</EyebrowPill>
 
         <h1 className="mt-6 text-[34px] leading-[1.04] tracking-[-0.035em] sm:text-[48px] lg:text-[56px]">
           Common questions
@@ -97,65 +193,48 @@ export function FaqPage() {
         )}
       </motion.header>
 
-      {/* ---- section jump row --------------------------------------------- */}
-      {/* Anchors, not state, so a section can be linked directly. */}
-      {(debounced ? filtered : groups).length > 1 && (
-        <nav aria-label="FAQ sections" className="mt-8 lg:mt-10">
-          <ul className="scroll-slim -mx-3 flex justify-start gap-2 overflow-x-auto px-3 pb-1 lg:flex-wrap lg:justify-center lg:overflow-visible">
-            {(debounced ? filtered : groups).map((group) => (
-              <li key={group.value} className="shrink-0">
-                <a
-                  href={`#faq-${group.value}`}
-                  className={cn(
-                    'inline-flex h-10 items-center gap-1.5 whitespace-nowrap rounded-full border border-line bg-surface px-4',
-                    'text-[13px] font-medium text-ink-500 transition-colors hover:border-line-strong hover:text-brand',
-                  )}
-                >
-                  {group.label}
-                  <span className="tnum text-[11.5px] text-ink-300">{group.faqs.length}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      )}
+      {/* ---- rail + answers ------------------------------------------------ */}
+      {isLoading ? (
+        <div className="mt-10 space-y-2 lg:mt-14">
+          {Array.from({ length: 8 }).map((_, index) => (
+            // eslint-disable-next-line react/no-array-index-key
+            <Skeleton key={index} className="h-[76px] rounded-[24px]" />
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="mt-10 flex flex-col items-center rounded-[24px] border border-line bg-surface py-16 text-center lg:mt-14">
+          <span className="mb-4 flex size-12 items-center justify-center rounded-full bg-surface-2 text-ink-300">
+            <MessageCircleQuestion className="size-5" strokeWidth={1.5} aria-hidden="true" />
+          </span>
+          <h2 className="text-[18px]">No answer for that yet</h2>
+          <p className="mx-auto mt-2 max-w-sm text-[13.5px] text-ink-500">
+            Ask the trade desk directly — and the answer usually ends up on this page.
+          </p>
+          <Link
+            to="/contact"
+            className="mt-6 inline-flex h-12 items-center rounded-[12px] bg-brand-gradient px-6 font-display text-[14px] font-semibold text-white transition-[filter] hover:brightness-110"
+          >
+            Contact us
+          </Link>
+        </div>
+      ) : (
+        <div className="mt-8 grid gap-6 lg:mt-14 lg:grid-cols-[224px_minmax(0,1fr)] lg:gap-10">
+          <CategoryNav groups={filtered} activeId={activeGroup} />
 
-      {/* ---- the questions ------------------------------------------------- */}
-      <div className="mx-auto mt-8 max-w-[860px] lg:mt-12">
-        {isLoading ? (
-          <div className="space-y-2">
-            {Array.from({ length: 8 }).map((_, index) => (
-              // eslint-disable-next-line react/no-array-index-key
-              <Skeleton key={index} className="h-[76px] rounded-[24px]" />
-            ))}
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center rounded-[24px] border border-line bg-surface py-16 text-center">
-            <span className="mb-4 flex size-12 items-center justify-center rounded-full bg-surface-2 text-ink-300">
-              <MessageCircleQuestion className="size-5" strokeWidth={1.5} aria-hidden="true" />
-            </span>
-            <h2 className="text-[18px]">No answer for that yet</h2>
-            <p className="mx-auto mt-2 max-w-sm text-[13.5px] text-ink-500">
-              Ask the trade desk directly — and the answer usually ends up on this page.
-            </p>
-            <Link
-              to="/contact"
-              className="mt-6 inline-flex h-12 items-center rounded-[12px] bg-brand-gradient px-6 font-display text-[14px] font-semibold text-white transition-[filter] hover:brightness-110"
-            >
-              Contact us
-            </Link>
-          </div>
-        ) : (
-          <div className="space-y-10 lg:space-y-14">
+          <div className="min-w-0 space-y-10 lg:space-y-14">
             {filtered.map((group) => (
-              <section key={group.value} id={`faq-${group.value}`} className="scroll-mt-[140px]">
+              <section
+                key={group.value}
+                id={`faq-${group.value}`}
+                className="scroll-mt-[calc(var(--header-h,72px)+20px)]"
+              >
                 <h2 className="mb-4 px-1 text-[19px] sm:text-[22px]">{group.label}</h2>
                 <Accordion items={group.faqs} />
               </section>
             ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* ---- still stuck ---------------------------------------------------
           The reference closes the list with a single quiet line rather than a

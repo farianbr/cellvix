@@ -7,6 +7,7 @@ import ApiError from '../utils/ApiError.js';
 import * as storeCredit from './storeCreditService.js';
 import { serializeOrder } from './orderService.js';
 import { serialize as serializeProduct } from './productService.js';
+import { renderInvoiceHtml } from './invoiceDocument.js';
 
 /**
  * The dashboard payload (brief §8.3).
@@ -287,6 +288,109 @@ export async function getInvoice(userId, number) {
   return {
     ...serializeInvoice(invoice),
     order: invoice.order ? serializeOrder(invoice.order) : null,
+  };
+}
+
+/**
+ * The printable invoice — the same document the buyer was emailed when the
+ * order was placed, rendered fresh so a later payment shows on it.
+ */
+export async function invoiceDocument(user, number, { nonce } = {}) {
+  const invoice = await Invoice.findOne({ number, user: user._id }).populate('order').lean();
+  if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');
+
+  return renderInvoiceHtml({ invoice, order: invoice.order, user, nonce });
+}
+
+/**
+ * Line-of-credit activity.
+ *
+ * There is no ledger behind this the way there is for store credit, and there
+ * deliberately is not one: the line of credit is a single balance on the user
+ * document that orders draw against and payments retire. What a buyer wants to
+ * see is how it got where it is, so this reconstructs the movements from the
+ * invoices that caused them — draws from terms invoices, repayments from the
+ * payments recorded against them.
+ *
+ * Store credit that settled part of a terms order is NOT a draw: that money
+ * never came off the limit. It is subtracted here for the same reason the
+ * invoice shows it as a payment.
+ */
+export async function lineOfCreditActivity(user) {
+  const invoices = await Invoice.find({ user: user._id, terms: { $ne: 'prepaid' } })
+    .sort({ issuedAt: -1 })
+    .populate('order', 'orderNumber')
+    .lean();
+
+  const entries = [];
+
+  for (const invoice of invoices) {
+    const payments = invoice.payments ?? [];
+    const fromStoreCredit = payments
+      .filter((payment) => payment.method === 'store-credit')
+      .reduce((sum, payment) => sum + (payment.amount ?? 0), 0);
+
+    const drawn = invoice.amount - fromStoreCredit;
+    if (drawn > 0) {
+      entries.push({
+        id: `${invoice._id}-draw`,
+        type: 'draw',
+        amount: drawn,
+        at: invoice.issuedAt,
+        invoiceNumber: invoice.number,
+        orderNumber: invoice.order?.orderNumber ?? null,
+        note: invoice.order?.orderNumber
+          ? `Order ${invoice.order.orderNumber} placed on ${(invoice.terms ?? '').replace('net', 'Net ')}`
+          : 'Charged to the account',
+      });
+    }
+
+    for (const [index, payment] of payments.entries()) {
+      // The store-credit line is already accounted for above.
+      if (payment.method === 'store-credit') continue;
+      entries.push({
+        id: `${invoice._id}-payment-${index}`,
+        type: 'payment',
+        amount: payment.amount ?? 0,
+        at: payment.at ?? invoice.issuedAt,
+        invoiceNumber: invoice.number,
+        orderNumber: invoice.order?.orderNumber ?? null,
+        note: `Payment against ${invoice.number}`,
+      });
+    }
+
+    // Settlement recorded as a figure rather than as a payment row — seeded
+    // history, and anything an admin marks paid without itemising it. Dated to
+    // the last write on the invoice, which is when the settlement happened.
+    const itemised = payments.reduce((sum, payment) => sum + (payment.amount ?? 0), 0);
+    const unitemised = (invoice.amountPaid ?? 0) - itemised;
+    if (unitemised > 0) {
+      entries.push({
+        id: `${invoice._id}-settled`,
+        type: 'payment',
+        amount: unitemised,
+        at: invoice.updatedAt ?? invoice.issuedAt,
+        invoiceNumber: invoice.number,
+        orderNumber: invoice.order?.orderNumber ?? null,
+        note: `${invoice.number} settled`,
+      });
+    }
+  }
+
+  entries.sort((a, b) => new Date(b.at) - new Date(a.at));
+
+  const limit = user.creditLimit ?? 0;
+  const balance = user.balance ?? 0;
+
+  return {
+    limit,
+    balance,
+    available: Math.max(0, limit - balance),
+    utilisation: limit > 0 ? Math.min(100, Math.round((balance / limit) * 100)) : 0,
+    terms: user.terms,
+    drawn: entries.filter((entry) => entry.type === 'draw').reduce((sum, e) => sum + e.amount, 0),
+    repaid: entries.filter((entry) => entry.type === 'payment').reduce((sum, e) => sum + e.amount, 0),
+    entries,
   };
 }
 

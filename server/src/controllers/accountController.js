@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { asyncHandler } from '../utils/ApiError.js';
 import * as accountService from '../services/accountService.js';
 
@@ -48,8 +49,39 @@ export const getInvoice = asyncHandler(async (req, res) => {
   res.json({ invoice: await accountService.getInvoice(req.user._id, req.params.number) });
 });
 
+/**
+ * The invoice as a printable page rather than JSON — the dashboard's PDF button
+ * opens it and the browser's print dialog does the rest.
+ *
+ * Helmet's global CSP forbids inline script, and the page needs exactly one
+ * line of it for the print button. Rather than loosening the policy for the
+ * whole app, this response carries its own: nothing loads, and the one nonced
+ * script may run.
+ */
+export const invoiceDocument = asyncHandler(async (req, res) => {
+  const nonce = randomBytes(16).toString('base64');
+  const html = await accountService.invoiceDocument(req.user, req.params.number, { nonce });
+
+  res.setHeader(
+    'Content-Security-Policy',
+    [
+      "default-src 'none'",
+      "style-src 'unsafe-inline'",
+      "img-src data:",
+      `script-src 'nonce-${nonce}'`,
+      "base-uri 'none'",
+      "form-action 'none'",
+    ].join('; '),
+  );
+  res.type('html').send(html);
+});
+
 export const storeCredit = asyncHandler(async (req, res) => {
   res.json(await accountService.storeCreditStatement(req.user._id));
+});
+
+export const creditActivity = asyncHandler(async (req, res) => {
+  res.json(await accountService.lineOfCreditActivity(req.user));
 });
 
 export const rechargeStoreCredit = asyncHandler(async (req, res) => {

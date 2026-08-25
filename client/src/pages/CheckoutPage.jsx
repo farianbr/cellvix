@@ -15,7 +15,7 @@ import {
   checkoutSchema,
 } from '@shared/schemas/checkout';
 import Input from '@/components/ui/Input';
-import Select from '@/components/ui/Select';
+import SelectField from '@/components/ui/SelectField';
 import Button from '@/components/ui/Button';
 import Checkbox from '@/components/ui/Checkbox';
 import StepSection from '@/components/checkout/StepSection';
@@ -107,7 +107,7 @@ export function CheckoutPage() {
     defaultValues: buildDefaults(null),
   });
 
-  const { register, watch, trigger, handleSubmit, formState, reset } = form;
+  const { register, watch, trigger, handleSubmit, formState, reset, setValue, control } = form;
   const values = watch();
 
   /**
@@ -164,8 +164,20 @@ export function CheckoutPage() {
   // total. The applied figure is a preview: `createOrder` recomputes it from
   // the live balance, so a top-up in another tab cannot double-spend.
   const storeCreditBalance = quoted?.storeCredit?.balance ?? 0;
-  const storeCreditApplied = values.useStoreCredit ? (quoted?.storeCredit?.applicable ?? 0) : 0;
+
+  // Held credit is drawn on before the line of credit is: on account, it always
+  // applies and the checkbox says so rather than pretending to be a choice. The
+  // server enforces the same order — see orderService.createOrder.
+  const creditLocked = values.paymentMethod === 'terms' && storeCreditBalance > 0;
+  const storeCreditApplied =
+    creditLocked || values.useStoreCredit ? (quoted?.storeCredit?.applicable ?? 0) : 0;
   const dueNow = Math.max(0, total - storeCreditApplied);
+
+  // Keep the submitted flag honest while the box is locked, so a buyer who
+  // unticked it against a card and then switched to terms still sends `true`.
+  useEffect(() => {
+    if (creditLocked && !values.useStoreCredit) setValue('useStoreCredit', true);
+  }, [creditLocked, values.useStoreCredit, setValue]);
 
   async function advance(stepKey) {
     const valid = await trigger(STEP_FIELDS[stepKey]);
@@ -338,11 +350,11 @@ export function CheckoutPage() {
                     error={formState.errors.shippingAddress?.city?.message}
                     {...register('shippingAddress.city')}
                   />
-                  <Select
+                  <SelectField
+                    control={control}
+                    name="shippingAddress.region"
                     label="Province"
                     options={PROVINCES}
-                    error={formState.errors.shippingAddress?.region?.message}
-                    {...register('shippingAddress.region')}
                   />
                   <Input
                     label="Postal code"
@@ -447,8 +459,48 @@ export function CheckoutPage() {
               summary={summaries.payment}
               onEdit={() => setActiveStep('payment')}
             >
+              {/* Store credit sits above the methods because that is the order
+                  the money moves in: held credit settles first, and what is
+                  left over is what the method below is asked for. */}
+              {storeCreditBalance > 0 && (
+                <label
+                  className={cn(
+                    'mb-4 flex items-start gap-3 rounded-[11px] border p-3.5 transition-[border-color,background]',
+                    creditLocked || values.useStoreCredit
+                      ? 'border-brand bg-brand-50'
+                      : 'cursor-pointer border-line hover:border-line-strong hover:bg-surface-2',
+                    creditLocked ? 'cursor-default' : 'cursor-pointer',
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    className="mt-0.5 size-4 accent-[var(--color-brand)]"
+                    disabled={creditLocked}
+                    {...register('useStoreCredit')}
+                  />
+                  <WalletCards className="mt-0.5 size-5 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-display text-[13.5px] font-semibold text-ink-900">
+                      Store credit{creditLocked ? ' — applied first' : ''}
+                    </span>
+                    <span className="tnum block text-[12.5px] text-ink-500">
+                      {money(storeCreditBalance)} available
+                      {storeCreditApplied > 0 ? ` · ${money(storeCreditApplied)} on this order` : ''}
+                    </span>
+                    {creditLocked && (
+                      <span className="mt-1 block text-[12px] leading-relaxed text-ink-400">
+                        Credit you already hold with us is used before your account terms are drawn
+                        on. Only {money(dueNow)} goes on account.
+                      </span>
+                    )}
+                  </span>
+                </label>
+              )}
+
               <fieldset className="space-y-2">
-                <legend className="sr-only">Payment method</legend>
+                <legend className="sr-only">
+                  {storeCreditBalance > 0 ? 'How to settle the rest' : 'Payment method'}
+                </legend>
 
                 <label
                   className={cn(
@@ -501,35 +553,6 @@ export function CheckoutPage() {
                   </label>
                 )}
               </fieldset>
-
-              {storeCreditBalance > 0 && (
-                <label
-                  className={cn(
-                    'mt-2 flex cursor-pointer items-start gap-3 rounded-[11px] border p-3.5 transition-[border-color,background]',
-                    values.useStoreCredit
-                      ? 'border-brand bg-brand-50'
-                      : 'border-line hover:border-line-strong hover:bg-surface-2',
-                  )}
-                >
-                  <input
-                    type="checkbox"
-                    className="mt-0.5 size-4 accent-[var(--color-brand)]"
-                    {...register('useStoreCredit')}
-                  />
-                  <WalletCards className="mt-0.5 size-5 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
-                  <span className="min-w-0 flex-1">
-                    <span className="block font-display text-[13.5px] font-semibold text-ink-900">
-                      Use store credit
-                    </span>
-                    <span className="tnum block text-[12.5px] text-ink-500">
-                      {money(storeCreditBalance)} available
-                      {values.useStoreCredit && storeCreditApplied > 0
-                        ? ` · ${money(storeCreditApplied)} on this order`
-                        : ''}
-                    </span>
-                  </span>
-                </label>
-              )}
 
               <Input
                 label="PO number"

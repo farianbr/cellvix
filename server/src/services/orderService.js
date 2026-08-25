@@ -9,6 +9,7 @@ import * as payment from './payment.js';
 import Offer from '../models/Offer.js';
 import { priceCart, assertBundlesOrderable } from './pricingService.js';
 import * as storeCredit from './storeCreditService.js';
+import { sendInvoiceEmail } from './notifications.js';
 
 const TERMS_DAYS = { prepaid: 0, net15: 15, net30: 30, net60: 60 };
 
@@ -152,7 +153,15 @@ export async function createOrder(user, input) {
   // Store credit is spent before the gateway is asked for anything, and how
   // much of it applies is decided here from the live balance — the client sends
   // a flag, never a number (PROJECT_INSTRUCTIONS.md §5.3).
-  const creditApplied = input.useStoreCredit
+  //
+  // Held credit outranks the line of credit: money the business already has with
+  // us settles the order before Cellvix lends it any. So on a terms order the
+  // flag cannot decline it — the two instruments stay apart, but the order in
+  // which they are drawn on is ours, not the buyer's. A card is different: it is
+  // the buyer's own money either way, so declining credit against a card is a
+  // real choice and the flag is honoured.
+  const spendCredit = input.paymentMethod === 'terms' || input.useStoreCredit;
+  const creditApplied = spendCredit
     ? Math.min(await storeCredit.balanceOf(user._id), priced.total)
     : 0;
   const dueNow = priced.total - creditApplied;
@@ -243,7 +252,7 @@ export async function createOrder(user, input) {
 
   const settled = creditApplied + (result.status === 'paid' ? dueNow : 0);
   const termsDays = TERMS_DAYS[user.terms] ?? 0;
-  await Invoice.create({
+  const invoice = await Invoice.create({
     number: await nextInvoiceNumber(),
     order: order._id,
     user: user._id,
@@ -305,6 +314,12 @@ export async function createOrder(user, input) {
     { user: user._id, savedForLater: false },
     { $set: { items: [], bundles: [], promoCode: '' } },
   );
+
+  // The invoice goes out by email the moment the order is placed. Deliberately
+  // not awaited: the order is already written, paid and stock-adjusted, so a
+  // slow or dead mail host must not hold the checkout response open — and
+  // `sendInvoiceEmail` never rejects, it logs and falls back to the outbox.
+  void sendInvoiceEmail({ invoice, order, user });
 
   return order;
 }

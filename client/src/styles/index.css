@@ -32,6 +32,15 @@
   --color-ink-300: #6e6e79;
   --color-ink-200: #9a9aa5;
 
+  /* The inverted editorial slab (About's statement, Contact's promise).
+     `ink-900` on its own is a flat photographic black that reads as a generic
+     dark section next to a warm red mark, so this is that same black mixed
+     ~12% toward --color-brand: still unmistakably near-black, but warm enough
+     that the inverted band belongs to the palette. A SOLID fill, not a second
+     gradient block — §2.2 keeps the gradient for the CTA. White sits at ~17:1
+     on it, white/60 at ~6.3:1. */
+  --color-ink-deep: #1f1214;
+
   /* --- surfaces & lines ------------------------------------------------- */
   --color-line: #e5e5ea;
   --color-line-strong: #d3d3db;
@@ -57,6 +66,9 @@
 
   /* --- type ------------------------------------------------------------- */
   --font-display: 'Archivo', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  /* There is no --font-wordmark. The footer used to SET the word "cellvix" in
+     Poppins at 300px; it shows the real wordmark asset now, so the family that
+     existed for that one element is gone from here and from index.html. */
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
 

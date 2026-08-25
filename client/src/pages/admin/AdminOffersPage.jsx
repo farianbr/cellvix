@@ -21,7 +21,8 @@ import Modal from '@/components/ui/Modal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
-import Select from '@/components/ui/Select';
+import SelectMenu from '@/components/ui/SelectMenu';
+import SelectField from '@/components/ui/SelectField';
 import Checkbox from '@/components/ui/Checkbox';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -230,7 +231,7 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
         </p>
       )}
 
-      <Select label="Offer type" options={KIND_OPTIONS} {...register('kind')} />
+      <SelectField control={control} name="kind" label="Offer type" options={KIND_OPTIONS} />
 
       <Input
         label="Title"
@@ -254,7 +255,12 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
           <legend className="eyebrow px-1 text-ink-400">The discount</legend>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <Select label="Discount" options={DISCOUNT_OPTIONS} {...register('discountType')} />
+            <SelectField
+              control={control}
+              name="discountType"
+              label="Discount"
+              options={DISCOUNT_OPTIONS}
+            />
             {discountType === 'percent' ? (
               <Input label="Percent off" inputMode="numeric" suffix="%" {...register('discountPercent')} />
             ) : discountType === 'amount' ? (
@@ -289,38 +295,39 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <Select
+            <SelectField
+              control={control}
+              name="targetDeviceTypeSlug"
               label="Device type"
               options={[
                 { value: '', label: 'Any device type' },
                 ...(tree ?? []).map((node) => ({ value: node.slug, label: node.name })),
               ]}
-              value={deviceType}
-              onChange={(event) => {
-                setValue('targetDeviceTypeSlug', event.target.value);
-                // A brand belongs to a device type; keeping the old one would
-                // target a pairing that does not exist in the catalogue.
-                setValue('targetBrandSlug', '');
-              }}
+              // A brand belongs to a device type; keeping the old one would
+              // target a pairing that does not exist in the catalogue.
+              onValueChange={() => setValue('targetBrandSlug', '')}
             />
-            <Select
+            <SelectField
+              control={control}
+              name="targetBrandSlug"
               label="Brand"
               options={[
                 { value: '', label: deviceType ? 'Any brand' : 'Pick a device type first' },
                 ...brands.map((node) => ({ value: node.slug, label: node.name })),
               ]}
               disabled={!deviceType}
-              {...register('targetBrandSlug')}
             />
-            <Select
+            <SelectField
+              control={control}
+              name="targetPartType"
               label="Part type"
               options={[{ value: '', label: 'Any part type' }, ...partTypes]}
-              {...register('targetPartType')}
             />
-            <Select
+            <SelectField
+              control={control}
+              name="targetGrade"
               label="Grade"
               options={[{ value: '', label: 'Any grade' }, ...GRADE_OPTIONS]}
-              {...register('targetGrade')}
             />
           </div>
           <p className="px-1 text-[12px] text-ink-300">
@@ -390,11 +397,12 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
           <legend className="eyebrow px-1 text-ink-400">Who can use it</legend>
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <Select
+            <SelectField
+              control={control}
+              name="redemption"
               label="Redemption"
               options={REDEMPTION_OPTIONS}
               hint={code ? undefined : 'Single-use needs a promo code.'}
-              {...register('redemption')}
             />
             <Input
               label="Total redemptions"
@@ -404,7 +412,12 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
             />
           </div>
 
-          <Select label="Availability" options={ELIGIBILITY_OPTIONS} {...register('eligibility')} />
+          <SelectField
+            control={control}
+            name="eligibility"
+            label="Availability"
+            options={ELIGIBILITY_OPTIONS}
+          />
 
           {eligibility === 'accounts' && (
             <AudiencePicker
@@ -508,12 +521,12 @@ export function AdminOffersPage() {
             icon={Search}
             containerClassName="min-w-[200px] flex-1"
           />
-          <Select
+          <SelectMenu
             options={STATUS_FILTERS}
             value={status}
-            onChange={(event) => setStatus(event.target.value)}
-            aria-label="Filter by status"
-            containerClassName="w-auto"
+            onChange={setStatus}
+            srLabel="Filter by status"
+            size="md"
             className="w-[160px]"
           />
         </div>

@@ -23,7 +23,7 @@ export function Panel({ title, description, action, children, className, bodyCla
 }
 
 /** A single figure with a label — the dashboard's top row. */
-export function StatTile({ label, value, hint, tone = 'neutral', icon: Icon }) {
+export function StatTile({ label, value, hint, tone = 'neutral', icon: Icon, className }) {
   const tones = {
     neutral: 'text-ink-900',
     ok: 'text-ok',
@@ -33,7 +33,7 @@ export function StatTile({ label, value, hint, tone = 'neutral', icon: Icon }) {
   };
 
   return (
-    <div className="rounded-[14px] border border-line bg-surface p-4">
+    <div className={cn('rounded-[14px] border border-line bg-surface p-4', className)}>
       <div className="mb-2 flex items-center gap-2">
         {Icon && (
           <span className="flex size-7 items-center justify-center rounded-lg bg-surface-2 text-ink-400">

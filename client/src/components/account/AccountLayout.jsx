@@ -1,9 +1,10 @@
-import { Navigate, NavLink, Outlet } from 'react-router';
+import { Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { Clock, LogOut } from 'lucide-react';
 import cn from '@/lib/cn';
 import { ACCOUNT_NAV } from '@shared/schemas/account';
 import { accountIcon } from './accountIcons';
 import Button from '@/components/ui/Button';
+import SelectMenu from '@/components/ui/SelectMenu';
 import Skeleton from '@/components/ui/Skeleton';
 import { useAuth, useSignOut } from '@/hooks/useAuth';
 import useUiStore from '@/store/uiStore';
@@ -19,6 +20,16 @@ export function AccountLayout() {
   const { user, isLoading, isAuthenticated, isApproved, isAdmin } = useAuth();
   const signOut = useSignOut();
   const openAccount = useUiStore((s) => s.openAccount);
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  // Below lg the section list is a dropdown, not a horizontal scroller. Eight
+  // pills in a swipe strip hid half the account behind a gesture nothing on the
+  // page advertised — the two sections furthest right were effectively unreachable
+  // on a 360px phone.
+  const activeNav =
+    ACCOUNT_NAV.find((item) => item.to !== '/account' && pathname.startsWith(item.to))?.to ??
+    '/account';
 
   if (isLoading) {
     return (
@@ -92,22 +103,37 @@ export function AccountLayout() {
           aria-label="Account sections"
           className="mb-4 lg:sticky lg:top-[132px] lg:mb-0 lg:rounded-[14px] lg:border lg:border-line lg:bg-surface lg:p-2"
         >
-          {/* Horizontal scroller on small screens, sidebar from lg. */}
-          <ul className="scroll-slim flex gap-1.5 overflow-x-auto pb-1 lg:flex-col lg:gap-0.5 lg:overflow-visible lg:pb-0">
+          {/* ---- dropdown below lg ---------------------------------------- */}
+          <div className="flex items-center gap-2 lg:hidden">
+            <SelectMenu
+              srLabel="Account section"
+              size="md"
+              align="left"
+              value={activeNav}
+              onChange={(to) => navigate(to)}
+              options={ACCOUNT_NAV.map((item) => ({ value: item.to, label: item.label }))}
+              className="min-w-0 flex-1"
+            />
+            <Button variant="outline" icon={LogOut} onClick={signOut} className="shrink-0">
+              Sign out
+            </Button>
+          </div>
+
+          {/* ---- sidebar from lg ------------------------------------------ */}
+          <ul className="hidden lg:flex lg:flex-col lg:gap-0.5">
             {ACCOUNT_NAV.map((item) => {
               const Icon = accountIcon(item.icon);
               return (
-                <li key={item.key} className="shrink-0 lg:shrink">
+                <li key={item.key}>
                   <NavLink
                     to={item.to}
                     end={item.to === '/account'}
                     className={({ isActive }) =>
                       cn(
                         'flex items-center gap-2.5 whitespace-nowrap rounded-[10px] px-3 py-2.5 text-[13.5px] font-medium transition-colors',
-                        'border lg:border-0',
                         isActive
-                          ? 'border-brand-100 bg-brand-50 text-brand-700'
-                          : 'border-line bg-surface text-ink-600 hover:bg-surface-2 hover:text-ink-900 lg:bg-transparent',
+                          ? 'bg-brand-50 text-brand-700'
+                          : 'text-ink-600 hover:bg-surface-2 hover:text-ink-900',
                       )
                     }
                   >
@@ -118,11 +144,11 @@ export function AccountLayout() {
               );
             })}
 
-            <li className="shrink-0 lg:mt-2 lg:shrink lg:border-t lg:border-line lg:pt-2">
+            <li className="mt-2 border-t border-line pt-2">
               <button
                 type="button"
                 onClick={signOut}
-                className="flex w-full items-center gap-2.5 whitespace-nowrap rounded-[10px] border border-line bg-surface px-3 py-2.5 text-[13.5px] font-medium text-ink-500 transition-colors hover:bg-danger-50 hover:text-danger lg:border-0 lg:bg-transparent"
+                className="flex w-full items-center gap-2.5 whitespace-nowrap rounded-[10px] px-3 py-2.5 text-[13.5px] font-medium text-ink-500 transition-colors hover:bg-danger-50 hover:text-danger"
               >
                 <LogOut className="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
                 Sign out

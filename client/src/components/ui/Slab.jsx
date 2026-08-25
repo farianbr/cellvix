@@ -8,15 +8,17 @@ import Reveal from '@/components/motion/Reveal';
  * column: each section owns its own ground, so a run of light panels can be
  * broken by a dark one without any section needing a background of its own.
  *
- * Tones: `light` is the default; `dark` is solid `ink-900`, deliberately NOT a
- * second gradient — a page gets one gradient block and that is the CTA
- * (PROJECT_INSTRUCTIONS.md §2.2).
+ * Tones: `light` is the default; `dark` is solid `ink-deep` — the logo black
+ * warmed ~12% toward the brand red, so the inverted band reads as Cellvix and
+ * not as a generic black box. It is deliberately NOT a second gradient: a page
+ * gets one gradient block and that is the CTA (PROJECT_INSTRUCTIONS.md §2.2).
+ * The single hairline of brand along its top edge is the only accent it takes.
  */
 
 const TONES = {
   light: 'bg-surface border border-line',
   muted: 'bg-surface-2 border border-line',
-  dark: 'bg-ink-900 text-white',
+  dark: 'relative bg-ink-deep text-white',
   gradient: 'bg-brand-gradient text-white',
 };
 
@@ -30,6 +32,15 @@ export function Slab({ tone = 'light', className, innerClassName, children, ...p
       )}
       {...props}
     >
+      {/* A 3px rule of the gradient across the top edge — the "thin top rule"
+          §2.2 allows. It is what ties the inverted slab to the brand without
+          filling anything. */}
+      {tone === 'dark' && (
+        <span
+          className="rule-brand-gradient absolute inset-x-0 top-0 h-0.75"
+          aria-hidden="true"
+        />
+      )}
       <div className={cn('mx-auto max-w-[1180px]', innerClassName)}>{children}</div>
     </section>
   );

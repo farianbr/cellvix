@@ -16,7 +16,7 @@ import { money, date, count as formatCount } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
-import Select from '@/components/ui/Select';
+import SelectField from '@/components/ui/SelectField';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Skeleton from '@/components/ui/Skeleton';
@@ -44,7 +44,7 @@ const TABS = [
  * same decision, made from the same information.
  */
 function ApproveForm({ user, onSubmit, onCancel, isPending, error }) {
-  const { register, handleSubmit, watch } = useForm({
+  const { register, handleSubmit, watch, control } = useForm({
     defaultValues: {
       creditLimitDollars: 5000,
       terms: 'net30',
@@ -99,7 +99,7 @@ function ApproveForm({ user, onSubmit, onCancel, isPending, error }) {
           disabled={terms === 'prepaid'}
           {...register('creditLimitDollars')}
         />
-        <Select label="Payment terms" options={TERMS} {...register('terms')} />
+        <SelectField control={control} name="terms" label="Payment terms" options={TERMS} />
       </div>
 
       <fieldset className="rounded-[11px] border border-line p-3.5">

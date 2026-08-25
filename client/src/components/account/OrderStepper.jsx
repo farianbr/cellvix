@@ -35,17 +35,51 @@ export function OrderStepper({ order, className }) {
   const reachedIndex = ORDER_STATUSES.findIndex((step) => step.value === order.status);
   const byStatus = new Map((order.timeline ?? []).map((entry) => [entry.status, entry]));
 
+  const stateFor = (index) =>
+    index < reachedIndex ? 'completed' : index === reachedIndex ? 'active' : 'upcoming';
+  const labelTone = (index) =>
+    index === reachedIndex ? 'text-ink-900' : index < reachedIndex ? 'text-ok' : 'text-ink-300';
+
   return (
     <div className={className}>
-      {/* ---- visual stepper ---------------------------------------------
+      {/* ---- vertical stepper below sm ----------------------------------
+          Five fixed-width steps and four connectors need ~420px. A 320px phone
+          got a clipped track with the last status off the edge, so the small
+          screen runs the same steps down the page instead — where there is
+          room for the timestamp beside each one. */}
+      <ol className="sm:hidden" aria-label="Order progress">
+        {ORDER_STATUSES.map((step, index) => {
+          const entry = byStatus.get(step.value);
+          const last = index === ORDER_STATUSES.length - 1;
+
+          return (
+            <li key={step.value} className="flex gap-3">
+              <div className="flex flex-col items-center self-stretch">
+                <StepIndicator state={stateFor(index)} index={index + 1} size="sm" />
+                {!last && (
+                  <StepConnector vertical complete={index < reachedIndex} className="my-1 min-h-5" />
+                )}
+              </div>
+
+              <div className={cn('min-w-0 flex-1', last ? 'pb-0' : 'pb-4')}>
+                <p className={cn('font-display text-[13px] font-bold leading-none', labelTone(index))}>
+                  {step.label}
+                </p>
+                {entry && (
+                  <p className="tnum mt-1 text-[11.5px] text-ink-400">{dateTime(entry.at)}</p>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+
+      {/* ---- horizontal stepper from sm ---------------------------------
           Connectors live BETWEEN list items, never inside them — drawing one on
           each side of every indicator double-renders the segment and leaves a
           visible seam in the middle of each run. */}
-      <ol className="flex items-start" aria-label="Order progress">
+      <ol className="hidden items-start sm:flex" aria-label="Order progress">
         {ORDER_STATUSES.map((step, index) => {
-          const isDone = index < reachedIndex;
-          const isCurrent = index === reachedIndex;
-          const state = isDone ? 'completed' : isCurrent ? 'active' : 'upcoming';
           const entry = byStatus.get(step.value);
 
           return (
@@ -54,20 +88,20 @@ export function OrderStepper({ order, className }) {
                 <StepConnector complete={index <= reachedIndex} className="mt-4 min-w-4 flex-1" />
               )}
 
-              <li className="flex w-[74px] shrink-0 flex-col items-center sm:w-[104px]">
-                <StepIndicator state={state} index={index + 1} size="md" />
+              <li className="flex w-26 shrink-0 flex-col items-center">
+                <StepIndicator state={stateFor(index)} index={index + 1} size="md" />
 
                 <p
                   className={cn(
-                    'mt-2 text-center font-display text-[11px] font-bold leading-tight sm:text-[12.5px]',
-                    isCurrent ? 'text-ink-900' : isDone ? 'text-ok' : 'text-ink-300',
+                    'mt-2 text-center font-display text-[12.5px] font-bold leading-tight',
+                    labelTone(index),
                   )}
                 >
                   {step.label}
                 </p>
 
                 {entry && (
-                  <p className="tnum mt-0.5 hidden text-center text-[11px] text-ink-400 sm:block">
+                  <p className="tnum mt-0.5 text-center text-[11px] text-ink-400">
                     {dateTime(entry.at)}
                   </p>
                 )}
@@ -85,7 +119,10 @@ export function OrderStepper({ order, className }) {
           {[...(order.timeline ?? [])].reverse().map((entry, index) => {
             const step = ORDER_STATUSES.find((s) => s.value === entry.status);
             return (
-              <li key={`${entry.status}-${entry.at}`} className="flex gap-3 px-4 py-3">
+              <li
+                key={`${entry.status}-${entry.at}`}
+                className="flex flex-wrap gap-x-3 gap-y-1 px-4 py-3 sm:flex-nowrap"
+              >
                 <span
                   className={cn(
                     'mt-1.5 size-2 shrink-0 rounded-full',
@@ -99,7 +136,7 @@ export function OrderStepper({ order, className }) {
                   </p>
                   {entry.note && <p className="mt-0.5 text-[12.5px] text-ink-500">{entry.note}</p>}
                 </div>
-                <p className="tnum shrink-0 text-right text-[12px] text-ink-400">
+                <p className="tnum w-full shrink-0 pl-5 text-[12px] text-ink-400 sm:w-auto sm:pl-0 sm:text-right">
                   {dateTime(entry.at)}
                 </p>
               </li>

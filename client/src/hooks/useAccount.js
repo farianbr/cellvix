@@ -59,6 +59,20 @@ export function useStoreCredit() {
   });
 }
 
+/**
+ * Line-of-credit movements — the draws and repayments behind the balance.
+ * Separate from useStoreCredit: two instruments, two statements.
+ */
+export function useCreditActivity() {
+  const { isApproved } = useAuth();
+  return useQuery({
+    queryKey: ['credit-activity'],
+    queryFn: () => api.get('/account/credit-activity'),
+    enabled: isApproved,
+    staleTime: 60 * 1000,
+  });
+}
+
 export function useSavedCarts() {
   const { isApproved } = useAuth();
   return useQuery({

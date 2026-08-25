@@ -6,7 +6,7 @@ import { money, date, count as formatCount } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
-import Select from '@/components/ui/Select';
+import SelectField from '@/components/ui/SelectField';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Skeleton from '@/components/ui/Skeleton';
@@ -130,7 +130,7 @@ function CustomerDetail({ id, onClose }) {
   // `values` (not `defaultValues`) because the account arrives after first
   // render — defaults would snapshot an empty user and the form would show
   // a zero credit limit for an account that has one.
-  const { register, handleSubmit } = useForm({
+  const { register, handleSubmit, control } = useForm({
     values: {
       creditLimitDollars: user ? (user.creditLimit / 100).toFixed(0) : '',
       terms: user?.terms ?? 'prepaid',
@@ -184,7 +184,7 @@ function CustomerDetail({ id, onClose }) {
 
         <div className="grid gap-3 sm:grid-cols-2">
           <Input label="Credit limit" inputMode="numeric" suffix="CAD" {...register('creditLimitDollars')} />
-          <Select label="Terms" options={TERMS} {...register('terms')} />
+          <SelectField control={control} name="terms" label="Terms" options={TERMS} />
         </div>
 
         <p className="tnum mt-2.5 text-[12.5px] text-ink-500">

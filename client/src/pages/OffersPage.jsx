@@ -327,64 +327,89 @@ function ComboCard({ offer, onAdd, addState }) {
           {offer.subtitle && <p className="mt-1 text-[13px] text-ink-400">{offer.subtitle}</p>}
         </div>
 
+        {/* Deliberately NOT the gradient: the gradient on this card belongs to
+            the "Add bundle" CTA in the footer, and a second gradient block up
+            here made the badge read as a button you could press. A tinted
+            outline pill states the same number and stays a label. */}
         {!gated && offer.savingsPercent > 0 && (
-          <span className="shrink-0 rounded-[10px] bg-brand-gradient px-3 py-2 text-center text-white">
-            <span className="block font-display text-[17px] font-extrabold leading-none">
+          <span className="inline-flex shrink-0 items-baseline gap-1 rounded-full border border-brand-100 bg-brand-50 py-1.5 pl-2.5 pr-3 text-brand-700">
+            <span className="tnum font-display text-[15px] font-extrabold leading-none tracking-tight">
               −{offer.savingsPercent}%
             </span>
-            <span className="eyebrow mt-1 block opacity-80">Bundle</span>
+            {/* Full-strength brand-700, not a faded one: at 11px an opacity of
+                0.7 over `brand-50` drops under 4.5:1 and fails the audit. The
+                11px uppercase against the 15px figure is difference enough. */}
+            <span className="eyebrow leading-none">off</span>
           </span>
         )}
       </header>
 
-      {/* ---- the equation ------------------------------------------------- */}
-      {/* Parts, plus, parts, equals one price. A stacked list would say the same
-          thing and none of it at a glance. */}
-      <div className="scroll-slim flex items-start gap-2 overflow-x-auto border-y border-line bg-surface-2 px-4 py-4 sm:px-5">
-        <ul className="flex items-start gap-2">
-          {(offer.products ?? []).map((line, index) => (
-            <li key={line.id} className="flex items-start gap-2">
-              {index > 0 && (
-                <span className="mt-7 shrink-0 text-ink-300" aria-hidden="true">
-                  <Plus className="size-4" strokeWidth={2.5} />
+      {/* ---- the equation -------------------------------------------------
+          Parts, plus, parts, equals one price — a stacked list would say the
+          same thing and none of it at a glance.
+
+          The row is centred rather than left-aligned: a two-part combo beside a
+          three-part one used to line up against the left edge with a ragged
+          gap on the right, and the equation is a composition, not a column.
+
+          On a phone it stops being one row. Three 92px parts plus the operators
+          cannot fit 320px, and the price is the one thing in the card that must
+          never be the part scrolled off the edge — so below `sm` the parts wrap
+          and the price sits under them behind a rule, with the `=` dropped
+          because a stacked equals sign reads as a mistake. From `sm` the single
+          row returns; if a long combo still outruns it there, the row scrolls
+          and `w-max` with auto margins keeps the first part reachable at the
+          left edge (a `justify-center` on the scroller would strand it). */}
+      <div className="scroll-slim border-y border-line bg-surface-2 px-4 py-4 sm:overflow-x-auto sm:px-5">
+        <div className="flex flex-col items-center gap-3 sm:mx-auto sm:w-max sm:flex-row sm:items-start sm:gap-2">
+          <ul className="flex flex-wrap items-start justify-center gap-2 sm:flex-nowrap">
+            {(offer.products ?? []).map((line, index) => (
+              <li key={line.id} className="flex items-start gap-2">
+                {index > 0 && (
+                  <span className="mt-7 shrink-0 text-ink-300" aria-hidden="true">
+                    <Plus className="size-4" strokeWidth={2.5} />
+                  </span>
+                )}
+                <ComboPart line={line} gated={gated} />
+              </li>
+            ))}
+          </ul>
+
+          <span
+            className="mt-7 hidden shrink-0 font-display text-[18px] font-bold text-ink-300 sm:block"
+            aria-hidden="true"
+          >
+            =
+          </span>
+
+          <div className="w-full shrink-0 border-t border-line pt-3 text-center sm:mt-4 sm:w-auto sm:border-0 sm:pl-1 sm:pt-0">
+            {gated ? (
+              <button
+                type="button"
+                onClick={() => openAccount('signin')}
+                className="inline-flex items-center gap-2 rounded-[10px] border border-line bg-surface px-3 py-2.5 text-left transition-colors hover:border-brand"
+              >
+                <Lock className="size-4 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
+                <span className="text-[12.5px] font-semibold leading-tight text-ink-700">
+                  {isAuthenticated ? 'Pending approval' : 'Sign in for'}
+                  <br />
+                  bundle pricing
                 </span>
-              )}
-              <ComboPart line={line} gated={gated} />
-            </li>
-          ))}
-        </ul>
-
-        <span className="mt-7 shrink-0 font-display text-[18px] font-bold text-ink-300" aria-hidden="true">
-          =
-        </span>
-
-        <div className="mt-4 shrink-0 pl-1">
-          {gated ? (
-            <button
-              type="button"
-              onClick={() => openAccount('signin')}
-              className="inline-flex items-center gap-2 rounded-[10px] border border-line bg-surface px-3 py-2.5 text-left transition-colors hover:border-brand"
-            >
-              <Lock className="size-4 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
-              <span className="text-[12.5px] font-semibold leading-tight text-ink-700">
-                {isAuthenticated ? 'Pending approval' : 'Sign in for'}
-                <br />
-                bundle pricing
-              </span>
-            </button>
-          ) : (
-            <>
-              <span className="tnum block font-display text-[26px] font-extrabold leading-none tracking-tight text-ink-900">
-                {money(offer.bundlePrice)}
-              </span>
-              <span className="tnum mt-1 block text-[12px] text-ink-300 line-through">
-                {money(offer.regularTotal)}
-              </span>
-              <span className="tnum mt-0.5 block text-[12px] font-semibold text-ok">
-                Save {money(offer.savings)}
-              </span>
-            </>
-          )}
+              </button>
+            ) : (
+              <>
+                <span className="tnum block font-display text-[26px] font-extrabold leading-none tracking-tight text-ink-900">
+                  {money(offer.bundlePrice)}
+                </span>
+                <span className="tnum mt-1 block text-[12px] text-ink-300 line-through">
+                  {money(offer.regularTotal)}
+                </span>
+                <span className="tnum mt-0.5 block text-[12px] font-semibold text-ok">
+                  Save {money(offer.savings)}
+                </span>
+              </>
+            )}
+          </div>
         </div>
       </div>
 

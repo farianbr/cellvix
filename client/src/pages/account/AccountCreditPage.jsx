@@ -1,27 +1,14 @@
-import { useState } from 'react';
-import { Link } from 'react-router';
-import {
-  ArrowRight,
-  ArrowDownLeft,
-  ArrowUpRight,
-  Check,
-  Plus,
-  Wallet,
-  WalletCards,
-} from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, Wallet } from 'lucide-react';
 import cn from '@/lib/cn';
-import { money, date } from '@/lib/format';
+import { money, moneyCompact, date } from '@/lib/format';
 import Panel, { StatTile } from '@/components/ui/Panel';
 import Skeleton from '@/components/ui/Skeleton';
-import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import { InvoiceStatusBadge } from '@/components/account/OrderStatusBadge';
 import {
-  useAccountMutations,
-  useAccountSummary,
-  useInvoices,
-  useStoreCredit,
-} from '@/hooks/useAccount';
+  StoreCreditCard,
+  RechargeForm,
+  StoreCreditActivity,
+} from '@/components/account/StoreCredit';
+import { useAccountSummary, useCreditActivity, useStoreCredit } from '@/hooks/useAccount';
 
 const TERMS_COPY = {
   prepaid: 'Payment is taken at checkout. No credit is extended on this account.',
@@ -31,87 +18,45 @@ const TERMS_COPY = {
 };
 
 /**
- * How each kind of movement reads on the statement. The buyer does not care
- * what the type is called in the database — they care whether money arrived and
- * why.
+ * A single movement on the line of credit: an order drawing against the limit,
+ * or a payment retiring part of it.
  */
-const MOVEMENTS = {
-  refund: { label: 'Refund', icon: ArrowDownLeft },
-  recharge: { label: 'Top-up', icon: Plus },
-  grant: { label: 'Added by Cellvix', icon: ArrowDownLeft },
-  adjustment: { label: 'Adjustment', icon: ArrowUpRight },
-  redemption: { label: 'Applied to order', icon: ArrowUpRight },
-};
-
-const TOP_UPS = [250, 500, 1000];
-
-/** Prepay and hold the money as store credit. */
-function RechargeForm({ onDone }) {
-  const { rechargeStoreCredit } = useAccountMutations();
-  const [amount, setAmount] = useState('500');
-
-  const dollars = Number(amount);
-  const invalid = !Number.isFinite(dollars) || dollars < 25 || dollars > 25_000;
+function CreditActivityRow({ entry }) {
+  const drawn = entry.type === 'draw';
+  const Icon = drawn ? ArrowUpRight : ArrowDownLeft;
 
   return (
-    <form
-      onSubmit={(event) => {
-        event.preventDefault();
-        if (invalid) return;
-        rechargeStoreCredit.mutate(
-          { amountDollars: dollars },
-          { onSuccess: () => onDone?.() },
-        );
-      }}
-      className="rounded-[14px] border border-line bg-surface-2 p-4"
-    >
-      <p className="font-display text-[13.5px] font-bold text-ink-900">Add funds</p>
-      <p className="mt-1 text-[12.5px] leading-relaxed text-ink-500">
-        Prepay now and the balance comes off your next order automatically. Minimum $25.
-      </p>
+    <li className="flex items-center gap-3 bg-surface px-4 py-3">
+      <span
+        className={cn(
+          'flex size-8 shrink-0 items-center justify-center rounded-full',
+          drawn ? 'bg-surface-3 text-ink-500' : 'bg-ok-50 text-ok',
+        )}
+        aria-hidden="true"
+      >
+        <Icon className="size-4" strokeWidth={2} />
+      </span>
 
-      <div className="mt-3 flex flex-wrap gap-1.5">
-        {TOP_UPS.map((value) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => setAmount(String(value))}
-            className={cn(
-              'tnum h-9 rounded-full border px-3.5 text-[13px] font-medium transition-colors',
-              Number(amount) === value
-                ? 'border-brand bg-brand-50 text-brand-700'
-                : 'border-line bg-surface text-ink-500 hover:border-line-strong',
-            )}
-          >
-            {money(value * 100)}
-          </button>
-        ))}
-      </div>
-
-      <div className="mt-3 flex flex-wrap items-end gap-2">
-        <Input
-          label="Amount"
-          inputMode="decimal"
-          suffix="CAD"
-          value={amount}
-          onChange={(event) => setAmount(event.target.value)}
-          containerClassName="max-w-[180px]"
-        />
-        <Button type="submit" loading={rechargeStoreCredit.isPending} disabled={invalid}>
-          Add funds
-        </Button>
-      </div>
-
-      {rechargeStoreCredit.isError && (
-        <p className="mt-2.5 text-[12.5px] text-danger">{rechargeStoreCredit.error.message}</p>
-      )}
-      {rechargeStoreCredit.isSuccess && (
-        <p className="mt-2.5 flex items-center gap-1.5 text-[12.5px] text-ok">
-          <Check className="size-3.5" strokeWidth={2.5} aria-hidden="true" />
-          {rechargeStoreCredit.data.message}
+      <div className="min-w-0 flex-1">
+        <p className="text-[13px] font-medium text-ink-900">
+          {drawn ? 'Drawn on terms' : 'Payment received'}
         </p>
-      )}
-    </form>
+        <p className="mt-0.5 truncate text-[12px] text-ink-500">{entry.note}</p>
+      </div>
+
+      <div className="shrink-0 text-right">
+        <p
+          className={cn(
+            'tnum font-display text-[13.5px] font-bold',
+            drawn ? 'text-ink-900' : 'text-ok',
+          )}
+        >
+          {drawn ? '−' : '+'}
+          {money(Math.abs(entry.amount))}
+        </p>
+        <p className="mt-0.5 text-[11.5px] text-ink-400">{date(entry.at)}</p>
+      </div>
+    </li>
   );
 }
 
@@ -126,20 +71,21 @@ function RechargeForm({ onDone }) {
  *
  * They were one "credit" number before, which meant a refund and a credit limit
  * looked like the same thing on the dashboard. They are not.
+ *
+ * The invoice statement is deliberately NOT repeated here — it is the whole of
+ * the invoices page, and two copies of the same list drift.
  */
 export function AccountCreditPage() {
   const { data: summary, isLoading } = useAccountSummary();
-  const { data: invoiceData } = useInvoices();
   const { data: creditData, isLoading: creditLoading } = useStoreCredit();
+  const { data: activity, isLoading: activityLoading } = useCreditActivity();
 
   if (isLoading || !summary) {
     return (
       <div className="space-y-4">
-        <div className="grid gap-3 sm:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, index) => (
-            // eslint-disable-next-line react/no-array-index-key
-            <Skeleton key={index} className="h-28" />
-          ))}
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,290px)_minmax(0,1fr)]">
+          <Skeleton className="h-48" />
+          <Skeleton className="h-48" />
         </div>
         <Skeleton className="h-56" />
       </div>
@@ -150,123 +96,42 @@ export function AccountCreditPage() {
   const tone = credit.utilisation >= 85 ? 'danger' : credit.utilisation >= 60 ? 'warn' : 'ok';
   const storeCredit = creditData?.balance ?? summary.storeCredit ?? 0;
   const movements = creditData?.transactions ?? [];
-
-  const ledger = invoiceData?.invoices ?? [];
+  const entries = activity?.entries ?? [];
 
   return (
     <div className="space-y-4">
-      {/* ---- store credit -------------------------------------------------- */}
-      <Panel
-        title="Store credit"
-        description="Money you hold with Cellvix. It comes off your next order automatically."
-      >
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,260px)_minmax(0,1fr)] lg:gap-6">
-          <div className="rounded-[14px] bg-brand-gradient p-5 text-white">
-            <span className="flex size-10 items-center justify-center rounded-[11px] bg-white/15">
-              <WalletCards className="size-5" strokeWidth={1.75} aria-hidden="true" />
-            </span>
-            <p className="tnum mt-4 font-display text-[34px] font-bold leading-none">
-              {money(storeCredit)}
-            </p>
-            <p className="mt-2 text-[12.5px] text-white/75">Available to spend</p>
-
-            {creditData && (creditData.added > 0 || creditData.spent > 0) && (
-              <dl className="mt-4 grid grid-cols-2 gap-2 border-t border-white/20 pt-3 text-[12px]">
-                <div>
-                  <dt className="text-white/65">Added</dt>
-                  <dd className="tnum mt-0.5 font-medium">{money(creditData.added)}</dd>
-                </div>
-                <div>
-                  <dt className="text-white/65">Used</dt>
-                  <dd className="tnum mt-0.5 font-medium">{money(creditData.spent)}</dd>
-                </div>
-              </dl>
-            )}
-          </div>
-
-          <RechargeForm />
-        </div>
-
-        {/* ---- movements ---------------------------------------------------- */}
-        <div className="mt-5">
-          <p className="eyebrow mb-2.5 text-ink-400">Credit activity</p>
-
-          {creditLoading ? (
-            <div className="space-y-2">
-              {Array.from({ length: 3 }).map((_, index) => (
-                // eslint-disable-next-line react/no-array-index-key
-                <Skeleton key={index} className="h-12" />
-              ))}
-            </div>
-          ) : movements.length === 0 ? (
-            <p className="rounded-[12px] bg-surface-2 px-4 py-6 text-center text-[13px] text-ink-400">
-              No store credit on this account yet. Refunds, top-ups and anything your rep allocates
-              will show here.
-            </p>
-          ) : (
-            <ul className="divide-y divide-line overflow-hidden rounded-[12px] border border-line">
-              {movements.map((row) => {
-                const meta = MOVEMENTS[row.type] ?? MOVEMENTS.adjustment;
-                const Icon = meta.icon;
-                const added = row.amount > 0;
-
-                return (
-                  <li key={row.id} className="flex items-center gap-3 bg-surface px-4 py-3">
-                    <span
-                      className={cn(
-                        'flex size-8 shrink-0 items-center justify-center rounded-full',
-                        added ? 'bg-ok-50 text-ok' : 'bg-surface-3 text-ink-500',
-                      )}
-                      aria-hidden="true"
-                    >
-                      <Icon className="size-4" strokeWidth={2} />
-                    </span>
-
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[13px] font-medium text-ink-900">{meta.label}</p>
-                      <p className="mt-0.5 truncate text-[12px] text-ink-500">
-                        {row.note}
-                        {row.orderNumber ? ` · ${row.orderNumber}` : ''}
-                      </p>
-                    </div>
-
-                    <div className="shrink-0 text-right">
-                      <p
-                        className={cn(
-                          'tnum font-display text-[13.5px] font-bold',
-                          added ? 'text-ok' : 'text-ink-900',
-                        )}
-                      >
-                        {added ? '+' : '−'}
-                        {money(Math.abs(row.amount))}
-                      </p>
-                      <p className="mt-0.5 text-[11.5px] text-ink-400">{date(row.createdAt)}</p>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
-      </Panel>
-
-      {/* ---- line of credit ------------------------------------------------ */}
-      <div className="grid gap-3 sm:grid-cols-3">
-        <StatTile label="Credit limit" value={money(credit.limit)} icon={Wallet} />
-        <StatTile
-          label="Current balance"
-          value={money(credit.balance)}
-          hint="Drawn against your limit"
-          tone={tone === 'ok' ? 'neutral' : tone}
+      {/* ---- the two balances, side by side ------------------------------
+          Both instruments at the top of the page, because "how much can I
+          spend" is the question this page exists to answer. The gradient card
+          is the money already held; the tiles are the money lent. */}
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,290px)_minmax(0,1fr)]">
+        <StoreCreditCard
+          balance={storeCredit}
+          added={creditData?.added ?? 0}
+          spent={creditData?.spent ?? 0}
         />
-        <StatTile
-          label="Available"
-          value={money(credit.available)}
-          hint={`${credit.utilisation}% of limit used`}
-          tone={credit.available > 0 ? 'ok' : 'danger'}
-        />
+
+        {/* Two up on a phone rather than a three-tile stack the buyer scrolls
+            past to reach anything else. */}
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
+          <StatTile label="Credit limit" value={moneyCompact(credit.limit)} icon={Wallet} />
+          <StatTile
+            label="Current balance"
+            value={moneyCompact(credit.balance)}
+            hint="Drawn against your limit"
+            tone={tone === 'ok' ? 'neutral' : tone}
+          />
+          <StatTile
+            label="Available"
+            value={moneyCompact(credit.available)}
+            hint={`${credit.utilisation}% of limit used`}
+            tone={credit.available > 0 ? 'ok' : 'danger'}
+            className="col-span-2 lg:col-span-1"
+          />
+        </div>
       </div>
 
+      {/* ---- line of credit ---------------------------------------------- */}
       <Panel
         title="Line of credit"
         description="What Cellvix extends to this account, and how much of it is drawn."
@@ -306,51 +171,50 @@ export function AccountCreditPage() {
         </div>
       </Panel>
 
+      {/* ---- line of credit activity ------------------------------------- */}
       <Panel
-        title="Statement"
-        description="Every invoice on this account, newest first."
-        action={
-          <Link
-            to="/account/invoices"
-            className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-brand hover:text-brand-700"
-          >
-            Full invoice view
-            <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
-          </Link>
-        }
-        flush
+        title="Line of credit activity"
+        description="Orders that drew against the limit, and the payments that retired them."
       >
-        {ledger.length === 0 ? (
-          <p className="px-5 py-10 text-center text-[13px] text-ink-400">
-            No activity on this account yet.
+        {activityLoading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <Skeleton key={index} className="h-12" />
+            ))}
+          </div>
+        ) : entries.length === 0 ? (
+          <p className="rounded-[12px] bg-surface-2 px-4 py-6 text-center text-[13px] text-ink-400">
+            {credit.limit > 0
+              ? 'Nothing drawn against your limit yet. Orders placed on terms will appear here.'
+              : 'No line of credit on this account. Ask your rep about trade terms.'}
           </p>
         ) : (
-          <ul className="divide-y divide-line">
-            {ledger.map((invoice) => (
-              <li key={invoice.number} className="flex items-center gap-3 px-4 py-3 sm:px-5">
-                <div className="min-w-0 flex-1">
-                  <p className="font-mono text-[12.5px] font-medium text-ink-900">
-                    {invoice.number}
-                  </p>
-                  <p className="mt-0.5 text-[12px] text-ink-500">
-                    Issued {date(invoice.issuedAt)} · due {date(invoice.dueDate)}
-                  </p>
-                </div>
+          <>
+            <ul className="divide-y divide-line overflow-hidden rounded-[12px] border border-line">
+              {entries.map((entry) => (
+                <CreditActivityRow key={entry.id} entry={entry} />
+              ))}
+            </ul>
 
-                <InvoiceStatusBadge status={invoice.status} size="sm" />
-
-                <div className="w-24 shrink-0 text-right">
-                  <p className="tnum font-display text-[13.5px] font-bold text-ink-900">
-                    {money(invoice.amount)}
-                  </p>
-                  {invoice.balance > 0 && (
-                    <p className="tnum text-[11.5px] text-warn">{money(invoice.balance)} due</p>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ul>
+            <div className="tnum mt-3 flex flex-wrap justify-between gap-2 text-[12.5px] text-ink-500">
+              <span>{money(activity.drawn)} drawn</span>
+              <span>{money(activity.repaid)} repaid</span>
+            </div>
+          </>
         )}
+      </Panel>
+
+      {/* ---- store credit ------------------------------------------------- */}
+      <Panel
+        title="Store credit"
+        description="Money you hold with Cellvix. It comes off your next order automatically."
+      >
+        <RechargeForm />
+
+        <div className="mt-5">
+          <p className="eyebrow mb-2.5 text-ink-400">Store credit activity</p>
+          <StoreCreditActivity movements={movements} isLoading={creditLoading} />
+        </div>
       </Panel>
     </div>
   );

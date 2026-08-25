@@ -22,7 +22,7 @@ import api from '@/lib/api';
 import { BUSINESS_INFO } from '@/lib/constants';
 import { contactSchema, CONTACT_TOPICS } from '@shared/schemas/contact';
 import Input from '@/components/ui/Input';
-import Select from '@/components/ui/Select';
+import SelectField from '@/components/ui/SelectField';
 import Textarea from '@/components/ui/Textarea';
 import Button from '@/components/ui/Button';
 import Slab, { EyebrowPill, SectionHeader } from '@/components/ui/Slab';
@@ -181,6 +181,7 @@ export function ContactPage() {
     handleSubmit,
     watch,
     reset,
+    control,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(contactSchema),
@@ -237,7 +238,12 @@ export function ContactPage() {
           </p>
         </motion.div>
 
-        <ul className="mt-10 grid gap-2 sm:grid-cols-3 lg:mt-14">
+        {/* On a phone these were three stacked 150px-tall blocks — a lot of
+            page spent restating three contact details. Below `sm` each one is a
+            compact row instead: the icon holds the left edge and the label,
+            value and hint sit beside it. From `sm` the three-up grid takes
+            over and the card goes back to its stacked, taller shape. */}
+        <ul className="mt-8 grid gap-2 sm:grid-cols-3 lg:mt-14">
           {CHANNELS.map(({ icon: Icon, label, value, hint, href }, index) => (
             <Reveal key={label} delay={index * 0.08} as="li">
               {/* The same two-element pill the FAQ rows use: a 2px edge that
@@ -245,21 +251,25 @@ export function ContactPage() {
                   not move. */}
               <a
                 href={href}
-                className="group block h-full rounded-[24px] bg-line p-[2px] transition-[background-color,background-image] duration-200 hover:bg-brand-gradient"
+                className="group block h-full rounded-[18px] bg-line p-[2px] transition-[background-color,background-image] duration-200 hover:bg-brand-gradient sm:rounded-[24px]"
               >
-                <span className="flex h-full flex-col rounded-[22px] bg-surface p-5 transition-shadow duration-200 group-hover:shadow-card">
+                <span className="flex h-full items-center gap-3.5 rounded-[16px] bg-surface p-3.5 transition-shadow duration-200 group-hover:shadow-card sm:flex-col sm:items-stretch sm:gap-0 sm:rounded-[22px] sm:p-5">
                   <span
-                    className="mb-4 flex size-11 items-center justify-center rounded-[12px] bg-surface-2 text-ink-500 transition-colors group-hover:bg-brand group-hover:text-white"
+                    className="flex size-10 shrink-0 items-center justify-center rounded-[12px] bg-surface-2 text-ink-500 transition-colors group-hover:bg-brand group-hover:text-white sm:mb-4 sm:size-11"
                     aria-hidden="true"
                   >
                     <Icon className="size-5" strokeWidth={1.75} />
                   </span>
 
-                  <span className="eyebrow text-ink-400">{label}</span>
-                  <span className="mt-2 block truncate font-display text-[16px] font-bold text-ink-900">
-                    {value}
+                  <span className="min-w-0 flex-1">
+                    <span className="eyebrow block text-ink-400">{label}</span>
+                    <span className="mt-1 block truncate font-display text-[15px] font-bold text-ink-900 sm:mt-2 sm:text-[16px]">
+                      {value}
+                    </span>
+                    <span className="mt-0.5 block text-[12.5px] leading-relaxed text-ink-400 sm:mt-1.5 sm:text-[13px]">
+                      {hint}
+                    </span>
                   </span>
-                  <span className="mt-1.5 text-[13px] leading-relaxed text-ink-400">{hint}</span>
                 </span>
               </a>
             </Reveal>
@@ -325,10 +335,11 @@ export function ContactPage() {
                     <Input label="Phone" type="tel" placeholder="Optional" {...register('phone')} />
                   </div>
 
-                  <Select
+                  <SelectField
+                    control={control}
+                    name="topic"
                     label="What is this about?"
                     options={CONTACT_TOPICS}
-                    {...register('topic')}
                   />
 
                   {/* Only asked for when it is actually relevant. */}

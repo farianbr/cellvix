@@ -8,12 +8,13 @@ import { paymentMethodSchema } from '@shared/schemas/account';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
-import Select from '@/components/ui/Select';
+import SelectField from '@/components/ui/SelectField';
 import Checkbox from '@/components/ui/Checkbox';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import { StoreCreditCard, RechargeForm } from '@/components/account/StoreCredit';
 import { useAuth } from '@/hooks/useAuth';
-import { useAccountMutations, useAccountSummary } from '@/hooks/useAccount';
+import { useAccountMutations, useAccountSummary, useStoreCredit } from '@/hooks/useAccount';
 
 const BRANDS = [
   { value: 'Visa', label: 'Visa' },
@@ -24,6 +25,7 @@ const BRANDS = [
 export function AccountPaymentMethodsPage() {
   const { user } = useAuth();
   const { data: summary } = useAccountSummary();
+  const { data: creditData } = useStoreCredit();
   const { addPaymentMethod, removePaymentMethod } = useAccountMutations();
   const [adding, setAdding] = useState(false);
 
@@ -31,6 +33,7 @@ export function AccountPaymentMethodsPage() {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(paymentMethodSchema),
@@ -123,6 +126,25 @@ export function AccountPaymentMethodsPage() {
         )}
       </Panel>
 
+      {/* ---- store credit ------------------------------------------------
+          A payment method in every sense that matters here: it settles an order
+          at checkout before a card is asked for anything. It belongs on the page
+          a buyer opens to answer "what can this account pay with". The statement
+          behind it stays on the credit page. */}
+      <Panel
+        title="Store credit"
+        description="Applied automatically at checkout, before any card is charged."
+      >
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,260px)_minmax(0,1fr)] lg:gap-6">
+          <StoreCreditCard
+            balance={creditData?.balance ?? summary?.storeCredit ?? 0}
+            added={creditData?.added ?? 0}
+            spent={creditData?.spent ?? 0}
+          />
+          <RechargeForm />
+        </div>
+      </Panel>
+
       {termsEnabled && (
         <Panel title="Trade terms">
           <div className="flex items-start gap-3">
@@ -151,7 +173,7 @@ export function AccountPaymentMethodsPage() {
 
       <Modal open={adding} onClose={() => setAdding(false)} title="Add a card" size="sm">
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <Select label="Card brand" options={BRANDS} {...register('brand')} />
+          <SelectField control={control} name="brand" label="Card brand" options={BRANDS} />
 
           <Input
             label="Last four digits"

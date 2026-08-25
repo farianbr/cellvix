@@ -20,7 +20,10 @@ export function Badge({ tone = 'neutral', size = 'md', icon: Icon, className, ch
   return (
     <span
       className={cn(
-        'eyebrow inline-flex items-center rounded-full border',
+        // A pill is a fixed-height shape: let the label wrap and the second
+        // line renders outside the border. It stays on one line and the layout
+        // around it is responsible for giving it room.
+        'eyebrow inline-flex items-center whitespace-nowrap rounded-full border',
         TONES[tone],
         SIZES[size],
         className,

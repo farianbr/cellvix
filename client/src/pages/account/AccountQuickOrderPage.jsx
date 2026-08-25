@@ -5,16 +5,18 @@ import { date } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import ProductPicker from '@/components/account/ProductPicker';
 import { useAccountMutations, useSavedCarts } from '@/hooks/useAccount';
 import useUiStore from '@/store/uiStore';
 
-const EMPTY_ROW = () => ({ id: crypto.randomUUID(), sku: '', qty: 1 });
+const EMPTY_ROW = () => ({ id: crypto.randomUUID(), product: null, qty: 1 });
 
 /**
  * Quick order pad / bulk reorder (brief §8.3).
  *
- * Two ways in, because trade buyers work both ways: a typed grid of SKU + qty,
- * and a paste box for a column copied out of a spreadsheet.
+ * Two ways in, because trade buyers work both ways: a grid of parts picked from
+ * the catalogue, and a paste box for a column of SKUs copied out of a
+ * spreadsheet.
  */
 export function AccountQuickOrderPage() {
   const [rows, setRows] = useState(() => Array.from({ length: 5 }, EMPTY_ROW));
@@ -43,8 +45,8 @@ export function AccountQuickOrderPage() {
   function submitGrid() {
     submit(
       rows
-        .filter((row) => row.sku.trim())
-        .map((row) => ({ sku: row.sku.trim(), qty: Number(row.qty) || 1 })),
+        .filter((row) => row.product)
+        .map((row) => ({ sku: row.product.sku, qty: Number(row.qty) || 1 })),
     );
   }
 
@@ -107,22 +109,20 @@ export function AccountQuickOrderPage() {
       {/* ---- typed grid --------------------------------------------------- */}
       <Panel
         title="Quick order pad"
-        description="Enter SKUs and quantities. Unmatched SKUs are reported back, never silently dropped."
+        description="Search the catalogue for each part, set a quantity, and add the lot to your cart in one go."
       >
         <ul className="space-y-2">
           {rows.map((row, index) => (
             <li key={row.id} className="flex items-start gap-2">
-              <span className="tnum mt-3 w-5 shrink-0 text-right text-[12px] text-ink-300">
+              <span className="tnum mt-3.5 w-5 shrink-0 text-right text-[12px] text-ink-300">
                 {index + 1}
               </span>
 
-              <Input
-                value={row.sku}
-                onChange={(event) => updateRow(row.id, { sku: event.target.value })}
-                placeholder="CVX-SAM-SA-1224"
-                aria-label={`SKU for line ${index + 1}`}
-                containerClassName="flex-1"
-                className="font-mono"
+              <ProductPicker
+                className="min-w-0 flex-1"
+                label={`Part for line ${index + 1}`}
+                value={row.product}
+                onChange={(product) => updateRow(row.id, { product })}
               />
 
               <Input
@@ -130,10 +130,10 @@ export function AccountQuickOrderPage() {
                 inputMode="numeric"
                 value={row.qty}
                 onChange={(event) =>
-                  updateRow(row.id, { qty: event.target.value.replace(/\D/g, '') })
+                  updateRow(row.id, { qty: event.target.value.replace(/D/g, '') })
                 }
                 aria-label={`Quantity for line ${index + 1}`}
-                containerClassName="w-20 shrink-0"
+                containerClassName="w-16 shrink-0 sm:w-20"
                 className="tnum text-center"
               />
 
@@ -163,7 +163,7 @@ export function AccountQuickOrderPage() {
           <Button
             icon={Zap}
             loading={bulkAdd.isPending}
-            disabled={!rows.some((row) => row.sku.trim())}
+            disabled={!rows.some((row) => row.product)}
             onClick={submitGrid}
             className="ml-auto"
           >

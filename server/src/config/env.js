@@ -27,6 +27,15 @@ const schema = z.object({
 
   // Opt-in: makes the MOCK gateway decline every charge, so the payment-failure
   // page can be exercised end to end. Off by default — see services/payment.js.
+  // ---- outbound mail ------------------------------------------------
+  // Optional. With no SMTP_URL the mailer writes each message to server/.mail
+  // and logs it instead of sending — the order still completes either way, so
+  // a missing mail server can never fail a checkout.
+  SMTP_URL: z.string().optional(),
+  MAIL_FROM: z.string().default('Cellvix <billing@cellvix.ca>'),
+  // Where a link in an email should point. Defaults to the first CLIENT_ORIGIN.
+  PUBLIC_ORIGIN: z.string().optional(),
+
   MOCK_PAYMENT_DECLINE: z
     .enum(['true', 'false', '1', '0'])
     .default('false')
@@ -49,6 +58,9 @@ export const env = {
   ...parsed.data,
   isProd: parsed.data.NODE_ENV === 'production',
   origins: parsed.data.CLIENT_ORIGIN.split(',').map((s) => s.trim()).filter(Boolean),
+  publicOrigin:
+    parsed.data.PUBLIC_ORIGIN ||
+    parsed.data.CLIENT_ORIGIN.split(',')[0].trim(),
 };
 
 if (env.isProd && env.JWT_SECRET.includes('dev-only')) {

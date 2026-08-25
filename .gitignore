@@ -34,3 +34,6 @@ scripts
 # OS
 .DS_Store
 Thumbs.db
+
+# Mail outbox — every message the mailer could not send (no SMTP_URL configured).
+server/.mail/

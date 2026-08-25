@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { Check, Loader2, Lock, ShoppingCart } from 'lucide-react';
+import { Check, Loader2, Lock, PackageX, ShoppingCart } from 'lucide-react';
 import { motion } from 'motion/react';
 import cn from '@/lib/cn';
 import { money } from '@/lib/format';
@@ -61,9 +61,16 @@ export function ProductCard({ product }) {
 
       {/* ---- image ---------------------------------------------------- */}
       <div className="relative aspect-4/3 shrink-0 overflow-hidden bg-surface-2">
+        {/* The dark "Out of stock" pill that used to sit in this corner was a
+            third stamp on one image, next to the grade badge and the in-cart
+            pill. The part itself carries the state now — drained of colour and
+            sat back — and the words live once, down in the body. */}
         <Link
           to={`/product/${product.slug}`}
-          className="block size-full p-4 transition-transform duration-300 group-hover:scale-[1.03] @min-[200px]:p-6"
+          className={cn(
+            'block size-full p-4 transition-transform duration-300 group-hover:scale-[1.03] @min-[200px]:p-6',
+            outOfStock && 'opacity-45 grayscale',
+          )}
           tabIndex={-1}
           aria-hidden="true"
         >
@@ -80,12 +87,6 @@ export function ProductCard({ product }) {
         </Link>
 
         <GradeBadge grade={product.grade} className="absolute left-2 top-2 @min-[200px]:left-3 @min-[200px]:top-3" />
-
-        {outOfStock && (
-          <span className="eyebrow absolute right-2 top-2 rounded-full bg-ink-900/85 px-1.5 py-1 text-white @min-[200px]:right-3 @min-[200px]:top-3 @min-[200px]:px-2">
-            Out of stock
-          </span>
-        )}
 
         {/* A bare number in a coloured circle here read as a second grade stamp —
             same shape, same corner of the same image. This is a labelled pill on
@@ -129,89 +130,104 @@ export function ProductCard({ product }) {
           <p className="mt-1 truncate font-mono text-[11px] text-ink-300">{product.sku}</p>
         </div>
 
-        {/* Availability, as a boolean. The on-hand count used to sit here; it is
-            warehouse data that moves hourly, and a buyer planning a build around
-            "37 in stock" was planning against a number we could not honour. */}
-        <div className="flex items-center gap-1.5 text-[12px] @min-[200px]:text-[12.5px]">
-          <span
-            className={cn('size-1.5 shrink-0 rounded-full', outOfStock ? 'bg-ink-300' : 'bg-ok')}
-            aria-hidden="true"
-          />
-          <span className={outOfStock ? 'text-ink-400' : 'text-ok'}>
-            {outOfStock ? 'Out of stock' : 'In stock'}
-          </span>
-        </div>
+        {/* Availability and price share one slot, because for a part that cannot
+            be bought they are one statement.
+            A price on an out-of-stock card is a number nobody can act on: it
+            invited a buyer to cost a job around a line we could not ship, and it
+            made a dead card look like a live one at a glance down the grid. The
+            unavailable state takes the slot instead — same height, so the row of
+            cards stays level.
+            In stock, availability is still a boolean: the on-hand count used to
+            sit here, and a buyer planning a build around "37 in stock" was
+            planning against a number that moves hourly. */}
+        {outOfStock ? (
+          <div className="rounded-[9px] border border-line bg-surface-2 px-2.5 py-2">
+            <p className="flex items-center gap-1.5 font-display text-[12.5px] font-semibold text-ink-500 @min-[200px]:text-[13px]">
+              <PackageX className="size-3.5 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
+              Out of stock
+            </p>
+            <p className="mt-0.5 text-[11px] leading-snug text-ink-300 @min-[200px]:text-[11.5px]">
+              {/* A gated buyer never saw a price to lose, so promising one back
+                  would be an odd thing to tell them. */}
+              {gated ? 'Check back for availability' : 'Pricing returns when this part does'}
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="flex items-center gap-1.5 text-[12px] @min-[200px]:text-[12.5px]">
+              <span className="size-1.5 shrink-0 rounded-full bg-ok" aria-hidden="true" />
+              <span className="text-ok">In stock</span>
+            </div>
 
-        {/* price, gated */}
-        <div className="relative">
-          <div className={cn(gated && 'price-gated', 'space-y-1')} aria-hidden={gated || undefined}>
-            <div className="flex items-baseline gap-2">
-              <span className="font-display text-[17px] font-bold tracking-tight text-ink-900 tnum @min-[200px]:text-[19px] @min-[260px]:text-[21px]">
-                {gated ? '$000.00' : money(product.price)}
-              </span>
-              {!gated && product.compareAtPrice && (
-                <span className="tnum text-[12.5px] text-ink-300 line-through">
-                  {money(product.compareAtPrice)}
-                </span>
+            {/* price, gated */}
+            <div className="relative">
+              <div className={cn(gated && 'price-gated', 'space-y-1')} aria-hidden={gated || undefined}>
+                <div className="flex items-baseline gap-2">
+                  <span className="font-display text-[17px] font-bold tracking-tight text-ink-900 tnum @min-[200px]:text-[19px] @min-[260px]:text-[21px]">
+                    {gated ? '$000.00' : money(product.price)}
+                  </span>
+                  {!gated && product.compareAtPrice && (
+                    <span className="tnum text-[12.5px] text-ink-300 line-through">
+                      {money(product.compareAtPrice)}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {gated && (
+                <button
+                  type="button"
+                  onClick={() => openAccount('signin')}
+                  className="absolute inset-0 -m-1 flex items-center justify-center rounded-lg bg-surface/45 backdrop-blur-[1px] transition-colors hover:bg-surface/25"
+                >
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-2.5 py-1 text-[11.5px] font-semibold text-ink-700 shadow-card">
+                    <Lock className="size-3" strokeWidth={2.25} aria-hidden="true" />
+                    {isAuthenticated ? 'Pending approval' : 'Login to view price'}
+                  </span>
+                </button>
               )}
             </div>
-          </div>
-
-          {gated && (
-            <button
-              type="button"
-              onClick={() => openAccount('signin')}
-              className="absolute inset-0 -m-1 flex items-center justify-center rounded-lg bg-surface/45 backdrop-blur-[1px] transition-colors hover:bg-surface/25"
-            >
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-2.5 py-1 text-[11.5px] font-semibold text-ink-700 shadow-card">
-                <Lock className="size-3" strokeWidth={2.25} aria-hidden="true" />
-                {isAuthenticated ? 'Pending approval' : 'Login to view price'}
-              </span>
-            </button>
-          )}
-        </div>
+          </>
+        )}
 
         {/* Add to cart. One row at every card width — the stepper narrows with
             the card (QtyStepper size="card") instead of dropping onto a second
             line, which is what made the two-up phone card 80px taller than it
             needed to be. Under 200px the button's word goes and the trolley
             carries it; the accessible name is on aria-label either way. */}
-        <div className="mt-0.5 flex items-center gap-1.5 @min-[200px]:gap-2">
-          <QtyStepper
-            value={qty}
-            onChange={setQty}
-            size="card"
-            disabled={outOfStock}
-            className="shrink-0"
-          />
+        {/* Out of stock, the whole action row goes. The stock block above already
+            says the card is not actionable; a greyed control under it is a
+            second way of saying so and a target people still try to press. */}
+        {!outOfStock && (
+          <div className="mt-0.5 flex items-center gap-1.5 @min-[200px]:gap-2">
+            <QtyStepper value={qty} onChange={setQty} size="card" className="shrink-0" />
 
-          <button
-            type="button"
-            onClick={handleAdd}
-            disabled={outOfStock || isAdding}
-            aria-label={`Add ${product.name} to cart`}
-            className={cn(
-              'flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[8px] font-display text-[13px] font-semibold transition-[background,color,filter] duration-[120ms]',
-              outOfStock
-                ? 'cursor-not-allowed bg-surface-3 text-ink-300'
-                : justAdded
+            <button
+              type="button"
+              onClick={handleAdd}
+              disabled={isAdding}
+              aria-label={`Add ${product.name} to cart`}
+              className={cn(
+                'flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[8px] font-display text-[13px] font-semibold transition-[background,color,filter] duration-[120ms]',
+                justAdded
                   ? 'bg-ok text-white'
                   : 'bg-brand-gradient text-white hover:brightness-110 active:brightness-95',
-            )}
-          >
-            {justAdded ? (
-              <>
-                <Check className="size-4 shrink-0" strokeWidth={2.5} aria-hidden="true" />
-                <span className="hidden @min-[200px]:inline">Added</span>
-              </>
-            ) : (
-              <>
-                <ShoppingCart className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
-                <span className="hidden @min-[200px]:inline">Add</span>
-              </>
-            )}
-          </button>
-        </div>
+              )}
+            >
+              {justAdded ? (
+                <>
+                  <Check className="size-4 shrink-0" strokeWidth={2.5} aria-hidden="true" />
+                  <span className="hidden @min-[200px]:inline">Added</span>
+                </>
+              ) : (
+                <>
+                  <ShoppingCart className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
+                  <span className="hidden @min-[200px]:inline">Add</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </div>
     </article>
   );

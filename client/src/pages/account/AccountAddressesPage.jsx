@@ -8,7 +8,7 @@ import { savedAddressSchema } from '@shared/schemas/account';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
-import Select from '@/components/ui/Select';
+import SelectField from '@/components/ui/SelectField';
 import Checkbox from '@/components/ui/Checkbox';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -19,6 +19,7 @@ function AddressForm({ address, onSubmit, onCancel, isPending }) {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(savedAddressSchema),
@@ -58,7 +59,7 @@ function AddressForm({ address, onSubmit, onCancel, isPending }) {
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Input label="City" error={errors.city?.message} {...register('city')} />
-        <Select label="Province" options={PROVINCES} error={errors.region?.message} {...register('region')} />
+        <SelectField control={control} name="region" label="Province" options={PROVINCES} />
         <Input
           label="Postal code"
           placeholder="M5V 2R7"

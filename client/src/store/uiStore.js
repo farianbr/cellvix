@@ -21,9 +21,15 @@ export const useUiStore = create((set) => ({
 
   // Bumped, never read for its value: the mobile header's LiveSearch focuses
   // itself whenever this changes. The bottom bar's search button is the only
-  // caller — the header search bar is sticky and always on screen, so the right
-  // behaviour is to put the cursor in it, not to open a second one.
+  // caller.
   searchFocusToken: 0,
+
+  // The mobile header's search row folds away once the page has scrolled past
+  // BOTTOM_NAV_REVEAL_AT — a full row of chrome over a grid the buyer is
+  // reading. This flag is what the bottom bar's search button raises to unfold
+  // it again; the header drops it back on its own when the page returns to the
+  // top, so the default behaviour is never left latched on.
+  mobileSearchOpen: false,
 
   openMegaMenu: () =>
     set({ megaMenuOpen: true, cartFlyoutOpen: false, accountPopupOpen: false, accountMenuOpen: false }),
@@ -46,12 +52,15 @@ export const useUiStore = create((set) => ({
   focusSearch: () =>
     set((s) => ({
       searchFocusToken: s.searchFocusToken + 1,
+      mobileSearchOpen: true,
       mobileNavOpen: false,
       cartFlyoutOpen: false,
       megaMenuOpen: false,
       accountPopupOpen: false,
       accountMenuOpen: false,
     })),
+
+  closeMobileSearch: () => set({ mobileSearchOpen: false }),
 
   openCart: () =>
     set({ cartFlyoutOpen: true, megaMenuOpen: false, accountPopupOpen: false, accountMenuOpen: false }),

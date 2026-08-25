@@ -2,14 +2,12 @@ import { Link, useLocation } from 'react-router';
 import { AnimatePresence, motion } from 'motion/react';
 import { Home, LayoutGrid, Search, ShoppingCart, User } from 'lucide-react';
 import cn from '@/lib/cn';
+import { BOTTOM_NAV_REVEAL_AT } from '@/lib/constants';
 import useUiStore from '@/store/uiStore';
 import useScrollProgress from '@/hooks/useScrollProgress';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { useAccountMenuTrigger } from '@/components/account/AccountMenu';
-
-/** Below this the header is still on screen, so the bar would only be clutter. */
-const REVEAL_AT = 160;
 
 /**
  * Phone/tablet bottom bar (brief §4.2).
@@ -29,11 +27,13 @@ export function MobileBottomNav() {
   const openCart = useUiStore((s) => s.openCart);
   const openAccount = useUiStore((s) => s.openAccount);
   const accountTrigger = useAccountMenuTrigger();
+  const cartOpen = useUiStore((s) => s.cartFlyoutOpen);
+  const accountMenuOpen = useUiStore((s) => s.accountMenuOpen);
 
   const { count: cartCount } = useCart();
   const { isAuthenticated, isPending, isAdmin } = useAuth();
 
-  const visible = y > REVEAL_AT;
+  const visible = y > BOTTOM_NAV_REVEAL_AT;
   const accountTo = isAdmin ? '/admin' : '/account';
 
   return (
@@ -78,10 +78,13 @@ export function MobileBottomNav() {
               </button>
             </li>
 
+            {/* `active` while the panel is open, so the bar says which button
+                put it there — the same signal the header buttons carry. */}
             <BarItem
               icon={ShoppingCart}
               label="Cart"
               onClick={openCart}
+              active={cartOpen}
               badge={cartCount}
             />
 
@@ -91,7 +94,7 @@ export function MobileBottomNav() {
               <BarItem
                 icon={User}
                 label="Account"
-                active={pathname.startsWith(accountTo)}
+                active={accountMenuOpen || pathname.startsWith(accountTo)}
                 dot={isPending}
                 {...accountTrigger}
               />

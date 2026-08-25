@@ -20,7 +20,13 @@ import Skeleton from '@/components/ui/Skeleton';
  * Picking a model on the left writes into the shared filter store — it filters
  * the grid rather than navigating.
  */
-export function LiveSearch({ className, autoFocus = false, focusToken = 0, onNavigate }) {
+export function LiveSearch({
+  className,
+  autoFocus = false,
+  focusToken = 0,
+  onNavigate,
+  onValueChange,
+}) {
   const [value, setValue] = useState('');
   const [open, setOpen] = useState(false);
   const debounced = useDebouncedValue(value, 220);
@@ -51,6 +57,13 @@ export function LiveSearch({ className, autoFocus = false, focusToken = 0, onNav
     inputRef.current?.focus();
     setOpen(true);
   }, [focusToken]);
+
+  // Reported up rather than owned up there: the field's text belongs to this
+  // component, but the mobile header needs to know whether it is empty before it
+  // decides to fold the row away on the next scroll.
+  useEffect(() => {
+    onValueChange?.(value);
+  }, [value, onValueChange]);
 
   const showPanel = open && debounced.trim().length >= 2;
   const hasResults = (data?.products?.length ?? 0) > 0;
@@ -116,7 +129,11 @@ export function LiveSearch({ className, autoFocus = false, focusToken = 0, onNav
             aria-expanded={showPanel}
             aria-controls={panelId}
             className={cn(
-              'h-11 w-full rounded-[10px] border border-line bg-surface-2 pl-11 pr-10 text-[14px] text-ink-900',
+              // 16px on a phone, 14 from sm up. Mobile Safari zooms the whole
+              // page in when a focused input's text is under 16px, and it does
+              // not zoom back out — the sticky header ends up wider than the
+              // viewport and the layout is stuck skewed until a reload.
+              'h-11 w-full rounded-[10px] border border-line bg-surface-2 pl-11 pr-10 text-[16px] text-ink-900 sm:text-[14px]',
               'placeholder:text-ink-300',
               'transition-[border-color,background,box-shadow] duration-[120ms]',
               'hover:border-line-strong',
@@ -148,9 +165,17 @@ export function LiveSearch({ className, autoFocus = false, focusToken = 0, onNav
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute left-0 right-0 top-[calc(100%+8px)] z-40 overflow-hidden rounded-[14px] border border-line bg-surface shadow-flyout"
+            className={cn(
+              'absolute left-0 right-0 top-[calc(100%+8px)] z-40 overflow-hidden rounded-[14px] border border-line bg-surface shadow-flyout',
+              // The field is only as wide as the header gap allows, and a panel
+              // that width clips part names two words in. From md the panel
+              // stops matching the input and takes the width the results need,
+              // anchored to the input's right edge so it cannot run off the
+              // viewport on a 1024 laptop.
+              'md:left-auto md:w-[min(720px,calc(100vw-24px))]',
+            )}
           >
-            <div className="grid max-h-[70vh] grid-cols-1 overflow-hidden md:grid-cols-[minmax(200px,240px)_1fr]">
+            <div className="grid max-h-[70vh] grid-cols-1 overflow-hidden md:grid-cols-[minmax(190px,214px)_1fr]">
               {/* ---- left: facets --------------------------------------
                   On a phone this is the entire panel. Product rows carry a
                   price, and prices are gated per account — a stack of them
