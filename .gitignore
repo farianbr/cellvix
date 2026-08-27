@@ -21,8 +21,8 @@ coverage/
 test-results/
 playwright-report/
 
-# Generated docs.
-docs
+# Generated screenshots only — the planning docs in docs/ are tracked.
+docs/screenshots
 
 # scratch
 cellvix-project-brief.md

@@ -284,7 +284,7 @@ NODE_ENV=production npm start
 | [PROGRESS.md](PROGRESS.md) | Phase board, decisions log, session log, known gaps, open questions. |
 | [CLAUDE.md](CLAUDE.md) | Session primer for AI coding agents. |
 | [cellvix-project-brief.md](cellvix-project-brief.md) | The client's original brief. Read-only reference. |
-| [docs/ERP_INTEGRATION.md](docs/ERP_INTEGRATION.md) | Planned ERP integration surface. |
+| [docs/ADMIN_ERP_REWORK.md](docs/ADMIN_ERP_REWORK.md) | Plan for rebuilding `/admin` as a full ERP console. Cellvix is the ERP — there is no external system of record. |
 
 ---
 

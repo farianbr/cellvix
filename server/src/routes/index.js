@@ -10,11 +10,14 @@ import * as cartController from '../controllers/cartController.js';
 import * as orderController from '../controllers/orderController.js';
 import * as accountController from '../controllers/accountController.js';
 import * as adminController from '../controllers/adminController.js';
+import * as purchaseController from '../controllers/purchaseController.js';
+import * as reportController from '../controllers/reportController.js';
+import * as salesController from '../controllers/salesController.js';
 import * as contactController from '../controllers/contactController.js';
 import * as contentController from '../controllers/contentController.js';
 
 import validate from '../middleware/validate.js';
-import { requireAuth, requireApproved, requireAdmin } from '../middleware/auth.js';
+import { requireAuth, requireApproved, requireAdmin, denyAdmin } from '../middleware/auth.js';
 import { loginSchema, registerSchema, forgotPasswordSchema } from '../../../shared/schemas/auth.js';
 import {
   addItemSchema,
@@ -43,6 +46,25 @@ import {
   userStatusSchema,
   productSchema,
   orderStatusSchema,
+  invoicePaymentSchema,
+  invoiceVoidSchema,
+  bulkOrderStatusSchema,
+  supplierSchema,
+  purchaseOrderSchema,
+  purchaseOrderStatusSchema,
+  purchaseReceiveSchema,
+  purchasePaymentSchema,
+  expenseSchema,
+  expenseCategorySchema,
+  stockAdjustSchema,
+  productOpsSchema,
+  quoteSchema,
+  quoteStatusSchema,
+  quoteConvertSchema,
+  rmaSchema,
+  rmaStatusSchema,
+  rmaInspectSchema,
+  rmaResolveSchema,
 } from '../../../shared/schemas/admin.js';
 import { contactSchema } from '../../../shared/schemas/contact.js';
 import { blogPostSchema, faqSchema, offerSchema } from '../../../shared/schemas/content.js';
@@ -96,36 +118,36 @@ router.get('/offers/:slug', contentController.getOffer);
 
 // --- cart ------------------------------------------------------------------
 // Signed in is enough to hold a cart; approval is only needed to check out.
-router.get('/cart', requireAuth, cartController.get);
-router.post('/cart/items', requireAuth, validate(addItemSchema), cartController.addItem);
-router.patch('/cart/items/:productId', requireAuth, validate(setQtySchema), cartController.setQty);
-router.delete('/cart/items/:productId', requireAuth, cartController.removeItem);
-router.post('/cart/merge', requireAuth, validate(mergeCartSchema), cartController.merge);
-router.post('/cart/save', requireAuth, validate(saveCartSchema), cartController.save);
-router.delete('/cart', requireAuth, cartController.clear);
+router.get('/cart', requireAuth, denyAdmin, cartController.get);
+router.post('/cart/items', requireAuth, denyAdmin, validate(addItemSchema), cartController.addItem);
+router.patch('/cart/items/:productId', requireAuth, denyAdmin, validate(setQtySchema), cartController.setQty);
+router.delete('/cart/items/:productId', requireAuth, denyAdmin, cartController.removeItem);
+router.post('/cart/merge', requireAuth, denyAdmin, validate(mergeCartSchema), cartController.merge);
+router.post('/cart/save', requireAuth, denyAdmin, validate(saveCartSchema), cartController.save);
+router.delete('/cart', requireAuth, denyAdmin, cartController.clear);
 
 // Combos and promo codes are priced things, so they need approval — a pending
 // business can still hold loose parts in its cart while it waits.
-router.post('/cart/bundles', requireAuth, requireApproved, validate(addBundleSchema), cartController.addBundle);
-router.patch('/cart/bundles/:offerId', requireAuth, requireApproved, validate(setBundleQtySchema), cartController.setBundleQty);
-router.delete('/cart/bundles/:offerId', requireAuth, requireApproved, cartController.removeBundle);
-router.post('/cart/promo', requireAuth, requireApproved, validate(promoCodeSchema), cartController.applyPromo);
-router.delete('/cart/promo', requireAuth, requireApproved, cartController.clearPromo);
+router.post('/cart/bundles', requireAuth, denyAdmin, requireApproved, validate(addBundleSchema), cartController.addBundle);
+router.patch('/cart/bundles/:offerId', requireAuth, denyAdmin, requireApproved, validate(setBundleQtySchema), cartController.setBundleQty);
+router.delete('/cart/bundles/:offerId', requireAuth, denyAdmin, requireApproved, cartController.removeBundle);
+router.post('/cart/promo', requireAuth, denyAdmin, requireApproved, validate(promoCodeSchema), cartController.applyPromo);
+router.delete('/cart/promo', requireAuth, denyAdmin, requireApproved, cartController.clearPromo);
 
 // Saved carts and the quick order pad need trade pricing, so they are gated.
-router.get('/cart/saved', requireAuth, requireApproved, cartController.listSaved);
-router.post('/cart/saved/:savedCartId/restore', requireAuth, requireApproved, cartController.restoreSaved);
-router.delete('/cart/saved/:savedCartId', requireAuth, requireApproved, cartController.deleteSaved);
-router.post('/cart/bulk', requireAuth, requireApproved, validate(bulkAddSchema), cartController.bulkAdd);
+router.get('/cart/saved', requireAuth, denyAdmin, requireApproved, cartController.listSaved);
+router.post('/cart/saved/:savedCartId/restore', requireAuth, denyAdmin, requireApproved, cartController.restoreSaved);
+router.delete('/cart/saved/:savedCartId', requireAuth, denyAdmin, requireApproved, cartController.deleteSaved);
+router.post('/cart/bulk', requireAuth, denyAdmin, requireApproved, validate(bulkAddSchema), cartController.bulkAdd);
 
 // --- orders ----------------------------------------------------------------
-router.get('/orders/quote', requireAuth, requireApproved, orderController.quote);
-router.post('/orders', requireAuth, requireApproved, validate(checkoutSchema), orderController.create);
-router.get('/orders', requireAuth, requireApproved, orderController.list);
-router.get('/orders/:orderNumber', requireAuth, requireApproved, orderController.detail);
+router.get('/orders/quote', requireAuth, denyAdmin, requireApproved, orderController.quote);
+router.post('/orders', requireAuth, denyAdmin, requireApproved, validate(checkoutSchema), orderController.create);
+router.get('/orders', requireAuth, denyAdmin, requireApproved, orderController.list);
+router.get('/orders/:orderNumber', requireAuth, denyAdmin, requireApproved, orderController.detail);
 
 // --- account ---------------------------------------------------------------
-const account = [requireAuth, requireApproved];
+const account = [requireAuth, denyAdmin, requireApproved];
 
 router.get('/account/summary', ...account, accountController.summary);
 router.patch('/account/profile', ...account, validate(profileSchema), accountController.updateProfile);
@@ -137,7 +159,9 @@ router.delete('/account/addresses/:addressId', ...account, accountController.rem
 router.post('/account/payment-methods', ...account, validate(paymentMethodSchema), accountController.addPaymentMethod);
 router.delete('/account/payment-methods/:methodId', ...account, accountController.removePaymentMethod);
 
-// Password change is available to any signed-in user, approved or not.
+// Password change is available to any signed-in user, approved or not — and
+// deliberately not denyAdmin: it is the only way a staff account changes its
+// own password, and it touches no buyer data.
 router.post('/account/password', requireAuth, validate(changePasswordSchema), accountController.changePassword);
 
 // Store credit: the statement, and the advance recharge that adds to it.
@@ -163,6 +187,9 @@ router.patch('/admin/users/:id/status', ...admin, validate(userStatusSchema), ad
 router.patch('/admin/users/:id/credit', ...admin, validate(creditSchema), adminController.setCredit);
 // The line of credit above is edited; store credit below is posted to.
 router.get('/admin/users/:id/store-credit', ...admin, adminController.storeCreditStatement);
+// The Activity tab on the client profile. Assembled from orders, invoices,
+// payments and credit movements until `AuditLog` lands in phase 11.
+router.get('/admin/users/:id/activity', ...admin, adminController.userActivity);
 router.post('/admin/users/:id/store-credit', ...admin, validate(storeCreditSchema), adminController.allocateStoreCredit);
 
 router.get('/admin/products', ...admin, adminController.listProducts);
@@ -172,9 +199,102 @@ router.patch('/admin/products/:id', ...admin, validate(productSchema), adminCont
 router.delete('/admin/products/:id', ...admin, adminController.toggleProduct);
 
 router.get('/admin/orders', ...admin, adminController.listOrders);
+// Registered ahead of the `:orderNumber` routes so a literal path can never be
+// swallowed by a parameter. Partial by design — the response names what moved
+// and what did not.
+router.patch('/admin/orders/bulk-status', ...admin, validate(bulkOrderStatusSchema), adminController.bulkUpdateOrderStatus);
 router.patch('/admin/orders/:orderNumber/status', ...admin, validate(orderStatusSchema), adminController.updateOrderStatus);
 // Refunds go to store credit — there is no gateway to send money back through.
 router.post('/admin/orders/:orderNumber/refund', ...admin, validate(refundSchema), adminController.refundOrder);
+
+// Invoices. `amountPaid` and the status are recomputed server-side from the
+// payment rows on every write — the client never sends either.
+router.get('/admin/invoices', ...admin, adminController.listInvoices);
+router.get('/admin/invoices/:number', ...admin, adminController.getInvoice);
+// The same artefact the customer receives, rendered by the same renderer — the
+// buyer route scopes its lookup to the signed-in user, so an admin needs this.
+router.get('/admin/invoices/:number/document', ...admin, adminController.invoiceDocument);
+router.post('/admin/invoices/:number/payments', ...admin, validate(invoicePaymentSchema), adminController.recordInvoicePayment);
+// Voiding forgives the balance and keeps the row: an invoice that vanishes
+// takes its own audit trail with it.
+router.post('/admin/invoices/:number/void', ...admin, validate(invoiceVoidSchema), adminController.voidInvoice);
+
+// --- purchase (phase 5) ----------------------------------------------------
+// Suppliers, purchase orders, expenses and the stock ledger. Every rule lives
+// in `purchaseService`; these routes only decide who may call it.
+
+router.get('/admin/suppliers', ...admin, purchaseController.listSuppliers);
+router.get('/admin/suppliers/:id', ...admin, purchaseController.getSupplier);
+router.post('/admin/suppliers', ...admin, validate(supplierSchema), purchaseController.createSupplier);
+router.patch('/admin/suppliers/:id', ...admin, validate(supplierSchema), purchaseController.updateSupplier);
+// Toggles isActive rather than deleting — purchase orders reference suppliers.
+router.delete('/admin/suppliers/:id', ...admin, purchaseController.toggleSupplier);
+
+router.get('/admin/purchase-orders', ...admin, purchaseController.listPurchaseOrders);
+router.post('/admin/purchase-orders', ...admin, validate(purchaseOrderSchema), purchaseController.createPurchaseOrder);
+router.get('/admin/purchase-orders/:id', ...admin, purchaseController.getPurchaseOrder);
+// Edits stop at draft; the service refuses a sent order rather than the route.
+router.patch('/admin/purchase-orders/:id', ...admin, validate(purchaseOrderSchema), purchaseController.updatePurchaseOrder);
+router.patch('/admin/purchase-orders/:id/status', ...admin, validate(purchaseOrderStatusSchema), purchaseController.setPurchaseOrderStatus);
+// Receiving increments stock and writes a StockMovement per line, server-side.
+// Partial by design: the response names what moved and what did not.
+router.post('/admin/purchase-orders/:id/receive', ...admin, validate(purchaseReceiveSchema), purchaseController.receivePurchaseOrder);
+// Recording a payment creates the Expense row — once. A second call is refused.
+router.post('/admin/purchase-orders/:id/payment', ...admin, validate(purchasePaymentSchema), purchaseController.recordPurchasePayment);
+
+// Categories are registered ahead of `/admin/expenses/:id` so a literal path
+// can never be swallowed by a parameter — the same ordering the bulk order
+// route needs.
+router.get('/admin/expenses/categories', ...admin, purchaseController.listExpenseCategories);
+router.post('/admin/expenses/categories', ...admin, validate(expenseCategorySchema), purchaseController.createExpenseCategory);
+router.patch('/admin/expenses/categories/:id', ...admin, validate(expenseCategorySchema), purchaseController.updateExpenseCategory);
+// Deactivates a category that is in use rather than deleting it.
+router.delete('/admin/expenses/categories/:id', ...admin, purchaseController.deleteExpenseCategory);
+
+router.get('/admin/expenses', ...admin, purchaseController.listExpenses);
+router.post('/admin/expenses', ...admin, validate(expenseSchema), purchaseController.createExpense);
+router.patch('/admin/expenses/:id', ...admin, validate(expenseSchema), purchaseController.updateExpense);
+router.delete('/admin/expenses/:id', ...admin, purchaseController.deleteExpense);
+
+// Inventory. Exact counts and costs are admin-only; the storefront's binary
+// in stock / out of stock is produced by productService.serialize and is not
+// affected by anything here.
+router.get('/admin/inventory', ...admin, purchaseController.listInventory);
+router.get('/admin/inventory/movements', ...admin, purchaseController.listStockMovements);
+router.get('/admin/inventory/:id', ...admin, purchaseController.getInventoryItem);
+router.patch('/admin/inventory/:id/ops', ...admin, validate(productOpsSchema), purchaseController.updateInventoryOps);
+// A manual correction, through the same ledger as every other stock movement.
+router.post('/admin/inventory/:id/adjust', ...admin, validate(stockAdjustSchema), purchaseController.adjustStock);
+
+// --- quotes & RMA (phase 7) ------------------------------------------------
+// A quote's stored price is honoured only while the quote is valid, and
+// conversion re-prices against live products before it writes an order.
+
+router.get('/admin/quotes', ...admin, salesController.listQuotes);
+router.post('/admin/quotes', ...admin, validate(quoteSchema), salesController.createQuote);
+router.get('/admin/quotes/:id', ...admin, salesController.getQuote);
+router.patch('/admin/quotes/:id', ...admin, validate(quoteSchema), salesController.updateQuote);
+router.patch('/admin/quotes/:id/status', ...admin, validate(quoteStatusSchema), salesController.setQuoteStatus);
+// Refuses with QUOTE_PRICE_DRIFT and the full comparison when catalogue prices
+// have moved and the admin has not acknowledged them.
+router.post('/admin/quotes/:id/convert', ...admin, validate(quoteConvertSchema), salesController.convertQuote);
+router.delete('/admin/quotes/:id', ...admin, salesController.deleteQuote);
+
+// Refunds route through storeCreditService and restocking through the stock
+// ledger — an RMA is not an exception to either rule.
+router.get('/admin/rma', ...admin, salesController.listRmas);
+router.post('/admin/rma', ...admin, validate(rmaSchema), salesController.createRma);
+router.get('/admin/rma/:id', ...admin, salesController.getRma);
+router.patch('/admin/rma/:id/status', ...admin, validate(rmaStatusSchema), salesController.setRmaStatus);
+router.patch('/admin/rma/:id/inspect', ...admin, validate(rmaInspectSchema), salesController.inspectRma);
+// Resolving decides money and stock, so it carries that decision rather than
+// being reachable through the status route.
+router.post('/admin/rma/:id/resolve', ...admin, validate(rmaResolveSchema), salesController.resolveRma);
+
+// --- reports (phase 6) -----------------------------------------------------
+// Read-only, always (§9.6). One GET per tab and no write verb on this path at
+// all — a report that can mutate is a report nobody can safely re-run.
+router.get('/admin/reports/:tab', ...admin, reportController.report);
 
 // Editorial content. Unlike products, none of these are referenced by an order,
 // so a delete here leaves nothing dangling and really deletes.

@@ -68,6 +68,15 @@ export async function quote(userId, deliveryCode = 'ground') {
 
   return {
     ...priced,
+    // `unitCost` rides along on a priced line so a placed order can snapshot it
+    // (§9.4), but this response is the BUYER's checkout preview — stripping it
+    // here keeps our margin off the customer's screen. `cartService` builds its
+    // payload from an explicit allowlist and never had the problem.
+    items: priced.items.map(({ unitCost, ...line }) => line),
+    bundles: priced.bundles.map((bundle) => ({
+      ...bundle,
+      products: (bundle.products ?? []).map(({ unitCost, ...line }) => line),
+    })),
     storeCredit: credit,
     itemCount:
       priced.items.reduce((sum, item) => sum + item.qty, 0) +
@@ -100,6 +109,8 @@ function flattenBundles(bundles) {
       qty: line.qty,
       unitPrice: line.unitPrice,
       lineTotal: line.lineTotal,
+      // Snapshotted the same way a loose line is (§9.4).
+      unitCost: line.unitCost,
       bundle: { offer: bundle.offerId, title: bundle.title },
     })),
   );
@@ -329,7 +340,11 @@ export function serializeOrder(order) {
   return {
     id: doc._id.toString(),
     orderNumber: doc.orderNumber,
-    items: doc.items.map((item) => ({
+    // `unitCost` is stripped here, deliberately. It is what Cellvix pays the
+    // supplier, and this serializer feeds the BUYER's order page — spreading
+    // the line wholesale would put our margin on the customer's screen. The
+    // reports read it from the documents directly, admin-side.
+    items: doc.items.map(({ unitCost, ...item }) => ({
       ...item,
       product: item.product?.toString?.() ?? item.product,
     })),

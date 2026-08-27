@@ -38,7 +38,32 @@ const productSchema = new mongoose.Schema(
 
     // Operations data. Surfaced to admins; the storefront only ever learns
     // whether this is greater than zero (see productService.serialize).
+    //
+    // Everything in this block is admin-only. `productService.serialize` is an
+    // allowlist rather than a blocklist, so a field added here cannot reach a
+    // public payload by being forgotten — but the storefront rule is worth
+    // restating where the fields live: in stock / out of stock, never a count,
+    // never a reorder point, never a cost (ERP rework §6.10).
     stock: { type: Number, default: 0, index: true },
+
+    // The reorder point the Inventory screen compares `stock` against. Zero
+    // means "no point set", which reads as never low rather than always low.
+    minStock: { type: Number, default: 0 },
+
+    // What Cellvix pays for the part, integer cents. Distinct from `price`,
+    // which is what a client pays. Margin in every report is the gap between
+    // the two, and an order line snapshots this at order time (§9.4) so a later
+    // cost change cannot rewrite the margin on a sale that already happened.
+    cost: { type: Number, default: 0 },
+
+    // Bin or shelf, free text — 'A-12-3'. One outlet today (§0.9).
+    location: { type: String, trim: true, maxlength: 40 },
+
+    // The default supplier for a reorder. A purchase-order line may still name
+    // a different one; this is the suggestion, not a constraint.
+    supplier: { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier', index: true },
+
+    barcode: { type: String, trim: true, maxlength: 60, index: true },
 
     // Denormalised taxonomy slugs: the filter query hits these directly.
     deviceTypeSlug: { type: String, index: true },

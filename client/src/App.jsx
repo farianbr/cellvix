@@ -1,5 +1,5 @@
 import { Suspense, lazy } from 'react';
-import { Route, Routes } from 'react-router';
+import { Navigate, Route, Routes } from 'react-router';
 import RootLayout from '@/components/layout/RootLayout';
 import ShopPage from '@/pages/ShopPage';
 import RouteFallback from '@/components/layout/RouteFallback';
@@ -33,7 +33,10 @@ const AccountAddressesPage = lazy(() => import('@/pages/account/AccountAddresses
 const AccountPaymentMethodsPage = lazy(() => import('@/pages/account/AccountPaymentMethodsPage'));
 const AccountCompanyPage = lazy(() => import('@/pages/account/AccountCompanyPage'));
 
-const AdminLayout = lazy(() => import('@/components/admin/AdminLayout'));
+// The ERP panel is a separate application with its own shell — it mounts
+// outside RootLayout so it never carries the shop header, mega menu or footer.
+const AdminShell = lazy(() => import('@/components/admin/shell/AdminShell'));
+const AdminStubPage = lazy(() => import('@/pages/admin/AdminStubPage'));
 const AdminOverviewPage = lazy(() => import('@/pages/admin/AdminOverviewPage'));
 const AdminApprovalsPage = lazy(() => import('@/pages/admin/AdminApprovalsPage'));
 const AdminOrdersPage = lazy(() => import('@/pages/admin/AdminOrdersPage'));
@@ -42,10 +45,131 @@ const AdminCustomersPage = lazy(() => import('@/pages/admin/AdminCustomersPage')
 const AdminOffersPage = lazy(() => import('@/pages/admin/AdminOffersPage'));
 const AdminBlogPage = lazy(() => import('@/pages/admin/AdminBlogPage'));
 const AdminFaqPage = lazy(() => import('@/pages/admin/AdminFaqPage'));
+const AdminInvoicesPage = lazy(() => import('@/pages/admin/AdminInvoicesPage'));
+const AdminClientProfilePage = lazy(() => import('@/pages/admin/AdminClientProfilePage'));
+const AdminSuppliersPage = lazy(() => import('@/pages/admin/AdminSuppliersPage'));
+const AdminSupplierProfilePage = lazy(() => import('@/pages/admin/AdminSupplierProfilePage'));
+const AdminPurchaseOrdersPage = lazy(() => import('@/pages/admin/AdminPurchaseOrdersPage'));
+const AdminPurchaseOrderDetailPage = lazy(
+  () => import('@/pages/admin/AdminPurchaseOrderDetailPage'),
+);
+const AdminExpensesPage = lazy(() => import('@/pages/admin/AdminExpensesPage'));
+const AdminExpenseCategoriesPage = lazy(
+  () => import('@/pages/admin/AdminExpenseCategoriesPage'),
+);
+const AdminInventoryDetailPage = lazy(() => import('@/pages/admin/AdminInventoryDetailPage'));
+const AdminReportsPage = lazy(() => import('@/pages/admin/AdminReportsPage'));
+const AdminBusinessReportPage = lazy(() => import('@/pages/admin/AdminBusinessReportPage'));
+const AdminQuotesPage = lazy(() => import('@/pages/admin/AdminQuotesPage'));
+const AdminQuoteDetailPage = lazy(() => import('@/pages/admin/AdminQuoteDetailPage'));
+const AdminRmaPage = lazy(() => import('@/pages/admin/AdminRmaPage'));
+const AdminRmaDetailPage = lazy(() => import('@/pages/admin/AdminRmaDetailPage'));
+
+/**
+ * Routes that exist in the nav but whose screens ship in a later phase (ERP
+ * rework §10). Listed here rather than mapped from ADMIN_ROUTES so the route
+ * table stays readable, and so promoting one to a real page is a single edit.
+ */
+const ADMIN_STUB_PATHS = [
+  'orders/:orderNumber',
+  'invoices/:number',
+  'marketing/calls',
+  'marketing/email',
+  'marketing/sms',
+  'marketing/whatsapp',
+  'marketing/referrals',
+  'outlets',
+  'outlets/add',
+  'outlets/:id',
+  'settings',
+  'settings/business-info',
+  'settings/sale',
+  'settings/invoice-status',
+  'settings/taxonomy',
+  'settings/shipping',
+  'settings/payment-methods',
+  'settings/inventory',
+  'settings/users',
+  'settings/roles',
+  'settings/calendar',
+  'settings/appointments',
+  'settings/email',
+  'settings/templates',
+  'settings/activity-log',
+  'settings/security-log',
+  'settings/api-keys',
+  'settings/third-party',
+  'profile',
+];
 
 export function App() {
   return (
     <Routes>
+      {/* The ERP panel. Outside RootLayout by design (§4) — it owns the whole
+          viewport. AdminShell is also the UI half of the guard; requireAdmin
+          enforces it server-side. */}
+      <Route
+        path="admin"
+        element={
+          <Suspense fallback={<RouteFallback />}>
+            <AdminShell />
+          </Suspense>
+        }
+      >
+        <Route index element={<AdminOverviewPage />} />
+        <Route path="clients" element={<AdminCustomersPage />} />
+        <Route path="clients/:id" element={<AdminClientProfilePage />} />
+        <Route path="orders" element={<AdminOrdersPage />} />
+        <Route path="inventory" element={<AdminProductsPage />} />
+        <Route path="inventory/:id" element={<AdminInventoryDetailPage />} />
+        <Route path="invoices" element={<AdminInvoicesPage />} />
+
+        {/* Purchase (phase 5). */}
+        <Route path="suppliers" element={<AdminSuppliersPage />} />
+        <Route path="suppliers/:id" element={<AdminSupplierProfilePage />} />
+        <Route path="purchase-orders" element={<AdminPurchaseOrdersPage />} />
+        <Route path="purchase-orders/:id" element={<AdminPurchaseOrderDetailPage />} />
+        <Route path="expenses" element={<AdminExpensesPage />} />
+        {/* Categories live under Settings — the expense screen links there, and
+            the old `/admin/expenses/categories` path still redirects to it. */}
+        <Route path="settings/expense-categories" element={<AdminExpenseCategoriesPage />} />
+
+        {/* Reports (phase 6). `business` is registered ahead of the tabbed
+            screen so the literal path cannot be swallowed. */}
+        {/* Quotes & RMA (phase 7). */}
+        <Route path="quotes" element={<AdminQuotesPage />} />
+        <Route path="quotes/:id" element={<AdminQuoteDetailPage />} />
+        <Route path="rma" element={<AdminRmaPage />} />
+        <Route path="rma/:id" element={<AdminRmaDetailPage />} />
+
+        <Route path="reports/business" element={<AdminBusinessReportPage />} />
+        <Route path="reports" element={<AdminReportsPage />} />
+        <Route path="marketing/offers" element={<AdminOffersPage />} />
+        <Route path="marketing/blog" element={<AdminBlogPage />} />
+        <Route path="marketing/faq" element={<AdminFaqPage />} />
+
+        {/* Approvals is the Clients screen filtered, and keeps its own screen
+            until phase 2 folds it in as a status filter. */}
+        <Route path="approvals" element={<AdminApprovalsPage />} />
+
+        {ADMIN_STUB_PATHS.map((path) => (
+          <Route key={path} path={path} element={<AdminStubPage />} />
+        ))}
+
+        {/* Old flat-admin URLs stay alive as redirects rather than 404s (§4). */}
+        <Route path="products" element={<Navigate to="/admin/inventory" replace />} />
+        <Route path="customers" element={<Navigate to="/admin/clients" replace />} />
+        <Route path="offers" element={<Navigate to="/admin/marketing/offers" replace />} />
+        <Route path="blog" element={<Navigate to="/admin/marketing/blog" replace />} />
+        <Route path="faqs" element={<Navigate to="/admin/marketing/faq" replace />} />
+        <Route
+          path="expenses/categories"
+          element={<Navigate to="/admin/settings/expense-categories" replace />}
+        />
+
+        <Route path="*" element={<Navigate to="/admin" replace />} />
+      </Route>
+
       <Route element={<RootLayout />}>
         <Route index element={<ShopPage />} />
 
@@ -114,24 +238,6 @@ export function App() {
           <Route path="company" element={<AccountCompanyPage />} />
         </Route>
 
-        {/* AdminLayout is also the route guard; requireAdmin enforces it server-side. */}
-        <Route
-          path="admin"
-          element={
-            <Suspense fallback={<RouteFallback />}>
-              <AdminLayout />
-            </Suspense>
-          }
-        >
-          <Route index element={<AdminOverviewPage />} />
-          <Route path="approvals" element={<AdminApprovalsPage />} />
-          <Route path="orders" element={<AdminOrdersPage />} />
-          <Route path="products" element={<AdminProductsPage />} />
-          <Route path="customers" element={<AdminCustomersPage />} />
-          <Route path="offers" element={<AdminOffersPage />} />
-          <Route path="blog" element={<AdminBlogPage />} />
-          <Route path="faqs" element={<AdminFaqPage />} />
-        </Route>
         <Route
           path="about"
           element={

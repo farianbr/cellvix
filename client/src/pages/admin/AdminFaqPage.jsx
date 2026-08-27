@@ -15,6 +15,9 @@ import Checkbox from '@/components/ui/Checkbox';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Skeleton from '@/components/ui/Skeleton';
+import PageHeader from '@/components/admin/PageHeader';
+import { ADMIN_ROUTES } from '@/lib/adminRoutes';
+import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { usePartTypes, useTaxonomy } from '@/hooks/useCatalog';
 import { useAdminFaqs, useAdminMutations } from '@/hooks/useAdmin';
 
@@ -144,6 +147,12 @@ function FaqForm({ faq, deviceTypes, partTypes, onSubmit, onCancel, isPending, e
   );
 }
 
+/**
+ * Header metadata read from the same table the breadcrumb uses, so a page
+ * title can never drift from its crumb.
+ */
+const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/marketing/faq'], icon: adminIcon('HelpCircle') };
+
 export function AdminFaqPage() {
   const [query, setQuery] = useState('');
   const [scope, setScope] = useState('all');
@@ -176,8 +185,14 @@ export function AdminFaqPage() {
 
   return (
     <>
+      <PageHeader
+        icon={ADMIN_PAGE.icon}
+        title={ADMIN_PAGE.title}
+        description={ADMIN_PAGE.description}
+      />
+
       <Panel
-        title="FAQs"
+        title="Questions"
         description={
           data
             ? `${data.counts?.general ?? 0} on the FAQ page · ${data.counts?.product ?? 0} on product pages`

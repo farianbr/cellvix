@@ -9,6 +9,7 @@
     "start": "node src/index.js",
     "seed": "node src/seed/run.js",
     "seed:content": "node src/seed/content.js",
+    "seed:expense-categories": "node src/seed/expense-categories.js",
     "backfill:competitors": "node src/seed/backfill-competitors.js"
   },
   "dependencies": {

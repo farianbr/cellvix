@@ -249,6 +249,10 @@ export async function priceCart(cart, user, { deliveryCode = 'ground' } = {}) {
       qty: cartItem.qty,
       unitPrice: product.price,
       lineTotal: product.price * cartItem.qty,
+      // Carried so a placed order can snapshot what the part cost at the time
+      // (§9.4). Undefined rather than zero when the catalogue has no cost —
+      // a zero would report as a 100% margin.
+      unitCost: product.cost > 0 ? product.cost : undefined,
       stock: product.stock,
       inStock: product.stock > 0,
       exceedsStock: cartItem.qty > product.stock,
@@ -405,6 +409,9 @@ export async function expandBundles(cart, _user) {
         qty,
         unitPrice: product.price,
         lineTotal: product.price * qty,
+        // Same snapshot as a loose line — a bundled part still has a cost, and
+        // the margin on a combo is the number most worth knowing.
+        unitCost: product.cost > 0 ? product.cost : undefined,
         inStock: product.stock > 0,
         exceedsStock: qty > product.stock,
       });

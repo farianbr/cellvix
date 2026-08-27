@@ -1,0 +1,544 @@
+import { useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router';
+import {
+  AlertCircle,
+  AlertTriangle,
+  ArrowRight,
+  Ban,
+  CheckCircle2,
+  Clock,
+  FileSignature,
+  Send,
+  TrendingDown,
+  Wallet,
+} from 'lucide-react';
+import cn from '@/lib/cn';
+import { money, date, dateTime, count as formatCount } from '@/lib/format';
+import Panel, { PanelEmpty } from '@/components/ui/Panel';
+import Modal from '@/components/ui/Modal';
+import Button from '@/components/ui/Button';
+import Badge from '@/components/ui/Badge';
+import PageHeader from '@/components/admin/PageHeader';
+import KpiRow from '@/components/admin/KpiRow';
+import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
+import { useAdminQuote, useAdminMutations } from '@/hooks/useAdmin';
+
+/**
+ * One quote — lines, expiry, the live price comparison, and conversion
+ * (ERP rework §6.6).
+ *
+ * The comparison panel is the point of this screen. A quote is a promise held
+ * for a period, and the catalogue keeps moving underneath it; showing that
+ * *while the quote is still open* is what lets an operator re-quote before a
+ * client accepts a price that now loses money.
+ */
+
+const STATUS_TONES = {
+  draft: 'neutral',
+  sent: 'info',
+  accepted: 'ok',
+  expired: 'warn',
+  converted: 'brand',
+  rejected: 'danger',
+};
+
+/**
+ * The price-comparison table.
+ *
+ * Rendered in two places with the same component: inline on the quote while it
+ * is open, and inside the conversion dialog when the server refuses with
+ * `QUOTE_PRICE_DRIFT`. One implementation means the operator sees the same
+ * numbers whichever moment they are looking at.
+ */
+function DriftTable({ drift, compact = false }) {
+  const lines = (drift?.lines ?? []).filter(
+    (line) => line.difference !== 0 || line.belowCost || line.unavailable || line.shortStock,
+  );
+
+  if (!lines.length) {
+    return (
+      <p className="text-[12.5px] text-ink-500">
+        Every quoted price still matches the catalogue.
+      </p>
+    );
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-left">
+        <thead>
+          <tr className="border-b border-line">
+            {['Item', 'Qty', 'Quoted', 'Today', 'Difference'].map((header, index) => (
+              <th
+                key={header}
+                scope="col"
+                className={cn(
+                  'eyebrow whitespace-nowrap px-3 py-2 text-ink-400',
+                  index === 0 ? 'text-left' : 'text-right',
+                )}
+              >
+                {header}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {lines.map((line) => (
+            <tr key={line.sku} className="border-b border-line last:border-0">
+              <td className="px-3 py-2">
+                <span className="block truncate text-[12.5px] text-ink-900">{line.name}</span>
+                <span className="block font-mono text-[11px] text-ink-300">{line.sku}</span>
+
+                {/* The two states that actually stop a conversion are named
+                    rather than left for the operator to infer from a dash. */}
+                {line.unavailable && (
+                  <Badge tone="danger" size="sm" className="mt-1">
+                    no longer available
+                  </Badge>
+                )}
+                {line.shortStock && !line.unavailable && (
+                  <Badge tone="danger" size="sm" className="mt-1">
+                    short of stock
+                  </Badge>
+                )}
+                {line.belowCost && !line.unavailable && (
+                  <Badge tone="warn" size="sm" className="mt-1">
+                    below today&rsquo;s cost
+                  </Badge>
+                )}
+              </td>
+              <td className="tnum px-3 py-2 text-right text-[12.5px] text-ink-700">{line.qty}</td>
+              <td className="tnum px-3 py-2 text-right text-[12.5px] font-medium text-ink-900">
+                {money(line.quotedPrice)}
+              </td>
+              <td className="tnum px-3 py-2 text-right text-[12.5px] text-ink-700">
+                {line.livePrice === null ? '—' : money(line.livePrice)}
+              </td>
+              <td className="tnum px-3 py-2 text-right text-[12.5px]">
+                {line.difference === null ? (
+                  <span className="text-ink-300">—</span>
+                ) : (
+                  // Signed once: a quote below today's price is a negative, and
+                  // the tone follows the sign rather than a second label.
+                  <span className={cn('font-medium', line.difference < 0 ? 'text-danger' : 'text-ok')}>
+                    {line.difference < 0 ? '−' : '+'}
+                    {money(Math.abs(line.difference))}
+                  </span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {!compact && (
+        <p className="tnum mt-2 px-3 text-[12px] text-ink-500">
+          Quoted total {money(drift.quotedTotal)} · at today&rsquo;s prices {money(drift.liveTotal)}
+        </p>
+      )}
+    </div>
+  );
+}
+
+export function AdminQuoteDetailPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [converting, setConverting] = useState(false);
+  const [driftFromServer, setDriftFromServer] = useState(null);
+
+  const { data, isLoading, error } = useAdminQuote(id);
+  const { setQuoteStatus, convertQuote } = useAdminMutations();
+
+  const quote = data?.quote;
+  const drift = data?.drift;
+
+  useSetRecordLabel(quote?.quoteNumber);
+
+  if (error) {
+    return (
+      <>
+        <PageHeader icon={FileSignature} title="Quote" />
+        <Panel>
+          <PanelEmpty
+            icon={FileSignature}
+            title="Quote not found"
+            body={error.message}
+            action={
+              <Link
+                to="/admin/quotes"
+                className="inline-flex h-9 select-none items-center justify-center rounded-[8px] border border-line-strong bg-surface px-3.5 font-display text-[13px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+              >
+                Back to quotes
+              </Link>
+            }
+          />
+        </Panel>
+      </>
+    );
+  }
+
+  if (isLoading || !quote) {
+    return (
+      <>
+        <PageHeader icon={FileSignature} title="Quote" />
+        <div className="space-y-3">
+          <div className="h-24 animate-pulse rounded-[14px] bg-surface-2" />
+          <div className="h-64 animate-pulse rounded-[14px] bg-surface-2" />
+        </div>
+      </>
+    );
+  }
+
+  const margin = quote.items.reduce(
+    (acc, item) => {
+      if (item.unitCost == null) return { ...acc, uncosted: acc.uncosted + 1 };
+      return {
+        ...acc,
+        cost: acc.cost + item.unitCost * item.qty,
+        costedRevenue: acc.costedRevenue + item.lineTotal,
+      };
+    },
+    { cost: 0, costedRevenue: 0, uncosted: 0 },
+  );
+
+  const marginPercent =
+    margin.costedRevenue > 0
+      ? Math.round(((margin.costedRevenue - margin.cost) / margin.costedRevenue) * 100)
+      : null;
+
+  function runConvert(acknowledgeDrift) {
+    convertQuote.mutate(
+      { id: quote.id, acknowledgeDrift, deliveryCode: 'ground' },
+      {
+        onSuccess: (payload) => {
+          setConverting(false);
+          setDriftFromServer(null);
+          if (payload?.order?.orderNumber) navigate('/admin/orders');
+        },
+        onError: (err) => {
+          // The server refuses a drifted conversion and hands back the full
+          // comparison. Showing it and asking is the whole contract — the
+          // operator decides to honour the quoted price, we never decide for
+          // them and never apply it silently.
+          if (err.code === 'QUOTE_PRICE_DRIFT' && err.fields?.drift) {
+            setDriftFromServer(err.fields.drift);
+            setConverting(true);
+          }
+        },
+      },
+    );
+  }
+
+  return (
+    <>
+      <PageHeader
+        icon={FileSignature}
+        title={quote.quoteNumber}
+        description={`${quote.user.businessName} · created ${date(quote.createdAt)}`}
+        badge={
+          <>
+            <Badge tone={STATUS_TONES[quote.status]} size="sm">
+              {quote.status}
+            </Badge>
+            {drift?.hasDrift && !['converted', 'rejected'].includes(quote.storedStatus) && (
+              <Badge tone="warn" size="sm">
+                prices moved
+              </Badge>
+            )}
+          </>
+        }
+        action={
+          <>
+            {quote.storedStatus === 'draft' && (
+              <Button
+                icon={Send}
+                loading={setQuoteStatus.isPending}
+                onClick={() => setQuoteStatus.mutate({ id: quote.id, status: 'sent' })}
+              >
+                Mark as sent
+              </Button>
+            )}
+            {quote.storedStatus === 'sent' && !quote.expired && (
+              <Button
+                icon={CheckCircle2}
+                loading={setQuoteStatus.isPending}
+                onClick={() => setQuoteStatus.mutate({ id: quote.id, status: 'accepted' })}
+              >
+                Mark as accepted
+              </Button>
+            )}
+            {quote.storedStatus === 'accepted' && (
+              <Button icon={ArrowRight} onClick={() => runConvert(false)} loading={convertQuote.isPending}>
+                Convert to order
+              </Button>
+            )}
+            {!['converted', 'rejected'].includes(quote.storedStatus) && (
+              <Button
+                variant="ghost"
+                icon={Ban}
+                onClick={() => setQuoteStatus.mutate({ id: quote.id, status: 'rejected' })}
+              >
+                Reject
+              </Button>
+            )}
+          </>
+        }
+      />
+
+      {(setQuoteStatus.error || (convertQuote.error && convertQuote.error.code !== 'QUOTE_PRICE_DRIFT')) && (
+        <p className="mb-3 flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+          <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
+          {(setQuoteStatus.error ?? convertQuote.error).message}
+        </p>
+      )}
+
+      {quote.expired && (
+        <p className="mb-3 flex items-start gap-2 rounded-[10px] bg-warn-50 px-3 py-2.5 text-[13px] leading-relaxed text-warn">
+          <Clock className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
+          <span>
+            This quote expired on {date(quote.validUntil)}. Extend its expiry before accepting or
+            converting it — honouring a lapsed price is a decision worth recording.
+          </span>
+        </p>
+      )}
+
+      <KpiRow
+        tiles={[
+          {
+            key: 'total',
+            label: 'Quote total',
+            value: money(quote.total),
+            hint: `${money(quote.subtotal)} of goods`,
+            tone: 'brand',
+            icon: Wallet,
+          },
+          {
+            key: 'lines',
+            label: 'Lines',
+            value: formatCount(quote.itemCount),
+            hint: `${formatCount(quote.items.reduce((sum, item) => sum + item.qty, 0))} units`,
+            tone: 'neutral',
+            icon: FileSignature,
+          },
+          {
+            key: 'margin',
+            label: 'Margin',
+            value: marginPercent === null ? '—' : `${marginPercent}%`,
+            hint:
+              margin.uncosted > 0
+                ? `Excludes ${formatCount(margin.uncosted)} line(s) with no recorded cost`
+                : 'At the quoted prices',
+            tone: marginPercent !== null && marginPercent < 0 ? 'danger' : 'ok',
+            icon: TrendingDown,
+          },
+          {
+            key: 'expiry',
+            label: 'Expires',
+            value: quote.validUntil ? date(quote.validUntil) : '—',
+            hint: quote.expired ? 'Past its date' : 'Still live',
+            tone: quote.expired ? 'warn' : 'info',
+            icon: Clock,
+          },
+        ]}
+      />
+
+      <div className="grid gap-3 lg:grid-cols-[1fr_300px]">
+        <div className="space-y-3">
+          <Panel title="Lines" flush>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-line">
+                    <th scope="col" className="eyebrow px-4 py-2.5 text-ink-400">
+                      Product
+                    </th>
+                    <th scope="col" className="eyebrow px-4 py-2.5 text-right text-ink-400">
+                      Qty
+                    </th>
+                    <th scope="col" className="eyebrow px-4 py-2.5 text-right text-ink-400">
+                      Quoted price
+                    </th>
+                    <th scope="col" className="eyebrow px-4 py-2.5 text-right text-ink-400">
+                      Line total
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {quote.items.map((item) => (
+                    <tr key={item.sku} className="border-b border-line last:border-0">
+                      <td className="px-4 py-3">
+                        <p className="text-[13px] text-ink-900">{item.name}</p>
+                        <p className="font-mono text-[11.5px] text-ink-400">{item.sku}</p>
+                      </td>
+                      <td className="tnum px-4 py-3 text-right text-[13px] text-ink-700">
+                        {formatCount(item.qty)}
+                      </td>
+                      <td className="tnum px-4 py-3 text-right text-[13px] text-ink-700">
+                        {money(item.unitPrice)}
+                      </td>
+                      <td className="tnum px-4 py-3 text-right text-[13px] font-medium text-ink-900">
+                        {money(item.lineTotal)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="border-t border-line px-4 py-3">
+              <dl className="ml-auto max-w-[260px] space-y-1 text-[13px]">
+                <div className="tnum flex justify-between text-ink-600">
+                  <dt>Subtotal</dt>
+                  <dd>{money(quote.subtotal)}</dd>
+                </div>
+                <div className="tnum flex justify-between text-ink-600">
+                  <dt>Shipping</dt>
+                  <dd>{money(quote.shipping)}</dd>
+                </div>
+                <div className="tnum flex justify-between text-ink-600">
+                  <dt>GST/HST</dt>
+                  <dd>{money(quote.tax)}</dd>
+                </div>
+                <div className="tnum flex justify-between border-t border-line pt-1 text-[14px] font-semibold text-ink-900">
+                  <dt>Total</dt>
+                  <dd>{money(quote.total)}</dd>
+                </div>
+              </dl>
+            </div>
+          </Panel>
+
+          {!['converted', 'rejected'].includes(quote.storedStatus) && (
+            <Panel
+              title="Against today's catalogue"
+              description="What this quote promised, and what those parts cost now."
+            >
+              <DriftTable drift={drift} />
+            </Panel>
+          )}
+        </div>
+
+        <div className="space-y-3">
+          <Panel title="Client">
+            <p className="text-[13.5px] font-medium text-ink-900">{quote.user.businessName}</p>
+            {quote.user.contactName && (
+              <p className="mt-0.5 text-[12.5px] text-ink-500">{quote.user.contactName}</p>
+            )}
+            {quote.user.email && (
+              <a
+                href={`mailto:${quote.user.email}`}
+                className="mt-0.5 block break-all text-[12.5px] text-ink-500 hover:text-brand"
+              >
+                {quote.user.email}
+              </a>
+            )}
+            {quote.user.id && (
+              <Link
+                to={`/admin/clients/${quote.user.id}`}
+                className="mt-3 inline-flex h-8 select-none items-center justify-center rounded-[8px] border border-line-strong bg-surface px-3 font-display text-[12.5px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+              >
+                View profile
+              </Link>
+            )}
+          </Panel>
+
+          {quote.convertedOrder?.orderNumber && (
+            <Panel title="Converted">
+              <p className="text-[13px] text-ink-600">
+                This quote became order{' '}
+                <span className="font-mono font-medium text-ink-900">
+                  {quote.convertedOrder.orderNumber}
+                </span>
+                .
+              </p>
+            </Panel>
+          )}
+
+          {quote.notes && (
+            <Panel title="Notes">
+              <p className="whitespace-pre-line text-[13px] leading-relaxed text-ink-600">
+                {quote.notes}
+              </p>
+            </Panel>
+          )}
+
+          <Panel title="Timeline" flush>
+            <ul className="divide-y divide-line">
+              {quote.timeline.map((entry, index) => (
+                <li key={`${entry.status}-${index}`} className="flex items-start gap-2.5 px-4 py-3">
+                  <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-surface-2 text-ink-400">
+                    <CheckCircle2 className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[12.5px] font-medium text-ink-900">{entry.status}</p>
+                    <p className="text-[11.5px] text-ink-400">{dateTime(entry.at)}</p>
+                    {entry.note && <p className="mt-0.5 text-[12px] text-ink-500">{entry.note}</p>}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </Panel>
+        </div>
+      </div>
+
+      <Modal
+        open={converting}
+        onClose={() => {
+          setConverting(false);
+          setDriftFromServer(null);
+        }}
+        title="Catalogue prices have changed"
+        size="lg"
+        align="top"
+      >
+        <div className="space-y-4">
+          <p className="flex items-start gap-2 rounded-[10px] bg-warn-50 px-3 py-2.5 text-[13px] leading-relaxed text-warn">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
+            <span>
+              These parts cost something different today than when{' '}
+              <strong className="font-semibold">{quote.quoteNumber}</strong> was issued. Converting
+              honours <strong className="font-semibold">the quoted prices</strong> — that is the
+              promise made to the client. Confirm you have seen the difference.
+            </span>
+          </p>
+
+          <DriftTable drift={driftFromServer ?? drift} compact />
+
+          {(driftFromServer ?? drift) && (
+            <p className="tnum rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12.5px] text-ink-600">
+              Converting at the quoted total of{' '}
+              <span className="font-medium text-ink-900">
+                {money((driftFromServer ?? drift).quotedTotal)}
+              </span>
+              , rather than {money((driftFromServer ?? drift).liveTotal)} at today&rsquo;s prices.
+            </p>
+          )}
+
+          {convertQuote.error && convertQuote.error.code !== 'QUOTE_PRICE_DRIFT' && (
+            <p className="flex items-start gap-2 text-[12.5px] text-danger">
+              <AlertCircle className="mt-0.5 size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+              {convertQuote.error.message}
+            </p>
+          )}
+
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => {
+                setConverting(false);
+                setDriftFromServer(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button loading={convertQuote.isPending} onClick={() => runConvert(true)}>
+              Convert at quoted prices
+            </Button>
+          </div>
+        </div>
+      </Modal>
+    </>
+  );
+}
+
+export default AdminQuoteDetailPage;

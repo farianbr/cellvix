@@ -29,6 +29,9 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Skeleton from '@/components/ui/Skeleton';
 import PostCover from '@/components/blog/PostCover';
+import PageHeader from '@/components/admin/PageHeader';
+import { ADMIN_ROUTES } from '@/lib/adminRoutes';
+import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminBlog, useAdminBlogPost, useAdminMutations } from '@/hooks/useAdmin';
 
 const STATUS_FILTERS = [
@@ -278,6 +281,12 @@ function PostEditor({ editingId, onSubmit, onCancel, isPending, error }) {
   );
 }
 
+/**
+ * Header metadata read from the same table the breadcrumb uses, so a page
+ * title can never drift from its crumb.
+ */
+const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/marketing/blog'], icon: adminIcon('Newspaper') };
+
 export function AdminBlogPage() {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('all');
@@ -296,8 +305,14 @@ export function AdminBlogPage() {
 
   return (
     <>
+      <PageHeader
+        icon={ADMIN_PAGE.icon}
+        title={ADMIN_PAGE.title}
+        description={ADMIN_PAGE.description}
+      />
+
       <Panel
-        title="Blog"
+        title="Posts"
         description={
           data
             ? `${data.counts?.published ?? 0} published · ${data.counts?.draft ?? 0} in draft`

@@ -18,6 +18,17 @@ const orderItemSchema = new mongoose.Schema(
     // and what came off it — which is what a trade buyer reconciles against.
     unitPrice: { type: Number, required: true },
     lineTotal: { type: Number, required: true },
+
+    // What the part cost Cellvix, snapshotted at order time from `Product.cost`
+    // (ERP rework §9.4). Margin has to survive a later cost change: joining to
+    // the product at report time would let a price negotiated in June silently
+    // rewrite the margin on a sale that happened in March.
+    //
+    // **Undefined, not zero, when unknown.** Orders placed before cost was
+    // tracked have no honest value here, and a zero would read as "this part
+    // was free" — a 100% margin. Every report distinguishes the two and says
+    // how many lines it could not cost.
+    unitCost: Number,
     // Set on lines that arrived as part of a combo, so the order page can group
     // them the way the cart did.
     bundle: {

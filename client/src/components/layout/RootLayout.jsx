@@ -1,13 +1,26 @@
-import { Outlet } from 'react-router';
+import { Navigate, Outlet } from 'react-router';
 import Header from './Header';
 import Footer from './Footer';
 import MobileBottomNav from './MobileBottomNav';
 import BackToTop from './BackToTop';
 import ScrollToTop from './ScrollToTop';
 import AccountPopup from '@/components/account/AccountPopup';
+import RouteFallback from './RouteFallback';
+import { useAuth } from '@/hooks/useAuth';
 
 /** Chrome shared by every route: header, footer, and the global overlays. */
 export function RootLayout() {
+  const { isLoading, isAdmin } = useAuth();
+
+  // Staff have no buyer side. The catalogue, cart and checkout all assume a
+  // business account behind them, so a signed-in admin is sent to the console
+  // from any storefront URL — typed, bookmarked or followed from an email.
+  //
+  // The wait on `isLoading` is what keeps a hard refresh at `/` from painting
+  // the shop for a beat before `/auth/me` answers.
+  if (isLoading) return <RouteFallback />;
+  if (isAdmin) return <Navigate to="/admin" replace />;
+
   return (
     <div className="flex min-h-screen flex-col">
       <ScrollToTop />

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { AlertCircle, Package, Search, Truck, Undo2 } from 'lucide-react';
+import { AlertCircle, Package, PackageCheck, Truck, Undo2, Wallet } from 'lucide-react';
 import cn from '@/lib/cn';
 import { money, date, count as formatCount } from '@/lib/format';
 import { ORDER_STATUS_FLOW, CARRIERS } from '@shared/schemas/admin';
@@ -8,15 +8,20 @@ import { ORDER_STATUSES } from '@/lib/constants';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
-import SelectMenu from '@/components/ui/SelectMenu';
 import SelectField from '@/components/ui/SelectField';
 import Button from '@/components/ui/Button';
-import Skeleton from '@/components/ui/Skeleton';
 import { OrderStatusBadge } from '@/components/account/OrderStatusBadge';
+import PageHeader from '@/components/admin/PageHeader';
+import KpiRow from '@/components/admin/KpiRow';
+import FilterStrip from '@/components/admin/FilterStrip';
+import DataTable, { CountLine } from '@/components/admin/DataTable';
+import { ADMIN_ROUTES } from '@/lib/adminRoutes';
+import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminOrders, useAdminMutations } from '@/hooks/useAdmin';
 
-const FILTERS = [
-  { value: 'all', label: 'All statuses' },
+/** Segmented pills, not a select — the counts are the point (§4, convention 8). */
+const PILLS = [
+  { value: 'all', label: 'All' },
   ...ORDER_STATUSES.map((status) => ({ value: status.value, label: status.label })),
   { value: 'cancelled', label: 'Cancelled' },
 ];
@@ -190,137 +195,293 @@ function RefundForm({ order, onSubmit, onCancel, isPending, error }) {
   );
 }
 
+/**
+ * Header metadata read from the same table the breadcrumb uses, so a page
+ * title can never drift from its crumb.
+ */
+const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/orders'], icon: adminIcon('Package') };
+
 export function AdminOrdersPage() {
   const [status, setStatus] = useState('all');
   const [query, setQuery] = useState('');
   const [editing, setEditing] = useState(null);
+  const [selected, setSelected] = useState([]);
+
+  const [bulkResult, setBulkResult] = useState(null);
 
   const { data, isLoading } = useAdminOrders({ status, q: query || undefined });
-  const { updateOrderStatus, refundOrder } = useAdminMutations();
+  const { updateOrderStatus, refundOrder, bulkOrderStatus } = useAdminMutations();
   const [refunding, setRefunding] = useState(null);
+
+  /**
+   * The server decides which of the selected orders can actually make the move
+   * — the client neither pre-filters the selection nor guesses the outcome.
+   * Whatever it reports back is what the operator is shown.
+   */
+  function setBulkStatus(next) {
+    bulkOrderStatus.mutate(
+      { orderNumbers: selected, status: next },
+      {
+        onSuccess: (result) => {
+          setBulkResult(result);
+          setSelected([]);
+        },
+      },
+    );
+  }
 
   const orders = data?.orders ?? [];
   const counts = data?.counts ?? {};
 
+  const awaiting = (counts.placed ?? 0) + (counts.processing ?? 0);
+  const shipped = (counts.shipped ?? 0) + (counts.out_for_delivery ?? 0);
+  const rangeValue = orders.reduce((sum, order) => sum + order.total, 0);
+
+  const columns = [
+    {
+      key: 'orderNumber',
+      header: 'Order',
+      priority: 1,
+      render: (order) => (
+        <>
+          <span className="block whitespace-nowrap font-mono text-[12.5px] font-medium text-ink-900">
+            {order.orderNumber}
+          </span>
+          {order.poNumber && (
+            <span className="block text-[11px] text-ink-400">PO {order.poNumber}</span>
+          )}
+        </>
+      ),
+    },
+    {
+      key: 'businessName',
+      header: 'Business',
+      // Folds away below 768: the order number, total and status are what an
+      // operator scans a phone for, and all three fit only without this.
+      priority: 2,
+      className: 'max-w-[180px] truncate',
+    },
+    {
+      key: 'createdAt',
+      header: 'Placed',
+      priority: 2,
+      render: (order) => <span className="text-[12.5px] text-ink-500">{date(order.createdAt)}</span>,
+    },
+    {
+      key: 'items',
+      header: 'Items',
+      priority: 3,
+      align: 'right',
+      className: 'tnum',
+      sortValue: (order) => order.items.length,
+      render: (order) => order.items.length,
+    },
+    {
+      key: 'total',
+      header: 'Total',
+      priority: 1,
+      align: 'right',
+      className: 'tnum font-medium text-ink-900',
+      render: (order) => money(order.total),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      priority: 1,
+      render: (order) => <OrderStatusBadge status={order.status} size="sm" />,
+    },
+    {
+      key: 'tracking',
+      header: 'Tracking',
+      priority: 3,
+      sortable: false,
+      render: (order) =>
+        order.tracking?.number ? (
+          <span className="tnum block font-mono text-[11.5px] text-ink-500">
+            {order.tracking.number}
+            <span className="block text-ink-300">{order.tracking.carrier}</span>
+          </span>
+        ) : (
+          <span className="text-[12px] text-ink-300">—</span>
+        ),
+    },
+  ];
+
+  // The two actions that used to be inline buttons. They move into the `···`
+  // menu so the row stops widening with every action added later.
+  const rowMenu = [
+    {
+      key: 'status',
+      label: 'Update status',
+      icon: Truck,
+      disabled: (order) => order.status === 'delivered' || order.status === 'cancelled',
+      onSelect: setEditing,
+    },
+    {
+      key: 'refund',
+      label: (order) => ((order.refundedTotal ?? 0) > 0 ? 'Refund again' : 'Refund to store credit'),
+      icon: Undo2,
+      tone: 'danger',
+      disabled: (order) => (order.refundedTotal ?? 0) >= order.total,
+      onSelect: setRefunding,
+    },
+  ];
+
   return (
     <>
-      <Panel
-        title="Orders"
-        description={`${formatCount(orders.length)} shown · ${formatCount(
-          (counts.placed ?? 0) + (counts.processing ?? 0),
-        )} awaiting dispatch`}
-        flush
-      >
-        <div className="flex flex-wrap gap-2.5 border-b border-line p-4 sm:px-5">
-          <Input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Order number, PO or SKU…"
-            icon={Search}
-            containerClassName="min-w-[200px] flex-1"
-          />
-          <SelectMenu
-            options={FILTERS}
-            value={status}
-            onChange={setStatus}
-            srLabel="Filter by status"
-            size="md"
-            className="w-[180px]"
-          />
+      <PageHeader
+        icon={ADMIN_PAGE.icon}
+        title={ADMIN_PAGE.title}
+        description={ADMIN_PAGE.description}
+      />
+
+      <KpiRow
+        tiles={[
+          {
+            key: 'open',
+            label: 'Open orders',
+            value: formatCount(awaiting + shipped),
+            hint: 'Placed through out for delivery',
+            tone: 'brand',
+            icon: Package,
+          },
+          {
+            key: 'awaiting',
+            label: 'To fulfil',
+            value: formatCount(awaiting),
+            hint: 'Placed or processing',
+            tone: awaiting > 0 ? 'warn' : 'ok',
+            icon: PackageCheck,
+          },
+          {
+            key: 'shipped',
+            label: 'In transit',
+            value: formatCount(shipped),
+            hint: 'Shipped or out for delivery',
+            tone: 'info',
+            icon: Truck,
+          },
+          {
+            key: 'value',
+            label: 'Value',
+            value: money(rangeValue),
+            hint: `Across ${formatCount(orders.length)} order${orders.length === 1 ? '' : 's'}`,
+            tone: 'ok',
+            icon: Wallet,
+          },
+        ]}
+      />
+
+      <Panel flush>
+        <FilterStrip
+          search={query}
+          onSearchChange={setQuery}
+          searchPlaceholder="Order number, PO or SKU…"
+          pills={PILLS.map((pill) => ({
+            ...pill,
+            count: pill.value === 'all' ? undefined : counts[pill.value],
+          }))}
+          activePill={status}
+          onPillChange={setStatus}
+          onExport={(format) =>
+            // Wired to a real endpoint in phase 12 (§7.4); until then it says so
+            // rather than downloading an empty file.
+            window.alert(
+              `Export to ${format} arrives in phase 12. It will carry the current filters: ` +
+                `status "${status}"${query ? `, search "${query}"` : ''}.`,
+            )
+          }
+        />
+
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-3 py-2 sm:px-4">
+          <CountLine total={orders.length} noun={orders.length === 1 ? 'order' : 'orders'} />
+
+          {selected.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-[12.5px] text-ink-500">
+                <span className="font-semibold text-ink-900">{selected.length}</span> selected
+              </p>
+
+              {/* Bulk deliberately offers no `shipped` step: one tracking number
+                  across many parcels is wrong, so shipping stays a per-order
+                  action with its own form. */}
+              <Button
+                size="xs"
+                variant="outline"
+                onClick={() => setBulkStatus('processing')}
+                loading={bulkOrderStatus.isPending}
+              >
+                Mark processing
+              </Button>
+              <Button
+                size="xs"
+                variant="outline"
+                onClick={() => setBulkStatus('delivered')}
+                loading={bulkOrderStatus.isPending}
+              >
+                Mark delivered
+              </Button>
+              <Button size="xs" variant="ghost" onClick={() => setSelected([])}>
+                Clear
+              </Button>
+            </div>
+          )}
         </div>
 
-        {isLoading ? (
-          <div className="space-y-2 p-4 sm:p-5">
-            {Array.from({ length: 5 }).map((_, index) => (
-              <Skeleton key={index} className="h-16" />
-            ))}
-          </div>
-        ) : orders.length === 0 ? (
-          <PanelEmpty icon={Package} title="No orders match" body="Try a different filter or search." />
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[840px] text-left">
-              <thead>
-                <tr className="border-b border-line">
-                  {['Order', 'Business', 'Placed', 'Items', 'Total', 'Status', 'Tracking', ''].map(
-                    (heading) => (
-                      <th key={heading} scope="col" className="eyebrow px-4 py-2.5 text-ink-400 first:sm:pl-5">
-                        {heading}
-                      </th>
-                    ),
-                  )}
-                </tr>
-              </thead>
+        {/* A batch is partial by design, so what did **not** move is reported
+            rather than swallowed — silently moving nineteen of twenty is how an
+            operator comes to trust a button that is lying to them. */}
+        {bulkResult && (
+          <div className="border-b border-line bg-surface-2 px-3 py-2.5 sm:px-4">
+            <p className="text-[12.5px] text-ink-700">
+              <span className="font-semibold text-ok">{bulkResult.updated.length} moved</span>
+              {bulkResult.skipped.length > 0 && (
+                <>
+                  {' · '}
+                  <span className="font-semibold text-warn">
+                    {bulkResult.skipped.length} skipped
+                  </span>
+                </>
+              )}
+              <button
+                type="button"
+                onClick={() => setBulkResult(null)}
+                className="ml-2 text-[12px] text-ink-400 underline hover:text-ink-900"
+              >
+                Dismiss
+              </button>
+            </p>
 
-              <tbody className="divide-y divide-line">
-                {orders.map((order) => (
-                  <tr key={order.orderNumber} className="transition-colors hover:bg-surface-2">
-                    <td className="px-4 py-3 sm:pl-5">
-                      <span className="font-mono text-[12.5px] font-medium text-ink-900">
-                        {order.orderNumber}
-                      </span>
-                      {order.poNumber && (
-                        <span className="block text-[11px] text-ink-400">PO {order.poNumber}</span>
-                      )}
-                    </td>
-
-                    <td className="max-w-[180px] truncate px-4 py-3 text-[13px] text-ink-700">
-                      {order.businessName}
-                    </td>
-
-                    <td className="px-4 py-3 text-[12.5px] text-ink-500">{date(order.createdAt)}</td>
-
-                    <td className="tnum px-4 py-3 text-[12.5px] text-ink-500">
-                      {order.items.length}
-                    </td>
-
-                    <td className="tnum px-4 py-3 text-[13px] font-medium text-ink-900">
-                      {money(order.total)}
-                    </td>
-
-                    <td className="px-4 py-3">
-                      <OrderStatusBadge status={order.status} size="sm" />
-                    </td>
-
-                    <td className="px-4 py-3">
-                      {order.tracking?.number ? (
-                        <span className="tnum block font-mono text-[11.5px] text-ink-500">
-                          {order.tracking.number}
-                          <span className="block text-ink-300">{order.tracking.carrier}</span>
-                        </span>
-                      ) : (
-                        <span className="text-[12px] text-ink-300">—</span>
-                      )}
-                    </td>
-
-                    <td className="px-4 py-3">
-                      <div className="flex justify-end gap-1.5">
-                        <Button
-                          size="xs"
-                          variant="outline"
-                          icon={Truck}
-                          disabled={order.status === 'delivered' || order.status === 'cancelled'}
-                          onClick={() => setEditing(order)}
-                        >
-                          Update
-                        </Button>
-                        <Button
-                          size="xs"
-                          variant="ghost"
-                          icon={Undo2}
-                          disabled={(order.refundedTotal ?? 0) >= order.total}
-                          onClick={() => setRefunding(order)}
-                        >
-                          {(order.refundedTotal ?? 0) > 0 ? 'Refunded' : 'Refund'}
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
+            {bulkResult.skipped.length > 0 && (
+              <ul className="mt-1.5 space-y-0.5">
+                {bulkResult.skipped.map((skip) => (
+                  <li key={skip.orderNumber} className="text-[12px] text-ink-500">
+                    <span className="font-mono text-ink-700">{skip.orderNumber}</span> — {skip.reason}
+                  </li>
                 ))}
-              </tbody>
-            </table>
+              </ul>
+            )}
           </div>
         )}
+
+        <DataTable
+          columns={columns}
+          rows={orders}
+          rowKey={(order) => order.orderNumber}
+          selectable
+          selected={selected}
+          onSelectionChange={setSelected}
+          rowMenu={rowMenu}
+          loading={isLoading}
+          defaultSort={{ key: 'createdAt', direction: 'desc' }}
+          empty={
+            <PanelEmpty
+              icon={Package}
+              title="No orders match"
+              body="Try a different filter or search."
+            />
+          }
+        />
       </Panel>
 
       <Modal

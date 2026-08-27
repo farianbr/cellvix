@@ -1,0 +1,140 @@
+import cn from '@/lib/cn';
+
+/**
+ * The KPI tile row every admin screen opens with (ERP rework §4, convention 7).
+ *
+ * Tiles carry a **coloured left border keyed to meaning, not decoration**
+ * (§2b). The map below is the whole vocabulary — a tile does not get to invent
+ * a colour:
+ *
+ *   money-in / positive     ok
+ *   money-out / cost        warn
+ *   overdue / negative      danger
+ *   neutral count           info
+ *   the page's headline     brand
+ *
+ * It **wraps to a grid rather than forcing one line**. CellShoppe's nine-tile
+ * P&L row overflows its own container even on desktop; a tile row that clips is
+ * a bug, so this one reflows instead.
+ */
+
+const TONE_BORDER = {
+  ok: 'border-l-ok',
+  warn: 'border-l-warn',
+  danger: 'border-l-danger',
+  info: 'border-l-info',
+  brand: 'border-l-brand',
+  neutral: 'border-l-line-strong',
+};
+
+const TONE_VALUE = {
+  ok: 'text-ink-900',
+  warn: 'text-ink-900',
+  danger: 'text-danger',
+  info: 'text-ink-900',
+  brand: 'text-ink-900',
+  neutral: 'text-ink-900',
+};
+
+const TONE_ICON = {
+  ok: 'bg-ok-50 text-ok',
+  warn: 'bg-warn-50 text-warn',
+  danger: 'bg-danger-50 text-danger',
+  info: 'bg-info-50 text-info',
+  brand: 'bg-brand-50 text-brand',
+  neutral: 'bg-surface-2 text-ink-400',
+};
+
+/**
+ * A period-over-period change. Direction is not assumed to be good: a rise in
+ * expenses is not a win, so the caller says which way is up via `goodWhen`.
+ */
+function Delta({ delta, goodWhen = 'up' }) {
+  if (delta == null || Number.isNaN(delta)) return null;
+
+  const rising = delta > 0;
+  const flat = delta === 0;
+  const good = flat ? null : (rising ? goodWhen === 'up' : goodWhen === 'down');
+
+  return (
+    <span
+      className={cn(
+        'tnum text-[11.5px] font-semibold',
+        good === null ? 'text-ink-400' : good ? 'text-ok' : 'text-danger',
+      )}
+    >
+      {rising ? '▲' : flat ? '·' : '▼'} {Math.abs(delta).toFixed(1)}%
+    </span>
+  );
+}
+
+export function KpiTile({ label, value, hint, tone = 'neutral', icon: Icon, delta, goodWhen, className }) {
+  return (
+    <div
+      className={cn(
+        'rounded-[12px] border border-line border-l-[3px] bg-surface p-3.5',
+        TONE_BORDER[tone] ?? TONE_BORDER.neutral,
+        className,
+      )}
+    >
+      <div className="mb-2 flex items-center gap-2">
+        {Icon && (
+          <span
+            className={cn(
+              'flex size-6 shrink-0 items-center justify-center rounded-[7px]',
+              TONE_ICON[tone] ?? TONE_ICON.neutral,
+            )}
+          >
+            <Icon className="size-3.5" strokeWidth={2} aria-hidden="true" />
+          </span>
+        )}
+        <p className="eyebrow min-w-0 truncate text-ink-400">{label}</p>
+      </div>
+
+      <div className="flex flex-wrap items-baseline gap-2">
+        <p
+          className={cn(
+            'tnum font-display text-[21px] font-bold leading-none',
+            TONE_VALUE[tone] ?? TONE_VALUE.neutral,
+          )}
+        >
+          {value}
+        </p>
+        <Delta delta={delta} goodWhen={goodWhen} />
+      </div>
+
+      {hint && <p className="mt-1.5 text-[11.5px] leading-snug text-ink-400">{hint}</p>}
+    </div>
+  );
+}
+
+/**
+ * Pass `tiles` as an array of KpiTile props. The grid tightens as the count
+ * grows so a nine-tile P&L row does not become nine near-empty columns.
+ */
+export function KpiRow({ tiles = [], className, children }) {
+  const count = tiles.length || 4;
+  const dense = count >= 7;
+
+  return (
+    <div
+      className={cn(
+        'mb-4 grid gap-2.5',
+        'grid-cols-2',
+        dense ? 'md:grid-cols-4 xl:grid-cols-7' : 'md:grid-cols-3 xl:grid-cols-6',
+        count <= 4 && 'xl:grid-cols-4',
+        count === 5 && 'xl:grid-cols-5',
+        className,
+      )}
+    >
+      {tiles.map(({ key, ...tile }) => (
+        // `key` is pulled out of the spread: React warns when a key arrives
+        // through `{...props}`, and it is not a KpiTile prop anyway.
+        <KpiTile key={key ?? tile.label} {...tile} />
+      ))}
+      {children}
+    </div>
+  );
+}
+
+export default KpiRow;

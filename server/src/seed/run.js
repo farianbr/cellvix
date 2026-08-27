@@ -9,8 +9,19 @@ import CreditTransaction from '../models/CreditTransaction.js';
 import BlogPost from '../models/BlogPost.js';
 import Faq from '../models/Faq.js';
 import Offer from '../models/Offer.js';
+import Supplier from '../models/Supplier.js';
+import PurchaseOrder from '../models/PurchaseOrder.js';
+import Expense from '../models/Expense.js';
+import ExpenseCategory from '../models/ExpenseCategory.js';
+import StockMovement from '../models/StockMovement.js';
 import { buildTaxonomyDocs, buildProducts } from './generate.js';
 import { BLOG_POSTS, GENERAL_FAQS, PRODUCT_FAQS, buildOffers } from './content.data.js';
+import { EXPENSE_CATEGORIES } from './expense-categories.js';
+import { SUPPLIERS, buildPurchaseOrders, buildExpenses, costFor } from './purchase.data.js';
+import Settings from '../models/Settings.js';
+import Quote from '../models/Quote.js';
+import Rma from '../models/Rma.js';
+import { buildQuotes, buildRmas } from './sales.data.js';
 
 const DEMO_PASSWORD = 'Cellvix123!';
 
@@ -144,6 +155,22 @@ export async function seedDatabase({ quiet = false } = {}) {
     BlogPost.deleteMany({}),
     Faq.deleteMany({}),
     Offer.deleteMany({}),
+    // Phase 5. These reference products by id, so leaving them behind while
+    // the catalogue is rebuilt would leave purchase orders pointing at parts
+    // that no longer exist.
+    Supplier.deleteMany({}),
+    PurchaseOrder.deleteMany({}),
+    Expense.deleteMany({}),
+    ExpenseCategory.deleteMany({}),
+    StockMovement.deleteMany({}),
+    // Phase 6. Dropped and recreated from defaults so a reseed cannot leave a
+    // half-edited settings document behind; `Settings.load()` rebuilds it.
+    Settings.deleteMany({}),
+
+    // Phase 7. Quotes reference products and RMAs reference orders, so both
+    // have to go when the catalogue is rebuilt.
+    Quote.deleteMany({}),
+    Rma.deleteMany({}),
   ]);
 
   // ---- taxonomy -----------------------------------------------------------
@@ -230,6 +257,11 @@ export async function seedDatabase({ quiet = false } = {}) {
         qty,
         unitPrice: product.price,
         lineTotal: product.price * qty,
+        // Cost snapshotted at order time (§9.4), so the reports have a real
+        // margin to compute rather than treating every seeded line as pure
+        // profit. Same grade-aware ratio the purchase seed uses, so a part's
+        // sale cost and its purchase cost tell the same story.
+        unitCost: costFor(product),
       };
     });
 
@@ -395,6 +427,201 @@ export async function seedDatabase({ quiet = false } = {}) {
   const offers = await Offer.insertMany(buildOffers(insertedProducts));
   log(`  offers: ${offers.length}`);
 
+  // ---- purchase (phase 5) -------------------------------------------------
+  // Suppliers, purchase orders, the stock the received ones put on the shelf,
+  // and the expenses. Written after the catalogue because every PO line and
+  // every movement points at a product id.
+
+  const categories = await ExpenseCategory.insertMany(EXPENSE_CATEGORIES);
+  const categoriesBySlug = new Map(categories.map((category) => [category.slug, category]));
+  log(`  expense categories: ${categories.length}`);
+
+  const suppliers = await Supplier.insertMany(SUPPLIERS);
+  const suppliersByCode = new Map(suppliers.map((supplier) => [supplier.code, supplier]));
+  log(`  suppliers: ${suppliers.length}`);
+
+  const year = new Date().getFullYear();
+  const { orders: poDocs, movements: poMovements } = buildPurchaseOrders({
+    products: insertedProducts,
+    suppliersByCode,
+    year,
+  });
+
+  // Received stock is added to what the catalogue generator already put on the
+  // shelf, and `qtyAfter` is written from the running total rather than from
+  // the receipt alone — a movement whose `qtyAfter` disagrees with the product
+  // is precisely the reconciliation failure the ledger exists to make visible.
+  const runningStock = new Map(
+    insertedProducts.map((product) => [product._id.toString(), product.stock]),
+  );
+
+  const movementDocs = poMovements.map((movement) => {
+    const key = movement.product.toString();
+    const after = (runningStock.get(key) ?? 0) + movement.qtyChange;
+    runningStock.set(key, after);
+    return {
+      product: movement.product,
+      type: movement.type,
+      qtyChange: movement.qtyChange,
+      qtyAfter: after,
+      unitCost: movement.unitCost,
+      reference: movement.reference,
+      createdAt: movement.createdAt,
+      updatedAt: movement.createdAt,
+    };
+  });
+
+  const insertedPos = await PurchaseOrder.insertMany(
+    poDocs.map(({ _paid, _method, ...po }) => po),
+  );
+  log(`  purchase orders: ${insertedPos.length}`);
+
+  // Point each movement at the purchase order that produced it, now that the
+  // POs have ids, and give every received part its cost — a receipt is the
+  // moment the true cost is known, which is what `receivePurchaseOrder` does.
+  const poByNumber = new Map(insertedPos.map((po) => [po.poNumber, po]));
+  for (const movement of movementDocs) {
+    const po = poByNumber.get(movement.reference.label);
+    if (po) movement.reference = { ...movement.reference, id: po._id };
+  }
+
+  if (movementDocs.length) await StockMovement.insertMany(movementDocs);
+  log(`  stock movements: ${movementDocs.length}`);
+
+  await Promise.all(
+    [...runningStock.entries()].map(([id, stock]) => Product.updateOne({ _id: id }, { stock })),
+  );
+
+  const receivedCosts = new Map();
+  for (const po of insertedPos) {
+    for (const item of po.items) {
+      if (item.qtyReceived > 0) receivedCosts.set(item.product.toString(), item.unitCost);
+    }
+  }
+  await Promise.all(
+    [...receivedCosts.entries()].map(([id, cost]) => Product.updateOne({ _id: id }, { cost })),
+  );
+
+  // The expenses a paid purchase order generated. Same shape the running code
+  // writes, so the P&L cannot tell a seeded row from a real one.
+  const purchaseCategory = categoriesBySlug.get('inventory-purchases');
+  const poExpenses = [];
+  let expenseSequence = 1;
+
+  for (const [index, plan] of poDocs.entries()) {
+    if (!plan._paid) continue;
+    const po = insertedPos[index];
+    const supplier = suppliers.find((row) => String(row._id) === String(po.supplier));
+
+    poExpenses.push({
+      number: `EXP-${year}-${String(expenseSequence).padStart(5, '0')}`,
+      date: po.receivedDate ?? po.orderDate,
+      description: `Purchase Order ${po.poNumber} — ${supplier?.name ?? 'supplier'}`,
+      category: purchaseCategory._id,
+      payee: supplier?.name,
+      method: plan._method,
+      status: 'paid',
+      amount: po.total,
+      tax: po.tax,
+      taxIncluded: true,
+      reference: po.poNumber,
+      purchaseOrder: po._id,
+    });
+    expenseSequence += 1;
+  }
+
+  const insertedPoExpenses = poExpenses.length ? await Expense.insertMany(poExpenses) : [];
+
+  // Close the loop the running code closes: a paid PO carries the expense its
+  // payment created, so the two can never be counted twice.
+  await Promise.all(
+    insertedPoExpenses.map((expense) =>
+      PurchaseOrder.updateOne(
+        { _id: expense.purchaseOrder },
+        {
+          payment: {
+            status: 'paid',
+            method: expense.method,
+            reference: expense.reference,
+            paidAt: expense.date,
+            expense: expense._id,
+          },
+        },
+      ),
+    ),
+  );
+
+  const manualExpenses = await Expense.insertMany(
+    buildExpenses({ categoriesBySlug, year, startSequence: expenseSequence }),
+  );
+  log(`  expenses: ${insertedPoExpenses.length + manualExpenses.length}`);
+
+  // Supplier card figures, recomputed from the orders exactly as
+  // `purchaseService.refreshSupplierTotals` does — never incremented.
+  await Promise.all(
+    suppliers.map(async (supplier) => {
+      const [row] = await PurchaseOrder.aggregate([
+        {
+          $match: {
+            supplier: new mongoose.Types.ObjectId(String(supplier._id)),
+            status: { $nin: ['draft', 'cancelled'] },
+          },
+        },
+        { $group: { _id: null, total: { $sum: '$total' }, count: { $sum: 1 } } },
+      ]);
+      await Supplier.updateOne(
+        { _id: supplier._id },
+        { ordersCount: row?.count ?? 0, totalSpent: row?.total ?? 0 },
+      );
+    }),
+  );
+
+  // A default supplier, a reorder point and a cost per product, so Inventory
+  // and the reports have something to show in those columns from the first run.
+  //
+  // Written for every product, not only the ones a purchase order touched: a
+  // catalogue where most parts have no cost would make every margin figure in
+  // phase 6 read as "mostly uncosted", which is true of the data but useless as
+  // a demo. The receipts above still overwrite it with the real landed cost for
+  // the parts that were actually delivered.
+  await Promise.all(
+    insertedProducts.map((product, index) =>
+      Product.updateOne(
+        { _id: product._id },
+        {
+          supplier: suppliers[index % 4]._id,
+          minStock: [10, 15, 20, 25, 30][index % 5],
+          ...(receivedCosts.has(product._id.toString()) ? {} : { cost: costFor(product) }),
+        },
+      ),
+    ),
+  );
+
+  // The settings singleton, recreated from its seeded defaults — per-province
+  // tax rates included, which the tax report reads (§9.5).
+  const settings = await Settings.load();
+
+  // ---- quotes & returns (phase 7) -----------------------------------------
+  // Quotes are priced off the catalogue at a negotiated discount; returns are
+  // built from real order lines, so a seeded RMA can never name a part that was
+  // not actually sold — which is the rule `rmaService.createRma` enforces.
+
+  const approvedBuyers = users.filter(
+    (user) => user.status === 'approved' && user.role === 'buyer',
+  );
+
+  const quotes = await Quote.insertMany(
+    buildQuotes({
+      products: insertedProducts,
+      users: approvedBuyers,
+      rate: Settings.rateFor(settings, 'ON'),
+    }),
+  );
+  log(`  quotes: ${quotes.length}`);
+
+  const rmas = await Rma.insertMany(buildRmas({ orders: insertedOrders }));
+  log(`  returns: ${rmas.length}`);
+
   return {
     taxonomy: bySlug.size,
     products: insertedProducts.length,
@@ -405,6 +632,13 @@ export async function seedDatabase({ quiet = false } = {}) {
     posts: posts.length,
     faqs: faqs.length,
     offers: offers.length,
+    suppliers: suppliers.length,
+    purchaseOrders: insertedPos.length,
+    expenseCategories: categories.length,
+    expenses: insertedPoExpenses.length + manualExpenses.length,
+    stockMovements: movementDocs.length,
+    quotes: quotes.length,
+    returns: rmas.length,
   };
 }
 

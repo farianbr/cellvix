@@ -20,6 +20,9 @@ import SelectField from '@/components/ui/SelectField';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Skeleton from '@/components/ui/Skeleton';
+import PageHeader from '@/components/admin/PageHeader';
+import { ADMIN_ROUTES } from '@/lib/adminRoutes';
+import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminUsers, useAdminMutations } from '@/hooks/useAdmin';
 
 const TERMS = [
@@ -173,6 +176,12 @@ const STATUS_TONES = {
   suspended: 'neutral',
 };
 
+/**
+ * Header metadata read from the same table the breadcrumb uses, so a page
+ * title can never drift from its crumb.
+ */
+const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/approvals'], icon: adminIcon('ShieldCheck') };
+
 export function AdminApprovalsPage() {
   const [status, setStatus] = useState('pending');
   const [approving, setApproving] = useState(null);
@@ -186,8 +195,14 @@ export function AdminApprovalsPage() {
 
   return (
     <>
+      <PageHeader
+        icon={ADMIN_PAGE.icon}
+        title={ADMIN_PAGE.title}
+        description={ADMIN_PAGE.description}
+      />
+
       <Panel
-        title="Business accounts"
+        title="Registrations"
         description="Approve a business to unlock trade pricing and ordering."
         flush
       >

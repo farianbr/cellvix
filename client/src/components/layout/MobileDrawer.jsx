@@ -11,7 +11,6 @@ import useUiStore from '@/store/uiStore';
 import useApplyFilterPath from '@/hooks/useApplyFilterPath';
 import { useTaxonomy } from '@/hooks/useCatalog';
 import { useAuth, useSignOut } from '@/hooks/useAuth';
-import { ADMIN_NAV } from '@shared/schemas/admin';
 
 const NAV_LINKS = [
   { label: 'Shop all parts', to: '/' },
@@ -26,10 +25,12 @@ const NAV_LINKS = [
   { label: 'Contact us', to: '/contact' },
 ];
 
-// Staff get the console sections instead of the buyer dashboard links.
+// Staff get one door into the console rather than the buyer dashboard links.
+// The ERP has its own sidebar and its own thirty-odd screens — mirroring that
+// tree into the storefront drawer would be a second, worse copy of it.
 const ADMIN_LINKS = [
   { label: 'Shop all parts', to: '/' },
-  ...ADMIN_NAV.map((item) => ({ label: `Admin — ${item.label}`, to: item.to })),
+  { label: 'Admin console', to: '/admin' },
   { label: 'Offers & combo deals', to: '/offers' },
   { label: 'Blog', to: '/blog' },
   { label: 'FAQ', to: '/faq' },

@@ -27,6 +27,9 @@ import Checkbox from '@/components/ui/Checkbox';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Skeleton from '@/components/ui/Skeleton';
+import PageHeader from '@/components/admin/PageHeader';
+import { ADMIN_ROUTES } from '@/lib/adminRoutes';
+import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { usePartTypes, useTaxonomy } from '@/hooks/useCatalog';
 import { useAdminOffers, useAdminMutations, useAdminUsers } from '@/hooks/useAdmin';
 
@@ -472,6 +475,12 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
   );
 }
 
+/**
+ * Header metadata read from the same table the breadcrumb uses, so a page
+ * title can never drift from its crumb.
+ */
+const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/marketing/offers'], icon: adminIcon('Tag') };
+
 export function AdminOffersPage() {
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState('all');
@@ -497,8 +506,14 @@ export function AdminOffersPage() {
 
   return (
     <>
+      <PageHeader
+        icon={ADMIN_PAGE.icon}
+        title={ADMIN_PAGE.title}
+        description={ADMIN_PAGE.description}
+      />
+
       <Panel
-        title="Offers & combo deals"
+        title="All offers"
         description={
           data
             ? `${data.counts?.live ?? 0} live · ${data.counts?.scheduled ?? 0} scheduled · ${

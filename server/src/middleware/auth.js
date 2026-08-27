@@ -70,6 +70,31 @@ export function requireApproved(req, _res, next) {
   return next(ApiError.forbidden(message, code));
 }
 
+/**
+ * The mirror of `requireAdmin`: keeps staff out of the buyer side.
+ *
+ * A staff login is not a business. It has no cart, no orders, no invoices and
+ * no credit, so every route beneath this one would either read an empty shape
+ * or write buyer data against an account that should never own any. The client
+ * redirects an admin away from the storefront (`RootLayout`); this is the half
+ * that holds when the request does not come from our UI.
+ *
+ * Its own code rather than `requireApproved`'s: an admin is not `approved` and
+ * would otherwise be told their account is under review, which is nonsense and
+ * would send them looking for an approval that is never coming.
+ */
+export function denyAdmin(req, _res, next) {
+  if (req.user?.role === 'admin') {
+    return next(
+      ApiError.forbidden(
+        'Staff accounts do not have a buyer side. Use the admin console.',
+        'ADMIN_NOT_A_BUYER',
+      ),
+    );
+  }
+  return next();
+}
+
 export function requireAdmin(req, _res, next) {
   if (!req.user) return next(ApiError.unauthorized());
   if (req.user.role !== 'admin') return next(ApiError.forbidden());

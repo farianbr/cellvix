@@ -16,6 +16,7 @@
     "build": "npm run build --workspace client",
     "seed": "npm run seed --workspace server",
     "seed:content": "npm run seed:content --workspace server",
+    "seed:expense-categories": "npm run seed:expense-categories --workspace server",
     "backfill:competitors": "npm run backfill:competitors --workspace server",
     "shoot": "node scripts/shoot.mjs",
     "smoke": "node scripts/smoke.mjs",
