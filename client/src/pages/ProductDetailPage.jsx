@@ -13,6 +13,7 @@ import QtyStepper from '@/components/product/QtyStepper';
 import GradeBadge from '@/components/product/GradeBadge';
 import PartIllustration from '@/components/product/PartIllustration';
 import ProductCard from '@/components/product/ProductCard';
+import MarketCompare from '@/components/product/MarketCompare';
 import ProductFaq from '@/components/product/ProductFaq';
 import WhyCellvix from '@/components/product/WhyCellvix';
 import { useCart } from '@/hooks/useCart';
@@ -80,7 +81,7 @@ export function ProductDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-[1200px] px-4 py-8 lg:px-6">
+      <div className="mx-auto max-w-[1400px] px-4 py-8 lg:px-6">
         <div className="grid gap-8 md:grid-cols-2">
           <Skeleton className="aspect-square" />
           <div className="space-y-4">
@@ -125,7 +126,7 @@ export function ProductDetailPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1200px] px-3 py-6 sm:px-4 lg:px-6 lg:py-8">
+    <div className="mx-auto max-w-[1400px] px-3 py-6 sm:px-4 lg:px-6 lg:py-8">
       <Breadcrumbs product={product} />
 
       <div className="grid gap-6 md:grid-cols-2 lg:gap-10">
@@ -145,7 +146,6 @@ export function ProductDetailPage() {
         <div className="min-w-0">
           <p className="eyebrow mb-2 text-ink-300">{product.partTypeLabel}</p>
           <h1 className="text-[24px] leading-tight sm:text-[30px]">{product.name}</h1>
-          <p className="mt-2 font-mono text-[12.5px] text-ink-400">{product.sku}</p>
 
           {/* Availability is a boolean here and everywhere else on the
               storefront. The on-hand count is warehouse data, and printing it
@@ -186,6 +186,12 @@ export function ProductDetailPage() {
             )}
           </div>
 
+          {/* What the same part costs elsewhere. Absent while the price is
+              gated — the server sends no comparison without a price to compare. */}
+          {!gated && (
+            <MarketCompare market={product.market} price={product.price} variant="detail" className="mt-5" />
+          )}
+
           {/* add to cart */}
           <div className="mt-6 flex flex-wrap items-stretch gap-3">
             <QtyStepper value={qty} onChange={setQty} disabled={outOfStock} />
@@ -211,9 +217,13 @@ export function ProductDetailPage() {
             <p className="mt-6 text-[14px] leading-relaxed text-ink-500">{product.description}</p>
           )}
 
+          {/* The SKU used to sit under the title, where it was the second thing
+              on the page and meant nothing to a buyer still deciding. It is a
+              reordering reference, so it lives with the rest of the reference
+              data — first row, because it is the one a buyer comes back for. */}
           {product.specs && Object.keys(product.specs).length > 0 && (
             <dl className="mt-6 overflow-hidden rounded-[12px] border border-line">
-              {Object.entries(product.specs).map(([key, value], index) => (
+              {Object.entries({ SKU: product.sku, ...product.specs }).map(([key, value], index) => (
                 <div
                   key={key}
                   className={cn(

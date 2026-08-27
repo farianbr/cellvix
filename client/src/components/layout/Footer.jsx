@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { ArrowUpRight, Facebook, Instagram, Linkedin, Mail, MapPin, Phone, Youtube } from 'lucide-react';
+import cn from '@/lib/cn';
 import { BUSINESS_INFO } from '@/lib/constants';
 
 const COLUMNS = [
@@ -153,12 +154,32 @@ export function Footer() {
               </div>
             </div>
 
-            {/* ---- navigation -------------------------------------------- */}
-            <div className="grid gap-x-6 gap-y-8 sm:grid-cols-3 lg:col-span-5">
-              {COLUMNS.map((column) => (
-                <nav key={column.title} aria-label={column.title}>
+            {/* ---- navigation --------------------------------------------
+                Two columns on a phone, not one. Stacked, three short link lists
+                ran the footer to most of a screen's height and left a column of
+                dead space beside every 13px link — the lists are far narrower
+                than the viewport, so the width was there and unused.
+
+                Two rather than three: at 320px a third column would put
+                "Invoices & statements" onto three lines. The third list wraps
+                onto the second row and takes the full width there, which is
+                also why the row gap is tighter than the desktop one. */}
+            <div className="grid grid-cols-2 gap-x-6 gap-y-7 sm:grid-cols-3 sm:gap-y-8 lg:col-span-5">
+              {COLUMNS.map((column, index) => (
+                <nav
+                  key={column.title}
+                  aria-label={column.title}
+                  className={cn(
+                    // The third list starts a second row of the two-column phone
+                    // layout on its own, so it takes the whole row and lays its
+                    // links out in two as well. Left in one column it was a
+                    // half-width list against a half-width blank — the exact
+                    // dead space the two-column change is here to remove.
+                    index === 2 && 'col-span-2 sm:col-span-1',
+                  )}
+                >
                   <h3 className="eyebrow mb-3.5 text-ink-400">{column.title}</h3>
-                  <ul className="space-y-2.5">
+                  <ul className={cn('space-y-2.5', index === 2 && 'grid grid-cols-2 gap-x-6 space-y-0 gap-y-2.5 sm:block sm:space-y-2.5')}>
                     {column.links.map((link) => (
                       <li key={link.label}>
                         <Link
@@ -174,8 +195,12 @@ export function Footer() {
               ))}
             </div>
 
-            {/* ---- the two calls to action ------------------------------- */}
-            <div className="lg:col-span-3">
+            {/* ---- the two calls to action -------------------------------
+                Side by side on a phone for the same reason as the link columns:
+                each is a two-line block that was taking a full-width row, with
+                a horizontal rule between them adding a third. Below `sm` the
+                rule becomes the vertical gap and the pair reads as one row. */}
+            <div className="grid grid-cols-2 gap-x-6 sm:block lg:col-span-3">
               <a
                 href={`tel:${BUSINESS_INFO.phone.replace(/[^\d+]/g, '')}`}
                 className="group block"
@@ -191,7 +216,8 @@ export function Footer() {
                 </span>
               </a>
 
-              <hr className="my-4 border-line" />
+              {/* The gap does this job in the two-up phone layout. */}
+              <hr className="my-4 hidden border-line sm:block" />
 
               <Link to="/contact" className="group block">
                 <span className="flex items-center gap-2 font-display text-[17px] font-bold text-ink-900 transition-colors group-hover:text-brand">

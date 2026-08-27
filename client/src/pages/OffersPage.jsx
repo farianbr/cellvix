@@ -677,7 +677,7 @@ export function OffersPage() {
   const nothingRunning = !isLoading && (data?.total ?? 0) === 0;
 
   return (
-    <div className="mx-auto max-w-[1200px] px-3 py-6 sm:px-4 lg:px-6 lg:py-10">
+    <div className="mx-auto max-w-[1400px] px-3 py-6 sm:px-4 lg:px-6 lg:py-10">
       <header className="mb-7 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div className="max-w-xl">
           <p className="eyebrow mb-2 text-brand">Running now</p>

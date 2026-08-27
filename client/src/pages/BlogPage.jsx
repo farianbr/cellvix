@@ -181,7 +181,7 @@ export function BlogPage() {
   const counts = Object.fromEntries((data?.categories ?? []).map((row) => [row.value, row.count]));
 
   return (
-    <div className="mx-auto max-w-[1200px] px-3 py-6 sm:px-4 lg:px-6 lg:py-10">
+    <div className="mx-auto max-w-[1400px] px-3 py-6 sm:px-4 lg:px-6 lg:py-10">
       <header className="mb-7 max-w-2xl">
         <p className="eyebrow mb-2 text-brand">Cellvix journal</p>
         <h1 className="text-[28px] sm:text-[34px]">Bench notes for repair businesses</h1>

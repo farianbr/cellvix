@@ -8,7 +8,7 @@ import { BUSINESS_INFO } from '@/lib/constants';
 import Drawer from '@/components/ui/Drawer';
 import LiveSearch from '@/components/search/LiveSearch';
 import useUiStore from '@/store/uiStore';
-import useFilterStore from '@/store/filterStore';
+import useApplyFilterPath from '@/hooks/useApplyFilterPath';
 import { useTaxonomy } from '@/hooks/useCatalog';
 import { useAuth, useSignOut } from '@/hooks/useAuth';
 import { ADMIN_NAV } from '@shared/schemas/admin';
@@ -54,7 +54,7 @@ const SOCIAL = [
 export function MobileDrawer() {
   const open = useUiStore((s) => s.mobileNavOpen);
   const close = useUiStore((s) => s.closeMobileNav);
-  const setPath = useFilterStore((s) => s.setPath);
+  const setPath = useApplyFilterPath();
 
   // The tab lives in the store, not here: the bottom bar's Categories button
   // opens this drawer straight onto the drill-down.

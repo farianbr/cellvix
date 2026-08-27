@@ -51,7 +51,7 @@ export function CartPage() {
   // while the request is in flight reads as "we lost your cart".
   if (!isReady) {
     return (
-      <div className="mx-auto max-w-[1200px] px-4 py-8 lg:px-6">
+      <div className="mx-auto max-w-[1400px] px-4 py-8 lg:px-6">
         <Skeleton className="mb-6 h-8 w-40" />
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-6">
           <Skeleton className="h-96" />
@@ -84,7 +84,7 @@ export function CartPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1200px] px-3 py-6 sm:px-4 lg:px-6 lg:py-8">
+    <div className="mx-auto max-w-[1400px] px-3 py-6 sm:px-4 lg:px-6 lg:py-8">
       <div className="mb-5 flex flex-wrap items-baseline justify-between gap-3">
         <h1 className="text-[22px] sm:text-[26px]">
           Your cart

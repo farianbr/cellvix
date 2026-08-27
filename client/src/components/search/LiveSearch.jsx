@@ -7,7 +7,7 @@ import { money, count as formatCount } from '@/lib/format';
 import { useSearchSuggestions } from '@/hooks/useCatalog';
 import useDebouncedValue from '@/hooks/useDebouncedValue';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
-import useFilterStore from '@/store/filterStore';
+import { useApplyFilterPath, useApplySearchQuery } from '@/hooks/useApplyFilterPath';
 import PartIllustration from '@/components/product/PartIllustration';
 import Skeleton from '@/components/ui/Skeleton';
 
@@ -40,8 +40,8 @@ export function LiveSearch({
   const panelId = `${inputId}-results`;
 
   const { data, isFetching } = useSearchSuggestions(debounced);
-  const setPath = useFilterStore((s) => s.setPath);
-  const setQuery = useFilterStore((s) => s.setQuery);
+  const setPath = useApplyFilterPath();
+  const setQuery = useApplySearchQuery();
 
   useOnClickOutside(containerRef, () => setOpen(false), open);
 

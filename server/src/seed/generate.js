@@ -92,6 +92,58 @@ export function buildTaxonomyDocs() {
 const COLOUR_VARIANTS = ['Black', 'White', 'Space Grey', 'Blue', 'Graphite'];
 
 /**
+ * Rival wholesalers the catalogue benchmarks against.
+ *
+ * INVENTED NAMES, on purpose. These are placeholders standing in for a real
+ * price feed, and seeding a real distributor's name against a number we made up
+ * would be putting words in a named company's mouth — it reads as a factual
+ * claim about their pricing the moment it renders on a card.
+ */
+const COMPETITORS = ['Northbound Parts', 'MapleCell Supply', 'PartsDirect CA'];
+
+/**
+ * A stable 32-bit seed from a string, so a product that has no sequence number
+ * — anything already in a live database, reached by the backfill rather than by
+ * the generator — can still be given the same benchmarks on every run.
+ */
+function hashString(value) {
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i += 1) {
+    hash ^= value.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return hash >>> 0;
+}
+
+/**
+ * Benchmark prices for one product.
+ *
+ * Two or three rivals, each 6–34% above our price, so the "save X vs market"
+ * line has something to say on most cards. About one product in nine gets a
+ * rival that UNDERCUTS us: the serializer drops the claim when we are not
+ * actually cheaper, and a seed where we always win never exercises that branch.
+ *
+ * Takes its OWN generator, seeded per product from the sequence number, rather
+ * than drawing from the catalogue's shared `random()`. Sharing it would advance
+ * that stream by four extra calls per product, which changes every price and
+ * stock roll after this one — the catalogue is meant to be byte-identical on
+ * every reseed, and adding a field here must not silently redraw the store.
+ */
+export function buildCompetitors(price, seed) {
+  const random = mulberry32(typeof seed === 'string' ? hashString(seed) : seed);
+  const pool = [...COMPETITORS].sort(() => random() - 0.5);
+  const count = random() < 0.55 ? 3 : 2;
+  const undercut = random() < 0.11;
+
+  return pool.slice(0, count).map((name, index) => {
+    // Round to the same nearest-5 the catalogue prices use, so a comparison row
+    // never looks more precise than the number it sits beside.
+    const factor = undercut && index === 0 ? 0.88 + random() * 0.08 : 1.06 + random() * 0.28;
+    return { name, price: Math.round((price * factor) / 5) * 5 };
+  });
+}
+
+/**
  * Builds the product catalogue.
  *
  * Not every model gets every part type — that would be a uniform grid with no
@@ -183,6 +235,7 @@ export function buildProducts({ targetCount = 420 } = {}) {
           grade,
           price,
           compareAtPrice: random() < 0.22 ? Math.round((price * 1.18) / 5) * 5 : undefined,
+          competitors: buildCompetitors(price, sequence),
           stock,
           deviceTypeSlug: model.deviceTypeSlug,
           deviceTypeName: model.deviceTypeName,

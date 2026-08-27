@@ -40,15 +40,19 @@ export function BlogPostPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-[760px] px-4 py-10">
-        <Skeleton className="mb-4 h-4 w-32" />
-        <Skeleton className="mb-3 h-10 w-full" />
-        <Skeleton className="mb-8 h-4 w-56" />
-        <Skeleton className="mb-8 aspect-16/10" rounded="lg" />
-        <div className="space-y-3">
-          {Array.from({ length: 8 }).map((_, index) => (
-            <Skeleton key={index} className="h-4 w-full" />
-          ))}
+      <div className="mx-auto max-w-[1400px] px-3 py-6 sm:px-4 lg:px-6 lg:py-10">
+        {/* Same measure the loaded article uses, so the skeleton does not sit at
+            a different width than the prose that replaces it. */}
+        <div className="mx-auto max-w-[760px]">
+          <Skeleton className="mb-4 h-4 w-32" />
+          <Skeleton className="mb-3 h-10 w-full" />
+          <Skeleton className="mb-8 h-4 w-56" />
+          <Skeleton className="mb-8 aspect-16/10" rounded="lg" />
+          <div className="space-y-3">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <Skeleton key={index} className="h-4 w-full" />
+            ))}
+          </div>
         </div>
       </div>
     );
@@ -86,16 +90,27 @@ export function BlogPostPage() {
         />
       </div>
 
-      {/* The column stays 760px whatever the window does — a measure that grows
-          with the viewport is what makes long-form unreadable at 1440. The
-          extra width a large desktop has goes to the contents rail instead, and
-          the grid collapses back to the single centred column below `xl`.
+      {/* The page is the same 1400px box every other page uses, so the header,
+          the footer and the article all line up down one pair of edges — a
+          narrower slab here read as a different site.
 
-          The rail sits on the LEFT, and it is first in the DOM too: it is
+          Inside it, the PROSE still stops at 760px: a measure that grows with
+          the viewport is what makes long-form unreadable at 1440, and that is a
+          separate question from how wide the page is. The width the page has
+          over the measure goes to the rails, so the article sits in a real
+          three-part layout rather than floating in a short centred column.
+
+          The contents rail sits on the LEFT, and is first in the DOM too: it is
           navigation for the page below it, so reaching it before the prose is
           the right order for a screen reader and for a Tab key as much as it is
-          for the eye. */}
-      <div className="mx-auto grid max-w-[760px] gap-10 px-3 py-6 sm:px-4 lg:py-10 xl:max-w-[1060px] xl:grid-cols-[220px_minmax(0,760px)] xl:gap-10">
+          for the eye.
+
+          The tracks start at the page's left edge rather than being centred in
+          it, so the contents rail lines up with the logo above it and the grid
+          on the Shop page — the same left margin down every page. The slack a
+          wide window has collects in a third, empty track on the right, which is
+          where the eye expects white space in a left-aligned layout. */}
+      <div className="mx-auto grid max-w-[1400px] gap-10 px-3 py-6 sm:px-4 lg:px-6 lg:py-10 xl:grid-cols-[220px_minmax(0,760px)_1fr]">
         <TableOfContents headings={headings} activeId={activeHeading} variant="rail" />
 
         <article className="min-w-0">

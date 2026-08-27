@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import cn from '@/lib/cn';
 import { count as formatCount } from '@/lib/format';
 import { useTaxonomy } from '@/hooks/useCatalog';
-import useFilterStore from '@/store/filterStore';
+import useApplyFilterPath from '@/hooks/useApplyFilterPath';
 import useUiStore from '@/store/uiStore';
 import Skeleton from '@/components/ui/Skeleton';
 
@@ -14,13 +14,17 @@ import Skeleton from '@/components/ui/Skeleton';
  * The desktop mega menu (brief §4.1).
  *
  * Critically: these are LIVE FILTERS, not links. Clicking a category writes to
- * the shared filter store and closes the panel — the grid updates in place and
- * the route never changes.
+ * the shared filter store and closes the panel — on the Shop page the grid
+ * updates in place and the route never changes.
+ *
+ * Off the Shop page the store has no grid subscribed to it, so `useApplyFilterPath`
+ * carries the user back to `/` with the filter applied. The header is on every
+ * page; a Categories menu that silently did nothing on /about was the bug.
  */
 export function MegaMenu() {
   const open = useUiStore((s) => s.megaMenuOpen);
   const closeMegaMenu = useUiStore((s) => s.closeMegaMenu);
-  const setPath = useFilterStore((s) => s.setPath);
+  const setPath = useApplyFilterPath();
 
   const { data: tree, isLoading } = useTaxonomy();
   const [hoveredType, setHoveredType] = useState(null);

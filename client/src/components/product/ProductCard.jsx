@@ -7,6 +7,7 @@ import { money } from '@/lib/format';
 import GradeBadge from './GradeBadge';
 import QtyStepper from './QtyStepper';
 import PartIllustration from './PartIllustration';
+import MarketCompare from './MarketCompare';
 import { useCart } from '@/hooks/useCart';
 import useUiStore from '@/store/uiStore';
 import { useAuth } from '@/hooks/useAuth';
@@ -126,8 +127,6 @@ export function ProductCard({ product }) {
               {product.name}
             </Link>
           </h3>
-
-          <p className="mt-1 truncate font-mono text-[11px] text-ink-300">{product.sku}</p>
         </div>
 
         {/* Availability and price share one slot, because for a part that cannot
@@ -187,6 +186,15 @@ export function ProductCard({ product }) {
                 </button>
               )}
             </div>
+
+            {/* What the same part costs elsewhere. Renders nothing unless the
+                server sent a comparison — which it does not when the price is
+                gated, or when we are not actually the cheaper option.
+                Shown at every card width: it is the reason to buy the part, so
+                hiding it on the surface most buyers are on was the wrong trade.
+                MarketCompare drops its own chevron and tightens its type below
+                200px so it stays one line on a ~169px two-up card. */}
+            <MarketCompare market={product.market} price={product.price} />
           </>
         )}
 

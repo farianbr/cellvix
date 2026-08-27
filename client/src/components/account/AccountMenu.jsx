@@ -9,12 +9,25 @@ import useUiStore from '@/store/uiStore';
 import { useAuth, useSignOut } from '@/hooks/useAuth';
 
 /**
- * Panel width. Was 320, which left a band of empty surface down the right of
- * every row — the longest label in ACCOUNT_NAV is "Payment methods" and the
- * account line above it truncates anyway, so the extra 40px was width the panel
- * had no content for.
+ * Panel width. Was 280, which fit the longest label and nothing else: the rows
+ * are icon + text + nothing, so every one of them ended in a run of empty
+ * surface whose width was however much "Payment methods" happened to leave. The
+ * panel now has room for the text to sit in a padded box rather than against
+ * the left edge of one.
  */
-const PANEL_W = 280;
+const PANEL_W = 296;
+
+/**
+ * The inset every row in the panel shares.
+ *
+ * The header, the nav rows and sign-out used to be padded independently — the
+ * header at 14px, the rows at 10px inside a 6px-padded scroller — so nothing
+ * lined up down the left, and the text read as pushed into the corner while the
+ * right side ran empty. One value across all three sections gives the panel a
+ * single left margin and, because each row is a full-width block, an equal one
+ * on the right.
+ */
+const INSET = 'px-3';
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
@@ -165,7 +178,7 @@ export function AccountMenu() {
                 style={{ width: `min(${PANEL_W}px, calc(100vw - 24px))` }}
                 className="flex max-h-[min(72vh,620px)] flex-col overflow-hidden rounded-[16px] border border-line bg-surface shadow-flyout"
               >
-                <header id={titleId} className="shrink-0 border-b border-line px-3.5 py-3">
+                <header id={titleId} className={cn('shrink-0 border-b border-line py-3', INSET)}>
                   <p className="truncate font-display text-[14.5px] font-bold text-ink-900">
                     {user.businessName}
                   </p>
@@ -186,6 +199,12 @@ export function AccountMenu() {
                   </span>
                 </header>
 
+                {/* The rounded hover fill needs to sit off the panel edge, so
+                    the container keeps a small inset and the ROWS give back the
+                    same amount — 6px + 6px lands the label on the header's
+                    12px. Previously 6px + 10px put every label 4px right of the
+                    business name above it, which is the misalignment that made
+                    the text look shoved into the corner. */}
                 <div className="scroll-slim flex-1 overflow-y-auto overscroll-contain p-1.5">
                   {isAdmin ? (
                     // Staff have no buyer orders, invoices or credit — the buyer
@@ -193,7 +212,7 @@ export function AccountMenu() {
                     <Link
                       to="/admin"
                       onClick={close}
-                      className="flex items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-[13px] font-medium text-ink-700 transition-colors hover:bg-surface-2 hover:text-ink-900"
+                      className="flex items-center gap-3 rounded-[10px] px-1.5 py-2 text-[13px] font-medium text-ink-700 transition-colors hover:bg-surface-2 hover:text-ink-900"
                     >
                       Admin console
                     </Link>
@@ -209,7 +228,7 @@ export function AccountMenu() {
                               onClick={close}
                               className={({ isActive }) =>
                                 cn(
-                                  'flex items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-[13px] font-medium transition-colors',
+                                  'flex items-center gap-3 rounded-[10px] px-1.5 py-2 text-[13px] font-medium transition-colors',
                                   isActive
                                     ? 'bg-brand-50 text-brand-700'
                                     : 'text-ink-700 hover:bg-surface-2 hover:text-ink-900',
@@ -226,6 +245,8 @@ export function AccountMenu() {
                   )}
                 </div>
 
+                {/* Same 6px + 6px as the scroller above, so sign-out sits on
+                    the same left line as the nav rows and the header. */}
                 <footer className="shrink-0 border-t border-line p-1.5">
                   <button
                     type="button"
@@ -233,7 +254,7 @@ export function AccountMenu() {
                       close();
                       signOut();
                     }}
-                    className="flex w-full items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-left text-[13px] font-medium text-ink-500 transition-colors hover:bg-danger-50 hover:text-danger"
+                    className="flex w-full items-center gap-3 rounded-[10px] px-1.5 py-2 text-left text-[13px] font-medium text-ink-500 transition-colors hover:bg-danger-50 hover:text-danger"
                   >
                     <LogOut className="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
                     Sign out

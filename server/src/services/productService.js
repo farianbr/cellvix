@@ -58,6 +58,50 @@ export function serialize(product, user) {
     ...base,
     price: doc.price,
     compareAtPrice: doc.compareAtPrice ?? null,
+    market: marketPosition(doc),
+  };
+}
+
+/**
+ * The competitor comparison, computed HERE and never on the client.
+ *
+ * The card shows one sentence — "save $8.80 vs market" — and that number is
+ * arithmetic over prices. Handing the client an array and letting it do the
+ * subtraction would put a second money calculation in the browser, which is the
+ * thing the pricing rules exist to prevent; it would also let a rounding
+ * difference put a different saving on the card than in the tooltip.
+ *
+ * Returns null when there is nothing honest to claim: no benchmarks, or we are
+ * not actually the cheapest. An undercut competitor is not a saving, and
+ * dressing one up as one is the kind of number a trade buyer checks once and
+ * then never trusts again.
+ */
+function marketPosition(doc) {
+  const competitors = (doc.competitors ?? [])
+    .filter((entry) => entry && Number.isFinite(entry.price) && entry.price > 0)
+    .map((entry) => ({ name: entry.name, price: entry.price }));
+
+  if (!competitors.length) return null;
+
+  const total = competitors.reduce((sum, entry) => sum + entry.price, 0);
+  // Integer cents out, like every other money field on the wire.
+  const average = Math.round(total / competitors.length);
+  const lowest = Math.min(...competitors.map((entry) => entry.price));
+  const savings = average - doc.price;
+
+  if (savings <= 0) return null;
+
+  return {
+    competitors,
+    average,
+    lowest,
+    savings,
+    // Whole percent — a card has no room for a decimal, and "18%" is the claim
+    // a buyer repeats back anyway.
+    savingsPercent: Math.round((savings / average) * 100),
+    // True only when we beat every single one, not just their mean. It is a
+    // stronger claim, so it gets a stricter test.
+    isLowest: doc.price < lowest,
   };
 }
 
