@@ -2,8 +2,9 @@ import Offer from '../models/Offer.js';
 import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import ApiError from '../utils/ApiError.js';
+import Settings, { DEFAULT_SHIPPING_METHODS } from '../models/Settings.js';
 import { offerStatus } from './offerService.js';
-import { DELIVERY_METHODS, TAX_RATE } from '../../../shared/schemas/checkout.js';
+import { TAX_RATE } from '../../../shared/schemas/checkout.js';
 
 /**
  * THE ONE PLACE A DISCOUNT IS DECIDED.
@@ -274,7 +275,16 @@ export async function priceCart(cart, user, { deliveryCode = 'ground' } = {}) {
   const bundleDiscount = bundlesListTotal - bundlesCharged;
 
   // ---- shipping, before any offer touches it ------------------------------
-  const method = DELIVERY_METHODS.find((m) => m.code === deliveryCode) ?? DELIVERY_METHODS[0];
+  // The price comes from Settings, not from `DELIVERY_METHODS` (§10, phase 11):
+  // the constant still defines which codes exist, because checkout validates
+  // `deliveryMethod` against a fixed enum, but the money is an operator's to
+  // change without a deploy. `shippingFor` falls back to the seeded bands, so
+  // this is a rate lookup rather than a new source of truth.
+  const settings = await Settings.load();
+  const shippingBands = settings.financial?.shippingMethods?.length
+    ? settings.financial.shippingMethods
+    : DEFAULT_SHIPPING_METHODS;
+  const method = Settings.shippingFor(settings, deliveryCode);
   const afterBundles = subtotal - bundleDiscount;
   const baseShipping = method.freeOver && afterBundles >= method.freeOver ? 0 : method.cost;
 
@@ -356,6 +366,29 @@ export async function priceCart(cart, user, { deliveryCode = 'ground' } = {}) {
       cost: shipping,
       etaDays: method.etaDays,
     },
+    /**
+     * Every band, priced against *this* cart's subtotal.
+     *
+     * The checkout picker used to render `DELIVERY_METHODS` from the shared
+     * constant, which was fine while the costs lived there too. Now that an
+     * operator can edit them (§6.15), a picker reading the constant would show
+     * a stale price beside a correct total — worse than either being wrong on
+     * its own. Sending the bands the quote actually priced against means the
+     * two cannot disagree.
+     *
+     * `cost` here is the band's price after its own free-over threshold, but
+     * before any promo code: a free-shipping offer zeroes `shipping` above,
+     * and the picker shows what each band costs rather than restating the
+     * discount it already displays separately.
+     */
+    deliveryOptions: shippingBands.map((band) => ({
+      code: band.code,
+      label: band.label,
+      detail: band.detail ?? '',
+      etaDays: band.etaDays,
+      cost: band.freeOver && afterBundles >= band.freeOver ? 0 : band.cost,
+      freeOver: band.freeOver ?? null,
+    })),
   };
 }
 

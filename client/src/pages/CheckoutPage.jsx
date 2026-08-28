@@ -134,8 +134,6 @@ export function CheckoutPage() {
     if (isReady && items.length === 0 && bundles.length === 0) navigate('/cart', { replace: true });
   }, [isReady, items.length, bundles.length, navigate]);
 
-  const method = DELIVERY_METHODS.find((m) => m.code === values.deliveryMethod) ?? DELIVERY_METHODS[0];
-
   /**
    * The binding price, from the server, re-fetched when the delivery method
    * changes.
@@ -152,7 +150,25 @@ export function CheckoutPage() {
     staleTime: 0,
   });
 
-  const shipping = quoted?.shipping ?? (method.freeOver && subtotal >= method.freeOver ? 0 : method.cost);
+  /**
+   * The delivery bands, priced by the server against this cart.
+   *
+   * Shipping rates are editable in Settings (§6.15), so `DELIVERY_METHODS` is
+   * no longer where the money lives — it still defines which codes exist, and
+   * stands in only for the first paint before the quote arrives. Rendering the
+   * constant's costs after that would put a stale price beside a correct total.
+   */
+  const deliveryOptions =
+    quoted?.deliveryOptions ??
+    DELIVERY_METHODS.map((option) => ({
+      ...option,
+      cost: option.freeOver && subtotal >= option.freeOver ? 0 : option.cost,
+    }));
+
+  const method =
+    deliveryOptions.find((m) => m.code === values.deliveryMethod) ?? deliveryOptions[0];
+
+  const shipping = quoted?.shipping ?? method.cost;
   const discount = quoted?.discount ?? 0;
   const bundleDiscount = quoted?.bundleDiscount ?? 0;
   const promoDiscount = quoted?.promoDiscount ?? 0;
@@ -395,9 +411,8 @@ export function CheckoutPage() {
             >
               <fieldset className="space-y-2">
                 <legend className="sr-only">Delivery method</legend>
-                {DELIVERY_METHODS.map((option) => {
-                  const cost =
-                    option.freeOver && subtotal >= option.freeOver ? 0 : option.cost;
+                {deliveryOptions.map((option) => {
+                  const cost = option.cost;
                   const isSelected = values.deliveryMethod === option.code;
 
                   return (

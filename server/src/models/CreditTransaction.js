@@ -22,7 +22,25 @@ import mongoose from 'mongoose';
  * owns it, the same way `pricingService` owns discounts.
  */
 
-export const CREDIT_TYPES = ['refund', 'recharge', 'grant', 'adjustment', 'redemption'];
+/**
+ * `referral` (ERP rework §6.13) is commission a business earned because an
+ * account it referred paid an invoice. It is its own type rather than a
+ * `grant`: a grant is somebody at Cellvix deciding to give money away, while
+ * this is money owed under a standing arrangement and triggered automatically.
+ * The two need to be told apart on a statement and in the reports.
+ *
+ * A reversal — the referred payment was refunded or its invoice voided — is
+ * also typed `referral`, with a negative amount, so a referral and its undo sit
+ * on the same line of any report that groups by type.
+ */
+export const CREDIT_TYPES = [
+  'refund',
+  'recharge',
+  'grant',
+  'adjustment',
+  'redemption',
+  'referral',
+];
 
 const creditTransactionSchema = new mongoose.Schema(
   {
@@ -49,11 +67,42 @@ const creditTransactionSchema = new mongoose.Schema(
     // Mock gateway reference for a top-up, so a recharge can be traced the same
     // way an order payment can.
     paymentRef: String,
+
+    // ---- referral commission (§6.13) ---------------------------------------
+    // Only set on `referral` rows. Together these are what makes an accrual
+    // traceable back to the money that produced it, and what lets a reversal
+    // find the exact accrual to undo.
+    referral: {
+      // The account whose payment earned this — the referrer is `user` above.
+      from: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      fromName: String,
+      // The invoice that was paid, and which payment row within it. An invoice
+      // can be paid in instalments and each instalment earns separately, so the
+      // invoice number alone is not a unique key.
+      invoiceNumber: String,
+      paymentIndex: Number,
+      // The rate in force when this was earned. Snapshotted, never looked up
+      // later: §6.13 requires that changing the rate does not silently restate
+      // commission already earned, the same way an order line snapshots price.
+      percent: Number,
+      // The payment amount the commission was calculated from.
+      basis: Number,
+      // Set on a reversal, pointing at the accrual it undoes.
+      reverses: { type: mongoose.Schema.Types.ObjectId, ref: 'CreditTransaction' },
+    },
   },
   { timestamps: true },
 );
 
 creditTransactionSchema.index({ user: 1, createdAt: -1 });
+
+// Finding the accrual a reversal must undo, and the "already paid for this
+// instalment" check that makes accrual idempotent. Sparse because only referral
+// rows carry these fields at all.
+creditTransactionSchema.index(
+  { 'referral.invoiceNumber': 1, 'referral.paymentIndex': 1 },
+  { sparse: true },
+);
 
 export const CreditTransaction = mongoose.model('CreditTransaction', creditTransactionSchema);
 

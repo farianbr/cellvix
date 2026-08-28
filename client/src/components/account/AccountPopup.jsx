@@ -257,6 +257,20 @@ function SignUpTab({ onSwitch }) {
         />
       </div>
 
+      {/* Referral code (§6.13). Optional, and set once — it cannot be added or
+          changed after the account exists, because a referrer that can be
+          edited later is a way to redirect money already earned. A code that is
+          not recognised is refused rather than quietly dropped, so nobody is
+          told they were referred when they were not. */}
+      <Input
+        label="Referral code"
+        placeholder="ABCD2345"
+        hint="Optional. If another Cellvix business referred you, enter their code — it cannot be added later."
+        autoCapitalize="characters"
+        error={errors.referralCode?.message}
+        {...register('referralCode')}
+      />
+
       <p className="rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12.5px] leading-relaxed text-ink-500">
         Cellvix is a wholesale-only platform. New accounts are reviewed by our team before trade
         pricing and ordering unlock.

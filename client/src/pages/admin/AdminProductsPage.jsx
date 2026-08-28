@@ -32,6 +32,7 @@ import DataTable, { CountLine } from '@/components/admin/DataTable';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useTaxonomy } from '@/hooks/useCatalog';
+import downloadExport from '@/lib/exportDownload';
 import {
   useAdminInventory,
   useAdminSuppliers,
@@ -674,12 +675,7 @@ export function AdminProductsPage() {
           pills={STOCK_FILTERS.map((pill) => ({ ...pill, count: counts[pill.value] }))}
           activePill={stock}
           onPillChange={setStock}
-          onExport={(format) =>
-            window.alert(
-              `Export to ${format} arrives in phase 12. It will carry the current filters: ` +
-                `stock "${stock}"${query ? `, search "${query}"` : ''}.`,
-            )
-          }
+          onExport={(format) => downloadExport('inventory', format, { q: query || undefined, stock: stock === 'all' ? undefined : stock })}
         />
 
         <div className="border-b border-line px-3 py-2 sm:px-4">

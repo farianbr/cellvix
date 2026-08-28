@@ -277,15 +277,50 @@ export async function searchProducts(term, user, { limit = 6 } = {}) {
   }
 
   const rx = likeRegex(q);
+
+  /**
+   * Models whose **alias** matches, resolved first (§6.15, phase 11d).
+   *
+   * A trade buyer types `15 PM`, not "iPhone 15 Pro Max". Aliases live on the
+   * taxonomy model rather than on each product, so one alias covers all forty
+   * parts that fit that phone — which means the alias has to be turned into a
+   * model slug here and then folded into the product query below. Without this
+   * the alias editor would be managing a field nothing reads.
+   *
+   * Matched against the lowercased term because aliases are stored lowercase.
+   */
+  const aliasMatches = await Taxonomy.find({
+    kind: 'model',
+    isActive: { $ne: false },
+    aliases: q.trim().toLowerCase(),
+  })
+    .select('slug name path productCount')
+    .limit(6)
+    .lean();
+
+  const aliasSlugs = aliasMatches.map((node) => node.slug);
+
   const query = {
     isActive: true,
-    $or: [{ name: rx }, { sku: rx }, { searchTerms: rx }, { modelName: rx }],
+    $or: [
+      { name: rx },
+      { sku: rx },
+      { searchTerms: rx },
+      { modelName: rx },
+      // An exact alias hit brings back every part for that model, which is the
+      // whole point of typing `15pm` into a parts catalogue. `modelSlug` is the
+      // flat field on `Product` — the nested `path` shape belongs to `Taxonomy`.
+      ...(aliasSlugs.length ? [{ modelSlug: { $in: aliasSlugs } }] : []),
+    ],
   };
 
-  const [products, total, models, partTypes] = await Promise.all([
+  const [products, total, nameModels, partTypes] = await Promise.all([
     Product.find(query).sort({ stock: -1 }).limit(limit).lean(),
     Product.countDocuments(query),
-    Taxonomy.find({ kind: 'model', name: rx }).sort({ productCount: -1 }).limit(6).lean(),
+    Taxonomy.find({ kind: 'model', name: rx, isActive: { $ne: false } })
+      .sort({ productCount: -1 })
+      .limit(6)
+      .lean(),
     Product.aggregate([
       { $match: query },
       { $group: { _id: '$partType', label: { $first: '$partTypeLabel' }, count: { $sum: 1 } } },
@@ -294,9 +329,15 @@ export async function searchProducts(term, user, { limit = 6 } = {}) {
     ]),
   ]);
 
+  // Alias hits first — somebody who typed `15pm` meant that model specifically,
+  // so it should not sit below a fuzzy name match. Deduplicated by slug.
+  const models = [...aliasMatches, ...nameModels].filter(
+    (node, index, all) => all.findIndex((other) => other.slug === node.slug) === index,
+  );
+
   return {
     // Left column of the dropdown.
-    models: models.map((m) => ({
+    models: models.slice(0, 6).map((m) => ({
       slug: m.slug,
       name: m.name,
       count: m.productCount,

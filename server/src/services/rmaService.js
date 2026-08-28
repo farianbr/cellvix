@@ -8,6 +8,7 @@ import ApiError from '../utils/ApiError.js';
 import { likeRegex } from '../utils/regex.js';
 import * as storeCredit from './storeCreditService.js';
 import { applyStockMovement } from './purchaseService.js';
+import * as notificationService from './notificationService.js';
 
 /**
  * RMA / returns (ERP rework §6.3, phase 7).
@@ -314,6 +315,17 @@ export async function createRma(body, createdBy) {
     resolution: 'pending',
     createdBy,
     timeline: [{ status: 'requested', at: new Date(), note: 'Return requested.' }],
+  });
+
+  // A return starts an SLA clock the moment it is filed (§6.3), so it is the
+  // one record here where a day spent unnoticed is a day already spent.
+  await notificationService.emit({
+    type: 'new_rma',
+    severity: 'warn',
+    title: `Return ${rma.rmaNumber} requested`,
+    detail: `Order ${order.orderNumber} · ${items.length} item${items.length === 1 ? '' : 's'}`,
+    entity: { kind: 'rma', id: rma._id.toString(), label: rma.rmaNumber },
+    href: `/admin/rma/${rma._id}`,
   });
 
   return getRma(rma._id.toString());

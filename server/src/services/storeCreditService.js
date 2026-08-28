@@ -24,7 +24,17 @@ import * as payment from './payment.js';
  * so two concurrent redemptions cannot both pass a read-then-write check and
  * overdraw the balance. A failed match means someone else got there first.
  */
-async function post({ userId, amount, type, note, order, orderNumber, createdBy, paymentRef }) {
+async function post({
+  userId,
+  amount,
+  type,
+  note,
+  order,
+  orderNumber,
+  createdBy,
+  paymentRef,
+  referral,
+}) {
   if (!Number.isInteger(amount) || amount === 0) {
     throw ApiError.badRequest('A credit movement must be a non-zero whole number of cents.');
   }
@@ -58,6 +68,7 @@ async function post({ userId, amount, type, note, order, orderNumber, createdBy,
     orderNumber,
     createdBy,
     paymentRef,
+    referral,
   });
 
   return { balance: updated.storeCredit, entry: serialize(entry) };
@@ -109,6 +120,60 @@ export async function allocate(userId, { amount, note }, adminId) {
     note: note || (amount > 0 ? 'Credit added by Cellvix' : 'Adjustment by Cellvix'),
     createdBy: adminId,
   });
+}
+
+/**
+ * Referral commission, in or out (ERP rework §6.13).
+ *
+ * This exists so referrals are **not an exception** to the rule this file
+ * enforces: a balance is never written by hand, and every movement is a ledger
+ * row that explains itself. `referralService` decides *whether* and *how much*;
+ * this decides nothing and simply moves the money, the same as every other
+ * function here.
+ *
+ * A negative `amount` is a reversal — the referred payment was refunded or its
+ * invoice voided — and carries `referral.reverses` pointing at the accrual it
+ * undoes.
+ *
+ * Note it deliberately does **not** guard the balance the way a spend does. A
+ * reversal has to succeed even when the referrer has already spent the credit:
+ * refusing it would leave commission standing on money that came back, which is
+ * exactly the leak the reversal exists to close. The balance is allowed to go
+ * to zero and the ledger stays truthful about why.
+ */
+export async function creditReferral({ referrerId, amount, note, referral }) {
+  if (amount < 0) {
+    // Spend-style guards would block a reversal against an already-spent
+    // balance, so this goes through the ledger without the `$gte` filter that
+    // `post` applies to negative amounts.
+    const updated = await User.findOneAndUpdate(
+      { _id: referrerId },
+      { $inc: { storeCredit: amount } },
+      { new: true },
+    );
+    if (!updated) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
+
+    // `storeCredit` has `min: 0` on the schema, which findOneAndUpdate does not
+    // enforce. Clamp explicitly so a reversal larger than the remaining balance
+    // lands on zero rather than a negative number no screen is designed to show.
+    if (updated.storeCredit < 0) {
+      updated.storeCredit = 0;
+      await updated.save();
+    }
+
+    const entry = await CreditTransaction.create({
+      user: referrerId,
+      amount,
+      balanceAfter: updated.storeCredit,
+      type: 'referral',
+      note,
+      referral,
+    });
+
+    return { balance: updated.storeCredit, entry: serialize(entry) };
+  }
+
+  return post({ userId: referrerId, amount, type: 'referral', note, referral });
 }
 
 /**
@@ -177,6 +242,24 @@ export async function refundOrder(orderNumber, { amount, note }, adminId) {
   });
   await order.save();
 
+  // Referral commission follows the money back (§6.13). Placed here rather than
+  // in each caller because both the admin refund route and an RMA resolution
+  // arrive through this function — a rule enforced at the choke point cannot be
+  // forgotten by a third caller added later.
+  //
+  // Only a refund in FULL reverses the commission. A partial refund is left
+  // alone deliberately: clawing back a fraction of a fraction produces rounding
+  // that never quite nets to zero across several partials, and the referrer
+  // ends up owing a cent nobody can explain. Full refund is the case that
+  // matters, and it is exact.
+  //
+  // Imported lazily: `referralService` imports this module, and a static import
+  // here would close the cycle.
+  if (order.refundedTotal >= order.total) {
+    const { reverseForOrder } = await import('./referralService.js');
+    await reverseForOrder(order._id);
+  }
+
   return { ...posted, refundedTotal: order.refundedTotal, orderTotal: order.total };
 }
 
@@ -213,6 +296,7 @@ export async function previewForTotal(userId, total) {
 export default {
   allocate,
   balanceOf,
+  creditReferral,
   previewForTotal,
   recharge,
   redeemForOrder,

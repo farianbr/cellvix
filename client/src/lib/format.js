@@ -71,6 +71,25 @@ export function relativeDays(value) {
   return days > 0 ? `in ${days} days` : `${Math.abs(days)} days ago`;
 }
 
+/**
+ * "just now" / "4m ago" / "3h ago" / "2d ago" / "Mar 14" — for the notification
+ * bell (§7.3), which needs finer grain than `relativeDays`.
+ *
+ * A notification from eleven minutes ago rendered as "today" tells the operator
+ * nothing about whether they have already seen it. Past a week the relative
+ * form stops helping and it falls back to a date.
+ */
+export function relativeTime(value) {
+  if (!value) return '';
+  const seconds = Math.round((new Date() - new Date(value)) / 1000);
+
+  if (seconds < 45) return 'just now';
+  if (seconds < 3600) return `${Math.round(seconds / 60)}m ago`;
+  if (seconds < 86_400) return `${Math.round(seconds / 3600)}h ago`;
+  if (seconds < 7 * 86_400) return `${Math.round(seconds / 86_400)}d ago`;
+  return dateShort(value);
+}
+
 /** 1240 -> "1,240" */
 export function count(n) {
   if (n === null || n === undefined) return '0';

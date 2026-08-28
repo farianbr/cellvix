@@ -3,6 +3,7 @@ import User from '../models/User.js';
 import ApiError from '../utils/ApiError.js';
 import env from '../config/env.js';
 import { clearSession } from '../services/authService.js';
+import Role from '../models/Role.js';
 
 const STATUS_ERRORS = {
   pending: [
@@ -71,12 +72,12 @@ export function requireApproved(req, _res, next) {
 }
 
 /**
- * The mirror of `requireAdmin`: keeps staff out of the buyer side.
+ * The mirror of `requireStaff`: keeps Cellvix people out of the buyer side.
  *
  * A staff login is not a business. It has no cart, no orders, no invoices and
  * no credit, so every route beneath this one would either read an empty shape
  * or write buyer data against an account that should never own any. The client
- * redirects an admin away from the storefront (`RootLayout`); this is the half
+ * redirects staff away from the storefront (`RootLayout`); this is the half
  * that holds when the request does not come from our UI.
  *
  * Its own code rather than `requireApproved`'s: an admin is not `approved` and
@@ -84,7 +85,7 @@ export function requireApproved(req, _res, next) {
  * would send them looking for an approval that is never coming.
  */
 export function denyAdmin(req, _res, next) {
-  if (req.user?.role === 'admin') {
+  if (isStaffAccount(req.user)) {
     return next(
       ApiError.forbidden(
         'Staff accounts do not have a buyer side. Use the admin console.',
@@ -95,10 +96,85 @@ export function denyAdmin(req, _res, next) {
   return next();
 }
 
+/**
+ * Full admin. Deliberately NOT satisfied by a `staff` account, however
+ * permissive its role: the things behind this guard are the ones §7.6 keeps
+ * admin-only regardless of role — editing roles, creating users, API keys and
+ * the security log — because a role that can grant itself power is not a
+ * permission system.
+ */
 export function requireAdmin(req, _res, next) {
   if (!req.user) return next(ApiError.unauthorized());
   if (req.user.role !== 'admin') return next(ApiError.forbidden());
   return next();
+}
+
+/**
+ * Admin panel access: an admin, or a staff member holding a role.
+ *
+ * A staff account with no `staffRole` is refused here — access is granted,
+ * never inherited, so an employee nobody has assigned is a locked door rather
+ * than a door standing open.
+ */
+export function requireStaff(req, _res, next) {
+  if (!req.user) return next(ApiError.unauthorized());
+  if (req.user.role === 'admin') return next();
+  if (req.user.role !== 'staff') return next(ApiError.forbidden());
+  if (req.user.lockedAt) {
+    return next(ApiError.forbidden('This staff account is locked.', 'STAFF_LOCKED'));
+  }
+  if (!req.user.staffRole) {
+    return next(
+      ApiError.forbidden(
+        'This staff account has no role assigned yet. An administrator must grant access.',
+        'NO_STAFF_ROLE',
+      ),
+    );
+  }
+  return next();
+}
+
+/**
+ * The real control (§7.6). The nav filter, hidden `+ Create` entries and
+ * disabled buttons are a courtesy; this is what actually decides.
+ *
+ * `admin` bypasses the role system entirely. Everyone else must hold `level`
+ * or better on `area`, where `view` is genuinely read-only — it must not reach
+ * a mutating route, including an export that writes an audit row.
+ */
+export function requirePermission(area, level = 'view') {
+  return async function permissionGuard(req, _res, next) {
+    if (!req.user) return next(ApiError.unauthorized());
+    if (req.user.role === 'admin') return next();
+    if (req.user.role !== 'staff') return next(ApiError.forbidden());
+    if (req.user.lockedAt) {
+      return next(ApiError.forbidden('This staff account is locked.', 'STAFF_LOCKED'));
+    }
+
+    try {
+      // Populated per request rather than cached on the user: a role edited in
+      // one tab has to bite on the next request in another, and a cached map is
+      // how somebody keeps access they were just denied.
+      const role = await Role.findById(req.user.staffRole);
+      if (!role?.allows(area, level)) {
+        return next(
+          ApiError.forbidden(
+            `Your role does not have ${level} access to ${area}.`,
+            'PERMISSION_DENIED',
+          ),
+        );
+      }
+      req.staffPermissions = role;
+      return next();
+    } catch (error) {
+      return next(error);
+    }
+  };
+}
+
+/** True when this account belongs to Cellvix rather than to a customer. */
+export function isStaffAccount(user) {
+  return Boolean(user && (user.role === 'admin' || user.role === 'staff'));
 }
 
 /** True when this requester may see trade pricing. Used by the product serializer. */

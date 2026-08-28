@@ -1,0 +1,248 @@
+import { Link, useParams } from 'react-router';
+import { ArrowLeft } from 'lucide-react';
+
+import Panel, { StatTile } from '@/components/ui/Panel';
+import Badge from '@/components/ui/Badge';
+import PageHeader from '@/components/admin/PageHeader';
+import { ADMIN_ROUTES } from '@/lib/adminRoutes';
+import { adminIcon } from '@/components/admin/shell/adminIcons';
+import { useAdminOrder } from '@/hooks/useAdmin';
+import { money, date, dateTime } from '@/lib/format';
+
+/**
+ * One order (§4b.6, phase 12).
+ *
+ * The route existed from phase 1 and rendered a stub; global search made that
+ * visible, since an order hit navigated straight into "not built yet".
+ *
+ * **Read-only.** Status changes and refunds are driven from the Orders list,
+ * which holds those dialogs and the rules behind them — the partial-refund
+ * ceiling, the bulk-action skip reasons. A second set of controls here would be
+ * a second place for them to drift.
+ */
+const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/orders/:orderNumber'], icon: adminIcon('Package') };
+
+const STATUS_TONE = {
+  pending: 'neutral',
+  processing: 'info',
+  shipped: 'info',
+  delivered: 'ok',
+  cancelled: 'danger',
+  refunded: 'warn',
+};
+
+function Address({ title, address }) {
+  if (!address) return null;
+  return (
+    <div className="min-w-0">
+      <p className="eyebrow mb-1 text-ink-400">{title}</p>
+      <p className="text-[13px] leading-relaxed text-ink-700">
+        {address.contactName && <span className="block font-medium text-ink-900">{address.contactName}</span>}
+        {address.company && <span className="block">{address.company}</span>}
+        {address.line1 && <span className="block">{address.line1}</span>}
+        {address.line2 && <span className="block">{address.line2}</span>}
+        <span className="block">
+          {[address.city, address.region, address.postal].filter(Boolean).join(', ')}
+        </span>
+        {address.phone && <span className="mt-1 block text-ink-500">{address.phone}</span>}
+      </p>
+    </div>
+  );
+}
+
+export function AdminOrderDetailPage() {
+  const { orderNumber } = useParams();
+  const { data, isLoading, error } = useAdminOrder(orderNumber);
+
+  if (isLoading) return <p className="text-[13px] text-ink-500">Loading order…</p>;
+
+  if (error) {
+    return (
+      <>
+        <PageHeader icon={ADMIN_PAGE.icon} title="Order not found" />
+        <p className="text-[13px] text-ink-500">
+          {error.message}{' '}
+          <Link to="/admin/orders" className="font-semibold text-brand underline">
+            Back to orders
+          </Link>
+        </p>
+      </>
+    );
+  }
+
+  const order = data?.order;
+  if (!order) return null;
+
+  return (
+    <>
+      <PageHeader
+        icon={ADMIN_PAGE.icon}
+        title={order.orderNumber}
+        description={`Placed ${date(order.createdAt)} by ${order.businessName}.`}
+        action={
+          <Link
+            to="/admin/orders"
+            className="inline-flex h-9 items-center gap-1.5 rounded-[9px] border border-line bg-surface px-3 text-[13px] font-medium text-ink-600 transition-colors hover:border-ink-300 hover:bg-surface-2"
+          >
+            <ArrowLeft className="size-3.5" strokeWidth={2} aria-hidden="true" />
+            All orders
+          </Link>
+        }
+      />
+
+      <div className="max-w-[900px] space-y-4">
+        <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
+          <StatTile label="Total" value={money(order.total)} />
+          <StatTile
+            label="Status"
+            value={order.status}
+            tone={STATUS_TONE[order.status] ?? 'neutral'}
+          />
+          <StatTile
+            label="Store credit used"
+            value={money(order.storeCreditApplied)}
+            tone={order.storeCreditApplied > 0 ? 'info' : 'neutral'}
+          />
+          <StatTile
+            label="Refunded"
+            value={money(order.refundedTotal)}
+            tone={order.refundedTotal > 0 ? 'warn' : 'neutral'}
+          />
+        </div>
+
+        <Panel title="Lines" description="What a warehouse picks. Bundle members are listed as parts.">
+          <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+            <table className="w-full min-w-[520px] border-collapse text-[13px]">
+              <thead>
+                <tr className="border-b border-line text-left">
+                  <th scope="col" className="pb-2 font-display text-[12px] font-semibold text-ink-500">Part</th>
+                  <th scope="col" className="pb-2 font-display text-[12px] font-semibold text-ink-500">Qty</th>
+                  <th scope="col" className="pb-2 text-right font-display text-[12px] font-semibold text-ink-500">Unit</th>
+                  <th scope="col" className="pb-2 text-right font-display text-[12px] font-semibold text-ink-500">Line</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {order.items.map((item, index) => (
+                  <tr key={`${item.sku}-${index}`}>
+                    <td className="py-2 pr-3">
+                      <span className="block font-medium text-ink-900">{item.name}</span>
+                      <span className="flex flex-wrap items-center gap-1.5">
+                        <span className="font-mono text-[12px] text-ink-400">{item.sku}</span>
+                        {/* A bundle member is priced as part of a unit, so its
+                            line total does not add up on its own — saying which
+                            offer it came from is what makes that legible. */}
+                        {item.bundle?.title && <Badge tone="brand">{item.bundle.title}</Badge>}
+                      </span>
+                    </td>
+                    <td className="tnum py-2 pr-3 text-ink-700">{item.qty}</td>
+                    <td className="tnum py-2 pr-3 text-right text-ink-700">{money(item.unitPrice)}</td>
+                    <td className="tnum py-2 text-right font-medium text-ink-900">{money(item.lineTotal)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <dl className="mt-4 space-y-1.5 border-t border-line pt-3 text-[13px]">
+            <div className="flex justify-between gap-3">
+              <dt className="text-ink-500">Subtotal</dt>
+              <dd className="tnum text-ink-900">{money(order.subtotal)}</dd>
+            </div>
+            {order.bundleDiscount > 0 && (
+              <div className="flex justify-between gap-3">
+                <dt className="text-ok">Bundle pricing</dt>
+                <dd className="tnum text-ok">−{money(order.bundleDiscount)}</dd>
+              </div>
+            )}
+            {order.promoDiscount > 0 && (
+              <div className="flex justify-between gap-3">
+                <dt className="text-ok">{order.promo?.code ?? 'Offer'}</dt>
+                <dd className="tnum text-ok">−{money(order.promoDiscount)}</dd>
+              </div>
+            )}
+            <div className="flex justify-between gap-3">
+              <dt className="text-ink-500">Shipping</dt>
+              <dd className="tnum text-ink-900">{money(order.shipping)}</dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-ink-500">Tax</dt>
+              <dd className="tnum text-ink-900">{money(order.tax)}</dd>
+            </div>
+            <div className="flex justify-between gap-3 border-t border-line pt-1.5">
+              <dt className="font-display font-bold text-ink-900">Total</dt>
+              <dd className="tnum font-display font-bold text-ink-900">{money(order.total)}</dd>
+            </div>
+          </dl>
+        </Panel>
+
+        <Panel title="Delivery & account">
+          <div className="grid gap-5 sm:grid-cols-2">
+            <Address title="Ship to" address={order.shippingAddress} />
+            <Address title="Bill to" address={order.billingAddress} />
+          </div>
+
+          <dl className="mt-4 grid gap-x-6 gap-y-2 border-t border-line pt-3 text-[13px] sm:grid-cols-2">
+            <div className="flex justify-between gap-3">
+              <dt className="text-ink-500">Account</dt>
+              <dd className="min-w-0 truncate">
+                {order.userId ? (
+                  <Link to={`/admin/clients/${order.userId}`} className="font-medium text-brand hover:underline">
+                    {order.businessName}
+                  </Link>
+                ) : (
+                  order.businessName
+                )}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-ink-500">Invoice</dt>
+              <dd>
+                {order.invoiceNumber ? (
+                  <Link to={`/admin/invoices/${order.invoiceNumber}`} className="font-medium text-brand hover:underline">
+                    {order.invoiceNumber}
+                  </Link>
+                ) : (
+                  <span className="text-ink-400">—</span>
+                )}
+              </dd>
+            </div>
+            <div className="flex justify-between gap-3">
+              <dt className="text-ink-500">Delivery</dt>
+              <dd className="text-ink-900">{order.deliveryMethod?.label ?? '—'}</dd>
+            </div>
+            {order.poNumber && (
+              <div className="flex justify-between gap-3">
+                <dt className="text-ink-500">PO number</dt>
+                <dd className="font-mono text-[12.5px] text-ink-900">{order.poNumber}</dd>
+              </div>
+            )}
+          </dl>
+
+          {order.deliveryNotes && (
+            <p className="mt-3 rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12.5px] leading-relaxed text-ink-600">
+              <span className="font-medium text-ink-700">Delivery notes: </span>
+              {order.deliveryNotes}
+            </p>
+          )}
+        </Panel>
+
+        <Panel
+          title="Timeline"
+          description="Append-only — it is what the buyer's tracking page renders."
+        >
+          <ol className="space-y-2.5">
+            {(order.timeline ?? []).map((entry, index) => (
+              <li key={index} className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
+                <Badge tone={STATUS_TONE[entry.status] ?? 'neutral'}>{entry.status}</Badge>
+                <span className="min-w-0 flex-1 text-[13px] text-ink-600">{entry.note}</span>
+                <span className="tnum shrink-0 text-[12px] text-ink-400">{dateTime(entry.at)}</span>
+              </li>
+            ))}
+          </ol>
+        </Panel>
+      </div>
+    </>
+  );
+}
+
+export default AdminOrderDetailPage;

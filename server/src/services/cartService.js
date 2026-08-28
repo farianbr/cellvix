@@ -74,6 +74,24 @@ export async function serialize(cart, user) {
     promoNotice: priced.promoNotice,
     promoCode: priced.promoCode,
     priceVisible: true,
+    /**
+     * The default shipping band, so the cart's preview arithmetic reads the
+     * live rate rather than a hard-coded one.
+     *
+     * The cart's shipping and tax lines are explicitly a preview — the binding
+     * numbers come from `/orders/quote` — but a preview built on a constant
+     * stops matching the moment an operator edits the rate in Settings
+     * (§6.15), and "free shipping over $500" is exactly the kind of promise a
+     * page must not make out of a stale number.
+     */
+    shippingPreview: (() => {
+      // Ground by name, not by position: the bands are an editable list and
+      // reordering them must not silently change which one the cart previews.
+      const band =
+        priced.deliveryOptions.find((option) => option.code === 'ground') ??
+        priced.deliveryOptions[0];
+      return band ? { cost: band.cost, freeOver: band.freeOver } : null;
+    })(),
     updatedAt: cart.updatedAt,
   };
 }

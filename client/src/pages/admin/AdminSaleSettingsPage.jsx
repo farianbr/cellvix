@@ -1,0 +1,346 @@
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+import { saleSettingsSchema } from '@shared/schemas/admin';
+import { PROVINCES } from '@shared/schemas/checkout';
+import Panel from '@/components/ui/Panel';
+import Input from '@/components/ui/Input';
+import SelectField from '@/components/ui/SelectField';
+import PageHeader from '@/components/admin/PageHeader';
+import { SettingsFormActions, PlaceholderNotice } from '@/components/admin/settings/SettingsForm';
+import { ADMIN_ROUTES } from '@/lib/adminRoutes';
+import { adminIcon } from '@/components/admin/shell/adminIcons';
+import { GRADES, GRADE_ORDER } from '@/lib/constants';
+import { useAdminSettings, useAdminMutations } from '@/hooks/useAdmin';
+
+/**
+ * Sale Settings (§6.15, category 2) — the regional and invoicing defaults every
+ * later screen reads.
+ *
+ * **Three deliberate divergences from CellShoppe**, each recorded in §6.15:
+ *
+ * 1. The flat "Default GST Rate" is a **per-province GST/HST table**. One rate
+ *    is wrong the moment Cellvix ships outside Ontario, and a wholesaler ships
+ *    across provinces by definition.
+ * 2. "Warranty by membership tier" is **warranty by product grade**. Wholesale
+ *    warranties on what the part is, not on who bought it — a new OEM screen
+ *    carries a different promise from a Pull-B one regardless of the buyer.
+ * 3. Currency is fixed CAD and is shown, not edited. Every amount in this system
+ *    is CAD cents; a currency select would imply a conversion layer that does
+ *    not exist.
+ *
+ * **Rates are entered as percentages and stored as fractions.** The model and
+ * `Settings.rateFor` both work in fractions — 0.13, never 13 — and the schema
+ * refuses anything above 0.35 for exactly the reason this conversion exists: a
+ * percentage typed into a fraction field overcharges by two orders of magnitude
+ * without throwing anything.
+ */
+const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/settings/sale'], icon: adminIcon('Coins') };
+
+const TAX_KINDS = [
+  { value: 'GST', label: 'GST only' },
+  { value: 'HST', label: 'HST (combined)' },
+  { value: 'GST+PST', label: 'GST + PST' },
+  { value: 'GST+QST', label: 'GST + QST' },
+];
+
+/**
+ * Timezones Cellvix plausibly operates in. A free-text field here is a way to
+ * store a string no date library can resolve.
+ */
+const TIMEZONES = [
+  { value: 'America/St_Johns', label: 'Newfoundland — America/St_Johns' },
+  { value: 'America/Halifax', label: 'Atlantic — America/Halifax' },
+  { value: 'America/Toronto', label: 'Eastern — America/Toronto' },
+  { value: 'America/Winnipeg', label: 'Central — America/Winnipeg' },
+  { value: 'America/Edmonton', label: 'Mountain — America/Edmonton' },
+  { value: 'America/Vancouver', label: 'Pacific — America/Vancouver' },
+];
+
+const provinceName = (code) => PROVINCES.find((p) => p.value === code)?.label ?? code;
+
+/** Fraction to the percentage an operator types, without float dust: 0.14975 → 14.975. */
+const toPercent = (fraction) => String(Math.round(fraction * 1e6) / 1e4);
+const toFraction = (percent) => Math.round(Number(percent) * 1e4) / 1e6;
+
+export function AdminSaleSettingsPage() {
+  const { data, isLoading } = useAdminSettings();
+  const { saveSaleSettings } = useAdminMutations();
+  const [saved, setSaved] = useState(false);
+
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    setError,
+    formState: { errors, isDirty, isSubmitting },
+  } = useForm({
+    // The form works in percentages and the API in fractions, so the resolver
+    // cannot be the shared schema directly — validation of the converted values
+    // happens server-side, and the fields below carry their own bounds.
+    resolver: zodResolver(saleSettingsSchema.omit({ taxRatesByProvince: true })),
+    defaultValues: { timezone: 'America/Toronto', defaultDueDays: 30, rmaSlaDays: 14, warrantyByGrade: {} },
+  });
+
+  // The tax table is held outside RHF: it is a fixed-length grid of rows keyed
+  // by province, not a list the operator adds to, and a field array would buy
+  // nothing over a plain object keyed on the province code.
+  const [rates, setRates] = useState({});
+  const [ratesDirty, setRatesDirty] = useState(false);
+
+  useEffect(() => {
+    if (!data?.financial || isDirty || ratesDirty) return;
+
+    reset({
+      timezone: data.financial.timezone,
+      defaultDueDays: data.financial.defaultDueDays,
+      rmaSlaDays: data.operations?.rmaSlaDays ?? 14,
+      warrantyByGrade: Object.fromEntries(
+        GRADE_ORDER.map((grade) => [grade, data.financial.warrantyByGrade?.[grade] ?? 0]),
+      ),
+    });
+
+    setRates(
+      Object.fromEntries(
+        data.financial.taxRatesByProvince.map((row) => [
+          row.province,
+          { percent: toPercent(row.rate), kind: row.kind },
+        ]),
+      ),
+    );
+  }, [data, isDirty, ratesDirty, reset]);
+
+  const dirty = isDirty || ratesDirty;
+
+  async function onSubmit(values) {
+    setSaved(false);
+    try {
+      const next = await saveSaleSettings.mutateAsync({
+        ...values,
+        taxRatesByProvince: Object.entries(rates).map(([province, row]) => ({
+          province,
+          rate: toFraction(row.percent),
+          kind: row.kind,
+        })),
+      });
+
+      reset({
+        timezone: next.financial.timezone,
+        defaultDueDays: next.financial.defaultDueDays,
+        rmaSlaDays: next.operations?.rmaSlaDays ?? 14,
+        warrantyByGrade: Object.fromEntries(
+          GRADE_ORDER.map((grade) => [grade, next.financial.warrantyByGrade?.[grade] ?? 0]),
+        ),
+      });
+      setRates(
+        Object.fromEntries(
+          next.financial.taxRatesByProvince.map((row) => [
+            row.province,
+            { percent: toPercent(row.rate), kind: row.kind },
+          ]),
+        ),
+      );
+      setRatesDirty(false);
+      setSaved(true);
+    } catch (err) {
+      setError('root', { message: err.message });
+    }
+  }
+
+  function editRate(province, patch) {
+    setRates((current) => ({ ...current, [province]: { ...current[province], ...patch } }));
+    setRatesDirty(true);
+    setSaved(false);
+  }
+
+  if (isLoading) return <p className="text-[13px] text-ink-500">Loading settings…</p>;
+
+  return (
+    <>
+      <PageHeader
+        icon={ADMIN_PAGE.icon}
+        title={ADMIN_PAGE.title}
+        description={ADMIN_PAGE.description}
+      />
+
+      <PlaceholderNotice>
+        The tax rates and warranty lengths below are seeded with standard figures and have not been
+        confirmed by the business. Tax rates decide what every future invoice charges a customer;
+        confirm them — including whether reseller exemptions apply — before relying on them.
+      </PlaceholderNotice>
+
+      <form onSubmit={handleSubmit(onSubmit)} className="max-w-[860px] space-y-4">
+        <Panel title="Application & regional" description="Where Cellvix operates, and in what currency.">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <SelectField
+              control={control}
+              name="timezone"
+              label="Timezone"
+              options={TIMEZONES}
+              hint="Used for report date ranges and time-lapse invoice statuses."
+              error={errors.timezone?.message}
+            />
+            <Input
+              label="Currency"
+              value="CAD — Canadian dollar"
+              readOnly
+              disabled
+              hint="Fixed. Every amount in this system is stored in CAD cents."
+            />
+          </div>
+        </Panel>
+
+        <Panel
+          title="Invoicing"
+          description="The defaults a new invoice and a new RMA are created with."
+        >
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input
+              type="number"
+              min="0"
+              max="365"
+              label="Default payment due days"
+              suffix="days"
+              hint="Net terms on an invoice with no other agreement."
+              error={errors.defaultDueDays?.message}
+              {...register('defaultDueDays')}
+            />
+            <Input
+              type="number"
+              min="1"
+              max="365"
+              label="RMA service level"
+              suffix="days"
+              hint="How long an RMA may sit before it is flagged as overdue."
+              error={errors.rmaSlaDays?.message}
+              {...register('rmaSlaDays')}
+            />
+          </div>
+        </Panel>
+
+        <Panel
+          title="GST/HST by province"
+          description="The rate charged on an order, chosen by the shipping address. Entered as a percentage."
+        >
+          {/* Scrolls inside itself rather than pushing the page sideways — the
+              table is 13 rows of three controls and a phone cannot fit them. */}
+          <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
+            <table className="w-full min-w-[520px] border-collapse text-[13px]">
+              <thead>
+                <tr className="border-b border-line text-left">
+                  <th scope="col" className="pb-2 font-display text-[12px] font-semibold text-ink-500">
+                    Province
+                  </th>
+                  <th scope="col" className="pb-2 font-display text-[12px] font-semibold text-ink-500">
+                    Rate
+                  </th>
+                  <th scope="col" className="pb-2 font-display text-[12px] font-semibold text-ink-500">
+                    Kind
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {PROVINCES.map((province) => {
+                  const row = rates[province.value];
+                  if (!row) return null;
+
+                  return (
+                    <tr key={province.value}>
+                      <th scope="row" className="py-2 pr-3 text-left font-medium text-ink-900">
+                        <span className="tnum mr-2 text-ink-400">{province.value}</span>
+                        {province.label}
+                      </th>
+                      <td className="py-2 pr-3">
+                        <Input
+                          type="number"
+                          min="0"
+                          max="35"
+                          step="0.001"
+                          suffix="%"
+                          aria-label={`${province.label} tax rate`}
+                          value={row.percent}
+                          onChange={(event) => editRate(province.value, { percent: event.target.value })}
+                          containerClassName="w-32"
+                        />
+                      </td>
+                      <td className="py-2">
+                        {/* A plain select: this is inside a hand-managed table
+                            row, so there is no RHF field for SelectField to
+                            control. */}
+                        <select
+                          aria-label={`${province.label} tax kind`}
+                          value={row.kind}
+                          onChange={(event) => editRate(province.value, { kind: event.target.value })}
+                          className="h-10 w-full min-w-[9rem] rounded-[9px] border border-line bg-surface px-3 text-[13px] text-ink-900 transition-colors focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
+                        >
+                          {TAX_KINDS.map((kind) => (
+                            <option key={kind.value} value={kind.value}>
+                              {kind.label}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          <p className="mt-3 text-[12.5px] leading-relaxed text-ink-500">
+            <strong className="font-semibold text-ink-700">Kind is not cosmetic.</strong> HST is one
+            combined tax; GST+PST are two taxes collected together. The tax report has to be able to
+            say which, rather than printing one blended number.
+          </p>
+        </Panel>
+
+        <Panel
+          title="Warranty by grade"
+          description="How long a part is covered, by what the part is. Zero means no warranty."
+        >
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {GRADE_ORDER.map((grade) => (
+              <Input
+                key={grade}
+                type="number"
+                min="0"
+                max="3650"
+                suffix="days"
+                label={GRADES[grade]?.label ?? grade}
+                error={errors.warrantyByGrade?.[grade]?.message}
+                {...register(`warrantyByGrade.${grade}`)}
+              />
+            ))}
+          </div>
+        </Panel>
+
+        <SettingsFormActions
+          dirty={dirty}
+          saving={isSubmitting || saveSaleSettings.isPending}
+          saved={saved}
+          error={errors.root?.message}
+          onReset={() => {
+            reset();
+            // The tax table lives outside RHF, so `reset()` does not touch it —
+            // discarding has to put the server's rates back by hand, or the
+            // form would report itself clean while still showing edited rates.
+            setRates(
+              Object.fromEntries(
+                (data?.financial?.taxRatesByProvince ?? []).map((row) => [
+                  row.province,
+                  { percent: toPercent(row.rate), kind: row.kind },
+                ]),
+              ),
+            );
+            setRatesDirty(false);
+            setSaved(false);
+          }}
+        />
+      </form>
+    </>
+  );
+}
+
+export default AdminSaleSettingsPage;

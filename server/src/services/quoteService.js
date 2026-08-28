@@ -8,6 +8,7 @@ import User from '../models/User.js';
 import Settings from '../models/Settings.js';
 import ApiError from '../utils/ApiError.js';
 import { likeRegex } from '../utils/regex.js';
+import * as notificationService from './notificationService.js';
 
 /**
  * Quotes (ERP rework §6.6, phase 7).
@@ -410,7 +411,29 @@ export async function setQuoteStatus(id, { status, note }) {
   quote.timeline.push({ status, at: new Date(), note });
   await quote.save();
 
+  // Only acceptance rings the bell (§7.3 names "new quote accepted", not every
+  // transition). A quote moving to `sent` or `rejected` was done by the person
+  // who would be reading the notification, and a bell that reports your own
+  // clicks back to you is one people stop looking at.
+  if (status === 'accepted') {
+    await notificationService.emit({
+      type: 'quote_accepted',
+      severity: 'success',
+      title: `Quote ${quote.quoteNumber} accepted`,
+      detail: `Ready to convert to an order · ${formatCad(quote.total)}`,
+      entity: { kind: 'quote', id: quote._id.toString(), label: quote.quoteNumber },
+      href: `/admin/quotes/${quote._id}`,
+    });
+  }
+
   return getQuote(quote._id.toString());
+}
+
+/** Cents to `$1,234.56`, for notification copy. */
+function formatCad(cents) {
+  return new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(
+    (cents ?? 0) / 100,
+  );
 }
 
 /**

@@ -41,6 +41,18 @@ async function getTransport() {
   return transportPromise;
 }
 
+/**
+ * Whether a real transport is available, without sending anything.
+ *
+ * Exists for the invoice-message dry run (phase 11d): a preview that says
+ * "would send" against a server whose real run writes to the outbox is a
+ * preview that disagrees with the thing it previews. Resolves the transport
+ * through the same path `sendMail` uses, so the two can never differ.
+ */
+export async function mailerConfigured() {
+  return Boolean(await getTransport());
+}
+
 const slug = (value) =>
   String(value ?? 'message')
     .replace(/[^a-z0-9]+/gi, '-')

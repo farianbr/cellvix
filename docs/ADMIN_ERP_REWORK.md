@@ -1,9 +1,11 @@
 # Cellvix Admin — ERP Rework Plan
 
-> **Status:** in build. **Phases 1–7 are done** (shell, kit, dashboard, sales depth, purchase,
-> reports, quotes & RMA) — see §10 and the Session 24–30 entries in [PROGRESS.md](../PROGRESS.md).
-> Phase 8 (outlet, staff & roles) is next, and clears the §6b **U8** register entry by giving the
-> Staff Performance report something real to attribute to.
+> **Status:** in build. **Phases 1–12 are done** — shell, kit, dashboard, sales depth, purchase,
+> reports, quotes & RMA, outlet/staff/roles, marketing, referrals, settings (in five passes) and the
+> cross-cutting work (search, profile, detail screens, exports, and the notification bell in 12c).
+> See §10 and the Session 24–36 entries in [PROGRESS.md](../PROGRESS.md).
+> **Phase 13 is what remains**: clearing the §6b register by wiring the shells — Twilio, WhatsApp,
+> telephony, Google OAuth and the calendar’s scheduling logic — each independently shippable.
 >
 > **Phase 6 pulled two things forward, deliberately.** `Order.items.unitCost` now snapshots cost at
 > order time (§9.4) — margin cannot be computed honestly without it. And the **`Settings` singleton
@@ -1028,13 +1030,13 @@ built UI-only goes here; nothing else is allowed to be.
 
 | # | Surface | Route | Ships | Deferred | Unblocked by |
 |---|---|---|---|---|---|
-| U1 | **Calendar** | `/admin/settings/calendar` | Weekly board, staff filter, colour-coded statuses, unscheduled tray, navigation | All scheduling reads/writes; Google Calendar sync | A decision on what Cellvix schedules (Q1 below) |
-| U2 | **Appointments** | `/admin/settings/appointments` | Time grid, `Book Appointment` dialog | Booking persistence, slot rules, conflict checks | Same as U1 |
-| U3 | **SMS** | `/admin/marketing/sms` | Compose form, history list, template picker | Live send (Twilio) | Twilio credentials |
-| U4 | **WhatsApp** | `/admin/marketing/whatsapp` | Compose form, history list, template picker | Live send (WhatsApp Business API) | Provider keys |
-| U5 | **Calls** | `/admin/marketing/calls` | Log-a-call form, history, call scripts | Click-to-dial, recording fetch, AI analysis | Telephony provider |
-| U6 | **Bulk Email** | `/admin/marketing/email` | Campaign builder, templates, audience picker, unsubscribes | Actual sending | Email provider + CASL consent data |
-| U7 | **Third-Party Apps** | `/admin/settings/third-party` | Connection cards, status chips, setup guidance | Google OAuth round-trip | Google Cloud client credentials |
+| U1 | **Calendar** | `/admin/settings/calendar` | ✅ **shipped, phase 11e** — weekly board, staff filter, status legend, unscheduled tray, navigation, reading a real (empty) `Appointment` | Scheduling writes; Google Calendar sync | Settled 2026-08-28: build UI now, wire later. Phase 13 |
+| U2 | **Appointments** | `/admin/settings/appointments` | ✅ **shipped, phase 11e** — day time-grid, disabled `Book Appointment`. **There is no write route at all** (POST 404s), not a disabled handler | Booking persistence, slot rules, conflict checks | Same as U1 |
+| U3 | **SMS** | `/admin/marketing/sms` | ✅ **shipped, phase 9** — compose form, history list, template picker; every message stored `queued_unconfigured` with the reason shown | Live send (Twilio) | Twilio credentials |
+| U4 | **WhatsApp** | `/admin/marketing/whatsapp` | ✅ **shipped, phase 9** — same screen as U3, different channel | Live send (WhatsApp Business API) | Provider keys |
+| U5 | **Calls** | `/admin/marketing/calls` | ✅ **shipped, phase 9** — log-a-call form with direction and recording URL, history. Logs rather than sends, so it carries no provider notice | Click-to-dial, recording fetch, AI analysis | Telephony provider |
+| U6 | **Bulk Email** | `/admin/marketing/email` | ✅ **shipped and fully wired, phase 9 — off this register.** `mailer.js` has a transport, so it genuinely sends; CASL consent and unsubscribe are enforced server-side | — | — |
+| U7 | **Third-Party Apps** | `/admin/settings/third-party` | ✅ **shipped, phase 11c** — connection cards, status chips, disabled `Connect`, and setup steps for the Google Cloud console | Google OAuth round-trip | Google Cloud client credentials |
 | U8 | **Staff Performance** | `/admin/reports?tab=staff` | The tab, its notice, and the whole-business totals that are genuinely known (invoiced, invoices, orders) | Per-staff attribution, contribution bars, turnaround, the detailed breakdown | Phase 8 — `Role`, staff accounts and order attribution |
 
 > **U8 is unblocked by our own build order, not by a client answer or a provider key** — which makes
@@ -1044,6 +1046,13 @@ built UI-only goes here; nothing else is allowed to be.
 **Not on this register, and deliberately so:** *Invoice Status* rules and *Message Templates* are
 **fully functional on the email channel from day one** — email already works in this codebase. Only
 their SMS and WhatsApp channels are stubbed, and the screen says so inline.
+
+> **Phase 11c changed what U3 and U4 are waiting on, and it is worth being precise.** Twilio and
+> WhatsApp credentials can now be **stored** on the API Keys screen — so the blocker is no longer
+> "nobody has the keys", it is that **no client transmits through them**. That distinction is carried
+> in the data: `channelStatus` returns `configured` (credentials present) *and* `delivers` (a message
+> actually leaves), and the screens' notice keys on `delivers`. Saving keys changes the notice's
+> wording; it does not remove it, and it does not make anything send. Phase 13 writes the client.
 
 ### Rules every UI-only surface obeys
 
@@ -1104,6 +1113,15 @@ of icon + type + one-line detail + relative time, tinted by severity and linking
 Sources: new registration · new order · new quote accepted · new RMA · invoice overdue · low stock ·
 out of stock · PO overdue. `Notification` model with per-admin read state; polled on an interval to
 start, upgraded to SSE only if that proves necessary.
+
+**Built in 12c, and the eight sources split into two kinds.** The first four are *events* — they
+happened at an instant and stay true — and are stored rows. The last four are *standing conditions*:
+they are true right now and stop being true when the invoice is paid or the shelf is restocked. Those
+are **derived from the live records on every read and never stored**, because a stored row for a
+condition that has cleared is a panel telling an operator to chase money that already arrived. Read
+state and `Clear All` are per admin — one event is seen separately by each of several staff, so a
+shared boolean would let the first reader silence it for everyone — and clearing writes a
+dismissal rather than deleting anybody else's row.
 
 Notifications are **role-filtered**: a warehouse role sees stock and PO alerts, not overdue
 invoices.
@@ -1300,8 +1318,8 @@ opt-in per [CLAUDE.md](../CLAUDE.md).
 | **8 — Outlet, staff & roles** | `Outlet` and `Role` models, outlet list/add/edit with live preview, Users and Roles & Access screens, `requirePermission` middleware, outlet switcher. | 1, 4 |
 | **9 — Marketing** | `MessageLog`, `Campaign`, `MessageTemplate`, four channel screens (**SMS/WhatsApp/Call UI-only — §6b U3–U5**), email fully wired, CASL consent and unsubscribe. Offers/Blog/FAQ already re-homed in phase 1. | 4 |
 | **10 — Referrals** | `referralCode` / `referredBy`, `referralPercent`, `CREDIT_TYPES += referral`, `storeCreditService.creditReferral()`, accrual on payment, reversal on refund, admin screen. Fully functional — no UI-only part. | 4, 5 |
-| **11 — Settings** | The seven categories and ~20 pages (§6.15), minus Users/Roles (phase 8) and Expense Categories (phase 5). Encrypted provider secrets, audit-log screens, and the **Calendar / Appointments UI shells — §6b U1–U2**. | 5, 8, 9 |
-| **12 — Cross-cutting** | Global search, notifications dropdown, My Profile, exports. | 3–10 |
+| **11 — Settings** | The seven categories and ~20 pages (§6.15), minus Users/Roles (phase 8) and Expense Categories (phase 5). Encrypted provider secrets, audit-log screens, and the **Calendar / Appointments UI shells — §6b U1–U2**. **Split into passes — see below.** | 5, 8, 9 |
+| **12 — Cross-cutting** | Global search, notifications dropdown, My Profile, exports. **12a done (Session 35):** search + profile + the order/invoice detail screens; `ADMIN_STUB_PATHS` emptied. **12b done (Session 35):** CSV/XLSX exports honouring the active filters across five lists, and the + Create menu reading the permission map. **12c done (Session 36):** the notification bell — four stored event sources, four derived standing conditions, per-admin read state and role filtering. **Phase 12 complete.** | 3–10 |
 | **13 — Wire the shells** | Clear the §6b register: connect Twilio / WhatsApp / telephony / email provider, Google OAuth, and the calendar's scheduling logic. Each entry is independently shippable. | 9, 11, + client answers |
 
 Phases 1–3 are what make the panel *feel* like CellShoppe. If time gets short, protect those.
@@ -1317,6 +1335,34 @@ invoice due days, warranty lengths and email toggles are all read by earlier pha
 read them from `Settings` with seeded defaults from day one; phase 11 only builds the **screens**
 that edit them. Hard-coding a rate in phase 5 and "moving it to Settings later" is how you end up
 with two sources of truth for the tax rate.
+
+**Phase 11 is split into passes**, settled 2026-08-28 when it was picked up: sixteen screens, a new
+`AuditLog` wired into every existing mutation, encrypted provider secrets and two UI shells is not
+one shippable unit, and each pass below ends shippable on its own.
+
+| Pass | Scope | Status |
+|---|---|---|
+| **11a** | `settingsService`, the six settings routes, the Summary/category map, Business Info, Sale Settings, Shipping Rates, Payment Methods, Inventory defaults. Shipping money moved out of `DELIVERY_METHODS` into `Settings`. | ✅ done (Session 35) |
+| **11b** | `AuditLog`, `auditService` as the one write path, audit hooks across every money-moving, permission and settings mutation, and the Activity and Security log screens. Closes the gap phases 8, 9 and 10 each recorded. | ✅ done (Session 35) |
+| **11c** | `ProviderCredential`, AES-256-GCM at rest, the write-only API Keys screen, Third-Party Apps (§6b U7), and stored keys wired into the channel predicates. | ✅ done (Session 35) |
+| **11d** | `Taxonomy.aliases` wired into search, the taxonomy editor, `InvoiceStatusRule` + `InvoiceStatusRun`, and the invoice-messages screen. | ✅ done (Session 35) |
+| **11e** | `Settings.communications`, Email Settings, Message Templates, and the Calendar + Appointments shells over a real `Appointment` model. | ✅ done (Session 35) — **phase 11 complete** |
+
+**Two decisions 11b settled that §6.15 and §7.5 left open.**
+
+*Role changes live in the **security** log, not the activity feed.* A role edit changes access for
+everyone holding it at once rather than for one named account, which makes it the more powerful of
+the two; splitting it from the staff changes would mean reconstructing one escalation from two
+screens.
+
+*The security log does not claim to record CSRF failures.* §6.15 lists them, but this codebase has
+no CSRF middleware, so the route description names only what the log can actually contain — an
+operator reading an empty result would otherwise take it as "no attacks" rather than "not measured".
+The claim goes back when the check does.
+
+`built: true` in `ADMIN_ROUTES` marks a screen that actually exists, because `phase` alone cannot:
+these sixteen routes share `phase: 11` while some are real and some are still stubs. The settings
+summary reads the flag.
 
 Phase 13 exists so the UI-only work has **a named home rather than a good intention**. It is not one
 task: each §6b entry is independently shippable the moment its blocker clears, and clearing one does
@@ -1361,6 +1407,17 @@ each is most likely to get broken by accident.
 The plan can be built end to end; what is listed below are values to swap in later, all of them
 editable in Settings rather than baked into code.
 
+> **Resolved 2026-08-28, after phase 11e — and phase 11 is now complete.** Q1 briefly looked
+> blocking: the Calendar and Appointments shells were the last unbuilt screens and they read from an
+> `Appointment` model that did not exist. The answer was to **build the interface now and wire the
+> scheduling later**, which is exactly what §6b exists to accommodate.
+>
+> So the model was written to the reading below — pickups, deliveries and RMA drop-offs — but kept
+> deliberately loose where the guess could be wrong: `relatedTo` is a `{ kind, id }` pair rather than
+> four typed refs, and `kind` is a short enum that costs nothing to extend. **There is no write route
+> at all**, so nothing has been persisted against a shape that may still move. Confirming the reading
+> is now phase 13's first task rather than a prerequisite.
+
 ### Deferred, not blocking — tracked in §6b
 
 | # | Item | Placeholder in the meantime | Needed by |
@@ -1401,3 +1458,7 @@ location)**.
 | 2026-08-27 | **Phase 2 built.** The shared kit — `DataTable` (declared columns, priority-based folding into a per-row disclosure, opt-out sorting), `KpiRow` (semantic left borders, wraps rather than clips), `DateRangeBar` (URL-synced, local-time presets), `FilterStrip`, `ProcessStrip` (separate from `StepIndicator` by design) — plus a working `CommandPalette` (Ctrl+K, screens-only until `/admin/search` lands in phase 12) and `CreateMenu` (`C`, grouped Income/Expense). Charts are hand-rolled inline SVG with a visually-hidden data table each. Orders, Clients and Inventory retrofitted; Clients and Inventory moved their filters into the URL so the dashboard's `?status=pending` and `?stock=low` links work. Approvals keeps its own screen — its reject flow requires a reason the account drawer does not collect, so the §6.2 fold waits for phase 4. Verified at 375 / 834 / 1280 / 1600. |
 | 2026-08-27 | **Phase 3 built.** `GET /admin/stats` takes `?from=&to=` (inclusive days, end-of-day resolved server-side) and answers with **`invoiced` and `collected` as separate named metrics** (§9.1), refunds as their own line (§9.2), receivables and inventory value as positions rather than flows, a gap-filled order-value trend (daily to ten weeks, weekly beyond), top clients and low-stock items. The old response shape survives as a subset. `AdminOverviewPage` rebuilt: URL-linkable date range, things-to-do cards that render only when non-zero, seven KPI tiles, trend chart, top clients, recent orders and low stock. Sidebar badges were reading keys the endpoint never sent and are now live. Two bugs fixed on the way: refunds were dated by `Order.updatedAt`, so any later status edit would have moved an old refund into the current period — they now come from the `CreditTransaction` ledger, which timestamps each one; and weekly bucket labels read `Dec 29 → Dec 28` for a calendar year, so they now carry the year when the range spans one. Verified at 375 / 834 / 1280 / 1600. |
 | 2026-08-28 | **Phase 4 built.** Invoices list with derived-not-stored `overdue`, collection-wide pill counts, and payment recording where **`amountPaid` and status are recomputed from the payment rows** — overpayment refused rather than allowed to exceed the invoice. Voiding forgives the balance and keeps the row with its reason. `GET /admin/invoices/:number/document` added because the buyer route scopes its lookup to the signed-in user; it renders the same artefact through the same renderer. Client profile at `/admin/clients/:id` with seven URL-addressable tabs, five KPIs keeping the line of credit and store credit apart, and an activity feed merging orders, invoices, payments and credit movements until `AuditLog` lands in phase 11. The Clients drawer was removed — with a real profile route it was a second address for one record (invariant 15). Breadcrumbs gained a record-label context so a detail page can name its record in the trail (§4b.6). Order bulk actions are **partial by design**: every single-order rule still applies, and the response names what moved and what did not with a reason per skip. Verified with 19/19 write-path assertions against `cellvix_test`, plus 375 / 834 / 1280 / 1600. |
+| 2026-08-28 | **Phase 9 built.** `MessageLog`, `Campaign` and `MessageTemplate`; `marketingService` with the four channels behind one `CHANNEL_PROVIDERS` table, so which providers are connected is decided in one place and every screen reads it. SMS and WhatsApp ship UI-only per U3–U4: composing writes a real row with `queued_unconfigured` and the named reason, and the screen reports that instead of a confirmation. Calls (U5) log rather than send, so they carry **no** provider notice — a warning on a screen working as designed is how warnings stop being read. Email is fully wired and stays off the register; with no `SMTP_URL` it reports the outbox by name and does not count those as sent. The send dialog reports four numbers (sent · outbox · failed · skipped), never one. **CASL enforced server-side**: consent resolved at send rather than compose so a late unsubscribe still excludes; audience stored as a filter, never a recipient list; sender identification and an HMAC'd unsubscribe link appended inside the send loop rather than left to the author; the public `/unsubscribe` page sits outside `RootLayout` and states that order and invoice mail still arrives; re-subscribing writes a new consent rather than erasing the old refusal. A one-to-one email to an unsubscribed account is refused, while an operational SMS to the same account still logs. Open/click tracking is absent rather than shown as zero. Verified: build clean and all five screens code-split; 18 marketing routes all permissioned plus the one deliberately public POST; 17 schema, 10 consent/token, 8 audience, 9 send-path and 8 unsubscribe-token cases, plus the CASL decoration asserted against real outbox output. Not verified: no database — `.env` points at the live cluster, so the data paths ran against stubbed models. |
+| 2026-08-28 | **Phase 9 verified against the live cluster and in a browser**, the client having confirmed the Atlas data is still dummy. The full CASL loop ran for real: 5 matched → 4 eligible → 1 skipped, four decorated emails, a link followed from the page unsubscribing that account, an idempotent second click, a tampered token refused, and the next campaign's audience dropping 4 → 3 on its own. Permissions confirmed by role (Warehouse 403 everywhere, Account Manager 200 on marketing and still 403 on admin-only `/admin/roles`). All four screens checked at 375 / 768 / 1024 / 1440 with no horizontal overflow and no console errors. **Four fixes came out of it:** a no-consent account was being told it had "unsubscribed" (now `RECIPIENT_NO_CONSENT`, distinct from `RECIPIENT_UNSUBSCRIBED`); **a phase-8 gap — `ensureBuiltInRoles` / `ensureDefaultOutlet` ran only inside the seed, so any database not re-seeded had zero roles and no default outlet; both are additive upserts and now run at boot**; `Campaign.stats.queued` added so a sent campaign no longer reads a bare "0" with no explanation; and the send dialog's "Send to 0" is now disabled and explained rather than being a button that can only fail. The seed was updated so a fresh run reproduces the verified state. |
+| 2026-08-28 | **Phase 10 built and verified live.** `User.referralCode` (minted on approval, unambiguous alphabet) · `User.referredBy` (set once at registration, no route edits it) · `Settings.financial.referralPercent` · `CREDIT_TYPES` gains `referral` · `storeCreditService.creditReferral()`, so referrals are not an exception to "the only place a balance moves". Accrual fires on `recordPayment` and is keyed on invoice number **plus payment index**, so instalments earn separately and a replay cannot pay twice; the rate is snapshotted per accrual and is never retroactive. Reversal fires on void and on full refund, keyed on the accrual it undoes, and is allowed to take the balance to zero where a spend would be refused — refusing it would leave commission standing on money that came back. Guards: self-referral rejected, one level only, `void` rows earn nothing, suspended referrers earn nothing, an unrecognised code is refused rather than silently dropped. **Admin-only, not `marketing: full`** — verified that Account Manager is refused. Verified live: $800 → $40.00 at 5%; rate raised to 10% and the earlier accrual stayed at 5% while the next earned at 10%; a payment then a void netted exactly to zero; replays and re-reversals were no-ops; four widths clean, no console errors. **One bug found and fixed:** totals were computed from each pairing's net, so a fully clawed-back accrual reported zero reversals — accruals and reversals are now tracked gross as well as netted, and the screen names both. Deferred: the buyer-facing half in `/account` (§6.13 puts the admin surface first) and audit-logging of rate changes, which waits on phase 11's `AuditLog`. |
+| 2026-08-29 | **Phase 12c built — the notification bell, and phase 12 with it.** §7.3 names eight sources, and they are answered two different ways on purpose: four are **events** (registration, order, quote accepted, RMA) and are stored `Notification` rows; four are **standing conditions** (invoice overdue, low stock, out of stock, PO overdue) and are **derived from the live records on every read**, never stored. A stored "invoice overdue" row is a lie the moment the invoice is paid, and keeping it honest would need a delete hook on every payment, receipt and stock movement — eight more places to forget. `list()` merges both halves newest-first and the client cannot tell them apart. **Read state is per admin** (`readBy` / `clearedBy` as arrays, not booleans): one order is one event several staff each see separately, and a boolean would let whoever opened the bell first mark it read for everyone. `Clear All` is likewise personal — it writes `clearedBy`, never deletes, and leaves the row unread in every other bell. **Role-filtered server-side** (§7.3): every row carries the permission area that gates it, and the areas are resolved from the caller's role per request, the same rule `searchService` follows — a search result and a notification both leak the existence, the name and usually the money of a record before anybody clicks. Opening the bell marks read but does not clear: "I have seen this" and "I am done with this" are different acts. `emit()` swallows its own failures exactly as `auditService.record()` does, and refuses a derived type outright so the collection cannot accumulate rows that go stale. Polled at 60s per §7.3 ("upgraded to SSE only if that proves necessary"), and not in a background tab. The badge shows a count rather than a dot, because "3 things want you" and "something wants you" are different messages. Verified: build clean; 15 logic assertions against stubbed models covering all four derived conditions and their copy, a `minStock: 0` product correctly not reading as low, warehouse seeing stock and PO but **not** overdue invoices, sales seeing the inverse, a roleless staff account seeing nothing, per-admin read state, an idempotent ``, derived ids skipped without issuing a write, and a derived type refused by `emit`. **Not verified: no database** — no local mongod and `.env` points at the live cluster, so the data paths ran against stubs. Needs a live pass. |

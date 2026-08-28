@@ -12,6 +12,7 @@ import DataTable, { CountLine } from '@/components/admin/DataTable';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminUsers } from '@/hooks/useAdmin';
+import downloadExport from '@/lib/exportDownload';
 
 /**
  * Header metadata read from the same table the breadcrumb uses, so a page
@@ -170,12 +171,7 @@ export function AdminCustomersPage() {
           }))}
           activePill={status}
           onPillChange={setStatus}
-          onExport={(format) =>
-            window.alert(
-              `Export to ${format} arrives in phase 12. It will carry the current filters: ` +
-                `status "${status}"${query ? `, search "${query}"` : ''}.`,
-            )
-          }
+          onExport={(format) => downloadExport('clients', format, { q: query || undefined, status })}
           actions={
             // The approve/reject flow sets credit terms and an account rep in
             // one payload, and requires a reason to reject — none of which the

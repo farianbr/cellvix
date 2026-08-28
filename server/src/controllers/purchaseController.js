@@ -1,5 +1,6 @@
 import { asyncHandler } from '../utils/ApiError.js';
 import * as purchaseService from '../services/purchaseService.js';
+import * as auditService from '../services/auditService.js';
 
 /**
  * Purchase — suppliers, purchase orders, expenses, categories and inventory
@@ -60,15 +61,59 @@ export const setPurchaseOrderStatus = asyncHandler(async (req, res) => {
  * not, with a reason per skip, and the UI shows the skips rather than
  * reporting a clean success.
  */
+/** Receiving moves stock, so it is audited alongside the money (§7.6). */
 export const receivePurchaseOrder = asyncHandler(async (req, res) => {
-  res.json(await purchaseService.receivePurchaseOrder(req.params.id, req.body, req.user._id));
+  const result = await purchaseService.receivePurchaseOrder(req.params.id, req.body, req.user._id);
+  const po = result?.order;
+
+  await auditService.record({
+    req,
+    action: 'purchase_order.receive',
+    entity: { kind: 'purchaseOrder', id: req.params.id, label: po?.poNumber ?? '' },
+    // What actually moved, from the service's own answer — `received` and
+    // `skipped` are named in the response precisely because a partial receive
+    // is normal, and the log should record which it was.
+    after: {
+      status: po?.status ?? null,
+      received: result?.received ?? null,
+      skipped: result?.skipped ?? null,
+    },
+    description: `Received stock against ${po?.poNumber ?? req.params.id}.`,
+  });
+
+  res.json(result);
 });
 
-/** Creates the `Expense` row, once. A second call is refused by the service. */
+/**
+ * Creates the `Expense` row, once. A second call is refused by the service.
+ *
+ * Named in §7.6 as money-moving, so it is always audited with actor and IP.
+ */
 export const recordPurchasePayment = asyncHandler(async (req, res) => {
-  res.status(201).json(
-    await purchaseService.recordPurchasePayment(req.params.id, req.body, req.user._id),
+  const result = await purchaseService.recordPurchasePayment(
+    req.params.id,
+    req.body,
+    req.user._id,
   );
+  const po = result?.order;
+
+  await auditService.record({
+    req,
+    action: 'purchase_order.payment',
+    entity: { kind: 'purchaseOrder', id: req.params.id, label: po?.poNumber ?? '' },
+    after: {
+      amount: req.body?.amount ?? null,
+      method: req.body?.method ?? '',
+      reference: req.body?.reference ?? '',
+      status: po?.payment?.status ?? null,
+      // The expense this created, so the two halves of one transaction can be
+      // found from either side.
+      expense: result?.expense?.id ?? null,
+    },
+    description: `Recorded a payment against ${po?.poNumber ?? req.params.id}.`,
+  });
+
+  res.status(201).json(result);
 });
 
 // ---- expenses ---------------------------------------------------------------
@@ -122,9 +167,30 @@ export const updateInventoryOps = asyncHandler(async (req, res) => {
   res.json(await purchaseService.updateInventoryOps(req.params.id, req.body));
 });
 
-/** Every stock change goes through the ledger — this one included. */
+/**
+ * Every stock change goes through the ledger — this one included.
+ *
+ * A manual adjustment is the one stock movement with no document behind it, so
+ * it is also the one that most needs an actor on record: "why is this 40 and
+ * not 47" is answered by the reason, and "who decided that" by this row.
+ */
 export const adjustStock = asyncHandler(async (req, res) => {
-  res.status(201).json(await purchaseService.adjustStock(req.params.id, req.body, req.user._id));
+  const result = await purchaseService.adjustStock(req.params.id, req.body, req.user._id);
+
+  await auditService.record({
+    req,
+    action: 'stock.adjust',
+    entity: { kind: 'product', id: req.params.id, label: result?.product?.sku ?? '' },
+    after: {
+      qtyChange: req.body?.qtyChange ?? null,
+      type: req.body?.type ?? '',
+      note: req.body?.note ?? '',
+      qtyAfter: result?.qtyAfter ?? null,
+    },
+    description: `Adjusted stock for ${result?.product?.sku ?? req.params.id}.`,
+  });
+
+  res.status(201).json(result);
 });
 
 export const listStockMovements = asyncHandler(async (req, res) => {

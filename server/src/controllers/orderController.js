@@ -33,6 +33,10 @@ export const quote = asyncHandler(async (req, res) => {
     // amount that actually applies is recomputed when the order is placed.
     storeCredit: priced.storeCredit,
     deliveryMethod: priced.deliveryMethod,
+    // The bands this quote priced against, so the checkout picker shows the
+    // same rates that produced the total rather than the shared constant's
+    // copy, which an operator can now edit out from under it (§6.15).
+    deliveryOptions: priced.deliveryOptions,
     itemCount: priced.itemCount,
   });
 });

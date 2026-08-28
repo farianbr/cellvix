@@ -22,6 +22,10 @@ import Settings from '../models/Settings.js';
 import Quote from '../models/Quote.js';
 import Rma from '../models/Rma.js';
 import { buildQuotes, buildRmas } from './sales.data.js';
+import Role from '../models/Role.js';
+import Outlet from '../models/Outlet.js';
+import { ensureBuiltInRoles, ensureDefaultOutlet } from '../services/accessService.js';
+import { ensureReferralCode } from '../services/referralService.js';
 
 const DEMO_PASSWORD = 'Cellvix123!';
 
@@ -77,6 +81,10 @@ const DEMO_USERS = [
     accountRep: { name: 'Marc Deveau', email: 'marc@cellvix.ca', phone: '+1 (416) 555-0110' },
   },
   {
+    // Referred by Northline (wired up after the users are saved, since it needs
+    // Northline's id). Gives the referrals screen a real pairing rather than
+    // only ever being seen in its empty state.
+    referredByEmail: 'buyer@cellvix.ca',
     businessName: 'Pixel Point Mobile',
     contactName: 'Sam Okafor',
     email: 'pending@cellvix.ca',
@@ -92,6 +100,36 @@ const DEMO_USERS = [
     phone: '+1 (416) 555-0100',
     status: 'approved',
     role: 'admin',
+  },
+  // One staff account per built-in role (§7.6), so the Users and Roles screens
+  // have something real to render and each permission level can be tried by
+  // signing in rather than by reading the code.
+  {
+    businessName: 'Cellvix',
+    contactName: 'Priya Raman',
+    email: 'priya@cellvix.ca',
+    phone: '+1 (416) 555-0141',
+    status: 'approved',
+    role: 'staff',
+    staffRoleSlug: 'account-manager',
+  },
+  {
+    businessName: 'Cellvix',
+    contactName: 'Marcus Webb',
+    email: 'marcus@cellvix.ca',
+    phone: '+1 (416) 555-0142',
+    status: 'approved',
+    role: 'staff',
+    staffRoleSlug: 'warehouse',
+  },
+  {
+    businessName: 'Cellvix',
+    contactName: 'Dana Okafor',
+    email: 'dana@cellvix.ca',
+    phone: '+1 (416) 555-0143',
+    status: 'approved',
+    role: 'staff',
+    staffRoleSlug: 'front-desk',
   },
   // Extra pending accounts so the admin approval queue is not empty.
   {
@@ -122,6 +160,9 @@ const DEMO_USERS = [
     creditLimit: 1_000_000,
     balance: 0,
     terms: 'net15',
+    // The one opted-out account, so the Unsubscribes register is not only ever
+    // seen empty and a campaign's "skipped" count is exercised for real.
+    unsubscribed: true,
   },
 ];
 
@@ -171,7 +212,19 @@ export async function seedDatabase({ quiet = false } = {}) {
     // have to go when the catalogue is rebuilt.
     Quote.deleteMany({}),
     Rma.deleteMany({}),
+
+    // Phase 8. Staff users reference both, so they are rebuilt with the users.
+    Role.deleteMany({}),
+    Outlet.deleteMany({}),
   ]);
+
+  // ---- roles & outlet ------------------------------------------------------
+  // Before users: a staff account cannot be created without a role to hold and
+  // an outlet to stand in.
+  await ensureBuiltInRoles();
+  const defaultOutlet = await ensureDefaultOutlet();
+  const rolesBySlug = new Map((await Role.find().lean()).map((r) => [r.slug, r]));
+  log(`  roles: ${rolesBySlug.size} · outlet: ${defaultOutlet.code}`);
 
   // ---- taxonomy -----------------------------------------------------------
   const taxonomyDocs = buildTaxonomyDocs();
@@ -222,12 +275,65 @@ export async function seedDatabase({ quiet = false } = {}) {
   // ---- users --------------------------------------------------------------
   const users = [];
   for (const data of DEMO_USERS) {
-    const user = new User(data);
+    const { staffRoleSlug, unsubscribed, referredByEmail, ...fields } = data;
+    const user = new User(fields);
     await user.setPassword(DEMO_PASSWORD);
     if (data.status === 'approved') user.approvedAt = new Date(Date.now() - 90 * 86_400_000);
+
+    // CASL consent (§6.13). Buyers register through a form that records this;
+    // seeded buyers get the same record so the marketing screens have a real
+    // population to work with. Without it every campaign resolves to an empty
+    // audience and the screens look broken when they are in fact correct —
+    // consent is closed by default, and a seeded account is still an account.
+    //
+    // Staff and admin are Cellvix, not customers, and are never in an
+    // audience, so they get no consent record at all.
+    if (data.role === 'buyer') {
+      user.marketingConsent = {
+        granted: true,
+        source: 'registration',
+        at: new Date(Date.now() - 120 * 86_400_000),
+      };
+      // One account opts out, so the Unsubscribes register and the "skipped"
+      // count on a campaign send both have something real to show. A screen
+      // whose empty state is the only state it is ever seen in is a screen
+      // nobody has actually checked.
+      if (unsubscribed) user.unsubscribedAt = new Date(Date.now() - 14 * 86_400_000);
+    }
+
+    // Staff are Cellvix people: they hold a role and stand in an outlet. An
+    // admin holds neither — it bypasses the role system by design (§7.6).
+    if (staffRoleSlug) {
+      user.staffRole = rolesBySlug.get(staffRoleSlug)?._id ?? null;
+      user.outlet = defaultOutlet._id;
+    }
+
+    // Referral code, minted on approval exactly as `approveUser` does it
+    // (§6.13) — a pending business does not get one.
+    if (data.status === 'approved' && data.role === 'buyer') {
+      await ensureReferralCode(user);
+    }
+
     users.push(await user.save());
   }
-  log(`  users: ${users.length}`);
+
+  // Referral attribution, once every account exists — it points at another
+  // user's id, so it cannot be set while that user is still being created.
+  // Set here and never again: attribution is fixed at registration (§6.13).
+  for (const data of DEMO_USERS) {
+    if (!data.referredByEmail) continue;
+    const referred = users.find((row) => row.email === data.email);
+    const referrer = users.find((row) => row.email === data.referredByEmail);
+    if (!referred || !referrer) continue;
+    referred.referredBy = referrer._id;
+    await referred.save();
+  }
+
+  const staffIds = users.filter((u) => u.role === 'staff').map((u) => u._id);
+  if (staffIds.length) {
+    await Outlet.updateOne({ _id: defaultOutlet._id }, { $set: { staff: staffIds } });
+  }
+  log(`  users: ${users.length} (staff: ${staffIds.length})`);
 
   // ---- orders + invoices for the primary demo buyer ------------------------
   const buyer = users.find((u) => u.email === 'buyer@cellvix.ca');

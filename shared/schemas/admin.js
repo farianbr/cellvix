@@ -534,3 +534,451 @@ export const rmaResolveSchema = z
     (value) => value.resolution !== 'refund' || (value.amountDollars ?? 0) > 0,
     { message: 'Enter an amount to refund.', path: ['amountDollars'] },
   );
+
+// ---- phase 8: outlets, roles and staff --------------------------------------
+
+/**
+ * Access areas and levels (§7.6). Duplicated from `models/Role.js` rather than
+ * imported: `shared/` is the boundary both halves read, and a schema that
+ * imports from `server/` would drag mongoose into the browser bundle.
+ */
+export const PERMISSION_AREAS = [
+  'clients',
+  'sales',
+  'purchase',
+  'reports',
+  'marketing',
+  'outlet',
+  'settings',
+];
+
+export const PERMISSION_LEVELS = ['none', 'view', 'full'];
+
+/** Human labels for the Roles & Access selects. */
+export const PERMISSION_LEVEL_LABELS = {
+  none: 'No access',
+  view: 'Read only',
+  full: 'Full',
+};
+
+export const OUTLET_STATUSES = ['active', 'inactive', 'maintenance'];
+export const OUTLET_COLOR_TOKENS = ['brand', 'info', 'success', 'warn', 'danger', 'ink'];
+
+const POSTAL_CA = /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/;
+
+const outletHoursSchema = z.object({
+  day: z.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']),
+  open: z.string().trim().max(5).optional(),
+  close: z.string().trim().max(5).optional(),
+  closed: z.boolean().default(false),
+});
+
+/**
+ * `code` is absent on purpose — it is assigned server-side (§6.14). A code the
+ * form proposes is a code two operators can pick in the same moment.
+ */
+export const outletSchema = z.object({
+  name: z.string().trim().min(1, 'Enter an outlet name.').max(120),
+  status: z.enum(OUTLET_STATUSES).default('active'),
+  colorToken: z.enum(OUTLET_COLOR_TOKENS).default('brand'),
+  address: z
+    .object({
+      street: z.string().trim().max(200).optional(),
+      line2: z.string().trim().max(200).optional(),
+      city: z.string().trim().max(120).optional(),
+      region: z.string().trim().max(60).optional(),
+      // Canadian conventions throughout. Empty is allowed — an outlet can be
+      // filed before its lease is signed — but a value that is present must be
+      // a real postal code.
+      postal: z
+        .string()
+        .trim()
+        .regex(POSTAL_CA, 'Enter a valid postal code (A1A 1A1).')
+        .optional()
+        .or(z.literal('')),
+      country: z.string().trim().max(60).default('Canada'),
+    })
+    .default({}),
+  phone: z.string().trim().max(40).optional(),
+  email: z.string().trim().email('Enter a valid email.').optional().or(z.literal('')),
+  manager: z.string().trim().max(120).optional(),
+  hours: z.array(outletHoursSchema).max(7).optional(),
+  notes: z.string().trim().max(2000).optional(),
+});
+
+const areasSchema = z.object(
+  PERMISSION_AREAS.reduce(
+    (out, area) => ({ ...out, [area]: z.enum(PERMISSION_LEVELS).default('none') }),
+    {},
+  ),
+);
+
+export const roleSchema = z.object({
+  name: z.string().trim().min(1, 'Enter a role name.').max(60),
+  areas: areasSchema.default({}),
+});
+
+/**
+ * Creating a Cellvix person. `accountType` is the account kind; `staffRole` is
+ * the permission set, and is required for staff — enforced here and again in
+ * the service, because access granted by an omitted field is access nobody
+ * chose to grant.
+ */
+export const staffUserSchema = z
+  .object({
+    name: z.string().trim().min(1, 'Enter a name.').max(120),
+    email: z.string().trim().email('Enter a valid email.'),
+    password: z.string().min(8, 'Use at least 8 characters.').max(200),
+    phone: z.string().trim().max(40).optional(),
+    accountType: z.enum(['staff', 'admin']).default('staff'),
+    staffRole: z.string().trim().optional(),
+    outlet: z.string().trim().optional(),
+  })
+  .refine((value) => value.accountType !== 'staff' || Boolean(value.staffRole), {
+    message: 'Choose a role for this staff member.',
+    path: ['staffRole'],
+  });
+
+/** The edit form. No password — changing one has its own route and its own rules. */
+export const staffUserUpdateSchema = z.object({
+  name: z.string().trim().min(1).max(120).optional(),
+  phone: z.string().trim().max(40).optional(),
+  accountType: z.enum(['staff', 'admin']).optional(),
+  staffRole: z.string().trim().nullable().optional(),
+  outlet: z.string().trim().nullable().optional(),
+  locked: z.boolean().optional(),
+});
+
+// ---- phase 9: marketing -----------------------------------------------------
+
+/**
+ * Duplicated from `models/MessageLog.js` and `models/Campaign.js` for the same
+ * reason the permission areas are: `shared/` is the boundary both halves read,
+ * and importing from `server/` would drag mongoose into the browser bundle.
+ */
+export const MESSAGE_CHANNELS = ['call', 'sms', 'whatsapp', 'email'];
+export const TEMPLATE_DOCUMENTS = ['none', 'order', 'invoice', 'quote', 'rma'];
+export const CAMPAIGN_AUDIENCES = ['approved', 'pending', 'all_customers', 'with_orders'];
+
+export const CAMPAIGN_AUDIENCE_LABELS = {
+  approved: 'Approved accounts',
+  pending: 'Pending accounts',
+  all_customers: 'All customer accounts',
+  with_orders: 'Accounts that have ordered',
+};
+
+/**
+ * Composing on a channel.
+ *
+ * There is no `status` field, and that is the point: whether a message was sent
+ * is decided by the server from the provider's real state (§6b rule 4). A
+ * client that could name its own status could report a send that never
+ * happened.
+ */
+export const messageSchema = z
+  .object({
+    userId: z.string().trim().min(1, 'Choose an account.'),
+    subject: z.string().trim().max(200).optional(),
+    body: z.string().trim().max(5000).optional(),
+    // Calls are the only inbound-capable channel today — somebody rang us.
+    direction: z.enum(['inbound', 'outbound']).default('outbound'),
+    recordingUrl: z.string().trim().url('Enter a valid URL.').optional().or(z.literal('')),
+    templateId: z.string().trim().optional(),
+  })
+  .refine((value) => Boolean(value.body?.trim()) || Boolean(value.templateId), {
+    message: 'Write a message or pick a template.',
+    path: ['body'],
+  });
+
+/** Logging a call. Notes stand in for the body, and there is nothing to send. */
+export const callLogSchema = z.object({
+  userId: z.string().trim().min(1, 'Choose an account.'),
+  direction: z.enum(['inbound', 'outbound']).default('outbound'),
+  body: z.string().trim().min(1, 'Write what the call was about.').max(5000),
+  recordingUrl: z.string().trim().url('Enter a valid URL.').optional().or(z.literal('')),
+});
+
+export const messageTemplateSchema = z.object({
+  name: z.string().trim().min(1, 'Name this template.').max(120),
+  channel: z.enum(MESSAGE_CHANNELS),
+  document: z.enum(TEMPLATE_DOCUMENTS).default('none'),
+  subject: z.string().trim().max(200).optional(),
+  body: z.string().trim().min(1, 'Write the message.').max(5000),
+  isActive: z.boolean().default(true),
+});
+
+/**
+ * A campaign. `audience` names a filter, never a list of recipients — consent
+ * is resolved at send time, so a list captured here would be both stale and
+ * unlawful to rely on (§6.13).
+ */
+export const campaignSchema = z.object({
+  name: z.string().trim().min(1, 'Name this campaign.').max(120),
+  subject: z.string().trim().min(1, 'Write a subject line.').max(200),
+  body: z.string().trim().min(1, 'Write the email.').max(20000),
+  audience: z
+    .object({ filter: z.enum(CAMPAIGN_AUDIENCES).default('approved') })
+    .default({ filter: 'approved' }),
+});
+
+/**
+ * The public unsubscribe payload — the account id and the HMAC from the link.
+ * Deliberately unauthenticated: CASL requires the mechanism to work without a
+ * sign-in, and the token is what stands in for one.
+ */
+export const unsubscribeSchema = z.object({
+  u: z.string().trim().min(1),
+  t: z.string().trim().min(1),
+});
+
+// ---- phase 10: referral commission ------------------------------------------
+
+/**
+ * The commission rate, as a percentage — 5 means 5%.
+ *
+ * This is the only writable field in the whole referral feature. Accruals are
+ * produced by payments and reversed by refunds; nothing may write one by hand,
+ * and `referredBy` is set once at registration and never edited (§6.13).
+ */
+export const referralRateSchema = z.object({
+  percent: z.coerce
+    .number()
+    .min(0, 'A rate cannot be negative.')
+    .max(100, 'A rate above 100% would pay out more than was collected.'),
+});
+
+// ---- phase 11a: settings ----------------------------------------------------
+
+/**
+ * Business Info (§6.15, category 1).
+ *
+ * Feeds invoices, transactional email and the storefront footer. Only the name
+ * is required — a business that has not yet been given a website should be able
+ * to save the fields it does have rather than being blocked on the ones it
+ * does not.
+ */
+export const businessInfoSchema = z.object({
+  name: z.string().trim().min(2, 'Enter the business name.').max(120),
+  tagline: z.string().trim().max(160).optional().or(z.literal('')),
+  phone: z.string().trim().max(40).optional().or(z.literal('')),
+  email: z.string().trim().email('Enter a valid email address.').optional().or(z.literal('')),
+  website: z.string().trim().url('Enter a valid URL.').optional().or(z.literal('')),
+  taxNumber: z.string().trim().max(40).optional().or(z.literal('')),
+  address: z.object({
+    line1: z.string().trim().max(160).optional().or(z.literal('')),
+    line2: z.string().trim().max(160).optional().or(z.literal('')),
+    city: z.string().trim().max(80).optional().or(z.literal('')),
+    region: z.string().trim().max(2).optional().or(z.literal('')),
+    postal: z
+      .string()
+      .trim()
+      .regex(POSTAL_CA, 'Enter a valid postal code (A1A 1A1).')
+      .optional()
+      .or(z.literal('')),
+    country: z.string().trim().max(2).default('CA'),
+  }),
+});
+
+/**
+ * One province's tax rate.
+ *
+ * **A fraction, not a percentage** — `0.13`, never `13`. The model stores it
+ * this way and `Settings.rateFor` reads it this way, so the conversion happens
+ * once, in the screen, rather than being a thing every reader has to remember.
+ * The 0.35 ceiling is a sanity bound: no Canadian combined rate is close to it,
+ * and a value above it is far more likely to be a percentage typed into a
+ * fraction field than a real rate.
+ */
+const taxRateRowSchema = z.object({
+  province: z.string().trim().length(2),
+  rate: z.coerce
+    .number()
+    .min(0, 'A tax rate cannot be negative.')
+    .max(0.35, 'That looks like a percentage. Enter a fraction — 13% is 0.13.'),
+  kind: z.enum(['GST', 'HST', 'GST+PST', 'GST+QST']),
+});
+
+/**
+ * Sale Settings (§6.15, category 2).
+ *
+ * `warrantyByGrade` is keyed on **product grade**, not membership tier —
+ * wholesale warranties on what the part is, not on who bought it (§6.15).
+ */
+export const saleSettingsSchema = z.object({
+  timezone: z.string().trim().min(1).max(64),
+  defaultDueDays: z.coerce
+    .number()
+    .int()
+    .min(0, 'Due days cannot be negative.')
+    .max(365, 'Use 365 days or fewer.'),
+  taxRatesByProvince: z.array(taxRateRowSchema).min(1, 'Keep at least one province.'),
+  warrantyByGrade: z.record(
+    z.string(),
+    z.coerce.number().int().min(0, 'A warranty cannot be negative.').max(3650),
+  ),
+  rmaSlaDays: z.coerce.number().int().min(1, 'Enter at least one day.').max(365),
+});
+
+/**
+ * Shipping Rates (§6.15).
+ *
+ * `code` is present but never written — the service matches on it and refuses
+ * anything it does not already have, because checkout validates
+ * `deliveryMethod` against a fixed enum and a band invented here would be
+ * unselectable.
+ *
+ * `freeOver` is nullable on purpose: empty means "never ships free", which is
+ * a different statement from `0`.
+ */
+export const shippingSettingsSchema = z.object({
+  methods: z
+    .array(
+      z.object({
+        code: z.string().trim().min(1),
+        label: z.string().trim().min(1, 'Name this method.').max(60),
+        detail: z.string().trim().max(120).optional().or(z.literal('')),
+        cost: cents,
+        etaDays: z.coerce.number().int().min(0).max(60),
+        freeOver: cents.nullable().optional(),
+      }),
+    )
+    .min(1),
+});
+
+/**
+ * Payment Methods (§6.15) — the list staff pick from when recording money
+ * moving. **Not** the buyer's saved cards, which are `User.paymentMethods`.
+ *
+ * `code` is the stable key that expenses and payments store, so it is set once
+ * from the label and then frozen.
+ */
+export const paymentMethodsSettingsSchema = z.object({
+  methods: z
+    .array(
+      z.object({
+        code: z
+          .string()
+          .trim()
+          .min(1)
+          .max(40)
+          .regex(/^[a-z0-9-]+$/, 'A code is lowercase letters, numbers and dashes.'),
+        label: z.string().trim().min(1, 'Name this method.').max(60),
+      }),
+    )
+    .min(1, 'Keep at least one payment method.'),
+});
+
+/**
+ * Inventory Settings (§6.15).
+ *
+ * Pre-fills the New Product form; a per-product value always wins, and nothing
+ * here reprices anything already in the catalogue.
+ *
+ * Margin stops below 100 because `markup = margin ÷ (100 − margin) × 100`
+ * divides by zero at 100 — a 100% margin means selling at infinite markup on a
+ * zero cost, which is not a number a form should accept.
+ */
+export const inventorySettingsSchema = z.object({
+  defaultMarkupPercent: z.coerce
+    .number()
+    .min(0, 'A markup cannot be negative.')
+    .max(1000, 'Use 1000% or less.'),
+  defaultMarginPercent: z.coerce
+    .number()
+    .min(0, 'A margin cannot be negative.')
+    .max(99.9, 'A margin of 100% or more has no finite markup.'),
+});
+
+// ---- phase 11c: provider credentials ----------------------------------------
+
+/**
+ * Writing one provider's credentials (§6.15, category 7).
+ *
+ * Deliberately a loose record rather than a per-provider shape: the field names
+ * are validated server-side against `PROVIDER_FIELDS`, which is the list the
+ * screen renders from, and duplicating that list here would give it two places
+ * to drift.
+ *
+ * **An empty string is meaningful.** It clears the field — that is how a key is
+ * removed — and it has to stay distinguishable from an absent key, which means
+ * "leave this one alone". So empty is allowed and `.strict()` is not used.
+ *
+ * There is no schema for *reading* a credential, because there is no route that
+ * returns one.
+ */
+export const providerCredentialSchema = z.record(
+  z.string(),
+  z.string().trim().max(500, 'That is longer than any provider key.'),
+);
+
+// ---- phase 11d: taxonomy & invoice status rules -----------------------------
+
+/**
+ * Editing a taxonomy node (§6.15 — *Device & Models*).
+ *
+ * **Only the safe fields.** `kind`, `slug` and `parent` are absent on purpose:
+ * every product carries a denormalised `path` written against that structure,
+ * so changing one here would detach products from a tree that still looks
+ * correct on screen. Restructuring is a re-seed, not a form.
+ */
+export const taxonomyNodeSchema = z.object({
+  name: z.string().trim().min(1, 'Give this a name.').max(120),
+  // Accepts an array or a comma-separated string; the service normalises both
+  // to lowercase, deduplicated entries.
+  aliases: z
+    .union([z.array(z.string().trim().max(60)), z.string().trim().max(600)])
+    .optional(),
+  isActive: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
+  order: z.coerce.number().int().min(0).max(9999).optional(),
+});
+
+/**
+ * One time-lapse invoice message (§6.15).
+ *
+ * `delayDays` is **signed**: negative means before the trigger, which is how
+ * "remind them three days before it is due" is expressed without a second
+ * direction field that could contradict it.
+ */
+export const invoiceStatusRuleSchema = z.object({
+  label: z.string().trim().min(1, 'Name this message.').max(80),
+  trigger: z.enum(['invoice_created', 'invoice_due', 'invoice_overdue', 'invoice_paid']),
+  delayDays: z.coerce
+    .number()
+    .int()
+    .min(-365, 'That is more than a year before.')
+    .max(365, 'That is more than a year after.')
+    .default(0),
+  channel: z.enum(MESSAGE_CHANNELS).default('email'),
+  subject: z.string().trim().max(200).optional(),
+  message: z.string().trim().min(1, 'Write the message.').max(5000),
+  isActive: z.boolean().default(false),
+});
+
+// ---- phase 11e: email settings ----------------------------------------------
+
+/**
+ * Automatic email and the reminder schedule (§6.15, category 5).
+ *
+ * Every toggle defaults **off** in the model, and this schema does not
+ * re-default them: the form always posts the full set, so an absent key here
+ * would mean "switch it off" rather than "leave it alone" — which is the wrong
+ * reading for a payload that is meant to be complete.
+ */
+export const communicationsSettingsSchema = z.object({
+  invoiceOnOrder: z.boolean(),
+  quoteOnCreate: z.boolean(),
+  paymentConfirmation: z.boolean(),
+  paymentStatusUpdates: z.boolean(),
+  accountApproved: z.boolean(),
+  accountRejected: z.boolean(),
+  invoiceReminders: z.boolean(),
+  lowStockAlerts: z.boolean(),
+
+  reminderDaysBefore: z.coerce.number().int().min(0, 'Use 0 or more days.').max(90),
+  followUpDaysAfter: z.coerce.number().int().min(0, 'Use 0 or more days.').max(90),
+  adminEmail: z.string().trim().email('Enter a valid email address.').optional().or(z.literal('')),
+  // Cents. 0 means "never notify on size" — distinct from an empty field.
+  notifyAboveAmount: cents.default(0),
+  lowStockEmail: z.string().trim().email('Enter a valid email address.').optional().or(z.literal('')),
+});

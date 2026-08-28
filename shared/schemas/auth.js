@@ -23,6 +23,17 @@ export const registerSchema = z.object({
   businessType: z.string().trim().optional(),
   website: z.string().trim().optional(),
   taxId: z.string().trim().optional(),
+  // A referral code from an existing account (ERP rework §6.13). Optional, and
+  // uppercased here so the buyer can type it however it was written down. An
+  // unrecognised code is refused server-side rather than ignored — silently
+  // dropping it costs a real referrer real money.
+  referralCode: z
+    .string()
+    .trim()
+    .toUpperCase()
+    .max(16)
+    .optional()
+    .or(z.literal('')),
   address: z
     .object({
       line1: z.string().trim().min(2, 'Enter a street address.'),

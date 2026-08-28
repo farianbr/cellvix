@@ -15,9 +15,29 @@ import * as reportController from '../controllers/reportController.js';
 import * as salesController from '../controllers/salesController.js';
 import * as contactController from '../controllers/contactController.js';
 import * as contentController from '../controllers/contentController.js';
+import * as accessController from '../controllers/accessController.js';
+import * as marketingController from '../controllers/marketingController.js';
+import * as referralController from '../controllers/referralController.js';
+import * as settingsController from '../controllers/settingsController.js';
+import * as auditController from '../controllers/auditController.js';
+import * as credentialController from '../controllers/credentialController.js';
+import * as taxonomyAdminController from '../controllers/taxonomyAdminController.js';
+import * as invoiceStatusController from '../controllers/invoiceStatusController.js';
+import * as appointmentController from '../controllers/appointmentController.js';
+import * as searchController from '../controllers/searchController.js';
+import * as profileController from '../controllers/profileController.js';
+import * as exportController from '../controllers/exportController.js';
+import * as notificationController from '../controllers/notificationController.js';
 
 import validate from '../middleware/validate.js';
-import { requireAuth, requireApproved, requireAdmin, denyAdmin } from '../middleware/auth.js';
+import {
+  requireAuth,
+  requireApproved,
+  requireAdmin,
+  requireStaff,
+  denyAdmin,
+  requirePermission,
+} from '../middleware/auth.js';
 import { loginSchema, registerSchema, forgotPasswordSchema } from '../../../shared/schemas/auth.js';
 import {
   addItemSchema,
@@ -65,6 +85,25 @@ import {
   rmaStatusSchema,
   rmaInspectSchema,
   rmaResolveSchema,
+  outletSchema,
+  roleSchema,
+  staffUserSchema,
+  staffUserUpdateSchema,
+  messageSchema,
+  callLogSchema,
+  messageTemplateSchema,
+  campaignSchema,
+  unsubscribeSchema,
+  referralRateSchema,
+  businessInfoSchema,
+  saleSettingsSchema,
+  shippingSettingsSchema,
+  paymentMethodsSettingsSchema,
+  inventorySettingsSchema,
+  providerCredentialSchema,
+  taxonomyNodeSchema,
+  invoiceStatusRuleSchema,
+  communicationsSettingsSchema,
 } from '../../../shared/schemas/admin.js';
 import { contactSchema } from '../../../shared/schemas/contact.js';
 import { blogPostSchema, faqSchema, offerSchema } from '../../../shared/schemas/content.js';
@@ -100,6 +139,13 @@ router.post(
 // --- contact ---------------------------------------------------------------
 // Open to guests; rate-limited because it is an unauthenticated write.
 router.post('/contact', authLimiter, validate(contactSchema), contactController.submit);
+
+// --- unsubscribe (phase 9) --------------------------------------------------
+// Deliberately unauthenticated: CASL requires the mechanism to work in no more
+// than two clicks, and the person clicking is very often not signed in. The
+// HMAC in the link authorises it, so a guessed account id gets nowhere. Rate
+// limited like every other unauthenticated write.
+router.post('/unsubscribe', authLimiter, validate(unsubscribeSchema), marketingController.unsubscribe);
 
 // --- catalogue -------------------------------------------------------------
 router.get('/taxonomy', taxonomyController.tree);
@@ -175,143 +221,336 @@ router.get('/invoices/:number', ...account, accountController.getInvoice);
 router.get('/invoices/:number/document', ...account, accountController.invoiceDocument);
 
 // --- admin -----------------------------------------------------------------
-const admin = [requireAuth, requireAdmin];
+// Panel access. `requireStaff` admits an admin or a staff member holding a
+// role; `requirePermission` on each route below decides what they may do with
+// it. Routes that must stay admin-only regardless of role use `adminOnly`.
+const admin = [requireAuth, requireStaff];
+const adminOnly = [requireAuth, requireAdmin];
 
+// Deliberately not permissioned: the sidebar badges read this on every screen,
+// so gating it by area would blank the counters for a role that can still see
+// the pages behind them. It returns counts, never records.
 router.get('/admin/stats', ...admin, adminController.stats);
 
-router.get('/admin/users', ...admin, adminController.listUsers);
-router.get('/admin/users/:id', ...admin, adminController.getUser);
-router.patch('/admin/users/:id/approve', ...admin, validate(approveUserSchema), adminController.approveUser);
-router.patch('/admin/users/:id/reject', ...admin, validate(rejectUserSchema), adminController.rejectUser);
-router.patch('/admin/users/:id/status', ...admin, validate(userStatusSchema), adminController.setUserStatus);
-router.patch('/admin/users/:id/credit', ...admin, validate(creditSchema), adminController.setCredit);
+router.get('/admin/users', ...admin, requirePermission('clients', 'view'), adminController.listUsers);
+router.get('/admin/users/:id', ...admin, requirePermission('clients', 'view'), adminController.getUser);
+router.patch('/admin/users/:id/approve', ...admin, requirePermission('clients', 'full'), validate(approveUserSchema), adminController.approveUser);
+router.patch('/admin/users/:id/reject', ...admin, requirePermission('clients', 'full'), validate(rejectUserSchema), adminController.rejectUser);
+router.patch('/admin/users/:id/status', ...admin, requirePermission('clients', 'full'), validate(userStatusSchema), adminController.setUserStatus);
+router.patch('/admin/users/:id/credit', ...admin, requirePermission('clients', 'full'), validate(creditSchema), adminController.setCredit);
 // The line of credit above is edited; store credit below is posted to.
-router.get('/admin/users/:id/store-credit', ...admin, adminController.storeCreditStatement);
+router.get('/admin/users/:id/store-credit', ...admin, requirePermission('clients', 'view'), adminController.storeCreditStatement);
 // The Activity tab on the client profile. Assembled from orders, invoices,
 // payments and credit movements until `AuditLog` lands in phase 11.
-router.get('/admin/users/:id/activity', ...admin, adminController.userActivity);
-router.post('/admin/users/:id/store-credit', ...admin, validate(storeCreditSchema), adminController.allocateStoreCredit);
+router.get('/admin/users/:id/activity', ...admin, requirePermission('clients', 'view'), adminController.userActivity);
+router.post('/admin/users/:id/store-credit', ...admin, requirePermission('clients', 'full'), validate(storeCreditSchema), adminController.allocateStoreCredit);
 
-router.get('/admin/products', ...admin, adminController.listProducts);
-router.post('/admin/products', ...admin, validate(productSchema), adminController.createProduct);
-router.patch('/admin/products/:id', ...admin, validate(productSchema), adminController.updateProduct);
+router.get('/admin/products', ...admin, requirePermission('purchase', 'view'), adminController.listProducts);
+router.post('/admin/products', ...admin, requirePermission('purchase', 'full'), validate(productSchema), adminController.createProduct);
+router.patch('/admin/products/:id', ...admin, requirePermission('purchase', 'full'), validate(productSchema), adminController.updateProduct);
 // Toggles isActive rather than deleting — orders reference products by id.
-router.delete('/admin/products/:id', ...admin, adminController.toggleProduct);
+router.delete('/admin/products/:id', ...admin, requirePermission('purchase', 'full'), adminController.toggleProduct);
 
-router.get('/admin/orders', ...admin, adminController.listOrders);
+router.get('/admin/orders', ...admin, requirePermission('sales', 'view'), adminController.listOrders);
 // Registered ahead of the `:orderNumber` routes so a literal path can never be
 // swallowed by a parameter. Partial by design — the response names what moved
 // and what did not.
-router.patch('/admin/orders/bulk-status', ...admin, validate(bulkOrderStatusSchema), adminController.bulkUpdateOrderStatus);
-router.patch('/admin/orders/:orderNumber/status', ...admin, validate(orderStatusSchema), adminController.updateOrderStatus);
+router.patch('/admin/orders/bulk-status', ...admin, requirePermission('sales', 'full'), validate(bulkOrderStatusSchema), adminController.bulkUpdateOrderStatus);
+router.get('/admin/orders/:orderNumber', ...admin, requirePermission('sales', 'view'), adminController.getOrder);
+router.patch('/admin/orders/:orderNumber/status', ...admin, requirePermission('sales', 'full'), validate(orderStatusSchema), adminController.updateOrderStatus);
 // Refunds go to store credit — there is no gateway to send money back through.
-router.post('/admin/orders/:orderNumber/refund', ...admin, validate(refundSchema), adminController.refundOrder);
+router.post('/admin/orders/:orderNumber/refund', ...admin, requirePermission('sales', 'full'), validate(refundSchema), adminController.refundOrder);
 
 // Invoices. `amountPaid` and the status are recomputed server-side from the
 // payment rows on every write — the client never sends either.
-router.get('/admin/invoices', ...admin, adminController.listInvoices);
-router.get('/admin/invoices/:number', ...admin, adminController.getInvoice);
+router.get('/admin/invoices', ...admin, requirePermission('sales', 'view'), adminController.listInvoices);
+router.get('/admin/invoices/:number', ...admin, requirePermission('sales', 'view'), adminController.getInvoice);
 // The same artefact the customer receives, rendered by the same renderer — the
 // buyer route scopes its lookup to the signed-in user, so an admin needs this.
-router.get('/admin/invoices/:number/document', ...admin, adminController.invoiceDocument);
-router.post('/admin/invoices/:number/payments', ...admin, validate(invoicePaymentSchema), adminController.recordInvoicePayment);
+router.get('/admin/invoices/:number/document', ...admin, requirePermission('sales', 'view'), adminController.invoiceDocument);
+router.post('/admin/invoices/:number/payments', ...admin, requirePermission('sales', 'full'), validate(invoicePaymentSchema), adminController.recordInvoicePayment);
 // Voiding forgives the balance and keeps the row: an invoice that vanishes
 // takes its own audit trail with it.
-router.post('/admin/invoices/:number/void', ...admin, validate(invoiceVoidSchema), adminController.voidInvoice);
+router.post('/admin/invoices/:number/void', ...admin, requirePermission('sales', 'full'), validate(invoiceVoidSchema), adminController.voidInvoice);
 
 // --- purchase (phase 5) ----------------------------------------------------
 // Suppliers, purchase orders, expenses and the stock ledger. Every rule lives
 // in `purchaseService`; these routes only decide who may call it.
 
-router.get('/admin/suppliers', ...admin, purchaseController.listSuppliers);
-router.get('/admin/suppliers/:id', ...admin, purchaseController.getSupplier);
-router.post('/admin/suppliers', ...admin, validate(supplierSchema), purchaseController.createSupplier);
-router.patch('/admin/suppliers/:id', ...admin, validate(supplierSchema), purchaseController.updateSupplier);
+router.get('/admin/suppliers', ...admin, requirePermission('purchase', 'view'), purchaseController.listSuppliers);
+router.get('/admin/suppliers/:id', ...admin, requirePermission('purchase', 'view'), purchaseController.getSupplier);
+router.post('/admin/suppliers', ...admin, requirePermission('purchase', 'full'), validate(supplierSchema), purchaseController.createSupplier);
+router.patch('/admin/suppliers/:id', ...admin, requirePermission('purchase', 'full'), validate(supplierSchema), purchaseController.updateSupplier);
 // Toggles isActive rather than deleting — purchase orders reference suppliers.
-router.delete('/admin/suppliers/:id', ...admin, purchaseController.toggleSupplier);
+router.delete('/admin/suppliers/:id', ...admin, requirePermission('purchase', 'full'), purchaseController.toggleSupplier);
 
-router.get('/admin/purchase-orders', ...admin, purchaseController.listPurchaseOrders);
-router.post('/admin/purchase-orders', ...admin, validate(purchaseOrderSchema), purchaseController.createPurchaseOrder);
-router.get('/admin/purchase-orders/:id', ...admin, purchaseController.getPurchaseOrder);
+router.get('/admin/purchase-orders', ...admin, requirePermission('purchase', 'view'), purchaseController.listPurchaseOrders);
+router.post('/admin/purchase-orders', ...admin, requirePermission('purchase', 'full'), validate(purchaseOrderSchema), purchaseController.createPurchaseOrder);
+router.get('/admin/purchase-orders/:id', ...admin, requirePermission('purchase', 'view'), purchaseController.getPurchaseOrder);
 // Edits stop at draft; the service refuses a sent order rather than the route.
-router.patch('/admin/purchase-orders/:id', ...admin, validate(purchaseOrderSchema), purchaseController.updatePurchaseOrder);
-router.patch('/admin/purchase-orders/:id/status', ...admin, validate(purchaseOrderStatusSchema), purchaseController.setPurchaseOrderStatus);
+router.patch('/admin/purchase-orders/:id', ...admin, requirePermission('purchase', 'full'), validate(purchaseOrderSchema), purchaseController.updatePurchaseOrder);
+router.patch('/admin/purchase-orders/:id/status', ...admin, requirePermission('purchase', 'full'), validate(purchaseOrderStatusSchema), purchaseController.setPurchaseOrderStatus);
 // Receiving increments stock and writes a StockMovement per line, server-side.
 // Partial by design: the response names what moved and what did not.
-router.post('/admin/purchase-orders/:id/receive', ...admin, validate(purchaseReceiveSchema), purchaseController.receivePurchaseOrder);
+router.post('/admin/purchase-orders/:id/receive', ...admin, requirePermission('purchase', 'full'), validate(purchaseReceiveSchema), purchaseController.receivePurchaseOrder);
 // Recording a payment creates the Expense row — once. A second call is refused.
-router.post('/admin/purchase-orders/:id/payment', ...admin, validate(purchasePaymentSchema), purchaseController.recordPurchasePayment);
+router.post('/admin/purchase-orders/:id/payment', ...admin, requirePermission('purchase', 'full'), validate(purchasePaymentSchema), purchaseController.recordPurchasePayment);
 
 // Categories are registered ahead of `/admin/expenses/:id` so a literal path
 // can never be swallowed by a parameter — the same ordering the bulk order
 // route needs.
-router.get('/admin/expenses/categories', ...admin, purchaseController.listExpenseCategories);
-router.post('/admin/expenses/categories', ...admin, validate(expenseCategorySchema), purchaseController.createExpenseCategory);
-router.patch('/admin/expenses/categories/:id', ...admin, validate(expenseCategorySchema), purchaseController.updateExpenseCategory);
+router.get('/admin/expenses/categories', ...admin, requirePermission('purchase', 'view'), purchaseController.listExpenseCategories);
+router.post('/admin/expenses/categories', ...admin, requirePermission('purchase', 'full'), validate(expenseCategorySchema), purchaseController.createExpenseCategory);
+router.patch('/admin/expenses/categories/:id', ...admin, requirePermission('purchase', 'full'), validate(expenseCategorySchema), purchaseController.updateExpenseCategory);
 // Deactivates a category that is in use rather than deleting it.
-router.delete('/admin/expenses/categories/:id', ...admin, purchaseController.deleteExpenseCategory);
+router.delete('/admin/expenses/categories/:id', ...admin, requirePermission('purchase', 'full'), purchaseController.deleteExpenseCategory);
 
-router.get('/admin/expenses', ...admin, purchaseController.listExpenses);
-router.post('/admin/expenses', ...admin, validate(expenseSchema), purchaseController.createExpense);
-router.patch('/admin/expenses/:id', ...admin, validate(expenseSchema), purchaseController.updateExpense);
-router.delete('/admin/expenses/:id', ...admin, purchaseController.deleteExpense);
+router.get('/admin/expenses', ...admin, requirePermission('purchase', 'view'), purchaseController.listExpenses);
+router.post('/admin/expenses', ...admin, requirePermission('purchase', 'full'), validate(expenseSchema), purchaseController.createExpense);
+router.patch('/admin/expenses/:id', ...admin, requirePermission('purchase', 'full'), validate(expenseSchema), purchaseController.updateExpense);
+router.delete('/admin/expenses/:id', ...admin, requirePermission('purchase', 'full'), purchaseController.deleteExpense);
 
 // Inventory. Exact counts and costs are admin-only; the storefront's binary
 // in stock / out of stock is produced by productService.serialize and is not
 // affected by anything here.
-router.get('/admin/inventory', ...admin, purchaseController.listInventory);
-router.get('/admin/inventory/movements', ...admin, purchaseController.listStockMovements);
-router.get('/admin/inventory/:id', ...admin, purchaseController.getInventoryItem);
-router.patch('/admin/inventory/:id/ops', ...admin, validate(productOpsSchema), purchaseController.updateInventoryOps);
+router.get('/admin/inventory', ...admin, requirePermission('purchase', 'view'), purchaseController.listInventory);
+router.get('/admin/inventory/movements', ...admin, requirePermission('purchase', 'view'), purchaseController.listStockMovements);
+router.get('/admin/inventory/:id', ...admin, requirePermission('purchase', 'view'), purchaseController.getInventoryItem);
+router.patch('/admin/inventory/:id/ops', ...admin, requirePermission('purchase', 'full'), validate(productOpsSchema), purchaseController.updateInventoryOps);
 // A manual correction, through the same ledger as every other stock movement.
-router.post('/admin/inventory/:id/adjust', ...admin, validate(stockAdjustSchema), purchaseController.adjustStock);
+router.post('/admin/inventory/:id/adjust', ...admin, requirePermission('purchase', 'full'), validate(stockAdjustSchema), purchaseController.adjustStock);
 
 // --- quotes & RMA (phase 7) ------------------------------------------------
 // A quote's stored price is honoured only while the quote is valid, and
 // conversion re-prices against live products before it writes an order.
 
-router.get('/admin/quotes', ...admin, salesController.listQuotes);
-router.post('/admin/quotes', ...admin, validate(quoteSchema), salesController.createQuote);
-router.get('/admin/quotes/:id', ...admin, salesController.getQuote);
-router.patch('/admin/quotes/:id', ...admin, validate(quoteSchema), salesController.updateQuote);
-router.patch('/admin/quotes/:id/status', ...admin, validate(quoteStatusSchema), salesController.setQuoteStatus);
+router.get('/admin/quotes', ...admin, requirePermission('sales', 'view'), salesController.listQuotes);
+router.post('/admin/quotes', ...admin, requirePermission('sales', 'full'), validate(quoteSchema), salesController.createQuote);
+router.get('/admin/quotes/:id', ...admin, requirePermission('sales', 'view'), salesController.getQuote);
+router.patch('/admin/quotes/:id', ...admin, requirePermission('sales', 'full'), validate(quoteSchema), salesController.updateQuote);
+router.patch('/admin/quotes/:id/status', ...admin, requirePermission('sales', 'full'), validate(quoteStatusSchema), salesController.setQuoteStatus);
 // Refuses with QUOTE_PRICE_DRIFT and the full comparison when catalogue prices
 // have moved and the admin has not acknowledged them.
-router.post('/admin/quotes/:id/convert', ...admin, validate(quoteConvertSchema), salesController.convertQuote);
-router.delete('/admin/quotes/:id', ...admin, salesController.deleteQuote);
+router.post('/admin/quotes/:id/convert', ...admin, requirePermission('sales', 'full'), validate(quoteConvertSchema), salesController.convertQuote);
+router.delete('/admin/quotes/:id', ...admin, requirePermission('sales', 'full'), salesController.deleteQuote);
 
 // Refunds route through storeCreditService and restocking through the stock
 // ledger — an RMA is not an exception to either rule.
-router.get('/admin/rma', ...admin, salesController.listRmas);
-router.post('/admin/rma', ...admin, validate(rmaSchema), salesController.createRma);
-router.get('/admin/rma/:id', ...admin, salesController.getRma);
-router.patch('/admin/rma/:id/status', ...admin, validate(rmaStatusSchema), salesController.setRmaStatus);
-router.patch('/admin/rma/:id/inspect', ...admin, validate(rmaInspectSchema), salesController.inspectRma);
+router.get('/admin/rma', ...admin, requirePermission('sales', 'view'), salesController.listRmas);
+router.post('/admin/rma', ...admin, requirePermission('sales', 'full'), validate(rmaSchema), salesController.createRma);
+router.get('/admin/rma/:id', ...admin, requirePermission('sales', 'view'), salesController.getRma);
+router.patch('/admin/rma/:id/status', ...admin, requirePermission('sales', 'full'), validate(rmaStatusSchema), salesController.setRmaStatus);
+router.patch('/admin/rma/:id/inspect', ...admin, requirePermission('sales', 'full'), validate(rmaInspectSchema), salesController.inspectRma);
 // Resolving decides money and stock, so it carries that decision rather than
 // being reachable through the status route.
-router.post('/admin/rma/:id/resolve', ...admin, validate(rmaResolveSchema), salesController.resolveRma);
+router.post('/admin/rma/:id/resolve', ...admin, requirePermission('sales', 'full'), validate(rmaResolveSchema), salesController.resolveRma);
+
+// --- outlets, roles & staff (phase 8) ---------------------------------------
+// Outlets are an ordinary permissioned area. Roles and user accounts are NOT:
+// they stay `requireAdmin` regardless of role, because a role that can grant
+// itself power is not a permission system (§7.6).
+
+const outletView = [...admin, requirePermission('outlet', 'view')];
+const outletFull = [...admin, requirePermission('outlet', 'full')];
+
+router.get('/admin/outlets', ...outletView, accessController.listOutlets);
+// Registered ahead of `/:id` so the literal path cannot be swallowed.
+router.get('/admin/outlets/next-code', ...outletFull, accessController.nextOutletCode);
+router.get('/admin/outlets/:id', ...outletView, accessController.getOutlet);
+router.post('/admin/outlets', ...outletFull, validate(outletSchema), accessController.createOutlet);
+router.patch('/admin/outlets/:id', ...outletFull, validate(outletSchema), accessController.updateOutlet);
+// Its own route rather than a field on the form, so "exactly one default" is
+// decided in one place.
+router.patch('/admin/outlets/:id/default', ...outletFull, accessController.setDefaultOutlet);
+router.delete('/admin/outlets/:id', ...outletFull, accessController.deleteOutlet);
+
+router.get('/admin/roles', ...adminOnly, accessController.listRoles);
+router.post('/admin/roles', ...adminOnly, validate(roleSchema), accessController.createRole);
+router.patch('/admin/roles/:id', ...adminOnly, validate(roleSchema), accessController.updateRole);
+router.delete('/admin/roles/:id', ...adminOnly, accessController.deleteRole);
+
+router.get('/admin/staff', ...adminOnly, accessController.listStaff);
+router.post('/admin/staff', ...adminOnly, validate(staffUserSchema), accessController.createStaff);
+router.patch('/admin/staff/:id', ...adminOnly, validate(staffUserUpdateSchema), accessController.updateStaff);
+router.delete('/admin/staff/:id', ...adminOnly, accessController.deleteStaff);
 
 // --- reports (phase 6) -----------------------------------------------------
 // Read-only, always (§9.6). One GET per tab and no write verb on this path at
 // all — a report that can mutate is a report nobody can safely re-run.
-router.get('/admin/reports/:tab', ...admin, reportController.report);
+router.get('/admin/reports/:tab', ...admin, requirePermission('reports', 'view'), reportController.report);
 
 // Editorial content. Unlike products, none of these are referenced by an order,
 // so a delete here leaves nothing dangling and really deletes.
-router.get('/admin/blog', ...admin, contentController.adminListPosts);
-router.get('/admin/blog/:id', ...admin, contentController.adminGetPost);
-router.post('/admin/blog', ...admin, validate(blogPostSchema), contentController.adminCreatePost);
-router.patch('/admin/blog/:id', ...admin, validate(blogPostSchema), contentController.adminUpdatePost);
-router.delete('/admin/blog/:id', ...admin, contentController.adminDeletePost);
+router.get('/admin/blog', ...admin, requirePermission('marketing', 'view'), contentController.adminListPosts);
+router.get('/admin/blog/:id', ...admin, requirePermission('marketing', 'view'), contentController.adminGetPost);
+router.post('/admin/blog', ...admin, requirePermission('marketing', 'full'), validate(blogPostSchema), contentController.adminCreatePost);
+router.patch('/admin/blog/:id', ...admin, requirePermission('marketing', 'full'), validate(blogPostSchema), contentController.adminUpdatePost);
+router.delete('/admin/blog/:id', ...admin, requirePermission('marketing', 'full'), contentController.adminDeletePost);
 
-router.get('/admin/faqs', ...admin, contentController.adminListFaqs);
-router.post('/admin/faqs', ...admin, validate(faqSchema), contentController.adminCreateFaq);
-router.patch('/admin/faqs/:id', ...admin, validate(faqSchema), contentController.adminUpdateFaq);
-router.delete('/admin/faqs/:id', ...admin, contentController.adminDeleteFaq);
+router.get('/admin/faqs', ...admin, requirePermission('marketing', 'view'), contentController.adminListFaqs);
+router.post('/admin/faqs', ...admin, requirePermission('marketing', 'full'), validate(faqSchema), contentController.adminCreateFaq);
+router.patch('/admin/faqs/:id', ...admin, requirePermission('marketing', 'full'), validate(faqSchema), contentController.adminUpdateFaq);
+router.delete('/admin/faqs/:id', ...admin, requirePermission('marketing', 'full'), contentController.adminDeleteFaq);
 
-router.get('/admin/offers', ...admin, contentController.adminListOffers);
-router.post('/admin/offers', ...admin, validate(offerSchema), contentController.adminCreateOffer);
-router.patch('/admin/offers/:id', ...admin, validate(offerSchema), contentController.adminUpdateOffer);
-router.delete('/admin/offers/:id', ...admin, contentController.adminDeleteOffer);
+router.get('/admin/offers', ...admin, requirePermission('marketing', 'view'), contentController.adminListOffers);
+router.post('/admin/offers', ...admin, requirePermission('marketing', 'full'), validate(offerSchema), contentController.adminCreateOffer);
+router.patch('/admin/offers/:id', ...admin, requirePermission('marketing', 'full'), validate(offerSchema), contentController.adminUpdateOffer);
+router.delete('/admin/offers/:id', ...admin, requirePermission('marketing', 'full'), contentController.adminDeleteOffer);
+
+// --- marketing channels (phase 9) -------------------------------------------
+// Composing is a `full` action on every channel, including the three that
+// cannot send: an unconfigured channel still writes contact history, and
+// writing history is not a read.
+
+const marketingView = [...admin, requirePermission('marketing', 'view')];
+const marketingFull = [...admin, requirePermission('marketing', 'full')];
+
+router.get('/admin/marketing/summary', ...marketingView, marketingController.summary);
+router.get('/admin/marketing/messages', ...marketingView, marketingController.listMessages);
+
+// One route per channel rather than a `:channel` parameter, so the channel is
+// decided by the path and never by the payload — see the controller.
+router.post('/admin/marketing/sms', ...marketingFull, validate(messageSchema), marketingController.sendSms);
+router.post('/admin/marketing/whatsapp', ...marketingFull, validate(messageSchema), marketingController.sendWhatsapp);
+router.post('/admin/marketing/email', ...marketingFull, validate(messageSchema), marketingController.sendEmail);
+// A call is a record of something that already happened, so its payload is
+// notes rather than a message body and it needs no template.
+router.post('/admin/marketing/calls', ...marketingFull, validate(callLogSchema), marketingController.logCall);
+
+router.get('/admin/marketing/templates', ...marketingView, marketingController.listTemplates);
+router.post('/admin/marketing/templates', ...marketingFull, validate(messageTemplateSchema), marketingController.createTemplate);
+router.patch('/admin/marketing/templates/:id', ...marketingFull, validate(messageTemplateSchema), marketingController.updateTemplate);
+router.delete('/admin/marketing/templates/:id', ...marketingFull, marketingController.deleteTemplate);
+
+// Registered ahead of `/campaigns/:id` so the literal path cannot be swallowed.
+router.get('/admin/marketing/unsubscribes', ...marketingView, marketingController.listUnsubscribes);
+// Re-subscribing records a NEW consent rather than clearing the old refusal —
+// it is a claim that somebody asked to be put back, and needs its own date.
+router.post('/admin/marketing/unsubscribes/:id/resubscribe', ...marketingFull, marketingController.resubscribe);
+
+router.get('/admin/marketing/campaigns', ...marketingView, marketingController.listCampaigns);
+router.post('/admin/marketing/campaigns', ...marketingFull, validate(campaignSchema), marketingController.createCampaign);
+router.get('/admin/marketing/campaigns/:id', ...marketingView, marketingController.getCampaign);
+router.patch('/admin/marketing/campaigns/:id', ...marketingFull, validate(campaignSchema), marketingController.updateCampaign);
+router.delete('/admin/marketing/campaigns/:id', ...marketingFull, marketingController.deleteCampaign);
+// The audience is resolved here, not at compose time, so consent is applied to
+// the list as it stands at this moment (§6.13).
+router.post('/admin/marketing/campaigns/:id/send', ...marketingFull, marketingController.sendCampaign);
+
+// --- referral commission (phase 10) -----------------------------------------
+// **Admin-only, not merely `marketing: full`** (§6.13). This feature pays real
+// money on an automatic trigger, and the rate control multiplies every future
+// payout — that is a decision for whoever owns the money, not for anyone who
+// can write a blog post.
+//
+// Read and rate only. There is no route that writes an accrual or edits an
+// attribution: commission is earned by a payment and reversed by a refund, both
+// inside the services that own those events, and `referredBy` is set once at
+// registration and never edited.
+router.get('/admin/referrals', ...adminOnly, referralController.list);
+router.patch('/admin/referrals/rate', ...adminOnly, validate(referralRateSchema), referralController.setRate);
+
+// ---- phase 11a: settings ----------------------------------------------------
+// Reading is `settings: view`; every write is `settings: full`. There is no
+// whole-document PUT — each route touches only the paths its own screen owns,
+// so one form cannot revert another's field by posting back a stale copy.
+//
+// `financial.referralPercent` is deliberately absent from all of these: it is
+// admin-only through `/admin/referrals/rate` (§6.13), and a `settings: full`
+// role must not gain a second door onto the number that multiplies every payout.
+router.get('/admin/settings', ...admin, requirePermission('settings', 'view'), settingsController.get);
+router.patch('/admin/settings/business', ...admin, requirePermission('settings', 'full'), validate(businessInfoSchema), settingsController.updateBusiness);
+router.patch('/admin/settings/sale', ...admin, requirePermission('settings', 'full'), validate(saleSettingsSchema), settingsController.updateSale);
+router.patch('/admin/settings/shipping', ...admin, requirePermission('settings', 'full'), validate(shippingSettingsSchema), settingsController.updateShipping);
+router.patch('/admin/settings/payment-methods', ...admin, requirePermission('settings', 'full'), validate(paymentMethodsSettingsSchema), settingsController.updatePaymentMethods);
+router.patch('/admin/settings/inventory', ...admin, requirePermission('settings', 'full'), validate(inventorySettingsSchema), settingsController.updateInventory);
+
+// ---- phase 11b: the audit trail ---------------------------------------------
+// Read-only by design — rows are written as a side effect of the operations
+// being logged, and there is deliberately no route that creates, edits or
+// deletes one (§6.15: neither log is ever deletable from the UI).
+//
+// The security log is **admin-only**, not `settings: view`: its rows name
+// accounts and addresses that failed to sign in, which is exactly what helps
+// somebody who is guessing at them.
+router.get('/admin/audit/activity', ...admin, requirePermission('settings', 'view'), auditController.activity);
+router.get('/admin/audit/security', ...adminOnly, auditController.security);
+
+// ---- phase 11c: provider credentials ----------------------------------------
+// **`adminOnly`, never `requirePermission('settings', …)`.** §6.15: API keys are
+// settable only by an admin and never by a role. A `settings: full` role that
+// could write provider credentials would be able to point the SMS channel at a
+// host of its choosing.
+//
+// The GET returns previews and a `configured` flag. **There is no route that
+// returns a stored secret** — not masked-then-revealed, not to an admin. The
+// only function that decrypts is `credentialService.valuesFor`, which nothing
+// here calls and which exists for the code that talks to a provider.
+router.get('/admin/credentials', ...adminOnly, credentialController.list);
+// PATCH rather than PUT: a write names only the fields being changed, and an
+// absent field means "leave it alone" rather than "clear it". Clearing is an
+// explicit empty string.
+router.patch('/admin/credentials/:provider', ...adminOnly, validate(providerCredentialSchema), credentialController.save);
+router.delete('/admin/credentials/:provider', ...adminOnly, credentialController.clear);
+
+// ---- phase 11d: taxonomy & invoice status rules -----------------------------
+// Both sit under `settings`, matching where §6.15 files them. The taxonomy
+// decides what the storefront can be filtered by and the rules decide what gets
+// emailed to customers automatically, so neither is a `view`-level write.
+router.get('/admin/taxonomy', ...admin, requirePermission('settings', 'view'), taxonomyAdminController.list);
+router.get('/admin/taxonomy/:id', ...admin, requirePermission('settings', 'view'), taxonomyAdminController.get);
+router.patch('/admin/taxonomy/:id', ...admin, requirePermission('settings', 'full'), validate(taxonomyNodeSchema), taxonomyAdminController.update);
+router.delete('/admin/taxonomy/:id', ...admin, requirePermission('settings', 'full'), taxonomyAdminController.remove);
+
+router.get('/admin/invoice-rules', ...admin, requirePermission('settings', 'view'), invoiceStatusController.list);
+router.post('/admin/invoice-rules', ...admin, requirePermission('settings', 'full'), validate(invoiceStatusRuleSchema), invoiceStatusController.create);
+router.patch('/admin/invoice-rules/:id', ...admin, requirePermission('settings', 'full'), validate(invoiceStatusRuleSchema), invoiceStatusController.update);
+router.delete('/admin/invoice-rules/:id', ...admin, requirePermission('settings', 'full'), invoiceStatusController.remove);
+// Running sends real email, so it needs `full` even in dry-run form — the dry
+// run reveals which accounts would be contacted, which is not a `view` fact.
+router.post('/admin/invoice-rules/run', ...admin, requirePermission('settings', 'full'), invoiceStatusController.run);
+
+// ---- phase 11e: email settings & the scheduling board -----------------------
+router.patch('/admin/settings/communications', ...admin, requirePermission('settings', 'full'), validate(communicationsSettingsSchema), settingsController.updateCommunications);
+
+// Read-only, and there is **no write route** — §6b U1–U2: the board ships as
+// interface without wiring, and an endpoint that accepted a booking would be
+// the "fake success" rule 4 forbids.
+router.get('/admin/appointments', ...admin, requirePermission('settings', 'view'), appointmentController.list);
+
+// ---- phase 12: global search ------------------------------------------------
+// Staff-level only, with no per-area guard here on purpose: the service decides
+// which groups this caller may see from their own role. A single
+// `requirePermission` would be wrong in both directions — too strict for a role
+// holding one area, too loose for one holding none.
+router.get('/admin/search', ...admin, searchController.search);
+
+// The signed-in staff member's own profile. No permission guard: it returns
+// nothing but what this account already knows about itself, and editing lives
+// on Settings > Users behind the admin-only guard that owns the self-demotion
+// and last-admin rules.
+router.get('/admin/profile', ...admin, profileController.me);
+
+// ---- phase 12b: list exports (§7.4) -----------------------------------------
+// Each export runs the SAME service function its list runs, with the same query
+// string — §7.4: an export that ignores the active filters is a bug. Each also
+// carries the same permission guard as the list it mirrors, so an export can
+// never be the weaker door onto the same rows.
+router.get('/admin/export/clients', ...admin, requirePermission('clients', 'view'), exportController.clients);
+router.get('/admin/export/orders', ...admin, requirePermission('sales', 'view'), exportController.orders);
+router.get('/admin/export/invoices', ...admin, requirePermission('sales', 'view'), exportController.invoices);
+router.get('/admin/export/inventory', ...admin, requirePermission('purchase', 'view'), exportController.inventory);
+router.get('/admin/export/expenses', ...admin, requirePermission('purchase', 'view'), exportController.expenses);
+
+// ---- phase 12c: notifications (§7.3) ----------------------------------------
+// Staff-level only, with no per-area guard here on purpose — the same reasoning
+// global search uses: the service decides which areas this caller's role may
+// receive from, and a single `requirePermission` would be wrong in both
+// directions, too strict for a role holding one area and too loose for one
+// holding none. The two writes move nothing but who has seen what, so they need
+// no `full`; the service still scopes what they touch to that caller's areas.
+router.get('/admin/notifications', ...admin, notificationController.list);
+router.post('/admin/notifications/read', ...admin, notificationController.markRead);
+router.post('/admin/notifications/clear', ...admin, notificationController.clearAll);
 
 export default router;

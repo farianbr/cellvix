@@ -23,6 +23,27 @@ const schema = z.object({
   JWT_EXPIRES_IN: z.string().default('7d'),
   COOKIE_NAME: z.string().default('cellvix_session'),
 
+  // Encrypts provider credentials at rest (§6.15, phase 11c). Optional: with it
+  // unset, `utils/secrets.js` derives a key from JWT_SECRET through scrypt, so
+  // an existing deployment keeps working without a config change.
+  //
+  // **Rotating either one makes every stored secret undecryptable** — by design,
+  // not by accident. `decrypt` then returns null, the affected provider reports
+  // itself unconfigured, and the keys have to be re-entered. That is the right
+  // failure: the alternative is a key that silently decrypts to garbage and
+  // gets sent to a provider.
+  //
+  // An **empty** `SECRETS_KEY=` in .env means "unset", not "a zero-length key":
+  // .env.example ships the name with no value, and a bare `.optional()` would
+  // read that as a present-but-too-short string and refuse to boot.
+  SECRETS_KEY: z
+    .string()
+    .optional()
+    .transform((value) => value?.trim() || undefined)
+    .refine((value) => value === undefined || value.length >= 16, {
+      message: 'SECRETS_KEY must be at least 16 characters, or empty to derive one from JWT_SECRET',
+    }),
+
   CLIENT_ORIGIN: z.string().default('http://localhost:5173'),
 
   // Opt-in: makes the MOCK gateway decline every charge, so the payment-failure
@@ -35,6 +56,15 @@ const schema = z.object({
   MAIL_FROM: z.string().default('Cellvix <billing@cellvix.ca>'),
   // Where a link in an email should point. Defaults to the first CLIENT_ORIGIN.
   PUBLIC_ORIGIN: z.string().optional(),
+
+  // ---- messaging providers (ERP rework §6b, U3–U4) ------------------
+  // All optional and all absent today. `marketingService` reads these to decide
+  // whether a channel can actually send: with none set, SMS and WhatsApp log
+  // every message as `queued_unconfigured` and each screen says so, rather than
+  // reporting a send that never happened. Setting them is what phase 13 does.
+  TWILIO_ACCOUNT_SID: z.string().optional(),
+  TWILIO_AUTH_TOKEN: z.string().optional(),
+  WHATSAPP_TOKEN: z.string().optional(),
 
   MOCK_PAYMENT_DECLINE: z
     .enum(['true', 'false', '1', '0'])

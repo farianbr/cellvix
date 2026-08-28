@@ -1,0 +1,309 @@
+import { useMemo, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { AlertCircle, Lock, Plus, Trash2, UsersRound } from 'lucide-react';
+import { staffUserSchema } from '@shared/schemas/admin';
+import Panel, { PanelEmpty } from '@/components/ui/Panel';
+import Modal from '@/components/ui/Modal';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import Input from '@/components/ui/Input';
+import SelectField from '@/components/ui/SelectField';
+import Button from '@/components/ui/Button';
+import Badge from '@/components/ui/Badge';
+import PageHeader from '@/components/admin/PageHeader';
+import DataTable from '@/components/admin/DataTable';
+import FilterStrip from '@/components/admin/FilterStrip';
+import KpiRow from '@/components/admin/KpiRow';
+import { ADMIN_ROUTES } from '@/lib/adminRoutes';
+import { adminIcon } from '@/components/admin/shell/adminIcons';
+import { useAdminStaff, useAdminRoles, useAdminOutlets, useAdminMutations } from '@/hooks/useAdmin';
+import { useAuth } from '@/hooks/useAuth';
+import { date as formatDate } from '@/lib/format';
+
+/**
+ * Staff accounts — who can sign in to the panel, and as what (§6.15/3, §7.6).
+ *
+ * **Cellvix people only.** Customers have their own screen under Clients, and
+ * mixing the two populations in one table is how an operator ends up handing a
+ * buyer a staff role. The server filters to `admin` and `staff`; this screen
+ * never asks for anyone else.
+ *
+ * Admin-only, deliberately: creating users is one of the things §7.6 keeps away
+ * from the role system entirely, because a role that can mint accounts can mint
+ * itself a better one.
+ */
+const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/settings/users'], icon: adminIcon('UsersRound') };
+
+function StaffForm({ roles, outlets, onSubmit, onCancel, isPending, error }) {
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(staffUserSchema),
+    defaultValues: { name: '', email: '', password: '', phone: '', accountType: 'staff', staffRole: '', outlet: '' },
+  });
+
+  const accountType = watch('accountType');
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+      {error && (
+        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+          <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
+          {error}
+        </p>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Input label="Name" error={errors.name?.message} {...register('name')} />
+        <Input label="Email" error={errors.email?.message} {...register('email')} />
+        <Input
+          label="Password"
+          type="password"
+          hint="At least 8 characters."
+          error={errors.password?.message}
+          {...register('password')}
+        />
+        <Input label="Phone" {...register('phone')} />
+
+        <SelectField
+          control={control}
+          name="accountType"
+          label="Account type"
+          options={[
+            { value: 'staff', label: 'Staff' },
+            { value: 'admin', label: 'Administrator' },
+          ]}
+        />
+
+        {/* An administrator holds no role: admin bypasses the permission map
+            entirely, so offering one would imply a limit that does not exist. */}
+        {accountType === 'staff' && (
+          <SelectField
+            control={control}
+            name="staffRole"
+            label="Role"
+            error={errors.staffRole?.message}
+            options={roles
+              .filter((role) => !role.isSystem)
+              .map((role) => ({ value: role.id, label: role.name }))}
+          />
+        )}
+
+        <SelectField
+          control={control}
+          name="outlet"
+          label="Outlet"
+          options={[
+            { value: '', label: 'Unassigned' },
+            ...outlets.map((outlet) => ({ value: outlet.id, label: outlet.name })),
+          ]}
+        />
+      </div>
+
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit" loading={isPending}>
+          Create account
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+export function AdminUsersPage() {
+  const [search, setSearch] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [adding, setAdding] = useState(false);
+  const [confirming, setConfirming] = useState(null);
+  const [error, setError] = useState(null);
+
+  const { user: me } = useAuth();
+  const params = useMemo(() => {
+    const next = {};
+    if (search) next.search = search;
+    if (roleFilter !== 'all') next.role = roleFilter;
+    return Object.keys(next).length ? next : undefined;
+  }, [search, roleFilter]);
+
+  const { data, isLoading } = useAdminStaff(params);
+  const { data: rolesData } = useAdminRoles();
+  const { data: outletsData } = useAdminOutlets();
+  const { createStaff, updateStaff, deleteStaff } = useAdminMutations();
+
+  const users = data?.users ?? [];
+  const summary = data?.summary ?? {};
+  const roles = rolesData?.roles ?? [];
+  const outlets = outletsData?.outlets ?? [];
+
+  const tiles = [
+    { label: 'Total', value: summary.total ?? 0, tone: 'brand', icon: UsersRound },
+    { label: 'Active', value: summary.active ?? 0, tone: 'ok' },
+    { label: 'Inactive', value: summary.inactive ?? 0, tone: 'neutral' },
+    { label: 'Admins', value: summary.admins ?? 0, tone: 'info' },
+    { label: 'Staff', value: summary.staff ?? 0, tone: 'info' },
+    { label: 'Locked', value: summary.locked ?? 0, tone: 'danger' },
+  ];
+
+  // Static, like every other screen's: `onSelect` receives the row, so the
+  // lock label is decided per row inside the handler rather than by rebuilding
+  // the menu for each one.
+  const rowMenu = [
+    {
+      key: 'lock',
+      label: 'Lock / unlock account',
+      icon: Lock,
+      onSelect: (row) => updateStaff.mutate({ id: row.id, locked: !row.locked }),
+    },
+    {
+      key: 'delete',
+      label: 'Delete',
+      icon: Trash2,
+      tone: 'danger',
+      onSelect: (row) => setConfirming(row),
+    },
+  ];
+
+  const columns = [
+    {
+      key: 'name',
+      header: 'Name',
+      cell: (row) => (
+        <div className="flex items-center gap-2">
+          <span className="font-medium text-ink-900">{row.name}</span>
+          {/* The operator needs to know which row is theirs before they act on
+              it — the self-lock and self-delete rules refuse anyway, but a chip
+              explains it before the error does. */}
+          {String(row.id) === String(me?.id) && (
+            <Badge tone="brand" size="sm">
+              You
+            </Badge>
+          )}
+        </div>
+      ),
+    },
+    { key: 'email', header: 'Email', cell: (row) => <span className="text-ink-500">{row.email}</span> },
+    {
+      key: 'role',
+      header: 'Role',
+      cell: (row) =>
+        row.accountType === 'admin' ? (
+          <Badge tone="dark" size="sm">
+            Administrator
+          </Badge>
+        ) : (
+          <span>{row.role?.name ?? <span className="text-danger">No role</span>}</span>
+        ),
+    },
+    { key: 'outlet', header: 'Outlet', cell: (row) => row.outlet?.name ?? '—' },
+    {
+      key: 'status',
+      header: 'Status',
+      cell: (row) => (
+        <Badge tone={row.locked ? 'danger' : 'ok'} size="sm">
+          {row.locked ? 'Locked' : 'Active'}
+        </Badge>
+      ),
+    },
+    {
+      key: 'lastLoginAt',
+      header: 'Last login',
+      cell: (row) => (row.lastLoginAt ? formatDate(row.lastLoginAt) : 'Never'),
+    },
+  ];
+
+  async function handleCreate(values) {
+    setError(null);
+    try {
+      await createStaff.mutateAsync({ ...values, outlet: values.outlet || undefined });
+      setAdding(false);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function confirmDelete() {
+    setError(null);
+    try {
+      await deleteStaff.mutateAsync(confirming.id);
+      setConfirming(null);
+    } catch (err) {
+      // The last-admin and self-delete rules answer here. The server's sentence
+      // names what to do first, so it is shown rather than replaced.
+      setError(err.message);
+    }
+  }
+
+  return (
+    <>
+      <PageHeader
+        icon={ADMIN_PAGE.icon}
+        title={ADMIN_PAGE.title}
+        description={ADMIN_PAGE.description}
+        action={
+          <Button size="sm" onClick={() => setAdding(true)}>
+            <Plus className="size-4" strokeWidth={2} aria-hidden="true" />
+            Add user
+          </Button>
+        }
+      />
+
+      <KpiRow tiles={tiles} />
+
+      <Panel flush>
+        <FilterStrip
+          search={search}
+          onSearchChange={setSearch}
+          searchPlaceholder="Search staff by name or email"
+          pills={[
+            { value: 'all', label: 'All roles' },
+            { value: 'admin', label: 'Administrators' },
+            ...roles.filter((r) => !r.isSystem).map((r) => ({ value: r.id, label: r.name })),
+          ]}
+          activePill={roleFilter}
+          onPillChange={setRoleFilter}
+        />
+
+        <DataTable
+          columns={columns}
+          rows={users}
+          loading={isLoading}
+          empty={<PanelEmpty icon={UsersRound} title="No staff accounts" body="Add your first user." />}
+          rowMenu={rowMenu}
+        />
+      </Panel>
+
+      <Modal open={adding} onClose={() => setAdding(false)} title="Add staff account" size="lg">
+        <StaffForm
+          roles={roles}
+          outlets={outlets}
+          onSubmit={handleCreate}
+          onCancel={() => setAdding(false)}
+          isPending={createStaff.isPending}
+          error={error}
+        />
+      </Modal>
+
+      <ConfirmDialog
+        open={Boolean(confirming)}
+        onClose={() => {
+          setConfirming(null);
+          setError(null);
+        }}
+        onConfirm={confirmDelete}
+        title={`Delete ${confirming?.name ?? 'user'}?`}
+        body="This permanently removes the account. Their history stays on the records they touched."
+        confirmLabel="Delete account"
+        loading={deleteStaff.isPending}
+        error={error}
+      />
+    </>
+  );
+}
+
+export default AdminUsersPage;

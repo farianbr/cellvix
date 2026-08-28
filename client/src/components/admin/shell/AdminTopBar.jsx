@@ -1,17 +1,19 @@
 import { useLocation, useNavigate } from 'react-router';
-import { ArrowLeft, Bell, Menu, Search } from 'lucide-react';
+import { ArrowLeft, Menu, Search } from 'lucide-react';
 import cn from '@/lib/cn';
 import { matchAdminRoute } from '@/lib/adminRoutes';
 import CreateMenu from './CreateMenu';
+import NotificationMenu from './NotificationMenu';
 
 /**
  * The ERP top bar (§4, convention 4): page-title chip with a back arrow,
  * global search, `+ Create`, notification bell, user chip.
  *
- * The bell stays disabled with an honest title until phase 12 — a button that
- * silently does nothing is worse than one that says why.
+ * The bell is `NotificationMenu`, which owns its own query, badge and panel —
+ * the top bar does not thread a count through, because a count computed here
+ * and a list fetched there are two answers to one question.
  */
-export function AdminTopBar({ user, unread = 0, onOpenSearch, onOpenMobileNav }) {
+export function AdminTopBar({ user, onOpenSearch, onOpenMobileNav }) {
   const location = useLocation();
   const navigate = useNavigate();
   const meta = matchAdminRoute(location.pathname);
@@ -75,18 +77,7 @@ export function AdminTopBar({ user, unread = 0, onOpenSearch, onOpenMobileNav })
 
         <CreateMenu />
 
-        <button
-          type="button"
-          disabled
-          title="Notifications ship in phase 12."
-          aria-label={`Notifications${unread ? `, ${unread} unread` : ''}`}
-          className="relative flex size-9 items-center justify-center rounded-[9px] text-ink-500 opacity-45"
-        >
-          <Bell className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />
-          {unread > 0 && (
-            <span className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-danger" aria-hidden="true" />
-          )}
-        </button>
+        <NotificationMenu />
 
         <span
           className="flex size-8 items-center justify-center rounded-full bg-surface-3 text-[11.5px] font-semibold text-ink-700"

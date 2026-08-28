@@ -9,7 +9,7 @@ import { useAuth } from './useAuth';
  * rather than overwriting each other.
  */
 export function useAdminStats(range) {
-  const { isAdmin } = useAuth();
+  const { canUseAdmin } = useAuth();
   const params = {};
   if (range?.from) params.from = range.from;
   if (range?.to) params.to = range.to;
@@ -17,17 +17,17 @@ export function useAdminStats(range) {
   return useQuery({
     queryKey: ['admin', 'stats', params],
     queryFn: () => api.get('/admin/stats', params),
-    enabled: isAdmin,
+    enabled: canUseAdmin,
     staleTime: 30 * 1000,
   });
 }
 
 export function useAdminUsers(params) {
-  const { isAdmin } = useAuth();
+  const { canUseAdmin } = useAuth();
   return useQuery({
     queryKey: ['admin', 'users', params],
     queryFn: () => api.get('/admin/users', params),
-    enabled: isAdmin,
+    enabled: canUseAdmin,
     staleTime: 15 * 1000,
   });
 }
@@ -50,31 +50,45 @@ export function useAdminStoreCredit(id) {
 }
 
 export function useAdminProducts(params) {
-  const { isAdmin } = useAuth();
+  const { canUseAdmin } = useAuth();
   return useQuery({
     queryKey: ['admin', 'products', params],
     queryFn: () => api.get('/admin/products', params),
-    enabled: isAdmin,
+    enabled: canUseAdmin,
     staleTime: 15 * 1000,
   });
 }
 
 export function useAdminOrders(params) {
-  const { isAdmin } = useAuth();
+  const { canUseAdmin } = useAuth();
   return useQuery({
     queryKey: ['admin', 'orders', params],
     queryFn: () => api.get('/admin/orders', params),
-    enabled: isAdmin,
+    enabled: canUseAdmin,
     staleTime: 15 * 1000,
   });
 }
 
+/**
+ * One order, by number — the detail screen (phase 12).
+ *
+ * Keyed on the order number rather than an id, matching the route and the
+ * endpoint: that is the identifier a packing slip and a customer email carry.
+ */
+export function useAdminOrder(orderNumber) {
+  return useQuery({
+    queryKey: ['admin', 'orders', 'one', orderNumber],
+    queryFn: () => api.get(`/admin/orders/${orderNumber}`),
+    enabled: Boolean(orderNumber),
+  });
+}
+
 export function useAdminBlog(params) {
-  const { isAdmin } = useAuth();
+  const { canUseAdmin } = useAuth();
   return useQuery({
     queryKey: ['admin', 'blog', params],
     queryFn: () => api.get('/admin/blog', params),
-    enabled: isAdmin,
+    enabled: canUseAdmin,
     staleTime: 15 * 1000,
   });
 }
@@ -90,31 +104,31 @@ export function useAdminBlogPost(id) {
 }
 
 export function useAdminFaqs(params) {
-  const { isAdmin } = useAuth();
+  const { canUseAdmin } = useAuth();
   return useQuery({
     queryKey: ['admin', 'faqs', params],
     queryFn: () => api.get('/admin/faqs', params),
-    enabled: isAdmin,
+    enabled: canUseAdmin,
     staleTime: 15 * 1000,
   });
 }
 
 export function useAdminOffers(params) {
-  const { isAdmin } = useAuth();
+  const { canUseAdmin } = useAuth();
   return useQuery({
     queryKey: ['admin', 'offers', params],
     queryFn: () => api.get('/admin/offers', params),
-    enabled: isAdmin,
+    enabled: canUseAdmin,
     staleTime: 15 * 1000,
   });
 }
 
 export function useAdminInvoices(params) {
-  const { isAdmin } = useAuth();
+  const { canUseAdmin } = useAuth();
   return useQuery({
     queryKey: ['admin', 'invoices', params],
     queryFn: () => api.get('/admin/invoices', params),
-    enabled: isAdmin,
+    enabled: canUseAdmin,
     staleTime: 15 * 1000,
   });
 }
@@ -139,11 +153,11 @@ export function useAdminUserActivity(id, enabled = true) {
 // ---- purchase (phase 5) -----------------------------------------------------
 
 export function useAdminSuppliers(params) {
-  const { isAdmin } = useAuth();
+  const { canUseAdmin } = useAuth();
   return useQuery({
     queryKey: ['admin', 'suppliers', params],
     queryFn: () => api.get('/admin/suppliers', params),
-    enabled: isAdmin,
+    enabled: canUseAdmin,
     staleTime: 30 * 1000,
   });
 }
@@ -157,11 +171,11 @@ export function useAdminSupplier(id) {
 }
 
 export function useAdminPurchaseOrders(params) {
-  const { isAdmin } = useAuth();
+  const { canUseAdmin } = useAuth();
   return useQuery({
     queryKey: ['admin', 'purchase-orders', params],
     queryFn: () => api.get('/admin/purchase-orders', params),
-    enabled: isAdmin,
+    enabled: canUseAdmin,
     staleTime: 15 * 1000,
   });
 }
@@ -175,11 +189,11 @@ export function useAdminPurchaseOrder(id) {
 }
 
 export function useAdminExpenses(params) {
-  const { isAdmin } = useAuth();
+  const { canUseAdmin } = useAuth();
   return useQuery({
     queryKey: ['admin', 'expenses', params],
     queryFn: () => api.get('/admin/expenses', params),
-    enabled: isAdmin,
+    enabled: canUseAdmin,
     staleTime: 15 * 1000,
   });
 }
@@ -187,11 +201,11 @@ export function useAdminExpenses(params) {
 /** Categories carry their usage count, so the UI can explain a refused delete
  *  before the operator clicks it rather than after. */
 export function useAdminExpenseCategories() {
-  const { isAdmin } = useAuth();
+  const { canUseAdmin } = useAuth();
   return useQuery({
     queryKey: ['admin', 'expense-categories'],
     queryFn: () => api.get('/admin/expenses/categories'),
-    enabled: isAdmin,
+    enabled: canUseAdmin,
     staleTime: 60 * 1000,
   });
 }
@@ -202,11 +216,11 @@ export function useAdminExpenseCategories() {
  * does — fetching 400+ rows to render a list of purchase orders is waste.
  */
 export function useAdminInventory(params, enabled = true) {
-  const { isAdmin } = useAuth();
+  const { canUseAdmin } = useAuth();
   return useQuery({
     queryKey: ['admin', 'inventory', params],
     queryFn: () => api.get('/admin/inventory', params),
-    enabled: isAdmin && enabled,
+    enabled: canUseAdmin && enabled,
     staleTime: 15 * 1000,
   });
 }
@@ -222,11 +236,11 @@ export function useAdminInventoryItem(id) {
 // ---- quotes & RMA (phase 7) -------------------------------------------------
 
 export function useAdminQuotes(params) {
-  const { isAdmin } = useAuth();
+  const { canUseAdmin } = useAuth();
   return useQuery({
     queryKey: ['admin', 'quotes', params],
     queryFn: () => api.get('/admin/quotes', params),
-    enabled: isAdmin,
+    enabled: canUseAdmin,
     staleTime: 15 * 1000,
   });
 }
@@ -242,11 +256,11 @@ export function useAdminQuote(id) {
 }
 
 export function useAdminRmas(params) {
-  const { isAdmin } = useAuth();
+  const { canUseAdmin } = useAuth();
   return useQuery({
     queryKey: ['admin', 'rma', params],
     queryFn: () => api.get('/admin/rma', params),
-    enabled: isAdmin,
+    enabled: canUseAdmin,
     staleTime: 15 * 1000,
   });
 }
@@ -270,7 +284,7 @@ export function useAdminRma(id) {
  * reading a column is worse than showing a figure a minute old.
  */
 export function useAdminReport(tab, range, extra) {
-  const { isAdmin } = useAuth();
+  const { canUseAdmin } = useAuth();
   const params = { ...extra };
   if (range?.from) params.from = range.from;
   if (range?.to) params.to = range.to;
@@ -278,7 +292,7 @@ export function useAdminReport(tab, range, extra) {
   return useQuery({
     queryKey: ['admin', 'reports', tab, params],
     queryFn: () => api.get(`/admin/reports/${tab}`, params),
-    enabled: isAdmin && Boolean(tab),
+    enabled: canUseAdmin && Boolean(tab),
     staleTime: 60 * 1000,
   });
 }
@@ -290,6 +304,345 @@ export function useAdminReport(tab, range, extra) {
  * whole admin cache is invalidated rather than surgically patched — these are
  * low-frequency, high-consequence actions.
  */
+// ---- phase 8: outlets, roles and staff --------------------------------------
+
+export function useAdminOutlets(params) {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'outlets', params],
+    queryFn: () => api.get('/admin/outlets', params),
+    enabled: canUseAdmin,
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useAdminOutlet(id) {
+  return useQuery({
+    queryKey: ['admin', 'outlets', id],
+    queryFn: () => api.get(`/admin/outlets/${id}`),
+    enabled: Boolean(id),
+  });
+}
+
+/** The next `#000001` code, so the Add form can show it before saving. */
+export function useNextOutletCode(enabled = true) {
+  return useQuery({
+    queryKey: ['admin', 'outlets', 'next-code'],
+    queryFn: () => api.get('/admin/outlets/next-code'),
+    enabled,
+    staleTime: 0,
+  });
+}
+
+/** Admin-only endpoints — a staff session gets a 403, so it never asks. */
+export function useAdminRoles() {
+  const { isAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'roles'],
+    queryFn: () => api.get('/admin/roles'),
+    enabled: isAdmin,
+    staleTime: 30 * 1000,
+  });
+}
+
+export function useAdminStaff(params) {
+  const { isAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'staff', params],
+    queryFn: () => api.get('/admin/staff', params),
+    enabled: isAdmin,
+    staleTime: 15 * 1000,
+  });
+}
+
+// ---- phase 9: marketing -----------------------------------------------------
+
+/**
+ * Channel states and the counts above each marketing screen.
+ *
+ * `channels` is the one source of truth for which providers are connected
+ * (§6b) — the notices on the SMS, WhatsApp and Calls screens read it rather
+ * than each hard-coding its own wording.
+ */
+export function useMarketingSummary() {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'marketing', 'summary'],
+    queryFn: () => api.get('/admin/marketing/summary'),
+    enabled: canUseAdmin,
+    staleTime: 30 * 1000,
+  });
+}
+
+/** The history panel. `channel` scopes it; `user` narrows it to one account. */
+export function useMarketingMessages(params) {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'marketing', 'messages', params],
+    queryFn: () => api.get('/admin/marketing/messages', params),
+    enabled: canUseAdmin,
+    staleTime: 10 * 1000,
+  });
+}
+
+export function useMarketingTemplates(channel) {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'marketing', 'templates', channel ?? 'all'],
+    queryFn: () => api.get('/admin/marketing/templates', channel ? { channel } : {}),
+    enabled: canUseAdmin,
+    staleTime: 60 * 1000,
+  });
+}
+
+export function useMarketingCampaigns(params) {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'marketing', 'campaigns', params],
+    queryFn: () => api.get('/admin/marketing/campaigns', params),
+    enabled: canUseAdmin,
+    staleTime: 15 * 1000,
+  });
+}
+
+/**
+ * One campaign, with its audience recounted server-side on every read —
+ * consent moves between saves, and the count shown is the one the operator uses
+ * to decide whether to send.
+ */
+export function useMarketingCampaign(id) {
+  return useQuery({
+    queryKey: ['admin', 'marketing', 'campaigns', id],
+    queryFn: () => api.get(`/admin/marketing/campaigns/${id}`),
+    enabled: Boolean(id),
+  });
+}
+
+export function useMarketingUnsubscribes(params) {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'marketing', 'unsubscribes', params],
+    queryFn: () => api.get('/admin/marketing/unsubscribes', params),
+    enabled: canUseAdmin,
+    staleTime: 30 * 1000,
+  });
+}
+
+// ---- phase 10: referral commission ------------------------------------------
+
+/**
+ * Referrals and the commission rate.
+ *
+ * Admin-only — a staff session gets a 403, so it never asks (§6.13). This pays
+ * real money on an automatic trigger, which is a decision for whoever owns the
+ * money rather than anyone holding `marketing: full`.
+ */
+export function useAdminReferrals(params) {
+  const { isAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'referrals', params],
+    queryFn: () => api.get('/admin/referrals', params),
+    enabled: isAdmin,
+    staleTime: 30 * 1000,
+  });
+}
+
+// ---- phase 11a: settings ----------------------------------------------------
+
+/**
+ * The settings singleton.
+ *
+ * One query behind every settings screen: the document is small, it is read by
+ * six forms, and a per-screen query would mean six caches that can disagree
+ * about the same field.
+ *
+ * `staleTime` is longer than the panel's default because settings change on the
+ * order of months, not minutes — and every mutation invalidates `['admin']`
+ * anyway, so an edit still lands immediately.
+ */
+export function useAdminSettings() {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'settings'],
+    queryFn: () => api.get('/admin/settings'),
+    enabled: canUseAdmin,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// ---- phase 12c: notifications (§7.3) ----------------------------------------
+
+/**
+ * The bell's contents.
+ *
+ * **Polled, as §7.3 specifies** — "polled on an interval to start, upgraded to
+ * SSE only if that proves necessary". One minute is the interval: the four
+ * standing conditions are recomputed on every read, so a shorter one buys
+ * freshness nobody can act on while multiplying a query that touches invoices,
+ * products and purchase orders.
+ *
+ * `refetchIntervalInBackground` is left at its default of false on purpose. A
+ * panel sitting in an unfocused tab overnight should not spend the night
+ * re-running that query, and the refetch on focus catches it up the instant
+ * somebody comes back.
+ */
+export function useNotifications() {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'notifications'],
+    queryFn: () => api.get('/admin/notifications'),
+    enabled: canUseAdmin,
+    staleTime: 30 * 1000,
+    refetchInterval: 60 * 1000,
+  });
+}
+
+/**
+ * Marking read and clearing.
+ *
+ * Both invalidate rather than optimistically patching the cache: the derived
+ * half of the list is recomputed server-side and a local edit cannot model it,
+ * so guessing would show a badge that disagrees with the next poll.
+ */
+export function useNotificationActions() {
+  const queryClient = useQueryClient();
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['admin', 'notifications'] });
+
+  return {
+    markRead: useMutation({
+      mutationFn: (ids) => api.post('/admin/notifications/read', ids ? { ids } : {}),
+      onSuccess: invalidate,
+    }),
+    clearAll: useMutation({
+      mutationFn: () => api.post('/admin/notifications/clear'),
+      onSuccess: invalidate,
+    }),
+  };
+}
+
+// ---- phase 11b: the audit trail ---------------------------------------------
+
+/**
+ * One page of the activity or security log.
+ *
+ * `kind` picks the endpoint rather than being sent as a parameter — the server
+ * decides which log a route reads, so a client cannot ask the activity route
+ * for security rows.
+ *
+ * The security log is admin-only, so a staff session never asks for it: it
+ * would only ever receive a 403.
+ */
+export function useAuditLog(kind, params) {
+  const { canUseAdmin, isAdmin } = useAuth();
+  const allowed = kind === 'security' ? isAdmin : canUseAdmin;
+
+  return useQuery({
+    queryKey: ['admin', 'audit', kind, params],
+    queryFn: () => api.get(`/admin/audit/${kind}`, params),
+    enabled: allowed,
+    // Short: a log is read to find out what just happened, and a stale page
+    // is the one thing it must not show.
+    staleTime: 10 * 1000,
+    placeholderData: (previous) => previous,
+  });
+}
+
+// ---- phase 11c: provider credentials ----------------------------------------
+
+/**
+ * Which providers are configured, and a masked preview of each field.
+ *
+ * **Never the values.** The server has no route that returns a stored secret
+ * (§6.15), so there is nothing to fetch and nothing to cache: what comes back
+ * is `configured`, `source` and a preview like `••••••••1234`.
+ *
+ * Admin-only — a staff session would only ever get a 403, so it never asks.
+ */
+export function useAdminCredentials() {
+  const { isAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'credentials'],
+    queryFn: () => api.get('/admin/credentials'),
+    enabled: isAdmin,
+    staleTime: 60 * 1000,
+  });
+}
+
+// ---- phase 11d: taxonomy & invoice status rules -----------------------------
+
+export function useAdminTaxonomy(params) {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'taxonomy', params],
+    queryFn: () => api.get('/admin/taxonomy', params),
+    enabled: canUseAdmin,
+    staleTime: 30 * 1000,
+    placeholderData: (previous) => previous,
+  });
+}
+
+export function useAdminInvoiceRules() {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'invoice-rules'],
+    queryFn: () => api.get('/admin/invoice-rules'),
+    enabled: canUseAdmin,
+    staleTime: 60 * 1000,
+  });
+}
+
+// ---- phase 11e: scheduling board (UI only, §6b U1–U2) -----------------------
+
+/**
+ * The scheduling board's data. Ships empty and there is no write hook — the
+ * screens render their chrome and say plainly that nothing is wired.
+ */
+export function useAdminAppointments(params) {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'appointments', params],
+    queryFn: () => api.get('/admin/appointments', params),
+    enabled: canUseAdmin,
+    staleTime: 60 * 1000,
+  });
+}
+
+// ---- phase 12: global search & profile --------------------------------------
+
+/**
+ * Record search behind Ctrl+K (§7.1).
+ *
+ * Results are **permission-filtered server-side** from the caller's role, so
+ * there is nothing to pass here and nothing this hook could ask for that the
+ * session is not entitled to.
+ *
+ * Disabled under two characters, matching the server's own floor — otherwise
+ * every palette open fires a request that returns nothing.
+ */
+export function useAdminSearch(term) {
+  const { canUseAdmin } = useAuth();
+  const q = (term ?? '').trim();
+
+  return useQuery({
+    queryKey: ['admin', 'search', q],
+    queryFn: () => api.get('/admin/search', { q }),
+    enabled: canUseAdmin && q.length >= 2,
+    staleTime: 15 * 1000,
+    placeholderData: (previous) => previous,
+  });
+}
+
+/** The signed-in staff member's own profile and recent activity. */
+export function useAdminProfile() {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'profile'],
+    queryFn: () => api.get('/admin/profile'),
+    enabled: canUseAdmin,
+    staleTime: 60 * 1000,
+  });
+}
+
 export function useAdminMutations() {
   const queryClient = useQueryClient();
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['admin'] });
@@ -569,6 +922,185 @@ export function useAdminMutations() {
         invalidate();
         queryClient.invalidateQueries({ queryKey: ['products'] });
       },
+    }),
+
+    // ---- phase 8 ----------------------------------------------------------
+    createOutlet: useMutation({
+      mutationFn: (body) => api.post('/admin/outlets', body),
+      onSuccess: invalidate,
+    }),
+    updateOutlet: useMutation({
+      mutationFn: ({ id, ...body }) => api.patch(`/admin/outlets/${id}`, body),
+      onSuccess: invalidate,
+    }),
+    setDefaultOutlet: useMutation({
+      mutationFn: (id) => api.patch(`/admin/outlets/${id}/default`),
+      onSuccess: invalidate,
+    }),
+    deleteOutlet: useMutation({
+      mutationFn: (id) => api.delete(`/admin/outlets/${id}`),
+      onSuccess: invalidate,
+    }),
+
+    createRole: useMutation({
+      mutationFn: (body) => api.post('/admin/roles', body),
+      onSuccess: invalidate,
+    }),
+    updateRole: useMutation({
+      mutationFn: ({ id, ...body }) => api.patch(`/admin/roles/${id}`, body),
+      // A role edit changes what the editor themselves may see, so the session
+      // is refetched alongside the admin caches.
+      onSuccess: () => {
+        invalidate();
+        queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+      },
+    }),
+    deleteRole: useMutation({
+      mutationFn: (id) => api.delete(`/admin/roles/${id}`),
+      onSuccess: invalidate,
+    }),
+
+    createStaff: useMutation({
+      mutationFn: (body) => api.post('/admin/staff', body),
+      onSuccess: invalidate,
+    }),
+    updateStaff: useMutation({
+      mutationFn: ({ id, ...body }) => api.patch(`/admin/staff/${id}`, body),
+      onSuccess: () => {
+        invalidate();
+        queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+      },
+    }),
+    deleteStaff: useMutation({
+      mutationFn: (id) => api.delete(`/admin/staff/${id}`),
+      onSuccess: invalidate,
+    }),
+
+    // ---- phase 9 ----------------------------------------------------------
+    // Every compose resolves to `{ message, notice }`. `notice` is non-null
+    // when the channel could not actually send, and the screen must render it
+    // instead of a confirmation — §6b rule 4, no fake success.
+    sendMessage: useMutation({
+      mutationFn: ({ channel, ...body }) => api.post(`/admin/marketing/${channel}`, body),
+      onSuccess: invalidate,
+    }),
+
+    createTemplate: useMutation({
+      mutationFn: (body) => api.post('/admin/marketing/templates', body),
+      onSuccess: invalidate,
+    }),
+    updateTemplate: useMutation({
+      mutationFn: ({ id, ...body }) => api.patch(`/admin/marketing/templates/${id}`, body),
+      onSuccess: invalidate,
+    }),
+    deleteTemplate: useMutation({
+      mutationFn: (id) => api.delete(`/admin/marketing/templates/${id}`),
+      onSuccess: invalidate,
+    }),
+
+    createCampaign: useMutation({
+      mutationFn: (body) => api.post('/admin/marketing/campaigns', body),
+      onSuccess: invalidate,
+    }),
+    updateCampaign: useMutation({
+      mutationFn: ({ id, ...body }) => api.patch(`/admin/marketing/campaigns/${id}`, body),
+      onSuccess: invalidate,
+    }),
+    deleteCampaign: useMutation({
+      mutationFn: (id) => api.delete(`/admin/marketing/campaigns/${id}`),
+      onSuccess: invalidate,
+    }),
+    // Resolves to `{ campaign, result }`, where `result` carries sent / queued
+    // / failed / skipped. The screen reports those four numbers rather than a
+    // single "sent" — a partial run says so.
+    sendCampaign: useMutation({
+      mutationFn: (id) => api.post(`/admin/marketing/campaigns/${id}/send`),
+      onSuccess: invalidate,
+    }),
+
+    resubscribe: useMutation({
+      mutationFn: (id) => api.post(`/admin/marketing/unsubscribes/${id}/resubscribe`),
+      onSuccess: invalidate,
+    }),
+
+    // ---- phase 10 ---------------------------------------------------------
+    // The only writable thing in the whole referral feature. Accruals are
+    // produced by payments and reversed by refunds — there is no mutation that
+    // writes one by hand, and attribution is set once at registration.
+    setReferralRate: useMutation({
+      mutationFn: (percent) => api.patch('/admin/referrals/rate', { percent }),
+      onSuccess: invalidate,
+    }),
+
+    // ---- phase 11a: settings ------------------------------------------------
+    // One mutation per section, mirroring the routes. There is no whole-document
+    // write: a form posts back the copy it loaded on open, so a wholesale save
+    // would let one screen silently revert a field another screen just changed.
+    saveBusinessInfo: useMutation({
+      mutationFn: (body) => api.patch('/admin/settings/business', body),
+      onSuccess: invalidate,
+    }),
+    saveSaleSettings: useMutation({
+      mutationFn: (body) => api.patch('/admin/settings/sale', body),
+      onSuccess: invalidate,
+    }),
+    saveShippingSettings: useMutation({
+      mutationFn: (body) => api.patch('/admin/settings/shipping', body),
+      onSuccess: invalidate,
+    }),
+    savePaymentMethods: useMutation({
+      mutationFn: (body) => api.patch('/admin/settings/payment-methods', body),
+      onSuccess: invalidate,
+    }),
+    saveInventorySettings: useMutation({
+      mutationFn: (body) => api.patch('/admin/settings/inventory', body),
+      onSuccess: invalidate,
+    }),
+
+    // ---- phase 11c: provider credentials -----------------------------------
+    // Write-only. The response carries previews and `configured` flags, never
+    // the values that were just sent — so nothing here caches a secret.
+    saveCredentials: useMutation({
+      mutationFn: ({ provider, ...values }) => api.patch(`/admin/credentials/${provider}`, values),
+      onSuccess: invalidate,
+    }),
+    clearCredentials: useMutation({
+      mutationFn: (provider) => api.delete(`/admin/credentials/${provider}`),
+      onSuccess: invalidate,
+    }),
+
+    // ---- phase 11d: taxonomy & invoice status rules ------------------------
+    // Taxonomy writes invalidate the public tree as well: the sidebar, mega
+    // menu and tab wizard all render from it, so an alias or a deactivation has
+    // to show up on the storefront without a hard refresh.
+    saveTaxonomyNode: useMutation({
+      mutationFn: ({ id, ...body }) => api.patch(`/admin/taxonomy/${id}`, body),
+      onSuccess: invalidateContent('taxonomy'),
+    }),
+    deleteTaxonomyNode: useMutation({
+      mutationFn: (id) => api.delete(`/admin/taxonomy/${id}`),
+      onSuccess: invalidateContent('taxonomy'),
+    }),
+
+    createInvoiceRule: useMutation({
+      mutationFn: (body) => api.post('/admin/invoice-rules', body),
+      onSuccess: invalidate,
+    }),
+    saveInvoiceRule: useMutation({
+      mutationFn: ({ id, ...body }) => api.patch(`/admin/invoice-rules/${id}`, body),
+      onSuccess: invalidate,
+    }),
+    deleteInvoiceRule: useMutation({
+      mutationFn: (id) => api.delete(`/admin/invoice-rules/${id}`),
+      onSuccess: invalidate,
+    }),
+    saveCommunications: useMutation({
+      mutationFn: (body) => api.patch('/admin/settings/communications', body),
+      onSuccess: invalidate,
+    }),
+    runInvoiceRules: useMutation({
+      mutationFn: (dryRun) => api.post(`/admin/invoice-rules/run?dryRun=${dryRun ? 'true' : 'false'}`),
+      onSuccess: invalidate,
     }),
   };
 }

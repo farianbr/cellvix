@@ -67,6 +67,11 @@ export const SETTINGS_CATEGORIES = [
  *
  * `phase` is the build phase from ERP rework §10. It drives the stub notice, so
  * a phase bump here is the only edit needed when a screen goes live.
+ *
+ * `built` says the screen actually exists, which `phase` alone cannot: phase 11
+ * is ~16 screens landing across several passes, so its routes carry the same
+ * phase number while some are real and some are still stubs. Anything reading
+ * "is there a screen here" — the settings summary's cards — reads this flag.
  */
 export const ADMIN_ROUTES = {
   // The full ERP dashboard — things-to-do cards, six KPIs, revenue chart — is
@@ -144,7 +149,8 @@ export const ADMIN_ROUTES = {
     parent: '/admin/orders',
     icon: 'Package',
     section: 'sales',
-    phase: 4,
+    phase: 12,
+    built: true,
     title: 'Order detail',
     description: 'Lines, totals, payment and the status timeline.',
   },
@@ -162,7 +168,8 @@ export const ADMIN_ROUTES = {
     parent: '/admin/invoices',
     icon: 'FileText',
     section: 'sales',
-    phase: 4,
+    phase: 12,
+    built: true,
     title: 'Invoice detail',
     description: 'Lines, payments and the document itself.',
   },
@@ -363,6 +370,15 @@ export const ADMIN_ROUTES = {
     title: 'Add outlet',
     description: 'Identity, location, management and hours — with a live preview.',
   },
+  '/admin/outlets/:id/edit': {
+    label: 'Edit outlet',
+    parent: '/admin/outlets',
+    icon: 'Pencil',
+    section: 'outlet',
+    phase: 8,
+    title: 'Edit outlet',
+    description: 'Identity, location, management and hours — with a live preview.',
+  },
   '/admin/outlets/:id': {
     label: 'Outlet',
     parent: '/admin/outlets',
@@ -380,6 +396,7 @@ export const ADMIN_ROUTES = {
     icon: 'LayoutGrid',
     section: 'settings',
     phase: 11,
+    built: true,
     title: 'Settings',
     description: 'Everything to configure your shop, grouped by area.',
   },
@@ -389,6 +406,7 @@ export const ADMIN_ROUTES = {
     icon: 'Building2',
     section: 'settings',
     phase: 11,
+    built: true,
     title: 'Business info',
     description: 'Company name, contact details, GST/HST number and logo.',
   },
@@ -398,6 +416,7 @@ export const ADMIN_ROUTES = {
     icon: 'Coins',
     section: 'settings',
     phase: 11,
+    built: true,
     title: 'Sale settings',
     description: 'Regional defaults, invoice numbering, warranty by grade and shipping.',
   },
@@ -407,6 +426,7 @@ export const ADMIN_ROUTES = {
     icon: 'FileText',
     section: 'settings',
     phase: 11,
+    built: true,
     title: 'Invoice statuses',
     description: 'Time-lapse status messages, each firing once per invoice.',
   },
@@ -416,6 +436,7 @@ export const ADMIN_ROUTES = {
     icon: 'Boxes',
     section: 'settings',
     phase: 11,
+    built: true,
     title: 'Devices, brands, models & aliases',
     description: 'The master list behind every device picker and the search box.',
   },
@@ -425,6 +446,7 @@ export const ADMIN_ROUTES = {
     icon: 'Truck',
     section: 'settings',
     phase: 11,
+    built: true,
     title: 'Shipping rates',
     description: 'Flat rate, free-over threshold and per-province surcharges.',
   },
@@ -434,6 +456,7 @@ export const ADMIN_ROUTES = {
     icon: 'CreditCard',
     section: 'settings',
     phase: 11,
+    built: true,
     title: 'Payment methods',
     description: 'The list behind every payment and expense form.',
   },
@@ -452,6 +475,7 @@ export const ADMIN_ROUTES = {
     icon: 'Boxes',
     section: 'settings',
     phase: 11,
+    built: true,
     title: 'Inventory defaults',
     description: 'Default markup and margin, general categories, groups.',
   },
@@ -479,6 +503,7 @@ export const ADMIN_ROUTES = {
     icon: 'CalendarDays',
     section: 'settings',
     phase: 11,
+    built: true,
     title: 'Calendar',
     description: 'The weekly board, by staff and by status.',
   },
@@ -488,6 +513,7 @@ export const ADMIN_ROUTES = {
     icon: 'CalendarClock',
     section: 'settings',
     phase: 11,
+    built: true,
     title: 'Appointments',
     description: 'The booking grid.',
   },
@@ -497,6 +523,7 @@ export const ADMIN_ROUTES = {
     icon: 'Mail',
     section: 'settings',
     phase: 11,
+    built: true,
     title: 'Email settings',
     description: 'Which emails send automatically, and the reminder schedule.',
   },
@@ -506,6 +533,7 @@ export const ADMIN_ROUTES = {
     icon: 'MessageSquare',
     section: 'settings',
     phase: 11,
+    built: true,
     title: 'Message templates',
     description: 'One message per document and status, per channel.',
   },
@@ -515,6 +543,7 @@ export const ADMIN_ROUTES = {
     icon: 'ClipboardList',
     section: 'settings',
     phase: 11,
+    built: true,
     title: 'Activity log',
     description: 'Every admin mutation: who, what, when and from where.',
   },
@@ -524,8 +553,13 @@ export const ADMIN_ROUTES = {
     icon: 'ShieldAlert',
     section: 'settings',
     phase: 11,
+    built: true,
     title: 'Security log',
-    description: 'Sign-ins, failures, lockouts and CSRF rejections.',
+    // Not "and CSRF rejections", which §6.15 lists: this codebase has no CSRF
+    // middleware, so promising a category the log can never contain would have
+    // an operator reading an empty result as "no attacks" rather than "not
+    // measured". It goes back in when the check does.
+    description: 'Sign-ins, failed attempts, lockouts and staff access changes.',
   },
   '/admin/settings/api-keys': {
     label: 'API Keys',
@@ -533,6 +567,7 @@ export const ADMIN_ROUTES = {
     icon: 'KeyRound',
     section: 'settings',
     phase: 11,
+    built: true,
     title: 'API keys',
     description: 'Provider credentials. Write-only — a stored secret never comes back.',
   },
@@ -542,6 +577,7 @@ export const ADMIN_ROUTES = {
     icon: 'Plug',
     section: 'settings',
     phase: 11,
+    built: true,
     title: 'Third-party apps',
     description: 'Ready-made connections to Google and friends.',
   },

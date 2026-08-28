@@ -12,7 +12,6 @@ import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import useUiStore from '@/store/uiStore';
 
-const FREE_SHIPPING_OVER = 50_000;
 
 export function CartPage() {
   const {
@@ -26,6 +25,7 @@ export function CartPage() {
     promoDiscount,
     promo,
     priceVisible,
+    shippingPreview,
     isReady,
     hasStockIssue,
     setQty,
@@ -41,11 +41,19 @@ export function CartPage() {
   // A preview of the checkout arithmetic, computed from what the server already
   // told us the cart is worth. The binding numbers come from /orders/quote —
   // this is here so the cart does not have to round-trip on every keystroke.
-  const freeShipping = promo?.freeShipping || (payable !== null && payable >= FREE_SHIPPING_OVER);
-  const shipping = payable === null ? null : freeShipping ? 0 : 1895;
+  //
+  // The rates come from the server with the cart, not from a constant here:
+  // shipping is editable in Settings (§6.15), and "free over $500" is exactly
+  // the kind of promise a page must not make out of a stale number.
+  const freeOver = shippingPreview?.freeOver ?? null;
+  const freeShipping = promo?.freeShipping || shippingPreview?.cost === 0;
+  const shipping = payable === null ? null : freeShipping ? 0 : (shippingPreview?.cost ?? 0);
   const tax = payable === null ? null : Math.round((payable + shipping) * TAX_RATE);
   const total = payable === null ? null : payable + shipping + tax;
-  const awayFromFreeShipping = payable === null ? null : FREE_SHIPPING_OVER - payable;
+  // Only meaningful when a threshold actually exists — a band with no free-over
+  // has no distance to advertise.
+  const awayFromFreeShipping =
+    payable === null || freeOver === null ? null : freeOver - payable;
 
   // Skeleton until we actually know what is in the cart — an empty-state flash
   // while the request is in flight reads as "we lost your cart".

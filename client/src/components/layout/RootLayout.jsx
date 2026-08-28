@@ -10,16 +10,17 @@ import { useAuth } from '@/hooks/useAuth';
 
 /** Chrome shared by every route: header, footer, and the global overlays. */
 export function RootLayout() {
-  const { isLoading, isAdmin } = useAuth();
+  const { isLoading, isAdmin, isStaff } = useAuth();
 
-  // Staff have no buyer side. The catalogue, cart and checkout all assume a
-  // business account behind them, so a signed-in admin is sent to the console
+  // Cellvix people have no buyer side. The catalogue, cart and checkout all
+  // assume a business account behind them, so any staff account is sent to the
+  // console
   // from any storefront URL — typed, bookmarked or followed from an email.
   //
   // The wait on `isLoading` is what keeps a hard refresh at `/` from painting
   // the shop for a beat before `/auth/me` answers.
   if (isLoading) return <RouteFallback />;
-  if (isAdmin) return <Navigate to="/admin" replace />;
+  if (isAdmin || isStaff) return <Navigate to="/admin" replace />;
 
   return (
     <div className="flex min-h-screen flex-col">

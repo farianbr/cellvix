@@ -29,6 +29,7 @@ import FilterStrip from '@/components/admin/FilterStrip';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
+import downloadExport from '@/lib/exportDownload';
 import {
   useAdminExpenses,
   useAdminExpenseCategories,
@@ -428,11 +429,16 @@ export function AdminExpensesPage() {
               </div>
             </div>
           }
+          // The same object the list query uses, so the file and the screen
+          // cannot disagree about what "current filters" means (§7.4).
           onExport={(format) =>
-            window.alert(
-              `Export to ${format} arrives in phase 12. It will carry the current filters: ` +
-                `status "${status}"${query ? `, search "${query}"` : ''}.`,
-            )
+            downloadExport('expenses', format, {
+              status,
+              category: category || undefined,
+              from: from || undefined,
+              to: to || undefined,
+              q: query || undefined,
+            })
           }
         />
 

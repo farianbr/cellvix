@@ -17,6 +17,7 @@ import DataTable, { CountLine } from '@/components/admin/DataTable';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminInvoices, useAdminMutations } from '@/hooks/useAdmin';
+import downloadExport from '@/lib/exportDownload';
 
 /**
  * Header metadata read from the same table the breadcrumb uses, so a page
@@ -340,12 +341,7 @@ export function AdminInvoicesPage() {
           pills={PILLS.map((pill) => ({ ...pill, count: counts[pill.value] }))}
           activePill={status}
           onPillChange={setStatus}
-          onExport={(format) =>
-            window.alert(
-              `Export to ${format} arrives in phase 12. It will carry the current filters: ` +
-                `status "${status}"${query ? `, search "${query}"` : ''}.`,
-            )
-          }
+          onExport={(format) => downloadExport('invoices', format, { status, q: query || undefined })}
         />
 
         <div className="border-b border-line px-3 py-2 sm:px-4">

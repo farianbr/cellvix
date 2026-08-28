@@ -31,11 +31,41 @@ const taxonomySchema = new mongoose.Schema(
     order: { type: Number, default: 0 },
     productCount: { type: Number, default: 0 },
     isFeatured: { type: Boolean, default: false }, // surfaces in the mega menu
+
+    /**
+     * What else this node is called (ERP rework §6.15, phase 11d).
+     *
+     * **The valuable part of the taxonomy screen.** A trade buyer types `15 PM`
+     * or `iphone15pm`, not "iPhone 15 Pro Max", and a wholesale search box that
+     * only matches the catalogue name is a search box that returns nothing for
+     * the way its users actually type.
+     *
+     * Deliberately on the **model**, not on the product: one alias here covers
+     * every SKU for that phone, where `Product.searchTerms` has to be repeated
+     * on each of the forty parts that fit it — and drift on one of them is a
+     * part that quietly stops being findable.
+     *
+     * Stored lowercase and trimmed by `normaliseAliases` in the service, so
+     * matching never has to case-fold at query time.
+     */
+    aliases: { type: [String], default: [] },
+
+    /**
+     * Inactive hides a node from the storefront's filters without deleting it.
+     *
+     * Deleting a model orphans every product pointing at it; a discontinued
+     * device needs to stop appearing in a picker while its parts stay
+     * orderable. Defaults true so every existing node is active without a
+     * migration.
+     */
+    isActive: { type: Boolean, default: true },
   },
   { timestamps: true },
 );
 
 taxonomySchema.index({ kind: 1, parent: 1, order: 1 });
+// Alias lookup drives the search box, so it is indexed rather than scanned.
+taxonomySchema.index({ aliases: 1 });
 
 export const Taxonomy = mongoose.model('Taxonomy', taxonomySchema);
 export default Taxonomy;

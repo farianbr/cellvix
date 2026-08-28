@@ -1,9 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { Plus } from 'lucide-react';
 import cn from '@/lib/cn';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
-import { ADMIN_ROUTES } from '@/lib/adminRoutes';
+import { useAuth } from '@/hooks/useAuth';
+import { can } from '@/lib/permissions';
 import { adminIcon } from './adminIcons';
 
 /**
@@ -13,13 +14,14 @@ import { adminIcon } from './adminIcons';
  * side, money going out on the other, which is how the operator already thinks
  * about which record they are about to make.
  *
- * Entries whose screen has not shipped route to the stub, which names the
- * phase. That is honest and keeps the menu whole; hiding half of it would make
- * the shortcut unlearnable and then change under the user later.
- *
- * Roles are phase 8. When they land, entries the user cannot reach are hidden
- * here **and** the underlying route still checks — a hidden menu item is not a
+ * **Entries the role cannot create are hidden** (§7.2, wired in phase 12b).
+ * Each carries the area and level its screen actually requires — creating is a
+ * `full` action everywhere, so `view` is not enough to see the entry. The
+ * underlying route still checks: a hidden menu item is a courtesy, never a
  * permission (§7.6).
+ *
+ * A group whose every entry is hidden disappears with its heading, rather than
+ * leaving a label above nothing.
  */
 
 const GROUPS = [
@@ -27,21 +29,21 @@ const GROUPS = [
     key: 'income',
     label: 'Income',
     items: [
-      { key: 'client', label: 'Client', to: '/admin/clients', icon: 'Users' },
-      { key: 'order', label: 'Order', to: '/admin/orders', icon: 'Package' },
-      { key: 'invoice', label: 'Invoice', to: '/admin/invoices', icon: 'FileText' },
-      { key: 'quote', label: 'Quote', to: '/admin/quotes', icon: 'FileSignature' },
-      { key: 'rma', label: 'RMA', to: '/admin/rma', icon: 'RotateCcw' },
+      { key: 'client', label: 'Client', to: '/admin/clients', icon: 'Users', area: 'clients' },
+      { key: 'order', label: 'Order', to: '/admin/orders', icon: 'Package', area: 'sales' },
+      { key: 'invoice', label: 'Invoice', to: '/admin/invoices', icon: 'FileText', area: 'sales' },
+      { key: 'quote', label: 'Quote', to: '/admin/quotes', icon: 'FileSignature', area: 'sales' },
+      { key: 'rma', label: 'RMA', to: '/admin/rma', icon: 'RotateCcw', area: 'sales' },
     ],
   },
   {
     key: 'expense',
     label: 'Expense',
     items: [
-      { key: 'supplier', label: 'Supplier', to: '/admin/suppliers', icon: 'Truck' },
-      { key: 'po', label: 'Purchase Order', to: '/admin/purchase-orders', icon: 'ClipboardList' },
-      { key: 'expense', label: 'Expense', to: '/admin/expenses', icon: 'Receipt' },
-      { key: 'product', label: 'Product', to: '/admin/inventory', icon: 'Boxes' },
+      { key: 'supplier', label: 'Supplier', to: '/admin/suppliers', icon: 'Truck', area: 'purchase' },
+      { key: 'po', label: 'Purchase Order', to: '/admin/purchase-orders', icon: 'ClipboardList', area: 'purchase' },
+      { key: 'expense', label: 'Expense', to: '/admin/expenses', icon: 'Receipt', area: 'purchase' },
+      { key: 'product', label: 'Product', to: '/admin/inventory', icon: 'Boxes', area: 'purchase' },
     ],
   },
 ];
@@ -50,7 +52,27 @@ export function CreateMenu() {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const navigate = useNavigate();
+  const { permissions, isAdmin } = useAuth();
   useOnClickOutside(ref, () => setOpen(false));
+
+  /**
+   * What this session may actually create.
+   *
+   * An admin bypasses the map entirely (§7.6), so it is checked first rather
+   * than relying on the map an admin session happens to carry.
+   */
+  const visibleGroups = useMemo(() => {
+    if (isAdmin) return GROUPS;
+
+    return GROUPS.map((group) => ({
+      ...group,
+      items: group.items.filter((item) => can(permissions, item.area, 'full')),
+    })).filter((group) => group.items.length > 0);
+  }, [permissions, isAdmin]);
+
+  // A role that can create nothing gets no button at all — a `+ Create` that
+  // opens an empty panel is worse than its absence.
+  const hasAnything = visibleGroups.length > 0;
 
   // `C` opens the menu, unless the user is typing — a shortcut that fires
   // inside a search box eats the letter.
@@ -74,6 +96,10 @@ export function CreateMenu() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, []);
 
+  // Placed after the hooks, never before them: bailing earlier would change the
+  // hook order between renders as permissions resolve.
+  if (!hasAnything) return null;
+
   return (
     <div ref={ref} className="relative">
       <button
@@ -93,14 +119,12 @@ export function CreateMenu() {
           role="menu"
           className="absolute right-0 top-full z-40 mt-1.5 w-[230px] overflow-hidden rounded-[11px] border border-line bg-surface py-1.5 shadow-card"
         >
-          {GROUPS.map((group, index) => (
+          {visibleGroups.map((group, index) => (
             <div key={group.key} className={cn(index > 0 && 'mt-1 border-t border-line pt-1')}>
               <p className="eyebrow px-3 py-1.5 text-ink-300">{group.label}</p>
 
               {group.items.map((item) => {
                 const Icon = adminIcon(item.icon);
-                const phase = ADMIN_ROUTES[item.to]?.phase ?? 1;
-                const pending = phase > 2;
 
                 return (
                   <button
@@ -117,9 +141,6 @@ export function CreateMenu() {
                       <Icon className="size-3.5 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
                     )}
                     <span className="flex-1">{item.label}</span>
-                    {pending && (
-                      <span className="eyebrow shrink-0 text-ink-200">P{phase}</span>
-                    )}
                   </button>
                 );
               })}

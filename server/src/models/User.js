@@ -46,8 +46,24 @@ const userSchema = new mongoose.Schema(
     passwordHash: { type: String, required: true, select: false },
     phone: String,
 
-    // One login per business — the brief explicitly rules out team roles.
-    role: { type: String, enum: ['buyer', 'admin'], default: 'buyer' },
+    // Account type, not a permission set.
+    //
+    // The brief's "one login per business, no team roles" governs BUYERS: a
+    // customer company has exactly one login, and that has not changed. 'staff'
+    // is a Cellvix-side employee (ERP rework §7.6) — our people, never a
+    // buyer's colleague. The two populations never mix.
+    role: { type: String, enum: ['buyer', 'staff', 'admin'], default: 'buyer' },
+
+    // Which permission set a staff member holds. Required for 'staff' and
+    // meaningless for everyone else: 'admin' bypasses the role system outright
+    // and a buyer never reaches it.
+    //
+    // A staff account with no staffRole has NO admin access at all. Access is
+    // granted, never inherited — an unassigned employee is a locked door.
+    staffRole: { type: mongoose.Schema.Types.ObjectId, ref: 'Role', default: null },
+
+    // Staff are scoped to one outlet; an admin sees everything (§6.14).
+    outlet: { type: mongoose.Schema.Types.ObjectId, ref: 'Outlet', default: null },
     status: {
       type: String,
       enum: ['pending', 'approved', 'rejected', 'suspended'],
@@ -83,6 +99,51 @@ const userSchema = new mongoose.Schema(
       phone: String,
     },
 
+    // ---- referral commission (ERP rework §6.13) ----------------------------
+    //
+    // A referring business earns a percentage of what the accounts it referred
+    // pay, credited as store credit.
+    //
+    // The code is minted on approval, not at signup: a pending business might
+    // never be approved, and a code that can refer people before its own
+    // account is trusted is a code worth abusing.
+    referralCode: { type: String, unique: true, sparse: true, index: true },
+
+    // Who referred this account. **Set once, at registration, and never
+    // editable afterwards** (§6.13) — a referrer that can be changed later is a
+    // way to redirect money that has already been earned. Nothing in the admin
+    // API exposes a write to this field.
+    referredBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null, index: true },
+
+    // CASL consent (ERP rework §6.13).
+    //
+    // Canadian anti-spam law requires consent, a working unsubscribe and sender
+    // identification on commercial email. This records the first two: what was
+    // granted, where it came from, and when — because "we had consent" is a
+    // claim that has to be evidenced, not asserted.
+    //
+    // Registering a B2B trade account is implied consent under CASL s.10(9) for
+    // messages about the business relationship. It is recorded explicitly
+    // anyway: an implied basis nobody wrote down is one nobody can defend.
+    marketingConsent: {
+      granted: { type: Boolean, default: false },
+      source: String, // 'registration' | 'admin' | 'import'
+      at: Date,
+      ip: String,
+    },
+
+    // Set the moment somebody unsubscribes. A timestamp rather than a boolean,
+    // because the date is the part that matters if the consent is ever
+    // questioned. Non-null excludes the account from every campaign, and it
+    // outranks `marketingConsent.granted` — a later unsubscribe always beats an
+    // earlier opt-in.
+    unsubscribedAt: Date,
+
+    // Set when an admin locks a staff account out without deleting it — the
+    // Users screen's Locked count. Distinct from `status: 'suspended'`, which
+    // is the buyer-side approval ladder and has its own error message.
+    lockedAt: Date,
+
     approvedAt: Date,
     approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     rejectionReason: String,
@@ -108,6 +169,8 @@ userSchema.methods.toPublic = function toPublic() {
     email: this.email,
     phone: this.phone,
     role: this.role,
+    staffRole: this.staffRole ? String(this.staffRole._id ?? this.staffRole) : null,
+    outlet: this.outlet ? String(this.outlet._id ?? this.outlet) : null,
     status: this.status,
     taxId: this.taxId,
     website: this.website,

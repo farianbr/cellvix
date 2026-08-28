@@ -21,6 +21,9 @@ const BlogPage = lazy(() => import('@/pages/BlogPage'));
 const BlogPostPage = lazy(() => import('@/pages/BlogPostPage'));
 const FaqPage = lazy(() => import('@/pages/FaqPage'));
 const OffersPage = lazy(() => import('@/pages/OffersPage'));
+// Public and outside RootLayout: somebody arriving here is leaving, and the
+// shop header would be reading the moment badly (phase 9, §6.13).
+const UnsubscribePage = lazy(() => import('@/pages/UnsubscribePage'));
 
 const AccountLayout = lazy(() => import('@/components/account/AccountLayout'));
 const AccountOverviewPage = lazy(() => import('@/pages/account/AccountOverviewPage'));
@@ -36,7 +39,6 @@ const AccountCompanyPage = lazy(() => import('@/pages/account/AccountCompanyPage
 // The ERP panel is a separate application with its own shell — it mounts
 // outside RootLayout so it never carries the shop header, mega menu or footer.
 const AdminShell = lazy(() => import('@/components/admin/shell/AdminShell'));
-const AdminStubPage = lazy(() => import('@/pages/admin/AdminStubPage'));
 const AdminOverviewPage = lazy(() => import('@/pages/admin/AdminOverviewPage'));
 const AdminApprovalsPage = lazy(() => import('@/pages/admin/AdminApprovalsPage'));
 const AdminOrdersPage = lazy(() => import('@/pages/admin/AdminOrdersPage'));
@@ -64,43 +66,44 @@ const AdminQuotesPage = lazy(() => import('@/pages/admin/AdminQuotesPage'));
 const AdminQuoteDetailPage = lazy(() => import('@/pages/admin/AdminQuoteDetailPage'));
 const AdminRmaPage = lazy(() => import('@/pages/admin/AdminRmaPage'));
 const AdminRmaDetailPage = lazy(() => import('@/pages/admin/AdminRmaDetailPage'));
+const AdminOutletsPage = lazy(() => import('@/pages/admin/AdminOutletsPage'));
+const AdminOutletFormPage = lazy(() => import('@/pages/admin/AdminOutletFormPage'));
+const AdminOutletDetailPage = lazy(() => import('@/pages/admin/AdminOutletDetailPage'));
+const AdminUsersPage = lazy(() => import('@/pages/admin/AdminUsersPage'));
+const AdminRolesPage = lazy(() => import('@/pages/admin/AdminRolesPage'));
+const AdminSmsPage = lazy(() => import('@/pages/admin/AdminSmsPage'));
+const AdminWhatsappPage = lazy(() => import('@/pages/admin/AdminWhatsappPage'));
+const AdminCallsPage = lazy(() => import('@/pages/admin/AdminCallsPage'));
+const AdminEmailPage = lazy(() => import('@/pages/admin/AdminEmailPage'));
+const AdminReferralsPage = lazy(() => import('@/pages/admin/AdminReferralsPage'));
+const AdminSettingsPage = lazy(() => import('@/pages/admin/AdminSettingsPage'));
+const AdminBusinessInfoPage = lazy(() => import('@/pages/admin/AdminBusinessInfoPage'));
+const AdminSaleSettingsPage = lazy(() => import('@/pages/admin/AdminSaleSettingsPage'));
+const AdminShippingSettingsPage = lazy(() => import('@/pages/admin/AdminShippingSettingsPage'));
+const AdminPaymentMethodsPage = lazy(() => import('@/pages/admin/AdminPaymentMethodsPage'));
+const AdminInventorySettingsPage = lazy(() => import('@/pages/admin/AdminInventorySettingsPage'));
+const AdminActivityLogPage = lazy(() => import('@/pages/admin/AdminActivityLogPage'));
+const AdminSecurityLogPage = lazy(() => import('@/pages/admin/AdminSecurityLogPage'));
+const AdminApiKeysPage = lazy(() => import('@/pages/admin/AdminApiKeysPage'));
+const AdminThirdPartyPage = lazy(() => import('@/pages/admin/AdminThirdPartyPage'));
+const AdminTaxonomyPage = lazy(() => import('@/pages/admin/AdminTaxonomyPage'));
+const AdminInvoiceStatusPage = lazy(() => import('@/pages/admin/AdminInvoiceStatusPage'));
+const AdminEmailSettingsPage = lazy(() => import('@/pages/admin/AdminEmailSettingsPage'));
+const AdminTemplatesPage = lazy(() => import('@/pages/admin/AdminTemplatesPage'));
+const AdminCalendarPage = lazy(() => import('@/pages/admin/AdminCalendarPage'));
+const AdminAppointmentsPage = lazy(() => import('@/pages/admin/AdminAppointmentsPage'));
+const AdminProfilePage = lazy(() => import('@/pages/admin/AdminProfilePage'));
+const AdminOrderDetailPage = lazy(() => import('@/pages/admin/AdminOrderDetailPage'));
+const AdminInvoiceDetailPage = lazy(() => import('@/pages/admin/AdminInvoiceDetailPage'));
 
 /**
- * Routes that exist in the nav but whose screens ship in a later phase (ERP
- * rework §10). Listed here rather than mapped from ADMIN_ROUTES so the route
- * table stays readable, and so promoting one to a real page is a single edit.
+ * There is no stub list any more.
+ *
+ * From phase 1 to phase 12 this held the routes whose screens had not been
+ * built, so the nav could be walked end to end ahead of the work. Every one of
+ * them is now a real screen — `AdminStubPage` is kept for the next time a route
+ * lands ahead of its page, and is deliberately not deleted.
  */
-const ADMIN_STUB_PATHS = [
-  'orders/:orderNumber',
-  'invoices/:number',
-  'marketing/calls',
-  'marketing/email',
-  'marketing/sms',
-  'marketing/whatsapp',
-  'marketing/referrals',
-  'outlets',
-  'outlets/add',
-  'outlets/:id',
-  'settings',
-  'settings/business-info',
-  'settings/sale',
-  'settings/invoice-status',
-  'settings/taxonomy',
-  'settings/shipping',
-  'settings/payment-methods',
-  'settings/inventory',
-  'settings/users',
-  'settings/roles',
-  'settings/calendar',
-  'settings/appointments',
-  'settings/email',
-  'settings/templates',
-  'settings/activity-log',
-  'settings/security-log',
-  'settings/api-keys',
-  'settings/third-party',
-  'profile',
-];
 
 export function App() {
   return (
@@ -148,13 +151,52 @@ export function App() {
         <Route path="marketing/blog" element={<AdminBlogPage />} />
         <Route path="marketing/faq" element={<AdminFaqPage />} />
 
+        {/* Marketing channels (phase 9). SMS, WhatsApp and Calls share one
+            component — same MessageLog, different channel. Only email sends
+            today; the other two log and say so (§6b U3–U5). */}
+        <Route path="marketing/sms" element={<AdminSmsPage />} />
+        <Route path="marketing/whatsapp" element={<AdminWhatsappPage />} />
+        <Route path="marketing/calls" element={<AdminCallsPage />} />
+        <Route path="marketing/email" element={<AdminEmailPage />} />
+        {/* Referral commission (phase 10). Admin-only server-side — this pays
+            real money on an automatic trigger (§6.13). */}
+        <Route path="marketing/referrals" element={<AdminReferralsPage />} />
+
+        {/* Outlet, staff & roles (phase 8). `add` and `:id/edit` share one
+            form component — the same fields with a different verb. */}
+        <Route path="outlets" element={<AdminOutletsPage />} />
+        <Route path="outlets/add" element={<AdminOutletFormPage />} />
+        <Route path="outlets/:id/edit" element={<AdminOutletFormPage />} />
+        <Route path="outlets/:id" element={<AdminOutletDetailPage />} />
+        <Route path="settings/users" element={<AdminUsersPage />} />
+        <Route path="settings/roles" element={<AdminRolesPage />} />
+
+        {/* Settings — the summary and every category landing are one screen,
+            separated by `?cat=`, so they share a route (§6.15). */}
+        <Route path="settings" element={<AdminSettingsPage />} />
+        <Route path="settings/business-info" element={<AdminBusinessInfoPage />} />
+        <Route path="settings/sale" element={<AdminSaleSettingsPage />} />
+        <Route path="settings/shipping" element={<AdminShippingSettingsPage />} />
+        <Route path="settings/payment-methods" element={<AdminPaymentMethodsPage />} />
+        <Route path="settings/inventory" element={<AdminInventorySettingsPage />} />
+        <Route path="settings/activity-log" element={<AdminActivityLogPage />} />
+        <Route path="settings/security-log" element={<AdminSecurityLogPage />} />
+        <Route path="settings/api-keys" element={<AdminApiKeysPage />} />
+        <Route path="settings/third-party" element={<AdminThirdPartyPage />} />
+        <Route path="settings/taxonomy" element={<AdminTaxonomyPage />} />
+        <Route path="settings/invoice-status" element={<AdminInvoiceStatusPage />} />
+        <Route path="settings/email" element={<AdminEmailSettingsPage />} />
+        <Route path="settings/templates" element={<AdminTemplatesPage />} />
+        <Route path="settings/calendar" element={<AdminCalendarPage />} />
+        <Route path="settings/appointments" element={<AdminAppointmentsPage />} />
+        <Route path="profile" element={<AdminProfilePage />} />
+        <Route path="orders/:orderNumber" element={<AdminOrderDetailPage />} />
+        <Route path="invoices/:number" element={<AdminInvoiceDetailPage />} />
+
         {/* Approvals is the Clients screen filtered, and keeps its own screen
             until phase 2 folds it in as a status filter. */}
         <Route path="approvals" element={<AdminApprovalsPage />} />
 
-        {ADMIN_STUB_PATHS.map((path) => (
-          <Route key={path} path={path} element={<AdminStubPage />} />
-        ))}
 
         {/* Old flat-admin URLs stay alive as redirects rather than 404s (§4). */}
         <Route path="products" element={<Navigate to="/admin/inventory" replace />} />
@@ -169,6 +211,20 @@ export function App() {
 
         <Route path="*" element={<Navigate to="/admin" replace />} />
       </Route>
+
+      {/* Outside RootLayout on purpose (§6.13): a person following the
+          unsubscribe link from an email is opting out, and meeting them with
+          the shop header, mega menu and footer would be reading the moment
+          badly. Public — CASL requires the mechanism to work without a
+          sign-in. */}
+      <Route
+        path="unsubscribe"
+        element={
+          <Suspense fallback={<RouteFallback />}>
+            <UnsubscribePage />
+          </Suspense>
+        }
+      />
 
       <Route element={<RootLayout />}>
         <Route index element={<ShopPage />} />

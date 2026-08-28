@@ -39,6 +39,46 @@ export const DEFAULT_TAX_RATES = [
   { province: 'YT', rate: 0.05, kind: 'GST' },
 ];
 
+/**
+ * The payment methods behind every expense and payment form (§6.15, Financial).
+ *
+ * **Not the buyer's saved cards.** `User.paymentMethods` is what a customer
+ * pays *with*; this is the vocabulary staff pick from when they record money
+ * moving — an expense paid by cheque, an invoice settled by e-Transfer. The two
+ * lists are unrelated and must not be merged.
+ *
+ * `code` is the stable key and `label` is what the operator reads, so renaming
+ * a label never orphans the expenses already recorded against its code.
+ */
+export const DEFAULT_PAYMENT_METHODS = [
+  { code: 'cash', label: 'Cash' },
+  { code: 'debit', label: 'Debit' },
+  { code: 'credit-card', label: 'Credit Card' },
+  { code: 'e-transfer', label: 'e-Transfer' },
+  { code: 'cheque', label: 'Cheque' },
+  { code: 'bank-transfer', label: 'Bank Transfer' },
+  { code: 'paypal', label: 'PayPal' },
+  { code: 'other', label: 'Other' },
+];
+
+/**
+ * Shipping bands (§6.15 — CellShoppe's per-km mileage rate is dropped; Cellvix
+ * ships parts, it does not drive to jobs).
+ *
+ * These are the three methods `shared/schemas/checkout.js` currently hard-codes,
+ * and the codes match deliberately: `DELIVERY_METHODS` stays the shape checkout
+ * renders and validates against, while the **money** moves here so a rate can
+ * change without a deploy. Costs are integer cents, like every other amount.
+ *
+ * `freeOver: null` means the method never ships free — deliberately distinct
+ * from `0`, which would mean it always does.
+ */
+export const DEFAULT_SHIPPING_METHODS = [
+  { code: 'ground', label: 'Ground', detail: '2–4 business days', cost: 1895, etaDays: 3, freeOver: 50_000 },
+  { code: 'express', label: 'Express', detail: 'Next business day', cost: 3495, etaDays: 1, freeOver: null },
+  { code: 'pickup', label: 'Warehouse pickup', detail: 'Ready in 2 hours', cost: 0, etaDays: 0, freeOver: null },
+];
+
 const settingsSchema = new mongoose.Schema(
   {
     // The singleton key. Unique, so a second document cannot be created by a
@@ -81,17 +121,105 @@ const settingsSchema = new mongoose.Schema(
 
       defaultDueDays: { type: Number, default: 30 },
 
+      // Referral commission (§6.13), as a percentage — 5 means 5%, not 0.05.
+      // Stored as a percent because that is the unit the operator types into
+      // the screen and the unit the rate is discussed in; the division happens
+      // once, inside `referralService`.
+      //
+      // Changing this is **not retroactive**: every accrual snapshots the rate
+      // in force when it was earned onto its own ledger row.
+      referralPercent: { type: Number, default: 5, min: 0, max: 100 },
+
       // Dummy values until the client confirms (§0.12).
       warrantyByGrade: {
         type: Map,
         of: Number, // days
         default: () => new Map([['NEW', 365], ['OEM', 180], ['PULL-A', 90], ['PULL-B', 60], ['AFTERMARKET', 90]]),
       },
+
+      // The vocabulary staff pick from when recording money moving. See
+      // DEFAULT_PAYMENT_METHODS — this is not the buyer's saved cards.
+      paymentMethods: {
+        type: [{ _id: false, code: String, label: String }],
+        default: () => DEFAULT_PAYMENT_METHODS,
+      },
+
+      // Integer cents, like every other amount in this system.
+      shippingMethods: {
+        type: [
+          {
+            _id: false,
+            code: String,
+            label: String,
+            detail: String,
+            cost: Number,
+            etaDays: Number,
+            // null means "never ships free" — not the same as 0.
+            freeOver: { type: Number, default: null },
+          },
+        ],
+        default: () => DEFAULT_SHIPPING_METHODS,
+      },
+    },
+
+    /**
+     * Defaults that pre-fill the New Product form (§6.15, Inventory Settings).
+     *
+     * **Pre-fill only — a per-product value always wins.** These never
+     * retroactively reprice anything already in the catalogue; changing a
+     * default changes what the next blank form suggests and nothing else.
+     *
+     * Markup and margin are two views of one number, related by
+     * `markup = margin ÷ (100 − margin) × 100`. Both are stored because the
+     * operator thinks in whichever one their supplier quotes in, and the screen
+     * prints the conversion so the two can never silently disagree.
+     */
+    inventory: {
+      defaultMarkupPercent: { type: Number, default: 40, min: 0, max: 1000 },
+      defaultMarginPercent: { type: Number, default: 28.5, min: 0, max: 99.9 },
     },
 
     operations: {
       rmaSlaDays: { type: Number, default: 14 },
       lowStockThreshold: { type: Number, default: 50 },
+    },
+
+    /**
+     * Automatic email, and who hears about what (§6.15 category 5, phase 11e).
+     *
+     * **Everything defaults off.** CellShoppe ships them off and that is the
+     * right call for anything that emails a customer: a toggle that starts on
+     * sends mail nobody chose to send, from a system nobody has finished
+     * configuring.
+     *
+     * One exception, deliberately: `invoiceOnOrder` defaults **true**, because
+     * it is already live — `orderService.placeOrder` has emailed the invoice
+     * since phase 2. Shipping it off would silently switch off a path that has
+     * been running for months, which is a behaviour change disguised as a
+     * default.
+     */
+    communications: {
+      // Live today.
+      invoiceOnOrder: { type: Boolean, default: true },
+
+      // Paths that exist but are not yet called from anywhere — see the
+      // `wired` map in `settingsService`, which is what stops the screen
+      // implying these do something.
+      quoteOnCreate: { type: Boolean, default: false },
+      paymentConfirmation: { type: Boolean, default: false },
+      paymentStatusUpdates: { type: Boolean, default: false },
+      accountApproved: { type: Boolean, default: false },
+      accountRejected: { type: Boolean, default: false },
+      invoiceReminders: { type: Boolean, default: false },
+      lowStockAlerts: { type: Boolean, default: false },
+
+      // Reminders & notifications.
+      reminderDaysBefore: { type: Number, default: 3, min: 0, max: 90 },
+      followUpDaysAfter: { type: Number, default: 7, min: 0, max: 90 },
+      adminEmail: { type: String, default: '' },
+      // Cents, like every other amount. 0 means "never notify on size".
+      notifyAboveAmount: { type: Number, default: 0, min: 0 },
+      lowStockEmail: { type: String, default: '' },
     },
   },
   { timestamps: true },
@@ -121,6 +249,19 @@ settingsSchema.statics.rateFor = function rateFor(settings, province) {
   const rates = settings?.financial?.taxRatesByProvince ?? DEFAULT_TAX_RATES;
   const match = rates.find((row) => row.province === province);
   return match?.rate ?? rates.find((row) => row.province === 'ON')?.rate ?? 0.13;
+};
+
+/**
+ * One shipping method by code, falling back to the first configured band.
+ *
+ * Mirrors `rateFor`'s posture: an unrecognised code is a data problem, and
+ * falling back to a real band is safer than charging nothing for delivery.
+ */
+settingsSchema.statics.shippingFor = function shippingFor(settings, code) {
+  const methods = settings?.financial?.shippingMethods?.length
+    ? settings.financial.shippingMethods
+    : DEFAULT_SHIPPING_METHODS;
+  return methods.find((row) => row.code === code) ?? methods[0];
 };
 
 export const Settings = mongoose.model('Settings', settingsSchema);

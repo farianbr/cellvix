@@ -5,17 +5,25 @@ import cn from '@/lib/cn';
 import { ADMIN_NAV } from '@shared/schemas/admin';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from './adminIcons';
+import { useDebouncedValue } from '@/hooks/useDebouncedValue';
+import { useAdminSearch } from '@/hooks/useAdmin';
 
 /**
  * Ctrl+K / ⌘K jump-to (ERP rework §7.1).
  *
- * **Screens only, for now.** §7.1 also specifies record search — clients,
- * orders, invoices, quotes, RMAs, products, suppliers, POs — over
- * `GET /admin/search?q=`, permission-filtered server-side. That endpoint is
- * phase 12, so rather than an empty box with a spinner that never resolves,
- * this navigates the panel and says plainly that records are not searchable
- * yet. Adding a `Records` group above `Screens` is additive when the endpoint
- * lands; nothing here has to be undone.
+ * **Screens and records**, since phase 12. Screens are matched locally against
+ * the nav tree — instant, and available with no network at all. Records come
+ * from `GET /admin/search`, which is **permission-filtered server-side**: a
+ * role that cannot open Purchase never sees a supplier here, because a search
+ * hit leaks a record's existence and name before anybody clicks it.
+ *
+ * **One flat list, grouped visually.** Arrow keys move through everything in
+ * order regardless of which heading a row sits under — a cursor that had to
+ * skip headings, or reset between groups, is the kind of thing that makes a
+ * palette feel wrong without anybody being able to say why.
+ *
+ * Records rank above screens when the query matches both: somebody typing an
+ * invoice number wants that invoice, not the Invoices list.
  *
  * Recent picks persist in `localStorage`, so the second use of the palette is
  * faster than the first.
@@ -116,25 +124,51 @@ export function CommandPalette({ open, onClose }) {
 
   const index = useMemo(buildIndex, []);
 
+  // Debounced so a typed invoice number is one request rather than fifteen.
+  const debouncedQuery = useDebouncedValue(query, 200);
+  const { data: records, isFetching } = useAdminSearch(open ? debouncedQuery : '');
+
   const results = useMemo(() => {
     if (!query.trim()) {
       const recentRows = recents
         .map((to) => index.find((row) => row.to === to))
         .filter(Boolean)
-        .map((row) => ({ ...row, recent: true }));
+        .map((row) => ({ ...row, recent: true, kind: 'screen' }));
 
       // Recents first, then the rest of the panel in nav order.
       const seen = new Set(recentRows.map((row) => row.to));
-      return [...recentRows, ...index.filter((row) => !seen.has(row.to))].slice(0, 12);
+      return [
+        ...recentRows,
+        ...index.filter((row) => !seen.has(row.to)).map((row) => ({ ...row, kind: 'screen' })),
+      ].slice(0, 12);
     }
 
-    return index
-      .map((row) => ({ row, value: Math.max(score(row.label, query), score(row.group ?? '', query) - 20) }))
+    // Records first: somebody typing an invoice number wants the invoice, not
+    // the Invoices list. Each carries its group label so the flat list can be
+    // rendered under headings without the cursor knowing about them.
+    const recordRows = (records?.groups ?? []).flatMap((group) =>
+      group.hits.map((hit) => ({
+        kind: 'record',
+        to: hit.to,
+        label: hit.title,
+        detail: hit.detail,
+        badge: hit.badge,
+        group: group.label,
+        icon: group.icon,
+      })),
+    );
+
+    const screenRows = index
+      .map((row) => ({
+        row,
+        value: Math.max(score(row.label, query), score(row.group ?? '', query) - 20),
+      }))
       .filter((entry) => entry.value > 0)
       .sort((a, b) => b.value - a.value)
-      .slice(0, 12)
-      .map((entry) => entry.row);
-  }, [query, index, recents]);
+      .map((entry) => ({ ...entry.row, kind: 'screen' }));
+
+    return [...recordRows, ...screenRows].slice(0, 14);
+  }, [query, index, recents, records]);
 
   useEffect(() => setCursor(0), [query]);
 
@@ -152,9 +186,18 @@ export function CommandPalette({ open, onClose }) {
 
   function go(row) {
     if (!row) return;
-    const next = [row.to, ...recents.filter((to) => to !== row.to)].slice(0, RECENTS_MAX);
-    setRecents(next);
-    writeRecents(next);
+
+    // **Only screens are remembered.** A recent list of record URLs would fill
+    // with one-off invoices nobody revisits, and would keep showing a row for
+    // a record that has since been deleted — `readRecents` resolves against the
+    // nav index, so a stale record path would simply vanish and leave the list
+    // shorter than it looks.
+    if (row.kind !== 'record') {
+      const next = [row.to, ...recents.filter((to) => to !== row.to)].slice(0, RECENTS_MAX);
+      setRecents(next);
+      writeRecents(next);
+    }
+
     onClose();
     navigate(row.to);
   }
@@ -186,7 +229,7 @@ export function CommandPalette({ open, onClose }) {
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Jump to a screen"
+        aria-label="Search"
         className="relative w-full max-w-[540px] overflow-hidden rounded-[14px] border border-line bg-surface shadow-card"
       >
         <div className="flex items-center gap-2.5 border-b border-line px-3.5">
@@ -196,7 +239,7 @@ export function CommandPalette({ open, onClose }) {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Jump to a screen…"
+            placeholder="Search screens, clients, orders, invoices…"
             className="h-12 flex-1 bg-transparent text-[14px] text-ink-900 placeholder:text-ink-300 focus:outline-none"
           />
           <kbd className="shrink-0 rounded border border-line px-1.5 py-0.5 text-[10.5px] text-ink-300">
@@ -207,46 +250,64 @@ export function CommandPalette({ open, onClose }) {
         <div className="max-h-[46vh] overflow-y-auto scroll-slim py-1.5">
           {results.length === 0 ? (
             <p className="px-4 py-6 text-center text-[13px] text-ink-400">
-              No screen matches “{query}”.
+              {isFetching ? 'Searching…' : `Nothing matches “${query}”.`}
             </p>
           ) : (
             results.map((row, position) => {
               const Icon = adminIcon(row.icon);
               const active = position === cursor;
+              // A heading whenever the group changes, so the flat list reads as
+              // sections without the cursor having to step over anything.
+              const previous = results[position - 1];
+              const heading =
+                row.kind === 'record' && row.group !== previous?.group
+                  ? row.group
+                  : row.kind === 'screen' && previous?.kind === 'record'
+                    ? 'Screens'
+                    : null;
 
               return (
-                <button
-                  key={row.to}
-                  type="button"
-                  onMouseEnter={() => setCursor(position)}
-                  onClick={() => go(row)}
-                  className={cn(
-                    'flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[13.5px] transition-colors',
-                    active ? 'bg-surface-2 text-ink-900' : 'text-ink-700',
+                <div key={`${row.kind}:${row.to}`}>
+                  {heading && (
+                    <p className="eyebrow px-3.5 pt-2 pb-1 text-ink-300">{heading}</p>
                   )}
-                >
-                  {Icon && (
-                    <Icon className="size-4 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
-                  )}
-                  <span className="flex-1 truncate">
-                    {row.group && <span className="text-ink-300">{row.group} · </span>}
-                    {row.label}
-                  </span>
-                  {row.recent && !query && (
-                    <span className="eyebrow shrink-0 text-ink-200">Recent</span>
-                  )}
-                  {active && (
-                    <CornerDownLeft className="size-3.5 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
-                  )}
-                </button>
+                  <button
+                    type="button"
+                    onMouseEnter={() => setCursor(position)}
+                    onClick={() => go(row)}
+                    className={cn(
+                      'flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[13.5px] transition-colors',
+                      active ? 'bg-surface-2 text-ink-900' : 'text-ink-700',
+                    )}
+                  >
+                    {Icon && (
+                      <Icon className="size-4 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
+                    )}
+                    <span className="min-w-0 flex-1 truncate">
+                      {row.kind === 'screen' && row.group && (
+                        <span className="text-ink-300">{row.group} · </span>
+                      )}
+                      {row.label}
+                      {row.detail && (
+                        <span className="ml-1.5 text-ink-300">{row.detail}</span>
+                      )}
+                    </span>
+                    {row.recent && !query && (
+                      <span className="eyebrow shrink-0 text-ink-200">Recent</span>
+                    )}
+                    {active && (
+                      <CornerDownLeft className="size-3.5 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
+                    )}
+                  </button>
+                </div>
               );
             })
           )}
         </div>
 
         <p className="border-t border-line bg-surface-2 px-3.5 py-2 text-[11.5px] leading-snug text-ink-400">
-          Screens only for now. Searching clients, orders, invoices and products arrives in phase 12
-          with the <code className="text-ink-500">/admin/search</code> endpoint.
+          Searches screens, clients, orders, invoices, quotes, RMAs, inventory, suppliers, purchase
+          orders and outlets — limited to what your role can open.
         </p>
       </div>
     </div>

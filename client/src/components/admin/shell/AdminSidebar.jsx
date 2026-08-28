@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { NavLink, useLocation } from 'react-router';
 import { ChevronDown, LogOut, Search, X } from 'lucide-react';
 import cn from '@/lib/cn';
 import { ADMIN_NAV } from '@shared/schemas/admin';
 import { activeNavKeys } from '@/lib/adminRoutes';
 import { adminIcon } from './adminIcons';
+import { visibleNav } from '@/lib/permissions';
+import { useAuth } from '@/hooks/useAuth';
 
 /**
  * The ERP sidebar (§4). Three shapes, one component:
@@ -79,6 +81,11 @@ function Badge({ count }) {
 
 function NavTree({ badges, onNavigate }) {
   const location = useLocation();
+  const { permissions } = useAuth();
+
+  // A group the role cannot reach is not rendered. The server refuses it
+  // anyway; hiding it stops an operator clicking into a wall (§7.6).
+  const nav = useMemo(() => visibleNav(ADMIN_NAV, permissions), [permissions]);
   const { group: activeGroup, child: activeChild } = activeNavKeys(location.pathname);
 
   // One parent expanded at a time (§2, convention 2). Kept in state rather than
@@ -89,7 +96,7 @@ function NavTree({ badges, onNavigate }) {
   return (
     <nav aria-label="Admin sections" className="min-h-0 flex-1 overflow-y-auto scroll-slim px-3 pb-3">
       <ul className="flex flex-col gap-0.5">
-        {ADMIN_NAV.map((item) => {
+        {nav.map((item) => {
           const Icon = adminIcon(item.icon);
 
           if (!item.children) {
@@ -170,12 +177,14 @@ function NavTree({ badges, onNavigate }) {
  */
 function IconRail({ badges }) {
   const location = useLocation();
+  const { permissions } = useAuth();
+  const nav = useMemo(() => visibleNav(ADMIN_NAV, permissions), [permissions]);
   const { group: activeGroup } = activeNavKeys(location.pathname);
 
   return (
     <nav aria-label="Admin sections" className="min-h-0 flex-1 overflow-y-auto scroll-slim py-3">
       <ul className="flex flex-col items-center gap-1">
-        {ADMIN_NAV.map((item) => {
+        {nav.map((item) => {
           const Icon = adminIcon(item.icon);
           const to = item.to ?? item.children?.[0]?.to;
           const isActive = activeGroup === item.key;

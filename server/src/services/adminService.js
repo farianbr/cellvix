@@ -7,6 +7,7 @@ import Rma, { RMA_OPEN_STATUSES } from '../models/Rma.js';
 import Taxonomy from '../models/Taxonomy.js';
 import ApiError from '../utils/ApiError.js';
 import * as storeCredit from './storeCreditService.js';
+import * as referralService from './referralService.js';
 import { likeRegex } from '../utils/regex.js';
 import { serializeOrder } from './orderService.js';
 import { renderInvoiceHtml } from './invoiceDocument.js';
@@ -394,6 +395,11 @@ function shapeUser(user) {
     approvedAt: user.approvedAt,
     lastLoginAt: user.lastLoginAt,
     createdAt: user.createdAt,
+    // Referral (§6.13). The code is what an operator reads out to a customer
+    // who asks how to refer somebody; `referredBy` is read-only everywhere,
+    // because attribution is set once at registration and never edited.
+    referralCode: user.referralCode ?? null,
+    referredBy: user.referredBy ? String(user.referredBy) : null,
   };
 }
 
@@ -464,6 +470,11 @@ export async function approveUser(id, adminId, { creditLimit, terms, accountRep 
   user.terms = terms;
   if (accountRep) user.accountRep = accountRep;
 
+  // The referral code is minted here rather than at signup (§6.13): a pending
+  // business might never be approved, and a code that can refer people before
+  // its own account is trusted is a code worth abusing.
+  await referralService.ensureReferralCode(user);
+
   await user.save();
   // TODO(email): notify the buyer once a mail provider is chosen (PROGRESS.md Q7).
   return shapeUser(user.toObject());
@@ -490,6 +501,9 @@ export async function setUserStatus(id, { status }) {
 
   user.status = status;
   if (status === 'approved' && !user.approvedAt) user.approvedAt = new Date();
+  // Approving through the status route mints a code too, so an account's
+  // referral ability does not depend on which screen approved it.
+  if (status === 'approved') await referralService.ensureReferralCode(user);
 
   await user.save();
   return shapeUser(user.toObject());
@@ -558,7 +572,14 @@ function shapeProduct(product) {
   };
 }
 
-export async function listProducts({ q, stock, page = 1, limit = 40 } = {}) {
+/**
+ * `all: true` lifts the page cap — for the export, which must not silently
+ * return the first hundred of four hundred products (§7.4). Deliberately a
+ * separate flag rather than a bigger `limit` ceiling: the cap is there to stop
+ * a screen asking for the whole catalogue by accident, and an export asking on
+ * purpose should have to say so.
+ */
+export async function listProducts({ q, stock, page = 1, limit = 40, all = false } = {}) {
   const query = {};
 
   if (q) {
@@ -570,13 +591,14 @@ export async function listProducts({ q, stock, page = 1, limit = 40 } = {}) {
   else if (stock === 'low') query.stock = { $gt: 0, $lt: LOW_STOCK_THRESHOLD };
   else if (stock === 'inactive') query.isActive = false;
 
-  const pageNumber = Math.max(1, Number(page) || 1);
-  const pageSize = Math.min(100, Number(limit) || 40);
+  const pageNumber = all ? 1 : Math.max(1, Number(page) || 1);
+  const pageSize = all ? 0 : Math.min(100, Number(limit) || 40);
 
   const [products, total] = await Promise.all([
     Product.find(query)
       .sort({ updatedAt: -1 })
-      .skip((pageNumber - 1) * pageSize)
+      .skip(all ? 0 : (pageNumber - 1) * pageSize)
+      // `.limit(0)` is Mongo's "no limit", which is what an export wants.
       .limit(pageSize)
       .lean(),
     Product.countDocuments(query),
@@ -688,6 +710,37 @@ export async function listOrders({ status, q } = {}) {
       businessEmail: order.user?.email ?? null,
     })),
     counts: Object.fromEntries(counts.map((row) => [row._id, row.count])),
+  };
+}
+
+/**
+ * One order, for the detail screen (§4b.6, phase 12).
+ *
+ * Looked up by `orderNumber` rather than id, because that is what a packing
+ * slip, an invoice and a customer email all carry — an operator reading a
+ * number off paper should be able to type it into the URL.
+ *
+ * The linked invoice rides along so the screen can cross-link the two without a
+ * second request; the buyer is populated for the same reason.
+ */
+export async function getOrder(orderNumber) {
+  const order = await Order.findOne({ orderNumber })
+    .populate('user', 'businessName contactName email phone')
+    .lean();
+  if (!order) throw ApiError.notFound('Order not found.', 'ORDER_NOT_FOUND');
+
+  const invoice = await Invoice.findOne({ order: order._id }).select('number status').lean();
+
+  return {
+    order: {
+      ...serializeOrder(order),
+      businessName: order.user?.businessName ?? '—',
+      contactName: order.user?.contactName ?? null,
+      businessEmail: order.user?.email ?? null,
+      userId: order.user?._id?.toString() ?? null,
+      invoiceNumber: invoice?.number ?? null,
+      invoiceStatus: invoice?.status ?? null,
+    },
   };
 }
 
@@ -919,6 +972,17 @@ export async function recordPayment(number, { amountDollars, at, method, referen
   recomputeInvoice(invoice);
   await invoice.save();
 
+  // Referral commission accrues on payment, never on the order (§6.13) — an
+  // unpaid invoice has earned nobody anything. Keyed on this payment's index,
+  // so an invoice settled in instalments earns once per instalment and a
+  // replayed request cannot pay twice.
+  //
+  // Deliberately not awaited into the response's success: `accrueForPayment`
+  // swallows its own failures, because a commission that could not post is a
+  // problem to investigate and never a reason to reject a payment that
+  // genuinely happened.
+  await referralService.accrueForPayment(invoice, invoice.payments.length - 1);
+
   return getInvoice(number);
 }
 
@@ -948,6 +1012,12 @@ export async function voidInvoice(number, { reason } = {}) {
 
   recomputeInvoice(invoice);
   await invoice.save();
+
+  // Voiding forgives the balance, so any commission this invoice earned is
+  // commission on money that never arrived. Every accrual against it is
+  // reversed — commission on money that came back is money leaking out
+  // (§6.13). Idempotent, so voiding twice does not claw back twice.
+  await referralService.reverseForInvoice(invoice.number);
 
   return getInvoice(number);
 }

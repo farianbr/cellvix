@@ -70,6 +70,13 @@ export function AuthProvider({ children }) {
       isApproved: user?.status === 'approved',
       isPending: user?.status === 'pending',
       isAdmin: user?.role === 'admin',
+      // Panel access. An admin always has it; a staff member has it only once
+      // an administrator has granted a role — access is granted, never
+      // inherited (§7.6). The server decides for real; this only shapes the UI.
+      isStaff: user?.role === 'staff',
+      canUseAdmin: user?.role === 'admin' || (user?.role === 'staff' && Boolean(user?.staffRole)),
+      // Area permissions, or null for an admin — who bypasses the map entirely.
+      permissions: user?.permissions ?? null,
       signIn,
       signUp,
       signOut,

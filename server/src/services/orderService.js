@@ -10,6 +10,8 @@ import Offer from '../models/Offer.js';
 import { priceCart, assertBundlesOrderable } from './pricingService.js';
 import * as storeCredit from './storeCreditService.js';
 import { sendInvoiceEmail } from './notifications.js';
+import * as notificationService from './notificationService.js';
+import Settings from '../models/Settings.js';
 
 const TERMS_DAYS = { prepaid: 0, net15: 15, net30: 30, net60: 60 };
 
@@ -330,9 +332,37 @@ export async function createOrder(user, input) {
   // not awaited: the order is already written, paid and stock-adjusted, so a
   // slow or dead mail host must not hold the checkout response open — and
   // `sendInvoiceEmail` never rejects, it logs and falls back to the outbox.
-  void sendInvoiceEmail({ invoice, order, user });
+  //
+  // Gated by Settings since phase 11e, so the Email Settings toggle governs a
+  // real path rather than a stored boolean. The read is inside the fire-and-
+  // forget too: a settings lookup must not delay the response either.
+  void (async () => {
+    const settings = await Settings.load();
+    if (settings?.communications?.invoiceOnOrder === false) return;
+    await sendInvoiceEmail({ invoice, order, user });
+  })().catch(() => {});
+
+  // The bell (§7.3). Awaited rather than fired-and-forgotten like the mail
+  // above: this is a local write with no network in it, and an order that
+  // appeared on a screen before it appeared in the bell would have staff
+  // working from two different pictures of the same minute.
+  await notificationService.emit({
+    type: 'new_order',
+    severity: 'success',
+    title: `Order ${orderNumber} placed`,
+    detail: `${user.businessName} · ${formatCad(priced.total)}`,
+    entity: { kind: 'order', id: orderNumber, label: orderNumber },
+    href: `/admin/orders/${orderNumber}`,
+  });
 
   return order;
+}
+
+/** Cents to `$1,234.56`, for notification copy. */
+function formatCad(cents) {
+  return new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(
+    (cents ?? 0) / 100,
+  );
 }
 
 export function serializeOrder(order) {

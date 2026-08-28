@@ -278,6 +278,9 @@ export function useCart() {
       promo: data?.promo ?? null,
       promoNotice: data?.promoNotice ?? null,
       promoCode: data?.promoCode ?? '',
+      // The live ground band, for the cart's preview arithmetic. Null until the
+      // cart resolves, and for an account that may not see prices at all.
+      shippingPreview: priceVisible ? (data?.shippingPreview ?? null) : null,
       priceVisible,
       isLoading: isAuthenticated && isLoading,
       /**
