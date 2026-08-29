@@ -36,10 +36,27 @@ JavaScript ESM throughout, npm workspaces.
 
 **For an admin**
 
+`/admin` is not a settings screen bolted onto a shop — it is the business's ERP, and Cellvix is the
+system of record. It runs in its own shell (dark sidebar, command palette on `Ctrl`/`⌘ K`,
+notification bell, breadcrumbs) with no storefront chrome, and every route is wired:
+
 - An approvals queue — a new business signs up, an admin sets its credit limit and terms and lets it
   in.
-- Products, orders, customers, offers, blog posts and FAQ entries, all editable in the browser.
-- Refunds to store credit, credit-limit changes, order status moves with tracking numbers.
+- **Sales:** orders, invoices, quotes, RMAs, customers and client profiles, with refunds to store
+  credit, credit-limit changes and status moves with tracking numbers.
+- **Purchase:** suppliers, purchase orders and expenses against a category tree.
+- **Inventory:** stock, reorder points and competitor benchmarks per SKU.
+- **Reports:** a dashboard of collected/invoiced/outstanding, trend and top-client charts, plus a
+  business overview built to print.
+- **Marketing:** offers, blog, FAQ, email, and SMS/WhatsApp/call logs.
+- **Outlet, staff & roles:** outlets, staff accounts, and per-area permission roles — an admin
+  bypasses the role system, a staff account without a role is told it has no access yet.
+- **Settings:** business info, sale/shipping/payment/inventory defaults, taxonomy, invoice statuses
+  and messages, email templates, API keys and encrypted third-party secrets, appointments and the
+  scheduling board, plus an activity log and a separate security log.
+
+Every list screen is one component — search, segmented pills, filter and export popovers, sortable
+columns that fold into an expandable row rather than disappearing at narrow widths.
 
 **Offers** are their own engine: percentage or fixed discounts, combo bundles priced as a unit,
 promo codes that can be single-use or open, and offers restricted to named accounts.
@@ -129,7 +146,8 @@ cart it was holding is still there.
 client/           React app (Vite)
   src/
     components/   ui/ primitives, plus filters, cart, checkout, product,
-                  account, admin, blog, layout, search
+                  account, blog, layout, search, and admin/ — which carries
+                  its own shell/, charts/ and list kit for the ERP console
     pages/        one file per route; account/ and admin/ are sub-consoles
     store/        Zustand: filterStore, cartStore, uiStore
     hooks/        data fetching (TanStack Query) and DOM behaviour
@@ -208,7 +226,9 @@ npm run dev            # client + server together
 npm run build          # production client bundle
 npm run seed           # WIPES taxonomy, products, users, orders, invoices — then reseeds
 npm run seed:content   # blog, FAQ and offers only; safe on a database with real accounts
-npm run smoke          # 205 end-to-end API assertions
+npm run seed:expense-categories   # upserts the starter expense categories; never wipes
+npm run backfill:competitors      # competitor benchmarks for products missing them; safe on a real DB
+npm run smoke          # 208 end-to-end API assertions
 npm run a11y           # axe-core WCAG 2.1 AA audit across 39 surfaces
 npm run shoot          # Playwright screenshot set -> docs/screenshots/
 ```
@@ -290,12 +310,20 @@ NODE_ENV=production npm start
 
 ## Status
 
-All nine build phases are complete: foundation and design system, data layer, shop page, cart and
-checkout, accounts, admin, static pages, editorial surfaces, and the offers engine.
+**The brief is delivered.** All nine build phases are complete — foundation and design system, data
+layer, shop page, cart and checkout, accounts, admin, static pages, editorial surfaces, and the
+offers engine.
 
-`npm run smoke` passes 205/205. `npm run a11y` reports 0 violations across 39 surfaces.
+On top of it, the **admin ERP rework** is 12 of 13 phases in: shell and component kit, dashboard,
+sales depth, purchase, reports, quotes and RMA, outlet/staff/roles, marketing, referrals, settings,
+and the search/profile/export/notification layer. **No admin route renders a stub and nothing in the
+shell is unwired.** Phase 13 wires the remaining §6b shells. `docs/ADMIN_ERP_REWORK.md` is the plan;
+`PROGRESS.md` is the board.
+
+`npm run smoke` runs 208 end-to-end API assertions. `npm run a11y` audits 39 surfaces against WCAG
+2.1 AA.
 
 Outstanding work is either hardening or blocked on the client. The largest open items: order
-creation still writes its four documents outside a transaction, there is no admin audit trail, and
-approval, rejection and forgot-password emails are not written yet — the mail transport now exists,
-but a provider still has to be chosen and configured. `PROGRESS.md` tracks both lists in full.
+creation still writes its four documents outside a transaction, and approval, rejection and
+forgot-password emails are not written yet — the mail transport exists, but a provider still has to
+be chosen and configured. `PROGRESS.md` tracks both lists in full.

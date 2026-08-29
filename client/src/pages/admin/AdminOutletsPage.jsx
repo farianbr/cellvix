@@ -218,7 +218,7 @@ export function AdminOutletsPage() {
     {
       key: 'name',
       header: 'Outlet',
-      cell: (row) => (
+      render: (row) => (
         <div className="flex items-center gap-2">
           <span
             className={cn('size-2.5 shrink-0 rounded-full', {
@@ -240,14 +240,14 @@ export function AdminOutletsPage() {
         </div>
       ),
     },
-    { key: 'code', header: 'Code', cell: (row) => <span className="font-mono text-[12px]">{row.code}</span> },
-    { key: 'city', header: 'City', cell: (row) => row.address?.city ?? '—' },
-    { key: 'manager', header: 'Manager', cell: (row) => row.manager || '—' },
-    { key: 'staffCount', header: 'Staff', align: 'right', cell: (row) => row.staffCount },
+    { key: 'code', header: 'Code', render: (row) => <span className="font-mono text-[12px]">{row.code}</span> },
+    { key: 'city', header: 'City', render: (row) => row.address?.city ?? '—' },
+    { key: 'manager', header: 'Manager', render: (row) => row.manager || '—' },
+    { key: 'staffCount', header: 'Staff', align: 'right', render: (row) => row.staffCount },
     {
       key: 'status',
       header: 'Status',
-      cell: (row) => (
+      render: (row) => (
         <Badge tone={STATUS_TONE[row.status] ?? 'neutral'} size="sm">
           {STATUS_LABEL[row.status] ?? row.status}
         </Badge>

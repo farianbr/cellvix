@@ -16,26 +16,36 @@ import cn from '@/lib/cn';
  *     readers, because a chart nobody can read is not accessible
  */
 
-/** Screen-reader table behind every chart. Visually hidden, structurally real. */
+/**
+ * Screen-reader table behind every chart. Visually hidden, structurally real.
+ *
+ * The hidden box is a wrapping `div`, never the `<table>` itself. A table
+ * overrules a height smaller than its own rows, so `sr-only`'s `height: 1px`
+ * did nothing to it: the table stayed its full natural height, invisible but
+ * occupying layout, and every screen holding a chart grew hundreds of pixels of
+ * dead scroll below its content. The wrapper is 1px and clips it.
+ */
 function ChartData({ caption, rows }) {
   return (
-    <table className="sr-only">
-      <caption>{caption}</caption>
-      <thead>
-        <tr>
-          <th scope="col">Label</th>
-          <th scope="col">Value</th>
-        </tr>
-      </thead>
-      <tbody>
-        {rows.map((row) => (
-          <tr key={row.label}>
-            <th scope="row">{row.label}</th>
-            <td>{row.display ?? row.value}</td>
+    <div className="sr-only">
+      <table>
+        <caption>{caption}</caption>
+        <thead>
+          <tr>
+            <th scope="col">Label</th>
+            <th scope="col">Value</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={row.label}>
+              <th scope="row">{row.label}</th>
+              <td>{row.display ?? row.value}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

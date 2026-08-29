@@ -173,7 +173,7 @@ export function AdminUsersPage() {
     {
       key: 'name',
       header: 'Name',
-      cell: (row) => (
+      render: (row) => (
         <div className="flex items-center gap-2">
           <span className="font-medium text-ink-900">{row.name}</span>
           {/* The operator needs to know which row is theirs before they act on
@@ -187,11 +187,11 @@ export function AdminUsersPage() {
         </div>
       ),
     },
-    { key: 'email', header: 'Email', cell: (row) => <span className="text-ink-500">{row.email}</span> },
+    { key: 'email', header: 'Email', render: (row) => <span className="text-ink-500">{row.email}</span> },
     {
       key: 'role',
       header: 'Role',
-      cell: (row) =>
+      render: (row) =>
         row.accountType === 'admin' ? (
           <Badge tone="dark" size="sm">
             Administrator
@@ -200,11 +200,11 @@ export function AdminUsersPage() {
           <span>{row.role?.name ?? <span className="text-danger">No role</span>}</span>
         ),
     },
-    { key: 'outlet', header: 'Outlet', cell: (row) => row.outlet?.name ?? '—' },
+    { key: 'outlet', header: 'Outlet', render: (row) => row.outlet?.name ?? '—' },
     {
       key: 'status',
       header: 'Status',
-      cell: (row) => (
+      render: (row) => (
         <Badge tone={row.locked ? 'danger' : 'ok'} size="sm">
           {row.locked ? 'Locked' : 'Active'}
         </Badge>
@@ -213,7 +213,7 @@ export function AdminUsersPage() {
     {
       key: 'lastLoginAt',
       header: 'Last login',
-      cell: (row) => (row.lastLoginAt ? formatDate(row.lastLoginAt) : 'Never'),
+      render: (row) => (row.lastLoginAt ? formatDate(row.lastLoginAt) : 'Never'),
     },
   ];
 
