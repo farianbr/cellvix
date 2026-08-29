@@ -188,6 +188,30 @@
     font-family: var(--font-mono);
   }
 
+  /* Screen-reader-only content that cannot stretch the page.
+
+     Tailwind's `sr-only` is a 1px box with `overflow: hidden`, which hides its
+     content visually but leaves it *scrollable*: the overflow still feeds the
+     document's scroll area, so a hidden data table several hundred pixels tall
+     gives the page that many pixels of dead scroll below the fold. Charts carry
+     exactly such a table.
+
+     This clips instead of hiding overflow — a zero-area clip path removes the
+     content from rendering entirely — and `contain: strict` stops its layout
+     from reaching the page at all. It stays in the accessibility tree, which is
+     the whole point. */
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    white-space: nowrap;
+    clip-path: inset(50%);
+    contain: strict;
+  }
+
   /* Prices, stock counts and balances sit in columns — keep digits aligned. */
   .tnum {
     font-variant-numeric: tabular-nums;

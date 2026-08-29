@@ -672,17 +672,25 @@ export function adminBreadcrumbTrail(pathname, { recordLabel } = {}) {
  * a plain `startsWith` would light up `Summary` while the user is on Roles;
  * and a detail route the nav never lists (`/admin/clients/:id`) still has to
  * highlight its list parent.
+ *
+ * `search` is not optional decoration. Two groups — Settings (`?cat=`) and
+ * Reports (`?tab=`) — are a single path with a query string per child, so a
+ * caller that passes only the pathname cannot tell Users & Access from Summary
+ * and lights up the wrong row on every one of them.
  */
-export function activeNavKeys(pathname) {
+export function activeNavKeys(pathname, search = '') {
   const meta = matchAdminRoute(pathname);
   const section = meta?.section ?? 'home';
   const group = ADMIN_NAV.find((item) => item.key === section);
+  const params = new URLSearchParams(search);
 
-  // Settings is the one group whose children are `?cat=` views of a single
-  // path, so path matching cannot separate them. A settings page names its
-  // category in `parent`, and that is the row to light up.
+  // Settings' children are `?cat=` views of one path, so path matching cannot
+  // separate them. The category comes from the URL when the user is on the
+  // hub itself, and from `parent` when they are on a settings page that owns a
+  // route of its own (`/admin/settings/users` belongs to `settings:users`).
   if (section === 'settings') {
-    const category = meta?.parent?.startsWith('settings:') ? meta.parent.slice(9) : null;
+    const category =
+      (meta?.parent?.startsWith('settings:') ? meta.parent.slice(9) : null) ?? params.get('cat');
     const settingsChild = category
       ? group?.children?.find((c) => c.to.endsWith(`?cat=${category}`))
       : group?.children?.find((c) => c.to === '/admin/settings');
@@ -693,11 +701,30 @@ export function activeNavKeys(pathname) {
   let bestLength = -1;
 
   for (const candidate of group?.children ?? []) {
-    const base = candidate.to.split('?')[0];
+    const [base, query] = candidate.to.split('?');
     const matches = pathname === base || pathname.startsWith(`${base}/`);
-    if (matches && base.length > bestLength) {
+    if (!matches) continue;
+
+    // A child that names a query parameter only wins when the URL carries the
+    // same value — this is what separates the seven `/admin/reports?tab=` rows.
+    // A child flagged `isDefault` also answers for the bare path, because the
+    // page it points at drops the parameter rather than restating the default.
+    if (query) {
+      const expected = new URLSearchParams(query);
+      const agrees = [...expected].every(
+        ([key, value]) =>
+          params.get(key) === value || (candidate.isDefault && params.get(key) === null),
+      );
+      if (!agrees) continue;
+    }
+
+    // Longest path wins, and among equal paths a query-bearing child beats the
+    // bare one — otherwise `/admin/reports?tab=pl` would settle on whichever
+    // `/admin/reports` row the list happened to reach first.
+    const weight = base.length + (query ? 1 : 0);
+    if (weight > bestLength) {
       child = candidate;
-      bestLength = base.length;
+      bestLength = weight;
     }
   }
 

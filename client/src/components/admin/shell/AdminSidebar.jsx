@@ -86,7 +86,7 @@ function NavTree({ badges, onNavigate }) {
   // A group the role cannot reach is not rendered. The server refuses it
   // anyway; hiding it stops an operator clicking into a wall (§7.6).
   const nav = useMemo(() => visibleNav(ADMIN_NAV, permissions), [permissions]);
-  const { group: activeGroup, child: activeChild } = activeNavKeys(location.pathname);
+  const { group: activeGroup, child: activeChild } = activeNavKeys(location.pathname, location.search);
 
   // One parent expanded at a time (§2, convention 2). Kept in state rather than
   // derived so a deliberate collapse survives until the route changes.
@@ -179,7 +179,7 @@ function IconRail({ badges }) {
   const location = useLocation();
   const { permissions } = useAuth();
   const nav = useMemo(() => visibleNav(ADMIN_NAV, permissions), [permissions]);
-  const { group: activeGroup } = activeNavKeys(location.pathname);
+  const { group: activeGroup } = activeNavKeys(location.pathname, location.search);
 
   return (
     <nav aria-label="Admin sections" className="min-h-0 flex-1 overflow-y-auto scroll-slim py-3">

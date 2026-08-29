@@ -12,42 +12,23 @@ import cn from '@/lib/cn';
  * Rules these all obey:
  *   · colour comes from `currentColor` or a semantic token class, never a hex
  *   · a zero/empty series draws its frame and says so — never an empty box
- *   · the SVG is `aria-hidden` and the real content is a `<table>` for screen
- *     readers, because a chart nobody can read is not accessible
- */
-
-/**
- * Screen-reader table behind every chart. Visually hidden, structurally real.
+ *   · the SVG is `aria-hidden`, and the numbers reach a screen reader as real
+ *     text beside it — a chart nobody can read is not accessible
  *
- * The hidden box is a wrapping `div`, never the `<table>` itself. A table
- * overrules a height smaller than its own rows, so `sr-only`'s `height: 1px`
- * did nothing to it: the table stayed its full natural height, invisible but
- * occupying layout, and every screen holding a chart grew hundreds of pixels of
- * dead scroll below its content. The wrapper is 1px and clips it.
+ * **How the accessible text is provided, and why it is not a hidden table.**
+ * Every chart used to carry a visually hidden `<table>` of its data. Two of the
+ * three already render that same data as a visible list, so the table read the
+ * figures out twice; worse, a hidden table cannot be made small. `sr-only` is a
+ * 1px box with `overflow: hidden`, and a table overrules any height below its
+ * own rows, so each one stayed ~700px tall and scrollable inside that box — and
+ * the document's scroll area counts that, which gave every screen holding a
+ * chart a stretch of dead scroll past its content. Clipping and `contain` stop
+ * it being reachable but do not stop it being counted.
+ *
+ * So the tables are gone. The donut and the bar list already list every label
+ * and value in the DOM; the trend chart, whose data lives only in the SVG path,
+ * states its shape in a sentence.
  */
-function ChartData({ caption, rows }) {
-  return (
-    <div className="sr-only">
-      <table>
-        <caption>{caption}</caption>
-        <thead>
-          <tr>
-            <th scope="col">Label</th>
-            <th scope="col">Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={row.label}>
-              <th scope="row">{row.label}</th>
-              <td>{row.display ?? row.value}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
 
 function EmptyFrame({ height, message }) {
   return (
@@ -98,14 +79,28 @@ export function TrendChart({
   const line = points.map((point, index) => `${index === 0 ? 'M' : 'L'}${x(index)},${y(point.value)}`).join(' ');
   const area = `${line} L${x(points.length - 1)},${padding.top + plotHeight} L${x(0)},${padding.top + plotHeight} Z`;
 
+  // What the chart says, in a sentence. A point-by-point reading of ninety days
+  // is not usable with a screen reader; the range, the average and the extremes
+  // are what somebody actually takes from glancing at the line.
+  const peak = points[values.indexOf(max)];
+  const trough = points[values.indexOf(min)];
+  const summary =
+    `${caption}. ${points.length} points from ${points[0].label} to ${points[points.length - 1].label}. ` +
+    `Average ${formatValue(Math.round(average))}, ` +
+    `highest ${formatValue(max)} on ${peak.label}, lowest ${formatValue(min)} on ${trough.label}.`;
+
   return (
     <div className={className}>
+      {/* `role="img"` with a label is the whole accessible representation: the
+          shapes inside carry no meaning on their own, and the sentence says
+          what the line does. */}
       <svg
         viewBox={`0 0 ${width} ${height}`}
         preserveAspectRatio="none"
         className="h-auto w-full text-brand"
         style={{ height }}
-        aria-hidden="true"
+        role="img"
+        aria-label={summary}
       >
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
@@ -151,14 +146,6 @@ export function TrendChart({
         <span>{points[points.length - 1].label}</span>
       </div>
 
-      <ChartData
-        caption={caption}
-        rows={points.map((point) => ({
-          label: point.label,
-          value: point.value,
-          display: formatValue(point.value),
-        }))}
-      />
     </div>
   );
 }
@@ -219,7 +206,9 @@ export function DonutChart({
         </g>
       </svg>
 
-      <ul className="min-w-[140px] flex-1 space-y-1.5">
+      {/* The legend is the accessible content — every label, value and share is
+          real text — so the ring beside it stays `aria-hidden`. */}
+      <ul className="min-w-[140px] flex-1 space-y-1.5" aria-label={caption}>
         {slices.map((slice, index) => (
           <li key={slice.label} className="flex items-center gap-2 text-[12.5px]">
             <span
@@ -237,15 +226,6 @@ export function DonutChart({
           </li>
         ))}
       </ul>
-
-      <ChartData
-        caption={caption}
-        rows={slices.map((slice) => ({
-          label: slice.label,
-          value: slice.value,
-          display: formatValue(slice.value),
-        }))}
-      />
     </div>
   );
 }
@@ -273,9 +253,11 @@ export function BarList({
   const max = Math.max(...items.map((item) => item.value), 1);
 
   return (
-    <div className={cn('space-y-2.5', className)}>
+    // Each row already states its label, its value and its hint as text, so the
+    // list is the accessible representation and the bars are decoration.
+    <div className={cn('space-y-2.5', className)} role="list" aria-label={caption}>
       {items.map((item) => (
-        <div key={item.label}>
+        <div key={item.label} role="listitem">
           <div className="mb-1 flex items-baseline justify-between gap-2 text-[12.5px]">
             <span className="min-w-0 truncate text-ink-700">{item.label}</span>
             <span className="tnum shrink-0 font-medium text-ink-900">{formatValue(item.value)}</span>
@@ -289,15 +271,6 @@ export function BarList({
           {item.hint && <p className="mt-0.5 text-[11px] text-ink-400">{item.hint}</p>}
         </div>
       ))}
-
-      <ChartData
-        caption={caption}
-        rows={items.map((item) => ({
-          label: item.label,
-          value: item.value,
-          display: formatValue(item.value),
-        }))}
-      />
     </div>
   );
 }

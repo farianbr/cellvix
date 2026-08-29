@@ -163,7 +163,16 @@ export const ADMIN_NAV = [
     area: 'reports',
     children: [
       { key: 'business', label: 'Business Overview', to: '/admin/reports/business', icon: 'LineChart' },
-      { key: 'summary', label: 'Summary', to: '/admin/reports?tab=summary', icon: 'PieChart' },
+      // `isDefault` marks the view a bare `/admin/reports` lands on. The page
+      // deletes `?tab=summary` from the URL rather than carrying a redundant
+      // parameter, so without this the sidebar would highlight nothing there.
+      {
+        key: 'summary',
+        label: 'Summary',
+        to: '/admin/reports?tab=summary',
+        icon: 'PieChart',
+        isDefault: true,
+      },
       { key: 'pl', label: 'Profit & Loss', to: '/admin/reports?tab=pl', icon: 'Scale' },
       { key: 'r-sales', label: 'Sales', to: '/admin/reports?tab=sales', icon: 'FileText' },
       { key: 'r-expense', label: 'Expense', to: '/admin/reports?tab=expense', icon: 'Receipt' },
