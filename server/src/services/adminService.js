@@ -9,9 +9,12 @@ const { default: Taxonomy } = require('../models/Taxonomy.js');
 const { default: ApiError } = require('../utils/ApiError.js');
 const storeCredit = require('./storeCreditService.js');
 const referralService = require('./referralService.js');
+const { generatePassword, sendWelcomeEmail } = require('./welcomeMail.js');
 const { likeRegex } = require('../utils/regex.js');
 const { serializeOrder } = require('./orderService.js');
 const orderBuilder = require('./orderBuilder.js');
+const invoicePaymentService = require('./invoicePaymentService.js');
+const { activityFeed } = require('./activityService.js');
 const { renderInvoiceHtml } = require('./invoiceDocument.js');
 const { invalidateTree } = require('./taxonomyService.js');
 const { ORDER_STATUS_FLOW } = require('../../../shared/schemas/admin.js');
@@ -606,13 +609,37 @@ async function createUser(data, adminId) {
     taxId: data.taxId,
     creditLimit: data.creditLimit ?? 0,
     terms: data.terms ?? 'prepaid',
-    marketingConsent: { granted: false, source: 'admin', at: new Date() },
     addresses: data.address
       ? [{ ...data.address, country: 'Canada', isDefaultShipping: true, isDefaultBilling: true }]
       : [],
   });
 
-  await user.setPassword(data.password);
+  /**
+   * Consent is recorded only when the admin actually ticked something.
+   *
+   * An absent `contactConsent` means nobody asked, which the profile screen
+   * shows as "nothing recorded yet" — a prompt to go and ask. Writing four
+   * falses instead would claim the customer was asked and declined on every
+   * channel, which is a different fact and one they never gave.
+   */
+  const channels = data.contactConsent;
+  const anyChannel = channels && Object.values(channels).some(Boolean);
+
+  if (channels) {
+    user.contactConsent = { ...channels, at: new Date(), source: 'admin', by: adminId };
+  }
+
+  // Same master-switch rule `setContactConsent` follows: any channel on turns
+  // marketing consent on, and it stays off when nothing was granted.
+  user.marketingConsent = { granted: Boolean(anyChannel), source: 'admin', at: new Date() };
+
+  /**
+   * The password is generated here rather than typed by the admin, and it is
+   * never persisted in the clear — `setPassword` hashes it, and the plaintext
+   * lives only long enough to be put in the welcome email below.
+   */
+  const password = generatePassword();
+  await user.setPassword(password);
 
   if (user.status === 'approved') {
     user.approvedAt = new Date();
@@ -624,7 +651,19 @@ async function createUser(data, adminId) {
   }
 
   await user.save();
-  return shapeUser(user.toObject());
+
+  /**
+   * Fire-and-forget, like the invoice email: the account exists and is already
+   * saved, so a dead SMTP host has to end in a log line rather than turning a
+   * created customer into an error the admin sees. `sendWelcomeEmail` never
+   * throws, and without SMTP configured it writes to `server/.mail/`.
+   *
+   * `delivered` rides back on the response so the admin panel can say whether
+   * the customer actually got their credentials, rather than implying it.
+   */
+  const mail = await sendWelcomeEmail({ user, password });
+
+  return { ...shapeUser(user.toObject()), welcomeEmail: mail };
 }
 
 /**
@@ -1223,22 +1262,14 @@ function shapeAdminInvoice(invoice) {
 }
 
 /**
- * Recompute an invoice's paid total and status **from its own payments**.
+ * Recompute an invoice's paid total and status from its own payments.
  *
- * Never trust an incoming `amountPaid`: the sum of the ledger is the truth, and
- * recomputing it here means a corrected or removed payment cannot leave the
- * header disagreeing with the rows beneath it.
+ * The arithmetic moved to `invoicePaymentService` when the customer payment
+ * path arrived and needed exactly the same rule. Kept as a re-export rather
+ * than a second copy: two answers to "what does paid mean" is how an invoice
+ * ends up `partial` on one screen and `paid` on another.
  */
-function recomputeInvoice(invoice) {
-  const paid = (invoice.payments ?? []).reduce((sum, payment) => sum + (payment.amount ?? 0), 0);
-  invoice.amountPaid = paid;
-
-  if (paid <= 0) invoice.status = 'unpaid';
-  else if (paid >= invoice.amount) invoice.status = 'paid';
-  else invoice.status = 'partial';
-
-  return invoice;
-}
+const recomputeInvoice = invoicePaymentService.recompute;
 
 /**
  * A standalone invoice (§7.2's `+ Create > Invoice`) — one raised against an
@@ -1268,7 +1299,11 @@ async function createInvoice(body) {
   }
 
   const invoice = await Invoice.create({
-    number: await orderBuilder.nextInvoiceNumber(),
+    // A charge raised by hand is money owed, not money received, so it starts
+    // life as a `due` record in the `CVX-` series and is renumbered into `INV-`
+    // when it settles.
+    number: await orderBuilder.nextInvoiceNumber('CVX'),
+    kind: 'due',
     // No `order`: that is what makes this one standalone, and the field has
     // always been optional so nothing else has to change to allow it.
     user: user._id,
@@ -1385,38 +1420,22 @@ async function recordPayment(number, { amountDollars, at, method, reference }) {
     throw ApiError.badRequest('Enter an amount to record.', 'INVALID_AMOUNT');
   }
 
-  const outstanding = invoice.amount - invoice.amountPaid;
-  if (amount > outstanding) {
-    // Overpayment is a real situation, but it belongs in store credit rather
-    // than an invoice that claims to be more than paid. Refuse and say so.
-    throw ApiError.badRequest(
-      `That is more than the ${(outstanding / 100).toFixed(2)} outstanding on this invoice.`,
-      'PAYMENT_TOO_LARGE',
-    );
-  }
-
-  invoice.payments.push({
+  // The payment row, the repayment of the line of credit, the promotion of a
+  // settled `due` record into an invoice and the referral accrual all happen in
+  // `invoicePaymentService` — the one place any of that is allowed to happen,
+  // so an admin-recorded payment and a buyer-made one cannot behave
+  // differently.
+  await invoicePaymentService.recordPayment(invoice, {
     amount,
     at: at ? new Date(`${at}T12:00:00`) : new Date(),
-    method: method || undefined,
-    reference: reference || undefined,
+    method,
+    reference,
   });
 
-  recomputeInvoice(invoice);
-  await invoice.save();
-
-  // Referral commission accrues on payment, never on the order (§6.13) — an
-  // unpaid invoice has earned nobody anything. Keyed on this payment's index,
-  // so an invoice settled in instalments earns once per instalment and a
-  // replayed request cannot pay twice.
-  //
-  // Deliberately not awaited into the response's success: `accrueForPayment`
-  // swallows its own failures, because a commission that could not post is a
-  // problem to investigate and never a reason to reject a payment that
-  // genuinely happened.
-  await referralService.accrueForPayment(invoice, invoice.payments.length - 1);
-
-  return getInvoice(number);
+  // Read back by the invoice's *current* number: settling a `due` record
+  // renumbers it out of the `CVX-` series into `INV-`, so `number` as it
+  // arrived may no longer resolve.
+  return getInvoice(invoice.number);
 }
 
 /**
@@ -1435,16 +1454,30 @@ async function voidInvoice(number, { reason } = {}) {
 
   const outstanding = invoice.amount - invoice.amountPaid;
   if (outstanding > 0) {
-    invoice.payments.push({
+    // `settle: false` — a void is forgiveness, not money. It must not promote
+    // the record to an invoice (nothing was invoiced) and must not earn
+    // commission, which is why this does not go through `recordPayment`.
+    await invoicePaymentService.applyPayment(invoice, {
       amount: outstanding,
-      at: new Date(),
       method: 'void',
       reference: reason || 'Voided by an administrator',
+      settle: false,
     });
-  }
 
-  recomputeInvoice(invoice);
-  await invoice.save();
+    // The debt is forgiven, so it stops counting against the line of credit —
+    // the same release a payment produces, for the opposite reason. Without
+    // this a voided invoice would hold the account at its limit for money
+    // nobody will ever collect.
+    if (invoice.terms && invoice.terms !== 'prepaid') {
+      await User.updateOne(
+        { _id: invoice.user, balance: { $gte: outstanding } },
+        { $inc: { balance: -outstanding } },
+      );
+    }
+  } else {
+    recomputeInvoice(invoice);
+    await invoice.save();
+  }
 
   // Voiding forgives the balance, so any commission this invoice earned is
   // commission on money that never arrived. Every accrual against it is
@@ -1464,80 +1497,13 @@ async function voidInvoice(number, { reason } = {}) {
  * movements are the record.
  */
 async function userActivity(id) {
-  const user = await User.findById(id).lean();
+  const user = await User.findById(id).select('_id').lean();
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
 
-  const [orders, invoices, credits] = await Promise.all([
-    Order.find({ user: id }).sort({ createdAt: -1 }).limit(40).lean(),
-    Invoice.find({ user: id }).sort({ issuedAt: -1 }).limit(40).lean(),
-    CreditTransaction.find({ user: id }).sort({ createdAt: -1 }).limit(40).lean(),
-  ]);
-
-  const events = [];
-
-  for (const order of orders) {
-    events.push({
-      kind: 'order',
-      at: order.createdAt,
-      title: `Order ${order.orderNumber} placed`,
-      detail: `${order.items.length} ${order.items.length === 1 ? 'line' : 'lines'}`,
-      amount: order.total,
-      reference: order.orderNumber,
-    });
-
-    // The timeline is where status history already lives, so it does not need
-    // a second store to be reportable.
-    for (const step of order.timeline ?? []) {
-      if (step.status === 'placed') continue;
-      events.push({
-        kind: 'order-status',
-        at: step.at,
-        title: `Order ${order.orderNumber} → ${step.status.replace(/_/g, ' ')}`,
-        detail: step.note ?? null,
-        reference: order.orderNumber,
-      });
-    }
-  }
-
-  for (const invoice of invoices) {
-    events.push({
-      kind: 'invoice',
-      at: invoice.issuedAt,
-      title: `Invoice ${invoice.number} issued`,
-      detail: invoice.terms,
-      amount: invoice.amount,
-      reference: invoice.number,
-    });
-
-    for (const payment of invoice.payments ?? []) {
-      events.push({
-        kind: payment.method === 'void' ? 'void' : 'payment',
-        at: payment.at,
-        title:
-          payment.method === 'void'
-            ? `Invoice ${invoice.number} voided`
-            : `Payment on ${invoice.number}`,
-        detail: payment.reference ?? payment.method ?? null,
-        amount: payment.amount,
-        reference: invoice.number,
-      });
-    }
-  }
-
-  for (const credit of credits) {
-    events.push({
-      kind: 'credit',
-      at: credit.createdAt,
-      title: `Store credit ${credit.amount > 0 ? 'added' : 'spent'} · ${credit.type}`,
-      detail: credit.note ?? null,
-      amount: credit.amount,
-      reference: credit.orderNumber ?? null,
-    });
-  }
-
-  events.sort((a, b) => new Date(b.at) - new Date(a.at));
-
-  return { activity: events.slice(0, 80) };
+  // The feed itself lives in `activityService`, because the buyer's own
+  // overview shows the same history and two assemblies of it would eventually
+  // disagree about the same account.
+  return activityFeed(id);
 }
 
 /**

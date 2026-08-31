@@ -1,0 +1,223 @@
+const { default: Invoice } = require('../models/Invoice.js');
+const { default: User } = require('../models/User.js');
+const { default: ApiError } = require('../utils/ApiError.js');
+const orderBuilder = require('./orderBuilder.js');
+
+/**
+ * Invoice payment — the only place a payment is recorded against an invoice.
+ *
+ * It exists for the same reason `storeCreditService` and `pricingService` do:
+ * three things must happen together every time money lands on an invoice, and
+ * a second place that records a payment is a second place to forget one of
+ * them.
+ *
+ *   1. the payment row is written and the header recomputed from the rows;
+ *   2. the **line of credit is repaid** — an amount owed on terms that is paid
+ *      has to come off `User.balance`, or the account stays at its limit
+ *      forever;
+ *   3. a `due` record that reaches zero **becomes an invoice** — renumbered out
+ *      of the `CVX-` series into `INV-`.
+ *
+ * Step 2 did not exist anywhere before this file. `orderService` and
+ * `adminService.createInvoice` both `$inc` the balance upward when an order or
+ * a charge goes on terms, and nothing ever brought it back down: repayment was
+ * only ever *displayed*, reconstructed from payment rows by
+ * `accountService.lineOfCreditActivity`. A buyer who paid every invoice still
+ * showed a full balance and no remaining credit.
+ *
+ * Admin payments (`adminService.recordPayment`), customer payments
+ * (`accountService.payInvoice` / `payOffCredit`) and voids all come through
+ * here, so none of the three can drift apart from the others.
+ */
+
+/**
+ * Recompute an invoice's paid total and status **from its own payments**.
+ *
+ * Never trust an incoming `amountPaid`: the sum of the rows is the truth, and
+ * recomputing it here means a corrected or removed payment cannot leave the
+ * header disagreeing with the rows beneath it.
+ *
+ * Lives here rather than in `adminService` (where it was written) because the
+ * customer payment path needs exactly the same arithmetic, and two copies of
+ * "what does paid mean" is how an invoice ends up `partial` on one screen and
+ * `paid` on another.
+ */
+function recompute(invoice) {
+  const paid = (invoice.payments ?? []).reduce((sum, payment) => sum + (payment.amount ?? 0), 0);
+  invoice.amountPaid = paid;
+
+  if (paid <= 0) invoice.status = 'unpaid';
+  else if (paid >= invoice.amount) invoice.status = 'paid';
+  else invoice.status = 'partial';
+
+  return invoice;
+}
+
+/** What is still owed. Never negative — overpayment is refused before it lands. */
+function outstandingOf(invoice) {
+  return Math.max(0, invoice.amount - (invoice.amountPaid ?? 0));
+}
+
+/**
+ * Records one payment against one invoice.
+ *
+ * `amount` is integer cents and is decided by the caller from the invoice's own
+ * balance — never sent by a client (§5.3).
+ *
+ * `settle: false` is for a void, which zeroes the balance without money having
+ * arrived: it must not repay the line of credit (nothing was paid), must not
+ * promote the record to an invoice (nothing was invoiced), and must not earn
+ * anybody commission. The caller handles the reversal.
+ *
+ * Returns `{ invoice, promoted, previousNumber }` — `promoted` tells the caller
+ * a `due` record just became an invoice, and `previousNumber` is what it was
+ * called before, which the referral reversal needs to find accruals booked
+ * against the old number.
+ */
+async function applyPayment(invoice, { amount, method, reference, at, settle = true } = {}) {
+  if (!Number.isInteger(amount) || amount <= 0) {
+    throw ApiError.badRequest('Enter an amount to record.', 'INVALID_AMOUNT');
+  }
+
+  const outstanding = outstandingOf(invoice);
+  if (amount > outstanding) {
+    // Overpayment is a real situation, but it belongs in store credit rather
+    // than an invoice that claims to be more than paid. Refuse and say so.
+    throw ApiError.badRequest(
+      `That is more than the ${(outstanding / 100).toFixed(2)} outstanding on this invoice.`,
+      'PAYMENT_TOO_LARGE',
+    );
+  }
+
+  invoice.payments.push({
+    amount,
+    at: at ?? new Date(),
+    method: method || undefined,
+    reference: reference || undefined,
+  });
+
+  recompute(invoice);
+
+  // ---- repay the line of credit ------------------------------------------
+  // Only money actually paid repays it, and only on an account that drew on it
+  // in the first place: a prepaid invoice never incremented `balance`, so
+  // decrementing it here would push the account into credit it never used.
+  //
+  // The `$max` guard keeps the balance at or above zero. It can legitimately be
+  // reached from below — a seeded account, a balance an admin corrected by hand
+  // — and a negative balance renders as negative available credit on a screen
+  // that has no design for it.
+  if (settle && invoice.terms && invoice.terms !== 'prepaid') {
+    const updated = await User.findOneAndUpdate(
+      { _id: invoice.user },
+      { $inc: { balance: -amount } },
+      { new: true, projection: { balance: 1 } },
+    );
+    if (updated && updated.balance < 0) {
+      await User.updateOne({ _id: invoice.user }, { $set: { balance: 0 } });
+    }
+  }
+
+  // ---- promote a settled `due` record into an invoice ---------------------
+  // The renumbering happens on save, but the *old* number is returned so the
+  // caller can accrue commission before anything looks the invoice up again.
+  const promoted = settle && invoice.kind === 'due' && invoice.status === 'paid';
+  const previousNumber = invoice.number;
+
+  if (promoted) {
+    invoice.kind = 'invoice';
+    invoice.number = await orderBuilder.nextInvoiceNumber('INV');
+    invoice.settledAt = new Date();
+  }
+
+  await invoice.save();
+
+  return { invoice, promoted, previousNumber };
+}
+
+/**
+ * Records a payment and books the referral commission it earned.
+ *
+ * The two are separated above and joined here because the ordering matters and
+ * is easy to get wrong: commission is keyed on `(invoiceNumber, paymentIndex)`
+ * (`referralService.accrueForPayment`), and a settling payment **renumbers the
+ * invoice**. Accruing after the rename would book the commission against a
+ * number that no earlier accrual on the same invoice shares, and a later
+ * reversal — which searches by number — would find only half of them.
+ *
+ * So: any accruals already standing against the old number are re-pointed at
+ * the new one first, then this payment accrues against the new number. Every
+ * accrual for an invoice ends up under one number, whatever order the
+ * instalments arrived in.
+ *
+ * Imported lazily for the same reason `storeCreditService` does it:
+ * `referralService` reaches back into the invoice side, and a static import
+ * here would close the cycle.
+ */
+async function recordPayment(invoice, options) {
+  const result = await applyPayment(invoice, options);
+  const { CreditTransaction } = require('../models/CreditTransaction.js');
+  const referralService = require('./referralService.js');
+
+  if (result.promoted && result.previousNumber !== invoice.number) {
+    // Best-effort, and deliberately so: a commission row that could not be
+    // re-pointed is a reconciliation problem, never a reason to reject a
+    // payment that genuinely happened.
+    try {
+      await CreditTransaction.updateMany(
+        { type: 'referral', 'referral.invoiceNumber': result.previousNumber },
+        { $set: { 'referral.invoiceNumber': invoice.number } },
+      );
+    } catch (error) {
+      console.error(
+        `  Invoice ${invoice.number}: re-pointing referral rows from ${result.previousNumber} failed — ${error.message}`,
+      );
+    }
+  }
+
+  // Referral commission accrues on payment, never on the order (§6.13) — an
+  // unpaid invoice has earned nobody anything. Keyed on this payment's index,
+  // so an invoice settled in instalments earns once per instalment and a
+  // replayed request cannot pay twice. `accrueForPayment` swallows its own
+  // failures.
+  await referralService.accrueForPayment(invoice, invoice.payments.length - 1);
+
+  return result;
+}
+
+/**
+ * Loads a payable record for one buyer, or refuses.
+ *
+ * Scoped to `user` rather than found by number alone: an invoice number is
+ * guessable, and a buyer must never be able to pay — or even read the balance
+ * of — somebody else's invoice. A miss is a 404 rather than a 403, so the
+ * endpoint does not confirm that a number exists.
+ */
+async function payableFor(userId, number) {
+  const invoice = await Invoice.findOne({ number, user: userId });
+  if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');
+
+  if (invoice.kind === 'receipt') {
+    throw ApiError.badRequest('A receipt is a record of money already moved.', 'NOT_PAYABLE');
+  }
+  if (outstandingOf(invoice) <= 0) {
+    throw ApiError.badRequest('This invoice is already settled.', 'ALREADY_SETTLED');
+  }
+
+  return invoice;
+}
+
+exports.default = {
+  applyPayment,
+  outstandingOf,
+  payableFor,
+  recompute,
+  recordPayment,
+};
+
+// --- CommonJS exports -------------------------------------------------
+exports.applyPayment = applyPayment;
+exports.outstandingOf = outstandingOf;
+exports.payableFor = payableFor;
+exports.recompute = recompute;
+exports.recordPayment = recordPayment;

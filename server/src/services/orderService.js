@@ -28,17 +28,10 @@ async function nextOrderNumber() {
   return `${prefix}${String(sequence).padStart(5, '0')}`;
 }
 
-async function nextInvoiceNumber() {
-  const year = new Date().getFullYear();
-  const prefix = `INV-${year}-`;
-  const last = await Invoice.findOne({ number: new RegExp(`^${prefix}`) })
-    .sort({ number: -1 })
-    .select('number')
-    .lean();
-
-  const sequence = last ? Number(last.number.slice(prefix.length)) + 1 : 10_001;
-  return `${prefix}${String(sequence).padStart(5, '0')}`;
-}
+// The invoice numbering lives in `orderBuilder` — it was written three times
+// before that file existed, and a series that two files can advance
+// independently is a series that collides.
+const { nextInvoiceNumber } = require('./orderBuilder.js');
 
 /**
  * Prices the cart.
@@ -265,8 +258,18 @@ async function createOrder(user, input) {
 
   const settled = creditApplied + (result.status === 'paid' ? dueNow : 0);
   const termsDays = TERMS_DAYS[user.terms] ?? 0;
+
+  // A tax invoice is raised only against money that actually arrived. An order
+  // paid at checkout — by card, by store credit, or by both — is invoiced
+  // immediately; one placed on terms is an **amount due** in the `CVX-` series
+  // until it is settled, and `invoicePaymentService` renumbers it into `INV-`
+  // at that point. Partly settled counts as due: the rest is still owed.
+  const fullySettled = settled >= priced.total;
+
   const invoice = await Invoice.create({
-    number: await nextInvoiceNumber(),
+    number: await nextInvoiceNumber(fullySettled ? 'INV' : 'CVX'),
+    kind: fullySettled ? 'invoice' : 'due',
+    settledAt: fullySettled ? new Date() : undefined,
     order: order._id,
     user: user._id,
     amount: priced.total,
@@ -278,7 +281,7 @@ async function createOrder(user, input) {
     terms: user.terms,
     // Credit can settle part of a terms order, which is exactly what 'partial'
     // is for — the rest still ages towards its due date.
-    status: settled >= priced.total ? 'paid' : settled > 0 ? 'partial' : 'unpaid',
+    status: fullySettled ? 'paid' : settled > 0 ? 'partial' : 'unpaid',
     payments: [
       ...(creditApplied > 0
         ? [

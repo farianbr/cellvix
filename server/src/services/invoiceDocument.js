@@ -140,6 +140,15 @@ function renderInvoiceHtml({ invoice, order, user, origin, nonce }) {
   const settled = balance <= 0;
   const business = BUSINESS_INFO;
 
+  // What this document calls itself. A tax invoice is issued only against money
+  // that arrived; before that the same row is an amount due, and a receipt for
+  // a store-credit movement is neither. Calling all three "invoice" is what the
+  // `kind` field on the model exists to stop.
+  const kind = invoice.kind ?? 'invoice';
+  const docLabel =
+    kind === 'receipt' ? 'Receipt' : kind === 'due' ? 'Statement of amount due' : 'Invoice';
+  const numberLabel = kind === 'receipt' ? 'Receipt no.' : kind === 'due' ? 'Reference' : 'Invoice no.';
+
   const payments = (invoice.payments ?? [])
     .map(
       (payment) => `
@@ -164,7 +173,7 @@ function renderInvoiceHtml({ invoice, order, user, origin, nonce }) {
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Invoice ${escapeHtml(invoice.number)} · ${escapeHtml(business.name)}</title>
+<title>${escapeHtml(docLabel)} ${escapeHtml(invoice.number)} · ${escapeHtml(business.name)}</title>
 <style>
   @media print {
     body { background: #fff !important; padding: 0 !important; }
@@ -233,7 +242,7 @@ ${
             Due ${escapeHtml(day(invoice.dueDate))}${order?.poNumber ? ` &nbsp;·&nbsp; PO ${escapeHtml(order.poNumber)}` : ''}
           </td>
           <td style="text-align:right;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:${INK};font-weight:700;">
-            Invoice no. ${escapeHtml(invoice.number)}${order?.orderNumber ? ` &nbsp;·&nbsp; Order ${escapeHtml(order.orderNumber)}` : ''}
+            ${escapeHtml(numberLabel)} ${escapeHtml(invoice.number)}${order?.orderNumber ? ` &nbsp;·&nbsp; Order ${escapeHtml(order.orderNumber)}` : ''}
           </td>
         </tr>
       </table>
@@ -265,6 +274,30 @@ ${
             <div style="margin-top:9px;display:inline-block;padding:13px 20px;background:#f7f7f9;border-radius:8px;">
               <span style="font-size:25px;font-weight:800;color:${settled ? INK : BRAND};letter-spacing:-.01em;">${money(settled ? invoice.amount : balance)}</span>
             </div>
+            ${
+              // Pay from the document itself — the shortest path from "I am
+              // looking at what I owe" to having paid it.
+              //
+              // A LINK, never a form. This page is served under its own
+              // Content-Security-Policy carrying `form-action 'none'`
+              // (`controllers/accountController.js`), so a posting button here
+              // would be silently dead. It carries `?pay=1`, which the invoices
+              // screen reads to open the payment sheet on arrival.
+              //
+              // `.no-print` because a printed sheet with a button on it is a
+              // button nobody can press.
+              !settled && origin
+                ? `<div class="no-print" style="margin-top:12px;">
+              <a href="${escapeHtml(origin)}/account/invoices?pay=${encodeURIComponent(invoice.number)}"
+                 style="display:inline-block;padding:11px 20px;border-radius:9px;background:${BRAND};color:#fff;font-size:13px;font-weight:700;text-decoration:none;">
+                Pay ${money(balance)} now
+              </a>
+              <div style="margin-top:7px;font-size:11px;line-height:1.6;color:${MUTED};">
+                Pay by card or with your store credit.
+              </div>
+            </div>`
+                : ''
+            }
           </td>
           <td style="vertical-align:top;">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
@@ -325,10 +358,13 @@ ${
 }
 
 /** Plain-text fallback, for the mail clients that refuse HTML. */
-function renderInvoiceText({ invoice, order }) {
+function renderInvoiceText({ invoice, order, origin }) {
   const balance = (invoice.amount ?? 0) - (invoice.amountPaid ?? 0);
+  const kind = invoice.kind ?? 'invoice';
+  const docLabel = kind === 'receipt' ? 'receipt' : kind === 'due' ? 'amount due' : 'invoice';
+
   const lines = [
-    `${BUSINESS_INFO.name} — invoice ${invoice.number}`,
+    `${BUSINESS_INFO.name} — ${docLabel} ${invoice.number}`,
     order?.orderNumber ? `Order ${order.orderNumber}` : null,
     `Issued ${day(invoice.issuedAt)} · due ${day(invoice.dueDate)}`,
     '',
@@ -339,6 +375,12 @@ function renderInvoiceText({ invoice, order }) {
     `Total ${money(invoice.amount)}`,
     invoice.amountPaid > 0 ? `Paid ${money(invoice.amountPaid)}` : null,
     `Balance due ${money(Math.max(0, balance))}`,
+    // The plain-text copy gets the same route to paying that the HTML one does.
+    // A reader on a mail client that refuses HTML is exactly the reader who
+    // needs the URL spelled out.
+    balance > 0 && origin
+      ? `\nPay online: ${origin}/account/invoices?pay=${encodeURIComponent(invoice.number)}`
+      : null,
     '',
     `Questions? ${BUSINESS_INFO.email} · ${BUSINESS_INFO.phone}`,
   ];

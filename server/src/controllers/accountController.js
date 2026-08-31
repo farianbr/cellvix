@@ -1,5 +1,6 @@
 const { randomBytes } = require('node:crypto');
 const { asyncHandler } = require('../utils/ApiError.js');
+const { default: env } = require('../config/env.js');
 const accountService = require('../services/accountService.js');
 
 const summary = asyncHandler(async (req, res) => {
@@ -60,7 +61,18 @@ const getInvoice = asyncHandler(async (req, res) => {
  */
 const invoiceDocument = asyncHandler(async (req, res) => {
   const nonce = randomBytes(16).toString('base64');
-  const html = await accountService.invoiceDocument(req.user, req.params.number, { nonce });
+  const html = await accountService.invoiceDocument(req.user, req.params.number, {
+    nonce,
+    // The browser copy gets an origin too, so an unpaid document can link back
+    // to the screen that pays it. It is a link and not a form on purpose: the
+    // CSP below sets `form-action 'none'`, and loosening that to let an invoice
+    // post somewhere would undo the point of giving this response its own
+    // policy at all.
+    //
+    // `env.publicOrigin` rather than this request's own host: the document is
+    // served by the API, and the link has to land on the storefront.
+    origin: env.publicOrigin,
+  });
 
   res.setHeader(
     'Content-Security-Policy',
@@ -88,6 +100,22 @@ const rechargeStoreCredit = asyncHandler(async (req, res) => {
   res.status(201).json(await accountService.rechargeStoreCredit(req.user, req.body));
 });
 
+const payInvoice = asyncHandler(async (req, res) => {
+  res.status(201).json(await accountService.payInvoice(req.user, req.params.number, req.body));
+});
+
+const payOffCredit = asyncHandler(async (req, res) => {
+  res.status(201).json(await accountService.payOffCredit(req.user, req.body));
+});
+
+const activity = asyncHandler(async (req, res) => {
+  res.json(await accountService.activity(req.user._id));
+});
+
+const referrals = asyncHandler(async (req, res) => {
+  res.json(await accountService.referrals(req.user));
+});
+
 // --- CommonJS exports -------------------------------------------------
 exports.summary = summary;
 exports.updateProfile = updateProfile;
@@ -103,3 +131,7 @@ exports.invoiceDocument = invoiceDocument;
 exports.storeCredit = storeCredit;
 exports.creditActivity = creditActivity;
 exports.rechargeStoreCredit = rechargeStoreCredit;
+exports.payInvoice = payInvoice;
+exports.payOffCredit = payOffCredit;
+exports.activity = activity;
+exports.referrals = referrals;

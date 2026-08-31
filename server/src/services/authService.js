@@ -1,9 +1,11 @@
 const jwt = require('jsonwebtoken');
 const { default: User } = require('../models/User.js');
+const { default: Supplier } = require('../models/Supplier.js');
 const { default: ApiError } = require('../utils/ApiError.js');
 const { default: env } = require('../config/env.js');
 const referralService = require('./referralService.js');
 const notificationService = require('./notificationService.js');
+const { sendWelcomeEmail } = require('./welcomeMail.js');
 
 // "Remember me" drives a long-lived cookie so the buyer is auto-signed-in on
 // return visits (brief §8.1).
@@ -92,7 +94,85 @@ async function register(data, { ip } = {}) {
     href: `/admin/clients/${user._id}`,
   });
 
+  /**
+   * No `password` argument: this buyer chose their own, so the message is the
+   * confirmation variant with no credentials block. Sending somebody back the
+   * password they just typed would put it in an inbox for no reason at all.
+   *
+   * Fire-and-forget for the same reason as the notification above — a
+   * registration that succeeded must not be reported as failed because mail
+   * was down.
+   */
+  await sendWelcomeEmail({ user });
+
   return user;
+}
+
+/**
+ * Records a business applying to sell to Cellvix.
+ *
+ * Creates **no account and no password**: this is an application for the
+ * purchasing team, not a login. It lands as a real `Supplier` document so it is
+ * reviewed on the screen buyers already use, but with `isActive: false`, which
+ * keeps it out of the supplier picker and stops any purchase order being raised
+ * against a business nobody has vetted. `appliedAt` is what tells an unreviewed
+ * application apart from a supplier that was deliberately deactivated.
+ *
+ * A repeat application from the same address updates the existing record rather
+ * than creating a second one — somebody applying twice is somebody who thinks
+ * the first one did not arrive, and two half-identical rows in the review queue
+ * help nobody. An already-active supplier is left completely alone: they are
+ * onboarded, and a public form must not be able to edit a live supplier.
+ */
+async function applyAsSupplier(data) {
+  const email = String(data.email).toLowerCase().trim();
+
+  const existing = await Supplier.findOne({ email });
+
+  // Already trading with us. Answer as though it was recorded — the purchasing
+  // team knows them, and telling an anonymous form which businesses are already
+  // suppliers is not something this endpoint should do.
+  if (existing?.isActive) return { recorded: true };
+
+  const fields = {
+    name: data.businessName,
+    contactName: data.contactName,
+    email,
+    phone: data.phone,
+    website: data.website || undefined,
+    supplies: data.supplies || undefined,
+    address: data.address
+      ? {
+          line1: data.address.line1 || undefined,
+          line2: data.address.line2 || undefined,
+          city: data.address.city || undefined,
+          region: data.address.region || undefined,
+          postal: data.address.postal || undefined,
+          country: 'CA',
+        }
+      : undefined,
+    isActive: false,
+    appliedAt: new Date(),
+  };
+
+  const supplier = existing
+    ? Object.assign(existing, fields)
+    : new Supplier({ ...fields, paymentTerms: 'net30' });
+
+  await supplier.save();
+
+  // Same reasoning as a new registration: an application nobody is told about
+  // sits unread until somebody happens to open the suppliers screen.
+  await notificationService.emit({
+    type: 'supplier_application',
+    severity: 'info',
+    title: `${supplier.name} applied to supply`,
+    detail: `${supplier.contactName} · ${supplier.email} · awaiting review`,
+    entity: { kind: 'supplier', id: supplier._id.toString(), label: supplier.name },
+    href: `/admin/suppliers`,
+  });
+
+  return { recorded: true };
 }
 
 /**
@@ -161,5 +241,6 @@ async function login({ email, password }) {
 exports.issueSession = issueSession;
 exports.clearSession = clearSession;
 exports.register = register;
+exports.applyAsSupplier = applyAsSupplier;
 exports.findForAudit = findForAudit;
 exports.login = login;

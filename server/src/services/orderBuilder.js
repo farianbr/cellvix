@@ -49,10 +49,18 @@ async function nextOrderNumber() {
   return `${prefix}${String(sequence).padStart(5, '0')}`;
 }
 
-/** `INV-2026-00001`, on the same terms as the order numbering above. */
-async function nextInvoiceNumber() {
+/**
+ * `INV-2026-00001`, on the same terms as the order numbering above.
+ *
+ * The series is a parameter because there are three of them and they must not
+ * share a counter: `INV` for a settled tax invoice, `CVX` for an amount still
+ * due, `RCT` for a store-credit receipt. Each keeps its own gapless run, which
+ * is the whole point of renumbering a `due` record when it settles — the `INV`
+ * sequence contains only invoices that were actually raised.
+ */
+async function nextInvoiceNumber(series = 'INV') {
   const year = new Date().getFullYear();
-  const prefix = `INV-${year}-`;
+  const prefix = `${series}-${year}-`;
   const last = await Invoice.findOne({ number: new RegExp(`^${prefix}`) })
     .sort({ number: -1 })
     .select('number')
@@ -113,18 +121,24 @@ async function buildOrderItems(rawItems) {
 }
 
 /**
- * The invoice an order raises, on the account's own terms.
+ * The billing record an order raises, on the account's own terms.
  *
  * Kept beside `raiseOrder` rather than inside it, because `createInvoice`
  * (a standalone invoice, §7.2) needs the numbering and the due-date arithmetic
  * without an order to hang them on.
+ *
+ * Nothing settled here, so this is always a `due` record in the `CVX-` series,
+ * never an invoice. It becomes one — renumbered into `INV-` — when it is paid
+ * in full, and `services/invoicePaymentService.js` is the only thing that does
+ * that.
  */
 async function createInvoiceFor(order, terms) {
   const dueDate = new Date();
   dueDate.setDate(dueDate.getDate() + (TERMS_DAYS[terms] ?? 0));
 
   return Invoice.create({
-    number: await nextInvoiceNumber(),
+    number: await nextInvoiceNumber('CVX'),
+    kind: 'due',
     order: order._id,
     user: order.user,
     amount: order.total,

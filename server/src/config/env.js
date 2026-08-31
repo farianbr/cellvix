@@ -53,6 +53,11 @@ const schema = z.object({
   // a missing mail server can never fail a checkout.
   SMTP_URL: z.string().optional(),
   MAIL_FROM: z.string().default('Cellvix <billing@cellvix.ca>'),
+  // Account mail — a welcome, credentials, anything about the account itself —
+  // rather than money. A message telling somebody their account is open should
+  // not arrive from the billing desk: the reply goes to whoever handles
+  // accounts, and "billing" on a welcome is the wrong address to reply to.
+  MAIL_FROM_ADMIN: z.string().default('Cellvix <admin@cellvix.ca>'),
   // Where a link in an email should point. Defaults to the first CLIENT_ORIGIN.
   PUBLIC_ORIGIN: z.string().optional(),
 

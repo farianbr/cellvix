@@ -1,0 +1,283 @@
+const crypto = require('node:crypto');
+const { default: env } = require('../config/env.js');
+const { sendMail } = require('./mailer.js');
+const { BUSINESS_INFO } = require('../../../shared/business.js');
+
+/**
+ * The welcome email, for both ways an account comes into being.
+ *
+ * A business that registers itself chose its own password and must never be
+ * sent one; an account an admin opened has a password the customer has never
+ * seen, so something has to carry it to them. Both get the same message with
+ * the same shape — one of them has a credentials block, the other does not.
+ *
+ * Sent from `MAIL_FROM_ADMIN`, not `MAIL_FROM`. A welcome arriving from the
+ * billing desk is the wrong address to reply to.
+ *
+ * **The generated password travels in the message body.** That is a deliberate
+ * decision taken with the client, and it has a real cost: mail is stored
+ * plaintext in the recipient's mailbox and on any server that relays it, so the
+ * password remains readable there for as long as the message is kept. The email
+ * therefore tells the customer to change it and links straight to the page
+ * where they can. If that trade is ever revisited, the fix is a one-time
+ * set-password link — the customer sets a secret that was never transmitted —
+ * and this file is the only place that would need to change.
+ *
+ * Called fire-and-forget: the account is already written by the time this runs,
+ * and a dead SMTP host must not turn a registration into an error. Every path
+ * resolves, the same contract `notifications.js` keeps.
+ */
+
+// Unambiguous alphabet, for the same reason `referralService` uses one: this
+// password gets read off a screen and retyped by somebody who did not choose
+// it. No O/0, no I/l/1. Symbols are drawn from a small set that survives being
+// read aloud and does not need escaping in a shell or a URL.
+const LETTERS = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz';
+const DIGITS = '23456789';
+const SYMBOLS = '!@#$%*?';
+const LENGTH = 14;
+
+/**
+ * A password that satisfies `passwordSchema` by construction.
+ *
+ * One letter, one digit and one symbol are placed first and the remainder drawn
+ * from the full alphabet, then the whole thing is shuffled — generating at
+ * random and re-rolling until it happens to pass would occasionally loop, and
+ * the schema is what the account is validated against on every later change.
+ */
+function generatePassword() {
+  const all = LETTERS + DIGITS + SYMBOLS;
+  const pick = (set) => set[crypto.randomInt(set.length)];
+
+  const chars = [pick(LETTERS), pick(DIGITS), pick(SYMBOLS)];
+  while (chars.length < LENGTH) chars.push(pick(all));
+
+  // Fisher-Yates with a CSPRNG, so the guaranteed letter/digit/symbol are not
+  // always sitting in the first three positions.
+  for (let i = chars.length - 1; i > 0; i -= 1) {
+    const j = crypto.randomInt(i + 1);
+    [chars[i], chars[j]] = [chars[j], chars[i]];
+  }
+
+  return chars.join('');
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+
+/**
+ * The email.
+ *
+ * Built to the same rules as the storefront rather than as a generic template:
+ * Archivo-then-system for display text, the ink/line greys from the design
+ * tokens, and the brand gradient used once as a hairline rather than as a
+ * coloured header band. Tables and inline styles throughout because that is
+ * what mail clients render reliably; Outlook ignores flexbox and most clients
+ * strip <style> blocks.
+ *
+ * The one deliberate exception to the storefront palette is the credentials
+ * block, which is the only thing in the message the reader must not miss.
+ */
+function renderHtml({ user, password, origin, approved }) {
+  const account = `${origin}/account`;
+  const security = `${origin}/account/company`;
+
+  const display = `'Archivo','Segoe UI',-apple-system,BlinkMacSystemFont,Arial,sans-serif`;
+  const body = `'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,Arial,sans-serif`;
+  const mono = `ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,monospace`;
+
+  const ink900 = '#18181b';
+  const ink500 = '#5c5c66';
+  const ink300 = '#9b9ba5';
+  const line = '#e7e7ea';
+  const surface2 = '#f7f7f8';
+
+  const row = (label, value, isMono) => `
+        <tr>
+          <td style="padding:11px 16px;border-top:1px solid ${line};font:400 12px/1.4 ${body};color:${ink500};white-space:nowrap;">${label}</td>
+          <td style="padding:11px 16px;border-top:1px solid ${line};font:${isMono ? `700 15px/1.4 ${mono};letter-spacing:0.4px` : `600 14px/1.4 ${body}`};color:${ink900};">${value}</td>
+        </tr>`;
+
+  return `<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Welcome to Cellvix</title></head>
+<body style="margin:0;padding:0;background:${surface2};">
+  <!-- Preheader: the line inboxes show beside the subject. Hidden in the body. -->
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">
+    ${password ? 'Your sign-in details are inside.' : 'Your account is with our team for review.'}
+  </div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${surface2};">
+    <tr><td align="center" style="padding:32px 16px;">
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border:1px solid ${line};border-radius:16px;overflow:hidden;">
+
+        <!-- The gradient as a hairline rule: accent, not a filled header. -->
+        <tr><td style="height:3px;line-height:3px;font-size:0;background:#CF3429;">
+          <div style="height:3px;background:linear-gradient(90deg,#CF3429,#000000);">&nbsp;</div>
+        </td></tr>
+
+        <tr><td style="padding:36px 36px 8px;">
+          <div style="font:700 11px/1 ${display};letter-spacing:0.14em;text-transform:uppercase;color:${ink300};">
+            ${escapeHtml(BUSINESS_INFO.name)}
+          </div>
+          <h1 style="margin:14px 0 0;font:700 26px/1.2 ${display};letter-spacing:-0.02em;color:${ink900};">
+            ${password ? 'Your account is ready' : 'Thanks for signing up'}
+          </h1>
+          <p style="margin:12px 0 0;font:400 14px/1.65 ${body};color:${ink500};">
+            ${
+              password
+                ? `We have opened a wholesale account for <strong style="color:${ink900};font-weight:600;">${escapeHtml(user.businessName)}</strong>. Everything you need to sign in is below.`
+                : `We have received the application for <strong style="color:${ink900};font-weight:600;">${escapeHtml(user.businessName)}</strong> and our team is reviewing it now.`
+            }
+          </p>
+        </td></tr>
+
+        ${
+          password
+            ? `
+        <!-- Credentials. The one block in the message that must not be missed. -->
+        <tr><td style="padding:26px 36px 0;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${line};border-radius:12px;overflow:hidden;">
+            <tr><td colspan="2" style="padding:12px 16px;background:${surface2};font:700 10.5px/1 ${display};letter-spacing:0.13em;text-transform:uppercase;color:${ink300};">
+              Sign-in details
+            </td></tr>
+            ${row('Email', escapeHtml(user.email), false)}
+            ${row('Password', escapeHtml(password), true)}
+          </table>
+
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;background:#fef2f2;border-radius:10px;">
+            <tr><td style="padding:12px 14px;font:400 12.5px/1.6 ${body};color:#b91c1c;">
+              This password is written in this email. Anyone who can read the message can sign in as
+              you, so please change it once you are in and delete this afterwards.
+            </td></tr>
+          </table>
+        </td></tr>`
+            : ''
+        }
+
+        <!-- Bulletproof-ish button: a padded table cell, not a styled <div>. -->
+        <tr><td style="padding:26px 36px 0;">
+          <table role="presentation" cellpadding="0" cellspacing="0">
+            <tr><td style="border-radius:10px;background:#CF3429;">
+              <a href="${password ? origin : account}" style="display:inline-block;padding:13px 26px;font:600 14px/1 ${display};color:#ffffff;text-decoration:none;">
+                ${password ? 'Sign in to Cellvix' : 'Go to your dashboard'}
+              </a>
+            </td></tr>
+          </table>
+        </td></tr>
+
+        <tr><td style="padding:24px 36px 0;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${line};">
+            <tr><td style="padding-top:20px;font:400 13.5px/1.65 ${body};color:${ink500};">
+              ${
+                approved
+                  ? 'Your account is approved, so trade pricing and ordering are live the moment you sign in.'
+                  : 'Approval usually takes one business day. You can sign in and browse now; trade pricing and ordering unlock once our team has verified your business.'
+              }
+            </td></tr>
+          </table>
+        </td></tr>
+
+        <tr><td style="padding:20px 36px 34px;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+            <tr>
+              <td style="font:400 13px/2 ${body};color:${ink500};">
+                ${password ? `Change your password &nbsp;<a href="${security}" style="color:#CF3429;text-decoration:none;font-weight:600;">${security.replace(/^https?:\/\//, '')}</a><br />` : ''}
+                Your dashboard &nbsp;<a href="${account}" style="color:#CF3429;text-decoration:none;font-weight:600;">${account.replace(/^https?:\/\//, '')}</a>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+      </table>
+
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+        <tr><td style="padding:18px 36px 0;text-align:center;font:400 11.5px/1.7 ${body};color:${ink300};">
+          ${escapeHtml(BUSINESS_INFO.name)} &nbsp;·&nbsp; ${escapeHtml(BUSINESS_INFO.address.city)}, ${escapeHtml(BUSINESS_INFO.address.region)}<br />
+          You are receiving this because an account was opened for this address.
+          Reply to this email and it reaches our team.
+        </td></tr>
+      </table>
+
+    </td></tr>
+  </table>
+</body>
+</html>`;
+}
+
+function renderText({ user, password, origin, approved }) {
+  const lines = [
+    password ? 'Your Cellvix account is ready' : 'Thanks for signing up to Cellvix',
+    '',
+    password
+      ? `We have opened a wholesale account for ${user.businessName}.`
+      : `We have received the application for ${user.businessName} and our team is reviewing it now.`,
+    '',
+  ];
+
+  if (password) {
+    lines.push(
+      'SIGN-IN DETAILS',
+      `  Email     ${user.email}`,
+      `  Password  ${password}`,
+      '',
+      'This password is written in this email. Anyone who can read the message can',
+      'sign in as you, so please change it once you are in and delete this afterwards.',
+      '',
+      `  Sign in          ${origin}/`,
+      `  Change password  ${origin}/account/company`,
+    );
+  } else {
+    lines.push(`  Your dashboard   ${origin}/account`);
+  }
+
+  lines.push(
+    '',
+    approved
+      ? 'Your account is approved, so trade pricing and ordering are live the moment you sign in.'
+      : 'Approval usually takes one business day. You can sign in and browse now; trade pricing and ordering unlock once our team has verified your business.',
+    '',
+    `${BUSINESS_INFO.name} · ${BUSINESS_INFO.address.city}, ${BUSINESS_INFO.address.region}`,
+    'Reply to this email and it reaches our team.',
+  );
+
+  return lines.join('\n');
+}
+
+/**
+ * Emails a welcome.
+ *
+ * `password` is omitted for a self-registered account — that buyer chose their
+ * own and must never be sent one back. Passing it switches the message to the
+ * credentials variant. Never throws.
+ */
+async function sendWelcomeEmail({ user, password = null }) {
+  if (!user?.email) return { delivered: false, via: 'outbox' };
+
+  try {
+    const origin = env.publicOrigin;
+    const approved = user.status === 'approved';
+
+    return await sendMail({
+      to: user.email,
+      from: env.MAIL_FROM_ADMIN,
+      subject: password ? 'Your Cellvix account is ready' : 'Welcome to Cellvix',
+      html: renderHtml({ user, password, origin, approved }),
+      text: renderText({ user, password, origin, approved }),
+    });
+  } catch (error) {
+    console.error(`  Mail: welcome email for ${user?.email} could not be built — ${error.message}`);
+    return { delivered: false, via: 'outbox' };
+  }
+}
+
+// --- CommonJS exports -------------------------------------------------
+exports.generatePassword = generatePassword;
+exports.sendWelcomeEmail = sendWelcomeEmail;
+exports.default = sendWelcomeEmail;

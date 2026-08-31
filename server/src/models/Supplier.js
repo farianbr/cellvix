@@ -39,6 +39,24 @@ const supplierSchema = new mongoose.Schema(
     notes: { type: String, trim: true, maxlength: 2000 },
     isActive: { type: Boolean, default: true, index: true },
 
+    /**
+     * A supplier who applied through the storefront rather than being entered
+     * by a buyer (§ sign-up, account type "Supplying Cellvix").
+     *
+     * An application is a real Supplier document from the moment it arrives, so
+     * the purchasing team reviews it on the screen they already use rather than
+     * in a second inbox. What keeps it out of the working set is `isActive:
+     * false` on create — nothing can raise a purchase order against it, and it
+     * does not appear in the supplier picker, until somebody activates it.
+     *
+     * `appliedAt` is what separates "applied and not yet reviewed" from "a
+     * supplier we deactivated", which are opposite facts that would otherwise
+     * both read as inactive.
+     */
+    appliedAt: { type: Date, index: true },
+    /** What they say they supply. Free text: this is their pitch, not a taxonomy. */
+    supplies: { type: String, trim: true, maxlength: 600 },
+
     // Caches. See the note above.
     ordersCount: { type: Number, default: 0 },
     totalSpent: { type: Number, default: 0 }, // integer cents

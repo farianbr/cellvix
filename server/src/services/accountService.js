@@ -5,6 +5,9 @@ const { default: Cart } = require('../models/Cart.js');
 const { default: User } = require('../models/User.js');
 const { default: ApiError } = require('../utils/ApiError.js');
 const storeCredit = require('./storeCreditService.js');
+const payment = require('./payment.js');
+const invoicePaymentService = require('./invoicePaymentService.js');
+const { activityFeed } = require('./activityService.js');
 const { serializeOrder } = require('./orderService.js');
 const { serialize: serializeProduct } = require('./productService.js');
 const { renderInvoiceHtml } = require('./invoiceDocument.js');
@@ -243,13 +246,19 @@ function serializeInvoice(invoice) {
   return {
     id: invoice._id.toString(),
     number: invoice.number,
+    // `due` (payable), `invoice` (settled, filed) or `receipt` (a store-credit
+    // movement). The buyer's screen splits on this rather than on status: a
+    // record is either something to pay or something that is done.
+    kind: invoice.kind ?? 'invoice',
     orderNumber: invoice.order?.orderNumber ?? null,
     amount: invoice.amount,
     amountPaid: invoice.amountPaid,
     balance: invoice.amount - invoice.amountPaid,
     issuedAt: invoice.issuedAt,
     dueDate: invoice.dueDate,
+    settledAt: invoice.settledAt ?? null,
     terms: invoice.terms,
+    reference: invoice.reference ?? null,
     // Derived rather than stored: an unpaid invoice becomes overdue by the
     // passage of time, with nothing writing to the database.
     status: overdue ? 'overdue' : invoice.status,
@@ -257,6 +266,14 @@ function serializeInvoice(invoice) {
   };
 }
 
+/**
+ * Everything billed to this account, split by what it is.
+ *
+ * `due` and the rest are returned as two lists rather than one filtered on the
+ * client, because they answer different questions and the screen shows them as
+ * two panels: what do I owe, and what have I been invoiced. The totals follow
+ * the same split.
+ */
 async function listInvoices(userId) {
   const invoices = await Invoice.find({ user: userId })
     .sort({ issuedAt: -1 })
@@ -264,17 +281,26 @@ async function listInvoices(userId) {
     .lean();
 
   const shaped = invoices.map(serializeInvoice);
+  const due = shaped.filter((invoice) => invoice.kind === 'due');
+  const settled = shaped.filter((invoice) => invoice.kind !== 'due');
 
   return {
+    // Kept whole for anything still reading the flat list.
     invoices: shaped,
+    due,
+    settled,
     totals: {
       count: shaped.length,
-      billed: shaped.reduce((sum, invoice) => sum + invoice.amount, 0),
+      // Only real invoices and receipts count as billed. A `due` record is not
+      // yet an invoice, and counting it here would double the figure the moment
+      // it settled and became one.
+      billed: settled.reduce((sum, invoice) => sum + invoice.amount, 0),
       paid: shaped.reduce((sum, invoice) => sum + invoice.amountPaid, 0),
-      outstanding: shaped.reduce((sum, invoice) => sum + invoice.balance, 0),
-      overdue: shaped
+      outstanding: due.reduce((sum, invoice) => sum + invoice.balance, 0),
+      overdue: due
         .filter((invoice) => invoice.status === 'overdue')
         .reduce((sum, invoice) => sum + invoice.balance, 0),
+      dueCount: due.length,
     },
   };
 }
@@ -295,11 +321,11 @@ async function getInvoice(userId, number) {
  * The printable invoice — the same document the buyer was emailed when the
  * order was placed, rendered fresh so a later payment shows on it.
  */
-async function invoiceDocument(user, number, { nonce } = {}) {
+async function invoiceDocument(user, number, { nonce, origin } = {}) {
   const invoice = await Invoice.findOne({ number, user: user._id }).populate('order').lean();
   if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');
 
-  return renderInvoiceHtml({ invoice, order: invoice.order, user, nonce });
+  return renderInvoiceHtml({ invoice, order: invoice.order, user, nonce, origin });
 }
 
 /**
@@ -406,6 +432,218 @@ async function rechargeStoreCredit(user, { amountDollars, poNumber }) {
   return { ...posted, message: 'Top-up added to your store credit.' };
 }
 
+// ---- paying -----------------------------------------------------------------
+
+/**
+ * Settles one amount, drawing store credit first if asked and charging the card
+ * for whatever is left.
+ *
+ * Split out because paying a single invoice and paying the whole line of credit
+ * differ only in what they are settling — the money side is identical, and two
+ * copies of "credit first, then card" is two places for the split to be wrong.
+ *
+ * The order matters: **credit is spent before the card is charged**, but the
+ * card is charged before either is recorded against an invoice. A declined card
+ * must not leave credit spent, so the redemption is unwound if the charge
+ * throws. The reverse order — charge first, then redeem — would leave a real
+ * charge standing if the redemption failed, which is worse.
+ *
+ * Returns the payment rows to write, which the caller allocates.
+ */
+async function settleAmount(user, { total, useStoreCredit, poNumber, label }) {
+  if (!Number.isInteger(total) || total <= 0) {
+    throw ApiError.badRequest('There is nothing to pay.', 'NOTHING_DUE');
+  }
+
+  let creditApplied = 0;
+  if (useStoreCredit) {
+    const { applicable } = await storeCredit.previewForTotal(user._id, total);
+    creditApplied = applicable;
+  }
+
+  const dueNow = total - creditApplied;
+  const rows = [];
+  const now = new Date();
+
+  if (creditApplied > 0) {
+    await storeCredit.redeemForOrder({
+      userId: user._id,
+      total: creditApplied,
+      orderNumber: label,
+    });
+    rows.push({ amount: creditApplied, method: 'store-credit', reference: `credit_${label}`, at: now });
+  }
+
+  if (dueNow > 0) {
+    let charged;
+    try {
+      charged = await payment.charge({
+        amount: dueNow,
+        method: 'card',
+        orderNumber: label,
+        poNumber,
+      });
+    } catch (error) {
+      // Put the credit back. The buyer asked to pay and did not; leaving their
+      // balance spent against nothing would be taking money for no invoice.
+      if (creditApplied > 0) {
+        await storeCredit.allocate(
+          user._id,
+          { amount: creditApplied, note: `Payment for ${label} was declined — credit returned` },
+          null,
+        );
+      }
+      throw error;
+    }
+
+    rows.push({
+      amount: dueNow,
+      method: 'card',
+      reference: charged.reference,
+      at: charged.processedAt,
+    });
+  }
+
+  return { rows, creditApplied, charged: dueNow };
+}
+
+/**
+ * Pays one invoice in full.
+ *
+ * The amount is the invoice's own balance and is never sent by the client
+ * (§5.3). Partial payment is not offered: an invoice is issued when the money
+ * is in, so a half-payment would leave a record that is neither an amount due
+ * nor an invoice.
+ */
+async function payInvoice(user, number, { useStoreCredit, poNumber } = {}) {
+  const invoice = await invoicePaymentService.payableFor(user._id, number);
+  const total = invoicePaymentService.outstandingOf(invoice);
+
+  const { rows, creditApplied, charged } = await settleAmount(user, {
+    total,
+    useStoreCredit,
+    poNumber,
+    label: invoice.number,
+  });
+
+  // One row at a time, through the one place a payment may be recorded — so
+  // each earns referral commission on its own instalment and the line of
+  // credit is repaid by the same amount that was collected.
+  for (const row of rows) {
+    // eslint-disable-next-line no-await-in-loop
+    await invoicePaymentService.recordPayment(invoice, row);
+  }
+
+  return {
+    invoice: serializeInvoice(invoice.toObject()),
+    creditApplied,
+    charged,
+    message: `${invoice.number} paid in full.`,
+  };
+}
+
+/**
+ * Pays the whole line of credit off in one action.
+ *
+ * `User.balance` is a single rolled-up number with nothing linking it to the
+ * records that produced it, so "pay the balance" means settling the amounts
+ * behind it: every `due` record on terms, **oldest first**, which is the order
+ * a trade account expects and the order that clears the oldest ageing first.
+ *
+ * One charge covers the lot and is then allocated across the records, rather
+ * than one charge per record — a buyer clicking `Pay all` expects one line on
+ * their card statement, not seven.
+ */
+async function payOffCredit(user, { useStoreCredit, poNumber } = {}) {
+  const invoices = await Invoice.find({
+    user: user._id,
+    kind: 'due',
+    terms: { $ne: 'prepaid' },
+  }).sort({ issuedAt: 1 });
+
+  const payable = invoices.filter((invoice) => invoicePaymentService.outstandingOf(invoice) > 0);
+  const total = payable.reduce(
+    (sum, invoice) => sum + invoicePaymentService.outstandingOf(invoice),
+    0,
+  );
+
+  if (total <= 0) {
+    throw ApiError.badRequest('Your line of credit is already clear.', 'NOTHING_DUE');
+  }
+
+  const label = `PAYOFF-${user._id.toString().slice(-6)}`;
+  const { rows, creditApplied, charged } = await settleAmount(user, {
+    total,
+    useStoreCredit,
+    poNumber,
+    label,
+  });
+
+  // Allocate oldest first. Each source of money (credit, then card) is drawn
+  // down across the invoices in turn, so an invoice can legitimately carry two
+  // payment rows — part credit, part card — and the sum still lands exactly on
+  // its balance.
+  const settled = [];
+  const pool = rows.map((row) => ({ ...row, left: row.amount }));
+
+  for (const invoice of payable) {
+    let owing = invoicePaymentService.outstandingOf(invoice);
+
+    for (const source of pool) {
+      if (owing <= 0) break;
+      if (source.left <= 0) continue;
+
+      const slice = Math.min(source.left, owing);
+      // eslint-disable-next-line no-await-in-loop
+      await invoicePaymentService.recordPayment(invoice, {
+        amount: slice,
+        method: source.method,
+        reference: source.reference,
+        at: source.at,
+      });
+
+      source.left -= slice;
+      owing -= slice;
+    }
+
+    settled.push(invoice.number);
+  }
+
+  return {
+    settled,
+    total,
+    creditApplied,
+    charged,
+    message:
+      settled.length === 1
+        ? 'Your outstanding balance is paid.'
+        : `${settled.length} outstanding amounts paid.`,
+  };
+}
+
+/**
+ * Everything that has happened on this account, newest first.
+ *
+ * Assembled by `activityFeed`, which the admin client profile already uses —
+ * one feed, so a buyer and their account rep are looking at the same history
+ * rather than two views that can disagree.
+ */
+async function activity(userId, { limit = 40 } = {}) {
+  return activityFeed(userId, { limit, forBuyer: true });
+}
+
+/**
+ * The buyer's own referral standing: their code, the rate, who they brought and
+ * what that has earned them.
+ *
+ * Scoped to one referrer rather than reusing `referralService.listReferrals`,
+ * which walks every referred account in the system for the admin screen.
+ */
+async function referrals(user) {
+  const referralService = require('./referralService.js');
+  return referralService.referralsFor(user);
+}
+
 // --- CommonJS exports -------------------------------------------------
 exports.summary = summary;
 exports.updateProfile = updateProfile;
@@ -421,3 +659,7 @@ exports.invoiceDocument = invoiceDocument;
 exports.lineOfCreditActivity = lineOfCreditActivity;
 exports.storeCreditStatement = storeCreditStatement;
 exports.rechargeStoreCredit = rechargeStoreCredit;
+exports.payInvoice = payInvoice;
+exports.payOffCredit = payOffCredit;
+exports.activity = activity;
+exports.referrals = referrals;

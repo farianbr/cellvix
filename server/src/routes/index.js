@@ -36,13 +36,18 @@ const { default: validate } = require('../middleware/validate.js');
 const {
   requireAuth, requireApproved, requireAdmin, requireStaff, denyAdmin, requirePermission,
 } = require('../middleware/auth.js');
-const { loginSchema, registerSchema, forgotPasswordSchema } = require('../../../shared/schemas/auth.js');
+const {
+  loginSchema,
+  registerSchema,
+  forgotPasswordSchema,
+  supplierApplicationSchema,
+} = require('../../../shared/schemas/auth.js');
 const {
   addItemSchema, setQtySchema, mergeCartSchema, saveCartSchema, addBundleSchema, setBundleQtySchema, promoCodeSchema,
 } = require('../../../shared/schemas/cart.js');
 const { checkoutSchema } = require('../../../shared/schemas/checkout.js');
 const {
-  profileSchema, savedAddressSchema, paymentMethodSchema, bulkAddSchema, changePasswordSchema, rechargeSchema,
+  profileSchema, savedAddressSchema, paymentMethodSchema, bulkAddSchema, changePasswordSchema, rechargeSchema, invoicePaymentSchema: accountInvoicePaymentSchema, creditPayoffSchema,
 } = require('../../../shared/schemas/account.js');
 const {
   approveUserSchema, rejectUserSchema, creditSchema, clientSchema, clientUpdateSchema, contactConsentSchema, tierSchema, internalNoteSchema, adminOrderSchema, adminInvoiceSchema, refundSchema, storeCreditSchema, userStatusSchema, productSchema, orderStatusSchema, invoicePaymentSchema, invoiceVoidSchema, bulkOrderStatusSchema, supplierSchema, supplierReturnSchema, supplierReturnStatusSchema, supplierCreditSchema, supplierServiceSchema, supplierServiceUpdateSchema, supplierChargeSchema, purchaseOrderSchema, purchaseOrderStatusSchema, purchaseReceiveSchema, purchasePaymentSchema, expenseSchema, expenseCategorySchema, stockAdjustSchema, productOpsSchema, quoteSchema, quoteStatusSchema, quoteConvertSchema, rmaSchema, rmaStatusSchema, rmaInspectSchema, rmaResolveSchema, ticketSchema, ticketUpdateSchema, ticketStatusSchema, outletSchema, roleSchema, staffUserSchema, staffUserUpdateSchema, messageSchema, callLogSchema, messageTemplateSchema, campaignSchema, unsubscribeSchema, referralRateSchema, businessInfoSchema, saleSettingsSchema, shippingSettingsSchema, paymentMethodsSettingsSchema, inventorySettingsSchema, providerCredentialSchema, taxonomyNodeSchema, invoiceStatusRuleSchema, communicationsSettingsSchema,
@@ -76,6 +81,15 @@ router.post(
   authLimiter,
   validate(forgotPasswordSchema),
   authController.forgotPassword,
+);
+// Creates no account, so it sits with auth rather than under /admin: it is the
+// other half of the storefront sign-up. Rate-limited like every other
+// unauthenticated write.
+router.post(
+  '/auth/supplier-application',
+  authLimiter,
+  validate(supplierApplicationSchema),
+  authController.applyAsSupplier,
 );
 
 // --- contact ---------------------------------------------------------------
@@ -161,6 +175,22 @@ router.post('/account/store-credit/recharge', ...account, validate(rechargeSchem
 router.get('/invoices', ...account, accountController.listInvoices);
 router.get('/invoices/:number', ...account, accountController.getInvoice);
 router.get('/invoices/:number/document', ...account, accountController.invoiceDocument);
+
+// Paying. Neither route takes an amount: what is owed is a fact the server
+// already holds, and §5.3 is explicit that the client never sends a figure that
+// decides what money moves. `payoff` settles every amount outstanding on the
+// line of credit, oldest first, in one charge.
+router.post('/invoices/:number/pay', ...account, validate(accountInvoicePaymentSchema), accountController.payInvoice);
+router.post('/account/credit/payoff', ...account, validate(creditPayoffSchema), accountController.payOffCredit);
+
+// The account's own history — the same feed the admin client profile reads, so
+// a buyer and their account rep are never looking at two different stories.
+router.get('/account/activity', ...account, accountController.activity);
+
+// The buyer's referral standing (§6.13). Read-only: a code is minted at
+// approval and a commission is earned by a payment, so there is nothing here
+// for a buyer to write.
+router.get('/account/referrals', ...account, accountController.referrals);
 
 // --- admin -----------------------------------------------------------------
 // Panel access. `requireStaff` admits an admin or a staff member holding a

@@ -71,7 +71,96 @@ async function post({
     referral,
   });
 
+  await issueReceipt(entry);
+
   return { balance: updated.storeCredit, entry: serialize(entry) };
+}
+
+/**
+ * Movement types that get a receipt document.
+ *
+ * The rule is "money entering the account gets a document, money leaving it on
+ * an order does not". A `redemption` is already a payment row on that order's
+ * own invoice, and an `adjustment` is a correction to a figure — issuing
+ * documents for either would have the statement counting the same cents twice.
+ *
+ * A `referral` accrual is included even though nobody paid Cellvix for it: it
+ * is money the business earned, and it needs a document for the same reason a
+ * refund does.
+ */
+const RECEIPTED_TYPES = new Set(['recharge', 'grant', 'refund', 'referral']);
+
+const RECEIPT_LABELS = {
+  recharge: 'Account top-up',
+  grant: 'Store credit issued by Cellvix',
+  refund: 'Refund to store credit',
+  referral: 'Referral commission',
+};
+
+/**
+ * Raises the receipt for a credit movement.
+ *
+ * Placed inside `post()` rather than in each caller for the same reason the
+ * ledger row itself is: this is the choke point every movement passes through,
+ * and a rule enforced at the choke point cannot be forgotten by a caller added
+ * later.
+ *
+ * **Best effort, and deliberately so.** The money has already moved and the
+ * ledger row already exists by the time this runs. A document that failed to
+ * render is a reconciliation problem to investigate; it is never a reason to
+ * unwind a balance change that succeeded. Same reasoning `referralService`
+ * applies to a commission that could not post, and `mailer` to an order
+ * confirmation that could not send.
+ *
+ * A reversal (negative `referral`) is receipted too, at its absolute value —
+ * the document says what happened, and "commission reversed" is a thing that
+ * happened.
+ */
+async function issueReceipt(entry) {
+  if (!RECEIPTED_TYPES.has(entry.type)) return null;
+
+  try {
+    // Lazy: `orderBuilder` pulls in the order graph, and this service is
+    // required by much of it.
+    const { nextInvoiceNumber } = require('./orderBuilder.js');
+    const { default: Invoice } = require('../models/Invoice.js');
+
+    const gross = Math.abs(entry.amount);
+    const reversal = entry.amount < 0;
+    const label = RECEIPT_LABELS[entry.type] ?? 'Store credit movement';
+
+    return await Invoice.create({
+      number: await nextInvoiceNumber('RCT'),
+      kind: 'receipt',
+      user: entry.user,
+      creditTransaction: entry._id,
+      order: entry.order,
+      amount: gross,
+      // A receipt records money that has already moved, so it is settled on
+      // the instant it exists. There is never a balance to chase.
+      amountPaid: gross,
+      status: 'paid',
+      // No tax line: a top-up, a refund and a commission accrual are movements
+      // of money, not supplies of goods, and GST/HST does not arise on them.
+      // `terms: 'prepaid'` keeps it out of every line-of-credit calculation.
+      terms: 'prepaid',
+      issuedAt: entry.createdAt ?? new Date(),
+      settledAt: entry.createdAt ?? new Date(),
+      reference: reversal ? `${label} reversed` : label,
+      notes: entry.note || undefined,
+      payments: [
+        {
+          amount: gross,
+          at: entry.createdAt ?? new Date(),
+          method: 'store-credit',
+          reference: entry.paymentRef || entry._id.toString(),
+        },
+      ],
+    });
+  } catch (error) {
+    console.error(`  Store credit: receipt for movement ${entry?._id} failed — ${error.message}`);
+    return null;
+  }
 }
 
 function serialize(entry) {
@@ -169,6 +258,11 @@ async function creditReferral({ referrerId, amount, note, referral }) {
       note,
       referral,
     });
+
+    // This branch writes the ledger itself rather than going through `post()`,
+    // so it has to raise the receipt itself too — the document belongs to the
+    // movement, not to the path that made it.
+    await issueReceipt(entry);
 
     return { balance: updated.storeCredit, entry: serialize(entry) };
   }

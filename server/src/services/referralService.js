@@ -46,15 +46,66 @@ const storeCreditService = require('./storeCreditService.js');
 // Unambiguous alphabet: no O/0, no I/1/L. A referral code gets read down a
 // phone line and typed by somebody who did not choose it.
 const CODE_ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
-const CODE_LENGTH = 8;
+const SUFFIX_LENGTH = 3;
 
-function randomCode() {
-  const bytes = crypto.randomBytes(CODE_LENGTH);
-  let out = '';
-  for (let i = 0; i < CODE_LENGTH; i += 1) {
-    out += CODE_ALPHABET[bytes[i] % CODE_ALPHABET.length];
+/**
+ * Two letters of the first name, two of the last, `CLV`, three random.
+ *
+ *   Jordan Smith  ->  JOSMCLVX7Q
+ *
+ * The initials make a code its owner recognises as theirs and can read out
+ * without checking, which a random string never manages. `CLV` marks it as ours
+ * on somebody else's screen.
+ *
+ * The random tail is what actually makes it unique — the initials are not a
+ * key, and two Jordan Smiths must not collide. Three characters of the alphabet
+ * above is 29,791 codes per name pair, and `ensureReferralCode` retries on the
+ * collisions that remain.
+ *
+ * Deliberately **not** built from the phone number, which was the first shape
+ * asked for: a referral code is pasted into public share links and read out to
+ * strangers, and a personal mobile number is not something to publish on the
+ * account holder's behalf. It also changes, and a code that changes breaks
+ * every link already handed out.
+ */
+function letterPair(source, fallback) {
+  const letters = String(source ?? '')
+    .toUpperCase()
+    .replace(/[^A-Z]/g, '');
+  // Padded rather than skipped, so the shape is fixed at 10 characters however
+  // short the name is — a one-letter name still produces a readable code.
+  return (letters + fallback).slice(0, 2);
+}
+
+/**
+ * The two words the initials come from.
+ *
+ * A single-word name is split down the middle rather than doubled, so the
+ * letters that survive are still that name's own: `Cher` gives `CH` + `ER`,
+ * and a one-letter name falls back to padding for the half that does not
+ * exist rather than losing the letter it does have.
+ */
+function nameParts(user) {
+  // `contactName` is the person; `businessName` is the fallback for an account
+  // that has only ever been addressed as a company.
+  const raw = String(user?.contactName || user?.businessName || '').trim();
+  const words = raw.split(/\s+/).filter(Boolean);
+
+  if (words.length >= 2) return [words[0], words[words.length - 1]];
+  if (words.length === 1) return [words[0].slice(0, 2), words[0].slice(2)];
+  return ['', ''];
+}
+
+function buildCode(user) {
+  const [first, last] = nameParts(user);
+  const bytes = crypto.randomBytes(SUFFIX_LENGTH);
+
+  let suffix = '';
+  for (let i = 0; i < SUFFIX_LENGTH; i += 1) {
+    suffix += CODE_ALPHABET[bytes[i] % CODE_ALPHABET.length];
   }
-  return out;
+
+  return `${letterPair(first, 'XX')}${letterPair(last, 'XX')}CLV${suffix}`;
 }
 
 /**
@@ -70,8 +121,8 @@ function randomCode() {
 async function ensureReferralCode(user) {
   if (user.referralCode) return user.referralCode;
 
-  for (let attempt = 0; attempt < 5; attempt += 1) {
-    const code = randomCode();
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const code = buildCode(user);
     // eslint-disable-next-line no-await-in-loop
     const taken = await User.exists({ referralCode: code });
     if (taken) continue;
@@ -80,8 +131,11 @@ async function ensureReferralCode(user) {
     return code;
   }
 
-  // Five collisions against a 31^8 space means something is wrong with the
-  // randomness, not with luck. Fail loudly rather than minting a duplicate.
+  // The initials are fixed per account, so the retry only ever re-rolls the
+  // three-character tail — 31^3 rather than the 31^8 the old fully random code
+  // had. Eight attempts rather than five for that reason. Exhausting them means
+  // thousands of accounts share one name pair, which is a data problem worth
+  // failing loudly over rather than minting a duplicate.
   throw ApiError.badRequest('Could not allocate a referral code.', 'REFERRAL_CODE_EXHAUSTED');
 }
 
@@ -430,11 +484,119 @@ async function listReferrals({ search, from, to } = {}) {
   return { referrals: rows, totals, percent: await currentPercent() };
 }
 
+/**
+ * One referrer's own standing — the buyer-facing view of §6.13.
+ *
+ * Separate from `listReferrals` rather than a filter over it: that function
+ * walks every referred account in the system to build the admin table, and
+ * running it to answer "what have *I* earned" would read the whole collection
+ * to throw almost all of it away.
+ *
+ * What it deliberately does **not** return is anything about the referred
+ * accounts' money. A referrer is shown who joined, whether that account is
+ * active yet, and what they themselves earned — never what the referred
+ * business spent. That is somebody else's trading history and no part of the
+ * commission arrangement.
+ *
+ * The code is minted here if the account somehow reached approval without one,
+ * so the screen can never render an empty box where a code should be.
+ */
+async function referralsFor(user) {
+  let { referralCode } = user;
+
+  if (!referralCode && user.status === 'approved') {
+    const doc = await User.findById(user._id);
+    if (doc) {
+      referralCode = await ensureReferralCode(doc);
+      await doc.save();
+    }
+  }
+
+  const [referred, rows, percent] = await Promise.all([
+    User.find({ referredBy: user._id })
+      .select('businessName status createdAt')
+      .sort({ createdAt: -1 })
+      .lean(),
+    CreditTransaction.find({ user: user._id, type: 'referral' })
+      .sort({ createdAt: -1 })
+      .lean(),
+    currentPercent(),
+  ]);
+
+  // Keyed by the referred account, so each row can say what it earned. Gross
+  // and net are tracked apart for the same reason the admin table does it: a
+  // pairing that accrued $100 and had all of it clawed back nets to zero, and
+  // reporting "nothing was reversed" about that is exactly wrong.
+  const byAccount = new Map();
+  let earned = 0;
+  let reversed = 0;
+
+  for (const row of rows) {
+    if (row.amount > 0) earned += row.amount;
+    else reversed += -row.amount;
+
+    const key = String(row.referral?.from ?? '');
+    if (!key) continue;
+
+    const current = byAccount.get(key) ?? { earned: 0, payments: 0, lastAt: null };
+    if (row.amount > 0) {
+      current.earned += row.amount;
+      current.payments += 1;
+      if (!current.lastAt || row.createdAt > current.lastAt) current.lastAt = row.createdAt;
+    } else {
+      current.earned += row.amount;
+      current.payments = Math.max(current.payments - 1, 0);
+    }
+    byAccount.set(key, current);
+  }
+
+  const accounts = referred.map((account) => {
+    const stat = byAccount.get(String(account._id)) ?? { earned: 0, payments: 0, lastAt: null };
+    return {
+      id: account._id.toString(),
+      businessName: account.businessName,
+      joinedAt: account.createdAt,
+      // Whether they are trading yet, not what they are worth.
+      active: account.status === 'approved',
+      status: account.status,
+      paymentsCounted: stat.payments,
+      commissionEarned: stat.earned,
+      lastEarnedAt: stat.lastAt,
+    };
+  });
+
+  return {
+    code: referralCode ?? null,
+    percent,
+    accounts,
+    totals: {
+      referred: accounts.length,
+      active: accounts.filter((account) => account.active).length,
+      // Net of reversals: what the referrer actually kept.
+      earned: earned - reversed,
+      earnedGross: earned,
+      reversed,
+      pending: accounts.filter((account) => account.paymentsCounted === 0).length,
+    },
+    // Newest first, for the "how it added up" list under the table.
+    history: rows.slice(0, 25).map((row) => ({
+      id: row._id.toString(),
+      amount: row.amount,
+      at: row.createdAt,
+      fromName: row.referral?.fromName ?? null,
+      percent: row.referral?.percent ?? null,
+      basis: row.referral?.basis ?? null,
+      reversal: row.amount < 0,
+    })),
+  };
+}
+
 exports.default = {
   accrueForPayment,
   currentPercent,
   ensureReferralCode,
   listReferrals,
+  referralsFor,
   resolveReferralCode,
   reverseForInvoice,
   reverseForOrder,
@@ -450,3 +612,4 @@ exports.accrueForPayment = accrueForPayment;
 exports.reverseForInvoice = reverseForInvoice;
 exports.reverseForOrder = reverseForOrder;
 exports.listReferrals = listReferrals;
+exports.referralsFor = referralsFor;

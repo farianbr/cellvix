@@ -47,6 +47,11 @@ const mongoose = require('mongoose');
  */
 const NOTIFICATION_TYPES = [
   'new_registration',
+  // A business applying to SELL to Cellvix, from the storefront sign-up. Kept
+  // apart from `new_registration` because it is not an account and does not
+  // route to the approvals queue: it lands in Suppliers as an inactive record
+  // for the purchasing team to review.
+  'supplier_application',
   'new_order',
   'quote_accepted',
   'new_rma',

@@ -51,6 +51,9 @@ const EVENT_LIMIT = 40;
 /** The permission area gating each event type (§7.6's areas, not invented ones). */
 const TYPE_AREA = {
   new_registration: 'clients',
+  // Gated on `purchase`, not `clients`: a supplier application is the
+  // purchasing team's work, and it is their screen it lands on.
+  supplier_application: 'purchase',
   new_order: 'sales',
   quote_accepted: 'sales',
   new_rma: 'sales',

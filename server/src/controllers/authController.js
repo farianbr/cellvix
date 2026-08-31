@@ -118,6 +118,18 @@ const me = asyncHandler(async (req, res) => {
   res.json({ user: await sessionUser(req.user) });
 });
 
+/**
+ * A business applying to supply Cellvix. Creates no account and no session.
+ *
+ * Always 202, whatever the service found. A public form that answered
+ * differently for an address already on file would report which businesses
+ * Cellvix buys from to anyone who cared to ask.
+ */
+const applyAsSupplier = asyncHandler(async (req, res) => {
+  await authService.applyAsSupplier(req.body);
+  res.status(202).json({ recorded: true });
+});
+
 const forgotPassword = asyncHandler(async (_req, res) => {
   // Always 204 — never reveal whether an address is registered.
   // TODO: wire to a transactional mail provider once the client picks one.
@@ -130,3 +142,4 @@ exports.login = login;
 exports.logout = logout;
 exports.me = me;
 exports.forgotPassword = forgotPassword;
+exports.applyAsSupplier = applyAsSupplier;

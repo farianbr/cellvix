@@ -12,7 +12,8 @@
     "seed:quotes": "node src/seed/quotes.js",
     "seed:expense-categories": "node src/seed/expense-categories.js",
     "seed:tickets": "node src/seed/tickets.js",
-    "backfill:competitors": "node src/seed/backfill-competitors.js"
+    "backfill:competitors": "node src/seed/backfill-competitors.js",
+    "backfill:invoice-kind": "node src/seed/backfill-invoice-kind.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
