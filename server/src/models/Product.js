@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const productSchema = new mongoose.Schema(
   {
@@ -95,5 +95,8 @@ productSchema.index({
 // Backs the header's live type-ahead.
 productSchema.index({ name: 'text', sku: 'text', searchTerms: 'text' });
 
-export const Product = mongoose.model('Product', productSchema);
-export default Product;
+const Product = mongoose.model('Product', productSchema);
+
+// --- CommonJS exports -------------------------------------------------
+exports.Product = Product;
+exports.default = Product;

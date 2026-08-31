@@ -13,6 +13,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import cn from '@/lib/cn';
+import useCreateParam from '@/hooks/useCreateParam';
 import { money, date, count as formatCount } from '@/lib/format';
 import { GRADE_ORDER, GRADES, LOW_STOCK_THRESHOLD } from '@/lib/constants';
 import { optionsFor } from '@/lib/taxonomy';
@@ -417,7 +418,9 @@ const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/inventory'], icon: adminIcon('Boxes
 
 export function AdminProductsPage() {
   const [query, setQuery] = useState('');
-  const [editing, setEditing] = useState(null); // product, or 'new'
+  // `+ Create > Product` arrives with `?new=1`; the sentinel is the same one
+  // the edit modal already reads.
+  const [editing, setEditing] = useCreateParam('new', null); // product, or 'new'
   const [editingOps, setEditingOps] = useState(null);
   const [adjusting, setAdjusting] = useState(null);
   const [selected, setSelected] = useState([]);
@@ -721,9 +724,23 @@ export function AdminProductsPage() {
             error={error}
             onCancel={() => setEditing(null)}
             onSubmit={(values) => {
-              const options = { onSuccess: () => setEditing(null) };
-              if (editing === 'new') createProduct.mutate(values, options);
-              else updateProduct.mutate({ id: editing.id, ...values }, options);
+              if (editing === 'new') {
+                createProduct.mutate(values, {
+                  onSuccess: (payload) => {
+                    setEditing(null);
+                    // A new product needs a reorder point and a cost before it
+                    // is much use, and both live on its detail page — so that is
+                    // where creating one lands. An edit stays put: the operator
+                    // was already looking at the list they wanted.
+                    if (payload?.product?.id) navigate(`/admin/inventory/${payload.product.id}`);
+                  },
+                });
+              } else {
+                updateProduct.mutate(
+                  { id: editing.id, ...values },
+                  { onSuccess: () => setEditing(null) },
+                );
+              }
             }}
           />
         )}

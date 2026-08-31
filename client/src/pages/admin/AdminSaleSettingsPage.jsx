@@ -12,6 +12,7 @@ import { SettingsFormActions, PlaceholderNotice } from '@/components/admin/setti
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { GRADES, GRADE_ORDER } from '@/lib/constants';
+import { MEMBERSHIP_TIERS } from '@shared/schemas/admin';
 import { useAdminSettings, useAdminMutations } from '@/hooks/useAdmin';
 
 /**
@@ -81,7 +82,13 @@ export function AdminSaleSettingsPage() {
     // cannot be the shared schema directly — validation of the converted values
     // happens server-side, and the fields below carry their own bounds.
     resolver: zodResolver(saleSettingsSchema.omit({ taxRatesByProvince: true })),
-    defaultValues: { timezone: 'America/Toronto', defaultDueDays: 30, rmaSlaDays: 14, warrantyByGrade: {} },
+    defaultValues: {
+      timezone: 'America/Toronto',
+      defaultDueDays: 30,
+      rmaSlaDays: 14,
+      warrantyByGrade: {},
+      warrantyBonusByTier: {},
+    },
   });
 
   // The tax table is held outside RHF: it is a fixed-length grid of rows keyed
@@ -99,6 +106,12 @@ export function AdminSaleSettingsPage() {
       rmaSlaDays: data.operations?.rmaSlaDays ?? 14,
       warrantyByGrade: Object.fromEntries(
         GRADE_ORDER.map((grade) => [grade, data.financial.warrantyByGrade?.[grade] ?? 0]),
+      ),
+      warrantyBonusByTier: Object.fromEntries(
+        MEMBERSHIP_TIERS.map((tier) => [
+          tier.value,
+          data.financial.warrantyBonusByTier?.[tier.value] ?? 0,
+        ]),
       ),
     });
 
@@ -132,6 +145,12 @@ export function AdminSaleSettingsPage() {
         rmaSlaDays: next.operations?.rmaSlaDays ?? 14,
         warrantyByGrade: Object.fromEntries(
           GRADE_ORDER.map((grade) => [grade, next.financial.warrantyByGrade?.[grade] ?? 0]),
+        ),
+        warrantyBonusByTier: Object.fromEntries(
+          MEMBERSHIP_TIERS.map((tier) => [
+            tier.value,
+            next.financial.warrantyBonusByTier?.[tier.value] ?? 0,
+          ]),
         ),
       });
       setRates(
@@ -314,6 +333,34 @@ export function AdminSaleSettingsPage() {
               />
             ))}
           </div>
+        </Panel>
+
+        <Panel
+          title="Warranty bonus by membership tier"
+          description="Extra days a tier adds on top of the grade above. Standard is the baseline, so it is zero."
+        >
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {MEMBERSHIP_TIERS.map((tier) => (
+              <Input
+                key={tier.value}
+                type="number"
+                min="0"
+                max="3650"
+                suffix="days"
+                label={tier.label}
+                disabled={tier.value === 'standard'}
+                error={errors.warrantyBonusByTier?.[tier.value]?.message}
+                {...register(`warrantyBonusByTier.${tier.value}`)}
+              />
+            ))}
+          </div>
+
+          <p className="mt-3 text-[12.5px] leading-relaxed text-ink-500">
+            <strong className="font-semibold text-ink-700">A bonus, not a replacement.</strong> Cover
+            is the grade&rsquo;s days plus the tier&rsquo;s, so a tier can only ever lengthen a
+            warranty — a Gold customer&rsquo;s NEW part gets 365 + 90 days, not 90. A grade with no
+            warranty gets none: a bonus extends cover that exists rather than creating it.
+          </p>
         </Panel>
 
         <SettingsFormActions

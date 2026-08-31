@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 /**
  * Every change to `Product.stock`, with its reason.
@@ -12,7 +12,7 @@ import mongoose from 'mongoose';
  * Written by `purchaseService` (receiving, adjustment) and by order fulfilment.
  * A client never adjusts stock directly.
  */
-export const MOVEMENT_TYPES = ['purchase', 'sale', 'adjustment', 'return', 'damage', 'transfer'];
+const MOVEMENT_TYPES = ['purchase', 'sale', 'adjustment', 'return', 'damage', 'transfer'];
 
 const stockMovementSchema = new mongoose.Schema(
   {
@@ -46,5 +46,9 @@ const stockMovementSchema = new mongoose.Schema(
 
 stockMovementSchema.index({ product: 1, createdAt: -1 });
 
-export const StockMovement = mongoose.model('StockMovement', stockMovementSchema);
-export default StockMovement;
+const StockMovement = mongoose.model('StockMovement', stockMovementSchema);
+
+// --- CommonJS exports -------------------------------------------------
+exports.MOVEMENT_TYPES = MOVEMENT_TYPES;
+exports.StockMovement = StockMovement;
+exports.default = StockMovement;

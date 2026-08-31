@@ -1,4 +1,4 @@
-import Taxonomy from '../models/Taxonomy.js';
+const { default: Taxonomy } = require('../models/Taxonomy.js');
 
 let cache = null;
 let cachedAt = 0;
@@ -10,7 +10,7 @@ const TTL_MS = 5 * 60 * 1000;
  * The sidebar, mega menu and tab wizard all render from this single response —
  * three sources would drift. It changes rarely, so it is cached in process.
  */
-export async function getTree({ force = false } = {}) {
+async function getTree({ force = false } = {}) {
   if (!force && cache && Date.now() - cachedAt < TTL_MS) return cache;
 
   const nodes = await Taxonomy.find({}).sort({ order: 1, name: 1 }).lean();
@@ -54,7 +54,11 @@ export async function getTree({ force = false } = {}) {
 }
 
 /** Call after any catalogue mutation so the next request rebuilds the tree. */
-export function invalidateTree() {
+function invalidateTree() {
   cache = null;
   cachedAt = 0;
 }
+
+// --- CommonJS exports -------------------------------------------------
+exports.getTree = getTree;
+exports.invalidateTree = invalidateTree;

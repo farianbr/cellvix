@@ -1,9 +1,9 @@
-import Settings, {
-  DEFAULT_PAYMENT_METHODS,
-  DEFAULT_SHIPPING_METHODS,
-  DEFAULT_TAX_RATES,
-} from '../models/Settings.js';
-import ApiError from '../utils/ApiError.js';
+const {
+  default: Settings,
+  DEFAULT_PAYMENT_METHODS, DEFAULT_SHIPPING_METHODS, DEFAULT_TAX_RATES,
+  DEFAULT_TIER_WARRANTY_BONUS,
+} = require('../models/Settings.js');
+const { default: ApiError } = require('../utils/ApiError.js');
 
 /**
  * The settings singleton's read and write surface (ERP rework §6.15, phase 11).
@@ -52,7 +52,7 @@ const TAX_KINDS = new Set(['GST', 'HST', 'GST+PST', 'GST+QST']);
  * A toggle flips to `true` here the moment its send path lands — one edit, and
  * the screen stops marking it.
  */
-export const COMMUNICATIONS_WIRED = {
+const COMMUNICATIONS_WIRED = {
   // Live since phase 2: `orderService.placeOrder` emails the invoice.
   invoiceOnOrder: true,
   // Live since phase 11d: the invoice-message rules send these.
@@ -77,7 +77,7 @@ export const COMMUNICATIONS_WIRED = {
  * plain object identically across driver versions, so it is normalised here
  * rather than in each screen.
  */
-export async function get() {
+async function get() {
   const doc = await Settings.load();
 
   return {
@@ -95,6 +95,24 @@ export async function get() {
           ? doc.financial.warrantyByGrade
           : Object.entries(doc.financial?.warrantyByGrade ?? {}),
       ),
+      /**
+       * Same Map normalisation as the grade table above — plus a default for
+       * documents that predate the field.
+       *
+       * A schema `default` only runs when a document is created, and this
+       * deployment's Settings row already exists, so without the fallback every
+       * existing install would read an empty table and quietly give every tier
+       * a zero bonus. `DEFAULT_TAX_RATES` is handled the same way, one line up,
+       * for exactly this reason.
+       */
+      warrantyBonusByTier: (() => {
+        const stored = Object.fromEntries(
+          doc.financial?.warrantyBonusByTier instanceof Map
+            ? doc.financial.warrantyBonusByTier
+            : Object.entries(doc.financial?.warrantyBonusByTier ?? {}),
+        );
+        return Object.keys(stored).length > 0 ? stored : { ...DEFAULT_TIER_WARRANTY_BONUS };
+      })(),
       paymentMethods: doc.financial?.paymentMethods?.length
         ? doc.financial.paymentMethods
         : DEFAULT_PAYMENT_METHODS,
@@ -148,7 +166,7 @@ async function patch($set) {
  * it is the answer to the `BUSINESS_INFO` placeholder constants still sitting
  * in `client/src/lib/constants.js`.
  */
-export async function updateBusiness(input) {
+async function updateBusiness(input) {
   return patch({
     'business.name': input.name,
     'business.tagline': input.tagline ?? '',
@@ -170,7 +188,7 @@ export async function updateBusiness(input) {
  * So rates are fractions here, the way the model stores and `rateFor` reads
  * them, and the screen does the percent conversion for display.
  */
-export async function updateSale(input) {
+async function updateSale(input) {
   const seen = new Set();
 
   for (const row of input.taxRatesByProvince) {
@@ -199,11 +217,37 @@ export async function updateSale(input) {
       : Object.entries(current.financial?.warrantyByGrade ?? {}),
   );
 
+  /**
+   * The tier bonus table is merged for the same reason, and additionally
+   * tolerates being absent from the payload: a client that predates the field
+   * must not wipe it by saving the rest of the form.
+   *
+   * **The stored value falls back to the defaults, not to `{}`.** A document
+   * that predates the field has an empty Map, so merging onto `{}` and then
+   * `$set`ting the result would let a payload naming one tier delete the other
+   * three — the exact whole-Map overwrite this merge exists to prevent, just
+   * arriving one save later. Merging onto the same defaults the read path
+   * serves keeps the two halves telling the same story.
+   */
+  const storedTierBonus = Object.fromEntries(
+    current.financial?.warrantyBonusByTier instanceof Map
+      ? current.financial.warrantyBonusByTier
+      : Object.entries(current.financial?.warrantyBonusByTier ?? {}),
+  );
+  const existingTierBonus =
+    Object.keys(storedTierBonus).length > 0
+      ? storedTierBonus
+      : { ...DEFAULT_TIER_WARRANTY_BONUS };
+
   return patch({
     'financial.timezone': input.timezone,
     'financial.defaultDueDays': input.defaultDueDays,
     'financial.taxRatesByProvince': input.taxRatesByProvince,
     'financial.warrantyByGrade': { ...existingWarranty, ...input.warrantyByGrade },
+    'financial.warrantyBonusByTier': {
+      ...existingTierBonus,
+      ...(input.warrantyBonusByTier ?? {}),
+    },
     'operations.rmaSlaDays': input.rmaSlaDays,
   });
 }
@@ -218,7 +262,7 @@ export async function updateSale(input) {
  * What is editable is the part an operator actually needs to change — the
  * label, the description, the price and the free-shipping threshold.
  */
-export async function updateShipping(input) {
+async function updateShipping(input) {
   const current = await Settings.load();
   const existing = current.financial?.shippingMethods?.length
     ? current.financial.shippingMethods
@@ -259,7 +303,7 @@ export async function updateShipping(input) {
  * frozen: expenses and payments store the code, so letting it change would
  * orphan every row already recorded against it.
  */
-export async function updatePaymentMethods(input) {
+async function updatePaymentMethods(input) {
   const seen = new Set();
 
   for (const row of input.methods) {
@@ -287,7 +331,7 @@ export async function updatePaymentMethods(input) {
  * says so, because "did I just change every price" is the first thing an
  * operator will wonder.
  */
-export async function updateInventory(input) {
+async function updateInventory(input) {
   return patch({
     'inventory.defaultMarkupPercent': input.defaultMarkupPercent,
     'inventory.defaultMarginPercent': input.defaultMarginPercent,
@@ -300,7 +344,7 @@ export async function updateInventory(input) {
  * Toggles and the reminder schedule. Nothing here sends anything — it decides
  * what the paths that do send are allowed to do.
  */
-export async function updateCommunications(input) {
+async function updateCommunications(input) {
   return patch({
     'communications.invoiceOnOrder': input.invoiceOnOrder,
     'communications.quoteOnCreate': input.quoteOnCreate,
@@ -318,7 +362,7 @@ export async function updateCommunications(input) {
   });
 }
 
-export default {
+exports.default = {
   get,
   updateBusiness,
   updateSale,
@@ -327,3 +371,13 @@ export default {
   updateInventory,
   updateCommunications,
 };
+
+// --- CommonJS exports -------------------------------------------------
+exports.COMMUNICATIONS_WIRED = COMMUNICATIONS_WIRED;
+exports.get = get;
+exports.updateBusiness = updateBusiness;
+exports.updateSale = updateSale;
+exports.updateShipping = updateShipping;
+exports.updatePaymentMethods = updatePaymentMethods;
+exports.updateInventory = updateInventory;
+exports.updateCommunications = updateCommunications;

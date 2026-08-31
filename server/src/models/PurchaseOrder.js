@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 /**
  * Stock on order from a supplier (ERP rework §6.8).
@@ -32,7 +32,7 @@ const purchaseOrderItemSchema = new mongoose.Schema(
   { _id: false },
 );
 
-export const PO_STATUSES = ['draft', 'sent', 'partial', 'received', 'cancelled'];
+const PO_STATUSES = ['draft', 'sent', 'partial', 'received', 'cancelled'];
 
 const purchaseOrderSchema = new mongoose.Schema(
   {
@@ -90,5 +90,9 @@ const purchaseOrderSchema = new mongoose.Schema(
 
 purchaseOrderSchema.index({ supplier: 1, orderDate: -1 });
 
-export const PurchaseOrder = mongoose.model('PurchaseOrder', purchaseOrderSchema);
-export default PurchaseOrder;
+const PurchaseOrder = mongoose.model('PurchaseOrder', purchaseOrderSchema);
+
+// --- CommonJS exports -------------------------------------------------
+exports.PO_STATUSES = PO_STATUSES;
+exports.PurchaseOrder = PurchaseOrder;
+exports.default = PurchaseOrder;

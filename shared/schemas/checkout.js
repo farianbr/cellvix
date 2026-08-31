@@ -1,7 +1,7 @@
-import { z } from 'zod';
+const { z } = require('zod');
 
 /** Canadian provinces and territories — the only shipping destinations Cellvix serves. */
-export const PROVINCES = [
+const PROVINCES = [
   { value: 'AB', label: 'Alberta' },
   { value: 'BC', label: 'British Columbia' },
   { value: 'MB', label: 'Manitoba' },
@@ -19,7 +19,7 @@ export const PROVINCES = [
 
 const POSTAL = /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/;
 
-export const addressSchema = z.object({
+const addressSchema = z.object({
   contactName: z.string().trim().min(2, 'Enter a contact name.'),
   company: z.string().trim().optional(),
   line1: z.string().trim().min(2, 'Enter a street address.'),
@@ -32,7 +32,7 @@ export const addressSchema = z.object({
 });
 
 /** Flat-rate placeholder until the client confirms carriers (PROGRESS.md Q5). */
-export const DELIVERY_METHODS = [
+const DELIVERY_METHODS = [
   {
     code: 'ground',
     label: 'Ground',
@@ -45,7 +45,7 @@ export const DELIVERY_METHODS = [
   { code: 'pickup', label: 'Warehouse pickup', detail: 'Ready in 2 hours', cost: 0, etaDays: 0 },
 ];
 
-export const checkoutSchema = z.object({
+const checkoutSchema = z.object({
   email: z.string().trim().toLowerCase().email('Enter a valid email address.'),
   shippingAddress: addressSchema,
   billingSameAsShipping: z.boolean().default(true),
@@ -60,7 +60,7 @@ export const checkoutSchema = z.object({
 });
 
 /** The checkout sections, in the order the conversational flow opens them. */
-export const CHECKOUT_STEPS = [
+const CHECKOUT_STEPS = [
   { key: 'contact', label: 'Contact' },
   { key: 'shipping', label: 'Shipping address' },
   { key: 'delivery', label: 'Delivery method' },
@@ -69,4 +69,12 @@ export const CHECKOUT_STEPS = [
 ];
 
 /** Placeholder rate — awaiting the client's real tax rules (PROGRESS.md Q4). */
-export const TAX_RATE = 0.13;
+const TAX_RATE = 0.13;
+
+// --- CommonJS exports -------------------------------------------------
+exports.PROVINCES = PROVINCES;
+exports.addressSchema = addressSchema;
+exports.DELIVERY_METHODS = DELIVERY_METHODS;
+exports.checkoutSchema = checkoutSchema;
+exports.CHECKOUT_STEPS = CHECKOUT_STEPS;
+exports.TAX_RATE = TAX_RATE;

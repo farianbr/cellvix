@@ -1,5 +1,5 @@
-import AuditLog, { diff } from '../models/AuditLog.js';
-import { likeRegex } from '../utils/regex.js';
+const { default: AuditLog, diff } = require('../models/AuditLog.js');
+const { likeRegex } = require('../utils/regex.js');
 
 /**
  * The audit trail's read and write surface (§7.5, §6.15 category 6, phase 11b).
@@ -22,7 +22,7 @@ import { likeRegex } from '../utils/regex.js';
  * Denormalised onto the row: an audit entry must still read correctly after the
  * account is renamed or deleted, so it cannot depend on a join that can vanish.
  */
-export function actorFrom(req) {
+function actorFrom(req) {
   const user = req?.user;
   return {
     actor: user?._id ?? null,
@@ -40,7 +40,7 @@ export function actorFrom(req) {
  * Callers are mutation paths that have already committed their change, so they
  * `await` this only to keep ordering tidy — the promise always resolves.
  */
-export async function record({
+async function record({
   req,
   kind = 'activity',
   action,
@@ -72,7 +72,7 @@ export async function record({
  * this and pressed save" is a log nobody scrolls, and the entries that matter
  * get buried in it.
  */
-export async function recordChange({ req, action, entity, before, after, fields, description }) {
+async function recordChange({ req, action, entity, before, after, fields, description }) {
   const changes = diff(before, after, { fields });
   if (!changes) return;
 
@@ -97,7 +97,7 @@ export async function recordChange({ req, action, entity, before, after, fields,
  * matching on `kind` and `action` could pick up somebody else's row under
  * concurrent sign-ins, which is a worse answer than none.
  */
-export async function recordSecurity({ req, action, entity, description, subject = null }) {
+async function recordSecurity({ req, action, entity, description, subject = null }) {
   const base = actorFrom(req);
 
   try {
@@ -131,7 +131,7 @@ export async function recordSecurity({ req, action, entity, description, subject
  * — not the caller's query — decides it, because the security log is admin-only
  * and a client-supplied `kind` would be a way around that.
  */
-export async function list({ kind = 'activity', q, action, entity, page = 1, limit = 50 } = {}) {
+async function list({ kind = 'activity', q, action, entity, page = 1, limit = 50 } = {}) {
   const filter = { kind };
 
   if (action) filter.action = action;
@@ -187,4 +187,11 @@ export async function list({ kind = 'activity', q, action, entity, page = 1, lim
   };
 }
 
-export default { record, recordChange, recordSecurity, actorFrom, list };
+exports.default = { record, recordChange, recordSecurity, actorFrom, list };
+
+// --- CommonJS exports -------------------------------------------------
+exports.actorFrom = actorFrom;
+exports.record = record;
+exports.recordChange = recordChange;
+exports.recordSecurity = recordSecurity;
+exports.list = list;

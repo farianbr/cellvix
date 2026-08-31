@@ -1,6 +1,6 @@
-import { connectDb, disconnectDb } from '../config/db.js';
-import Product from '../models/Product.js';
-import { buildCompetitors } from './generate.js';
+const { connectDb, disconnectDb } = require('../config/db.js');
+const { default: Product } = require('../models/Product.js');
+const { buildCompetitors } = require('./generate.js');
 
 /**
  * Backfills the `competitors` benchmark prices onto products that predate the
@@ -21,9 +21,8 @@ import { buildCompetitors } from './generate.js';
  *
  *   npm run backfill:competitors
  *   npm run backfill:competitors -- --force
- *   MONGODB_URI="<uri>/cellvix_test" npm run backfill:competitors
  */
-export async function backfillCompetitors({ force = false, quiet = false } = {}) {
+async function backfillCompetitors({ force = false, quiet = false } = {}) {
   const log = quiet ? () => {} : (...args) => console.log(...args);
 
   const query = force ? {} : { $or: [{ competitors: { $size: 0 } }, { competitors: { $exists: false } }] };
@@ -62,15 +61,23 @@ export async function backfillCompetitors({ force = false, quiet = false } = {})
 // Only runs the connect/disconnect wrapper when invoked directly, so the
 // function above stays importable from a test or another script.
 if (process.argv[1] && process.argv[1].endsWith('backfill-competitors.js')) {
-  const force = process.argv.includes('--force');
+  (async () => {
+    const force = process.argv.includes('--force');
 
-  await connectDb();
-  console.log(`\n  Backfilling competitor benchmarks${force ? ' (--force: recomputing all)' : ''}\n`);
+    await connectDb();
+    console.log(`\n  Backfilling competitor benchmarks${force ? ' (--force: recomputing all)' : ''}\n`);
 
-  try {
-    await backfillCompetitors({ force });
-    console.log('\n  Done. Nothing else in the database was touched.\n');
-  } finally {
-    await disconnectDb();
-  }
+    try {
+      await backfillCompetitors({ force });
+      console.log('\n  Done. Nothing else in the database was touched.\n');
+    } finally {
+      await disconnectDb();
+    }
+  })().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
 }
+
+// --- CommonJS exports -------------------------------------------------
+exports.backfillCompetitors = backfillCompetitors;

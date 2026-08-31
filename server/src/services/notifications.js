@@ -1,6 +1,6 @@
-import env from '../config/env.js';
-import { sendMail } from './mailer.js';
-import { renderInvoiceHtml, renderInvoiceText } from './invoiceDocument.js';
+const { default: env } = require('../config/env.js');
+const { sendMail } = require('./mailer.js');
+const { renderInvoiceHtml, renderInvoiceText } = require('./invoiceDocument.js');
 
 /**
  * Transactional mail the buyer gets without asking for it.
@@ -10,7 +10,7 @@ import { renderInvoiceHtml, renderInvoiceText } from './invoiceDocument.js';
  */
 
 /** Emails the invoice for a freshly placed order. Never throws. */
-export async function sendInvoiceEmail({ invoice, order, user }) {
+async function sendInvoiceEmail({ invoice, order, user }) {
   if (!user?.email) return { delivered: false, via: 'outbox' };
 
   try {
@@ -29,4 +29,6 @@ export async function sendInvoiceEmail({ invoice, order, user }) {
   }
 }
 
-export default sendInvoiceEmail;
+// --- CommonJS exports -------------------------------------------------
+exports.sendInvoiceEmail = sendInvoiceEmail;
+exports.default = sendInvoiceEmail;

@@ -1,6 +1,6 @@
-import { asyncHandler } from '../utils/ApiError.js';
-import * as invoiceStatusService from '../services/invoiceStatusService.js';
-import * as auditService from '../services/auditService.js';
+const { asyncHandler } = require('../utils/ApiError.js');
+const invoiceStatusService = require('../services/invoiceStatusService.js');
+const auditService = require('../services/auditService.js');
 
 /**
  * Time-lapse invoice messages (§6.15 category 2, phase 11d).
@@ -10,11 +10,11 @@ import * as auditService from '../services/auditService.js';
  * the question somebody asks after the first complaint.
  */
 
-export const list = asyncHandler(async (req, res) => {
+const list = asyncHandler(async (req, res) => {
   res.json(await invoiceStatusService.list());
 });
 
-export const create = asyncHandler(async (req, res) => {
+const create = asyncHandler(async (req, res) => {
   const result = await invoiceStatusService.create(req.body);
 
   await auditService.record({
@@ -33,7 +33,7 @@ export const create = asyncHandler(async (req, res) => {
   res.status(201).json(result);
 });
 
-export const update = asyncHandler(async (req, res) => {
+const update = asyncHandler(async (req, res) => {
   const before = (await invoiceStatusService.list()).rules.find((r) => r.id === req.params.id);
   const result = await invoiceStatusService.update(req.params.id, req.body);
 
@@ -63,7 +63,7 @@ export const update = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
-export const remove = asyncHandler(async (req, res) => {
+const remove = asyncHandler(async (req, res) => {
   const result = await invoiceStatusService.remove(req.params.id);
 
   await auditService.record({
@@ -84,7 +84,7 @@ export const remove = asyncHandler(async (req, res) => {
  * before switching a rule on. A dry run is not audited, because it changes
  * nothing.
  */
-export const run = asyncHandler(async (req, res) => {
+const run = asyncHandler(async (req, res) => {
   const dryRun = req.query.dryRun === 'true';
   const result = await invoiceStatusService.run({ dryRun });
 
@@ -101,3 +101,10 @@ export const run = asyncHandler(async (req, res) => {
 
   res.json(result);
 });
+
+// --- CommonJS exports -------------------------------------------------
+exports.list = list;
+exports.create = create;
+exports.update = update;
+exports.remove = remove;
+exports.run = run;

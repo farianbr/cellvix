@@ -1,5 +1,5 @@
-import { asyncHandler } from '../utils/ApiError.js';
-import * as marketingService from '../services/marketingService.js';
+const { asyncHandler } = require('../utils/ApiError.js');
+const marketingService = require('../services/marketingService.js');
 
 /**
  * Marketing — calls, SMS, WhatsApp, email campaigns and consent (§6.13, phase 9).
@@ -13,7 +13,7 @@ import * as marketingService from '../services/marketingService.js';
 
 // ---- messages ---------------------------------------------------------------
 
-export const listMessages = asyncHandler(async (req, res) => {
+const listMessages = asyncHandler(async (req, res) => {
   res.json(await marketingService.listMessages(req.query));
 });
 
@@ -29,62 +29,62 @@ const composer = (channel) =>
     res.status(201).json(await marketingService.sendMessage(channel, req.body, req.user));
   });
 
-export const sendSms = composer('sms');
-export const sendWhatsapp = composer('whatsapp');
-export const sendEmail = composer('email');
-export const logCall = composer('call');
+const sendSms = composer('sms');
+const sendWhatsapp = composer('whatsapp');
+const sendEmail = composer('email');
+const logCall = composer('call');
 
 // ---- templates --------------------------------------------------------------
 
-export const listTemplates = asyncHandler(async (req, res) => {
+const listTemplates = asyncHandler(async (req, res) => {
   res.json(await marketingService.listTemplates(req.query));
 });
 
-export const createTemplate = asyncHandler(async (req, res) => {
+const createTemplate = asyncHandler(async (req, res) => {
   res.status(201).json(await marketingService.createTemplate(req.body, req.user));
 });
 
-export const updateTemplate = asyncHandler(async (req, res) => {
+const updateTemplate = asyncHandler(async (req, res) => {
   res.json(await marketingService.updateTemplate(req.params.id, req.body));
 });
 
-export const deleteTemplate = asyncHandler(async (req, res) => {
+const deleteTemplate = asyncHandler(async (req, res) => {
   res.json(await marketingService.deleteTemplate(req.params.id));
 });
 
 // ---- campaigns --------------------------------------------------------------
 
-export const listCampaigns = asyncHandler(async (req, res) => {
+const listCampaigns = asyncHandler(async (req, res) => {
   res.json(await marketingService.listCampaigns(req.query));
 });
 
-export const getCampaign = asyncHandler(async (req, res) => {
+const getCampaign = asyncHandler(async (req, res) => {
   res.json(await marketingService.getCampaign(req.params.id));
 });
 
-export const createCampaign = asyncHandler(async (req, res) => {
+const createCampaign = asyncHandler(async (req, res) => {
   res.status(201).json(await marketingService.createCampaign(req.body, req.user));
 });
 
-export const updateCampaign = asyncHandler(async (req, res) => {
+const updateCampaign = asyncHandler(async (req, res) => {
   res.json(await marketingService.updateCampaign(req.params.id, req.body));
 });
 
-export const deleteCampaign = asyncHandler(async (req, res) => {
+const deleteCampaign = asyncHandler(async (req, res) => {
   res.json(await marketingService.deleteCampaign(req.params.id));
 });
 
-export const sendCampaign = asyncHandler(async (req, res) => {
+const sendCampaign = asyncHandler(async (req, res) => {
   res.json(await marketingService.sendCampaign(req.params.id, req.user));
 });
 
 // ---- consent ----------------------------------------------------------------
 
-export const listUnsubscribes = asyncHandler(async (req, res) => {
+const listUnsubscribes = asyncHandler(async (req, res) => {
   res.json(await marketingService.listUnsubscribes(req.query));
 });
 
-export const resubscribe = asyncHandler(async (req, res) => {
+const resubscribe = asyncHandler(async (req, res) => {
   res.json(await marketingService.resubscribe(req.params.id));
 });
 
@@ -92,12 +92,33 @@ export const resubscribe = asyncHandler(async (req, res) => {
  * The public unsubscribe. No session, by design — see the service. The HMAC in
  * the link is what authorises it.
  */
-export const unsubscribe = asyncHandler(async (req, res) => {
+const unsubscribe = asyncHandler(async (req, res) => {
   res.json(await marketingService.unsubscribe(req.body.u, req.body.t));
 });
 
 // ---- overview ---------------------------------------------------------------
 
-export const summary = asyncHandler(async (_req, res) => {
+const summary = asyncHandler(async (_req, res) => {
   res.json(await marketingService.summary());
 });
+
+// --- CommonJS exports -------------------------------------------------
+exports.listMessages = listMessages;
+exports.sendSms = sendSms;
+exports.sendWhatsapp = sendWhatsapp;
+exports.sendEmail = sendEmail;
+exports.logCall = logCall;
+exports.listTemplates = listTemplates;
+exports.createTemplate = createTemplate;
+exports.updateTemplate = updateTemplate;
+exports.deleteTemplate = deleteTemplate;
+exports.listCampaigns = listCampaigns;
+exports.getCampaign = getCampaign;
+exports.createCampaign = createCampaign;
+exports.updateCampaign = updateCampaign;
+exports.deleteCampaign = deleteCampaign;
+exports.sendCampaign = sendCampaign;
+exports.listUnsubscribes = listUnsubscribes;
+exports.resubscribe = resubscribe;
+exports.unsubscribe = unsubscribe;
+exports.summary = summary;

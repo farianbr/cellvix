@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 /**
  * The audit trail (ERP rework §7.5, §6.15 category 6, phase 11b).
@@ -26,7 +26,7 @@ import mongoose from 'mongoose';
  */
 
 /** What a row can be about. Free-form would make the entity filter useless. */
-export const AUDIT_ENTITIES = [
+const AUDIT_ENTITIES = [
   'user',
   'staff',
   'role',
@@ -153,7 +153,7 @@ function sameValue(a, b) {
  * would say "somebody saved this and altered nothing" — a log full of those is
  * a log nobody reads.
  */
-export function diff(before = {}, after = {}, { fields } = {}) {
+function diff(before = {}, after = {}, { fields } = {}) {
   const keys = fields ?? [...new Set([...Object.keys(before ?? {}), ...Object.keys(after ?? {})])];
 
   const changedBefore = {};
@@ -182,5 +182,10 @@ export function diff(before = {}, after = {}, { fields } = {}) {
   return changed ? { before: changedBefore, after: changedAfter } : null;
 }
 
-export const AuditLog = mongoose.model('AuditLog', auditLogSchema);
-export default AuditLog;
+const AuditLog = mongoose.model('AuditLog', auditLogSchema);
+
+// --- CommonJS exports -------------------------------------------------
+exports.AUDIT_ENTITIES = AUDIT_ENTITIES;
+exports.diff = diff;
+exports.AuditLog = AuditLog;
+exports.default = AuditLog;

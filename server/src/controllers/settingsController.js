@@ -1,6 +1,6 @@
-import { asyncHandler } from '../utils/ApiError.js';
-import * as settingsService from '../services/settingsService.js';
-import * as auditService from '../services/auditService.js';
+const { asyncHandler } = require('../utils/ApiError.js');
+const settingsService = require('../services/settingsService.js');
+const auditService = require('../services/auditService.js');
 
 /**
  * Settings (ERP rework §6.15, phase 11).
@@ -11,7 +11,7 @@ import * as auditService from '../services/auditService.js';
  * in another tab. Each route touches only the paths its own screen owns.
  */
 
-export const get = asyncHandler(async (req, res) => {
+const get = asyncHandler(async (req, res) => {
   res.json(await settingsService.get());
 });
 
@@ -78,38 +78,47 @@ function sectionOf(settings, section) {
   }
 }
 
-export const updateBusiness = auditedWrite(
+const updateBusiness = auditedWrite(
   'business',
   (body) => settingsService.updateBusiness(body),
   'business information',
 );
 
-export const updateSale = auditedWrite(
+const updateSale = auditedWrite(
   'sale',
   (body) => settingsService.updateSale(body),
   'sale settings',
 );
 
-export const updateShipping = auditedWrite(
+const updateShipping = auditedWrite(
   'shipping',
   (body) => settingsService.updateShipping(body),
   'shipping rates',
 );
 
-export const updatePaymentMethods = auditedWrite(
+const updatePaymentMethods = auditedWrite(
   'payment-methods',
   (body) => settingsService.updatePaymentMethods(body),
   'payment methods',
 );
 
-export const updateCommunications = auditedWrite(
+const updateCommunications = auditedWrite(
   'communications',
   (body) => settingsService.updateCommunications(body),
   'email settings',
 );
 
-export const updateInventory = auditedWrite(
+const updateInventory = auditedWrite(
   'inventory',
   (body) => settingsService.updateInventory(body),
   'inventory defaults',
 );
+
+// --- CommonJS exports -------------------------------------------------
+exports.get = get;
+exports.updateBusiness = updateBusiness;
+exports.updateSale = updateSale;
+exports.updateShipping = updateShipping;
+exports.updatePaymentMethods = updatePaymentMethods;
+exports.updateCommunications = updateCommunications;
+exports.updateInventory = updateInventory;

@@ -1,5 +1,5 @@
-import { asyncHandler } from '../utils/ApiError.js';
-import * as notificationService from '../services/notificationService.js';
+const { asyncHandler } = require('../utils/ApiError.js');
+const notificationService = require('../services/notificationService.js');
 
 /**
  * The notification bell (§7.3, phase 12c).
@@ -10,7 +10,7 @@ import * as notificationService from '../services/notificationService.js';
  * ask for the alerts its role cannot see.
  */
 
-export const list = asyncHandler(async (req, res) => {
+const list = asyncHandler(async (req, res) => {
   res.json(await notificationService.list(req.user));
 });
 
@@ -18,10 +18,15 @@ export const list = asyncHandler(async (req, res) => {
  * Marks read. An empty body means "everything I can see" — the dropdown sends
  * that when it opens, and specific ids when a single row is clicked.
  */
-export const markRead = asyncHandler(async (req, res) => {
+const markRead = asyncHandler(async (req, res) => {
   res.json(await notificationService.markRead(req.user, req.body?.ids));
 });
 
-export const clearAll = asyncHandler(async (req, res) => {
+const clearAll = asyncHandler(async (req, res) => {
   res.json(await notificationService.clearAll(req.user));
 });
+
+// --- CommonJS exports -------------------------------------------------
+exports.list = list;
+exports.markRead = markRead;
+exports.clearAll = clearAll;

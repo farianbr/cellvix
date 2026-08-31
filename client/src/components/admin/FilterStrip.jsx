@@ -76,12 +76,89 @@ export function FilterStrip({
   exportFormats = ['CSV', 'XLSX'],
   onExport,
   actions,
+  /**
+   * Put the status pills on their own row above the search.
+   *
+   * For a board with eight or nine statuses — the ticket queue — squeezing them
+   * onto one line with a search box and two menus means they scroll sideways,
+   * and a filter an operator has to scroll to find is one they stop using. A
+   * list with four pills reads better on a single line, so this is opt-in
+   * rather than the default.
+   */
+  stackPills = false,
   className,
 }) {
+  const pillRow = pills.length > 0 && (
+    <div className="scroll-slim flex max-w-full gap-1.5 overflow-x-auto">
+      {pills.map((pill) => {
+        const isActive = activePill === pill.value;
+
+        return (
+          <button
+            key={pill.value}
+            type="button"
+            onClick={() => onPillChange?.(pill.value)}
+            aria-pressed={isActive}
+            className={cn(
+              'flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[8px] border px-2.5 text-[13px] font-medium transition-colors',
+              isActive
+                ? 'border-transparent bg-brand-gradient text-white'
+                : 'border-line bg-surface text-ink-600 hover:border-line-strong hover:text-ink-900',
+            )}
+          >
+            {pill.label}
+            {/* The count is a fixed-width chip, not loose text beside the
+                label. As bare digits it sat on the label's baseline and
+                took its own width, so `All 128` and `Pending 3` put their
+                numbers at different offsets and the pill row read as
+                ragged. A centred chip with a `min-w` of two digits keeps
+                every count in the same place regardless of magnitude, and
+                `tabular-nums` stops 1s from being narrower than 8s. */}
+            {pill.count != null && (
+              <span
+                className={cn(
+                  'tnum inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[11px] font-semibold leading-none',
+                  isActive ? 'bg-white/20 text-white' : 'bg-surface-3 text-ink-500',
+                )}
+              >
+                {pill.count}
+              </span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  if (stackPills) {
+    return (
+      <div className={className}>
+        <div className="border-b border-line p-3 sm:px-4">{pillRow}</div>
+        <FilterStrip
+          search={search}
+          onSearchChange={onSearchChange}
+          searchPlaceholder={searchPlaceholder}
+          filters={filters}
+          activeFilterCount={activeFilterCount}
+          onClearFilters={onClearFilters}
+          exportFormats={exportFormats}
+          onExport={onExport}
+          actions={actions}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={cn('flex flex-wrap items-center gap-2 border-b border-line p-3 sm:px-4', className)}>
       {onSearchChange && (
-        <div className="relative min-w-[180px] flex-1">
+        /* Sized, not stretched. `flex-1` let the field absorb every pixel the
+           pills and menus did not use, so on a wide screen it became a
+           600px-wide box for a search term nobody types more than three words
+           into — and it pushed the pills, which are the primary filter, far
+           from the eye. It stays flexible below its cap so a narrow screen can
+           still shrink it. */
+        <div className="relative w-full min-w-[180px] shrink sm:w-[260px]">
           <Search
             className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-ink-300"
             strokeWidth={2}
@@ -107,40 +184,7 @@ export function FilterStrip({
         </div>
       )}
 
-      {pills.length > 0 && (
-        <div className="scroll-slim flex max-w-full gap-1.5 overflow-x-auto">
-          {pills.map((pill) => {
-            const isActive = activePill === pill.value;
-
-            return (
-              <button
-                key={pill.value}
-                type="button"
-                onClick={() => onPillChange?.(pill.value)}
-                aria-pressed={isActive}
-                className={cn(
-                  'flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[8px] border px-2.5 text-[13px] font-medium transition-colors',
-                  isActive
-                    ? 'border-transparent bg-brand-gradient text-white'
-                    : 'border-line bg-surface text-ink-600 hover:border-line-strong hover:text-ink-900',
-                )}
-              >
-                {pill.label}
-                {pill.count != null && (
-                  <span
-                    className={cn(
-                      'tnum text-[11.5px]',
-                      isActive ? 'text-white/75' : 'text-ink-300',
-                    )}
-                  >
-                    {pill.count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      )}
+      {pillRow}
 
       <div className="ml-auto flex items-center gap-2">
         {actions}

@@ -1,6 +1,6 @@
-import { asyncHandler } from '../utils/ApiError.js';
-import * as accessService from '../services/accessService.js';
-import * as auditService from '../services/auditService.js';
+const { asyncHandler } = require('../utils/ApiError.js');
+const accessService = require('../services/accessService.js');
+const auditService = require('../services/auditService.js');
 
 /**
  * Outlets, roles and staff accounts (ERP rework §6.14, §6.15/3, §7.6).
@@ -13,37 +13,37 @@ import * as auditService from '../services/auditService.js';
 
 // ---- outlets ----------------------------------------------------------------
 
-export const listOutlets = asyncHandler(async (req, res) => {
+const listOutlets = asyncHandler(async (req, res) => {
   res.json(await accessService.listOutlets(req.query));
 });
 
-export const getOutlet = asyncHandler(async (req, res) => {
+const getOutlet = asyncHandler(async (req, res) => {
   res.json(await accessService.getOutlet(req.params.id));
 });
 
-export const nextOutletCode = asyncHandler(async (_req, res) => {
+const nextOutletCode = asyncHandler(async (_req, res) => {
   res.json({ code: await accessService.nextOutletCode() });
 });
 
-export const createOutlet = asyncHandler(async (req, res) => {
+const createOutlet = asyncHandler(async (req, res) => {
   res.status(201).json(await accessService.createOutlet(req.body));
 });
 
-export const updateOutlet = asyncHandler(async (req, res) => {
+const updateOutlet = asyncHandler(async (req, res) => {
   res.json(await accessService.updateOutlet(req.params.id, req.body));
 });
 
-export const setDefaultOutlet = asyncHandler(async (req, res) => {
+const setDefaultOutlet = asyncHandler(async (req, res) => {
   res.json(await accessService.setDefaultOutlet(req.params.id));
 });
 
-export const deleteOutlet = asyncHandler(async (req, res) => {
+const deleteOutlet = asyncHandler(async (req, res) => {
   res.json(await accessService.deleteOutlet(req.params.id));
 });
 
 // ---- roles ------------------------------------------------------------------
 
-export const listRoles = asyncHandler(async (_req, res) => {
+const listRoles = asyncHandler(async (_req, res) => {
   res.json({ roles: await accessService.listRoles() });
 });
 
@@ -60,7 +60,7 @@ export const listRoles = asyncHandler(async (_req, res) => {
  * holding the role at once rather than for one named account. Splitting them
  * across two screens would mean reconstructing one escalation from two places.
  */
-export const createRole = asyncHandler(async (req, res) => {
+const createRole = asyncHandler(async (req, res) => {
   const role = await accessService.createRole(req.body);
 
   await auditService.record({
@@ -75,7 +75,7 @@ export const createRole = asyncHandler(async (req, res) => {
   res.status(201).json(role);
 });
 
-export const updateRole = asyncHandler(async (req, res) => {
+const updateRole = asyncHandler(async (req, res) => {
   const before = await accessService.getRoleSnapshot(req.params.id);
   const role = await accessService.updateRole(req.params.id, req.body);
 
@@ -96,7 +96,7 @@ export const updateRole = asyncHandler(async (req, res) => {
   res.json(role);
 });
 
-export const deleteRole = asyncHandler(async (req, res) => {
+const deleteRole = asyncHandler(async (req, res) => {
   const before = await accessService.getRoleSnapshot(req.params.id);
   const result = await accessService.deleteRole(req.params.id);
 
@@ -114,7 +114,7 @@ export const deleteRole = asyncHandler(async (req, res) => {
 
 // ---- staff ------------------------------------------------------------------
 
-export const listStaff = asyncHandler(async (req, res) => {
+const listStaff = asyncHandler(async (req, res) => {
   res.json(await accessService.listStaff(req.query));
 });
 
@@ -123,7 +123,7 @@ export const listStaff = asyncHandler(async (req, res) => {
  * events**, not merely administrative ones: each changes who can sign in and
  * what they can reach once they do.
  */
-export const createStaff = asyncHandler(async (req, res) => {
+const createStaff = asyncHandler(async (req, res) => {
   const staff = await accessService.createStaff(req.body);
 
   await auditService.record({
@@ -145,7 +145,7 @@ export const createStaff = asyncHandler(async (req, res) => {
   res.status(201).json(staff);
 });
 
-export const updateStaff = asyncHandler(async (req, res) => {
+const updateStaff = asyncHandler(async (req, res) => {
   const before = await accessService.getStaffSnapshot(req.params.id);
   const staff = await accessService.updateStaff(req.params.id, req.body, req.user._id);
 
@@ -168,7 +168,7 @@ export const updateStaff = asyncHandler(async (req, res) => {
   res.json(staff);
 });
 
-export const deleteStaff = asyncHandler(async (req, res) => {
+const deleteStaff = asyncHandler(async (req, res) => {
   const before = await accessService.getStaffSnapshot(req.params.id);
   const result = await accessService.deleteStaff(req.params.id, req.user._id);
 
@@ -183,3 +183,20 @@ export const deleteStaff = asyncHandler(async (req, res) => {
 
   res.json(result);
 });
+
+// --- CommonJS exports -------------------------------------------------
+exports.listOutlets = listOutlets;
+exports.getOutlet = getOutlet;
+exports.nextOutletCode = nextOutletCode;
+exports.createOutlet = createOutlet;
+exports.updateOutlet = updateOutlet;
+exports.setDefaultOutlet = setDefaultOutlet;
+exports.deleteOutlet = deleteOutlet;
+exports.listRoles = listRoles;
+exports.createRole = createRole;
+exports.updateRole = updateRole;
+exports.deleteRole = deleteRole;
+exports.listStaff = listStaff;
+exports.createStaff = createStaff;
+exports.updateStaff = updateStaff;
+exports.deleteStaff = deleteStaff;

@@ -1,9 +1,9 @@
-import { asyncHandler } from '../utils/ApiError.js';
-import Appointment, {
-  APPOINTMENT_KINDS,
-  APPOINTMENT_STATUSES,
-} from '../models/Appointment.js';
-import User from '../models/User.js';
+const { asyncHandler } = require('../utils/ApiError.js');
+const {
+  default: Appointment,
+  APPOINTMENT_KINDS, APPOINTMENT_STATUSES,
+} = require('../models/Appointment.js');
+const { default: User } = require('../models/User.js');
 
 /**
  * The scheduling board (§6.15 category 4 — **UI only, §6b U1–U2**, phase 11e).
@@ -19,7 +19,7 @@ import User from '../models/User.js';
  * service being written, not a migration.
  */
 
-export const list = asyncHandler(async (req, res) => {
+const list = asyncHandler(async (req, res) => {
   const { from, to } = req.query;
 
   const filter = {};
@@ -64,3 +64,6 @@ export const list = asyncHandler(async (req, res) => {
     wired: false,
   });
 });
+
+// --- CommonJS exports -------------------------------------------------
+exports.list = list;

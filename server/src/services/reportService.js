@@ -1,13 +1,13 @@
-import Order from '../models/Order.js';
-import Invoice from '../models/Invoice.js';
-import Product from '../models/Product.js';
-import Expense from '../models/Expense.js';
-import PurchaseOrder from '../models/PurchaseOrder.js';
-import StockMovement from '../models/StockMovement.js';
-import Supplier from '../models/Supplier.js';
-import CreditTransaction from '../models/CreditTransaction.js';
-import Settings from '../models/Settings.js';
-import ApiError from '../utils/ApiError.js';
+const { default: Order } = require('../models/Order.js');
+const { default: Invoice } = require('../models/Invoice.js');
+const { default: Product } = require('../models/Product.js');
+const { default: Expense } = require('../models/Expense.js');
+const { default: PurchaseOrder } = require('../models/PurchaseOrder.js');
+const { default: StockMovement } = require('../models/StockMovement.js');
+const { default: Supplier } = require('../models/Supplier.js');
+const { default: CreditTransaction } = require('../models/CreditTransaction.js');
+const { default: Settings } = require('../models/Settings.js');
+const { default: ApiError } = require('../utils/ApiError.js');
 
 /**
  * Reports (ERP rework §6.11–6.12, phase 6).
@@ -884,7 +884,7 @@ const TABS = {
  * same settings document, so two tabs can never disagree about what "this
  * month" means or what rate a province charges.
  */
-export async function report(tab, query = {}) {
+async function report(tab, query = {}) {
   const handler = TABS[tab];
   if (!handler) throw ApiError.notFound(`No report named "${tab}".`, 'REPORT_NOT_FOUND');
 
@@ -905,4 +905,8 @@ export async function report(tab, query = {}) {
   };
 }
 
-export const REPORT_TABS = Object.keys(TABS);
+const REPORT_TABS = Object.keys(TABS);
+
+// --- CommonJS exports -------------------------------------------------
+exports.report = report;
+exports.REPORT_TABS = REPORT_TABS;

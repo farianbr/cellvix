@@ -1,6 +1,6 @@
-import { asyncHandler } from '../utils/ApiError.js';
-import * as purchaseService from '../services/purchaseService.js';
-import * as auditService from '../services/auditService.js';
+const { asyncHandler } = require('../utils/ApiError.js');
+const purchaseService = require('../services/purchaseService.js');
+const auditService = require('../services/auditService.js');
 
 /**
  * Purchase — suppliers, purchase orders, expenses, categories and inventory
@@ -13,46 +13,46 @@ import * as auditService from '../services/auditService.js';
 
 // ---- suppliers --------------------------------------------------------------
 
-export const listSuppliers = asyncHandler(async (req, res) => {
+const listSuppliers = asyncHandler(async (req, res) => {
   res.json(await purchaseService.listSuppliers(req.query));
 });
 
-export const getSupplier = asyncHandler(async (req, res) => {
+const getSupplier = asyncHandler(async (req, res) => {
   res.json(await purchaseService.getSupplier(req.params.id));
 });
 
-export const createSupplier = asyncHandler(async (req, res) => {
+const createSupplier = asyncHandler(async (req, res) => {
   res.status(201).json(await purchaseService.createSupplier(req.body));
 });
 
-export const updateSupplier = asyncHandler(async (req, res) => {
+const updateSupplier = asyncHandler(async (req, res) => {
   res.json(await purchaseService.updateSupplier(req.params.id, req.body));
 });
 
 /** Deactivates rather than deletes — purchase orders reference a supplier. */
-export const toggleSupplier = asyncHandler(async (req, res) => {
+const toggleSupplier = asyncHandler(async (req, res) => {
   res.json(await purchaseService.toggleSupplier(req.params.id));
 });
 
 // ---- purchase orders --------------------------------------------------------
 
-export const listPurchaseOrders = asyncHandler(async (req, res) => {
+const listPurchaseOrders = asyncHandler(async (req, res) => {
   res.json(await purchaseService.listPurchaseOrders(req.query));
 });
 
-export const getPurchaseOrder = asyncHandler(async (req, res) => {
+const getPurchaseOrder = asyncHandler(async (req, res) => {
   res.json(await purchaseService.getPurchaseOrder(req.params.id));
 });
 
-export const createPurchaseOrder = asyncHandler(async (req, res) => {
+const createPurchaseOrder = asyncHandler(async (req, res) => {
   res.status(201).json(await purchaseService.createPurchaseOrder(req.body, req.user._id));
 });
 
-export const updatePurchaseOrder = asyncHandler(async (req, res) => {
+const updatePurchaseOrder = asyncHandler(async (req, res) => {
   res.json(await purchaseService.updatePurchaseOrder(req.params.id, req.body));
 });
 
-export const setPurchaseOrderStatus = asyncHandler(async (req, res) => {
+const setPurchaseOrderStatus = asyncHandler(async (req, res) => {
   res.json(await purchaseService.setPurchaseOrderStatus(req.params.id, req.body));
 });
 
@@ -62,7 +62,7 @@ export const setPurchaseOrderStatus = asyncHandler(async (req, res) => {
  * reporting a clean success.
  */
 /** Receiving moves stock, so it is audited alongside the money (§7.6). */
-export const receivePurchaseOrder = asyncHandler(async (req, res) => {
+const receivePurchaseOrder = asyncHandler(async (req, res) => {
   const result = await purchaseService.receivePurchaseOrder(req.params.id, req.body, req.user._id);
   const po = result?.order;
 
@@ -89,7 +89,7 @@ export const receivePurchaseOrder = asyncHandler(async (req, res) => {
  *
  * Named in §7.6 as money-moving, so it is always audited with actor and IP.
  */
-export const recordPurchasePayment = asyncHandler(async (req, res) => {
+const recordPurchasePayment = asyncHandler(async (req, res) => {
   const result = await purchaseService.recordPurchasePayment(
     req.params.id,
     req.body,
@@ -118,52 +118,52 @@ export const recordPurchasePayment = asyncHandler(async (req, res) => {
 
 // ---- expenses ---------------------------------------------------------------
 
-export const listExpenses = asyncHandler(async (req, res) => {
+const listExpenses = asyncHandler(async (req, res) => {
   res.json(await purchaseService.listExpenses(req.query));
 });
 
-export const createExpense = asyncHandler(async (req, res) => {
+const createExpense = asyncHandler(async (req, res) => {
   res.status(201).json(await purchaseService.createExpense(req.body, req.user._id));
 });
 
-export const updateExpense = asyncHandler(async (req, res) => {
+const updateExpense = asyncHandler(async (req, res) => {
   res.json(await purchaseService.updateExpense(req.params.id, req.body));
 });
 
-export const deleteExpense = asyncHandler(async (req, res) => {
+const deleteExpense = asyncHandler(async (req, res) => {
   res.json(await purchaseService.deleteExpense(req.params.id));
 });
 
 // ---- expense categories -----------------------------------------------------
 
-export const listExpenseCategories = asyncHandler(async (_req, res) => {
+const listExpenseCategories = asyncHandler(async (_req, res) => {
   res.json(await purchaseService.listExpenseCategories());
 });
 
-export const createExpenseCategory = asyncHandler(async (req, res) => {
+const createExpenseCategory = asyncHandler(async (req, res) => {
   res.status(201).json(await purchaseService.createExpenseCategory(req.body));
 });
 
-export const updateExpenseCategory = asyncHandler(async (req, res) => {
+const updateExpenseCategory = asyncHandler(async (req, res) => {
   res.json(await purchaseService.updateExpenseCategory(req.params.id, req.body));
 });
 
 /** A category in use is deactivated; the response says which happened. */
-export const deleteExpenseCategory = asyncHandler(async (req, res) => {
+const deleteExpenseCategory = asyncHandler(async (req, res) => {
   res.json(await purchaseService.deleteExpenseCategory(req.params.id));
 });
 
 // ---- inventory --------------------------------------------------------------
 
-export const listInventory = asyncHandler(async (req, res) => {
+const listInventory = asyncHandler(async (req, res) => {
   res.json(await purchaseService.listInventory(req.query));
 });
 
-export const getInventoryItem = asyncHandler(async (req, res) => {
+const getInventoryItem = asyncHandler(async (req, res) => {
   res.json(await purchaseService.getInventoryItem(req.params.id));
 });
 
-export const updateInventoryOps = asyncHandler(async (req, res) => {
+const updateInventoryOps = asyncHandler(async (req, res) => {
   res.json(await purchaseService.updateInventoryOps(req.params.id, req.body));
 });
 
@@ -174,7 +174,7 @@ export const updateInventoryOps = asyncHandler(async (req, res) => {
  * it is also the one that most needs an actor on record: "why is this 40 and
  * not 47" is answered by the reason, and "who decided that" by this row.
  */
-export const adjustStock = asyncHandler(async (req, res) => {
+const adjustStock = asyncHandler(async (req, res) => {
   const result = await purchaseService.adjustStock(req.params.id, req.body, req.user._id);
 
   await auditService.record({
@@ -193,6 +193,33 @@ export const adjustStock = asyncHandler(async (req, res) => {
   res.status(201).json(result);
 });
 
-export const listStockMovements = asyncHandler(async (req, res) => {
+const listStockMovements = asyncHandler(async (req, res) => {
   res.json(await purchaseService.listStockMovements(req.query));
 });
+
+// --- CommonJS exports -------------------------------------------------
+exports.listSuppliers = listSuppliers;
+exports.getSupplier = getSupplier;
+exports.createSupplier = createSupplier;
+exports.updateSupplier = updateSupplier;
+exports.toggleSupplier = toggleSupplier;
+exports.listPurchaseOrders = listPurchaseOrders;
+exports.getPurchaseOrder = getPurchaseOrder;
+exports.createPurchaseOrder = createPurchaseOrder;
+exports.updatePurchaseOrder = updatePurchaseOrder;
+exports.setPurchaseOrderStatus = setPurchaseOrderStatus;
+exports.receivePurchaseOrder = receivePurchaseOrder;
+exports.recordPurchasePayment = recordPurchasePayment;
+exports.listExpenses = listExpenses;
+exports.createExpense = createExpense;
+exports.updateExpense = updateExpense;
+exports.deleteExpense = deleteExpense;
+exports.listExpenseCategories = listExpenseCategories;
+exports.createExpenseCategory = createExpenseCategory;
+exports.updateExpenseCategory = updateExpenseCategory;
+exports.deleteExpenseCategory = deleteExpenseCategory;
+exports.listInventory = listInventory;
+exports.getInventoryItem = getInventoryItem;
+exports.updateInventoryOps = updateInventoryOps;
+exports.adjustStock = adjustStock;
+exports.listStockMovements = listStockMovements;

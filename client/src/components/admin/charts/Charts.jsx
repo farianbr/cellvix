@@ -76,7 +76,51 @@ export function TrendChart({
   const x = (index) => padding.left + (index / (points.length - 1)) * plotWidth;
   const y = (value) => padding.top + plotHeight - ((value - min) / span) * plotHeight;
 
-  const line = points.map((point, index) => `${index === 0 ? 'M' : 'L'}${x(index)},${y(point.value)}`).join(' ');
+  /**
+   * A smoothed path rather than a polyline.
+   *
+   * Straight segments meeting at every data point give the trend a row of
+   * sharp spikes, which reads as noise and makes two adjacent days look like a
+   * dramatic event. This is a monotone cubic: each point gets control points
+   * derived from its neighbours, and the tangent is **flattened to horizontal
+   * wherever the series changes direction** (the `slope` sign test below).
+   * That is what keeps the curve from overshooting — a plain Catmull-Rom
+   * would bow past a local maximum and draw a value the data never reached,
+   * which on a money chart is a lie rather than a smoothing artefact.
+   */
+  const coords = points.map((point, index) => [x(index), y(point.value)]);
+
+  // Tangent at each point, in y-per-x. Endpoints take their one-sided slope;
+  // an interior point takes the average of its two, or zero at a turn.
+  const slopes = coords.map(([, py], index) => {
+    const previous = coords[index - 1];
+    const next = coords[index + 1];
+    if (!previous) return (next[1] - py) / (next[0] - coords[index][0]);
+    if (!next) return (py - previous[1]) / (coords[index][0] - previous[0]);
+
+    const before = (py - previous[1]) / (coords[index][0] - previous[0]);
+    const after = (next[1] - py) / (next[0] - coords[index][0]);
+    // Opposite signs mean this point is a peak or a trough: flatten it, so the
+    // curve turns around at the real value instead of sailing past it.
+    return before * after <= 0 ? 0 : (before + after) / 2;
+  });
+
+  const line = coords
+    .map(([px, py], index) => {
+      if (index === 0) return `M${px},${py}`;
+
+      const [prevX, prevY] = coords[index - 1];
+      // A third of the gap is the standard Hermite-to-Bezier conversion and
+      // keeps the curve visibly tight to its points.
+      const third = (px - prevX) / 3;
+
+      return (
+        `C${prevX + third},${prevY + slopes[index - 1] * third} ` +
+        `${px - third},${py - slopes[index] * third} ${px},${py}`
+      );
+    })
+    .join(' ');
+
   const area = `${line} L${x(points.length - 1)},${padding.top + plotHeight} L${x(0)},${padding.top + plotHeight} Z`;
 
   // What the chart says, in a sentence. A point-by-point reading of ninety days

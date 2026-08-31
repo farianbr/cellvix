@@ -1,112 +1,54 @@
-import { Router } from 'express';
-import rateLimit from 'express-rate-limit';
+const { Router } = require('express');
+const rateLimit = require('express-rate-limit');
 
-import env from '../config/env.js';
+const { default: env } = require('../config/env.js');
 
-import * as authController from '../controllers/authController.js';
-import * as productController from '../controllers/productController.js';
-import * as taxonomyController from '../controllers/taxonomyController.js';
-import * as cartController from '../controllers/cartController.js';
-import * as orderController from '../controllers/orderController.js';
-import * as accountController from '../controllers/accountController.js';
-import * as adminController from '../controllers/adminController.js';
-import * as purchaseController from '../controllers/purchaseController.js';
-import * as reportController from '../controllers/reportController.js';
-import * as salesController from '../controllers/salesController.js';
-import * as contactController from '../controllers/contactController.js';
-import * as contentController from '../controllers/contentController.js';
-import * as accessController from '../controllers/accessController.js';
-import * as marketingController from '../controllers/marketingController.js';
-import * as referralController from '../controllers/referralController.js';
-import * as settingsController from '../controllers/settingsController.js';
-import * as auditController from '../controllers/auditController.js';
-import * as credentialController from '../controllers/credentialController.js';
-import * as taxonomyAdminController from '../controllers/taxonomyAdminController.js';
-import * as invoiceStatusController from '../controllers/invoiceStatusController.js';
-import * as appointmentController from '../controllers/appointmentController.js';
-import * as searchController from '../controllers/searchController.js';
-import * as profileController from '../controllers/profileController.js';
-import * as exportController from '../controllers/exportController.js';
-import * as notificationController from '../controllers/notificationController.js';
+const authController = require('../controllers/authController.js');
+const productController = require('../controllers/productController.js');
+const taxonomyController = require('../controllers/taxonomyController.js');
+const cartController = require('../controllers/cartController.js');
+const orderController = require('../controllers/orderController.js');
+const accountController = require('../controllers/accountController.js');
+const adminController = require('../controllers/adminController.js');
+const purchaseController = require('../controllers/purchaseController.js');
+const supplierReturnController = require('../controllers/supplierReturnController.js');
+const supplierServiceController = require('../controllers/supplierServiceController.js');
+const reportController = require('../controllers/reportController.js');
+const salesController = require('../controllers/salesController.js');
+const ticketController = require('../controllers/ticketController.js');
+const contactController = require('../controllers/contactController.js');
+const contentController = require('../controllers/contentController.js');
+const accessController = require('../controllers/accessController.js');
+const marketingController = require('../controllers/marketingController.js');
+const referralController = require('../controllers/referralController.js');
+const settingsController = require('../controllers/settingsController.js');
+const auditController = require('../controllers/auditController.js');
+const credentialController = require('../controllers/credentialController.js');
+const taxonomyAdminController = require('../controllers/taxonomyAdminController.js');
+const invoiceStatusController = require('../controllers/invoiceStatusController.js');
+const appointmentController = require('../controllers/appointmentController.js');
+const searchController = require('../controllers/searchController.js');
+const profileController = require('../controllers/profileController.js');
+const exportController = require('../controllers/exportController.js');
+const notificationController = require('../controllers/notificationController.js');
 
-import validate from '../middleware/validate.js';
-import {
-  requireAuth,
-  requireApproved,
-  requireAdmin,
-  requireStaff,
-  denyAdmin,
-  requirePermission,
-} from '../middleware/auth.js';
-import { loginSchema, registerSchema, forgotPasswordSchema } from '../../../shared/schemas/auth.js';
-import {
-  addItemSchema,
-  setQtySchema,
-  mergeCartSchema,
-  saveCartSchema,
-  addBundleSchema,
-  setBundleQtySchema,
-  promoCodeSchema,
-} from '../../../shared/schemas/cart.js';
-import { checkoutSchema } from '../../../shared/schemas/checkout.js';
-import {
-  profileSchema,
-  savedAddressSchema,
-  paymentMethodSchema,
-  bulkAddSchema,
-  changePasswordSchema,
-  rechargeSchema,
-} from '../../../shared/schemas/account.js';
-import {
-  approveUserSchema,
-  rejectUserSchema,
-  creditSchema,
-  refundSchema,
-  storeCreditSchema,
-  userStatusSchema,
-  productSchema,
-  orderStatusSchema,
-  invoicePaymentSchema,
-  invoiceVoidSchema,
-  bulkOrderStatusSchema,
-  supplierSchema,
-  purchaseOrderSchema,
-  purchaseOrderStatusSchema,
-  purchaseReceiveSchema,
-  purchasePaymentSchema,
-  expenseSchema,
-  expenseCategorySchema,
-  stockAdjustSchema,
-  productOpsSchema,
-  quoteSchema,
-  quoteStatusSchema,
-  quoteConvertSchema,
-  rmaSchema,
-  rmaStatusSchema,
-  rmaInspectSchema,
-  rmaResolveSchema,
-  outletSchema,
-  roleSchema,
-  staffUserSchema,
-  staffUserUpdateSchema,
-  messageSchema,
-  callLogSchema,
-  messageTemplateSchema,
-  campaignSchema,
-  unsubscribeSchema,
-  referralRateSchema,
-  businessInfoSchema,
-  saleSettingsSchema,
-  shippingSettingsSchema,
-  paymentMethodsSettingsSchema,
-  inventorySettingsSchema,
-  providerCredentialSchema,
-  taxonomyNodeSchema,
-  invoiceStatusRuleSchema,
-  communicationsSettingsSchema,
-} from '../../../shared/schemas/admin.js';
-import { contactSchema } from '../../../shared/schemas/contact.js';
-import { blogPostSchema, faqSchema, offerSchema } from '../../../shared/schemas/content.js';
+const { default: validate } = require('../middleware/validate.js');
+const {
+  requireAuth, requireApproved, requireAdmin, requireStaff, denyAdmin, requirePermission,
+} = require('../middleware/auth.js');
+const { loginSchema, registerSchema, forgotPasswordSchema } = require('../../../shared/schemas/auth.js');
+const {
+  addItemSchema, setQtySchema, mergeCartSchema, saveCartSchema, addBundleSchema, setBundleQtySchema, promoCodeSchema,
+} = require('../../../shared/schemas/cart.js');
+const { checkoutSchema } = require('../../../shared/schemas/checkout.js');
+const {
+  profileSchema, savedAddressSchema, paymentMethodSchema, bulkAddSchema, changePasswordSchema, rechargeSchema,
+} = require('../../../shared/schemas/account.js');
+const {
+  approveUserSchema, rejectUserSchema, creditSchema, clientSchema, clientUpdateSchema, contactConsentSchema, tierSchema, internalNoteSchema, adminOrderSchema, adminInvoiceSchema, refundSchema, storeCreditSchema, userStatusSchema, productSchema, orderStatusSchema, invoicePaymentSchema, invoiceVoidSchema, bulkOrderStatusSchema, supplierSchema, supplierReturnSchema, supplierReturnStatusSchema, supplierCreditSchema, supplierServiceSchema, supplierServiceUpdateSchema, supplierChargeSchema, purchaseOrderSchema, purchaseOrderStatusSchema, purchaseReceiveSchema, purchasePaymentSchema, expenseSchema, expenseCategorySchema, stockAdjustSchema, productOpsSchema, quoteSchema, quoteStatusSchema, quoteConvertSchema, rmaSchema, rmaStatusSchema, rmaInspectSchema, rmaResolveSchema, ticketSchema, ticketUpdateSchema, ticketStatusSchema, outletSchema, roleSchema, staffUserSchema, staffUserUpdateSchema, messageSchema, callLogSchema, messageTemplateSchema, campaignSchema, unsubscribeSchema, referralRateSchema, businessInfoSchema, saleSettingsSchema, shippingSettingsSchema, paymentMethodsSettingsSchema, inventorySettingsSchema, providerCredentialSchema, taxonomyNodeSchema, invoiceStatusRuleSchema, communicationsSettingsSchema,
+} = require('../../../shared/schemas/admin.js');
+const { contactSchema } = require('../../../shared/schemas/contact.js');
+const { blogPostSchema, faqSchema, offerSchema } = require('../../../shared/schemas/content.js');
 
 const router = Router();
 
@@ -233,7 +175,15 @@ const adminOnly = [requireAuth, requireAdmin];
 router.get('/admin/stats', ...admin, adminController.stats);
 
 router.get('/admin/users', ...admin, requirePermission('clients', 'view'), adminController.listUsers);
+// Opening a client account is a `full` action, not a `view` one — a hidden
+// `+ Create` entry is a courtesy, this is the permission (§7.6).
+router.post('/admin/users', ...admin, requirePermission('clients', 'full'), validate(clientSchema), adminController.createUser);
 router.get('/admin/users/:id', ...admin, requirePermission('clients', 'view'), adminController.getUser);
+router.patch('/admin/users/:id', ...admin, requirePermission('clients', 'full'), validate(clientUpdateSchema), adminController.updateUser);
+router.patch('/admin/users/:id/consent', ...admin, requirePermission('clients', 'full'), validate(contactConsentSchema), adminController.setContactConsent);
+router.patch('/admin/users/:id/tier', ...admin, requirePermission('clients', 'full'), validate(tierSchema), adminController.setTier);
+router.post('/admin/users/:id/notes', ...admin, requirePermission('clients', 'full'), validate(internalNoteSchema), adminController.addInternalNote);
+router.delete('/admin/users/:id/notes/:noteId', ...admin, requirePermission('clients', 'full'), adminController.deleteInternalNote);
 router.patch('/admin/users/:id/approve', ...admin, requirePermission('clients', 'full'), validate(approveUserSchema), adminController.approveUser);
 router.patch('/admin/users/:id/reject', ...admin, requirePermission('clients', 'full'), validate(rejectUserSchema), adminController.rejectUser);
 router.patch('/admin/users/:id/status', ...admin, requirePermission('clients', 'full'), validate(userStatusSchema), adminController.setUserStatus);
@@ -252,6 +202,9 @@ router.patch('/admin/products/:id', ...admin, requirePermission('purchase', 'ful
 router.delete('/admin/products/:id', ...admin, requirePermission('purchase', 'full'), adminController.toggleProduct);
 
 router.get('/admin/orders', ...admin, requirePermission('sales', 'view'), adminController.listOrders);
+// An order raised by hand — a phone or email order. Same rules as a converted
+// quote, because it runs the same code (`services/orderBuilder.js`).
+router.post('/admin/orders', ...admin, requirePermission('sales', 'full'), validate(adminOrderSchema), adminController.createOrder);
 // Registered ahead of the `:orderNumber` routes so a literal path can never be
 // swallowed by a parameter. Partial by design — the response names what moved
 // and what did not.
@@ -264,6 +217,8 @@ router.post('/admin/orders/:orderNumber/refund', ...admin, requirePermission('sa
 // Invoices. `amountPaid` and the status are recomputed server-side from the
 // payment rows on every write — the client never sends either.
 router.get('/admin/invoices', ...admin, requirePermission('sales', 'view'), adminController.listInvoices);
+// A standalone invoice — one with no order behind it (§7.2).
+router.post('/admin/invoices', ...admin, requirePermission('sales', 'full'), validate(adminInvoiceSchema), adminController.createInvoice);
 router.get('/admin/invoices/:number', ...admin, requirePermission('sales', 'view'), adminController.getInvoice);
 // The same artefact the customer receives, rendered by the same renderer — the
 // buyer route scopes its lookup to the signed-in user, so an admin needs this.
@@ -283,6 +238,28 @@ router.post('/admin/suppliers', ...admin, requirePermission('purchase', 'full'),
 router.patch('/admin/suppliers/:id', ...admin, requirePermission('purchase', 'full'), validate(supplierSchema), purchaseController.updateSupplier);
 // Toggles isActive rather than deleting — purchase orders reference suppliers.
 router.delete('/admin/suppliers/:id', ...admin, requirePermission('purchase', 'full'), purchaseController.toggleSupplier);
+
+// --- returns to a supplier (Purchase § RMA / Returns) ------------------------
+// The purchase-side counterpart of `/admin/rma`: stock going back out, and a
+// credit claimed from the supplier rather than given to a customer.
+router.get('/admin/supplier-returns', ...admin, requirePermission('purchase', 'view'), supplierReturnController.list);
+router.post('/admin/supplier-returns', ...admin, requirePermission('purchase', 'full'), validate(supplierReturnSchema), supplierReturnController.create);
+router.get('/admin/supplier-returns/:id', ...admin, requirePermission('purchase', 'view'), supplierReturnController.get);
+router.patch('/admin/supplier-returns/:id/status', ...admin, requirePermission('purchase', 'full'), validate(supplierReturnStatusSchema), supplierReturnController.setStatus);
+router.post('/admin/supplier-returns/:id/credit', ...admin, requirePermission('purchase', 'full'), validate(supplierCreditSchema), supplierReturnController.recordCredit);
+router.delete('/admin/supplier-returns/:id', ...admin, requirePermission('purchase', 'full'), supplierReturnController.remove);
+
+// --- bought-in services & supplier subscriptions -----------------------------
+// One collection behind two screens: `?kind=service` is anything billed once,
+// `?kind=subscription` is anything that repeats. Recording a charge writes a
+// real Expense, so the P&L sees it like every other cost.
+router.get('/admin/supplier-services', ...admin, requirePermission('purchase', 'view'), supplierServiceController.list);
+router.post('/admin/supplier-services', ...admin, requirePermission('purchase', 'full'), validate(supplierServiceSchema), supplierServiceController.create);
+router.get('/admin/supplier-services/:id', ...admin, requirePermission('purchase', 'view'), supplierServiceController.get);
+router.patch('/admin/supplier-services/:id', ...admin, requirePermission('purchase', 'full'), validate(supplierServiceUpdateSchema), supplierServiceController.update);
+router.post('/admin/supplier-services/:id/charges', ...admin, requirePermission('purchase', 'full'), validate(supplierChargeSchema), supplierServiceController.recordCharge);
+router.patch('/admin/supplier-services/:id/cancel', ...admin, requirePermission('purchase', 'full'), supplierServiceController.setCancelled);
+router.delete('/admin/supplier-services/:id', ...admin, requirePermission('purchase', 'full'), supplierServiceController.remove);
 
 router.get('/admin/purchase-orders', ...admin, requirePermission('purchase', 'view'), purchaseController.listPurchaseOrders);
 router.post('/admin/purchase-orders', ...admin, requirePermission('purchase', 'full'), validate(purchaseOrderSchema), purchaseController.createPurchaseOrder);
@@ -344,6 +321,15 @@ router.patch('/admin/rma/:id/inspect', ...admin, requirePermission('sales', 'ful
 // Resolving decides money and stock, so it carries that decision rather than
 // being reachable through the status route.
 router.post('/admin/rma/:id/resolve', ...admin, requirePermission('sales', 'full'), validate(rmaResolveSchema), salesController.resolveRma);
+
+// Repair tickets. The status route is separate from the update route because
+// only it records the move on the ticket timeline.
+router.get('/admin/tickets', ...admin, requirePermission('sales', 'view'), ticketController.listTickets);
+router.post('/admin/tickets', ...admin, requirePermission('sales', 'full'), validate(ticketSchema), ticketController.createTicket);
+router.get('/admin/tickets/:id', ...admin, requirePermission('sales', 'view'), ticketController.getTicket);
+router.patch('/admin/tickets/:id', ...admin, requirePermission('sales', 'full'), validate(ticketUpdateSchema), ticketController.updateTicket);
+router.patch('/admin/tickets/:id/status', ...admin, requirePermission('sales', 'full'), validate(ticketStatusSchema), ticketController.setTicketStatus);
+router.delete('/admin/tickets/:id', ...admin, requirePermission('sales', 'full'), ticketController.deleteTicket);
 
 // --- outlets, roles & staff (phase 8) ---------------------------------------
 // Outlets are an ordinary permissioned area. Roles and user accounts are NOT:
@@ -553,4 +539,5 @@ router.get('/admin/notifications', ...admin, notificationController.list);
 router.post('/admin/notifications/read', ...admin, notificationController.markRead);
 router.post('/admin/notifications/clear', ...admin, notificationController.clearAll);
 
-export default router;
+// --- CommonJS exports -------------------------------------------------
+exports.default = router;

@@ -1,7 +1,7 @@
-import { asyncHandler } from '../utils/ApiError.js';
-import * as authService from '../services/authService.js';
-import * as auditService from '../services/auditService.js';
-import Role, { PERMISSION_AREAS } from '../models/Role.js';
+const { asyncHandler } = require('../utils/ApiError.js');
+const authService = require('../services/authService.js');
+const auditService = require('../services/auditService.js');
+const { default: Role, PERMISSION_AREAS } = require('../models/Role.js');
 
 /**
  * The session shape, plus the resolved permission map for Cellvix staff.
@@ -34,7 +34,7 @@ async function sessionUser(user) {
   return shape;
 }
 
-export const register = asyncHandler(async (req, res) => {
+const register = asyncHandler(async (req, res) => {
   // The IP is recorded with the CASL consent, so it is read here — only the
   // request knows it, and the service must not reach for `req` (§6.13).
   const user = await authService.register(req.body, { ip: req.ip });
@@ -59,7 +59,7 @@ export const register = asyncHandler(async (req, res) => {
  * unchanged: the caller must still get `INVALID_CREDENTIALS`, and the response
  * must not reveal whether the address exists.
  */
-export const login = asyncHandler(async (req, res) => {
+const login = asyncHandler(async (req, res) => {
   let user;
   try {
     user = await authService.login(req.body);
@@ -92,7 +92,7 @@ export const login = asyncHandler(async (req, res) => {
   res.json({ user: await sessionUser(user) });
 });
 
-export const logout = asyncHandler(async (req, res) => {
+const logout = asyncHandler(async (req, res) => {
   if (req.user) {
     await auditService.recordSecurity({
       req,
@@ -114,12 +114,19 @@ export const logout = asyncHandler(async (req, res) => {
  * first paint — answering with an error meant a red entry in the browser console
  * on every anonymous page load, which no client-side catch can suppress.
  */
-export const me = asyncHandler(async (req, res) => {
+const me = asyncHandler(async (req, res) => {
   res.json({ user: await sessionUser(req.user) });
 });
 
-export const forgotPassword = asyncHandler(async (_req, res) => {
+const forgotPassword = asyncHandler(async (_req, res) => {
   // Always 204 — never reveal whether an address is registered.
   // TODO: wire to a transactional mail provider once the client picks one.
   res.status(204).end();
 });
+
+// --- CommonJS exports -------------------------------------------------
+exports.register = register;
+exports.login = login;
+exports.logout = logout;
+exports.me = me;
+exports.forgotPassword = forgotPassword;

@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Link, useSearchParams } from 'react-router';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 import { useForm } from 'react-hook-form';
+import useCreateParam from '@/hooks/useCreateParam';
 import {
   AlertCircle,
   ClipboardList,
@@ -256,7 +257,9 @@ function SupplierCard({ supplier, onEdit, onToggle }) {
 export function AdminSuppliersPage() {
   const [query, setQuery] = useState('');
   const [editing, setEditing] = useState(null);
-  const [creating, setCreating] = useState(false);
+  // Opened directly by `+ Create` (§7.2), which arrives with `?new=1`.
+  const navigate = useNavigate();
+  const [creating, setCreating] = useCreateParam();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const status = searchParams.get('status') ?? 'all';
@@ -356,7 +359,14 @@ export function AdminSuppliersPage() {
           error={createSupplier.error?.message}
           onCancel={() => setCreating(false)}
           onSubmit={(values) =>
-            createSupplier.mutate(values, { onSuccess: () => setCreating(false) })
+            createSupplier.mutate(values, {
+              onSuccess: (payload) => {
+                setCreating(false);
+                // Straight to the supplier that was just added — the next thing
+                // an operator does is raise a purchase order against it.
+                if (payload?.supplier?.id) navigate(`/admin/suppliers/${payload.supplier.id}`);
+              },
+            })
           }
         />
       </Modal>

@@ -1,9 +1,13 @@
+import { useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import {
   ArrowRight,
   Building2,
   FileText,
+  MessageCircle,
   Package,
+  Pencil,
+  Plus,
   Receipt,
   RotateCcw,
   Undo2,
@@ -11,19 +15,34 @@ import {
   WalletCards,
 } from 'lucide-react';
 import cn from '@/lib/cn';
-import { money, date, dateTime, count as formatCount } from '@/lib/format';
+import { money, date, dateTime, relativeTime, count as formatCount } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Badge from '@/components/ui/Badge';
+import Button from '@/components/ui/Button';
 import Skeleton from '@/components/ui/Skeleton';
 import { OrderStatusBadge, InvoiceStatusBadge } from '@/components/account/OrderStatusBadge';
 import PageHeader from '@/components/admin/PageHeader';
 import KpiRow from '@/components/admin/KpiRow';
 import DataTable from '@/components/admin/DataTable';
 import { CreditForm, StoreCreditPanel, STATUS_TONES } from '@/components/admin/ClientDetail';
+import {
+  ConsentPanel,
+  TierPanel,
+  NotesPanel,
+  ConversationsPanel,
+  ReferralPanel,
+} from '@/components/admin/CustomerCrm';
+import { MEMBERSHIP_TIERS } from '@shared/schemas/admin';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
-import { useAdminUser, useAdminUserActivity } from '@/hooks/useAdmin';
+import {
+  useAdminUser,
+  useAdminUserActivity,
+  useAdminMutations,
+  useMarketingMessages,
+  useAdminSettings,
+} from '@/hooks/useAdmin';
 
 const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/clients/:id'], icon: adminIcon('Users') };
 
@@ -33,12 +52,21 @@ const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/clients/:id'], icon: adminIcon('Use
  * URL per screen).
  */
 const TABS = [
+  // Overview is a **summary of every other tab**, not a tab of its own content:
+  // each panel on it shows the first few rows and links to the tab that owns
+  // them. An operator opening a customer wants the shape of the relationship
+  // before they want any one part of it.
   { key: 'overview', label: 'Overview' },
   { key: 'orders', label: 'Orders' },
   { key: 'invoices', label: 'Invoices' },
   { key: 'credit', label: 'Credit' },
   { key: 'quotes', label: 'Quotes' },
   { key: 'rmas', label: 'RMAs' },
+  { key: 'conversations', label: 'Conversations' },
+  { key: 'notes', label: 'Notes' },
+  // Consent, tier and the referral scheme: the terms of the relationship
+  // rather than a record of it.
+  { key: 'membership', label: 'Referral & Portal' },
   { key: 'activity', label: 'Activity' },
 ];
 
@@ -51,6 +79,45 @@ const ACTIVITY_STYLE = {
   void: { icon: Undo2, tone: 'text-warn' },
   credit: { icon: WalletCards, tone: 'text-ok' },
 };
+
+/** Tier badge tones. Mirrors `CustomerCrm`'s `TierPanel` and the customers list. */
+const TIER_TONE = { standard: 'neutral', silver: 'info', gold: 'warn', platinum: 'brand' };
+
+/**
+ * One Overview roll-up card: a few rows, and a link to the tab that owns them.
+ *
+ * The action is a button rather than a link because the tab lives in a query
+ * parameter this page already owns — routing through the URL would work, but
+ * `setTab` is the one place that decides how a tab is selected.
+ */
+function SummaryPanel({ title, cta, onOpen, children }) {
+  return (
+    <Panel
+      title={title}
+      action={
+        <button
+          type="button"
+          onClick={onOpen}
+          className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-brand hover:text-brand-700"
+        >
+          {cta}
+          <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
+        </button>
+      }
+    >
+      {children}
+    </Panel>
+  );
+}
+
+function SummaryRow({ label, children }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <dt className="shrink-0 text-ink-500">{label}</dt>
+      <dd className="min-w-0 text-right text-ink-900">{children}</dd>
+    </div>
+  );
+}
 
 /**
  * A tab whose records arrive with a later phase.
@@ -84,6 +151,33 @@ export function AdminClientProfilePage() {
     tab === 'activity',
   );
 
+  /**
+   * Contact history, from the same `MessageLog` the Marketing screens write.
+   *
+   * Fetched on Overview as well as its own tab, because Overview summarises it —
+   * but only a handful of rows there, since the roll-up shows three.
+   */
+  const wantsMessages = tab === 'conversations' || tab === 'overview';
+  const { data: messageData, isLoading: messagesLoading } = useMarketingMessages(
+    wantsMessages ? { user: id, limit: tab === 'overview' ? 5 : 50 } : undefined,
+  );
+
+  const {
+    setContactConsent,
+    setTier,
+    addInternalNote,
+    deleteInternalNote,
+    sendMessage,
+  } = useAdminMutations();
+
+  // What the server said actually happened to a message. Held here rather than
+  // in the panel so it survives the panel's own re-render after a send.
+  const [notice, setNotice] = useState(null);
+
+  // The tier's warranty bonus is a setting, not a property of the account, so
+  // the panel reads it from there rather than the profile inventing a number.
+  const { data: settingsData } = useAdminSettings();
+
   // Publishes the business name to the shell's breadcrumb, so the trail reads
   // `⌂ > Sales > Clients > Northline Wireless` rather than `… > Client` (§4b.6).
   // Called before the loading return, because a hook cannot be conditional.
@@ -106,11 +200,44 @@ export function AdminClientProfilePage() {
     );
   }
 
-  const { user, orders, invoices } = data;
+  const { user, orders, invoices, notes = [] } = data;
+  const messages = messageData?.messages ?? [];
+
+  /**
+   * Log a call, or send a message, against this account.
+   *
+   * Defined once and passed to both the Conversations tab and the Overview
+   * roll-up: two copies would eventually disagree about which route a channel
+   * posts to, and the `notice` handling is the part that must not drift — the
+   * server says whether anything actually transmitted, and that is rendered
+   * verbatim rather than turned into a confirmation (§6b rule 4).
+   */
+  function logInteraction({ channel, direction, body }, done) {
+    // `calls` is the route's plural; the other three match the channel name.
+    const route = channel === 'call' ? 'calls' : channel;
+
+    sendMessage.mutate(
+      { channel: route, userId: id, direction, body, text: body },
+      {
+        onSuccess: (payload) => {
+          setNotice(payload?.notice ?? null);
+          done();
+        },
+      },
+    );
+  }
 
   const invoiced = invoices.reduce((sum, invoice) => sum + invoice.amount, 0);
   const outstanding = invoices.reduce((sum, invoice) => sum + invoice.balance, 0);
   const orderValue = orders.reduce((sum, order) => sum + order.total, 0);
+
+  const tierBonus = settingsData?.financial?.warrantyBonusByTier?.[user.tier] ?? 0;
+
+  // Channel names for the Overview summary. Read from the same `consent.channels`
+  // the panel writes, so the two can never disagree about who may be contacted.
+  const consentedChannels = Object.entries(user.consent.channels)
+    .filter(([, on]) => on)
+    .map(([channel]) => (channel === 'call' ? 'Phone' : channel === 'sms' ? 'SMS' : channel === 'whatsapp' ? 'WhatsApp' : 'Email'));
 
   return (
     <>
@@ -124,12 +251,31 @@ export function AdminClientProfilePage() {
           </Badge>
         }
         action={
-          <Link
-            to="/admin/clients"
-            className="flex h-9 items-center rounded-[8px] border border-line bg-surface px-3 text-[13px] font-medium text-ink-600 transition-colors hover:border-line-strong hover:text-ink-900"
-          >
-            All clients
-          </Link>
+          <>
+            <Link
+              to="/admin/clients"
+              className="flex h-9 items-center rounded-[8px] border border-line bg-surface px-3 text-[13px] font-medium text-ink-600 transition-colors hover:border-line-strong hover:text-ink-900"
+            >
+              All customers
+            </Link>
+            {/* The profile is where somebody notices a detail is wrong, so the
+                way to correct it belongs here rather than only back on the
+                list. Same route the list's row menu opens. */}
+            {/* Raising an invoice against the account already on screen. It
+                opens the invoices page's own form pre-filled rather than
+                forking a second one — two invoice forms would eventually
+                disagree about terms or due dates. */}
+            <Link to={`/admin/invoices?new=1&client=${id}`}>
+              <Button size="sm" variant="outline" icon={Plus}>
+                New invoice
+              </Button>
+            </Link>
+            <Link to={`/admin/clients/${id}/edit`}>
+              <Button size="sm" icon={Pencil}>
+                Edit
+              </Button>
+            </Link>
+          </>
         }
       />
 
@@ -251,6 +397,133 @@ export function AdminClientProfilePage() {
               </ul>
             )}
           </Panel>
+
+          {/* ---- the roll-up ------------------------------------------------
+              Each summary shows the first few rows and hands off to the tab
+              that owns them. Deliberately read-only: a form on Overview and the
+              same form on its own tab is two places to write the same record,
+              and they drift. Overview answers "what is going on with this
+              account"; the tabs are where something is done about it. */}
+          <SummaryPanel
+            title="Membership & consent"
+            onOpen={() => setTab('membership')}
+            cta="Referral & Portal"
+          >
+            <dl className="space-y-2 text-[12.5px]">
+              <SummaryRow label="Tier">
+                <Badge tone={TIER_TONE[user.tier] ?? 'neutral'} size="sm">
+                  {MEMBERSHIP_TIERS.find((item) => item.value === user.tier)?.label ?? user.tier}
+                </Badge>
+              </SummaryRow>
+              <SummaryRow label="Warranty bonus">
+                {tierBonus > 0 ? `+${tierBonus} days` : 'None'}
+              </SummaryRow>
+              <SummaryRow label="Referral code">
+                {user.referralCode ? (
+                  <code className="font-mono text-[12px] font-semibold">{user.referralCode}</code>
+                ) : (
+                  <span className="text-ink-400">Not issued</span>
+                )}
+              </SummaryRow>
+              <SummaryRow label="Contactable on">
+                {user.consent.unsubscribedAt ? (
+                  <span className="text-danger">Unsubscribed</span>
+                ) : consentedChannels.length > 0 ? (
+                  consentedChannels.join(' · ')
+                ) : user.consent.recorded ? (
+                  <span className="text-warn">Nothing — all declined</span>
+                ) : (
+                  <span className="text-ink-400">Not recorded</span>
+                )}
+              </SummaryRow>
+            </dl>
+          </SummaryPanel>
+
+          <SummaryPanel
+            title="Conversations"
+            onOpen={() => setTab('conversations')}
+            cta="All conversations"
+          >
+            {messages.length === 0 ? (
+              <p className="py-3 text-[12.5px] text-ink-400">Nothing logged yet.</p>
+            ) : (
+              <ul className="space-y-2">
+                {messages.slice(0, 3).map((message) => (
+                  <li key={message.id} className="flex items-start gap-2.5 text-[12.5px]">
+                    <MessageCircle
+                      className="mt-0.5 size-3.5 shrink-0 text-ink-300"
+                      strokeWidth={2}
+                      aria-hidden="true"
+                    />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-ink-700">{message.body}</span>
+                      <span className="text-[11.5px] text-ink-400">
+                        {message.channel} · {relativeTime(message.createdAt)}
+                      </span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </SummaryPanel>
+
+          <SummaryPanel title="Internal notes" onOpen={() => setTab('notes')} cta="All notes">
+            {notes.length === 0 ? (
+              <p className="py-3 text-[12.5px] text-ink-400">No notes yet.</p>
+            ) : (
+              <ul className="space-y-2">
+                {notes.slice(0, 3).map((note) => (
+                  <li key={note.id} className="text-[12.5px]">
+                    <p className="line-clamp-2 text-ink-700">{note.body}</p>
+                    <p className="text-[11.5px] text-ink-400">
+                      {note.staffName} · {date(note.createdAt)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </SummaryPanel>
+        </div>
+      )}
+
+      {tab === 'conversations' && (
+        <ConversationsPanel
+          messages={messages}
+          isLoading={messagesLoading}
+          isPending={sendMessage.isPending}
+          error={sendMessage.error?.message}
+          notice={notice}
+          onDismissNotice={() => setNotice(null)}
+          onLog={logInteraction}
+        />
+      )}
+
+      {tab === 'notes' && (
+        <NotesPanel
+          notes={notes}
+          isPending={addInternalNote.isPending}
+          onAdd={(body, done) => addInternalNote.mutate({ id, body }, { onSuccess: done })}
+          onDelete={(noteId) => deleteInternalNote.mutate({ id, noteId })}
+        />
+      )}
+
+      {tab === 'membership' && (
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="space-y-4">
+            <ReferralPanel user={user} percent={settingsData?.financial?.referralPercent ?? 5} />
+            <TierPanel
+              tier={user.tier}
+              warrantyBonus={settingsData?.financial?.warrantyBonusByTier?.[user.tier] ?? 0}
+              isPending={setTier.isPending}
+              onChange={(next) => setTier.mutate({ id, tier: next })}
+            />
+          </div>
+
+          <ConsentPanel
+            consent={user.consent}
+            isPending={setContactConsent.isPending}
+            onSave={(channels) => setContactConsent.mutate({ id, ...channels })}
+          />
         </div>
       )}
 

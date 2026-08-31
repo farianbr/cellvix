@@ -1,5 +1,5 @@
-import ApiError from '../utils/ApiError.js';
-import env from '../config/env.js';
+const { default: ApiError } = require('../utils/ApiError.js');
+const { default: env } = require('../config/env.js');
 
 /**
  * Payment gateway — MOCK.
@@ -50,7 +50,7 @@ function declineReason({ poNumber }) {
  * @returns {Promise<{ status: 'paid'|'pending', reference: string, processedAt: Date }>}
  * @throws {ApiError} 402 PAYMENT_DECLINED
  */
-export async function charge({ amount, method, orderNumber, poNumber }) {
+async function charge({ amount, method, orderNumber, poNumber }) {
   // A little latency so the checkout's loading state is exercised in dev.
   await new Promise((resolve) => setTimeout(resolve, 350));
 
@@ -69,4 +69,7 @@ export async function charge({ amount, method, orderNumber, poNumber }) {
   };
 }
 
-export default { charge };
+exports.default = { charge };
+
+// --- CommonJS exports -------------------------------------------------
+exports.charge = charge;

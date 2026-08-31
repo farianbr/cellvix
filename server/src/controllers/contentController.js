@@ -1,7 +1,7 @@
-import { asyncHandler } from '../utils/ApiError.js';
-import * as blogService from '../services/blogService.js';
-import * as faqService from '../services/faqService.js';
-import * as offerService from '../services/offerService.js';
+const { asyncHandler } = require('../utils/ApiError.js');
+const blogService = require('../services/blogService.js');
+const faqService = require('../services/faqService.js');
+const offerService = require('../services/offerService.js');
 
 /**
  * Blog, FAQ and offers.
@@ -13,79 +13,99 @@ import * as offerService from '../services/offerService.js';
 
 // ---- blog -------------------------------------------------------------------
 
-export const listPosts = asyncHandler(async (req, res) => {
+const listPosts = asyncHandler(async (req, res) => {
   res.json(await blogService.listPublished(req.query));
 });
 
-export const getPost = asyncHandler(async (req, res) => {
+const getPost = asyncHandler(async (req, res) => {
   res.json(await blogService.getBySlug(req.params.slug));
 });
 
-export const adminListPosts = asyncHandler(async (req, res) => {
+const adminListPosts = asyncHandler(async (req, res) => {
   res.json(await blogService.listAll(req.query));
 });
 
-export const adminGetPost = asyncHandler(async (req, res) => {
+const adminGetPost = asyncHandler(async (req, res) => {
   res.json({ post: await blogService.getById(req.params.id) });
 });
 
-export const adminCreatePost = asyncHandler(async (req, res) => {
+const adminCreatePost = asyncHandler(async (req, res) => {
   res.status(201).json({ post: await blogService.createPost(req.body) });
 });
 
-export const adminUpdatePost = asyncHandler(async (req, res) => {
+const adminUpdatePost = asyncHandler(async (req, res) => {
   res.json({ post: await blogService.updatePost(req.params.id, req.body) });
 });
 
-export const adminDeletePost = asyncHandler(async (req, res) => {
+const adminDeletePost = asyncHandler(async (req, res) => {
   res.json({ post: await blogService.deletePost(req.params.id) });
 });
 
 // ---- faq --------------------------------------------------------------------
 
-export const listFaqs = asyncHandler(async (req, res) => {
+const listFaqs = asyncHandler(async (req, res) => {
   res.json(await faqService.listGeneral(req.query));
 });
 
-export const adminListFaqs = asyncHandler(async (req, res) => {
+const adminListFaqs = asyncHandler(async (req, res) => {
   res.json(await faqService.listAll(req.query));
 });
 
-export const adminCreateFaq = asyncHandler(async (req, res) => {
+const adminCreateFaq = asyncHandler(async (req, res) => {
   res.status(201).json({ faq: await faqService.createFaq(req.body) });
 });
 
-export const adminUpdateFaq = asyncHandler(async (req, res) => {
+const adminUpdateFaq = asyncHandler(async (req, res) => {
   res.json({ faq: await faqService.updateFaq(req.params.id, req.body) });
 });
 
-export const adminDeleteFaq = asyncHandler(async (req, res) => {
+const adminDeleteFaq = asyncHandler(async (req, res) => {
   res.json({ faq: await faqService.deleteFaq(req.params.id) });
 });
 
 // ---- offers -----------------------------------------------------------------
 
-export const listOffers = asyncHandler(async (req, res) => {
+const listOffers = asyncHandler(async (req, res) => {
   // `req.user` may be null — the price gate inside decides what a guest sees.
   res.json(await offerService.listLive(req.user));
 });
 
-export const getOffer = asyncHandler(async (req, res) => {
+const getOffer = asyncHandler(async (req, res) => {
   res.json(await offerService.getBySlug(req.params.slug, req.user));
 });
 
-export const adminListOffers = asyncHandler(async (req, res) => {
+const adminListOffers = asyncHandler(async (req, res) => {
   res.json(await offerService.listAll(req.query));
 });
 
-export const adminCreateOffer = asyncHandler(async (req, res) => {
+const adminCreateOffer = asyncHandler(async (req, res) => {
   res.status(201).json({ offer: await offerService.createOffer(req.body) });
 });
 
-export const adminUpdateOffer = asyncHandler(async (req, res) => {
+const adminUpdateOffer = asyncHandler(async (req, res) => {
   res.json({ offer: await offerService.updateOffer(req.params.id, req.body) });
 });
 
-export const adminDeleteOffer = asyncHandler(async (req, res) => {
+const adminDeleteOffer = asyncHandler(async (req, res) => {
   res.json({ offer: await offerService.deleteOffer(req.params.id) });
 });
+
+// --- CommonJS exports -------------------------------------------------
+exports.listPosts = listPosts;
+exports.getPost = getPost;
+exports.adminListPosts = adminListPosts;
+exports.adminGetPost = adminGetPost;
+exports.adminCreatePost = adminCreatePost;
+exports.adminUpdatePost = adminUpdatePost;
+exports.adminDeletePost = adminDeletePost;
+exports.listFaqs = listFaqs;
+exports.adminListFaqs = adminListFaqs;
+exports.adminCreateFaq = adminCreateFaq;
+exports.adminUpdateFaq = adminUpdateFaq;
+exports.adminDeleteFaq = adminDeleteFaq;
+exports.listOffers = listOffers;
+exports.getOffer = getOffer;
+exports.adminListOffers = adminListOffers;
+exports.adminCreateOffer = adminCreateOffer;
+exports.adminUpdateOffer = adminUpdateOffer;
+exports.adminDeleteOffer = adminDeleteOffer;

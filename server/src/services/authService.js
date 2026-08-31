@@ -1,15 +1,15 @@
-import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
-import ApiError from '../utils/ApiError.js';
-import env from '../config/env.js';
-import * as referralService from './referralService.js';
-import * as notificationService from './notificationService.js';
+const jwt = require('jsonwebtoken');
+const { default: User } = require('../models/User.js');
+const { default: ApiError } = require('../utils/ApiError.js');
+const { default: env } = require('../config/env.js');
+const referralService = require('./referralService.js');
+const notificationService = require('./notificationService.js');
 
 // "Remember me" drives a long-lived cookie so the buyer is auto-signed-in on
 // return visits (brief §8.1).
 const REMEMBER_MS = 90 * 24 * 60 * 60 * 1000;
 
-export function issueSession(res, user, remember = false) {
+function issueSession(res, user, remember = false) {
   const token = jwt.sign({ sub: user._id.toString() }, env.JWT_SECRET, {
     expiresIn: remember ? '90d' : env.JWT_EXPIRES_IN,
   });
@@ -28,11 +28,11 @@ export function issueSession(res, user, remember = false) {
   });
 }
 
-export function clearSession(res) {
+function clearSession(res) {
   res.clearCookie(env.COOKIE_NAME, { path: '/' });
 }
 
-export async function register(data, { ip } = {}) {
+async function register(data, { ip } = {}) {
   const existing = await User.findOne({ email: data.email });
   if (existing) {
     throw ApiError.conflict(
@@ -114,7 +114,7 @@ export async function register(data, { ip } = {}) {
  * Returns null rather than throwing: this is called from a path that is already
  * handling an error, and it must not replace it with its own.
  */
-export async function findForAudit(email) {
+async function findForAudit(email) {
   if (!email) return null;
   try {
     return await User.findOne({ email: String(email).toLowerCase().trim() }).lean();
@@ -123,7 +123,7 @@ export async function findForAudit(email) {
   }
 }
 
-export async function login({ email, password }) {
+async function login({ email, password }) {
   const user = await User.findOne({ email }).select('+passwordHash');
   if (!user) {
     throw ApiError.unauthorized('That email and password do not match.', 'INVALID_CREDENTIALS');
@@ -156,3 +156,10 @@ export async function login({ email, password }) {
   await user.save();
   return user;
 }
+
+// --- CommonJS exports -------------------------------------------------
+exports.issueSession = issueSession;
+exports.clearSession = clearSession;
+exports.register = register;
+exports.findForAudit = findForAudit;
+exports.login = login;

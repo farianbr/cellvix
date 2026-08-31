@@ -11,6 +11,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import cn from '@/lib/cn';
+import useCreateParam from '@/hooks/useCreateParam';
 import { money, date, count as formatCount } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
@@ -169,7 +170,8 @@ function RmaForm({ onSubmit, onCancel, isPending, error }) {
 
 export function AdminRmaPage() {
   const [query, setQuery] = useState('');
-  const [creating, setCreating] = useState(false);
+  // Opened directly by `+ Create` (§7.2), which arrives with `?new=1`.
+  const [creating, setCreating] = useCreateParam();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 

@@ -49,6 +49,9 @@ const AdminBlogPage = lazy(() => import('@/pages/admin/AdminBlogPage'));
 const AdminFaqPage = lazy(() => import('@/pages/admin/AdminFaqPage'));
 const AdminInvoicesPage = lazy(() => import('@/pages/admin/AdminInvoicesPage'));
 const AdminClientProfilePage = lazy(() => import('@/pages/admin/AdminClientProfilePage'));
+const AdminCustomerEditPage = lazy(() => import('@/pages/admin/AdminCustomerEditPage'));
+const AdminSupplierReturnsPage = lazy(() => import('@/pages/admin/AdminSupplierReturnsPage'));
+const AdminSupplierServicesPage = lazy(() => import('@/pages/admin/AdminSupplierServicesPage'));
 const AdminSuppliersPage = lazy(() => import('@/pages/admin/AdminSuppliersPage'));
 const AdminSupplierProfilePage = lazy(() => import('@/pages/admin/AdminSupplierProfilePage'));
 const AdminPurchaseOrdersPage = lazy(() => import('@/pages/admin/AdminPurchaseOrdersPage'));
@@ -64,6 +67,7 @@ const AdminReportsPage = lazy(() => import('@/pages/admin/AdminReportsPage'));
 const AdminBusinessReportPage = lazy(() => import('@/pages/admin/AdminBusinessReportPage'));
 const AdminQuotesPage = lazy(() => import('@/pages/admin/AdminQuotesPage'));
 const AdminQuoteDetailPage = lazy(() => import('@/pages/admin/AdminQuoteDetailPage'));
+const AdminTicketsPage = lazy(() => import('@/pages/admin/AdminTicketsPage'));
 const AdminRmaPage = lazy(() => import('@/pages/admin/AdminRmaPage'));
 const AdminRmaDetailPage = lazy(() => import('@/pages/admin/AdminRmaDetailPage'));
 const AdminOutletsPage = lazy(() => import('@/pages/admin/AdminOutletsPage'));
@@ -122,6 +126,7 @@ export function App() {
         <Route index element={<AdminOverviewPage />} />
         <Route path="clients" element={<AdminCustomersPage />} />
         <Route path="clients/:id" element={<AdminClientProfilePage />} />
+        <Route path="clients/:id/edit" element={<AdminCustomerEditPage />} />
         <Route path="orders" element={<AdminOrdersPage />} />
         <Route path="inventory" element={<AdminProductsPage />} />
         <Route path="inventory/:id" element={<AdminInventoryDetailPage />} />
@@ -130,6 +135,9 @@ export function App() {
         {/* Purchase (phase 5). */}
         <Route path="suppliers" element={<AdminSuppliersPage />} />
         <Route path="suppliers/:id" element={<AdminSupplierProfilePage />} />
+        <Route path="supplier-returns" element={<AdminSupplierReturnsPage />} />
+        <Route path="supplier-services" element={<AdminSupplierServicesPage mode="service" />} />
+        <Route path="supplier-subscriptions" element={<AdminSupplierServicesPage mode="subscription" />} />
         <Route path="purchase-orders" element={<AdminPurchaseOrdersPage />} />
         <Route path="purchase-orders/:id" element={<AdminPurchaseOrderDetailPage />} />
         <Route path="expenses" element={<AdminExpensesPage />} />
@@ -144,6 +152,10 @@ export function App() {
         <Route path="quotes/:id" element={<AdminQuoteDetailPage />} />
         <Route path="rma" element={<AdminRmaPage />} />
         <Route path="rma/:id" element={<AdminRmaDetailPage />} />
+
+        {/* Repair tickets. The detail screen is not built yet, so a row opens
+            the edit dialog on the list rather than a route that would 404. */}
+        <Route path="tickets" element={<AdminTicketsPage />} />
 
         <Route path="reports/business" element={<AdminBusinessReportPage />} />
         <Route path="reports" element={<AdminReportsPage />} />

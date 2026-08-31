@@ -1,8 +1,8 @@
-import { randomBytes } from 'node:crypto';
-import { asyncHandler } from '../utils/ApiError.js';
-import * as adminService from '../services/adminService.js';
-import * as auditService from '../services/auditService.js';
-import User from '../models/User.js';
+const { randomBytes } = require('node:crypto');
+const { asyncHandler } = require('../utils/ApiError.js');
+const adminService = require('../services/adminService.js');
+const auditService = require('../services/auditService.js');
+const { default: User } = require('../models/User.js');
 
 /**
  * **Audit hooks live in the controller, not the service** (§7.5, phase 11b).
@@ -19,21 +19,128 @@ import User from '../models/User.js';
 
 // `from` and `to` are inclusive `YYYY-MM-DD` days; the service owns end-of-day
 // and the default window, so both halves cannot disagree about what a range is.
-export const stats = asyncHandler(async (req, res) => {
+const stats = asyncHandler(async (req, res) => {
   res.json(await adminService.stats({ from: req.query.from, to: req.query.to }));
 });
 
 // ---- customers --------------------------------------------------------------
 
-export const listUsers = asyncHandler(async (req, res) => {
+const listUsers = asyncHandler(async (req, res) => {
   res.json(await adminService.listUsers(req.query));
 });
 
-export const getUser = asyncHandler(async (req, res) => {
+const createUser = asyncHandler(async (req, res) => {
+  const user = await adminService.createUser(req.body, req.user._id);
+
+  await auditService.record({
+    req,
+    action: 'user.create',
+    entity: { kind: 'user', id: user.id, label: user.businessName },
+    after: { status: user.status, creditLimit: user.creditLimit, terms: user.terms },
+    description: `Opened ${user.businessName} as a ${user.status} account.`,
+  });
+
+  res.status(201).json({ user });
+});
+
+const getUser = asyncHandler(async (req, res) => {
   res.json(await adminService.getUser(req.params.id));
 });
 
-export const approveUser = asyncHandler(async (req, res) => {
+const updateUser = asyncHandler(async (req, res) => {
+  const user = await adminService.updateUser(req.params.id, req.body);
+
+  await auditService.record({
+    req,
+    action: 'user.update',
+    entity: { kind: 'user', id: req.params.id, label: user.businessName ?? user.email },
+    // Only the identity fields this endpoint can actually write. Credit and
+    // status are edited elsewhere and would be noise in this record.
+    after: {
+      businessName: user.businessName,
+      contactName: user.contactName,
+      email: user.email,
+      phone: user.phone,
+    },
+    description: `Edited the profile for ${user.businessName ?? user.email}.`,
+  });
+
+  res.json({ user });
+});
+
+/**
+ * Consent is always audited, and audited as a `security` record.
+ *
+ * Under CASL the defensible question is not "is consent on" but "who set it,
+ * when, and on what basis" — so the before/after pair matters more here than on
+ * an ordinary field edit, and it belongs in the log an auditor is pointed at
+ * rather than the general activity feed.
+ */
+const setContactConsent = asyncHandler(async (req, res) => {
+  const before = await User.findById(req.params.id)
+    .select('contactConsent marketingConsent')
+    .lean();
+  const user = await adminService.setContactConsent(req.params.id, req.body, req.user._id);
+
+  await auditService.record({
+    req,
+    kind: 'security',
+    action: 'user.consent',
+    entity: { kind: 'user', id: req.params.id, label: user.businessName ?? user.email },
+    before: {
+      channels: {
+        sms: before?.contactConsent?.sms === true,
+        whatsapp: before?.contactConsent?.whatsapp === true,
+        email: before?.contactConsent?.email === true,
+        call: before?.contactConsent?.call === true,
+      },
+      marketing: before?.marketingConsent?.granted === true,
+    },
+    after: { channels: user.consent.channels, marketing: user.consent.marketing },
+    description: `Recorded contact consent for ${user.businessName ?? user.email}.`,
+  });
+
+  res.json({ user });
+});
+
+const setTier = asyncHandler(async (req, res) => {
+  const before = await User.findById(req.params.id).select('tier').lean();
+  const user = await adminService.setTier(req.params.id, req.body);
+
+  await auditService.record({
+    req,
+    action: 'user.tier',
+    entity: { kind: 'user', id: req.params.id, label: user.businessName ?? user.email },
+    before: { tier: before?.tier ?? 'standard' },
+    after: { tier: user.tier },
+    description: `Set ${user.businessName ?? user.email} to the ${user.tier} tier.`,
+  });
+
+  res.json({ user });
+});
+
+const addInternalNote = asyncHandler(async (req, res) => {
+  // `req.user` rather than just the id: the note denormalises who wrote it, so
+  // it still reads correctly after that person's account is gone.
+  res.status(201).json(await adminService.addInternalNote(req.params.id, req.body, req.user));
+});
+
+const deleteInternalNote = asyncHandler(async (req, res) => {
+  const result = await adminService.deleteInternalNote(req.params.id, req.params.noteId);
+
+  // Deleting somebody else's note is the one destructive act on this screen,
+  // so it is the one that leaves a row behind.
+  await auditService.record({
+    req,
+    action: 'user.note_delete',
+    entity: { kind: 'user', id: req.params.id, label: req.params.noteId },
+    description: 'Deleted an internal note.',
+  });
+
+  res.json(result);
+});
+
+const approveUser = asyncHandler(async (req, res) => {
   const user = await adminService.approveUser(req.params.id, req.user._id, req.body);
 
   await auditService.record({
@@ -47,7 +154,7 @@ export const approveUser = asyncHandler(async (req, res) => {
   res.json({ user });
 });
 
-export const rejectUser = asyncHandler(async (req, res) => {
+const rejectUser = asyncHandler(async (req, res) => {
   const user = await adminService.rejectUser(req.params.id, req.body);
 
   await auditService.record({
@@ -61,7 +168,7 @@ export const rejectUser = asyncHandler(async (req, res) => {
   res.json({ user });
 });
 
-export const setUserStatus = asyncHandler(async (req, res) => {
+const setUserStatus = asyncHandler(async (req, res) => {
   const user = await adminService.setUserStatus(req.params.id, req.body);
 
   // Suspending an account is a security event as well as an administrative
@@ -85,7 +192,7 @@ export const setUserStatus = asyncHandler(async (req, res) => {
  * The **line of credit** — what Cellvix lends. Not store credit, which moves
  * only through `storeCreditService` and is logged separately below.
  */
-export const setCredit = asyncHandler(async (req, res) => {
+const setCredit = asyncHandler(async (req, res) => {
   // A lean read of the two fields rather than `getUser`, which also fetches ten
   // orders and ten invoices this does not need.
   const before = await User.findById(req.params.id).select('creditLimit terms').lean();
@@ -105,33 +212,47 @@ export const setCredit = asyncHandler(async (req, res) => {
 
 // ---- products ---------------------------------------------------------------
 
-export const listProducts = asyncHandler(async (req, res) => {
+const listProducts = asyncHandler(async (req, res) => {
   res.json(await adminService.listProducts(req.query));
 });
 
-export const createProduct = asyncHandler(async (req, res) => {
+const createProduct = asyncHandler(async (req, res) => {
   res.status(201).json({ product: await adminService.createProduct(req.body) });
 });
 
-export const updateProduct = asyncHandler(async (req, res) => {
+const updateProduct = asyncHandler(async (req, res) => {
   res.json({ product: await adminService.updateProduct(req.params.id, req.body) });
 });
 
-export const toggleProduct = asyncHandler(async (req, res) => {
+const toggleProduct = asyncHandler(async (req, res) => {
   res.json({ product: await adminService.deactivateProduct(req.params.id) });
 });
 
 // ---- orders -----------------------------------------------------------------
 
-export const listOrders = asyncHandler(async (req, res) => {
+const listOrders = asyncHandler(async (req, res) => {
   res.json(await adminService.listOrders(req.query));
 });
 
-export const getOrder = asyncHandler(async (req, res) => {
+const createOrder = asyncHandler(async (req, res) => {
+  const order = await adminService.createOrder(req.body);
+
+  await auditService.record({
+    req,
+    action: 'order.create',
+    entity: { kind: 'order', id: order.orderNumber, label: order.orderNumber },
+    after: { total: order.total, items: order.items?.length ?? 0 },
+    description: `Raised ${order.orderNumber} by hand.`,
+  });
+
+  res.status(201).json({ order });
+});
+
+const getOrder = asyncHandler(async (req, res) => {
   res.json(await adminService.getOrder(req.params.orderNumber));
 });
 
-export const updateOrderStatus = asyncHandler(async (req, res) => {
+const updateOrderStatus = asyncHandler(async (req, res) => {
   res.json({ order: await adminService.updateOrderStatus(req.params.orderNumber, req.body) });
 });
 
@@ -140,7 +261,7 @@ export const updateOrderStatus = asyncHandler(async (req, res) => {
  * service allowed to move it. §7.6 names this as money-moving and therefore
  * always audited with actor and IP.
  */
-export const allocateStoreCredit = asyncHandler(async (req, res) => {
+const allocateStoreCredit = asyncHandler(async (req, res) => {
   const result = await adminService.allocateStoreCredit(req.params.id, req.body, req.user._id);
 
   await auditService.record({
@@ -163,11 +284,11 @@ export const allocateStoreCredit = asyncHandler(async (req, res) => {
   res.status(201).json(result);
 });
 
-export const storeCreditStatement = asyncHandler(async (req, res) => {
+const storeCreditStatement = asyncHandler(async (req, res) => {
   res.json(await adminService.storeCreditStatement(req.params.id));
 });
 
-export const refundOrder = asyncHandler(async (req, res) => {
+const refundOrder = asyncHandler(async (req, res) => {
   const result = await adminService.refundOrder(req.params.orderNumber, req.body, req.user._id);
 
   await auditService.record({
@@ -190,15 +311,29 @@ export const refundOrder = asyncHandler(async (req, res) => {
 
 // ---- invoices ---------------------------------------------------------------
 
-export const listInvoices = asyncHandler(async (req, res) => {
+const listInvoices = asyncHandler(async (req, res) => {
   res.json(await adminService.listInvoices(req.query));
 });
 
-export const getInvoice = asyncHandler(async (req, res) => {
+const createInvoice = asyncHandler(async (req, res) => {
+  const invoice = await adminService.createInvoice(req.body);
+
+  await auditService.record({
+    req,
+    action: 'invoice.create',
+    entity: { kind: 'invoice', id: invoice.number, label: invoice.number },
+    after: { amount: invoice.amount, terms: invoice.terms, dueDate: invoice.dueDate },
+    description: `Raised ${invoice.number} against ${invoice.businessName} with no order behind it.`,
+  });
+
+  res.status(201).json({ invoice });
+});
+
+const getInvoice = asyncHandler(async (req, res) => {
   res.json(await adminService.getInvoice(req.params.number));
 });
 
-export const recordInvoicePayment = asyncHandler(async (req, res) => {
+const recordInvoicePayment = asyncHandler(async (req, res) => {
   const result = await adminService.recordPayment(req.params.number, req.body);
   const invoice = result?.invoice ?? result;
 
@@ -221,7 +356,7 @@ export const recordInvoicePayment = asyncHandler(async (req, res) => {
   res.status(201).json(result);
 });
 
-export const voidInvoice = asyncHandler(async (req, res) => {
+const voidInvoice = asyncHandler(async (req, res) => {
   const result = await adminService.voidInvoice(req.params.number, req.body);
   const invoice = result?.invoice ?? result;
 
@@ -238,7 +373,7 @@ export const voidInvoice = asyncHandler(async (req, res) => {
 
 // ---- client profile ---------------------------------------------------------
 
-export const userActivity = asyncHandler(async (req, res) => {
+const userActivity = asyncHandler(async (req, res) => {
   res.json(await adminService.userActivity(req.params.id));
 });
 
@@ -246,7 +381,7 @@ export const userActivity = asyncHandler(async (req, res) => {
 
 // Partial by design: the response names what moved and what did not, and the
 // UI shows the skips rather than reporting a clean success.
-export const bulkUpdateOrderStatus = asyncHandler(async (req, res) => {
+const bulkUpdateOrderStatus = asyncHandler(async (req, res) => {
   res.json(await adminService.bulkUpdateOrderStatus(req.body));
 });
 
@@ -258,7 +393,7 @@ export const bulkUpdateOrderStatus = asyncHandler(async (req, res) => {
  * button, and loosening the policy app-wide to serve one document would be the
  * wrong trade. Nothing loads; the one nonced script may run.
  */
-export const invoiceDocument = asyncHandler(async (req, res) => {
+const invoiceDocument = asyncHandler(async (req, res) => {
   const nonce = randomBytes(16).toString('base64');
   const html = await adminService.invoiceDocument(req.params.number, { nonce });
 
@@ -275,3 +410,37 @@ export const invoiceDocument = asyncHandler(async (req, res) => {
   );
   res.type('html').send(html);
 });
+
+// --- CommonJS exports -------------------------------------------------
+exports.stats = stats;
+exports.listUsers = listUsers;
+exports.createUser = createUser;
+exports.getUser = getUser;
+exports.updateUser = updateUser;
+exports.setContactConsent = setContactConsent;
+exports.setTier = setTier;
+exports.addInternalNote = addInternalNote;
+exports.deleteInternalNote = deleteInternalNote;
+exports.approveUser = approveUser;
+exports.rejectUser = rejectUser;
+exports.setUserStatus = setUserStatus;
+exports.setCredit = setCredit;
+exports.listProducts = listProducts;
+exports.createProduct = createProduct;
+exports.updateProduct = updateProduct;
+exports.toggleProduct = toggleProduct;
+exports.listOrders = listOrders;
+exports.createOrder = createOrder;
+exports.getOrder = getOrder;
+exports.updateOrderStatus = updateOrderStatus;
+exports.allocateStoreCredit = allocateStoreCredit;
+exports.storeCreditStatement = storeCreditStatement;
+exports.refundOrder = refundOrder;
+exports.listInvoices = listInvoices;
+exports.createInvoice = createInvoice;
+exports.getInvoice = getInvoice;
+exports.recordInvoicePayment = recordInvoicePayment;
+exports.voidInvoice = voidInvoice;
+exports.userActivity = userActivity;
+exports.bulkUpdateOrderStatus = bulkUpdateOrderStatus;
+exports.invoiceDocument = invoiceDocument;

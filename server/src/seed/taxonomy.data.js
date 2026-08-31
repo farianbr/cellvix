@@ -8,7 +8,7 @@
  * (PROGRESS.md, open question #2).
  */
 
-export const TAXONOMY = [
+const TAXONOMY = [
   {
     name: 'Smartphone',
     slug: 'smartphone',
@@ -325,7 +325,7 @@ export const TAXONOMY = [
  * Which part types exist for each device type, with a base price band in cents
  * and the grades that part is realistically sold in.
  */
-export const PART_TYPES = {
+const PART_TYPES = {
   smartphone: [
     { slug: 'screen-assembly', label: 'Screen Assembly', price: [4500, 32000], grades: ['NEW', 'OEM', 'PULL-A', 'PULL-B', 'AFTERMARKET'] },
     { slug: 'battery', label: 'Battery', price: [1200, 4800], grades: ['NEW', 'OEM', 'AFTERMARKET'] },
@@ -379,10 +379,15 @@ export const PART_TYPES = {
 };
 
 /** Grade affects price: a B-grade pull is worth less than a new part. */
-export const GRADE_MULTIPLIER = {
+const GRADE_MULTIPLIER = {
   NEW: 1,
   OEM: 1.18,
   'PULL-A': 0.78,
   'PULL-B': 0.58,
   AFTERMARKET: 0.62,
 };
+
+// --- CommonJS exports -------------------------------------------------
+exports.TAXONOMY = TAXONOMY;
+exports.PART_TYPES = PART_TYPES;
+exports.GRADE_MULTIPLIER = GRADE_MULTIPLIER;

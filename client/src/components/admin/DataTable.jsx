@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, ChevronsUpDown, MoreHorizontal } from 'lucide-react';
+import { ArrowDown, ArrowUp, Check, ChevronsUpDown, Minus, MoreHorizontal } from 'lucide-react';
 import cn from '@/lib/cn';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
 
@@ -23,23 +23,50 @@ import useOnClickOutside from '@/hooks/useOnClickOutside';
  * because sorting one page of twenty-five is a lie about the whole set.
  */
 
-/** A bare checkbox. `ui/Checkbox` is a labelled filter row and is the wrong shape in a cell. */
+/**
+ * A bare checkbox. `ui/Checkbox` is a labelled filter row and is the wrong shape
+ * in a cell, but the **mark** is copied from it deliberately.
+ *
+ * `appearance-none` removes the platform tick along with the platform box, so a
+ * checked row used to render as a filled brand square with nothing in it — the
+ * colour was the only signal, which reads as a highlight rather than a
+ * selection, and disappears entirely for anyone who cannot separate the two
+ * tones. The glyph is drawn on top: a check when selected, a dash when the
+ * header is partially selected, matching `ui/Checkbox`.
+ */
 function CellCheckbox({ checked, indeterminate, onChange, label }) {
   const ref = useRef(null);
+  const isPartial = Boolean(indeterminate) && !checked;
 
   useEffect(() => {
-    if (ref.current) ref.current.indeterminate = Boolean(indeterminate) && !checked;
-  }, [indeterminate, checked]);
+    if (ref.current) ref.current.indeterminate = isPartial;
+  }, [isPartial]);
 
   return (
-    <input
-      ref={ref}
-      type="checkbox"
-      checked={checked}
-      onChange={(event) => onChange(event.target.checked)}
-      aria-label={label}
-      className="size-[15px] cursor-pointer appearance-none rounded-[4px] border border-line-strong bg-surface transition-colors checked:border-brand checked:bg-brand indeterminate:border-brand indeterminate:bg-brand focus-visible:outline-none"
-    />
+    <span className="relative flex size-[16px] shrink-0 items-center justify-center">
+      <input
+        ref={ref}
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        aria-label={label}
+        className="peer absolute size-full cursor-pointer appearance-none rounded-[4px] border border-line-strong bg-surface transition-colors checked:border-brand checked:bg-brand indeterminate:border-brand indeterminate:bg-brand focus-visible:outline-none"
+      />
+
+      {isPartial ? (
+        <Minus
+          className="pointer-events-none relative size-2.5 text-white"
+          strokeWidth={3.5}
+          aria-hidden="true"
+        />
+      ) : (
+        <Check
+          className="pointer-events-none relative size-2.5 text-white opacity-0 transition-opacity peer-checked:opacity-100"
+          strokeWidth={3.5}
+          aria-hidden="true"
+        />
+      )}
+    </span>
   );
 }
 
@@ -189,10 +216,22 @@ export function DataTable({
             <tr className="border-b border-line">
               {selectable && (
                 <th scope="col" className="w-10 px-4 py-2.5">
+                  {/* Select-all adds and removes **this page's** keys rather
+                      than replacing the whole selection. On a paginated list
+                      the old `checked ? allKeys : []` silently discarded rows
+                      picked on another page the moment the header box was
+                      touched — the operator sees a count drop with no row
+                      changing in front of them. */}
                   <CellCheckbox
                     checked={allSelected}
                     indeterminate={someSelected}
-                    onChange={(checked) => onSelectionChange?.(checked ? allKeys : [])}
+                    onChange={(checked) =>
+                      onSelectionChange?.(
+                        checked
+                          ? [...new Set([...selected, ...allKeys])]
+                          : selected.filter((key) => !allKeys.includes(key)),
+                      )
+                    }
                     label={allSelected ? 'Clear selection' : 'Select all rows'}
                   />
                 </th>
@@ -225,6 +264,14 @@ export function DataTable({
                       <button
                         type="button"
                         onClick={() => toggleSort(column)}
+                        // The arrow always trails the label. `flex-row-reverse`
+                        // was tried here to right-align the pair and is wrong:
+                        // it reverses the children, so the arrow landed on the
+                        // *left* of a right-aligned column while every other
+                        // column kept it on the right. The `th` already carries
+                        // `text-right`, and an `inline-flex` button is an inline
+                        // box — so it is pushed to the right edge by that
+                        // text-align on its own, with nothing to do here.
                         className={cn(
                           'eyebrow inline-flex items-center gap-1 transition-colors hover:text-ink-700',
                           isSorted && 'text-ink-900',
@@ -244,7 +291,14 @@ export function DataTable({
                 );
               })}
 
-              {rowMenu && <th scope="col" className="w-12 px-4 py-2.5" />}
+              {/* Labelled, not blank. An unnamed trailing column reads as a
+                  rendering gap — the `···` looks like it belongs to the last
+                  data column rather than being an actions cell of its own. */}
+              {rowMenu && (
+                <th scope="col" className="eyebrow w-20 px-4 py-2.5 text-right text-ink-400">
+                  Actions
+                </th>
+              )}
             </tr>
           </thead>
 
@@ -284,10 +338,20 @@ export function DataTable({
                           column.className,
                         )}
                       >
-                        <span className="flex items-center gap-2">
-                          {/* The disclosure lives on the first cell so the fold
-                              is reachable without a column of its own. */}
-                          {index === 0 && foldable.length > 0 && (
+                        {/* Only the first cell needs the flex row, and only
+                            when there is a disclosure to sit in it.
+
+                            Every cell used to be wrapped in
+                            `flex items-center`, which silently defeated
+                            `align: 'right'` on every column that asked for it:
+                            a flex container's children are laid out by
+                            `justify-content`, so the inherited `text-align`
+                            did nothing and money columns sat left under
+                            right-aligned headers. Wrapping only where a
+                            disclosure exists lets the `td`'s own text-align
+                            apply everywhere else. */}
+                        {index === 0 && foldable.length > 0 ? (
+                          <span className="flex items-center gap-2">
                             <button
                               type="button"
                               onClick={(event) => {
@@ -300,11 +364,13 @@ export function DataTable({
                             >
                               <ChevronsUpDown className="size-3" strokeWidth={2.25} aria-hidden="true" />
                             </button>
-                          )}
-                          <span className="min-w-0">
-                            {column.render ? column.render(row) : row[column.key]}
+                            <span className="min-w-0">
+                              {column.render ? column.render(row) : row[column.key]}
+                            </span>
                           </span>
-                        </span>
+                        ) : (
+                          column.render ? column.render(row) : row[column.key]
+                        )}
                       </td>
                     ))}
 

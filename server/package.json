@@ -2,14 +2,16 @@
   "name": "server",
   "private": true,
   "version": "0.1.0",
-  "type": "module",
+  "type": "commonjs",
   "main": "src/index.js",
   "scripts": {
     "dev": "node --watch src/index.js",
     "start": "node src/index.js",
     "seed": "node src/seed/run.js",
     "seed:content": "node src/seed/content.js",
+    "seed:quotes": "node src/seed/quotes.js",
     "seed:expense-categories": "node src/seed/expense-categories.js",
+    "seed:tickets": "node src/seed/tickets.js",
     "backfill:competitors": "node src/seed/backfill-competitors.js"
   },
   "dependencies": {
@@ -23,6 +25,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.3",
     "morgan": "^1.10.0",
+    "nodemailer": "^9.0.6",
     "zod": "^3.24.1"
   }
 }

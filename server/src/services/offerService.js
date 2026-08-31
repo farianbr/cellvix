@@ -1,10 +1,10 @@
-import Offer from '../models/Offer.js';
-import Order from '../models/Order.js';
-import Product from '../models/Product.js';
-import ApiError from '../utils/ApiError.js';
-import { likeRegex } from '../utils/regex.js';
-import { canSeePricing } from '../middleware/auth.js';
-import { serialize as serializeProduct } from './productService.js';
+const { default: Offer } = require('../models/Offer.js');
+const { default: Order } = require('../models/Order.js');
+const { default: Product } = require('../models/Product.js');
+const { default: ApiError } = require('../utils/ApiError.js');
+const { likeRegex } = require('../utils/regex.js');
+const { canSeePricing } = require('../middleware/auth.js');
+const { serialize: serializeProduct } = require('./productService.js');
 
 function slugify(value) {
   return value
@@ -18,7 +18,7 @@ function slugify(value) {
  * Live / scheduled / expired is DERIVED from the window on every read.
  * Storing it would need a cron job to stay true (PROJECT_INSTRUCTIONS.md §5.6).
  */
-export function offerStatus(offer, now = new Date()) {
+function offerStatus(offer, now = new Date()) {
   if (!offer.isActive) return 'paused';
   if (offer.startsAt && offer.startsAt > now) return 'scheduled';
   if (offer.endsAt && offer.endsAt < now) return 'expired';
@@ -146,7 +146,7 @@ async function redeemedOfferIds(user) {
  * not be advertised to the whole internet — and a code that comes back "not
  * recognised" is a lot less annoying than one that was dangled and refused.
  */
-export async function listLive(user) {
+async function listLive(user) {
   const now = new Date();
 
   const docs = await Offer.find({
@@ -189,7 +189,7 @@ export async function listLive(user) {
   };
 }
 
-export async function getBySlug(slug, user) {
+async function getBySlug(slug, user) {
   const now = new Date();
   const doc = await Offer.findOne({ slug }).lean();
   if (!doc) throw ApiError.notFound('That offer does not exist.', 'OFFER_NOT_FOUND');
@@ -205,7 +205,7 @@ export async function getBySlug(slug, user) {
 
 // --- admin -------------------------------------------------------------------
 
-export async function listAll({ status, q } = {}) {
+async function listAll({ status, q } = {}) {
   const now = new Date();
   const query = {};
   if (q) {
@@ -308,7 +308,7 @@ function shapeWrite(data) {
   };
 }
 
-export async function createOffer(data) {
+async function createOffer(data) {
   const write = shapeWrite(data);
   await assertSkusExist(write.items);
 
@@ -316,7 +316,7 @@ export async function createOffer(data) {
   return baseShape(offer.toObject(), new Date());
 }
 
-export async function updateOffer(id, data) {
+async function updateOffer(id, data) {
   const offer = await Offer.findById(id);
   if (!offer) throw ApiError.notFound('Offer not found.', 'OFFER_NOT_FOUND');
 
@@ -328,8 +328,17 @@ export async function updateOffer(id, data) {
   return baseShape(offer.toObject(), new Date());
 }
 
-export async function deleteOffer(id) {
+async function deleteOffer(id) {
   const offer = await Offer.findByIdAndDelete(id).lean();
   if (!offer) throw ApiError.notFound('Offer not found.', 'OFFER_NOT_FOUND');
   return baseShape(offer, new Date());
 }
+
+// --- CommonJS exports -------------------------------------------------
+exports.offerStatus = offerStatus;
+exports.listLive = listLive;
+exports.getBySlug = getBySlug;
+exports.listAll = listAll;
+exports.createOffer = createOffer;
+exports.updateOffer = updateOffer;
+exports.deleteOffer = deleteOffer;

@@ -1,6 +1,6 @@
-import crypto from 'node:crypto';
+const crypto = require('node:crypto');
 
-import env from '../config/env.js';
+const { default: env } = require('../config/env.js');
 
 /**
  * Encryption at rest for provider credentials (ERP rework §6.15, phase 11c).
@@ -57,7 +57,7 @@ function key() {
  * Returns a self-describing string — `v1:iv:tag:ciphertext`, all base64url —
  * so the format can be changed later without guessing what an existing row is.
  */
-export function encrypt(plaintext) {
+function encrypt(plaintext) {
   const value = String(plaintext ?? '');
   if (!value) return '';
 
@@ -84,7 +84,7 @@ export function encrypt(plaintext) {
  * report itself unconfigured — which the channel notices already handle — not
  * for every request touching settings to 500.
  */
-export function decrypt(stored) {
+function decrypt(stored) {
   if (!stored || typeof stored !== 'string') return null;
 
   const parts = stored.split(':');
@@ -115,11 +115,16 @@ export function decrypt(stored) {
  * characters is masked completely: showing four of a six-character secret
  * gives away most of it.
  */
-export function maskPreview(plaintext) {
+function maskPreview(plaintext) {
   const value = String(plaintext ?? '');
   if (!value) return '';
   if (value.length < 8) return '•'.repeat(8);
   return `${'•'.repeat(8)}${value.slice(-4)}`;
 }
 
-export default { encrypt, decrypt, maskPreview };
+exports.default = { encrypt, decrypt, maskPreview };
+
+// --- CommonJS exports -------------------------------------------------
+exports.encrypt = encrypt;
+exports.decrypt = decrypt;
+exports.maskPreview = maskPreview;

@@ -6,7 +6,7 @@
  * tab, contact page and the invoice document the server emails all read this
  * object, client and server alike.
  */
-export const BUSINESS_INFO = {
+const BUSINESS_INFO = {
   name: 'Cellvix',
   tagline: 'Repair with confidence',
   domain: 'cellvix.ca',
@@ -45,4 +45,6 @@ export const BUSINESS_INFO = {
   },
 };
 
-export default BUSINESS_INFO;
+// --- CommonJS exports -------------------------------------------------
+exports.BUSINESS_INFO = BUSINESS_INFO;
+exports.default = BUSINESS_INFO;

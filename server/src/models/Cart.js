@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const cartItemSchema = new mongoose.Schema(
   {
@@ -51,5 +51,8 @@ const cartSchema = new mongoose.Schema(
 // A user has exactly one active cart, plus any number of saved ones.
 cartSchema.index({ user: 1, savedForLater: 1 });
 
-export const Cart = mongoose.model('Cart', cartSchema);
-export default Cart;
+const Cart = mongoose.model('Cart', cartSchema);
+
+// --- CommonJS exports -------------------------------------------------
+exports.Cart = Cart;
+exports.default = Cart;

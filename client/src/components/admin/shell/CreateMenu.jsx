@@ -22,6 +22,13 @@ import { adminIcon } from './adminIcons';
  *
  * A group whose every entry is hidden disappears with its heading, rather than
  * leaving a label above nothing.
+ *
+ * **Every entry opens a form, not a list.** `+ Create > Quote` used to land on
+ * the quotes list and leave the operator to find the button they had just
+ * pressed the equivalent of — which is the menu asking them to do the thing
+ * twice. It cannot open a modal on a page that has not mounted, so it navigates
+ * with `?new=1` and the page reads that through `useCreateParam`, which strips
+ * the flag on arrival so the URL stops describing a modal the moment it closes.
  */
 
 const GROUPS = [
@@ -34,6 +41,7 @@ const GROUPS = [
       { key: 'invoice', label: 'Invoice', to: '/admin/invoices', icon: 'FileText', area: 'sales' },
       { key: 'quote', label: 'Quote', to: '/admin/quotes', icon: 'FileSignature', area: 'sales' },
       { key: 'rma', label: 'RMA', to: '/admin/rma', icon: 'RotateCcw', area: 'sales' },
+      { key: 'ticket', label: 'Ticket', to: '/admin/tickets', icon: 'ClipboardList', area: 'sales' },
     ],
   },
   {
@@ -133,7 +141,7 @@ export function CreateMenu() {
                     role="menuitem"
                     onClick={() => {
                       setOpen(false);
-                      navigate(item.to);
+                      navigate(`${item.to}?new=1`);
                     }}
                     className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-[13px] text-ink-700 transition-colors hover:bg-surface-2 hover:text-ink-900"
                   >

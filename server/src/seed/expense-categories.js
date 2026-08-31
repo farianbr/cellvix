@@ -1,6 +1,6 @@
-import mongoose from 'mongoose';
-import { connectDb, disconnectDb } from '../config/db.js';
-import ExpenseCategory from '../models/ExpenseCategory.js';
+const mongoose = require('mongoose');
+const { connectDb, disconnectDb } = require('../config/db.js');
+const { default: ExpenseCategory } = require('../models/ExpenseCategory.js');
 
 /**
  * The Canadian starter set of expense categories (ERP rework §6.9).
@@ -19,7 +19,7 @@ import ExpenseCategory from '../models/ExpenseCategory.js';
  * All of them are editable and deletable from `/admin/settings/expense-categories`
  * — this is a starting point, not a fixed vocabulary.
  */
-export const EXPENSE_CATEGORIES = [
+const EXPENSE_CATEGORIES = [
   { name: 'Inventory Purchases', slug: 'inventory-purchases', colorToken: 'brand', gstApplicable: true, order: 10 },
   { name: 'Rent', slug: 'rent', colorToken: 'ink', gstApplicable: false, order: 20 },
   { name: 'Utilities', slug: 'utilities', colorToken: 'info', gstApplicable: true, order: 30 },
@@ -33,7 +33,7 @@ export const EXPENSE_CATEGORIES = [
   { name: 'Supplies', slug: 'supplies', colorToken: 'ok', gstApplicable: true, order: 110 },
 ];
 
-export async function seedExpenseCategories({ quiet = false } = {}) {
+async function seedExpenseCategories({ quiet = false } = {}) {
   const log = quiet ? () => {} : (...args) => console.log(...args);
 
   const existing = await ExpenseCategory.find({}).select('slug').lean();
@@ -48,11 +48,20 @@ export async function seedExpenseCategories({ quiet = false } = {}) {
 
 // CLI entry: `npm run seed:expense-categories`
 if (process.argv[1] && process.argv[1].endsWith('expense-categories.js')) {
-  console.log('\n  Seeding Cellvix expense categories…\n');
-  await connectDb();
-  const result = await seedExpenseCategories();
-  console.log('\n  Done.', result, '\n');
-  await disconnectDb();
-  await mongoose.connection.close();
-  process.exit(0);
+  (async () => {
+    console.log('\n  Seeding Cellvix expense categories…\n');
+    await connectDb();
+    const result = await seedExpenseCategories();
+    console.log('\n  Done.', result, '\n');
+    await disconnectDb();
+    await mongoose.connection.close();
+    process.exit(0);
+  })().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
 }
+
+// --- CommonJS exports -------------------------------------------------
+exports.EXPENSE_CATEGORIES = EXPENSE_CATEGORIES;
+exports.seedExpenseCategories = seedExpenseCategories;

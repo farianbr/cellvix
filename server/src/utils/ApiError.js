@@ -2,7 +2,7 @@
  * Every error the API returns is shaped `{ error: { code, message } }`.
  * Clients branch on `code`; `message` is display copy. See PROJECT_INSTRUCTIONS.md §5.1.
  */
-export class ApiError extends Error {
+class ApiError extends Error {
   constructor(status, code, message, fields = null) {
     super(message);
     this.name = 'ApiError';
@@ -39,7 +39,10 @@ export class ApiError extends Error {
 }
 
 /** Wraps an async route handler so rejections reach the error middleware. */
-export const asyncHandler = (fn) => (req, res, next) =>
+const asyncHandler = (fn) => (req, res, next) =>
   Promise.resolve(fn(req, res, next)).catch(next);
 
-export default ApiError;
+// --- CommonJS exports -------------------------------------------------
+exports.ApiError = ApiError;
+exports.asyncHandler = asyncHandler;
+exports.default = ApiError;

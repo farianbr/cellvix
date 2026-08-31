@@ -1,7 +1,7 @@
-import { asyncHandler } from '../utils/ApiError.js';
-import * as quoteService from '../services/quoteService.js';
-import * as rmaService from '../services/rmaService.js';
-import * as auditService from '../services/auditService.js';
+const { asyncHandler } = require('../utils/ApiError.js');
+const quoteService = require('../services/quoteService.js');
+const rmaService = require('../services/rmaService.js');
+const auditService = require('../services/auditService.js');
 
 /**
  * Quotes and RMAs (ERP rework §6.3, §6.6).
@@ -13,23 +13,23 @@ import * as auditService from '../services/auditService.js';
 
 // ---- quotes -----------------------------------------------------------------
 
-export const listQuotes = asyncHandler(async (req, res) => {
+const listQuotes = asyncHandler(async (req, res) => {
   res.json(await quoteService.listQuotes(req.query));
 });
 
-export const getQuote = asyncHandler(async (req, res) => {
+const getQuote = asyncHandler(async (req, res) => {
   res.json(await quoteService.getQuote(req.params.id));
 });
 
-export const createQuote = asyncHandler(async (req, res) => {
+const createQuote = asyncHandler(async (req, res) => {
   res.status(201).json(await quoteService.createQuote(req.body, req.user._id));
 });
 
-export const updateQuote = asyncHandler(async (req, res) => {
+const updateQuote = asyncHandler(async (req, res) => {
   res.json(await quoteService.updateQuote(req.params.id, req.body));
 });
 
-export const setQuoteStatus = asyncHandler(async (req, res) => {
+const setQuoteStatus = asyncHandler(async (req, res) => {
   res.json(await quoteService.setQuoteStatus(req.params.id, req.body));
 });
 
@@ -37,33 +37,33 @@ export const setQuoteStatus = asyncHandler(async (req, res) => {
  * Accept → convert. Refuses with `QUOTE_PRICE_DRIFT` and the full comparison
  * when catalogue prices have moved and the admin has not acknowledged them.
  */
-export const convertQuote = asyncHandler(async (req, res) => {
+const convertQuote = asyncHandler(async (req, res) => {
   res.status(201).json(await quoteService.convertQuote(req.params.id, req.body, req.user._id));
 });
 
-export const deleteQuote = asyncHandler(async (req, res) => {
+const deleteQuote = asyncHandler(async (req, res) => {
   res.json(await quoteService.deleteQuote(req.params.id));
 });
 
 // ---- RMA --------------------------------------------------------------------
 
-export const listRmas = asyncHandler(async (req, res) => {
+const listRmas = asyncHandler(async (req, res) => {
   res.json(await rmaService.listRmas(req.query));
 });
 
-export const getRma = asyncHandler(async (req, res) => {
+const getRma = asyncHandler(async (req, res) => {
   res.json(await rmaService.getRma(req.params.id));
 });
 
-export const createRma = asyncHandler(async (req, res) => {
+const createRma = asyncHandler(async (req, res) => {
   res.status(201).json(await rmaService.createRma(req.body, req.user._id));
 });
 
-export const setRmaStatus = asyncHandler(async (req, res) => {
+const setRmaStatus = asyncHandler(async (req, res) => {
   res.json(await rmaService.setRmaStatus(req.params.id, req.body));
 });
 
-export const inspectRma = asyncHandler(async (req, res) => {
+const inspectRma = asyncHandler(async (req, res) => {
   res.json(await rmaService.inspectRma(req.params.id, req.body));
 });
 
@@ -73,7 +73,7 @@ export const inspectRma = asyncHandler(async (req, res) => {
  * Named in §7.6 as money-moving, so it is always audited with actor and IP —
  * this is the one RMA step that both refunds a customer and returns stock.
  */
-export const resolveRma = asyncHandler(async (req, res) => {
+const resolveRma = asyncHandler(async (req, res) => {
   const result = await rmaService.resolveRma(req.params.id, req.body, req.user._id);
   const rma = result?.rma ?? result;
 
@@ -94,3 +94,18 @@ export const resolveRma = asyncHandler(async (req, res) => {
 
   res.json(result);
 });
+
+// --- CommonJS exports -------------------------------------------------
+exports.listQuotes = listQuotes;
+exports.getQuote = getQuote;
+exports.createQuote = createQuote;
+exports.updateQuote = updateQuote;
+exports.setQuoteStatus = setQuoteStatus;
+exports.convertQuote = convertQuote;
+exports.deleteQuote = deleteQuote;
+exports.listRmas = listRmas;
+exports.getRma = getRma;
+exports.createRma = createRma;
+exports.setRmaStatus = setRmaStatus;
+exports.inspectRma = inspectRma;
+exports.resolveRma = resolveRma;

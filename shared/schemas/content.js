@@ -1,4 +1,4 @@
-import { z } from 'zod';
+const { z } = require('zod');
 
 /**
  * Editorial content: blog posts, FAQs and offers.
@@ -14,16 +14,16 @@ const optionalDate = z.string().trim().optional().nullable().or(z.literal(''));
 
 // --- blog --------------------------------------------------------------------
 
-export const BLOG_CATEGORIES = [
+const BLOG_CATEGORIES = [
   { value: 'repair-guides', label: 'Repair guides' },
   { value: 'industry-news', label: 'Industry news' },
   { value: 'product-updates', label: 'Product updates' },
   { value: 'business-tips', label: 'Business tips' },
 ];
 
-export const BLOG_STATUSES = ['draft', 'published'];
+const BLOG_STATUSES = ['draft', 'published'];
 
-export const blogPostSchema = z.object({
+const blogPostSchema = z.object({
   title: z.string().trim().min(4, 'Give the post a title.').max(160),
   excerpt: z.string().trim().min(10, 'Write a one-line summary.').max(320),
   // Plain text with a tiny markup vocabulary — see client/src/lib/richText.jsx.
@@ -41,7 +41,7 @@ export const blogPostSchema = z.object({
 
 // --- faq ---------------------------------------------------------------------
 
-export const FAQ_CATEGORIES = [
+const FAQ_CATEGORIES = [
   { value: 'ordering', label: 'Ordering' },
   { value: 'accounts', label: 'Accounts & approval' },
   { value: 'pricing', label: 'Pricing & credit' },
@@ -50,7 +50,7 @@ export const FAQ_CATEGORIES = [
   { value: 'products', label: 'Parts & grading' },
 ];
 
-export const FAQ_SCOPES = [
+const FAQ_SCOPES = [
   { value: 'general', label: 'General — FAQ page' },
   { value: 'product', label: 'Product — product detail pages' },
 ];
@@ -60,7 +60,7 @@ export const FAQ_SCOPES = [
  * every product. Filling either one narrows it; that is how "every product
  * detail page has an FAQ" holds without authoring 420 of them.
  */
-export const faqSchema = z.object({
+const faqSchema = z.object({
   question: z.string().trim().min(6, 'Enter the question.').max(240),
   answer: z.string().trim().min(10, 'Enter the answer.').max(4000),
   category: z.enum(FAQ_CATEGORIES.map((c) => c.value)).default('ordering'),
@@ -73,20 +73,20 @@ export const faqSchema = z.object({
 
 // --- offers ------------------------------------------------------------------
 
-export const OFFER_KINDS = [
+const OFFER_KINDS = [
   { value: 'deal', label: 'Deal — a discount across a slice of the catalogue' },
   { value: 'combo', label: 'Combo — a fixed bundle of SKUs at a bundle price' },
 ];
 
-export const DISCOUNT_TYPES = [
+const DISCOUNT_TYPES = [
   { value: 'percent', label: '% off' },
   { value: 'amount', label: '$ off' },
   { value: 'free-shipping', label: 'Free shipping' },
 ];
 
-export const OFFER_ACCENTS = ['brand', 'ok', 'info', 'warn'];
+const OFFER_ACCENTS = ['brand', 'ok', 'info', 'warn'];
 
-export const offerSchema = z
+const offerSchema = z
   .object({
     title: z.string().trim().min(4, 'Give the offer a title.').max(120),
     subtitle: z.string().trim().max(200).optional().or(z.literal('')),
@@ -195,3 +195,15 @@ export const offerSchema = z
       }
     }
   });
+
+// --- CommonJS exports -------------------------------------------------
+exports.BLOG_CATEGORIES = BLOG_CATEGORIES;
+exports.BLOG_STATUSES = BLOG_STATUSES;
+exports.blogPostSchema = blogPostSchema;
+exports.FAQ_CATEGORIES = FAQ_CATEGORIES;
+exports.FAQ_SCOPES = FAQ_SCOPES;
+exports.faqSchema = faqSchema;
+exports.OFFER_KINDS = OFFER_KINDS;
+exports.DISCOUNT_TYPES = DISCOUNT_TYPES;
+exports.OFFER_ACCENTS = OFFER_ACCENTS;
+exports.offerSchema = offerSchema;

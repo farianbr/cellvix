@@ -1,10 +1,10 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
-import Taxonomy from '../models/Taxonomy.js';
-import Product from '../models/Product.js';
-import ApiError from '../utils/ApiError.js';
-import { likeRegex } from '../utils/regex.js';
-import { invalidateTree } from './taxonomyService.js';
+const { default: Taxonomy } = require('../models/Taxonomy.js');
+const { default: Product } = require('../models/Product.js');
+const { default: ApiError } = require('../utils/ApiError.js');
+const { likeRegex } = require('../utils/regex.js');
+const { invalidateTree } = require('./taxonomyService.js');
 
 /**
  * The taxonomy editor (ERP rework §6.15 — CellShoppe's *Device & Models*,
@@ -31,7 +31,7 @@ import { invalidateTree } from './taxonomyService.js';
  * stripped of anything that would match everything — an empty alias, or one
  * that is just whitespace, silently turns a search box into a firehose.
  */
-export function normaliseAliases(input) {
+function normaliseAliases(input) {
   const list = Array.isArray(input)
     ? input
     : String(input ?? '')
@@ -78,7 +78,7 @@ function shape(node, counts) {
  * Search spans name, slug **and aliases**, because a screen whose whole purpose
  * is managing aliases has to be able to find a node by one.
  */
-export async function list({ search, kind, parent, includeInactive, page = 1, limit = 50 } = {}) {
+async function list({ search, kind, parent, includeInactive, page = 1, limit = 50 } = {}) {
   const filter = {};
 
   if (kind && kind !== 'all') filter.kind = kind;
@@ -160,7 +160,7 @@ async function liveCounts() {
 }
 
 /** One node, for the edit form. */
-export async function get(id) {
+async function get(id) {
   if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('Not found.', 'TAXONOMY_NOT_FOUND');
 
   const node = await Taxonomy.findById(id).lean();
@@ -178,7 +178,7 @@ export async function get(id) {
  * tree that still looks correct on screen. Restructuring the taxonomy is a
  * re-seed, not a form.
  */
-export async function update(id, input) {
+async function update(id, input) {
   if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('Not found.', 'TAXONOMY_NOT_FOUND');
 
   const node = await Taxonomy.findById(id);
@@ -224,7 +224,7 @@ export async function update(id, input) {
  * it, and a node with children. Cascading either would delete catalogue
  * structure from a screen whose job is editing labels.
  */
-export async function remove(id) {
+async function remove(id) {
   if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('Not found.', 'TAXONOMY_NOT_FOUND');
 
   const node = await Taxonomy.findById(id);
@@ -253,4 +253,11 @@ export async function remove(id) {
   return { removed: true, name: node.name };
 }
 
-export default { list, get, update, remove, normaliseAliases };
+exports.default = { list, get, update, remove, normaliseAliases };
+
+// --- CommonJS exports -------------------------------------------------
+exports.normaliseAliases = normaliseAliases;
+exports.list = list;
+exports.get = get;
+exports.update = update;
+exports.remove = remove;

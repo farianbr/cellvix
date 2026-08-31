@@ -1,18 +1,28 @@
-import Notification from '../models/Notification.js';
-import Invoice from '../models/Invoice.js';
-import Product from '../models/Product.js';
-import PurchaseOrder from '../models/PurchaseOrder.js';
-import Role from '../models/Role.js';
+const { default: Notification } = require('../models/Notification.js');
+const { default: Invoice } = require('../models/Invoice.js');
+const { default: Product } = require('../models/Product.js');
+const { default: PurchaseOrder } = require('../models/PurchaseOrder.js');
+const { default: Role } = require('../models/Role.js');
+const { default: User } = require('../models/User.js');
 
 /**
  * The notification bell (ERP rework §7.3, §6.15, phase 12c).
  *
  * §7.3 names eight sources. They are answered two different ways, for the
  * reason set out at length in `models/Notification.js`: four are **events** and
- * are stored, four are **standing conditions** and are derived from the live
+ * are stored, and **five** are standing conditions derived from the live
  * records every time the bell is opened. A stored "invoice overdue" row is a
  * lie the moment the invoice is paid, and keeping it honest would need a delete
  * hook on every payment, receipt and stock movement.
+ *
+ * The fifth derived condition is `pending_approval`, and it is the reason an
+ * approvals queue that nobody discovers on their own finally surfaces here.
+ * `new_registration` already existed as a stored event, but an event only fires
+ * once, for accounts created after it shipped — every account already waiting
+ * when the feature landed was invisible. The two describe the same account from
+ * different angles: the stored row is what *happened* ("they signed up"), the
+ * derived row is what is *true* ("still waiting"). `list()` drops the stored one
+ * when both are present, so an account never occupies two lines.
  *
  * The two halves meet in `list()`, sorted into one stream. The client is not
  * told which is which — it does not need to know, and a UI that distinguished
@@ -57,7 +67,7 @@ const TYPE_AREA = {
  * never turn a successful order into a reported failure, because the retry
  * that follows is a second order.
  */
-export async function emit({ type, severity = 'info', title, detail = '', entity, href = '' }) {
+async function emit({ type, severity = 'info', title, detail = '', entity, href = '' }) {
   try {
     const area = TYPE_AREA[type];
     // An unknown type has no area, and a row with no area is one no role filter
@@ -102,7 +112,7 @@ async function allowedAreas(user) {
   return new Set(['clients', 'sales', 'purchase'].filter((area) => role.allows(area, 'view')));
 }
 
-// ---- the derived four -------------------------------------------------------
+// ---- the derived five -------------------------------------------------------
 
 /**
  * Standing conditions, read from the live records.
@@ -113,9 +123,63 @@ async function allowedAreas(user) {
  * per-admin read state to keep, because the row stops existing the moment the
  * condition clears, which is the honest behaviour — an operator who dismissed
  * "out of stock" and still has an empty shelf has not solved anything.
+ *
+ * One of them, `pending_approval`, also carries an `action`. It is the only row
+ * type that does, and only because approving is the *whole* response to that
+ * alert — every other condition is cleared by work done elsewhere (paying an
+ * invoice, receiving a PO), so a button on the row would have nothing to do.
  */
 async function derivedFor(areas, now) {
   const jobs = [];
+
+  if (areas.has('clients')) {
+    jobs.push(
+      // Oldest first: an account that has been waiting a fortnight is the one
+      // that needs answering, and the `PER_CONDITION` cap would otherwise drop
+      // exactly those in favour of the ones that just arrived.
+      User.find({ role: 'buyer', status: 'pending' })
+        .sort({ createdAt: 1 })
+        .limit(PER_CONDITION)
+        .lean()
+        .then((rows) =>
+          rows.map((user) => {
+            const days = Math.max(
+              Math.floor((now - new Date(user.createdAt)) / 86_400_000),
+              1,
+            );
+            return {
+              id: `pending_approval:${user._id}`,
+              type: 'pending_approval',
+              severity: 'warn',
+              title: `${user.businessName} is waiting for approval`,
+              detail: `${user.contactName} · ${user.email} · ${days} day${days === 1 ? '' : 's'} waiting`,
+              entity: { kind: 'user', id: user._id.toString(), label: user.businessName },
+              href: `/admin/clients/${user._id}`,
+              area: 'clients',
+              read: false,
+              // Dated to the registration rather than to now, unlike the stock
+              // conditions: this one *does* have a moment of onset the record
+              // remembers, and an operator sorting by age wants the real age.
+              createdAt: user.createdAt,
+              // The bell approves in place. `userId` rather than re-parsing the
+              // synthetic `id` on the client — a prefix format is this module's
+              // business, not the dropdown's. The contact fields ride along so
+              // the approval form can identify the account it is about without
+              // a second request for a record the row already described.
+              action: {
+                kind: 'approve_user',
+                userId: user._id.toString(),
+                label: 'Approve',
+                businessName: user.businessName,
+                contactName: user.contactName,
+                email: user.email,
+                taxId: user.taxId ?? null,
+              },
+            };
+          }),
+        ),
+    );
+  }
 
   if (areas.has('sales')) {
     jobs.push(
@@ -244,7 +308,7 @@ function formatMoney(cents) {
  * right: the badge means "things want your attention", not "things arrived
  * since you last looked".
  */
-export async function list(user) {
+async function list(user) {
   const areas = await allowedAreas(user);
   if (areas.size === 0) return { entries: [], unread: 0, total: 0 };
 
@@ -264,22 +328,52 @@ export async function list(user) {
     derivedFor(areas, now),
   ]);
 
-  const events = stored.map((row) => ({
-    id: row._id.toString(),
-    type: row.type,
-    severity: row.severity,
-    title: row.title,
-    detail: row.detail,
-    entity: row.entity,
-    href: row.href,
-    area: row.area,
-    read: (row.readBy ?? []).some((id) => id.equals?.(userId) ?? String(id) === String(userId)),
-    createdAt: row.createdAt,
-  }));
-
-  const entries = [...events, ...derived].sort(
-    (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+  // An account that is still pending is described twice — once by the stored
+  // `new_registration` event and once by the derived `pending_approval` row.
+  // The derived one wins: it is the live state, it carries the approve action,
+  // and two lines for one account reads as two accounts at a glance.
+  const pendingIds = new Set(
+    derived
+      .filter((row) => row.type === 'pending_approval')
+      .map((row) => String(row.entity?.id ?? '')),
   );
+
+  const events = stored
+    .filter(
+      (row) =>
+        !(row.type === 'new_registration' && pendingIds.has(String(row.entity?.id ?? ''))),
+    )
+    .map((row) => ({
+      id: row._id.toString(),
+      type: row.type,
+      severity: row.severity,
+      title: row.title,
+      detail: row.detail,
+      entity: row.entity,
+      href: row.href,
+      area: row.area,
+      read: (row.readBy ?? []).some((id) => id.equals?.(userId) ?? String(id) === String(userId)),
+      createdAt: row.createdAt,
+      // Stored rows never carry one. The field is present so the client can
+      // read `entry.action` uniformly rather than branching on the row's half.
+      action: null,
+    }));
+
+  // Newest-first, **except that a row you can act on from here comes first.**
+  //
+  // Date alone buries them. The stock conditions have no moment of onset the
+  // records remember, so they are dated to now and sort above everything; a
+  // pending account carries its real registration date, which on a catalogue
+  // with forty empty shelves puts the one row with a button on it below forty
+  // rows without one. Sorting a queue so that the only actionable item needs
+  // scrolling to reach is the same failure as not showing it at all.
+  const entries = [...events, ...derived]
+    .map((entry) => ({ ...entry, action: entry.action ?? null }))
+    .sort((a, b) => {
+      const actionable = Boolean(b.action) - Boolean(a.action);
+      if (actionable !== 0) return actionable;
+      return new Date(b.createdAt) - new Date(a.createdAt);
+    });
 
   return {
     entries,
@@ -299,7 +393,7 @@ export async function list(user) {
  * id with no stored row is right here, because "mark an unpayable invoice read"
  * is a request with no meaning rather than an error the operator can act on.
  */
-export async function markRead(user, ids) {
+async function markRead(user, ids) {
   const filter = { readBy: { $ne: user._id } };
 
   if (Array.isArray(ids) && ids.length > 0) {
@@ -332,7 +426,7 @@ export async function markRead(user, ids) {
  * anything. The condition reappears on the next read, which is the honest
  * answer even though it is the less satisfying one.
  */
-export async function clearAll(user) {
+async function clearAll(user) {
   const areas = await allowedAreas(user);
   if (areas.size === 0) return { cleared: 0 };
 
@@ -344,4 +438,10 @@ export async function clearAll(user) {
   return { cleared: result.modifiedCount ?? 0 };
 }
 
-export default { emit, list, markRead, clearAll };
+exports.default = { emit, list, markRead, clearAll };
+
+// --- CommonJS exports -------------------------------------------------
+exports.emit = emit;
+exports.list = list;
+exports.markRead = markRead;
+exports.clearAll = clearAll;

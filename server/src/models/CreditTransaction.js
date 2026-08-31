@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 /**
  * The store-credit ledger.
@@ -33,7 +33,7 @@ import mongoose from 'mongoose';
  * also typed `referral`, with a negative amount, so a referral and its undo sit
  * on the same line of any report that groups by type.
  */
-export const CREDIT_TYPES = [
+const CREDIT_TYPES = [
   'refund',
   'recharge',
   'grant',
@@ -104,6 +104,9 @@ creditTransactionSchema.index(
   { sparse: true },
 );
 
-export const CreditTransaction = mongoose.model('CreditTransaction', creditTransactionSchema);
+const CreditTransaction = mongoose.model('CreditTransaction', creditTransactionSchema);
 
-export default CreditTransaction;
+// --- CommonJS exports -------------------------------------------------
+exports.CREDIT_TYPES = CREDIT_TYPES;
+exports.CreditTransaction = CreditTransaction;
+exports.default = CreditTransaction;

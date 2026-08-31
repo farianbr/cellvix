@@ -1,7 +1,7 @@
-import { z } from 'zod';
-import { addressSchema } from './checkout.js';
+const { z } = require('zod');
+const { addressSchema } = require('./checkout.js');
 
-export const profileSchema = z.object({
+const profileSchema = z.object({
   businessName: z.string().trim().min(2, 'Enter your business name.'),
   contactName: z.string().trim().min(2, 'Enter a contact name.'),
   phone: z.string().trim().min(7, 'Enter a phone number.'),
@@ -12,13 +12,13 @@ export const profileSchema = z.object({
 });
 
 /** Saved addresses reuse the checkout address shape plus a label and defaults. */
-export const savedAddressSchema = addressSchema.extend({
+const savedAddressSchema = addressSchema.extend({
   label: z.string().trim().min(1, 'Give this address a label.').max(40),
   isDefaultShipping: z.boolean().optional().default(false),
   isDefaultBilling: z.boolean().optional().default(false),
 });
 
-export const paymentMethodSchema = z.object({
+const paymentMethodSchema = z.object({
   type: z.enum(['card', 'ach']).default('card'),
   brand: z.string().trim().max(24).optional(),
   last4: z.string().trim().regex(/^\d{4}$/, 'Enter the last four digits.'),
@@ -31,7 +31,7 @@ export const paymentMethodSchema = z.object({
  * Quick order pad: a list of SKUs and quantities, pasted or typed. Unresolvable
  * SKUs come back named rather than silently dropped.
  */
-export const bulkAddSchema = z.object({
+const bulkAddSchema = z.object({
   lines: z
     .array(
       z.object({
@@ -43,7 +43,7 @@ export const bulkAddSchema = z.object({
     .max(200),
 });
 
-export const changePasswordSchema = z
+const changePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, 'Enter your current password.'),
     newPassword: z
@@ -59,7 +59,7 @@ export const changePasswordSchema = z
   });
 
 /** Sidebar sections, in render order. */
-export const ACCOUNT_NAV = [
+const ACCOUNT_NAV = [
   { key: 'overview', label: 'Overview', to: '/account', icon: 'LayoutDashboard' },
   { key: 'orders', label: 'Orders & tracking', to: '/account/orders', icon: 'Package' },
   { key: 'invoices', label: 'Invoices & statements', to: '/account/invoices', icon: 'FileText' },
@@ -75,10 +75,19 @@ export const ACCOUNT_NAV = [
  * Bounded at both ends — a $5 top-up costs more in gateway fees than it is
  * worth, and five figures should be a phone call to the trade desk.
  */
-export const rechargeSchema = z.object({
+const rechargeSchema = z.object({
   amountDollars: z.coerce
     .number()
     .min(25, 'Top up at least $25.')
     .max(25_000, 'For a top-up this size, talk to your account rep.'),
   poNumber: z.string().trim().max(40).optional(),
 });
+
+// --- CommonJS exports -------------------------------------------------
+exports.profileSchema = profileSchema;
+exports.savedAddressSchema = savedAddressSchema;
+exports.paymentMethodSchema = paymentMethodSchema;
+exports.bulkAddSchema = bulkAddSchema;
+exports.changePasswordSchema = changePasswordSchema;
+exports.ACCOUNT_NAV = ACCOUNT_NAV;
+exports.rechargeSchema = rechargeSchema;

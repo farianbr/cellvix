@@ -1,17 +1,17 @@
-import mongoose from 'mongoose';
-import Order from '../models/Order.js';
-import Invoice from '../models/Invoice.js';
-import Product from '../models/Product.js';
-import Cart from '../models/Cart.js';
-import User from '../models/User.js';
-import ApiError from '../utils/ApiError.js';
-import * as payment from './payment.js';
-import Offer from '../models/Offer.js';
-import { priceCart, assertBundlesOrderable } from './pricingService.js';
-import * as storeCredit from './storeCreditService.js';
-import { sendInvoiceEmail } from './notifications.js';
-import * as notificationService from './notificationService.js';
-import Settings from '../models/Settings.js';
+const mongoose = require('mongoose');
+const { default: Order } = require('../models/Order.js');
+const { default: Invoice } = require('../models/Invoice.js');
+const { default: Product } = require('../models/Product.js');
+const { default: Cart } = require('../models/Cart.js');
+const { default: User } = require('../models/User.js');
+const { default: ApiError } = require('../utils/ApiError.js');
+const payment = require('./payment.js');
+const { default: Offer } = require('../models/Offer.js');
+const { priceCart, assertBundlesOrderable } = require('./pricingService.js');
+const storeCredit = require('./storeCreditService.js');
+const { sendInvoiceEmail } = require('./notifications.js');
+const notificationService = require('./notificationService.js');
+const { default: Settings } = require('../models/Settings.js');
 
 const TERMS_DAYS = { prepaid: 0, net15: 15, net30: 30, net60: 60 };
 
@@ -51,7 +51,7 @@ async function nextInvoiceNumber() {
  * Always recomputed from live documents. Never from anything the client sent:
  * the checkout page's running total is a preview, this is the number that binds.
  */
-export async function quote(userId, deliveryCode = 'ground') {
+async function quote(userId, deliveryCode = 'ground') {
   const cart = await Cart.findOne({ user: userId, savedForLater: false });
   if (!cart || (cart.items.length === 0 && (cart.bundles?.length ?? 0) === 0)) {
     throw ApiError.badRequest('Your cart is empty.', 'CART_EMPTY');
@@ -125,7 +125,7 @@ function flattenBundles(bundles) {
  * invoice -> empty the cart. The charge happens before stock moves so a decline
  * cannot leave the catalogue short.
  */
-export async function createOrder(user, input) {
+async function createOrder(user, input) {
   const priced = await quote(user._id, input.deliveryMethod);
 
   // A bundle whose offer stopped running, or lost a part, cannot be honoured at
@@ -365,7 +365,7 @@ function formatCad(cents) {
   );
 }
 
-export function serializeOrder(order) {
+function serializeOrder(order) {
   const doc = order.toObject ? order.toObject() : order;
   return {
     id: doc._id.toString(),
@@ -405,15 +405,21 @@ export function serializeOrder(order) {
   };
 }
 
-export async function listOrders(userId, { limit = 50 } = {}) {
+async function listOrders(userId, { limit = 50 } = {}) {
   const orders = await Order.find({ user: userId }).sort({ createdAt: -1 }).limit(limit).lean();
   return orders.map(serializeOrder);
 }
 
-export async function getOrder(userId, orderNumber) {
+async function getOrder(userId, orderNumber) {
   const order = await Order.findOne({ orderNumber, user: userId }).lean();
   if (!order) throw ApiError.notFound('Order not found.', 'ORDER_NOT_FOUND');
   return serializeOrder(order);
 }
 
-export { mongoose };
+// --- CommonJS exports -------------------------------------------------
+exports.quote = quote;
+exports.createOrder = createOrder;
+exports.serializeOrder = serializeOrder;
+exports.listOrders = listOrders;
+exports.getOrder = getOrder;
+exports.mongoose = mongoose;

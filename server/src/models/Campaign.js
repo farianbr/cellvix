@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 /**
  * A bulk email campaign (ERP rework §6.13, §8).
@@ -18,7 +18,7 @@ import mongoose from 'mongoose';
  * good look on a number we assumed.
  */
 
-export const CAMPAIGN_STATUSES = ['draft', 'scheduled', 'sending', 'sent', 'failed'];
+const CAMPAIGN_STATUSES = ['draft', 'scheduled', 'sending', 'sent', 'failed'];
 
 /**
  * Who a campaign goes to, before consent is applied.
@@ -27,7 +27,7 @@ export const CAMPAIGN_STATUSES = ['draft', 'scheduled', 'sending', 'sent', 'fail
  * whatever this selects, always, and cannot be turned off from the UI. See
  * `marketingService.resolveAudience`.
  */
-export const CAMPAIGN_AUDIENCES = ['approved', 'pending', 'all_customers', 'with_orders'];
+const CAMPAIGN_AUDIENCES = ['approved', 'pending', 'all_customers', 'with_orders'];
 
 const campaignSchema = new mongoose.Schema(
   {
@@ -77,5 +77,10 @@ const campaignSchema = new mongoose.Schema(
 
 campaignSchema.index({ createdAt: -1 });
 
-export const Campaign = mongoose.model('Campaign', campaignSchema);
-export default Campaign;
+const Campaign = mongoose.model('Campaign', campaignSchema);
+
+// --- CommonJS exports -------------------------------------------------
+exports.CAMPAIGN_STATUSES = CAMPAIGN_STATUSES;
+exports.CAMPAIGN_AUDIENCES = CAMPAIGN_AUDIENCES;
+exports.Campaign = Campaign;
+exports.default = Campaign;

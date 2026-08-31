@@ -1,3 +1,5 @@
+import { Link } from 'react-router';
+import { ArrowUpRight } from 'lucide-react';
 import cn from '@/lib/cn';
 
 /**
@@ -68,15 +70,30 @@ function Delta({ delta, goodWhen = 'up' }) {
   );
 }
 
-export function KpiTile({ label, value, hint, tone = 'neutral', icon: Icon, delta, goodWhen, className }) {
-  return (
-    <div
-      className={cn(
-        'rounded-[12px] border border-line border-l-[3px] bg-surface p-3.5',
-        TONE_BORDER[tone] ?? TONE_BORDER.neutral,
-        className,
-      )}
-    >
+/**
+ * A tile becomes a link when the caller gives it `to`.
+ *
+ * A figure an operator wants to act on is a figure they will click, and a tile
+ * that looks like a card but does nothing teaches them the row is inert. The
+ * arrow appears on hover rather than sitting there permanently: seven arrows
+ * in a row is noise, and the pointer already says the tile is live.
+ *
+ * `to` is optional on purpose — the P&L rows on Reports are read, not
+ * navigated, and they keep the plain `div` with no focus ring to tab through.
+ */
+export function KpiTile({
+  label,
+  value,
+  hint,
+  tone = 'neutral',
+  icon: Icon,
+  delta,
+  goodWhen,
+  to,
+  className,
+}) {
+  const body = (
+    <>
       <div className="mb-2 flex items-center gap-2">
         {Icon && (
           <span
@@ -88,7 +105,14 @@ export function KpiTile({ label, value, hint, tone = 'neutral', icon: Icon, delt
             <Icon className="size-3.5" strokeWidth={2} aria-hidden="true" />
           </span>
         )}
-        <p className="eyebrow min-w-0 truncate text-ink-400">{label}</p>
+        <p className="eyebrow min-w-0 flex-1 truncate text-ink-400">{label}</p>
+        {to && (
+          <ArrowUpRight
+            className="size-3.5 shrink-0 text-ink-300 opacity-0 transition-opacity group-hover:opacity-100"
+            strokeWidth={2}
+            aria-hidden="true"
+          />
+        )}
       </div>
 
       <div className="flex flex-wrap items-baseline gap-2">
@@ -104,7 +128,30 @@ export function KpiTile({ label, value, hint, tone = 'neutral', icon: Icon, delt
       </div>
 
       {hint && <p className="mt-1.5 text-[11.5px] leading-snug text-ink-400">{hint}</p>}
-    </div>
+    </>
+  );
+
+  const shell = cn(
+    'rounded-[12px] border border-line border-l-[3px] bg-surface p-3.5',
+    TONE_BORDER[tone] ?? TONE_BORDER.neutral,
+    className,
+  );
+
+  if (!to) return <div className={shell}>{body}</div>;
+
+  return (
+    <Link
+      to={to}
+      // Only the three neutral sides lift on hover: `hover:border-line-strong`
+      // would set all four and take the tone-keyed left border with it, which
+      // is the one part of the tile that carries meaning (§2b).
+      className={cn(
+        shell,
+        'group block transition-colors hover:border-y-line-strong hover:border-r-line-strong hover:bg-surface-2',
+      )}
+    >
+      {body}
+    </Link>
   );
 }
 

@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
 const addressSchema = new mongoose.Schema(
   {
@@ -132,6 +132,69 @@ const userSchema = new mongoose.Schema(
       ip: String,
     },
 
+    /**
+     * What the customer agreed to be contacted **on** (§6.13, CASL).
+     *
+     * This sits *beneath* `marketingConsent.granted`, which stays the master
+     * switch — a campaign needs the master flag AND the channel it is sending
+     * on, and `unsubscribedAt` still outranks both. Modelling it the other way
+     * round, with four independent flags and no master, would mean an
+     * unsubscribe had four places to be honoured and would eventually be missed
+     * in one of them.
+     *
+     * `undefined` is not `false`. An account that predates this field has never
+     * been asked, which is a different fact from having declined, so the
+     * defaults below are applied only to accounts created from here on and the
+     * read path treats a missing channel as "not recorded" (see
+     * `consentChannels` in adminService).
+     *
+     * Every channel carries its own `at` and `source`: consent that cannot say
+     * when it was given, and on what basis, is consent that cannot be defended.
+     */
+    contactConsent: {
+      sms: { type: Boolean, default: false },
+      whatsapp: { type: Boolean, default: false },
+      email: { type: Boolean, default: false },
+      call: { type: Boolean, default: false },
+      at: Date,
+      source: String, // 'registration' | 'admin' | 'import'
+      by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    },
+
+    /**
+     * Membership tier — a label an admin sets, and nothing more (yet).
+     *
+     * It deliberately does **not** touch price. `services/pricingService.js` is
+     * the only place a discount is decided and offers never stack; a tier that
+     * quietly granted a percentage would be a second discount engine sitting
+     * outside that rule. When tiers are meant to affect money, they go through
+     * pricingService as a named offer type.
+     */
+    tier: {
+      type: String,
+      enum: ['standard', 'silver', 'gold', 'platinum'],
+      default: 'standard',
+      index: true,
+    },
+
+    /**
+     * Staff-only notes about an account.
+     *
+     * Append-only, and never shown to the customer: this is where "always
+     * disputes the freight line" and "pays late but pays" get written, and the
+     * value of it depends entirely on nobody being able to quietly rewrite what
+     * a colleague recorded. Deleting is an admin act with its own endpoint
+     * rather than an edit in place.
+     */
+    internalNotes: [
+      {
+        body: { type: String, trim: true, maxlength: 2000, required: true },
+        staff: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+        staffName: String,
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
+
     // Set the moment somebody unsubscribes. A timestamp rather than a boolean,
     // because the date is the part that matters if the consent is ever
     // questioned. Non-null excludes the account from every campaign, and it
@@ -183,10 +246,16 @@ userSchema.methods.toPublic = function toPublic() {
     paymentMethods: this.paymentMethods,
     fieldMemory: Object.fromEntries(this.fieldMemory ?? []),
     accountRep: this.accountRep,
+    tier: this.tier ?? 'standard',
     approvedAt: this.approvedAt,
     createdAt: this.createdAt,
+    // `internalNotes` is deliberately absent: this shape is what the account
+    // holder receives about itself, and staff notes are not for them.
   };
 };
 
-export const User = mongoose.model('User', userSchema);
-export default User;
+const User = mongoose.model('User', userSchema);
+
+// --- CommonJS exports -------------------------------------------------
+exports.User = User;
+exports.default = User;

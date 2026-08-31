@@ -1,7 +1,6 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { BUSINESS_INFO } from '../../../shared/business.js';
+const fs = require('node:fs');
+const path = require('node:path');
+const { BUSINESS_INFO } = require('../../../shared/business.js');
 
 /**
  * The invoice document.
@@ -25,7 +24,7 @@ import { BUSINESS_INFO } from '../../../shared/business.js';
  * one thing worse than no letterhead. Read once at boot; if the file is not
  * there the masthead falls back to the wordmark set in type.
  */
-const here = path.dirname(fileURLToPath(import.meta.url));
+const here = __dirname;
 const LOGO = (() => {
   try {
     const file = path.resolve(here, '..', '..', '..', 'client', 'public', 'brand', 'logo.png');
@@ -136,7 +135,7 @@ function totalsRow(label, value, { strong = false, tone } = {}) {
  *                                without one the print button is not rendered,
  *                                which is exactly what the emailed copy wants.
  */
-export function renderInvoiceHtml({ invoice, order, user, origin, nonce }) {
+function renderInvoiceHtml({ invoice, order, user, origin, nonce }) {
   const balance = (invoice.amount ?? 0) - (invoice.amountPaid ?? 0);
   const settled = balance <= 0;
   const business = BUSINESS_INFO;
@@ -326,7 +325,7 @@ ${
 }
 
 /** Plain-text fallback, for the mail clients that refuse HTML. */
-export function renderInvoiceText({ invoice, order }) {
+function renderInvoiceText({ invoice, order }) {
   const balance = (invoice.amount ?? 0) - (invoice.amountPaid ?? 0);
   const lines = [
     `${BUSINESS_INFO.name} — invoice ${invoice.number}`,
@@ -347,4 +346,7 @@ export function renderInvoiceText({ invoice, order }) {
   return lines.filter((line) => line !== null).join('\n');
 }
 
-export default renderInvoiceHtml;
+// --- CommonJS exports -------------------------------------------------
+exports.renderInvoiceHtml = renderInvoiceHtml;
+exports.renderInvoiceText = renderInvoiceText;
+exports.default = renderInvoiceHtml;

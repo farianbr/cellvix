@@ -1,6 +1,6 @@
-import { asyncHandler } from '../utils/ApiError.js';
-import * as taxonomyAdminService from '../services/taxonomyAdminService.js';
-import * as auditService from '../services/auditService.js';
+const { asyncHandler } = require('../utils/ApiError.js');
+const taxonomyAdminService = require('../services/taxonomyAdminService.js');
+const auditService = require('../services/auditService.js');
 
 /**
  * The taxonomy editor (§6.15 — CellShoppe's *Device & Models*, phase 11d).
@@ -11,15 +11,15 @@ import * as auditService from '../services/auditService.js';
  * at all, so there is nothing to log for it.
  */
 
-export const list = asyncHandler(async (req, res) => {
+const list = asyncHandler(async (req, res) => {
   res.json(await taxonomyAdminService.list(req.query));
 });
 
-export const get = asyncHandler(async (req, res) => {
+const get = asyncHandler(async (req, res) => {
   res.json(await taxonomyAdminService.get(req.params.id));
 });
 
-export const update = asyncHandler(async (req, res) => {
+const update = asyncHandler(async (req, res) => {
   const before = await taxonomyAdminService.get(req.params.id).catch(() => null);
   const result = await taxonomyAdminService.update(req.params.id, req.body);
 
@@ -47,7 +47,7 @@ export const update = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
-export const remove = asyncHandler(async (req, res) => {
+const remove = asyncHandler(async (req, res) => {
   const before = await taxonomyAdminService.get(req.params.id).catch(() => null);
   const result = await taxonomyAdminService.remove(req.params.id);
 
@@ -61,3 +61,9 @@ export const remove = asyncHandler(async (req, res) => {
 
   res.json(result);
 });
+
+// --- CommonJS exports -------------------------------------------------
+exports.list = list;
+exports.get = get;
+exports.update = update;
+exports.remove = remove;

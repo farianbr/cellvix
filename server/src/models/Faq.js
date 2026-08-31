@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 /**
  * One collection serves both the general FAQ page and the per-product FAQ
@@ -24,5 +24,8 @@ const faqSchema = new mongoose.Schema(
 
 faqSchema.index({ scope: 1, isPublished: 1, order: 1 });
 
-export const Faq = mongoose.model('Faq', faqSchema);
-export default Faq;
+const Faq = mongoose.model('Faq', faqSchema);
+
+// --- CommonJS exports -------------------------------------------------
+exports.Faq = Faq;
+exports.default = Faq;

@@ -1,6 +1,6 @@
-import BlogPost from '../models/BlogPost.js';
-import ApiError from '../utils/ApiError.js';
-import { likeRegex } from '../utils/regex.js';
+const { default: BlogPost } = require('../models/BlogPost.js');
+const { default: ApiError } = require('../utils/ApiError.js');
+const { likeRegex } = require('../utils/regex.js');
 
 const PAGE_SIZE = 9;
 const WORDS_PER_MINUTE = 220;
@@ -49,7 +49,7 @@ function serializeDetail(post) {
  * is typed in the query string — status is fixed on the query, not filtered
  * from a parameter.
  */
-export async function listPublished({ category, tag, q, page = 1, limit = PAGE_SIZE } = {}) {
+async function listPublished({ category, tag, q, page = 1, limit = PAGE_SIZE } = {}) {
   const query = { status: 'published', publishedAt: { $lte: new Date() } };
 
   if (category && category !== 'all') query.category = String(category);
@@ -93,7 +93,7 @@ export async function listPublished({ category, tag, q, page = 1, limit = PAGE_S
   };
 }
 
-export async function getBySlug(slug) {
+async function getBySlug(slug) {
   const post = await BlogPost.findOne({
     slug,
     status: 'published',
@@ -116,7 +116,7 @@ export async function getBySlug(slug) {
 
 // --- admin -------------------------------------------------------------------
 
-export async function listAll({ status, q } = {}) {
+async function listAll({ status, q } = {}) {
   const query = {};
   if (status && status !== 'all') query.status = String(status);
   if (q) {
@@ -135,7 +135,7 @@ export async function listAll({ status, q } = {}) {
   };
 }
 
-export async function getById(id) {
+async function getById(id) {
   const post = await BlogPost.findById(id).lean();
   if (!post) throw ApiError.notFound('Post not found.', 'POST_NOT_FOUND');
   return serializeDetail(post);
@@ -182,7 +182,7 @@ function resolvePublishedAt(data, existing) {
   return existing?.publishedAt ?? new Date();
 }
 
-export async function createPost(data) {
+async function createPost(data) {
   const post = await BlogPost.create({
     ...shapeWrite(data),
     slug: await uniqueSlug(data.title),
@@ -191,7 +191,7 @@ export async function createPost(data) {
   return serializeDetail(post.toObject());
 }
 
-export async function updatePost(id, data) {
+async function updatePost(id, data) {
   const post = await BlogPost.findById(id);
   if (!post) throw ApiError.notFound('Post not found.', 'POST_NOT_FOUND');
 
@@ -207,8 +207,17 @@ export async function updatePost(id, data) {
   return serializeDetail(post.toObject());
 }
 
-export async function deletePost(id) {
+async function deletePost(id) {
   const post = await BlogPost.findByIdAndDelete(id).lean();
   if (!post) throw ApiError.notFound('Post not found.', 'POST_NOT_FOUND');
   return serialize(post);
 }
+
+// --- CommonJS exports -------------------------------------------------
+exports.listPublished = listPublished;
+exports.getBySlug = getBySlug;
+exports.listAll = listAll;
+exports.getById = getById;
+exports.createPost = createPost;
+exports.updatePost = updatePost;
+exports.deletePost = deletePost;

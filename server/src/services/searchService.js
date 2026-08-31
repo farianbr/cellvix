@@ -1,14 +1,14 @@
-import User from '../models/User.js';
-import Order from '../models/Order.js';
-import Invoice from '../models/Invoice.js';
-import Product from '../models/Product.js';
-import Quote from '../models/Quote.js';
-import Rma from '../models/Rma.js';
-import Supplier from '../models/Supplier.js';
-import PurchaseOrder from '../models/PurchaseOrder.js';
-import Outlet from '../models/Outlet.js';
-import Role from '../models/Role.js';
-import { likeRegex } from '../utils/regex.js';
+const { default: User } = require('../models/User.js');
+const { default: Order } = require('../models/Order.js');
+const { default: Invoice } = require('../models/Invoice.js');
+const { default: Product } = require('../models/Product.js');
+const { default: Quote } = require('../models/Quote.js');
+const { default: Rma } = require('../models/Rma.js');
+const { default: Supplier } = require('../models/Supplier.js');
+const { default: PurchaseOrder } = require('../models/PurchaseOrder.js');
+const { default: Outlet } = require('../models/Outlet.js');
+const { default: Role } = require('../models/Role.js');
+const { likeRegex } = require('../utils/regex.js');
 
 /**
  * Global search (ERP rework §7.1, phase 12).
@@ -71,7 +71,7 @@ async function allowedGroups(user) {
  * Returns `{ groups: [...] }` with empty groups omitted, so the palette renders
  * what matched rather than nine headings with one row under them.
  */
-export async function search(term, user) {
+async function search(term, user) {
   const q = typeof term === 'string' ? term.trim() : '';
   // Two characters is the floor everywhere else in this codebase
   // (`searchProducts` uses the same), and a one-character regex matches most of
@@ -280,4 +280,7 @@ export async function search(term, user) {
   };
 }
 
-export default { search };
+exports.default = { search };
+
+// --- CommonJS exports -------------------------------------------------
+exports.search = search;

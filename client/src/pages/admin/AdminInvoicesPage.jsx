@@ -1,22 +1,25 @@
 import { useState } from 'react';
-import { useSearchParams } from 'react-router';
+import { useNavigate, useSearchParams } from 'react-router';
 import { useForm } from 'react-hook-form';
-import { AlertCircle, Ban, Download, FileText, Receipt, Wallet } from 'lucide-react';
+import { AlertCircle, Ban, Download, FileText, Plus, Receipt, Wallet } from 'lucide-react';
 import { money, date, count as formatCount } from '@/lib/format';
 import { apiUrl } from '@/lib/api';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
+import Textarea from '@/components/ui/Textarea';
 import SelectField from '@/components/ui/SelectField';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import PageHeader from '@/components/admin/PageHeader';
+import { TERMS } from '@/components/admin/ApproveClientForm';
 import KpiRow from '@/components/admin/KpiRow';
 import FilterStrip from '@/components/admin/FilterStrip';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
-import { useAdminInvoices, useAdminMutations } from '@/hooks/useAdmin';
+import { useAdminInvoices, useAdminUsers, useAdminMutations } from '@/hooks/useAdmin';
+import useCreateParam from '@/hooks/useCreateParam';
 import downloadExport from '@/lib/exportDownload';
 
 /**
@@ -155,16 +158,134 @@ function VoidForm({ invoice, onSubmit, onCancel, isPending, error }) {
   );
 }
 
+/**
+ * A standalone invoice — one raised against an account for something no order
+ * covers: a restocking fee, a repair, an agreed adjustment (§7.2).
+ *
+ * It has no line items, and that is the model rather than an omission: an
+ * invoice stores a single `amount`, so a reference and a note carry what it is
+ * for. An invoice reading only "$240" is one nobody can reconcile six weeks
+ * later, which is why the reference is asked for rather than tucked away.
+ *
+ * **A blank due date is not empty, it is "use the terms".** The hint says so,
+ * because a date field that silently fills itself in after submission looks
+ * like the form ignored what was typed.
+ */
+function InvoiceForm({ clients, defaultUser, onSubmit, onCancel, isPending, error }) {
+  const { register, handleSubmit, control, watch } = useForm({
+    defaultValues: {
+      // `defaultUser` is how the customer profile raises an invoice against the
+      // account already on screen (`?new=1&client=<id>`): it pre-picks the
+      // client instead of forking a second, near-identical form that would
+      // eventually disagree with this one about terms or due dates.
+      user: defaultUser ?? clients[0]?.id ?? '',
+      amountDollars: '',
+      terms: 'prepaid',
+      issuedAt: todayIso(),
+      dueDate: '',
+      reference: '',
+      notes: '',
+    },
+  });
+
+  const terms = watch('terms');
+
+  return (
+    <form
+      onSubmit={handleSubmit((values) =>
+        onSubmit({
+          user: values.user,
+          amount: Math.round(Number(values.amountDollars || 0) * 100),
+          terms: values.terms,
+          issuedAt: values.issuedAt || undefined,
+          dueDate: values.dueDate || undefined,
+          reference: values.reference || undefined,
+          notes: values.notes || undefined,
+        }),
+      )}
+      className="space-y-4"
+    >
+      {error && (
+        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+          <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
+          {error}
+        </p>
+      )}
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <SelectField
+          control={control}
+          name="user"
+          label="Client"
+          options={clients.map((client) => ({ value: client.id, label: client.businessName }))}
+        />
+        <Input
+          label="Amount"
+          inputMode="decimal"
+          suffix="CAD"
+          {...register('amountDollars')}
+        />
+      </div>
+
+      <Input
+        label="Reference"
+        placeholder="Restocking fee, bench repair, agreed adjustment…"
+        hint="What this invoice is for. It is the only description the invoice carries."
+        {...register('reference')}
+      />
+
+      <div className="grid gap-3 sm:grid-cols-3">
+        <SelectField control={control} name="terms" label="Payment terms" options={TERMS} />
+        <Input label="Issued" type="date" {...register('issuedAt')} />
+        <Input
+          label="Due"
+          type="date"
+          hint={terms === 'prepaid' ? 'Blank means on issue.' : `Blank uses ${terms}.`}
+          {...register('dueDate')}
+        />
+      </div>
+
+      <Textarea label="Notes" rows={2} {...register('notes')} />
+
+      {terms !== 'prepaid' && (
+        <p className="rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12.5px] text-ink-500">
+          On terms, this draws on the client's line of credit until it is paid — the same as an
+          invoice raised by an order.
+        </p>
+      )}
+
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit" loading={isPending}>
+          Raise invoice
+        </Button>
+      </div>
+    </form>
+  );
+}
+
 export function AdminInvoicesPage() {
   const [query, setQuery] = useState('');
   const [paying, setPaying] = useState(null);
   const [voiding, setVoiding] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  // Opened directly by `+ Create` (§7.2), which arrives with `?new=1`.
+  // `client` seeds the form when the customer profile sends us here to raise
+  // an invoice against the account already on screen.
+  const [creating, setCreating, createSeed] = useCreateParam(true, false, ['client']);
 
   const status = searchParams.get('status') ?? 'all';
 
   const { data, isLoading } = useAdminInvoices({ status, q: query || undefined });
-  const { recordInvoicePayment, voidInvoice } = useAdminMutations();
+  // Any client can be invoiced — unlike an order, this does not need approval:
+  // a pending account can still owe money for a repair.
+  const { data: clientData } = useAdminUsers({});
+  const { recordInvoicePayment, voidInvoice, createInvoice } = useAdminMutations();
+
+  const clients = clientData?.users ?? [];
 
   const invoices = data?.invoices ?? [];
   const counts = data?.counts ?? {};
@@ -294,6 +415,11 @@ export function AdminInvoicesPage() {
         icon={ADMIN_PAGE.icon}
         title={ADMIN_PAGE.title}
         description={ADMIN_PAGE.description}
+        action={
+          <Button onClick={() => setCreating(true)} icon={Plus} disabled={!clients.length}>
+            New invoice
+          </Button>
+        }
       />
 
       <KpiRow
@@ -409,6 +535,36 @@ export function AdminInvoicesPage() {
                 { number: voiding.number, reason: values.reason },
                 { onSuccess: () => setVoiding(null) },
               )
+            }
+          />
+        )}
+      </Modal>
+
+      <Modal
+        open={Boolean(creating)}
+        onClose={() => setCreating(false)}
+        title="New invoice"
+        size="lg"
+        align="top"
+      >
+        {creating && (
+          <InvoiceForm
+            clients={clients}
+            defaultUser={createSeed.client}
+            isPending={createInvoice.isPending}
+            error={createInvoice.error?.message}
+            onCancel={() => setCreating(false)}
+            onSubmit={(values) =>
+              createInvoice.mutate(values, {
+                onSuccess: (payload) => {
+                  setCreating(false);
+                  // Straight to the invoice — the next thing an operator does is
+                  // send it or record what has already been paid against it.
+                  if (payload?.invoice?.number) {
+                    navigate(`/admin/invoices/${payload.invoice.number}`);
+                  }
+                },
+              })
             }
           />
         )}

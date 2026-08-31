@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 /**
  * A return authorisation (ERP rework §6.3).
@@ -15,7 +15,7 @@ import mongoose from 'mongoose';
  * `StockMovement` of type `return` through `purchaseService.applyStockMovement`,
  * for the same reason — one ledger, one writer.
  */
-export const RMA_STATUSES = [
+const RMA_STATUSES = [
   'requested',
   'approved',
   'in_transit',
@@ -26,11 +26,11 @@ export const RMA_STATUSES = [
 ];
 
 /** Everything before `resolved`/`rejected` is open, and ages against the SLA. */
-export const RMA_OPEN_STATUSES = RMA_STATUSES.filter(
+const RMA_OPEN_STATUSES = RMA_STATUSES.filter(
   (status) => !['resolved', 'rejected'].includes(status),
 );
 
-export const RMA_RESOLUTIONS = ['pending', 'refund', 'replace', 'reject'];
+const RMA_RESOLUTIONS = ['pending', 'refund', 'replace', 'reject'];
 
 /**
  * What happens to each returned part once it has been looked at.
@@ -40,7 +40,7 @@ export const RMA_RESOLUTIONS = ['pending', 'refund', 'replace', 'reject'];
  * refunded for an item that is scrapped rather than resold. Conflating the two
  * is how a warehouse ends up with phantom inventory.
  */
-export const ITEM_DISPOSITIONS = ['pending', 'restock', 'scrap', 'return_to_supplier', 'reject'];
+const ITEM_DISPOSITIONS = ['pending', 'restock', 'scrap', 'return_to_supplier', 'reject'];
 
 const rmaItemSchema = new mongoose.Schema(
   {
@@ -109,5 +109,12 @@ const rmaSchema = new mongoose.Schema(
 rmaSchema.index({ user: 1, createdAt: -1 });
 rmaSchema.index({ status: 1, createdAt: -1 });
 
-export const Rma = mongoose.model('Rma', rmaSchema);
-export default Rma;
+const Rma = mongoose.model('Rma', rmaSchema);
+
+// --- CommonJS exports -------------------------------------------------
+exports.RMA_STATUSES = RMA_STATUSES;
+exports.RMA_OPEN_STATUSES = RMA_OPEN_STATUSES;
+exports.RMA_RESOLUTIONS = RMA_RESOLUTIONS;
+exports.ITEM_DISPOSITIONS = ITEM_DISPOSITIONS;
+exports.Rma = Rma;
+exports.default = Rma;

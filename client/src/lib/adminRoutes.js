@@ -87,13 +87,17 @@ export const ADMIN_ROUTES = {
   },
 
   // Sales
+  // "Customers" in the UI, `/admin/clients` in the URL. The route is not
+  // renamed with the label: it is linked to from the dashboard, the bell, the
+  // approvals redirect and saved bookmarks, and a cosmetic rename is not worth
+  // breaking those. `clients` also stays the permission area name.
   '/admin/clients': {
-    label: 'Clients',
+    label: 'Customers',
     parent: 'sales',
     icon: 'Users',
     section: 'sales',
     phase: 1,
-    title: 'Clients',
+    title: 'Customers',
     description: 'Every business account, its credit terms and what it has ordered.',
   },
   // Approvals keeps its own screen until phase 2 folds it into Clients as a
@@ -109,13 +113,40 @@ export const ADMIN_ROUTES = {
     description: 'Businesses waiting on a decision before they can see pricing or order.',
   },
   '/admin/clients/:id': {
-    label: 'Client',
+    label: 'Customer',
     parent: '/admin/clients',
     icon: 'Users',
     section: 'sales',
     phase: 1,
-    title: 'Client profile',
+    title: 'Customer profile',
     description: 'Orders, invoices, quotes, RMAs and credit for one account.',
+  },
+  '/admin/clients/:id/edit': {
+    label: 'Edit',
+    parent: '/admin/clients/:id',
+    icon: 'Users',
+    section: 'sales',
+    phase: 1,
+    title: 'Edit customer',
+    description: 'Update the contact details and address on this account.',
+  },
+  '/admin/tickets': {
+    label: 'Tickets',
+    parent: 'sales',
+    icon: 'ClipboardList',
+    section: 'sales',
+    phase: 1,
+    title: 'Tickets',
+    description: 'Track every repair from intake to completion.',
+  },
+  '/admin/tickets/:id': {
+    label: 'Ticket',
+    parent: '/admin/tickets',
+    icon: 'ClipboardList',
+    section: 'sales',
+    phase: 1,
+    title: 'Ticket detail',
+    description: 'The device, the fault, who is on it and what has happened so far.',
   },
   '/admin/rma': {
     label: 'RMA / Returns',
@@ -228,6 +259,42 @@ export const ADMIN_ROUTES = {
     phase: 5,
     title: 'Purchase order detail',
     description: 'Lines, receiving, landed cost and the automation stages.',
+  },
+  '/admin/supplier-returns': {
+    label: 'RMA / Returns',
+    parent: 'purchase',
+    icon: 'RotateCcw',
+    section: 'purchase',
+    phase: 5,
+    title: 'Returns to suppliers',
+    description: 'Faulty and wrong stock going back, and the credit claimed for it.',
+  },
+  '/admin/supplier-returns/:id': {
+    label: 'Return',
+    parent: '/admin/supplier-returns',
+    icon: 'RotateCcw',
+    section: 'purchase',
+    phase: 5,
+    title: 'Supplier return',
+    description: 'What is going back, where it is, and what the supplier credited.',
+  },
+  '/admin/supplier-services': {
+    label: 'Service Products',
+    parent: 'purchase',
+    icon: 'Wrench',
+    section: 'purchase',
+    phase: 5,
+    title: 'Service products',
+    description: 'Things bought in that are not stock — outsourced repair, freight, disposal.',
+  },
+  '/admin/supplier-subscriptions': {
+    label: 'Subscription Plans',
+    parent: 'purchase',
+    icon: 'CalendarClock',
+    section: 'purchase',
+    phase: 5,
+    title: 'Subscription plans',
+    description: 'Recurring supplier costs, what they renew and what they add up to.',
   },
   '/admin/expenses': {
     label: 'Expenses',
@@ -627,9 +694,24 @@ export function adminBreadcrumbTrail(pathname, { recordLabel } = {}) {
   let cursor = meta;
   let guard = 0;
 
+  const segments = pathname.replace(/\/+$/, '').split('/');
+
   while (cursor && guard < 10) {
     guard += 1;
-    trail.unshift({ label: cursor.label, to: cursor.path });
+
+    /**
+     * An ancestor crumb links to the **actual** URL, not to its pattern.
+     *
+     * `/admin/clients/:id/edit` sits under `/admin/clients/:id`, and pushing
+     * that key straight into `to` produced a crumb pointing at the literal
+     * string `:id` — a dead link on every record. Because an ancestor is always
+     * a prefix of the current path, its real URL is simply the first N segments
+     * of the one being viewed.
+     */
+    const depth = cursor.path.split('/').length;
+    const to = cursor.path.includes('/:') ? segments.slice(0, depth).join('/') : cursor.path;
+
+    trail.unshift({ label: cursor.label, to });
 
     const { parent } = cursor;
     if (!parent) break;
@@ -657,8 +739,31 @@ export function adminBreadcrumbTrail(pathname, { recordLabel } = {}) {
     cursor = ADMIN_ROUTES[parent] ? { ...ADMIN_ROUTES[parent], path: parent } : null;
   }
 
-  // Detail pages name the record, not the type (§4b.6).
-  if (recordLabel && trail.length) trail[trail.length - 1].label = recordLabel;
+  /**
+   * Detail pages name the record, not the type (§4b.6) — but the record is
+   * named on **its own** crumb rather than always on the last one.
+   *
+   * On `/admin/clients/:id` those are the same crumb. On a child of it, such as
+   * `/admin/clients/:id/edit`, they are not: naming the last crumb turned "Edit"
+   * into the business name and left the parent reading a generic "Customer", so
+   * the trail said `Customers > Customer > Northline` for a page that is an edit
+   * form. The record crumb is the deepest one whose route pattern *ends* in a
+   * parameter; if there is none, the last crumb is the record, as before.
+   */
+  if (recordLabel && trail.length) {
+    let cursorPath = meta.path;
+    let index = trail.length - 1;
+
+    while (index >= 0 && !/\/:[^/]+$/.test(cursorPath)) {
+      const parent = ADMIN_ROUTES[cursorPath]?.parent;
+      if (!parent?.startsWith('/admin')) break;
+      cursorPath = parent;
+      index -= 1;
+    }
+
+    if (index >= 0 && /\/:[^/]+$/.test(cursorPath)) trail[index].label = recordLabel;
+    else trail[trail.length - 1].label = recordLabel;
+  }
   // The last crumb is the current page and is never a link (§4b.4).
   if (trail.length) trail[trail.length - 1].to = null;
 

@@ -1,7 +1,7 @@
-import Faq from '../models/Faq.js';
-import ApiError from '../utils/ApiError.js';
-import { likeRegex } from '../utils/regex.js';
-import { FAQ_CATEGORIES } from '../../../shared/schemas/content.js';
+const { default: Faq } = require('../models/Faq.js');
+const { default: ApiError } = require('../utils/ApiError.js');
+const { likeRegex } = require('../utils/regex.js');
+const { FAQ_CATEGORIES } = require('../../../shared/schemas/content.js');
 
 const CATEGORY_ORDER = FAQ_CATEGORIES.map((category) => category.value);
 
@@ -26,7 +26,7 @@ function serialize(faq) {
  * The general FAQ page. Grouped server-side so the page renders sections in the
  * canonical category order rather than whatever order Mongo returned.
  */
-export async function listGeneral({ q } = {}) {
+async function listGeneral({ q } = {}) {
   const query = { scope: 'general', isPublished: true };
   if (q) {
     const rx = likeRegex(q);
@@ -57,7 +57,7 @@ export async function listGeneral({ q } = {}) {
  * filling either narrows it. The most specific entries sort first, so a screen
  * question outranks a generic shipping one on a screen's page.
  */
-export async function listForProduct(product, { limit = 8 } = {}) {
+async function listForProduct(product, { limit = 8 } = {}) {
   if (!product) return [];
 
   const faqs = await Faq.find({
@@ -96,7 +96,7 @@ function fill(text, product) {
 
 // --- admin -------------------------------------------------------------------
 
-export async function listAll({ scope, q } = {}) {
+async function listAll({ scope, q } = {}) {
   const query = {};
   if (scope && scope !== 'all') query.scope = String(scope);
   if (q) {
@@ -130,12 +130,12 @@ function shapeWrite(data) {
   };
 }
 
-export async function createFaq(data) {
+async function createFaq(data) {
   const faq = await Faq.create(shapeWrite(data));
   return serialize(faq.toObject());
 }
 
-export async function updateFaq(id, data) {
+async function updateFaq(id, data) {
   const faq = await Faq.findById(id);
   if (!faq) throw ApiError.notFound('FAQ entry not found.', 'FAQ_NOT_FOUND');
   Object.assign(faq, shapeWrite(data));
@@ -143,8 +143,16 @@ export async function updateFaq(id, data) {
   return serialize(faq.toObject());
 }
 
-export async function deleteFaq(id) {
+async function deleteFaq(id) {
   const faq = await Faq.findByIdAndDelete(id).lean();
   if (!faq) throw ApiError.notFound('FAQ entry not found.', 'FAQ_NOT_FOUND');
   return serialize(faq);
 }
+
+// --- CommonJS exports -------------------------------------------------
+exports.listGeneral = listGeneral;
+exports.listForProduct = listForProduct;
+exports.listAll = listAll;
+exports.createFaq = createFaq;
+exports.updateFaq = updateFaq;
+exports.deleteFaq = deleteFaq;

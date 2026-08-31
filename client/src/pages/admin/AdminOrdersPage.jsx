@@ -1,6 +1,16 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { AlertCircle, Package, PackageCheck, Truck, Undo2, Wallet } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router';
+import { useFieldArray, useForm } from 'react-hook-form';
+import {
+  AlertCircle,
+  Package,
+  PackageCheck,
+  Plus,
+  Trash2,
+  Truck,
+  Undo2,
+  Wallet,
+} from 'lucide-react';
 import cn from '@/lib/cn';
 import { money, date, count as formatCount } from '@/lib/format';
 import { ORDER_STATUS_FLOW, CARRIERS } from '@shared/schemas/admin';
@@ -8,6 +18,7 @@ import { ORDER_STATUSES } from '@/lib/constants';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
+import Textarea from '@/components/ui/Textarea';
 import SelectField from '@/components/ui/SelectField';
 import Button from '@/components/ui/Button';
 import { OrderStatusBadge } from '@/components/account/OrderStatusBadge';
@@ -17,8 +28,21 @@ import FilterStrip from '@/components/admin/FilterStrip';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
-import { useAdminOrders, useAdminMutations } from '@/hooks/useAdmin';
+import {
+  useAdminOrders,
+  useAdminUsers,
+  useAdminInventory,
+  useAdminMutations,
+} from '@/hooks/useAdmin';
+import useCreateParam from '@/hooks/useCreateParam';
 import downloadExport from '@/lib/exportDownload';
+
+/** How the order is going out. Matches `adminOrderSchema`'s enum. */
+const DELIVERY = [
+  { value: 'ground', label: 'Ground' },
+  { value: 'express', label: 'Express' },
+  { value: 'pickup', label: 'Pickup' },
+];
 
 /** Segmented pills, not a select — the counts are the point (§4, convention 8). */
 const PILLS = [
@@ -202,17 +226,225 @@ function RefundForm({ order, onSubmit, onCancel, isPending, error }) {
  */
 const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/orders'], icon: adminIcon('Package') };
 
+/**
+ * Raising an order by hand — a phone order, a walk-in, one that arrived by
+ * email (§7.2).
+ *
+ * Only **approved** clients are offered, and that is not a convenience: the
+ * server refuses an order for anyone else, so listing a pending business here
+ * would be an invitation to an error the operator cannot fix from this form.
+ *
+ * A blank price quotes at list, the same convention the quote builder uses. The
+ * totals below are a preview and say so — tax is the server's, at this client's
+ * own provincial rate, which this form does not know.
+ */
+function OrderForm({ clients, products, onSubmit, onCancel, isPending, error }) {
+  const { register, handleSubmit, control, watch } = useForm({
+    defaultValues: {
+      user: clients[0]?.id ?? '',
+      deliveryCode: 'ground',
+      shippingDollars: '0.00',
+      poNumber: '',
+      notes: '',
+      items: [{ product: '', qty: 1, unitPriceDollars: '' }],
+    },
+  });
+
+  const { fields, append, remove } = useFieldArray({ control, name: 'items' });
+  const watched = watch('items');
+  const shipping = Math.round(Number(watch('shippingDollars') || 0) * 100);
+
+  const byId = new Map(products.map((product) => [product.id, product]));
+
+  const subtotal = (watched ?? []).reduce((sum, line) => {
+    const qty = Number(line?.qty ?? 0);
+    const typed = Math.round(Number(line?.unitPriceDollars ?? 0) * 100);
+    const price = typed > 0 ? typed : (byId.get(line?.product)?.price ?? 0);
+    return sum + (Number.isFinite(qty) ? qty * price : 0);
+  }, 0);
+
+  return (
+    <form
+      onSubmit={handleSubmit((values) =>
+        onSubmit({
+          user: values.user,
+          deliveryCode: values.deliveryCode,
+          shipping: Math.round(Number(values.shippingDollars || 0) * 100),
+          poNumber: values.poNumber || undefined,
+          notes: values.notes || undefined,
+          items: values.items
+            .filter((line) => line.product)
+            .map((line) => ({
+              product: line.product,
+              qty: Number(line.qty) || 1,
+              // Zero means "use the catalogue price" — the server's convention,
+              // so a blank field sends zero rather than nothing.
+              unitPrice: Math.round(Number(line.unitPriceDollars || 0) * 100),
+            })),
+        }),
+      )}
+      className="space-y-4"
+    >
+      {error && (
+        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+          <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
+          {error}
+        </p>
+      )}
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <SelectField
+          control={control}
+          name="user"
+          label="Client"
+          hint="Approved accounts only — ordering needs approval."
+          options={clients.map((client) => ({ value: client.id, label: client.businessName }))}
+        />
+        <Input label="Client PO number" {...register('poNumber')} />
+      </div>
+
+      <div>
+        <p className="eyebrow mb-2 text-ink-400">Lines</p>
+
+        <div className="space-y-2">
+          {fields.map((field, index) => {
+            const picked = byId.get(watched?.[index]?.product);
+            return (
+              <div
+                key={field.id}
+                className="grid items-end gap-2 rounded-[10px] bg-surface-2 p-2.5 sm:grid-cols-[1fr_80px_130px_auto]"
+              >
+                <SelectField
+                  control={control}
+                  name={`items.${index}.product`}
+                  label={index === 0 ? 'Product' : undefined}
+                  options={products.map((product) => ({
+                    value: product.id,
+                    label: `${product.sku} · ${product.name}`,
+                  }))}
+                  size="sm"
+                />
+                <Input
+                  label={index === 0 ? 'Qty' : undefined}
+                  type="number"
+                  min="1"
+                  // The stock on hand, so an operator sees the ceiling before
+                  // the server refuses the whole order for one short line.
+                  hint={index === 0 && picked ? `${picked.stock} on hand` : undefined}
+                  {...register(`items.${index}.qty`)}
+                />
+                <Input
+                  label={index === 0 ? 'Unit price' : undefined}
+                  inputMode="decimal"
+                  suffix="CAD"
+                  placeholder={picked ? (picked.price / 100).toFixed(2) : 'list'}
+                  hint={index === 0 ? 'Blank sells at list' : undefined}
+                  {...register(`items.${index}.unitPriceDollars`)}
+                />
+                <button
+                  type="button"
+                  onClick={() => remove(index)}
+                  disabled={fields.length === 1}
+                  aria-label={`Remove line ${index + 1}`}
+                  className="flex size-9 shrink-0 items-center justify-center rounded-[8px] border border-line text-ink-400 transition-colors hover:border-danger/30 hover:bg-danger-50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Trash2 className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          icon={Plus}
+          className="mt-2"
+          onClick={() => append({ product: '', qty: 1, unitPriceDollars: '' })}
+        >
+          Add line
+        </Button>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <SelectField
+          control={control}
+          name="deliveryCode"
+          label="Delivery"
+          options={DELIVERY}
+        />
+        <Input label="Shipping" inputMode="decimal" suffix="CAD" {...register('shippingDollars')} />
+      </div>
+
+      <Textarea label="Notes" rows={2} {...register('notes')} />
+
+      <div className="rounded-[10px] bg-surface-2 px-3 py-2.5">
+        <p className="tnum flex items-baseline justify-between text-[13px] text-ink-600">
+          <span>Subtotal</span>
+          <span>{money(subtotal)}</span>
+        </p>
+        <p className="tnum mt-1 flex items-baseline justify-between text-[13px] text-ink-600">
+          <span>Shipping</span>
+          <span>{money(shipping)}</span>
+        </p>
+        <p className="mt-1.5 text-[11.5px] leading-relaxed text-ink-400">
+          A preview before tax. Placing this takes the stock and raises an invoice on the account's
+          own terms, exactly as a checkout does.
+        </p>
+      </div>
+
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit" loading={isPending}>
+          Place order
+        </Button>
+      </div>
+    </form>
+  );
+}
+
 export function AdminOrdersPage() {
-  const [status, setStatus] = useState('all');
+  /**
+   * The status filter lives in the URL, not in local state.
+   *
+   * The dashboard links here already filtered — "12 awaiting fulfilment" opens
+   * `?status=placed` — and a local `useState` swallowed that, landing the
+   * operator on every order and making them re-pick the filter they had just
+   * clicked. In the URL it also means a filtered board can be linked to.
+   */
+  const [searchParams, setSearchParams] = useSearchParams();
+  const status = searchParams.get('status') ?? 'all';
+
+  function setStatus(value) {
+    const params = new URLSearchParams(searchParams);
+    if (!value || value === 'all') params.delete('status');
+    else params.set('status', value);
+    setSearchParams(params, { replace: true });
+  }
+
   const [query, setQuery] = useState('');
   const [editing, setEditing] = useState(null);
   const [selected, setSelected] = useState([]);
 
   const [bulkResult, setBulkResult] = useState(null);
 
+  const navigate = useNavigate();
+  // Opened directly by `+ Create` (§7.2), which arrives with `?new=1`.
+  const [creating, setCreating] = useCreateParam();
+
   const { data, isLoading } = useAdminOrders({ status, q: query || undefined });
-  const { updateOrderStatus, refundOrder, bulkOrderStatus } = useAdminMutations();
+  // Only approved accounts can order, so only approved accounts are offered.
+  const { data: clientData } = useAdminUsers({ status: 'approved' });
+  // The catalogue is 400+ rows; it loads only while the builder is open.
+  const { data: inventoryData } = useAdminInventory({}, Boolean(creating));
+  const { updateOrderStatus, refundOrder, bulkOrderStatus, createOrder } = useAdminMutations();
   const [refunding, setRefunding] = useState(null);
+
+  const clients = clientData?.users ?? [];
+  const products = inventoryData?.products ?? [];
 
   /**
    * The server decides which of the selected orders can actually make the move
@@ -334,6 +566,11 @@ export function AdminOrdersPage() {
         icon={ADMIN_PAGE.icon}
         title={ADMIN_PAGE.title}
         description={ADMIN_PAGE.description}
+        action={
+          <Button onClick={() => setCreating(true)} icon={Plus} disabled={!clients.length}>
+            New order
+          </Button>
+        }
       />
 
       <KpiRow
@@ -519,6 +756,36 @@ export function AdminOrdersPage() {
                 { orderNumber: refunding.orderNumber, ...body },
                 { onSuccess: () => setRefunding(null) },
               )
+            }
+          />
+        )}
+      </Modal>
+
+      <Modal
+        open={Boolean(creating)}
+        onClose={() => setCreating(false)}
+        title="New order"
+        size="xl"
+        align="top"
+      >
+        {creating && (
+          <OrderForm
+            clients={clients}
+            products={products}
+            isPending={createOrder.isPending}
+            error={createOrder.error?.message}
+            onCancel={() => setCreating(false)}
+            onSubmit={(values) =>
+              createOrder.mutate(values, {
+                onSuccess: (payload) => {
+                  setCreating(false);
+                  // Straight to the order that was just raised — the next thing
+                  // an operator does is fulfil it.
+                  if (payload?.order?.orderNumber) {
+                    navigate(`/admin/orders/${payload.order.orderNumber}`);
+                  }
+                },
+              })
             }
           />
         )}

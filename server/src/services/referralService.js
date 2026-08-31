@@ -1,12 +1,12 @@
-import crypto from 'node:crypto';
+const crypto = require('node:crypto');
 
-import User from '../models/User.js';
-import Invoice from '../models/Invoice.js';
-import CreditTransaction from '../models/CreditTransaction.js';
-import Settings from '../models/Settings.js';
-import ApiError from '../utils/ApiError.js';
-import { likeRegex } from '../utils/regex.js';
-import * as storeCreditService from './storeCreditService.js';
+const { default: User } = require('../models/User.js');
+const { default: Invoice } = require('../models/Invoice.js');
+const { default: CreditTransaction } = require('../models/CreditTransaction.js');
+const { default: Settings } = require('../models/Settings.js');
+const { default: ApiError } = require('../utils/ApiError.js');
+const { likeRegex } = require('../utils/regex.js');
+const storeCreditService = require('./storeCreditService.js');
 
 /**
  * Referral commission (ERP rework §6.13, phase 10).
@@ -67,7 +67,7 @@ function randomCode() {
  * Retries on collision rather than trusting randomness — a unique index that
  * throws in production is not a plan.
  */
-export async function ensureReferralCode(user) {
+async function ensureReferralCode(user) {
   if (user.referralCode) return user.referralCode;
 
   for (let attempt = 0; attempt < 5; attempt += 1) {
@@ -98,7 +98,7 @@ export async function ensureReferralCode(user) {
  * The cycle §6.13 warns about needs two accounts and one level, and one level
  * cannot contain a cycle.
  */
-export async function resolveReferralCode(code) {
+async function resolveReferralCode(code) {
   const trimmed = String(code ?? '').trim().toUpperCase();
   if (!trimmed) return null;
 
@@ -125,12 +125,12 @@ export async function resolveReferralCode(code) {
 }
 
 /** The rate in force right now, as a percentage (5 means 5%). */
-export async function currentPercent() {
+async function currentPercent() {
   const settings = await Settings.load();
   return settings?.financial?.referralPercent ?? 5;
 }
 
-export async function setPercent(percent) {
+async function setPercent(percent) {
   const value = Number(percent);
   if (!Number.isFinite(value) || value < 0 || value > 100) {
     throw ApiError.badRequest('Enter a rate between 0 and 100.', 'INVALID_PERCENT');
@@ -160,7 +160,7 @@ export async function setPercent(percent) {
  * roll back a payment that genuinely happened. It returns `null` and logs
  * instead, the same reasoning `mailer.js` applies to order confirmation email.
  */
-export async function accrueForPayment(invoice, paymentIndex) {
+async function accrueForPayment(invoice, paymentIndex) {
   try {
     const payment = invoice.payments?.[paymentIndex];
     if (!payment) return null;
@@ -230,7 +230,7 @@ export async function accrueForPayment(invoice, paymentIndex) {
  * Reversal is itself idempotent: an accrual that already carries a reversal is
  * skipped, so voiding an invoice twice does not claw back twice.
  */
-export async function reverseForInvoice(invoiceNumber, paymentIndex = null) {
+async function reverseForInvoice(invoiceNumber, paymentIndex = null) {
   try {
     const filter = { type: 'referral', 'referral.invoiceNumber': invoiceNumber };
     if (paymentIndex !== null) filter['referral.paymentIndex'] = paymentIndex;
@@ -286,7 +286,7 @@ export async function reverseForInvoice(invoiceNumber, paymentIndex = null) {
  * `Invoice` carries no order number — it references the order by id — so the
  * caller passes the order's `_id`.
  */
-export async function reverseForOrder(orderId) {
+async function reverseForOrder(orderId) {
   const invoice = await Invoice.findOne({ order: orderId }).select('number').lean();
   if (!invoice) return { reversed: 0 };
   return reverseForInvoice(invoice.number);
@@ -301,7 +301,7 @@ export async function reverseForOrder(orderId) {
  * `storeCredit` is one number covering refunds, grants and top-ups too, and
  * cannot answer "how much has this pairing earned". Summing the rows can.
  */
-export async function listReferrals({ search, from, to } = {}) {
+async function listReferrals({ search, from, to } = {}) {
   const referred = await User.find({ referredBy: { $ne: null } })
     .select('businessName contactName email status createdAt referredBy')
     .sort({ createdAt: -1 })
@@ -430,7 +430,7 @@ export async function listReferrals({ search, from, to } = {}) {
   return { referrals: rows, totals, percent: await currentPercent() };
 }
 
-export default {
+exports.default = {
   accrueForPayment,
   currentPercent,
   ensureReferralCode,
@@ -440,3 +440,13 @@ export default {
   reverseForOrder,
   setPercent,
 };
+
+// --- CommonJS exports -------------------------------------------------
+exports.ensureReferralCode = ensureReferralCode;
+exports.resolveReferralCode = resolveReferralCode;
+exports.currentPercent = currentPercent;
+exports.setPercent = setPercent;
+exports.accrueForPayment = accrueForPayment;
+exports.reverseForInvoice = reverseForInvoice;
+exports.reverseForOrder = reverseForOrder;
+exports.listReferrals = listReferrals;

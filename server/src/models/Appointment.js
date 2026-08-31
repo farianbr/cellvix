@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 /**
  * The scheduling board's data model (ERP rework §6.15 category 4, §6b U1–U2,
@@ -20,14 +20,14 @@ import mongoose from 'mongoose';
  * an RMA or an order later does not need a schema change.
  */
 
-export const APPOINTMENT_KINDS = [
+const APPOINTMENT_KINDS = [
   { value: 'pickup', label: 'Customer pickup' },
   { value: 'delivery', label: 'Local delivery' },
   { value: 'rma_dropoff', label: 'RMA drop-off' },
   { value: 'other', label: 'Other' },
 ];
 
-export const APPOINTMENT_STATUSES = [
+const APPOINTMENT_STATUSES = [
   { value: 'unscheduled', label: 'Unscheduled', tone: 'neutral' },
   { value: 'scheduled', label: 'Scheduled', tone: 'info' },
   { value: 'in_progress', label: 'In progress', tone: 'warn' },
@@ -90,5 +90,10 @@ const appointmentSchema = new mongoose.Schema(
 // everything unscheduled.
 appointmentSchema.index({ startAt: 1, status: 1 });
 
-export const Appointment = mongoose.model('Appointment', appointmentSchema);
-export default Appointment;
+const Appointment = mongoose.model('Appointment', appointmentSchema);
+
+// --- CommonJS exports -------------------------------------------------
+exports.APPOINTMENT_KINDS = APPOINTMENT_KINDS;
+exports.APPOINTMENT_STATUSES = APPOINTMENT_STATUSES;
+exports.Appointment = Appointment;
+exports.default = Appointment;

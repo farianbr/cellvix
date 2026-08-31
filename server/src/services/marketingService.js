@@ -1,17 +1,17 @@
-import crypto from 'node:crypto';
+const crypto = require('node:crypto');
 
-import MessageLog, { MESSAGE_CHANNELS } from '../models/MessageLog.js';
-import MessageTemplate from '../models/MessageTemplate.js';
-import Campaign from '../models/Campaign.js';
-import User from '../models/User.js';
-import Order from '../models/Order.js';
-import Settings from '../models/Settings.js';
-import ApiError from '../utils/ApiError.js';
-import { likeRegex } from '../utils/regex.js';
-import { sendMail } from './mailer.js';
-import * as credentialService from './credentialService.js';
-import env from '../config/env.js';
-import { BUSINESS_INFO } from '../../../shared/business.js';
+const { default: MessageLog, MESSAGE_CHANNELS } = require('../models/MessageLog.js');
+const { default: MessageTemplate } = require('../models/MessageTemplate.js');
+const { default: Campaign } = require('../models/Campaign.js');
+const { default: User } = require('../models/User.js');
+const { default: Order } = require('../models/Order.js');
+const { default: Settings } = require('../models/Settings.js');
+const { default: ApiError } = require('../utils/ApiError.js');
+const { likeRegex } = require('../utils/regex.js');
+const { sendMail } = require('./mailer.js');
+const credentialService = require('./credentialService.js');
+const { default: env } = require('../config/env.js');
+const { BUSINESS_INFO } = require('../../../shared/business.js');
 
 /**
  * Marketing — the four communication channels (ERP rework §6.13, phase 9).
@@ -93,7 +93,7 @@ const CHANNEL_PROVIDERS = {
  * Async since phase 11c: a channel's readiness now depends on credentials in
  * the database as well as the environment, and reading those is a query.
  */
-export async function channelStatus(channel) {
+async function channelStatus(channel) {
   const provider = CHANNEL_PROVIDERS[channel];
   if (!provider) throw ApiError.badRequest('Unknown channel.', 'UNKNOWN_CHANNEL');
 
@@ -127,7 +127,7 @@ export async function channelStatus(channel) {
   };
 }
 
-export async function channelStatuses() {
+async function channelStatuses() {
   const resolved = await Promise.all(MESSAGE_CHANNELS.map((channel) => channelStatus(channel)));
   return MESSAGE_CHANNELS.reduce(
     (out, channel, index) => ({ ...out, [channel]: resolved[index] }),
@@ -202,7 +202,7 @@ function serializeCampaign(row) {
  * Scoped to one channel by default, because that is what the screens ask for.
  * `user` narrows it to one account for the client profile's contact history.
  */
-export async function listMessages({ channel, user, search, status, page = 1, limit = 25 } = {}) {
+async function listMessages({ channel, user, search, status, page = 1, limit = 25 } = {}) {
   const filter = {};
   if (channel) filter.channel = channel;
   if (user) filter.user = user;
@@ -240,7 +240,7 @@ export async function listMessages({ channel, user, search, status, page = 1, li
  * unconfigured channel the row is still written and the caller gets back the
  * reason, which is what the screen shows instead of a confirmation (§6b rule 1).
  */
-export async function sendMessage(
+async function sendMessage(
   channel,
   { userId, body, subject, direction, recordingUrl, templateId },
   staff,
@@ -281,7 +281,7 @@ export async function sendMessage(
     // happened, on either side of the line.
     row.status = 'logged';
   } else if (channel === 'email') {
-    if (isSuppressed(account)) {
+    if (isSuppressed(account, 'email')) {
       // A one-to-one email to a suppressed account is refused rather than
       // quietly logged. Somebody is choosing to write to a business that
       // cannot lawfully be written to, and they should learn that before it is
@@ -319,7 +319,31 @@ export async function sendMessage(
         'No SMTP transport is configured, so the message was written to the local outbox instead of being delivered.';
     }
   } else {
-    // SMS and WhatsApp. **Credentials are stored but no client sends them yet**
+    /**
+     * SMS and WhatsApp now carry the same consent gate email has.
+     *
+     * They had none, because before per-channel consent there was nothing to
+     * check that was not simply the email flag — and refusing an SMS on the
+     * grounds of email consent would have been wrong. Now that a customer can
+     * say "email yes, SMS no", that answer has to be honoured on the channel it
+     * was given about, and it is checked **before** the message is written:
+     * `queued_unconfigured` means "we will send this when the provider is
+     * wired", so logging one to somebody who has declined the channel would
+     * queue up a future violation rather than prevent one.
+     */
+    if (isSuppressed(account, channel)) {
+      throw account.unsubscribedAt
+        ? ApiError.badRequest(
+            `${account.businessName} has unsubscribed. Reach them another way.`,
+            'RECIPIENT_UNSUBSCRIBED',
+          )
+        : ApiError.badRequest(
+            `${account.businessName} has not consented to ${channel === 'whatsapp' ? 'WhatsApp' : 'SMS'}. Record consent on their profile first, or reach them another way.`,
+            'RECIPIENT_NO_CONSENT',
+          );
+    }
+
+    // **Credentials are stored but no client sends them yet**
     // — that is phase 13's job (§6b U3–U4), and this file has no Twilio or
     // WhatsApp SDK in it.
     //
@@ -347,25 +371,25 @@ export async function sendMessage(
 
 // ---- templates --------------------------------------------------------------
 
-export async function listTemplates({ channel } = {}) {
+async function listTemplates({ channel } = {}) {
   const filter = {};
   if (channel) filter.channel = channel;
   const rows = await MessageTemplate.find(filter).sort({ channel: 1, name: 1 }).lean();
   return { templates: rows.map(serializeTemplate) };
 }
 
-export async function createTemplate(data, staff) {
+async function createTemplate(data, staff) {
   const row = await MessageTemplate.create({ ...data, createdBy: staff?._id });
   return { template: serializeTemplate(row) };
 }
 
-export async function updateTemplate(id, data) {
+async function updateTemplate(id, data) {
   const row = await MessageTemplate.findByIdAndUpdate(id, data, { new: true });
   if (!row) throw ApiError.notFound('Template not found.', 'TEMPLATE_NOT_FOUND');
   return { template: serializeTemplate(row) };
 }
 
-export async function deleteTemplate(id) {
+async function deleteTemplate(id) {
   const row = await MessageTemplate.findByIdAndDelete(id);
   if (!row) throw ApiError.notFound('Template not found.', 'TEMPLATE_NOT_FOUND');
   return { ok: true };
@@ -374,14 +398,32 @@ export async function deleteTemplate(id) {
 // ---- consent ----------------------------------------------------------------
 
 /**
- * Is this account excluded from commercial email?
+ * Is this account excluded from commercial contact on `channel`?
  *
- * Unsubscribing outranks consent: a later withdrawal always beats an earlier
- * opt-in, whatever order the two fields were written in.
+ * Three gates, in the order they outrank each other:
+ *
+ *   1. `unsubscribedAt` — the customer's own withdrawal. A later withdrawal
+ *      always beats an earlier opt-in, whatever order the fields were written.
+ *   2. `marketingConsent.granted` — the master switch every campaign query
+ *      already checks, and the one an admin moves.
+ *   3. `contactConsent[channel]` — what they agreed to be reached **on**.
+ *
+ * **A missing channel record is not a refusal.** Accounts that predate the
+ * channel field have never been asked, and treating "not recorded" as "no"
+ * would silently empty every existing audience the moment this shipped. So the
+ * channel gate applies only once somebody has actually answered
+ * (`contactConsent.at` is set); until then the master flag decides alone, which
+ * is exactly the behaviour that was here before.
+ *
+ * `channel` is optional so existing callers that ask the general question keep
+ * working unchanged.
  */
-export function isSuppressed(account) {
+function isSuppressed(account, channel) {
   if (account?.unsubscribedAt) return true;
-  return account?.marketingConsent?.granted !== true;
+  if (account?.marketingConsent?.granted !== true) return true;
+
+  if (!channel || !account?.contactConsent?.at) return false;
+  return account.contactConsent[channel] !== true;
 }
 
 /**
@@ -393,7 +435,7 @@ export function isSuppressed(account) {
  * carries no expiry on purpose — an unsubscribe link that stops working is a
  * CASL problem, not a security improvement.
  */
-export function unsubscribeToken(userId) {
+function unsubscribeToken(userId) {
   return crypto
     .createHmac('sha256', env.JWT_SECRET)
     .update(`unsubscribe:${String(userId)}`)
@@ -457,7 +499,7 @@ function decorate(body, account) {
  * Staff and admin accounts are never in an audience — they are Cellvix, not
  * customers.
  */
-export async function resolveAudience(filter = 'approved') {
+async function resolveAudience(filter = 'approved') {
   const base = { role: 'buyer' };
 
   if (filter === 'approved') base.status = 'approved';
@@ -467,7 +509,7 @@ export async function resolveAudience(filter = 'approved') {
   else throw ApiError.badRequest('Unknown audience.', 'UNKNOWN_AUDIENCE');
 
   let candidates = await User.find(base)
-    .select('email businessName contactName marketingConsent unsubscribedAt')
+    .select('email businessName contactName marketingConsent contactConsent unsubscribedAt')
     .lean();
 
   if (filter === 'with_orders') {
@@ -476,14 +518,16 @@ export async function resolveAudience(filter = 'approved') {
     candidates = candidates.filter((row) => placed.has(String(row._id)));
   }
 
-  const eligible = candidates.filter((row) => !isSuppressed(row));
+  // Campaigns are email, and now say so: an account that consented to SMS but
+  // not email is not in an email campaign's audience.
+  const eligible = candidates.filter((row) => !isSuppressed(row, 'email'));
 
   return { eligible, matched: candidates.length, skipped: candidates.length - eligible.length };
 }
 
 // ---- campaigns --------------------------------------------------------------
 
-export async function listCampaigns({ status, search, page = 1, limit = 25 } = {}) {
+async function listCampaigns({ status, search, page = 1, limit = 25 } = {}) {
   const filter = {};
   if (status) filter.status = status;
   if (search) filter.$or = [{ name: likeRegex(search) }, { subject: likeRegex(search) }];
@@ -508,7 +552,7 @@ export async function listCampaigns({ status, search, page = 1, limit = 25 } = {
   };
 }
 
-export async function getCampaign(id) {
+async function getCampaign(id) {
   const row = await Campaign.findById(id).lean();
   if (!row) throw ApiError.notFound('Campaign not found.', 'CAMPAIGN_NOT_FOUND');
 
@@ -523,7 +567,7 @@ export async function getCampaign(id) {
   };
 }
 
-export async function createCampaign(data, staff) {
+async function createCampaign(data, staff) {
   const { eligible } = await resolveAudience(data.audience?.filter ?? 'approved');
   const row = await Campaign.create({
     ...data,
@@ -540,7 +584,7 @@ export async function createCampaign(data, staff) {
  * A sent campaign is a record of what was said. Editing it would rewrite
  * history that the recipients already hold a copy of.
  */
-export async function updateCampaign(id, data) {
+async function updateCampaign(id, data) {
   const row = await Campaign.findById(id);
   if (!row) throw ApiError.notFound('Campaign not found.', 'CAMPAIGN_NOT_FOUND');
   if (row.status === 'sent' || row.status === 'sending') {
@@ -562,7 +606,7 @@ export async function updateCampaign(id, data) {
   return { campaign: serializeCampaign(row) };
 }
 
-export async function deleteCampaign(id) {
+async function deleteCampaign(id) {
   const row = await Campaign.findById(id);
   if (!row) throw ApiError.notFound('Campaign not found.', 'CAMPAIGN_NOT_FOUND');
   if (row.status === 'sent') {
@@ -588,7 +632,7 @@ export async function deleteCampaign(id) {
  * cost the other thirty-nine their message. The counts returned say exactly
  * what happened, which is why `sent` is incremented rather than assumed.
  */
-export async function sendCampaign(id, staff) {
+async function sendCampaign(id, staff) {
   const row = await Campaign.findById(id);
   if (!row) throw ApiError.notFound('Campaign not found.', 'CAMPAIGN_NOT_FOUND');
   if (row.status === 'sent' || row.status === 'sending') {
@@ -675,7 +719,7 @@ export async function sendCampaign(id, staff) {
 // ---- unsubscribes -----------------------------------------------------------
 
 /** The Unsubscribes screen: who opted out, and when. */
-export async function listUnsubscribes({ search, page = 1, limit = 25 } = {}) {
+async function listUnsubscribes({ search, page = 1, limit = 25 } = {}) {
   const filter = { unsubscribedAt: { $ne: null } };
   if (search) filter.$or = [{ businessName: likeRegex(search) }, { email: likeRegex(search) }];
 
@@ -684,7 +728,7 @@ export async function listUnsubscribes({ search, page = 1, limit = 25 } = {}) {
 
   const [rows, total, consenting] = await Promise.all([
     User.find(filter)
-      .select('businessName contactName email unsubscribedAt marketingConsent')
+      .select('businessName contactName email unsubscribedAt marketingConsent contactConsent')
       .sort({ unsubscribedAt: -1 })
       .skip((current - 1) * perPage)
       .limit(perPage)
@@ -721,7 +765,7 @@ export async function listUnsubscribes({ search, page = 1, limit = 25 } = {}) {
  * Idempotent. Unsubscribing twice is a success, not an error: a person clicking
  * the link again should be reassured, not shown a failure.
  */
-export async function unsubscribe(userId, token) {
+async function unsubscribe(userId, token) {
   const expected = unsubscribeToken(userId);
   const given = String(token ?? '');
 
@@ -759,7 +803,7 @@ export async function unsubscribe(userId, token) {
  * a claim that they asked for it, and that claim needs its own date and its own
  * trail. The screen says as much before the operator confirms.
  */
-export async function resubscribe(userId) {
+async function resubscribe(userId) {
   const account = await User.findById(userId);
   if (!account) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
 
@@ -773,7 +817,7 @@ export async function resubscribe(userId) {
 // ---- the marketing overview -------------------------------------------------
 
 /** Counts and channel states for the marketing screens' header tiles. */
-export async function summary() {
+async function summary() {
   const [byChannel, campaigns, unsubscribed, consenting, settings] = await Promise.all([
     MessageLog.aggregate([{ $group: { _id: '$channel', count: { $sum: 1 } } }]),
     Campaign.countDocuments({}),
@@ -792,7 +836,7 @@ export async function summary() {
   };
 }
 
-export default {
+exports.default = {
   channelStatus,
   channelStatuses,
   listMessages,
@@ -813,3 +857,26 @@ export default {
   resolveAudience,
   summary,
 };
+
+// --- CommonJS exports -------------------------------------------------
+exports.channelStatus = channelStatus;
+exports.channelStatuses = channelStatuses;
+exports.listMessages = listMessages;
+exports.sendMessage = sendMessage;
+exports.listTemplates = listTemplates;
+exports.createTemplate = createTemplate;
+exports.updateTemplate = updateTemplate;
+exports.deleteTemplate = deleteTemplate;
+exports.isSuppressed = isSuppressed;
+exports.unsubscribeToken = unsubscribeToken;
+exports.resolveAudience = resolveAudience;
+exports.listCampaigns = listCampaigns;
+exports.getCampaign = getCampaign;
+exports.createCampaign = createCampaign;
+exports.updateCampaign = updateCampaign;
+exports.deleteCampaign = deleteCampaign;
+exports.sendCampaign = sendCampaign;
+exports.listUnsubscribes = listUnsubscribes;
+exports.unsubscribe = unsubscribe;
+exports.resubscribe = resubscribe;
+exports.summary = summary;

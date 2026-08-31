@@ -1,10 +1,10 @@
-import ProviderCredential, {
-  PROVIDER_FIELDS,
-  PROVIDER_BY_KEY,
-} from '../models/ProviderCredential.js';
-import ApiError from '../utils/ApiError.js';
-import { encrypt, decrypt, maskPreview } from '../utils/secrets.js';
-import env from '../config/env.js';
+const {
+  default: ProviderCredential,
+  PROVIDER_FIELDS, PROVIDER_BY_KEY,
+} = require('../models/ProviderCredential.js');
+const { default: ApiError } = require('../utils/ApiError.js');
+const { encrypt, decrypt, maskPreview } = require('../utils/secrets.js');
+const { default: env } = require('../config/env.js');
 
 /**
  * Provider credentials (ERP rework §6.15 category 7, phase 11c).
@@ -57,7 +57,7 @@ function definitionFor(provider, field) {
  * screen must say a database value would be ignored; `stored` means this screen
  * is what is being used; `unset` means the provider cannot work yet.
  */
-export async function list() {
+async function list() {
   // No `.select('+value')`, so the ciphertext is not even loaded.
   const rows = await ProviderCredential.find().lean();
   const stored = new Map(rows.map((row) => [`${row.provider}.${row.field}`, row]));
@@ -113,7 +113,7 @@ export async function list() {
  * that is how an operator removes a key, and it has to be distinguishable from
  * "leave this alone", which is what an absent key means.
  */
-export async function save(provider, values, actorId) {
+async function save(provider, values, actorId) {
   const entry = PROVIDER_BY_KEY.get(provider);
   if (!entry) throw ApiError.notFound(`There is no provider called “${provider}”.`, 'UNKNOWN_PROVIDER');
 
@@ -159,7 +159,7 @@ export async function save(provider, values, actorId) {
 }
 
 /** Removes every field for one provider. */
-export async function clear(provider) {
+async function clear(provider) {
   if (!PROVIDER_BY_KEY.has(provider)) {
     throw ApiError.notFound(`There is no provider called “${provider}”.`, 'UNKNOWN_PROVIDER');
   }
@@ -178,7 +178,7 @@ export async function clear(provider) {
  *
  * Env wins over a stored value, matching `list()`'s `source`.
  */
-export async function valuesFor(provider) {
+async function valuesFor(provider) {
   const entry = PROVIDER_BY_KEY.get(provider);
   if (!entry) return {};
 
@@ -210,7 +210,7 @@ export async function valuesFor(provider) {
  * that nothing reads, which is exactly the two-sources-of-truth problem §10
  * warns about.
  */
-export async function isConfigured(provider) {
+async function isConfigured(provider) {
   const entry = PROVIDER_BY_KEY.get(provider);
   if (!entry) return false;
 
@@ -218,4 +218,11 @@ export async function isConfigured(provider) {
   return entry.fields.every((definition) => Boolean(values[definition.key]));
 }
 
-export default { list, save, clear, valuesFor, isConfigured };
+exports.default = { list, save, clear, valuesFor, isConfigured };
+
+// --- CommonJS exports -------------------------------------------------
+exports.list = list;
+exports.save = save;
+exports.clear = clear;
+exports.valuesFor = valuesFor;
+exports.isConfigured = isConfigured;

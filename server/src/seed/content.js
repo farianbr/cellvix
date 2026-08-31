@@ -1,10 +1,10 @@
-import mongoose from 'mongoose';
-import { connectDb, disconnectDb } from '../config/db.js';
-import Product from '../models/Product.js';
-import BlogPost from '../models/BlogPost.js';
-import Faq from '../models/Faq.js';
-import Offer from '../models/Offer.js';
-import { BLOG_POSTS, GENERAL_FAQS, PRODUCT_FAQS, buildOffers } from './content.data.js';
+const mongoose = require('mongoose');
+const { connectDb, disconnectDb } = require('../config/db.js');
+const { default: Product } = require('../models/Product.js');
+const { default: BlogPost } = require('../models/BlogPost.js');
+const { default: Faq } = require('../models/Faq.js');
+const { default: Offer } = require('../models/Offer.js');
+const { BLOG_POSTS, GENERAL_FAQS, PRODUCT_FAQS, buildOffers } = require('./content.data.js');
 
 /**
  * Seeds ONLY the editorial collections — blog posts, FAQs and offers.
@@ -20,7 +20,7 @@ import { BLOG_POSTS, GENERAL_FAQS, PRODUCT_FAQS, buildOffers } from './content.d
 const readMinutes = (body) =>
   Math.max(1, Math.round(body.trim().split(/\s+/).filter(Boolean).length / 220));
 
-export async function seedContent({ quiet = false } = {}) {
+async function seedContent({ quiet = false } = {}) {
   const log = quiet ? () => {} : (...args) => console.log(...args);
 
   const products = await Product.find({ isActive: true }).lean();
@@ -49,11 +49,19 @@ export async function seedContent({ quiet = false } = {}) {
 
 // CLI entry: `npm run seed:content`
 if (process.argv[1] && process.argv[1].endsWith('content.js')) {
-  console.log('\n  Seeding Cellvix editorial content…\n');
-  await connectDb();
-  const result = await seedContent();
-  console.log('\n  Done.', result, '\n');
-  await disconnectDb();
-  await mongoose.connection.close();
-  process.exit(0);
+  (async () => {
+    console.log('\n  Seeding Cellvix editorial content…\n');
+    await connectDb();
+    const result = await seedContent();
+    console.log('\n  Done.', result, '\n');
+    await disconnectDb();
+    await mongoose.connection.close();
+    process.exit(0);
+  })().catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
 }
+
+// --- CommonJS exports -------------------------------------------------
+exports.seedContent = seedContent;

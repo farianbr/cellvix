@@ -1,6 +1,6 @@
-import { asyncHandler } from '../utils/ApiError.js';
-import * as credentialService from '../services/credentialService.js';
-import * as auditService from '../services/auditService.js';
+const { asyncHandler } = require('../utils/ApiError.js');
+const credentialService = require('../services/credentialService.js');
+const auditService = require('../services/auditService.js');
 
 /**
  * API Keys (ERP rework §6.15 category 7, phase 11c).
@@ -17,11 +17,11 @@ import * as auditService from '../services/auditService.js';
  * worth stealing.
  */
 
-export const list = asyncHandler(async (req, res) => {
+const list = asyncHandler(async (req, res) => {
   res.json(await credentialService.list());
 });
 
-export const save = asyncHandler(async (req, res) => {
+const save = asyncHandler(async (req, res) => {
   const result = await credentialService.save(req.params.provider, req.body, req.user._id);
 
   await auditService.record({
@@ -38,7 +38,7 @@ export const save = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
-export const clear = asyncHandler(async (req, res) => {
+const clear = asyncHandler(async (req, res) => {
   const result = await credentialService.clear(req.params.provider);
 
   await auditService.record({
@@ -52,3 +52,8 @@ export const clear = asyncHandler(async (req, res) => {
 
   res.json(result);
 });
+
+// --- CommonJS exports -------------------------------------------------
+exports.list = list;
+exports.save = save;
+exports.clear = clear;

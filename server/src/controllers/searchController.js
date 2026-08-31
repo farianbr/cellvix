@@ -1,5 +1,5 @@
-import { asyncHandler } from '../utils/ApiError.js';
-import * as searchService from '../services/searchService.js';
+const { asyncHandler } = require('../utils/ApiError.js');
+const searchService = require('../services/searchService.js');
 
 /**
  * Global search (§7.1, phase 12).
@@ -9,6 +9,9 @@ import * as searchService from '../services/searchService.js';
  * let the client pick which record types to search would be a way to ask for
  * the ones its role cannot see.
  */
-export const search = asyncHandler(async (req, res) => {
+const search = asyncHandler(async (req, res) => {
   res.json(await searchService.search(req.query.q, req.user));
 });
+
+// --- CommonJS exports -------------------------------------------------
+exports.search = search;

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { useForm } from 'react-hook-form';
+import useCreateParam from '@/hooks/useCreateParam';
 import {
   AlertCircle,
   ClipboardList,
@@ -155,7 +156,8 @@ function ExpenseForm({ expense, categories, onSubmit, onCancel, isPending, error
 export function AdminExpensesPage() {
   const [query, setQuery] = useState('');
   const [editing, setEditing] = useState(null);
-  const [creating, setCreating] = useState(false);
+  // Opened directly by `+ Create` (§7.2), which arrives with `?new=1`.
+  const [creating, setCreating] = useCreateParam();
   const [deleting, setDeleting] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
 

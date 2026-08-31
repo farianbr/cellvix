@@ -1,61 +1,61 @@
-import { asyncHandler } from '../utils/ApiError.js';
-import * as cartService from '../services/cartService.js';
+const { asyncHandler } = require('../utils/ApiError.js');
+const cartService = require('../services/cartService.js');
 
 /** Every response is the whole serialized cart, so the client never guesses state. */
 const respond = async (res, cart, user, status = 200) =>
   res.status(status).json({ cart: await cartService.serialize(cart, user) });
 
-export const get = asyncHandler(async (req, res) => {
+const get = asyncHandler(async (req, res) => {
   const cart = await cartService.getOrCreateCart(req.user._id);
   await respond(res, cart, req.user);
 });
 
-export const addItem = asyncHandler(async (req, res) => {
+const addItem = asyncHandler(async (req, res) => {
   const cart = await cartService.addItem(req.user._id, req.body.productId, req.body.qty);
   await respond(res, cart, req.user, 201);
 });
 
-export const setQty = asyncHandler(async (req, res) => {
+const setQty = asyncHandler(async (req, res) => {
   const cart = await cartService.setQty(req.user._id, req.params.productId, req.body.qty);
   await respond(res, cart, req.user);
 });
 
-export const removeItem = asyncHandler(async (req, res) => {
+const removeItem = asyncHandler(async (req, res) => {
   const cart = await cartService.removeItem(req.user._id, req.params.productId);
   await respond(res, cart, req.user);
 });
 
-export const merge = asyncHandler(async (req, res) => {
+const merge = asyncHandler(async (req, res) => {
   const cart = await cartService.mergeGuestCart(req.user._id, req.body.items);
   await respond(res, cart, req.user);
 });
 
-export const save = asyncHandler(async (req, res) => {
+const save = asyncHandler(async (req, res) => {
   const cart = await cartService.saveForLater(req.user._id, req.body.name);
   await respond(res, cart, req.user);
 });
 
-export const clear = asyncHandler(async (req, res) => {
+const clear = asyncHandler(async (req, res) => {
   const cart = await cartService.clearCart(req.user._id);
   await respond(res, cart, req.user);
 });
 
-export const listSaved = asyncHandler(async (req, res) => {
+const listSaved = asyncHandler(async (req, res) => {
   res.json({ carts: await cartService.listSaved(req.user._id) });
 });
 
-export const restoreSaved = asyncHandler(async (req, res) => {
+const restoreSaved = asyncHandler(async (req, res) => {
   const cart = await cartService.restoreSaved(req.user._id, req.params.savedCartId);
   await respond(res, cart, req.user);
 });
 
-export const deleteSaved = asyncHandler(async (req, res) => {
+const deleteSaved = asyncHandler(async (req, res) => {
   await cartService.deleteSaved(req.user._id, req.params.savedCartId);
   res.status(204).end();
 });
 
 /** Quick order pad. Reports what could not be added rather than dropping it. */
-export const bulkAdd = asyncHandler(async (req, res) => {
+const bulkAdd = asyncHandler(async (req, res) => {
   const { cart, added, notFound, outOfStock } = await cartService.bulkAdd(
     req.user._id,
     req.body.lines,
@@ -70,29 +70,47 @@ export const bulkAdd = asyncHandler(async (req, res) => {
 
 // ---- combo bundles ----------------------------------------------------------
 
-export const addBundle = asyncHandler(async (req, res) => {
+const addBundle = asyncHandler(async (req, res) => {
   const cart = await cartService.addBundle(req.user._id, req.body.offer, req.body.qty);
   await respond(res, cart, req.user, 201);
 });
 
-export const setBundleQty = asyncHandler(async (req, res) => {
+const setBundleQty = asyncHandler(async (req, res) => {
   const cart = await cartService.setBundleQty(req.user._id, req.params.offerId, req.body.qty);
   await respond(res, cart, req.user);
 });
 
-export const removeBundle = asyncHandler(async (req, res) => {
+const removeBundle = asyncHandler(async (req, res) => {
   const cart = await cartService.removeBundle(req.user._id, req.params.offerId);
   await respond(res, cart, req.user);
 });
 
 // ---- promo code -------------------------------------------------------------
 
-export const applyPromo = asyncHandler(async (req, res) => {
+const applyPromo = asyncHandler(async (req, res) => {
   const cart = await cartService.applyPromoCode(req.user._id, req.body.code, req.user);
   await respond(res, cart, req.user);
 });
 
-export const clearPromo = asyncHandler(async (req, res) => {
+const clearPromo = asyncHandler(async (req, res) => {
   const cart = await cartService.clearPromoCode(req.user._id);
   await respond(res, cart, req.user);
 });
+
+// --- CommonJS exports -------------------------------------------------
+exports.get = get;
+exports.addItem = addItem;
+exports.setQty = setQty;
+exports.removeItem = removeItem;
+exports.merge = merge;
+exports.save = save;
+exports.clear = clear;
+exports.listSaved = listSaved;
+exports.restoreSaved = restoreSaved;
+exports.deleteSaved = deleteSaved;
+exports.bulkAdd = bulkAdd;
+exports.addBundle = addBundle;
+exports.setBundleQty = setBundleQty;
+exports.removeBundle = removeBundle;
+exports.applyPromo = applyPromo;
+exports.clearPromo = clearPromo;

@@ -1,7 +1,7 @@
-import { asyncHandler } from '../utils/ApiError.js';
-import * as adminService from '../services/adminService.js';
-import * as purchaseService from '../services/purchaseService.js';
-import * as exportService from '../services/exportService.js';
+const { asyncHandler } = require('../utils/ApiError.js');
+const adminService = require('../services/adminService.js');
+const purchaseService = require('../services/purchaseService.js');
+const exportService = require('../services/exportService.js');
 
 /**
  * List exports (ERP rework §7.4, phase 12b).
@@ -32,7 +32,7 @@ const { asMoney, asDate } = exportService;
 /** Pulled off `?format=`; anything that is not xlsx is CSV. */
 const formatOf = (req) => (req.query.format === 'xlsx' ? 'xlsx' : 'csv');
 
-export const clients = asyncHandler(async (req, res) => {
+const clients = asyncHandler(async (req, res) => {
   const { users } = await adminService.listUsers(req.query);
 
   exportService.send(res, {
@@ -55,7 +55,7 @@ export const clients = asyncHandler(async (req, res) => {
   });
 });
 
-export const orders = asyncHandler(async (req, res) => {
+const orders = asyncHandler(async (req, res) => {
   const { orders: rows } = await adminService.listOrders(req.query);
 
   exportService.send(res, {
@@ -81,7 +81,7 @@ export const orders = asyncHandler(async (req, res) => {
   });
 });
 
-export const invoices = asyncHandler(async (req, res) => {
+const invoices = asyncHandler(async (req, res) => {
   const { invoices: rows } = await adminService.listInvoices(req.query);
 
   exportService.send(res, {
@@ -106,7 +106,7 @@ export const invoices = asyncHandler(async (req, res) => {
   });
 });
 
-export const inventory = asyncHandler(async (req, res) => {
+const inventory = asyncHandler(async (req, res) => {
   // The screen paginates at 40 and the service caps a page at 100; an export of
   // the first hundred of four hundred parts is not an export, it is a quiet
   // data loss. `all` lifts the cap — the filters themselves go through
@@ -136,7 +136,7 @@ export const inventory = asyncHandler(async (req, res) => {
   });
 });
 
-export const expenses = asyncHandler(async (req, res) => {
+const expenses = asyncHandler(async (req, res) => {
   const { expenses: rows } = await purchaseService.listExpenses(req.query);
 
   exportService.send(res, {
@@ -159,3 +159,10 @@ export const expenses = asyncHandler(async (req, res) => {
     ],
   });
 });
+
+// --- CommonJS exports -------------------------------------------------
+exports.clients = clients;
+exports.orders = orders;
+exports.invoices = invoices;
+exports.inventory = inventory;
+exports.expenses = expenses;

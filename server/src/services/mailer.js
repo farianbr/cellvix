@@ -1,7 +1,6 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import env from '../config/env.js';
+const fs = require('node:fs/promises');
+const path = require('node:path');
+const { default: env } = require('../config/env.js');
 
 /**
  * Outbound mail.
@@ -17,7 +16,7 @@ import env from '../config/env.js';
  * a rejected checkout. Every path through `sendMail` resolves.
  */
 
-const here = path.dirname(fileURLToPath(import.meta.url));
+const here = __dirname;
 const OUTBOX = path.resolve(here, '..', '..', '.mail');
 
 /** Resolved once. `null` means "no transport — use the outbox". */
@@ -29,7 +28,34 @@ async function getTransport() {
   transportPromise ??= (async () => {
     try {
       const { default: nodemailer } = await import('nodemailer');
-      return nodemailer.createTransport(env.SMTP_URL);
+      /**
+       * `secure` is decided here rather than left to the URL scheme.
+       *
+       * cPanel's outgoing server is mail.<domain> on port 465, which is
+       * *implicit* TLS: the connection is encrypted from the first byte. A
+       * plain `smtp://` URL makes nodemailer default to `secure: false` and
+       * open in cleartext expecting a STARTTLS upgrade that a 465 listener
+       * never offers, so the socket hangs until it times out. Port 587 is the
+       * opposite — cleartext first, then STARTTLS — and must stay
+       * `secure: false`. Deriving it from the port means either form of URL
+       * works and neither has to be remembered.
+       */
+      const url = new URL(env.SMTP_URL);
+      const port = Number(url.port) || (url.protocol === 'smtps:' ? 465 : 587);
+      return nodemailer.createTransport({
+        host: url.hostname,
+        port,
+        secure: port === 465 || url.protocol === 'smtps:',
+        auth: url.username
+          ? {
+              // A cPanel mailbox name is a full address, so the `@` arrives
+              // percent-encoded in the URL and must be decoded before it goes
+              // out as the AUTH username, or the login is rejected.
+              user: decodeURIComponent(url.username),
+              pass: decodeURIComponent(url.password),
+            }
+          : undefined,
+      });
     } catch (error) {
       // Optional dependency: SMTP_URL is set but nodemailer was never installed.
       console.warn(`  Mail: SMTP_URL is set but nodemailer is unavailable (${error.message}).`);
@@ -49,7 +75,7 @@ async function getTransport() {
  * preview that disagrees with the thing it previews. Resolves the transport
  * through the same path `sendMail` uses, so the two can never differ.
  */
-export async function mailerConfigured() {
+async function mailerConfigured() {
   return Boolean(await getTransport());
 }
 
@@ -63,7 +89,7 @@ const slug = (value) =>
 /**
  * @returns {Promise<{ delivered: boolean, via: 'smtp' | 'outbox', path?: string }>}
  */
-export async function sendMail({ to, subject, html, text, from = env.MAIL_FROM }) {
+async function sendMail({ to, subject, html, text, from = env.MAIL_FROM }) {
   const transport = await getTransport();
 
   if (transport) {
@@ -95,4 +121,7 @@ export async function sendMail({ to, subject, html, text, from = env.MAIL_FROM }
   }
 }
 
-export default sendMail;
+// --- CommonJS exports -------------------------------------------------
+exports.mailerConfigured = mailerConfigured;
+exports.sendMail = sendMail;
+exports.default = sendMail;

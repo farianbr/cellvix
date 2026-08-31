@@ -1,5 +1,5 @@
-import { asyncHandler } from '../utils/ApiError.js';
-import * as orderService from '../services/orderService.js';
+const { asyncHandler } = require('../utils/ApiError.js');
+const orderService = require('../services/orderService.js');
 
 /**
  * The binding price of the current cart.
@@ -8,7 +8,7 @@ import * as orderService from '../services/orderService.js';
  * breakdown, because a total the buyer cannot reconcile line by line is a total
  * they will query.
  */
-export const quote = asyncHandler(async (req, res) => {
+const quote = asyncHandler(async (req, res) => {
   const priced = await orderService.quote(req.user._id, req.query.deliveryMethod);
   res.json({
     subtotal: priced.subtotal,
@@ -41,15 +41,21 @@ export const quote = asyncHandler(async (req, res) => {
   });
 });
 
-export const create = asyncHandler(async (req, res) => {
+const create = asyncHandler(async (req, res) => {
   const order = await orderService.createOrder(req.user, req.body);
   res.status(201).json({ order: orderService.serializeOrder(order) });
 });
 
-export const list = asyncHandler(async (req, res) => {
+const list = asyncHandler(async (req, res) => {
   res.json({ orders: await orderService.listOrders(req.user._id) });
 });
 
-export const detail = asyncHandler(async (req, res) => {
+const detail = asyncHandler(async (req, res) => {
   res.json({ order: await orderService.getOrder(req.user._id, req.params.orderNumber) });
 });
+
+// --- CommonJS exports -------------------------------------------------
+exports.quote = quote;
+exports.create = create;
+exports.list = list;
+exports.detail = detail;

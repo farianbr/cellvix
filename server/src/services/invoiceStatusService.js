@@ -1,19 +1,16 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
-import InvoiceStatusRule, {
-  InvoiceStatusRun,
-  RULE_TRIGGERS,
-  RULE_TOKENS,
-  triggerDate,
-  ensureBuiltInRules,
-} from '../models/InvoiceStatusRule.js';
-import Invoice from '../models/Invoice.js';
-import User from '../models/User.js';
-import MessageLog from '../models/MessageLog.js';
-import Settings from '../models/Settings.js';
-import ApiError from '../utils/ApiError.js';
-import { sendMail, mailerConfigured } from './mailer.js';
-import { channelStatus } from './marketingService.js';
+const {
+  default: InvoiceStatusRule,
+  InvoiceStatusRun, RULE_TRIGGERS, RULE_TOKENS, triggerDate, ensureBuiltInRules,
+} = require('../models/InvoiceStatusRule.js');
+const { default: Invoice } = require('../models/Invoice.js');
+const { default: User } = require('../models/User.js');
+const { default: MessageLog } = require('../models/MessageLog.js');
+const { default: Settings } = require('../models/Settings.js');
+const { default: ApiError } = require('../utils/ApiError.js');
+const { sendMail, mailerConfigured } = require('./mailer.js');
+const { channelStatus } = require('./marketingService.js');
 
 /**
  * Cents to `$1,234.56`, for the `{{amount}}` placeholder.
@@ -73,7 +70,7 @@ function shape(rule) {
  * that predates this phase would otherwise show an empty screen, which is the
  * exact failure phase 9 hit with roles and outlets (Session 34).
  */
-export async function list() {
+async function list() {
   await ensureBuiltInRules();
 
   const rules = await InvoiceStatusRule.find().sort({ isBuiltIn: -1, createdAt: 1 }).lean();
@@ -93,7 +90,7 @@ export async function list() {
   };
 }
 
-export async function create(input) {
+async function create(input) {
   const rule = await InvoiceStatusRule.create({
     label: input.label.trim(),
     trigger: input.trigger,
@@ -110,7 +107,7 @@ export async function create(input) {
   return { rule: shape(rule.toObject()) };
 }
 
-export async function update(id, input) {
+async function update(id, input) {
   if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('Rule not found.', 'RULE_NOT_FOUND');
 
   const rule = await InvoiceStatusRule.findById(id);
@@ -130,7 +127,7 @@ export async function update(id, input) {
   return { rule: shape(rule.toObject()) };
 }
 
-export async function remove(id) {
+async function remove(id) {
   if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('Rule not found.', 'RULE_NOT_FOUND');
 
   const rule = await InvoiceStatusRule.findById(id);
@@ -183,7 +180,7 @@ async function candidatesFor(rule, now) {
  * cron pass"), and until it exists the screen says so rather than implying
  * these fire on their own.
  */
-export async function run({ dryRun = false, now = new Date() } = {}) {
+async function run({ dryRun = false, now = new Date() } = {}) {
   // The master switch on Email Settings (§6.15 category 5, phase 11e). A rule
   // being active is not enough — the business has to have automatic invoice
   // email switched on at all. Reported rather than silently returning nothing,
@@ -334,4 +331,11 @@ export async function run({ dryRun = false, now = new Date() } = {}) {
   return { dryRun, ranAt: now, results };
 }
 
-export default { list, create, update, remove, run };
+exports.default = { list, create, update, remove, run };
+
+// --- CommonJS exports -------------------------------------------------
+exports.list = list;
+exports.create = create;
+exports.update = update;
+exports.remove = remove;
+exports.run = run;

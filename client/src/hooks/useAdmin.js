@@ -29,6 +29,18 @@ export function useAdminUsers(params) {
     queryFn: () => api.get('/admin/users', params),
     enabled: canUseAdmin,
     staleTime: 15 * 1000,
+    /**
+     * Keep the previous response on screen while a new one loads.
+     *
+     * The status pills and the search box are part of the query key, so
+     * changing one used to drop `data` to `undefined` for the length of the
+     * round trip. Everything derived from it went with it — the counts on the
+     * pills, the `Review N` button, the KPI figures — so the toolbar visibly
+     * lost controls and then got them back, and the rows below jumped as the
+     * header reflowed. Holding the last result means only the table body
+     * changes, which is the only thing that actually did.
+     */
+    placeholderData: (previous) => previous,
   });
 }
 
@@ -273,6 +285,33 @@ export function useAdminRma(id) {
   });
 }
 
+/**
+ * Repair tickets. `params` carries the status pill, the search, the priority
+ * and technician filters and the page — all of it in the key, so paging back
+ * to a page already seen is instant.
+ */
+export function useAdminTickets(params) {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'tickets', params],
+    queryFn: () => api.get('/admin/tickets', params),
+    enabled: canUseAdmin,
+    staleTime: 15 * 1000,
+    // A list that reflows under the operator while they read a row is worse
+    // than one a few seconds stale, but a page of tickets is a live board —
+    // keeping the previous page on screen during a refetch is the compromise.
+    placeholderData: (previous) => previous,
+  });
+}
+
+export function useAdminTicket(id) {
+  return useQuery({
+    queryKey: ['admin', 'tickets', 'one', id],
+    queryFn: () => api.get(`/admin/tickets/${id}`),
+    enabled: Boolean(id),
+  });
+}
+
 // ---- reports (phase 6) ------------------------------------------------------
 
 /**
@@ -374,13 +413,18 @@ export function useMarketingSummary() {
   });
 }
 
-/** The history panel. `channel` scopes it; `user` narrows it to one account. */
+/**
+ * The history panel. `channel` scopes it; `user` narrows it to one account.
+ *
+ * Passing `undefined` skips the fetch, which is how a caller that only wants
+ * the history on one tab avoids paying for it on every other one.
+ */
 export function useMarketingMessages(params) {
   const { canUseAdmin } = useAuth();
   return useQuery({
-    queryKey: ['admin', 'marketing', 'messages', params],
+    queryKey: ['admin', 'marketing', 'messages', params ?? null],
     queryFn: () => api.get('/admin/marketing/messages', params),
-    enabled: canUseAdmin,
+    enabled: canUseAdmin && params !== undefined,
     staleTime: 10 * 1000,
   });
 }
@@ -460,6 +504,39 @@ export function useAdminReferrals(params) {
  * order of months, not minutes — and every mutation invalidates `['admin']`
  * anyway, so an edit still lands immediately.
  */
+/** Returns going back to a supplier (Purchase § RMA / Returns). */
+export function useSupplierReturns(params) {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'supplier-returns', params],
+    queryFn: () => api.get('/admin/supplier-returns', params),
+    enabled: canUseAdmin,
+    staleTime: 15 * 1000,
+    placeholderData: (previous) => previous,
+  });
+}
+
+/** Bought-in services and supplier subscriptions. `kind` picks which screen. */
+export function useSupplierServices(params) {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'supplier-services', params],
+    queryFn: () => api.get('/admin/supplier-services', params),
+    enabled: canUseAdmin,
+    staleTime: 15 * 1000,
+    placeholderData: (previous) => previous,
+  });
+}
+
+export function useSupplierReturn(id) {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'supplier-returns', id],
+    queryFn: () => api.get(`/admin/supplier-returns/${id}`),
+    enabled: canUseAdmin && Boolean(id),
+  });
+}
+
 export function useAdminSettings() {
   const { canUseAdmin } = useAuth();
   return useQuery({
@@ -655,6 +732,69 @@ export function useAdminMutations() {
   };
 
   return {
+    createUser: useMutation({
+      mutationFn: (body) => api.post('/admin/users', body),
+      onSuccess: invalidate,
+    }),
+    updateUser: useMutation({
+      mutationFn: ({ id, ...body }) => api.patch(`/admin/users/${id}`, body),
+      onSuccess: invalidate,
+    }),
+    createSupplierReturn: useMutation({
+      mutationFn: (body) => api.post('/admin/supplier-returns', body),
+      onSuccess: invalidate,
+    }),
+    setSupplierReturnStatus: useMutation({
+      mutationFn: ({ id, ...body }) => api.patch(`/admin/supplier-returns/${id}/status`, body),
+      onSuccess: invalidate,
+    }),
+    recordSupplierCredit: useMutation({
+      mutationFn: ({ id, ...body }) => api.post(`/admin/supplier-returns/${id}/credit`, body),
+      onSuccess: invalidate,
+    }),
+    deleteSupplierReturn: useMutation({
+      mutationFn: (id) => api.delete(`/admin/supplier-returns/${id}`),
+      onSuccess: invalidate,
+    }),
+
+    createSupplierService: useMutation({
+      mutationFn: (body) => api.post('/admin/supplier-services', body),
+      onSuccess: invalidate,
+    }),
+    updateSupplierService: useMutation({
+      mutationFn: ({ id, ...body }) => api.patch(`/admin/supplier-services/${id}`, body),
+      onSuccess: invalidate,
+    }),
+    recordSupplierCharge: useMutation({
+      mutationFn: ({ id, ...body }) => api.post(`/admin/supplier-services/${id}/charges`, body),
+      onSuccess: invalidate,
+    }),
+    cancelSupplierService: useMutation({
+      mutationFn: ({ id, cancelled }) =>
+        api.patch(`/admin/supplier-services/${id}/cancel`, { cancelled }),
+      onSuccess: invalidate,
+    }),
+    deleteSupplierService: useMutation({
+      mutationFn: (id) => api.delete(`/admin/supplier-services/${id}`),
+      onSuccess: invalidate,
+    }),
+
+    setContactConsent: useMutation({
+      mutationFn: ({ id, ...body }) => api.patch(`/admin/users/${id}/consent`, body),
+      onSuccess: invalidate,
+    }),
+    setTier: useMutation({
+      mutationFn: ({ id, tier }) => api.patch(`/admin/users/${id}/tier`, { tier }),
+      onSuccess: invalidate,
+    }),
+    addInternalNote: useMutation({
+      mutationFn: ({ id, body }) => api.post(`/admin/users/${id}/notes`, { body }),
+      onSuccess: invalidate,
+    }),
+    deleteInternalNote: useMutation({
+      mutationFn: ({ id, noteId }) => api.delete(`/admin/users/${id}/notes/${noteId}`),
+      onSuccess: invalidate,
+    }),
     approveUser: useMutation({
       mutationFn: ({ id, ...body }) => api.patch(`/admin/users/${id}/approve`, body),
       onSuccess: invalidate,
@@ -678,6 +818,16 @@ export function useAdminMutations() {
         queryClient.invalidateQueries({ queryKey: ['admin', 'store-credit', variables.id] });
       },
     }),
+    // An order raised by hand. It takes stock and raises an invoice exactly as
+    // a checkout does, so the storefront's own order list moved too.
+    createOrder: useMutation({
+      mutationFn: (body) => api.post('/admin/orders', body),
+      onSuccess: () => {
+        invalidate();
+        queryClient.invalidateQueries({ queryKey: ['orders'] });
+        queryClient.invalidateQueries({ queryKey: ['products'] });
+      },
+    }),
     refundOrder: useMutation({
       mutationFn: ({ orderNumber, ...body }) =>
         api.post(`/admin/orders/${orderNumber}/refund`, body),
@@ -691,6 +841,15 @@ export function useAdminMutations() {
       onSuccess: invalidate,
     }),
 
+    // A standalone invoice — no order behind it. On terms it draws on the line
+    // of credit, so the client's own account view moved as well.
+    createInvoice: useMutation({
+      mutationFn: (body) => api.post('/admin/invoices', body),
+      onSuccess: () => {
+        invalidate();
+        queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
+      },
+    }),
     recordInvoicePayment: useMutation({
       mutationFn: ({ number, ...body }) => api.post(`/admin/invoices/${number}/payments`, body),
       onSuccess: invalidate,
@@ -899,6 +1058,24 @@ export function useAdminMutations() {
     }),
     deleteQuote: useMutation({
       mutationFn: (id) => api.delete(`/admin/quotes/${id}`),
+      onSuccess: invalidate,
+    }),
+
+    createTicket: useMutation({
+      mutationFn: (body) => api.post('/admin/tickets', body),
+      onSuccess: invalidate,
+    }),
+    updateTicket: useMutation({
+      mutationFn: ({ id, ...body }) => api.patch(`/admin/tickets/${id}`, body),
+      onSuccess: invalidate,
+    }),
+    /** Status is its own call because only it writes the ticket timeline. */
+    setTicketStatus: useMutation({
+      mutationFn: ({ id, ...body }) => api.patch(`/admin/tickets/${id}/status`, body),
+      onSuccess: invalidate,
+    }),
+    deleteTicket: useMutation({
+      mutationFn: (id) => api.delete(`/admin/tickets/${id}`),
       onSuccess: invalidate,
     }),
 

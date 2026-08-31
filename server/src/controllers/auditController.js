@@ -1,5 +1,5 @@
-import { asyncHandler } from '../utils/ApiError.js';
-import * as auditService from '../services/auditService.js';
+const { asyncHandler } = require('../utils/ApiError.js');
+const auditService = require('../services/auditService.js');
 
 /**
  * The two log screens (§6.15, category 6, phase 11b).
@@ -16,7 +16,7 @@ import * as auditService from '../services/auditService.js';
  * route would hand a staff account the sign-in failures.
  */
 
-export const activity = asyncHandler(async (req, res) => {
+const activity = asyncHandler(async (req, res) => {
   res.json(await auditService.list({ ...req.query, kind: 'activity' }));
 });
 
@@ -27,6 +27,10 @@ export const activity = asyncHandler(async (req, res) => {
  * helps somebody who is guessing at them — so this is not something a
  * `settings: view` role should be able to read.
  */
-export const security = asyncHandler(async (req, res) => {
+const security = asyncHandler(async (req, res) => {
   res.json(await auditService.list({ ...req.query, kind: 'security' }));
 });
+
+// --- CommonJS exports -------------------------------------------------
+exports.activity = activity;
+exports.security = security;

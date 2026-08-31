@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 /**
  * The settings singleton (ERP rework §8, §6.15).
@@ -16,6 +16,15 @@ import mongoose from 'mongoose';
  */
 
 /**
+ * Extra warranty days each membership tier adds on top of the part's grade.
+ *
+ * Defined here rather than inline in the schema so the read path can fall back
+ * to it: a schema `default` only fires when a document is created, and every
+ * existing deployment already has its Settings row.
+ */
+const DEFAULT_TIER_WARRANTY_BONUS = { standard: 0, silver: 30, gold: 90, platinum: 180 };
+
+/**
  * Standard 2026 provincial rates (§0.13 — to be confirmed with the client,
  * editable in Settings from day one).
  *
@@ -23,7 +32,7 @@ import mongoose from 'mongoose';
  * two taxes that happen to be collected together, and the register has to be
  * able to say which it is rather than printing one blended number.
  */
-export const DEFAULT_TAX_RATES = [
+const DEFAULT_TAX_RATES = [
   { province: 'AB', rate: 0.05, kind: 'GST' },
   { province: 'BC', rate: 0.12, kind: 'GST+PST' },
   { province: 'MB', rate: 0.12, kind: 'GST+PST' },
@@ -50,7 +59,7 @@ export const DEFAULT_TAX_RATES = [
  * `code` is the stable key and `label` is what the operator reads, so renaming
  * a label never orphans the expenses already recorded against its code.
  */
-export const DEFAULT_PAYMENT_METHODS = [
+const DEFAULT_PAYMENT_METHODS = [
   { code: 'cash', label: 'Cash' },
   { code: 'debit', label: 'Debit' },
   { code: 'credit-card', label: 'Credit Card' },
@@ -73,7 +82,7 @@ export const DEFAULT_PAYMENT_METHODS = [
  * `freeOver: null` means the method never ships free — deliberately distinct
  * from `0`, which would mean it always does.
  */
-export const DEFAULT_SHIPPING_METHODS = [
+const DEFAULT_SHIPPING_METHODS = [
   { code: 'ground', label: 'Ground', detail: '2–4 business days', cost: 1895, etaDays: 3, freeOver: 50_000 },
   { code: 'express', label: 'Express', detail: 'Next business day', cost: 3495, etaDays: 1, freeOver: null },
   { code: 'pickup', label: 'Warehouse pickup', detail: 'Ready in 2 hours', cost: 0, etaDays: 0, freeOver: null },
@@ -137,6 +146,25 @@ const settingsSchema = new mongoose.Schema(
         default: () => new Map([['NEW', 365], ['OEM', 180], ['PULL-A', 90], ['PULL-B', 60], ['AFTERMARKET', 90]]),
       },
 
+      /**
+       * Extra warranty days a membership tier adds **on top of** the grade.
+       *
+       * Additive rather than absolute, and that is the whole design decision.
+       * An absolute figure per tier would silently overwrite the grade table —
+       * a Gold customer's 90-day tier warranty would *shorten* the 365 days a
+       * NEW part already carries, which is the opposite of what a tier is for.
+       * A bonus can only ever improve the cover, so the two tables can never
+       * contradict each other.
+       *
+       * Standard is 0 by definition: it is the baseline the grade table already
+       * describes.
+       */
+      warrantyBonusByTier: {
+        type: Map,
+        of: Number, // extra days
+        default: () => new Map(Object.entries(DEFAULT_TIER_WARRANTY_BONUS)),
+      },
+
       // The vocabulary staff pick from when recording money moving. See
       // DEFAULT_PAYMENT_METHODS — this is not the buyer's saved cards.
       paymentMethods: {
@@ -181,6 +209,9 @@ const settingsSchema = new mongoose.Schema(
 
     operations: {
       rmaSlaDays: { type: Number, default: 14 },
+      // A repair is a promise with a date on it, so an open ticket ages
+      // against its own SLA rather than borrowing the returns one.
+      ticketSlaDays: { type: Number, default: 7 },
       lowStockThreshold: { type: Number, default: 50 },
     },
 
@@ -264,5 +295,12 @@ settingsSchema.statics.shippingFor = function shippingFor(settings, code) {
   return methods.find((row) => row.code === code) ?? methods[0];
 };
 
-export const Settings = mongoose.model('Settings', settingsSchema);
-export default Settings;
+const Settings = mongoose.model('Settings', settingsSchema);
+
+// --- CommonJS exports -------------------------------------------------
+exports.DEFAULT_TAX_RATES = DEFAULT_TAX_RATES;
+exports.DEFAULT_TIER_WARRANTY_BONUS = DEFAULT_TIER_WARRANTY_BONUS;
+exports.DEFAULT_PAYMENT_METHODS = DEFAULT_PAYMENT_METHODS;
+exports.DEFAULT_SHIPPING_METHODS = DEFAULT_SHIPPING_METHODS;
+exports.Settings = Settings;
+exports.default = Settings;

@@ -1,6 +1,6 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
-import { MESSAGE_CHANNELS } from './MessageLog.js';
+const { MESSAGE_CHANNELS } = require('./MessageLog.js');
 
 /**
  * Time-lapse invoice messages (ERP rework §6.15 category 2, §8, phase 11d).
@@ -23,7 +23,7 @@ import { MESSAGE_CHANNELS } from './MessageLog.js';
  * rather than by a state machine that has to be kept in step with the invoice's
  * own status.
  */
-export const RULE_TRIGGERS = [
+const RULE_TRIGGERS = [
   { value: 'invoice_created', label: 'the invoice is issued' },
   { value: 'invoice_due', label: 'the invoice falls due' },
   { value: 'invoice_overdue', label: 'the invoice becomes overdue' },
@@ -42,7 +42,7 @@ export const RULE_TRIGGERS = [
  * Returns null when the trigger has not happened, which is how the pass knows
  * an unpaid invoice is not yet a candidate for a paid-invoice rule.
  */
-export function triggerDate(trigger, invoice) {
+function triggerDate(trigger, invoice) {
   switch (trigger) {
     case 'invoice_created':
       return invoice.issuedAt ?? invoice.createdAt ?? null;
@@ -68,7 +68,7 @@ export function triggerDate(trigger, invoice) {
  * shows up as `{{amont}}` in the preview instead of silently sending a sentence
  * with a hole in it.
  */
-export const RULE_TOKENS = [
+const RULE_TOKENS = [
   { token: '{{customer_name}}', label: 'Customer name' },
   { token: '{{shop_name}}', label: 'Cellvix' },
   { token: '{{invoice_number}}', label: 'Invoice number' },
@@ -133,7 +133,7 @@ invoiceStatusRuleSchema.statics.render = function render(body, { invoice, user, 
   );
 };
 
-export const InvoiceStatusRule = mongoose.model('InvoiceStatusRule', invoiceStatusRuleSchema);
+const InvoiceStatusRule = mongoose.model('InvoiceStatusRule', invoiceStatusRuleSchema);
 
 /**
  * One (rule, invoice) pair that has already fired.
@@ -161,7 +161,7 @@ const invoiceStatusRunSchema = new mongoose.Schema(
 
 invoiceStatusRunSchema.index({ rule: 1, invoice: 1 }, { unique: true });
 
-export const InvoiceStatusRun = mongoose.model('InvoiceStatusRun', invoiceStatusRunSchema);
+const InvoiceStatusRun = mongoose.model('InvoiceStatusRun', invoiceStatusRunSchema);
 
 /**
  * The rules seeded on first use (§6.15: built-ins are marked and undeletable).
@@ -170,7 +170,7 @@ export const InvoiceStatusRun = mongoose.model('InvoiceStatusRun', invoiceStatus
  * that emails a customer should be switched on deliberately by somebody who has
  * read what it says, not by installing the software.
  */
-export const BUILT_IN_RULES = [
+const BUILT_IN_RULES = [
   {
     label: 'Invoice issued',
     trigger: 'invoice_created',
@@ -213,7 +213,7 @@ export const BUILT_IN_RULES = [
  * Creates the built-ins if they are missing. Additive — never overwrites an
  * edited rule, so it is safe to run at boot on a live database.
  */
-export async function ensureBuiltInRules() {
+async function ensureBuiltInRules() {
   for (const rule of BUILT_IN_RULES) {
     await InvoiceStatusRule.updateOne(
       { label: rule.label, isBuiltIn: true },
@@ -223,4 +223,12 @@ export async function ensureBuiltInRules() {
   }
 }
 
-export default InvoiceStatusRule;
+// --- CommonJS exports -------------------------------------------------
+exports.RULE_TRIGGERS = RULE_TRIGGERS;
+exports.triggerDate = triggerDate;
+exports.RULE_TOKENS = RULE_TOKENS;
+exports.InvoiceStatusRule = InvoiceStatusRule;
+exports.InvoiceStatusRun = InvoiceStatusRun;
+exports.BUILT_IN_RULES = BUILT_IN_RULES;
+exports.ensureBuiltInRules = ensureBuiltInRules;
+exports.default = InvoiceStatusRule;

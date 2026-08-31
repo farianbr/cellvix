@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 /**
  * Provider credentials, encrypted at rest (ERP rework §6.15, phase 11c).
@@ -26,7 +26,7 @@ import mongoose from 'mongoose';
  * and an arbitrary key nobody reads would be a field that looks configured and
  * changes nothing.
  */
-export const PROVIDER_FIELDS = [
+const PROVIDER_FIELDS = [
   {
     provider: 'twilio',
     label: 'SMS (Twilio)',
@@ -80,7 +80,7 @@ export const PROVIDER_FIELDS = [
 ];
 
 /** Quick lookup, so callers do not re-scan the array. */
-export const PROVIDER_BY_KEY = new Map(PROVIDER_FIELDS.map((entry) => [entry.provider, entry]));
+const PROVIDER_BY_KEY = new Map(PROVIDER_FIELDS.map((entry) => [entry.provider, entry]));
 
 const providerCredentialSchema = new mongoose.Schema(
   {
@@ -125,5 +125,10 @@ providerCredentialSchema.methods.toPublic = function toPublic() {
   };
 };
 
-export const ProviderCredential = mongoose.model('ProviderCredential', providerCredentialSchema);
-export default ProviderCredential;
+const ProviderCredential = mongoose.model('ProviderCredential', providerCredentialSchema);
+
+// --- CommonJS exports -------------------------------------------------
+exports.PROVIDER_FIELDS = PROVIDER_FIELDS;
+exports.PROVIDER_BY_KEY = PROVIDER_BY_KEY;
+exports.ProviderCredential = ProviderCredential;
+exports.default = ProviderCredential;

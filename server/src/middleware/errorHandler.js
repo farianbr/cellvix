@@ -1,14 +1,14 @@
-import { ZodError } from 'zod';
-import mongoose from 'mongoose';
-import ApiError from '../utils/ApiError.js';
-import env from '../config/env.js';
+const { ZodError } = require('zod');
+const mongoose = require('mongoose');
+const { default: ApiError } = require('../utils/ApiError.js');
+const { default: env } = require('../config/env.js');
 
-export function notFoundHandler(req, res, next) {
+function notFoundHandler(req, res, next) {
   next(ApiError.notFound(`No route for ${req.method} ${req.originalUrl}`, 'ROUTE_NOT_FOUND'));
 }
 
 /** The single error exit. Must stay the last middleware registered. */
-export function errorHandler(err, req, res, _next) {
+function errorHandler(err, req, res, _next) {
   let status = 500;
   let code = 'INTERNAL_ERROR';
   let message = 'Something went wrong on our end.';
@@ -55,3 +55,7 @@ export function errorHandler(err, req, res, _next) {
     },
   });
 }
+
+// --- CommonJS exports -------------------------------------------------
+exports.notFoundHandler = notFoundHandler;
+exports.errorHandler = errorHandler;

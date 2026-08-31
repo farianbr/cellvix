@@ -14,7 +14,7 @@ const day = 86_400_000;
 const daysAgo = (n) => new Date(Date.now() - n * day);
 const daysFromNow = (n) => new Date(Date.now() + n * day);
 
-export const BLOG_POSTS = [
+const BLOG_POSTS = [
   {
     title: 'How to grade a pull screen before you fit it',
     slug: 'how-to-grade-a-pull-screen',
@@ -219,7 +219,7 @@ Northern and remote postal codes add two to four business days through the winte
   },
 ];
 
-export const GENERAL_FAQS = [
+const GENERAL_FAQS = [
   // ordering
   {
     question: 'Do I need an account to see prices?',
@@ -387,7 +387,7 @@ export const GENERAL_FAQS = [
  * page; the targeted ones sort above them. That is how all 420 SKUs get a
  * useful FAQ section without 420 authored entries.
  */
-export const PRODUCT_FAQS = [
+const PRODUCT_FAQS = [
   {
     question: 'Is {product} tested before it ships?',
     answer:
@@ -495,7 +495,7 @@ export const PRODUCT_FAQS = [
  * combo pointing at a SKU that no longer exists is exactly the broken card the
  * write-time SKU check exists to prevent.
  */
-export function buildOffers(products) {
+function buildOffers(products) {
   const inStock = products.filter((product) => product.stock > 0);
 
   /**
@@ -732,3 +732,9 @@ export function buildOffers(products) {
 
   return offers;
 }
+
+// --- CommonJS exports -------------------------------------------------
+exports.BLOG_POSTS = BLOG_POSTS;
+exports.GENERAL_FAQS = GENERAL_FAQS;
+exports.PRODUCT_FAQS = PRODUCT_FAQS;
+exports.buildOffers = buildOffers;

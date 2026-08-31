@@ -1,10 +1,9 @@
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import dotenv from 'dotenv';
-import { z } from 'zod';
+const path = require('node:path');
+const dotenv = require('dotenv');
+const { z } = require('zod');
 
 // One .env at the repo root serves both workspaces.
-const here = path.dirname(fileURLToPath(import.meta.url));
+const here = __dirname;
 dotenv.config({ path: path.resolve(here, '..', '..', '..', '.env') });
 
 const schema = z.object({
@@ -84,7 +83,7 @@ if (!parsed.success) {
   process.exit(1);
 }
 
-export const env = {
+const env = {
   ...parsed.data,
   isProd: parsed.data.NODE_ENV === 'production',
   origins: parsed.data.CLIENT_ORIGIN.split(',').map((s) => s.trim()).filter(Boolean),
@@ -98,4 +97,6 @@ if (env.isProd && env.JWT_SECRET.includes('dev-only')) {
   process.exit(1);
 }
 
-export default env;
+// --- CommonJS exports -------------------------------------------------
+exports.env = env;
+exports.default = env;

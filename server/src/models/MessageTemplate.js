@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
-import { MESSAGE_CHANNELS } from './MessageLog.js';
+const mongoose = require('mongoose');
+const { MESSAGE_CHANNELS } = require('./MessageLog.js');
 
 /**
  * Reusable message bodies (ERP rework §6.13, §8, §6.15).
@@ -15,7 +15,7 @@ import { MESSAGE_CHANNELS } from './MessageLog.js';
  * of the whole list.
  */
 
-export const TEMPLATE_DOCUMENTS = ['none', 'order', 'invoice', 'quote', 'rma'];
+const TEMPLATE_DOCUMENTS = ['none', 'order', 'invoice', 'quote', 'rma'];
 
 /**
  * Placeholders a body may contain. Substitution is literal and total — an
@@ -23,7 +23,7 @@ export const TEMPLATE_DOCUMENTS = ['none', 'order', 'invoice', 'quote', 'rma'];
  * so a typo shows up in the preview as `{{bussiness}}` instead of silently
  * sending a sentence with a hole in it.
  */
-export const TEMPLATE_TOKENS = [
+const TEMPLATE_TOKENS = [
   { token: '{{businessName}}', label: 'Business name' },
   { token: '{{contactName}}', label: 'Contact name' },
   { token: '{{email}}', label: 'Email address' },
@@ -67,5 +67,10 @@ messageTemplateSchema.statics.render = function render(body, user) {
   );
 };
 
-export const MessageTemplate = mongoose.model('MessageTemplate', messageTemplateSchema);
-export default MessageTemplate;
+const MessageTemplate = mongoose.model('MessageTemplate', messageTemplateSchema);
+
+// --- CommonJS exports -------------------------------------------------
+exports.TEMPLATE_DOCUMENTS = TEMPLATE_DOCUMENTS;
+exports.TEMPLATE_TOKENS = TEMPLATE_TOKENS;
+exports.MessageTemplate = MessageTemplate;
+exports.default = MessageTemplate;

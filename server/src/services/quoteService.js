@@ -1,14 +1,13 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
-import Quote from '../models/Quote.js';
-import Order from '../models/Order.js';
-import Invoice from '../models/Invoice.js';
-import Product from '../models/Product.js';
-import User from '../models/User.js';
-import Settings from '../models/Settings.js';
-import ApiError from '../utils/ApiError.js';
-import { likeRegex } from '../utils/regex.js';
-import * as notificationService from './notificationService.js';
+const { default: Quote } = require('../models/Quote.js');
+const { default: Product } = require('../models/Product.js');
+const { default: User } = require('../models/User.js');
+const { default: Settings } = require('../models/Settings.js');
+const { default: ApiError } = require('../utils/ApiError.js');
+const { likeRegex } = require('../utils/regex.js');
+const notificationService = require('./notificationService.js');
+const orderBuilder = require('./orderBuilder.js');
 
 /**
  * Quotes (ERP rework §6.6, phase 7).
@@ -31,8 +30,6 @@ import * as notificationService from './notificationService.js';
  *      behind their back and not ignored. A quote is a promise; honouring it
  *      knowingly is a decision, honouring it accidentally is a bug.
  */
-
-const TERMS_DAYS = { prepaid: 0, net15: 15, net30: 30, net60: 60 };
 
 // ---- helpers ----------------------------------------------------------------
 
@@ -152,7 +149,7 @@ function provinceFor(user) {
 
 // ---- read -------------------------------------------------------------------
 
-export async function listQuotes({ q, status, from, to } = {}) {
+async function listQuotes({ q, status, from, to } = {}) {
   const now = new Date();
   const query = {};
 
@@ -213,7 +210,7 @@ export async function listQuotes({ q, status, from, to } = {}) {
   };
 }
 
-export async function getQuote(id) {
+async function getQuote(id) {
   const query = isObjectId(id) ? { _id: id } : { quoteNumber: String(id) };
   const quote = await Quote.findOne(query)
     .populate('user', 'businessName contactName email phone addresses terms')
@@ -311,7 +308,7 @@ async function buildItems(rawItems) {
   });
 }
 
-export async function createQuote(body, createdBy) {
+async function createQuote(body, createdBy) {
   const user = await User.findById(body.user).lean();
   if (!user) throw ApiError.badRequest('Pick a client.', 'USER_NOT_FOUND');
 
@@ -338,7 +335,7 @@ export async function createQuote(body, createdBy) {
 }
 
 /** Edits stop once a quote has been accepted — the client agreed to a number. */
-export async function updateQuote(id, body) {
+async function updateQuote(id, body) {
   const query = isObjectId(id) ? { _id: id } : { quoteNumber: String(id) };
   const quote = await Quote.findOne(query);
   if (!quote) throw ApiError.notFound('Quote not found.', 'QUOTE_NOT_FOUND');
@@ -384,7 +381,7 @@ const ALLOWED_TRANSITIONS = {
   rejected: [],
 };
 
-export async function setQuoteStatus(id, { status, note }) {
+async function setQuoteStatus(id, { status, note }) {
   const query = isObjectId(id) ? { _id: id } : { quoteNumber: String(id) };
   const quote = await Quote.findOne(query);
   if (!quote) throw ApiError.notFound('Quote not found.', 'QUOTE_NOT_FOUND');
@@ -453,7 +450,7 @@ function formatCad(cents) {
  *
  * Stock is decremented in one bulk write, as order placement does.
  */
-export async function convertQuote(id, { acknowledgeDrift = false, deliveryCode } = {}, adminId) {
+async function convertQuote(id, { acknowledgeDrift = false, deliveryCode } = {}, adminId) {
   const query = isObjectId(id) ? { _id: id } : { quoteNumber: String(id) };
   const quote = await Quote.findOne(query).populate('user');
   if (!quote) throw ApiError.notFound('Quote not found.', 'QUOTE_NOT_FOUND');
@@ -513,19 +510,9 @@ export async function convertQuote(id, { acknowledgeDrift = false, deliveryCode 
     throw error;
   }
 
-  const settings = await Settings.load();
-  const rate = Settings.rateFor(settings, provinceFor(user));
-
-  const address = (user.addresses ?? []).find((row) => row.isDefaultShipping) ?? user.addresses?.[0];
-  if (!address) {
-    throw ApiError.badRequest(
-      `${user.businessName} has no shipping address on file.`,
-      'NO_SHIPPING_ADDRESS',
-    );
-  }
-
-  // The quoted prices are what binds — that is the promise. Totals are still
-  // recomputed here rather than copied from the quote document.
+  // The quoted prices are what binds — that is the promise, and it is the one
+  // thing `orderBuilder` does not decide for itself. Everything computed *from*
+  // them is still recomputed there rather than copied off the quote.
   const items = quote.items.map((item) => ({
     product: item.product,
     sku: item.sku,
@@ -536,71 +523,18 @@ export async function convertQuote(id, { acknowledgeDrift = false, deliveryCode 
     unitCost: item.unitCost,
   }));
 
-  const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
-  const shipping = quote.shipping ?? 0;
-  const tax = Math.round((subtotal + shipping) * rate);
-  const total = subtotal + shipping + tax;
-
-  const orderNumber = await nextOrderNumber();
-  const terms = user.terms ?? 'prepaid';
-
-  const order = await Order.create({
-    orderNumber,
-    user: user._id,
+  // Everything from here — the approval gate, the address, the stock re-check,
+  // the totals, the order, the invoice and the bell — is `orderBuilder`'s, and
+  // is the same code `adminService.createOrder` runs.
+  const { order, invoice } = await orderBuilder.raiseOrder({
+    user,
     items,
-    subtotal,
-    discount: 0,
-    shipping,
-    tax,
-    total,
-    status: 'placed',
-    timeline: [
-      {
-        status: 'placed',
-        at: new Date(),
-        note: `Converted from quote ${quote.quoteNumber}.`,
-      },
-    ],
-    shippingAddress: {
-      contactName: address.contactName,
-      company: address.company,
-      line1: address.line1,
-      line2: address.line2,
-      city: address.city,
-      region: address.region,
-      postal: address.postal,
-      country: address.country,
-      phone: address.phone,
-    },
-    billingAddress: {
-      contactName: address.contactName,
-      company: address.company,
-      line1: address.line1,
-      line2: address.line2,
-      city: address.city,
-      region: address.region,
-      postal: address.postal,
-      country: address.country,
-      phone: address.phone,
-    },
-    deliveryMethod: { code: deliveryCode ?? 'ground', label: 'Ground', cost: shipping, etaDays: 3 },
-    payment: {
-      // A converted quote is billed on the account's terms rather than charged
-      // — there is no card in the room when an admin converts one.
-      method: terms === 'prepaid' ? 'card' : 'terms',
-      status: 'pending',
-    },
+    shipping: quote.shipping ?? 0,
+    deliveryCode: deliveryCode ?? 'ground',
+    note: `Converted from quote ${quote.quoteNumber}.`,
   });
 
-  // One bulk write so a partial failure cannot half-apply, exactly as order
-  // placement does it.
-  await Product.bulkWrite(
-    items.map((item) => ({
-      updateOne: { filter: { _id: item.product }, update: { $inc: { stock: -item.qty } } },
-    })),
-  );
-
-  const invoice = await createInvoiceFor(order, terms);
+  const { orderNumber, total } = order;
 
   quote.status = 'converted';
   quote.convertedOrder = order._id;
@@ -619,46 +553,8 @@ export async function convertQuote(id, { acknowledgeDrift = false, deliveryCode 
   };
 }
 
-/** `CVX-2026-00043`, matching `orderService`'s own numbering. */
-async function nextOrderNumber() {
-  const year = new Date().getFullYear();
-  const prefix = `CVX-${year}-`;
-  const last = await Order.findOne({ orderNumber: new RegExp(`^${prefix}`) })
-    .sort({ orderNumber: -1 })
-    .select('orderNumber')
-    .lean();
 
-  const sequence = last ? Number(last.orderNumber.slice(prefix.length)) + 1 : 10_001;
-  return `${prefix}${String(sequence).padStart(5, '0')}`;
-}
-
-/** The invoice a converted order raises, on the account's own terms. */
-async function createInvoiceFor(order, terms) {
-  const year = new Date().getFullYear();
-  const prefix = `INV-${year}-`;
-  const last = await Invoice.findOne({ number: new RegExp(`^${prefix}`) })
-    .sort({ number: -1 })
-    .select('number')
-    .lean();
-  const sequence = last ? Number(last.number.slice(prefix.length)) + 1 : 10_001;
-
-  const dueDate = new Date();
-  dueDate.setDate(dueDate.getDate() + (TERMS_DAYS[terms] ?? 0));
-
-  return Invoice.create({
-    number: `${prefix}${String(sequence).padStart(5, '0')}`,
-    order: order._id,
-    user: order.user,
-    amount: order.total,
-    amountPaid: 0,
-    issuedAt: new Date(),
-    dueDate,
-    terms,
-    status: 'unpaid',
-  });
-}
-
-export async function deleteQuote(id) {
+async function deleteQuote(id) {
   const query = isObjectId(id) ? { _id: id } : { quoteNumber: String(id) };
   const quote = await Quote.findOne(query);
   if (!quote) throw ApiError.notFound('Quote not found.', 'QUOTE_NOT_FOUND');
@@ -673,3 +569,12 @@ export async function deleteQuote(id) {
   await quote.deleteOne();
   return { ok: true };
 }
+
+// --- CommonJS exports -------------------------------------------------
+exports.listQuotes = listQuotes;
+exports.getQuote = getQuote;
+exports.createQuote = createQuote;
+exports.updateQuote = updateQuote;
+exports.setQuoteStatus = setQuoteStatus;
+exports.convertQuote = convertQuote;
+exports.deleteQuote = deleteQuote;

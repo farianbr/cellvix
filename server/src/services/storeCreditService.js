@@ -1,8 +1,8 @@
-import CreditTransaction from '../models/CreditTransaction.js';
-import User from '../models/User.js';
-import Order from '../models/Order.js';
-import ApiError from '../utils/ApiError.js';
-import * as payment from './payment.js';
+const { default: CreditTransaction } = require('../models/CreditTransaction.js');
+const { default: User } = require('../models/User.js');
+const { default: Order } = require('../models/Order.js');
+const { default: ApiError } = require('../utils/ApiError.js');
+const payment = require('./payment.js');
 
 /**
  * Store credit — the only place a store-credit balance moves.
@@ -74,7 +74,7 @@ async function post({
   return { balance: updated.storeCredit, entry: serialize(entry) };
 }
 
-export function serialize(entry) {
+function serialize(entry) {
   const doc = entry.toObject ? entry.toObject() : entry;
   return {
     id: doc._id.toString(),
@@ -87,14 +87,14 @@ export function serialize(entry) {
   };
 }
 
-export async function balanceOf(userId) {
+async function balanceOf(userId) {
   const user = await User.findById(userId).select('storeCredit').lean();
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
   return user.storeCredit ?? 0;
 }
 
 /** The statement: balance plus the movements that produced it, newest first. */
-export async function statement(userId, { limit = 50 } = {}) {
+async function statement(userId, { limit = 50 } = {}) {
   const [balance, entries] = await Promise.all([
     balanceOf(userId),
     CreditTransaction.find({ user: userId }).sort({ createdAt: -1 }).limit(limit).lean(),
@@ -112,7 +112,7 @@ export async function statement(userId, { limit = 50 } = {}) {
  * typed `adjustment` rather than `redemption` and reads that way on the
  * statement.
  */
-export async function allocate(userId, { amount, note }, adminId) {
+async function allocate(userId, { amount, note }, adminId) {
   return post({
     userId,
     amount,
@@ -141,7 +141,7 @@ export async function allocate(userId, { amount, note }, adminId) {
  * exactly the leak the reversal exists to close. The balance is allowed to go
  * to zero and the ledger stays truthful about why.
  */
-export async function creditReferral({ referrerId, amount, note, referral }) {
+async function creditReferral({ referrerId, amount, note, referral }) {
   if (amount < 0) {
     // Spend-style guards would block a reversal against an already-spent
     // balance, so this goes through the ledger without the `$gte` filter that
@@ -182,7 +182,7 @@ export async function creditReferral({ referrerId, amount, note, referral }) {
  * The charge goes through the same mock gateway an order does, so a declined
  * top-up behaves like a declined checkout and nothing is credited.
  */
-export async function recharge(user, { amount, poNumber }) {
+async function recharge(user, { amount, poNumber }) {
   const result = await payment.charge({
     amount,
     method: 'card',
@@ -207,7 +207,7 @@ export async function recharge(user, { amount, poNumber }) {
  * is what a trade account wants anyway — the next order is usually days away.
  * Partial refunds are allowed up to what is left unrefunded on the order.
  */
-export async function refundOrder(orderNumber, { amount, note }, adminId) {
+async function refundOrder(orderNumber, { amount, note }, adminId) {
   const order = await Order.findOne({ orderNumber });
   if (!order) throw ApiError.notFound('Order not found.', 'ORDER_NOT_FOUND');
 
@@ -270,7 +270,7 @@ export async function refundOrder(orderNumber, { amount, note }, adminId) {
  * and never by the client (PROJECT_INSTRUCTIONS.md §5.3 — the client never sends
  * a price or a discount).
  */
-export async function redeemForOrder({ userId, total, orderId, orderNumber }) {
+async function redeemForOrder({ userId, total, orderId, orderNumber }) {
   const balance = await balanceOf(userId);
   const applied = Math.min(balance, total);
   if (applied <= 0) return { applied: 0, balance };
@@ -288,12 +288,12 @@ export async function redeemForOrder({ userId, total, orderId, orderNumber }) {
 }
 
 /** What an order could draw before it is placed — drives the checkout preview. */
-export async function previewForTotal(userId, total) {
+async function previewForTotal(userId, total) {
   const balance = await balanceOf(userId);
   return { balance, applicable: Math.max(0, Math.min(balance, total)) };
 }
 
-export default {
+exports.default = {
   allocate,
   balanceOf,
   creditReferral,
@@ -303,3 +303,14 @@ export default {
   refundOrder,
   statement,
 };
+
+// --- CommonJS exports -------------------------------------------------
+exports.serialize = serialize;
+exports.balanceOf = balanceOf;
+exports.statement = statement;
+exports.allocate = allocate;
+exports.creditReferral = creditReferral;
+exports.recharge = recharge;
+exports.refundOrder = refundOrder;
+exports.redeemForOrder = redeemForOrder;
+exports.previewForTotal = previewForTotal;

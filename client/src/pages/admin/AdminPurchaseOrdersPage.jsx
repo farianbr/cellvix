@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { useFieldArray, useForm } from 'react-hook-form';
+import useCreateParam from '@/hooks/useCreateParam';
 import {
   AlertCircle,
   AlertTriangle,
@@ -231,7 +232,8 @@ function PurchaseOrderForm({ suppliers, products, onSubmit, onCancel, isPending,
 
 export function AdminPurchaseOrdersPage() {
   const [query, setQuery] = useState('');
-  const [creating, setCreating] = useState(false);
+  // Opened directly by `+ Create` (§7.2), which arrives with `?new=1`.
+  const [creating, setCreating] = useCreateParam();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 

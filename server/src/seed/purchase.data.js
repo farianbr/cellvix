@@ -17,17 +17,17 @@
 const DAY = 86_400_000;
 
 /** `n` whole days before today, at midnight — a purchase date, not a moment. */
-export function daysAgo(n) {
+function daysAgo(n) {
   const date = new Date(Date.now() - n * DAY);
   date.setHours(0, 0, 0, 0);
   return date;
 }
 
-export function daysAhead(n) {
+function daysAhead(n) {
   return daysAgo(-n);
 }
 
-export const SUPPLIERS = [
+const SUPPLIERS = [
   {
     name: 'Shenzhen Kaiyuan Components',
     code: 'SKC',
@@ -125,7 +125,7 @@ export const SUPPLIERS = [
  * part is bought dear and carries a thinner margin. Rounded to whole cents,
  * because everything in this system is integer cents.
  */
-export function costFor(product) {
+function costFor(product) {
   const ratio = { NEW: 0.62, OEM: 0.7, 'PULL-A': 0.58, 'PULL-B': 0.52, AFTERMARKET: 0.45 };
   return Math.max(1, Math.round(product.price * (ratio[product.grade] ?? 0.6)));
 }
@@ -220,7 +220,7 @@ const PO_PLANS = [
  * received quantity with no movement behind it is exactly the unexplainable
  * stock the ledger exists to prevent.
  */
-export function buildPurchaseOrders({ products, suppliersByCode, year = new Date().getFullYear() }) {
+function buildPurchaseOrders({ products, suppliersByCode, year = new Date().getFullYear() }) {
   const orders = [];
   const movements = [];
   const stockDelta = new Map();
@@ -355,7 +355,7 @@ const EXPENSE_PLANS = [
  * `startSequence` continues the `EXP-` numbering after the rows the paid
  * purchase orders already generated, so no two expenses share a number.
  */
-export function buildExpenses({ categoriesBySlug, year = new Date().getFullYear(), startSequence = 1 }) {
+function buildExpenses({ categoriesBySlug, year = new Date().getFullYear(), startSequence = 1 }) {
   let sequence = startSequence;
 
   return EXPENSE_PLANS.flatMap((plan) => {
@@ -382,3 +382,11 @@ export function buildExpenses({ categoriesBySlug, year = new Date().getFullYear(
     ];
   });
 }
+
+// --- CommonJS exports -------------------------------------------------
+exports.daysAgo = daysAgo;
+exports.daysAhead = daysAhead;
+exports.SUPPLIERS = SUPPLIERS;
+exports.costFor = costFor;
+exports.buildPurchaseOrders = buildPurchaseOrders;
+exports.buildExpenses = buildExpenses;

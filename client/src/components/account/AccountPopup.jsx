@@ -157,7 +157,19 @@ function SignUpTab({ onSwitch }) {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm({ resolver: zodResolver(registerSchema) });
+  } = useForm({
+    resolver: zodResolver(registerSchema),
+    /**
+     * A referral link carries the referrer's code as `?ref=`, so somebody who
+     * followed one does not have to be told a code over the phone and type it
+     * correctly. It stays an ordinary editable field: attribution is set once
+     * at registration and cannot be added later, so the person signing up has
+     * to be able to see and correct what the link put there.
+     */
+    defaultValues: {
+      referralCode: new URLSearchParams(window.location.search).get('ref') ?? '',
+    },
+  });
 
   async function onSubmit(values) {
     setFormError(null);

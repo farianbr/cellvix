@@ -89,6 +89,7 @@ export function AdminShell() {
     overdueInvoices: stats?.receivables?.overdueCount ?? 0,
     lowStock: (stats?.inventory?.lowStock ?? 0) + (stats?.inventory?.outOfStock ?? 0),
     openRmas: stats?.rma?.open ?? 0,
+    openTickets: stats?.tickets?.open ?? 0,
   };
 
   const openSearch = () => setPaletteOpen(true);

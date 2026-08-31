@@ -1,18 +1,20 @@
-import User from '../models/User.js';
-import Product from '../models/Product.js';
-import Order from '../models/Order.js';
-import Invoice from '../models/Invoice.js';
-import CreditTransaction from '../models/CreditTransaction.js';
-import Rma, { RMA_OPEN_STATUSES } from '../models/Rma.js';
-import Taxonomy from '../models/Taxonomy.js';
-import ApiError from '../utils/ApiError.js';
-import * as storeCredit from './storeCreditService.js';
-import * as referralService from './referralService.js';
-import { likeRegex } from '../utils/regex.js';
-import { serializeOrder } from './orderService.js';
-import { renderInvoiceHtml } from './invoiceDocument.js';
-import { invalidateTree } from './taxonomyService.js';
-import { ORDER_STATUS_FLOW } from '../../../shared/schemas/admin.js';
+const { default: User } = require('../models/User.js');
+const { default: Product } = require('../models/Product.js');
+const { default: Order } = require('../models/Order.js');
+const { default: Invoice } = require('../models/Invoice.js');
+const { default: CreditTransaction } = require('../models/CreditTransaction.js');
+const { default: Rma, RMA_OPEN_STATUSES } = require('../models/Rma.js');
+const { default: Ticket, TICKET_OPEN_STATUSES } = require('../models/Ticket.js');
+const { default: Taxonomy } = require('../models/Taxonomy.js');
+const { default: ApiError } = require('../utils/ApiError.js');
+const storeCredit = require('./storeCreditService.js');
+const referralService = require('./referralService.js');
+const { likeRegex } = require('../utils/regex.js');
+const { serializeOrder } = require('./orderService.js');
+const orderBuilder = require('./orderBuilder.js');
+const { renderInvoiceHtml } = require('./invoiceDocument.js');
+const { invalidateTree } = require('./taxonomyService.js');
+const { ORDER_STATUS_FLOW } = require('../../../shared/schemas/admin.js');
 
 const LOW_STOCK_THRESHOLD = 50;
 
@@ -129,7 +131,7 @@ function isoWeek(date) {
  * Today's response shape is preserved as a subset, so every existing consumer
  * keeps working while the new dashboard reads the richer fields.
  */
-export async function stats({ from, to } = {}) {
+async function stats({ from, to } = {}) {
   const now = new Date();
   const { start, end } = resolveRange({ from, to });
   const unit = bucketFor(start, end);
@@ -163,6 +165,7 @@ export async function stats({ from, to } = {}) {
     pendingQueue,
     lowStockItems,
     openRmas,
+    openTickets,
   ] = await Promise.all([
     User.countDocuments({ status: 'pending' }),
     User.countDocuments({ status: 'approved', role: 'buyer' }),
@@ -299,6 +302,7 @@ export async function stats({ from, to } = {}) {
     // badge counters — a badge that moved when you changed the dashboard's
     // dates would be nonsense.
     Rma.countDocuments({ status: { $in: RMA_OPEN_STATUSES } }),
+    Ticket.countDocuments({ status: { $in: TICKET_OPEN_STATUSES } }),
   ]);
 
   const collected = collectedRows[0]?.total ?? 0;
@@ -353,6 +357,10 @@ export async function stats({ from, to } = {}) {
     // resolved or rejected — a return still needing somebody's attention.
     rma: { open: openRmas },
 
+    // Open here excludes `ready_to_pickup`: the repair is done and the badge
+    // should stop nagging, even though the device is still on the shelf.
+    tickets: { open: openTickets },
+
     trend: fillBuckets(trendRows, start, end, unit),
     topClients: topClientRows,
 
@@ -400,10 +408,35 @@ function shapeUser(user) {
     // because attribution is set once at registration and never edited.
     referralCode: user.referralCode ?? null,
     referredBy: user.referredBy ? String(user.referredBy) : null,
+
+    tier: user.tier ?? 'standard',
+
+    /**
+     * Consent, master flag and channels together.
+     *
+     * `recorded` says whether anybody has ever answered the channel question
+     * for this account. An account that predates the field has not declined —
+     * it has not been asked — and the UI has to be able to tell those apart,
+     * because "no consent recorded" is a prompt to go and ask, while "declined"
+     * is an answer to respect.
+     */
+    consent: {
+      marketing: user.marketingConsent?.granted === true,
+      unsubscribedAt: user.unsubscribedAt ?? null,
+      recorded: Boolean(user.contactConsent?.at),
+      at: user.contactConsent?.at ?? null,
+      source: user.contactConsent?.source ?? null,
+      channels: {
+        sms: user.contactConsent?.sms === true,
+        whatsapp: user.contactConsent?.whatsapp === true,
+        email: user.contactConsent?.email === true,
+        call: user.contactConsent?.call === true,
+      },
+    },
   };
 }
 
-export async function listUsers({ status, q } = {}) {
+async function listUsers({ status, q } = {}) {
   const query = { role: 'buyer' };
   if (status && status !== 'all') query.status = String(status);
 
@@ -415,18 +448,98 @@ export async function listUsers({ status, q } = {}) {
   // Pending first — the approvals queue is the point of this screen.
   const users = await User.find(query).sort({ status: 1, createdAt: -1 }).limit(200).lean();
 
-  const counts = await User.aggregate([
-    { $match: { role: 'buyer' } },
-    { $group: { _id: '$status', count: { $sum: 1 } } },
+  const ids = users.map((user) => user._id);
+
+  /**
+   * Per-account trading history, in two grouped queries rather than two per
+   * row. The customers list shows lifetime value, invoice count and last order
+   * date for every account on screen; fetched individually that is 200 round
+   * trips for a 200-row page.
+   *
+   * **Lifetime value is what was invoiced, not what was ordered.** An order can
+   * be cancelled, edited or never invoiced; the invoice is the document the
+   * business is actually accountable for, and it is what the reports already
+   * treat as the money figure (§9.1). Cancelled orders are excluded from the
+   * order side for the same reason they are excluded from the trend.
+   */
+  const now = new Date();
+
+  const [counts, invoiceRows, overdueRows, orderRows] = await Promise.all([
+    User.aggregate([
+      { $match: { role: 'buyer' } },
+      { $group: { _id: '$status', count: { $sum: 1 } } },
+    ]),
+
+    Invoice.aggregate([
+      { $match: { user: { $in: ids } } },
+      {
+        $group: {
+          _id: '$user',
+          lifetimeValue: { $sum: '$amount' },
+          invoiceCount: { $sum: 1 },
+        },
+      },
+    ]),
+
+    /**
+     * Genuinely **overdue** money, which is not the same as `User.balance`.
+     *
+     * `balance` is what the account currently owes on its line of credit —
+     * an invoice raised yesterday on Net 30 is owed but perfectly in order.
+     * Overdue is the unpaid remainder of invoices whose due date has passed,
+     * which is the figure an operator chases, and it matches the definition
+     * `listInvoices` already uses for its `overdue` filter.
+     */
+    Invoice.aggregate([
+      { $match: { user: { $in: ids }, status: { $ne: 'paid' }, dueDate: { $lt: now } } },
+      {
+        $group: {
+          _id: '$user',
+          overdue: { $sum: { $subtract: ['$amount', { $ifNull: ['$amountPaid', 0] }] } },
+          overdueCount: { $sum: 1 },
+        },
+      },
+    ]),
+    Order.aggregate([
+      { $match: { user: { $in: ids }, status: { $ne: 'cancelled' } } },
+      {
+        $group: {
+          _id: '$user',
+          orderCount: { $sum: 1 },
+          lastOrderedAt: { $max: '$createdAt' },
+        },
+      },
+    ]),
   ]);
 
+  const invoiceBy = new Map(invoiceRows.map((row) => [String(row._id), row]));
+  const overdueBy = new Map(overdueRows.map((row) => [String(row._id), row]));
+  const orderBy = new Map(orderRows.map((row) => [String(row._id), row]));
+
   return {
-    users: users.map(shapeUser),
+    users: users.map((user) => {
+      const key = String(user._id);
+      const invoiced = invoiceBy.get(key);
+      const late = overdueBy.get(key);
+      const ordered = orderBy.get(key);
+
+      return {
+        ...shapeUser(user),
+        lifetimeValue: invoiced?.lifetimeValue ?? 0,
+        invoiceCount: invoiced?.invoiceCount ?? 0,
+        // Kept apart from `balance`, which shapeUser already returns: one is
+        // owed, the other is late, and collapsing them would overstate arrears.
+        overdue: late?.overdue ?? 0,
+        overdueCount: late?.overdueCount ?? 0,
+        orderCount: ordered?.orderCount ?? 0,
+        lastOrderedAt: ordered?.lastOrderedAt ?? null,
+      };
+    }),
     counts: Object.fromEntries(counts.map((row) => [row._id, row.count])),
   };
 }
 
-export async function getUser(id) {
+async function getUser(id) {
   const user = await User.findById(id).lean();
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
 
@@ -437,6 +550,10 @@ export async function getUser(id) {
 
   return {
     user: shapeUser(user),
+    // Staff notes ride with the profile: they are the thing somebody reads
+    // before picking up the phone, so a second request for them would just be
+    // a spinner in front of the reason they opened the screen.
+    ...listInternalNotes(user),
     orders: orders.map(serializeOrder),
     invoices: invoices.map((invoice) => ({
       number: invoice.number,
@@ -451,13 +568,245 @@ export async function getUser(id) {
 }
 
 /**
+ * Opens a client account from the admin side (§7.2's `+ Create > Client`).
+ *
+ * The counterpart to `authService.register`, and it differs from it in three
+ * places that all trace back to *who is in the room*:
+ *
+ * - **It defaults to approved.** The admin creating the account is the
+ *   approval; making them create a pending one and then approve it a moment
+ *   later is a step that decides nothing. `status: 'pending'` is still offered,
+ *   for an account being entered ahead of the paperwork.
+ * - **Marketing consent defaults to false.** A business opening its own account
+ *   gives implied consent under CASL s.10(9) — it asked for the relationship.
+ *   An admin typing that business in has not been asked anything by anybody, so
+ *   there is no implied basis to record and pretending otherwise is the kind of
+ *   thing that is indefensible later. The source is stamped `admin` so it is
+ *   obvious where the record came from.
+ * - **It sets credit terms immediately** when the account starts approved, the
+ *   same pairing `approveUser` enforces.
+ */
+async function createUser(data, adminId) {
+  const email = String(data.email).toLowerCase().trim();
+
+  const existing = await User.findOne({ email });
+  if (existing) {
+    throw ApiError.conflict('An account with that email already exists.', 'EMAIL_IN_USE');
+  }
+
+  const user = new User({
+    businessName: data.businessName,
+    contactName: data.contactName,
+    email,
+    phone: data.phone,
+    role: 'buyer',
+    status: data.status,
+    businessType: data.businessType,
+    website: data.website,
+    taxId: data.taxId,
+    creditLimit: data.creditLimit ?? 0,
+    terms: data.terms ?? 'prepaid',
+    marketingConsent: { granted: false, source: 'admin', at: new Date() },
+    addresses: data.address
+      ? [{ ...data.address, country: 'Canada', isDefaultShipping: true, isDefaultBilling: true }]
+      : [],
+  });
+
+  await user.setPassword(data.password);
+
+  if (user.status === 'approved') {
+    user.approvedAt = new Date();
+    user.approvedBy = adminId;
+    // Minted on approval, never at creation, for the reason `approveUser`
+    // gives: a code that can refer people before its account is trusted is a
+    // code worth abusing.
+    await referralService.ensureReferralCode(user);
+  }
+
+  await user.save();
+  return shapeUser(user.toObject());
+}
+
+/**
+ * Edits a customer's profile from the admin side.
+ *
+ * **What it deliberately does not touch.** Status, credit limit and terms are
+ * not editable here even though they sit on the same document: each already has
+ * its own endpoint that does more than write the field — `approveUser` stamps
+ * who approved and mints a referral code, `rejectUser` requires a reason,
+ * `setCredit` is the line of credit. An edit form that also wrote `status`
+ * would be a second, quieter approval path with none of that, which is exactly
+ * the split the shared `ApproveClientForm` exists to prevent. It never touches
+ * `balance` or `storeCredit` either: those move through their services only.
+ *
+ * **Email is editable but re-checked**, because it is the sign-in identity —
+ * changing it to one already in use would lock two accounts out of themselves.
+ *
+ * Fields absent from the payload are left alone; a field sent empty is cleared,
+ * which is how an operator removes a tax ID they entered by mistake.
+ */
+async function updateUser(id, data) {
+  const user = await User.findById(id);
+  if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
+  if (user.role === 'admin') {
+    throw ApiError.badRequest('Admin accounts are not edited here.', 'NOT_A_CUSTOMER');
+  }
+
+  if (data.email) {
+    const email = String(data.email).toLowerCase().trim();
+    if (email !== user.email) {
+      const clash = await User.findOne({ email, _id: { $ne: user._id } });
+      if (clash) {
+        throw ApiError.conflict('An account with that email already exists.', 'EMAIL_IN_USE');
+      }
+      user.email = email;
+    }
+  }
+
+  for (const field of ['businessName', 'contactName', 'phone']) {
+    if (data[field] != null) user[field] = data[field];
+  }
+
+  // Optional descriptors: an empty string is a deletion, not a value.
+  for (const field of ['businessType', 'website', 'taxId']) {
+    if (data[field] != null) user[field] = data[field] || undefined;
+  }
+
+  /**
+   * The address list is not replaced wholesale. An account can carry several,
+   * and the form edits the default shipping one — overwriting the array would
+   * silently drop the others.
+   */
+  if (data.address) {
+    const index = user.addresses.findIndex((address) => address.isDefaultShipping);
+    const next = { ...data.address, country: 'Canada' };
+
+    if (index >= 0) {
+      Object.assign(user.addresses[index], next);
+    } else {
+      user.addresses.push({ ...next, isDefaultShipping: true, isDefaultBilling: true });
+    }
+  }
+
+  await user.save();
+  return shapeUser(user.toObject());
+}
+
+/**
+ * Records what a customer agreed to be contacted on (§6.13, CASL).
+ *
+ * **The master flag follows the channels.** `marketingConsent.granted` is what
+ * every campaign query already checks, so leaving it untouched while ticking
+ * four channel boxes would produce an account that looks contactable on the
+ * profile and is invisible to every campaign. Granting any channel grants the
+ * master flag; clearing all four withdraws it, which is the only reading of
+ * "they agreed to nothing" that is not a trap.
+ *
+ * **Withdrawing consent here does not clear `unsubscribedAt`,** and re-granting
+ * it does not resurrect a suppressed account: an unsubscribe is the customer's
+ * own act and is not undone by an admin ticking a box. That has to go through
+ * the marketing screen's explicit re-subscribe, which records who did it.
+ */
+async function setContactConsent(id, { sms, whatsapp, email, call }, adminId) {
+  const user = await User.findById(id);
+  if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
+
+  const channels = {
+    sms: Boolean(sms),
+    whatsapp: Boolean(whatsapp),
+    email: Boolean(email),
+    call: Boolean(call),
+  };
+
+  user.contactConsent = {
+    ...channels,
+    at: new Date(),
+    source: 'admin',
+    by: adminId,
+  };
+
+  const any = Object.values(channels).some(Boolean);
+
+  // Only move the master flag when it actually changes, so an unrelated edit
+  // does not restamp somebody's original consent date.
+  if (any && user.marketingConsent?.granted !== true) {
+    user.marketingConsent = { granted: true, source: 'admin', at: new Date() };
+  } else if (!any && user.marketingConsent?.granted === true) {
+    user.marketingConsent = { ...user.marketingConsent, granted: false };
+  }
+
+  await user.save();
+  return shapeUser(user.toObject());
+}
+
+/**
+ * Sets the membership tier.
+ *
+ * A label, checked against the enum and nothing else. It does not touch price:
+ * `pricingService` is the only place a discount is decided, and a tier that
+ * granted one here would be a second discount engine outside that rule.
+ */
+async function setTier(id, { tier }) {
+  const user = await User.findById(id);
+  if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
+
+  user.tier = tier;
+  await user.save();
+  return shapeUser(user.toObject());
+}
+
+/** Staff-only notes on an account. Append-only; see the model for why. */
+async function addInternalNote(id, { body }, staff) {
+  const user = await User.findById(id);
+  if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
+
+  user.internalNotes.push({
+    body,
+    staff: staff?._id,
+    // Denormalised so a note still says who wrote it after that person leaves
+    // and their account is deleted — the attribution is part of the record.
+    staffName: staff?.contactName ?? staff?.email ?? 'Staff',
+    createdAt: new Date(),
+  });
+
+  await user.save();
+  return listInternalNotes(user);
+}
+
+async function deleteInternalNote(id, noteId) {
+  const user = await User.findById(id);
+  if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
+
+  const note = user.internalNotes.id(noteId);
+  if (!note) throw ApiError.notFound('Note not found.', 'NOTE_NOT_FOUND');
+
+  note.deleteOne();
+  await user.save();
+  return listInternalNotes(user);
+}
+
+/** Newest first — a note panel is read from the top. */
+function listInternalNotes(user) {
+  return {
+    notes: [...(user.internalNotes ?? [])]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .map((note) => ({
+        id: note._id.toString(),
+        body: note.body,
+        staffName: note.staffName ?? 'Staff',
+        createdAt: note.createdAt,
+      })),
+  };
+}
+
+/**
  * Approves a business.
  *
  * This is the gate the whole B2B model hangs on: until it runs, the account can
  * browse but sees no prices and cannot order. Credit terms are set here because
  * approving and deciding terms are one decision, not two.
  */
-export async function approveUser(id, adminId, { creditLimit, terms, accountRep }) {
+async function approveUser(id, adminId, { creditLimit, terms, accountRep }) {
   const user = await User.findById(id);
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
   if (user.role === 'admin') throw ApiError.badRequest('Admin accounts are not approved this way.');
@@ -480,7 +829,7 @@ export async function approveUser(id, adminId, { creditLimit, terms, accountRep 
   return shapeUser(user.toObject());
 }
 
-export async function rejectUser(id, { reason }) {
+async function rejectUser(id, { reason }) {
   const user = await User.findById(id);
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
 
@@ -492,7 +841,7 @@ export async function rejectUser(id, { reason }) {
   return shapeUser(user.toObject());
 }
 
-export async function setUserStatus(id, { status }) {
+async function setUserStatus(id, { status }) {
   const user = await User.findById(id);
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
   if (user.role === 'admin') {
@@ -516,24 +865,24 @@ export async function setUserStatus(id, { status }) {
  * that gets edited, while an allocation is an event that gets recorded. One
  * overwrites, the other appends.
  */
-export async function allocateStoreCredit(id, { amountDollars, note }, adminId) {
+async function allocateStoreCredit(id, { amountDollars, note }, adminId) {
   const amount = Math.round(Number(amountDollars) * 100);
   const posted = await storeCredit.allocate(id, { amount, note }, adminId);
   const user = await User.findById(id).lean();
   return { ...posted, user: shapeUser(user) };
 }
 
-export async function storeCreditStatement(id) {
+async function storeCreditStatement(id) {
   return storeCredit.statement(id, { limit: 100 });
 }
 
 /** Refunds an order to the buyer's store credit. */
-export async function refundOrder(orderNumber, { amountDollars, note }, adminId) {
+async function refundOrder(orderNumber, { amountDollars, note }, adminId) {
   const amount = Math.round(Number(amountDollars) * 100);
   return storeCredit.refundOrder(orderNumber, { amount, note }, adminId);
 }
 
-export async function setCredit(id, { creditLimit, terms }) {
+async function setCredit(id, { creditLimit, terms }) {
   const user = await User.findById(id);
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
 
@@ -579,7 +928,7 @@ function shapeProduct(product) {
  * a screen asking for the whole catalogue by accident, and an export asking on
  * purpose should have to say so.
  */
-export async function listProducts({ q, stock, page = 1, limit = 40, all = false } = {}) {
+async function listProducts({ q, stock, page = 1, limit = 40, all = false } = {}) {
   const query = {};
 
   if (q) {
@@ -633,7 +982,7 @@ async function resolveTaxonomyNames(data) {
   };
 }
 
-export async function createProduct(data) {
+async function createProduct(data) {
   const existing = await Product.findOne({ sku: data.sku.toUpperCase() });
   if (existing) throw ApiError.conflict('That SKU already exists.', 'DUPLICATE_SKU');
 
@@ -652,7 +1001,7 @@ export async function createProduct(data) {
   return shapeProduct(product.toObject());
 }
 
-export async function updateProduct(id, data) {
+async function updateProduct(id, data) {
   const product = await Product.findById(id);
   if (!product) throw ApiError.notFound('Product not found.', 'PRODUCT_NOT_FOUND');
 
@@ -674,7 +1023,7 @@ export async function updateProduct(id, data) {
  * orders pointing at nothing. `isActive: false` hides it from the storefront
  * while keeping every past order readable.
  */
-export async function deactivateProduct(id) {
+async function deactivateProduct(id) {
   const product = await Product.findById(id);
   if (!product) throw ApiError.notFound('Product not found.', 'PRODUCT_NOT_FOUND');
 
@@ -686,7 +1035,38 @@ export async function deactivateProduct(id) {
 
 // ---- orders -----------------------------------------------------------------
 
-export async function listOrders({ status, q } = {}) {
+/**
+ * An admin raising an order directly (§7.2's `+ Create > Order`) — a phone
+ * order, a walk-in, one that arrived by email.
+ *
+ * Almost nothing happens here. Prices are read from the catalogue by
+ * `orderBuilder.buildOrderItems`, and everything after that — approval,
+ * address, stock, totals, the order, the invoice, the bell — is
+ * `orderBuilder.raiseOrder`, the same code a converted quote runs. That is the
+ * point of the split: a second way to raise an order must not become a second
+ * set of rules about when one may be raised.
+ */
+async function createOrder(body) {
+  const user = await User.findById(body.user).lean();
+  if (!user) throw ApiError.badRequest('Pick a client.', 'USER_NOT_FOUND');
+
+  const items = await orderBuilder.buildOrderItems(body.items);
+
+  const { order } = await orderBuilder.raiseOrder({
+    user,
+    items,
+    shipping: body.shipping ?? 0,
+    deliveryCode: body.deliveryCode,
+    poNumber: body.poNumber,
+    note: body.notes
+      ? `Raised by an administrator. ${body.notes}`
+      : 'Raised by an administrator.',
+  });
+
+  return serializeOrder(order);
+}
+
+async function listOrders({ status, q } = {}) {
   const query = {};
   if (status && status !== 'all') query.status = String(status);
 
@@ -723,7 +1103,7 @@ export async function listOrders({ status, q } = {}) {
  * The linked invoice rides along so the screen can cross-link the two without a
  * second request; the buyer is populated for the same reason.
  */
-export async function getOrder(orderNumber) {
+async function getOrder(orderNumber) {
   const order = await Order.findOne({ orderNumber })
     .populate('user', 'businessName contactName email phone')
     .lean();
@@ -752,7 +1132,7 @@ export async function getOrder(orderNumber) {
  * Moving to `shipped` without a tracking number is refused — that transition is
  * exactly when the buyer expects one to appear.
  */
-export async function updateOrderStatus(orderNumber, { status, note, tracking }) {
+async function updateOrderStatus(orderNumber, { status, note, tracking }) {
   const order = await Order.findOne({ orderNumber });
   if (!order) throw ApiError.notFound('Order not found.', 'ORDER_NOT_FOUND');
 
@@ -828,6 +1208,10 @@ function shapeAdminInvoice(invoice) {
     issuedAt: invoice.issuedAt,
     dueDate: invoice.dueDate,
     terms: invoice.terms,
+    // Only a hand-raised invoice carries these; one behind an order says what
+    // it is for by pointing at the order.
+    reference: invoice.reference ?? null,
+    notes: invoice.notes ?? null,
     status: overdue ? 'overdue' : invoice.status,
     payments: (invoice.payments ?? []).map((payment) => ({
       amount: payment.amount,
@@ -857,13 +1241,62 @@ function recomputeInvoice(invoice) {
 }
 
 /**
+ * A standalone invoice (§7.2's `+ Create > Invoice`) — one raised against an
+ * account for something no order covers.
+ *
+ * Two things it does that are easy to leave out:
+ *
+ * - **A sent `dueDate` wins over the terms.** The terms table is a default, not
+ *   a rule: an agreed date is a fact about the arrangement, and silently
+ *   overwriting it with `issuedAt + 30` would be the system correcting a human
+ *   who knew better.
+ * - **It draws on the line of credit.** An unpaid invoice on terms is money the
+ *   client owes, so `balance` moves exactly as it does when an order raises
+ *   one. Skipping this would leave a client under their limit on paper while
+ *   owing more than it.
+ */
+async function createInvoice(body) {
+  const user = await User.findById(body.user).lean();
+  if (!user) throw ApiError.badRequest('Pick a client.', 'USER_NOT_FOUND');
+
+  const issuedAt = body.issuedAt ? new Date(`${body.issuedAt}T00:00:00`) : new Date();
+
+  let dueDate = body.dueDate ? new Date(`${body.dueDate}T00:00:00`) : null;
+  if (!dueDate) {
+    dueDate = new Date(issuedAt);
+    dueDate.setDate(dueDate.getDate() + (orderBuilder.TERMS_DAYS[body.terms] ?? 0));
+  }
+
+  const invoice = await Invoice.create({
+    number: await orderBuilder.nextInvoiceNumber(),
+    // No `order`: that is what makes this one standalone, and the field has
+    // always been optional so nothing else has to change to allow it.
+    user: user._id,
+    amount: body.amount,
+    amountPaid: 0,
+    issuedAt,
+    dueDate,
+    terms: body.terms,
+    status: 'unpaid',
+    reference: body.reference,
+    notes: body.notes,
+  });
+
+  if (body.terms !== 'prepaid') {
+    await User.updateOne({ _id: user._id }, { $inc: { balance: body.amount } });
+  }
+
+  return shapeAdminInvoice({ ...invoice.toObject(), user, order: null });
+}
+
+/**
  * Admin invoice list.
  *
  * `status=overdue` is a filter over derived state rather than a stored value,
  * so it is applied in the query as "not paid, and past due" — the dashboard
  * links straight here with it.
  */
-export async function listInvoices({ status, q, from, to } = {}) {
+async function listInvoices({ status, q, from, to } = {}) {
   const now = new Date();
   const query = {};
 
@@ -925,7 +1358,7 @@ export async function listInvoices({ status, q, from, to } = {}) {
   };
 }
 
-export async function getInvoice(number) {
+async function getInvoice(number) {
   const invoice = await Invoice.findOne({ number })
     .populate('order', 'orderNumber items total status')
     .populate('user', 'businessName contactName email phone')
@@ -943,7 +1376,7 @@ export async function getInvoice(number) {
  * the payment rows, server-side, exactly as the Instructions require of every
  * money total.
  */
-export async function recordPayment(number, { amountDollars, at, method, reference }) {
+async function recordPayment(number, { amountDollars, at, method, reference }) {
   const invoice = await Invoice.findOne({ number });
   if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');
 
@@ -993,7 +1426,7 @@ export async function recordPayment(number, { amountDollars, at, method, referen
  * the balance goes to zero, and the reason is recorded as a payment of type
  * `void`. An invoice that vanishes takes its own audit trail with it.
  */
-export async function voidInvoice(number, { reason } = {}) {
+async function voidInvoice(number, { reason } = {}) {
   const invoice = await Invoice.findOne({ number });
   if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');
   if (invoice.status === 'paid' && invoice.amountPaid >= invoice.amount) {
@@ -1030,7 +1463,7 @@ export async function voidInvoice(number, { reason } = {}) {
  * arrives in phase 11, and until it does, orders, invoices, payments and credit
  * movements are the record.
  */
-export async function userActivity(id) {
+async function userActivity(id) {
   const user = await User.findById(id).lean();
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
 
@@ -1125,7 +1558,7 @@ export async function userActivity(id) {
  * many parcels is wrong, so bulk-to-shipped skips anything without one already
  * and says so.
  */
-export async function bulkUpdateOrderStatus({ orderNumbers, status, note }) {
+async function bulkUpdateOrderStatus({ orderNumbers, status, note }) {
   const orders = await Order.find({ orderNumber: { $in: orderNumbers } });
   const byNumber = new Map(orders.map((order) => [order.orderNumber, order]));
 
@@ -1182,7 +1615,7 @@ export async function bulkUpdateOrderStatus({ orderNumbers, status, note }) {
  * would be free to drift from what the customer actually received, and then the
  * two would disagree in front of a customer.
  */
-export async function invoiceDocument(number, { nonce } = {}) {
+async function invoiceDocument(number, { nonce } = {}) {
   const invoice = await Invoice.findOne({ number }).populate('order').lean();
   if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');
 
@@ -1191,3 +1624,37 @@ export async function invoiceDocument(number, { nonce } = {}) {
 
   return renderInvoiceHtml({ invoice, order: invoice.order, user, nonce });
 }
+
+// --- CommonJS exports -------------------------------------------------
+exports.stats = stats;
+exports.listUsers = listUsers;
+exports.getUser = getUser;
+exports.createUser = createUser;
+exports.updateUser = updateUser;
+exports.setContactConsent = setContactConsent;
+exports.setTier = setTier;
+exports.addInternalNote = addInternalNote;
+exports.deleteInternalNote = deleteInternalNote;
+exports.approveUser = approveUser;
+exports.rejectUser = rejectUser;
+exports.setUserStatus = setUserStatus;
+exports.allocateStoreCredit = allocateStoreCredit;
+exports.storeCreditStatement = storeCreditStatement;
+exports.refundOrder = refundOrder;
+exports.setCredit = setCredit;
+exports.listProducts = listProducts;
+exports.createProduct = createProduct;
+exports.updateProduct = updateProduct;
+exports.deactivateProduct = deactivateProduct;
+exports.createOrder = createOrder;
+exports.listOrders = listOrders;
+exports.getOrder = getOrder;
+exports.updateOrderStatus = updateOrderStatus;
+exports.createInvoice = createInvoice;
+exports.listInvoices = listInvoices;
+exports.getInvoice = getInvoice;
+exports.recordPayment = recordPayment;
+exports.voidInvoice = voidInvoice;
+exports.userActivity = userActivity;
+exports.bulkUpdateOrderStatus = bulkUpdateOrderStatus;
+exports.invoiceDocument = invoiceDocument;

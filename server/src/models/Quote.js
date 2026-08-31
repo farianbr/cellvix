@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 /**
  * A price quote built for an account (ERP rework §6.6).
@@ -12,7 +12,7 @@ import mongoose from 'mongoose';
  * itself into an order unexamined: conversion re-prices against live products
  * and surfaces any difference to the admin first (§6.6).
  */
-export const QUOTE_STATUSES = ['draft', 'sent', 'accepted', 'expired', 'converted', 'rejected'];
+const QUOTE_STATUSES = ['draft', 'sent', 'accepted', 'expired', 'converted', 'rejected'];
 
 const quoteItemSchema = new mongoose.Schema(
   {
@@ -81,5 +81,9 @@ const quoteSchema = new mongoose.Schema(
 
 quoteSchema.index({ user: 1, createdAt: -1 });
 
-export const Quote = mongoose.model('Quote', quoteSchema);
-export default Quote;
+const Quote = mongoose.model('Quote', quoteSchema);
+
+// --- CommonJS exports -------------------------------------------------
+exports.QUOTE_STATUSES = QUOTE_STATUSES;
+exports.Quote = Quote;
+exports.default = Quote;

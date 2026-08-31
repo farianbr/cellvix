@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 /**
  * Admin notifications (ERP rework §7.3, §6.15, phase 12c).
@@ -9,8 +9,9 @@ import mongoose from 'mongoose';
  * - *Events* — a registration, an order, an accepted quote, a new RMA. These
  *   happened at an instant and stay true forever. They are rows here.
  * - *Standing conditions* — an invoice is overdue, a product is low or out of
- *   stock, a PO is late. These are **true right now and can stop being true**
- *   without anybody touching the bell.
+ *   stock, a PO is late, an account is still waiting for approval. These are
+ *   **true right now and can stop being true** without anybody touching the
+ *   bell.
  *
  * A stored row for a standing condition goes stale the moment the invoice is
  * paid or the shelf is restocked, and then the panel is telling an operator to
@@ -33,12 +34,18 @@ import mongoose from 'mongoose';
  */
 
 /**
- * The event sources. The four standing conditions
- * (`invoice_overdue`, `low_stock`, `out_of_stock`, `po_overdue`) are
+ * The event sources. The five standing conditions (`invoice_overdue`,
+ * `low_stock`, `out_of_stock`, `po_overdue`, `pending_approval`) are
  * deliberately absent — they are derived, never written, and listing them here
  * would invite somebody to `emit()` one.
+ *
+ * `new_registration` and the derived `pending_approval` overlap on purpose and
+ * are not the same fact: this one records that an account *was created*, which
+ * stays true forever; the derived one records that it is *still waiting*, which
+ * stops the moment an admin answers. `notificationService.list()` hides this row
+ * while its derived twin is present so one account never occupies two lines.
  */
-export const NOTIFICATION_TYPES = [
+const NOTIFICATION_TYPES = [
   'new_registration',
   'new_order',
   'quote_accepted',
@@ -46,7 +53,7 @@ export const NOTIFICATION_TYPES = [
 ];
 
 /** Tints the row (§6.15): `danger` for out of stock, `warn` for low stock. */
-export const NOTIFICATION_SEVERITIES = ['info', 'success', 'warn', 'danger'];
+const NOTIFICATION_SEVERITIES = ['info', 'success', 'warn', 'danger'];
 
 const notificationSchema = new mongoose.Schema(
   {
@@ -99,5 +106,10 @@ const notificationSchema = new mongoose.Schema(
 notificationSchema.index({ area: 1, createdAt: -1 });
 notificationSchema.index({ createdAt: -1 });
 
-export const Notification = mongoose.model('Notification', notificationSchema);
-export default Notification;
+const Notification = mongoose.model('Notification', notificationSchema);
+
+// --- CommonJS exports -------------------------------------------------
+exports.NOTIFICATION_TYPES = NOTIFICATION_TYPES;
+exports.NOTIFICATION_SEVERITIES = NOTIFICATION_SEVERITIES;
+exports.Notification = Notification;
+exports.default = Notification;

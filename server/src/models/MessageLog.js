@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 /**
  * Every outbound and inbound message, on every channel (ERP rework §6.13, §8).
@@ -17,8 +17,8 @@ import mongoose from 'mongoose';
  * somebody made, which is a different fact).
  */
 
-export const MESSAGE_CHANNELS = ['call', 'sms', 'whatsapp', 'email'];
-export const MESSAGE_DIRECTIONS = ['inbound', 'outbound'];
+const MESSAGE_CHANNELS = ['call', 'sms', 'whatsapp', 'email'];
+const MESSAGE_DIRECTIONS = ['inbound', 'outbound'];
 
 /**
  * `logged`               a call that happened; there is nothing to send
@@ -26,7 +26,7 @@ export const MESSAGE_DIRECTIONS = ['inbound', 'outbound'];
  * `sent` / `delivered`   a provider accepted / confirmed it
  * `failed`               a provider was asked and refused
  */
-export const MESSAGE_STATUSES = ['logged', 'queued_unconfigured', 'sent', 'delivered', 'failed'];
+const MESSAGE_STATUSES = ['logged', 'queued_unconfigured', 'sent', 'delivered', 'failed'];
 
 const messageLogSchema = new mongoose.Schema(
   {
@@ -71,5 +71,11 @@ const messageLogSchema = new mongoose.Schema(
 messageLogSchema.index({ channel: 1, createdAt: -1 });
 messageLogSchema.index({ user: 1, createdAt: -1 });
 
-export const MessageLog = mongoose.model('MessageLog', messageLogSchema);
-export default MessageLog;
+const MessageLog = mongoose.model('MessageLog', messageLogSchema);
+
+// --- CommonJS exports -------------------------------------------------
+exports.MESSAGE_CHANNELS = MESSAGE_CHANNELS;
+exports.MESSAGE_DIRECTIONS = MESSAGE_DIRECTIONS;
+exports.MESSAGE_STATUSES = MESSAGE_STATUSES;
+exports.MessageLog = MessageLog;
+exports.default = MessageLog;

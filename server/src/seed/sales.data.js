@@ -10,13 +10,13 @@
 
 const DAY = 86_400_000;
 
-export function daysAgo(n) {
+function daysAgo(n) {
   const date = new Date(Date.now() - n * DAY);
   date.setHours(0, 0, 0, 0);
   return date;
 }
 
-export function daysAhead(n) {
+function daysAhead(n) {
   return daysAgo(-n);
 }
 
@@ -43,7 +43,7 @@ const QUOTE_PLANS = [
  * `quoteService.recomputeTotals` does, so a seeded quote cannot disagree with
  * one the running code would produce.
  */
-export function buildQuotes({ products, users, rate = 0.13, year = new Date().getFullYear() }) {
+function buildQuotes({ products, users, rate = 0.13, year = new Date().getFullYear() }) {
   if (!products.length || !users.length) return [];
 
   let sequence = 1;
@@ -143,7 +143,7 @@ const RMA_PLANS = [
  * order's own items, so a return can never name a part that was not sold —
  * which is exactly the rule `rmaService.createRma` enforces.
  */
-export function buildRmas({ orders, year = new Date().getFullYear() }) {
+function buildRmas({ orders, year = new Date().getFullYear() }) {
   const usable = orders.filter((order) => (order.items ?? []).length > 0);
   if (!usable.length) return [];
 
@@ -208,3 +208,9 @@ export function buildRmas({ orders, year = new Date().getFullYear() }) {
     ];
   });
 }
+
+// --- CommonJS exports -------------------------------------------------
+exports.daysAgo = daysAgo;
+exports.daysAhead = daysAhead;
+exports.buildQuotes = buildQuotes;
+exports.buildRmas = buildRmas;

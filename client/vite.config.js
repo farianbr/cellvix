@@ -5,9 +5,85 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.dirname(fileURLToPath(import.meta.url));
+const sharedDir = path.resolve(root, '..', 'shared');
+
+const toPosix = (value) => value.replace(/\\/g, '/');
+
+/**
+ * Makes `shared/` importable as ESM by the dev server.
+ *
+ * `shared/` is CommonJS because the Express server `require()`s it. The
+ * production build converts it through `build.commonjsOptions` below, but the
+ * dev server does not apply that plugin to aliased sources outside
+ * `node_modules`: it would serve the raw `exports.x = …` assignments, which
+ * declare no ESM binding, so every `import { X } from '@shared/…'` would arrive
+ * as `undefined`.
+ *
+ * The rewrite is mechanical — run the CommonJS body against a local `module`
+ * object, then re-export each name the conversion emitted. These modules hold
+ * only zod schemas and constants, so evaluating one has no side effects.
+ */
+function sharedCommonJsPlugin() {
+  const sharedPosix = toPosix(sharedDir);
+
+  return {
+    name: 'cellvix-shared-commonjs',
+    apply: 'serve',
+    transform(code, id) {
+      const file = toPosix(id.split('?')[0]);
+      if (!file.startsWith(sharedPosix) || !file.endsWith('.js')) return null;
+
+      const names = [...code.matchAll(/^exports\.([A-Za-z_$][\w$]*)\s*=/gm)].map((m) => m[1]);
+      const unique = [...new Set(names)];
+      if (unique.length === 0) return null;
+
+      // Every `require()` has to become a static ESM import, or the browser
+      // hits an undefined `require` at runtime. This covers both a sibling
+      // module (`./checkout.js`) and a bare package (`zod`).
+      //
+      // The namespace and its `default` are merged rather than one being
+      // preferred: Vite's optimized `zod` exposes `z` on the namespace but not
+      // on `default`, while a plain CommonJS package puts everything on
+      // `default`. Spreading both means a destructured `require` finds its key
+      // either way.
+      const imports = [];
+      const bindings = [];
+      let index = 0;
+      const body = code.replace(/require\((['"])([^'"]+)\1\)/g, (_match, _quote, spec) => {
+        const local = `__cjsDep${index}`;
+        index += 1;
+        imports.push(`import * as ${local}Ns from '${spec}';`);
+        bindings.push(
+          `const ${local} = Object.assign({}, ${local}Ns.default, ${local}Ns);`,
+        );
+        return local;
+      });
+
+      const named = unique
+        .filter((name) => name !== 'default')
+        .map((name) => `export const ${name} = __module.exports.${name};`);
+
+      return {
+        code: [
+          ...imports,
+          ...bindings,
+          'const __module = { exports: {} };',
+          '{',
+          '  const module = __module;',
+          '  const exports = __module.exports;',
+          body,
+          '}',
+          ...named,
+          unique.includes('default') ? 'export default __module.exports.default;' : '',
+        ].join('\n'),
+        map: null,
+      };
+    },
+  };
+}
 
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
+  plugins: [sharedCommonJsPlugin(), react(), tailwindcss()],
   resolve: {
     alias: {
       '@': path.resolve(root, 'src'),
@@ -15,6 +91,14 @@ export default defineConfig({
     },
   },
   build: {
+    /**
+     * `shared/` is CommonJS and lives outside `node_modules` — the only place
+     * @rollup/plugin-commonjs converts by default. Without this the build fails
+     * with `"X" is not exported by "../shared/…"`.
+     */
+    commonjsOptions: {
+      include: [/shared[/\\]/, /node_modules/],
+    },
     rollupOptions: {
       output: {
         /**

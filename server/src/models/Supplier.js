@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 /**
  * A business Cellvix buys stock from.
@@ -48,5 +48,8 @@ const supplierSchema = new mongoose.Schema(
 
 supplierSchema.index({ name: 'text', code: 'text', contactName: 'text' });
 
-export const Supplier = mongoose.model('Supplier', supplierSchema);
-export default Supplier;
+const Supplier = mongoose.model('Supplier', supplierSchema);
+
+// --- CommonJS exports -------------------------------------------------
+exports.Supplier = Supplier;
+exports.default = Supplier;

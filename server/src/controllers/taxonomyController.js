@@ -1,6 +1,9 @@
-import { asyncHandler } from '../utils/ApiError.js';
-import * as taxonomyService from '../services/taxonomyService.js';
+const { asyncHandler } = require('../utils/ApiError.js');
+const taxonomyService = require('../services/taxonomyService.js');
 
-export const tree = asyncHandler(async (_req, res) => {
+const tree = asyncHandler(async (_req, res) => {
   res.json(await taxonomyService.getTree());
 });
+
+// --- CommonJS exports -------------------------------------------------
+exports.tree = tree;

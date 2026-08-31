@@ -1,5 +1,5 @@
-import mongoose from 'mongoose';
-import env from './env.js';
+const mongoose = require('mongoose');
+const { default: env } = require('./env.js');
 
 let shuttingDown = false;
 
@@ -13,7 +13,7 @@ let shuttingDown = false;
  * request becomes a silent 401 and every cart is orphaned. That reads as an
  * authentication bug and is not one, so the convenience is not worth it.
  */
-export async function connectDb() {
+async function connectDb() {
   mongoose.set('strictQuery', true);
 
   // A remote cluster drops connections in ways a local mongod never did: laptop
@@ -40,7 +40,11 @@ export async function connectDb() {
   return mongoose.connection;
 }
 
-export async function disconnectDb() {
+async function disconnectDb() {
   shuttingDown = true;
   await mongoose.disconnect();
 }
+
+// --- CommonJS exports -------------------------------------------------
+exports.connectDb = connectDb;
+exports.disconnectDb = disconnectDb;

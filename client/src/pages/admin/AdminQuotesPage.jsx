@@ -8,10 +8,12 @@ import {
   FileSignature,
   Plus,
   Send,
+  ThumbsUp,
   Trash2,
   Wallet,
 } from 'lucide-react';
 import cn from '@/lib/cn';
+import useCreateParam from '@/hooks/useCreateParam';
 import { money, date, count as formatCount } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
@@ -22,6 +24,7 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import PageHeader from '@/components/admin/PageHeader';
 import KpiRow from '@/components/admin/KpiRow';
+import BulkBar from '@/components/admin/BulkBar';
 import FilterStrip from '@/components/admin/FilterStrip';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
@@ -219,7 +222,8 @@ function QuoteForm({ clients, products, quote, onSubmit, onCancel, isPending, er
 
 export function AdminQuotesPage() {
   const [query, setQuery] = useState('');
-  const [creating, setCreating] = useState(false);
+  // Opened directly by `+ Create` (§7.2), which arrives with `?new=1`.
+  const [creating, setCreating] = useCreateParam();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -229,7 +233,8 @@ export function AdminQuotesPage() {
   const { data: clientData } = useAdminUsers({ status: 'approved' });
   // Only loaded while the builder is open — the catalogue is 400+ rows.
   const { data: inventoryData } = useAdminInventory({}, creating);
-  const { createQuote, setQuoteStatus } = useAdminMutations();
+  const [selected, setSelected] = useState([]);
+  const { createQuote, setQuoteStatus, deleteQuote } = useAdminMutations();
 
   const quotes = data?.quotes ?? [];
   const counts = data?.counts ?? {};
@@ -242,6 +247,47 @@ export function AdminQuotesPage() {
     if (next === 'all') params.delete('status');
     else params.set('status', next);
     setSearchParams(params, { replace: true });
+  }
+
+  /**
+   * Bulk accept / delete.
+   *
+   * **Rows the server would refuse are skipped and reported, never sent.** The
+   * quote ladder only accepts a `sent` quote and refuses an expired one, and a
+   * converted quote cannot be deleted because that would orphan the order it
+   * became. Firing those anyway would produce a row of red toasts and leave the
+   * operator to work out which of forty selections actually moved.
+   *
+   * Sequential rather than `Promise.all`: these are audited writes, and forty
+   * at once at a shared Atlas instance is how a bulk action becomes a partial
+   * one for reasons nobody can reconstruct afterwards.
+   */
+  async function runBulk(action) {
+    const rows = quotes.filter((quote) => selected.includes(quote.id));
+
+    const eligible =
+      action === 'accept'
+        ? rows.filter((quote) => quote.storedStatus === 'sent' && !quote.expired)
+        : rows.filter((quote) => quote.storedStatus !== 'converted');
+
+    for (const quote of eligible) {
+      if (action === 'accept') {
+        await setQuoteStatus.mutateAsync({ id: quote.id, status: 'accepted' }).catch(() => {});
+      } else {
+        await deleteQuote.mutateAsync(quote.id).catch(() => {});
+      }
+    }
+
+    setSelected([]);
+
+    const skipped = rows.length - eligible.length;
+    if (skipped > 0) {
+      window.alert(
+        action === 'accept'
+          ? `${eligible.length} accepted. ${skipped} skipped — only a sent quote that has not expired can be accepted.`
+          : `${eligible.length} deleted. ${skipped} skipped — a converted quote cannot be deleted without orphaning the order it became.`,
+      );
+    }
   }
 
   const columns = [
@@ -429,6 +475,9 @@ export function AdminQuotesPage() {
           columns={columns}
           rows={quotes}
           rowKey={(quote) => quote.id}
+          selectable
+          selected={selected}
+          onSelectionChange={setSelected}
           rowMenu={rowMenu}
           onRowClick={(quote) => navigate(`/admin/quotes/${quote.id}`)}
           loading={isLoading}
@@ -446,6 +495,33 @@ export function AdminQuotesPage() {
           }
         />
       </Panel>
+
+      {/* Bulk actions.
+          **Convert is deliberately absent.** Converting asks two questions per
+          quote — the delivery method, and whether a price that has drifted from
+          the catalogue is accepted — and a batch would have to answer both on
+          the operator's behalf for every row. Accepting and deleting ask
+          nothing, so those are the two that are safe in bulk. */}
+      <BulkBar count={selected.length} noun="selected" onClear={() => setSelected([])}>
+        <Button
+          size="xs"
+          variant="outline"
+          icon={ThumbsUp}
+          loading={setQuoteStatus.isPending}
+          onClick={() => runBulk('accept')}
+        >
+          Accept
+        </Button>
+        <Button
+          size="xs"
+          variant="outline"
+          icon={Trash2}
+          loading={deleteQuote.isPending}
+          onClick={() => runBulk('delete')}
+        >
+          Delete
+        </Button>
+      </BulkBar>
 
       <Modal
         open={creating}

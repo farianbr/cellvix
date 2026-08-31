@@ -1,10 +1,10 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
-import Role, { PERMISSION_AREAS, PERMISSION_LEVELS } from '../models/Role.js';
-import Outlet from '../models/Outlet.js';
-import User from '../models/User.js';
-import ApiError from '../utils/ApiError.js';
-import { likeRegex } from '../utils/regex.js';
+const { default: Role, PERMISSION_AREAS, PERMISSION_LEVELS } = require('../models/Role.js');
+const { default: Outlet } = require('../models/Outlet.js');
+const { default: User } = require('../models/User.js');
+const { default: ApiError } = require('../utils/ApiError.js');
+const { likeRegex } = require('../utils/regex.js');
 
 /**
  * Outlets, roles and staff accounts (ERP rework §6.14, §6.15/3, §7.6 — phase 8).
@@ -82,7 +82,7 @@ const BUILT_IN_ROLES = [
  * slug and an operator's edits to a non-system role are left alone, because
  * re-running setup must never quietly reset permissions somebody tuned.
  */
-export async function ensureBuiltInRoles() {
+async function ensureBuiltInRoles() {
   const created = [];
   for (const role of BUILT_IN_ROLES) {
     const existing = await Role.findOne({ slug: role.slug });
@@ -104,7 +104,7 @@ export async function ensureBuiltInRoles() {
  * One location today (§0.9), but the switcher and every `outlet` field need a
  * row to point at from day one.
  */
-export async function ensureDefaultOutlet() {
+async function ensureDefaultOutlet() {
   const existing = await Outlet.findOne({ isDefault: true });
   if (existing) return existing;
 
@@ -132,13 +132,13 @@ export async function ensureDefaultOutlet() {
  * from the client: a code the form proposes is a code two operators can pick in
  * the same moment.
  */
-export async function nextOutletCode() {
+async function nextOutletCode() {
   const last = await Outlet.findOne().sort({ code: -1 }).select('code').lean();
   const current = Number(String(last?.code ?? '#000000').replace(/\D/g, '')) || 0;
   return `#${String(current + 1).padStart(6, '0')}`;
 }
 
-export async function listOutlets({ search, status } = {}) {
+async function listOutlets({ search, status } = {}) {
   const filter = {};
   if (status && status !== 'all') filter.status = status;
   if (search) {
@@ -174,7 +174,7 @@ export async function listOutlets({ search, status } = {}) {
   };
 }
 
-export async function getOutlet(id) {
+async function getOutlet(id) {
   if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('Outlet not found.');
   const outlet = await Outlet.findById(id).lean();
   if (!outlet) throw ApiError.notFound('Outlet not found.');
@@ -187,7 +187,7 @@ export async function getOutlet(id) {
   return { ...outlet, id: String(outlet._id), staff };
 }
 
-export async function createOutlet(payload) {
+async function createOutlet(payload) {
   const outlet = await Outlet.create({
     ...payload,
     code: await nextOutletCode(),
@@ -198,7 +198,7 @@ export async function createOutlet(payload) {
   return outlet.toPublic();
 }
 
-export async function updateOutlet(id, payload) {
+async function updateOutlet(id, payload) {
   if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('Outlet not found.');
   const outlet = await Outlet.findById(id);
   if (!outlet) throw ApiError.notFound('Outlet not found.');
@@ -212,7 +212,7 @@ export async function updateOutlet(id, payload) {
 }
 
 /** Moves the default flag, keeping exactly one winner. */
-export async function setDefaultOutlet(id) {
+async function setDefaultOutlet(id) {
   if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('Outlet not found.');
   const outlet = await Outlet.findById(id);
   if (!outlet) throw ApiError.notFound('Outlet not found.');
@@ -230,7 +230,7 @@ export async function setDefaultOutlet(id) {
  * Refused while the outlet is the default or still has staff — the same
  * reasoning as a role in use. Reassign, then delete.
  */
-export async function deleteOutlet(id) {
+async function deleteOutlet(id) {
   if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('Outlet not found.');
   const outlet = await Outlet.findById(id);
   if (!outlet) throw ApiError.notFound('Outlet not found.');
@@ -256,7 +256,7 @@ export async function deleteOutlet(id) {
 
 // ---- roles ------------------------------------------------------------------
 
-export async function listRoles() {
+async function listRoles() {
   const roles = await Role.find().sort({ isSystem: -1, isBuiltIn: -1, name: 1 });
 
   const counts = await User.aggregate([
@@ -294,7 +294,7 @@ function slugify(name) {
     .replace(/^-+|-+$/g, '');
 }
 
-export async function createRole({ name, areas }) {
+async function createRole({ name, areas }) {
   const slug = slugify(name);
   if (!slug) throw ApiError.badRequest('Enter a role name.');
 
@@ -305,7 +305,7 @@ export async function createRole({ name, areas }) {
   return role.toPublic();
 }
 
-export async function updateRole(id, { name, areas }) {
+async function updateRole(id, { name, areas }) {
   if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('Role not found.');
   const role = await Role.findById(id);
   if (!role) throw ApiError.notFound('Role not found.');
@@ -331,7 +331,7 @@ export async function updateRole(id, { name, areas }) {
   return role.toPublic();
 }
 
-export async function deleteRole(id) {
+async function deleteRole(id) {
   if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('Role not found.');
   const role = await Role.findById(id);
   if (!role) throw ApiError.notFound('Role not found.');
@@ -380,7 +380,7 @@ function staffRow(user) {
  * screen under Clients, and mixing the two populations in one table is how an
  * operator ends up granting a customer a staff role.
  */
-export async function listStaff({ search, role, status } = {}) {
+async function listStaff({ search, role, status } = {}) {
   const filter = { role: { $in: ['admin', 'staff'] } };
 
   if (role && role !== 'all') {
@@ -443,7 +443,7 @@ async function assertRoleAndOutlet({ accountType, staffRole, outlet }) {
   }
 }
 
-export async function createStaff(payload) {
+async function createStaff(payload) {
   const { name, email, password, phone, accountType = 'staff', staffRole, outlet } = payload;
 
   const existing = await User.findOne({ email: String(email).toLowerCase() });
@@ -478,7 +478,7 @@ export async function createStaff(payload) {
   );
 }
 
-export async function updateStaff(id, payload, actorId) {
+async function updateStaff(id, payload, actorId) {
   if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('User not found.');
   const user = await User.findById(id);
   if (!user) throw ApiError.notFound('User not found.');
@@ -547,7 +547,7 @@ export async function updateStaff(id, payload, actorId) {
   );
 }
 
-export async function deleteStaff(id, actorId) {
+async function deleteStaff(id, actorId) {
   if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('User not found.');
   if (String(id) === String(actorId)) {
     throw ApiError.badRequest('You cannot delete your own account.', 'SELF_DELETE');
@@ -587,14 +587,14 @@ export async function deleteStaff(id, actorId) {
  * that would reject it, and it must not throw its own error ahead of the real
  * one the caller is about to produce.
  */
-export async function getRoleSnapshot(id) {
+async function getRoleSnapshot(id) {
   if (!mongoose.isValidObjectId(id)) return null;
   const role = await Role.findById(id);
   return role ? role.toPublic() : null;
 }
 
 /** The same, for a staff account. Uses `staffRow` so it matches what the API returns. */
-export async function getStaffSnapshot(id) {
+async function getStaffSnapshot(id) {
   if (!mongoose.isValidObjectId(id)) return null;
   const user = await User.findById(id)
     .populate('staffRole', 'name slug')
@@ -612,7 +612,7 @@ export async function getStaffSnapshot(id) {
   };
 }
 
-export default {
+exports.default = {
   ensureBuiltInRoles,
   ensureDefaultOutlet,
   getRoleSnapshot,
@@ -633,3 +633,24 @@ export default {
   updateStaff,
   deleteStaff,
 };
+
+// --- CommonJS exports -------------------------------------------------
+exports.ensureBuiltInRoles = ensureBuiltInRoles;
+exports.ensureDefaultOutlet = ensureDefaultOutlet;
+exports.nextOutletCode = nextOutletCode;
+exports.listOutlets = listOutlets;
+exports.getOutlet = getOutlet;
+exports.createOutlet = createOutlet;
+exports.updateOutlet = updateOutlet;
+exports.setDefaultOutlet = setDefaultOutlet;
+exports.deleteOutlet = deleteOutlet;
+exports.listRoles = listRoles;
+exports.createRole = createRole;
+exports.updateRole = updateRole;
+exports.deleteRole = deleteRole;
+exports.listStaff = listStaff;
+exports.createStaff = createStaff;
+exports.updateStaff = updateStaff;
+exports.deleteStaff = deleteStaff;
+exports.getRoleSnapshot = getRoleSnapshot;
+exports.getStaffSnapshot = getStaffSnapshot;

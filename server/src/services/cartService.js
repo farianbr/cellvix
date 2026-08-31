@@ -1,13 +1,13 @@
-import Cart from '../models/Cart.js';
-import Product from '../models/Product.js';
-import ApiError from '../utils/ApiError.js';
-import { canSeePricing } from '../middleware/auth.js';
-import Offer from '../models/Offer.js';
-import { offerStatus } from './offerService.js';
-import { OfferRejection, priceCart, resolveCode } from './pricingService.js';
+const { default: Cart } = require('../models/Cart.js');
+const { default: Product } = require('../models/Product.js');
+const { default: ApiError } = require('../utils/ApiError.js');
+const { canSeePricing } = require('../middleware/auth.js');
+const { default: Offer } = require('../models/Offer.js');
+const { offerStatus } = require('./offerService.js');
+const { OfferRejection, priceCart, resolveCode } = require('./pricingService.js');
 
 /** A user has exactly one active cart. Saved carts are separate documents. */
-export async function getOrCreateCart(userId) {
+async function getOrCreateCart(userId) {
   let cart = await Cart.findOne({ user: userId, savedForLater: false });
   if (!cart) cart = await Cart.create({ user: userId, items: [] });
   return cart;
@@ -25,7 +25,7 @@ export async function getOrCreateCart(userId) {
  * Price gating still applies: a pending user gets their lines with no money at
  * all, and never reaches the pricing engine.
  */
-export async function serialize(cart, user) {
+async function serialize(cart, user) {
   const showPricing = canSeePricing(user);
 
   if (!showPricing) return serializeUnpriced(cart);
@@ -152,7 +152,7 @@ async function requireProduct(productId) {
   return product;
 }
 
-export async function addItem(userId, productId, qty) {
+async function addItem(userId, productId, qty) {
   const product = await requireProduct(productId);
   const cart = await getOrCreateCart(userId);
 
@@ -167,7 +167,7 @@ export async function addItem(userId, productId, qty) {
   return cart;
 }
 
-export async function setQty(userId, productId, qty) {
+async function setQty(userId, productId, qty) {
   const cart = await getOrCreateCart(userId);
 
   if (qty === 0) {
@@ -186,14 +186,14 @@ export async function setQty(userId, productId, qty) {
   return cart;
 }
 
-export async function removeItem(userId, productId) {
+async function removeItem(userId, productId) {
   const cart = await getOrCreateCart(userId);
   cart.items = cart.items.filter((item) => item.product.toString() !== productId);
   await cart.save();
   return cart;
 }
 
-export async function clearCart(userId) {
+async function clearCart(userId) {
   const cart = await getOrCreateCart(userId);
   cart.items = [];
   cart.bundles = [];
@@ -209,7 +209,7 @@ export async function clearCart(userId) {
  * Quantities are summed, not replaced — a buyer who added two screens as a
  * guest and one on their phone should end up with three.
  */
-export async function mergeGuestCart(userId, guestItems) {
+async function mergeGuestCart(userId, guestItems) {
   if (!guestItems?.length) return getOrCreateCart(userId);
 
   const cart = await getOrCreateCart(userId);
@@ -236,7 +236,7 @@ export async function mergeGuestCart(userId, guestItems) {
 }
 
 /** Parks a copy of the active cart and empties the live one. */
-export async function saveForLater(userId, name) {
+async function saveForLater(userId, name) {
   const cart = await getOrCreateCart(userId);
   if (cart.items.length === 0 && cart.bundles.length === 0) {
     throw ApiError.badRequest('There is nothing in your cart to save.', 'CART_EMPTY');
@@ -257,7 +257,7 @@ export async function saveForLater(userId, name) {
   return cart;
 }
 
-export async function listSaved(userId) {
+async function listSaved(userId) {
   const carts = await Cart.find({ user: userId, savedForLater: true }).sort({ createdAt: -1 }).lean();
   return carts.map((cart) => ({
     id: cart._id.toString(),
@@ -270,7 +270,7 @@ export async function listSaved(userId) {
 }
 
 /** Merges a saved cart back into the active one. The saved copy is consumed. */
-export async function restoreSaved(userId, savedCartId) {
+async function restoreSaved(userId, savedCartId) {
   const saved = await Cart.findOne({ _id: savedCartId, user: userId, savedForLater: true });
   if (!saved) throw ApiError.notFound('Saved cart not found.', 'SAVED_CART_NOT_FOUND');
 
@@ -303,7 +303,7 @@ export async function restoreSaved(userId, savedCartId) {
   return cart;
 }
 
-export async function deleteSaved(userId, savedCartId) {
+async function deleteSaved(userId, savedCartId) {
   const result = await Cart.deleteOne({ _id: savedCartId, user: userId, savedForLater: true });
   if (result.deletedCount === 0) {
     throw ApiError.notFound('Saved cart not found.', 'SAVED_CART_NOT_FOUND');
@@ -317,7 +317,7 @@ export async function deleteSaved(userId, savedCartId) {
  * pasting 40 lines from a spreadsheet needs to know which three did not land.
  * SKU matching is case-insensitive and exact; partial matches would be guessing.
  */
-export async function bulkAdd(userId, lines) {
+async function bulkAdd(userId, lines) {
   const skus = lines.map((line) => line.sku.trim().toUpperCase());
 
   const products = await Product.find({
@@ -369,7 +369,7 @@ export async function bulkAdd(userId, lines) {
  * expanded from the live offer at read time (`pricingService.expandBundles`),
  * so editing the combo in the admin updates every cart holding it.
  */
-export async function addBundle(userId, slugOrId, qty = 1) {
+async function addBundle(userId, slugOrId, qty = 1) {
   const offer = await findLiveCombo(slugOrId);
   const cart = await getOrCreateCart(userId);
 
@@ -381,7 +381,7 @@ export async function addBundle(userId, slugOrId, qty = 1) {
   return cart;
 }
 
-export async function setBundleQty(userId, offerId, qty) {
+async function setBundleQty(userId, offerId, qty) {
   const cart = await getOrCreateCart(userId);
 
   if (qty === 0) {
@@ -396,7 +396,7 @@ export async function setBundleQty(userId, offerId, qty) {
   return cart;
 }
 
-export async function removeBundle(userId, offerId) {
+async function removeBundle(userId, offerId) {
   return setBundleQty(userId, offerId, 0);
 }
 
@@ -426,7 +426,7 @@ async function findLiveCombo(slugOrId) {
  * attached — `priceCart` returns a `promoNotice` explaining what the cart is
  * missing, and the discount starts applying the moment it qualifies.
  */
-export async function applyPromoCode(userId, code, user) {
+async function applyPromoCode(userId, code, user) {
   let offer;
   try {
     offer = await resolveCode(code, user);
@@ -443,9 +443,28 @@ export async function applyPromoCode(userId, code, user) {
   return cart;
 }
 
-export async function clearPromoCode(userId) {
+async function clearPromoCode(userId) {
   const cart = await getOrCreateCart(userId);
   cart.promoCode = '';
   await cart.save();
   return cart;
 }
+
+// --- CommonJS exports -------------------------------------------------
+exports.getOrCreateCart = getOrCreateCart;
+exports.serialize = serialize;
+exports.addItem = addItem;
+exports.setQty = setQty;
+exports.removeItem = removeItem;
+exports.clearCart = clearCart;
+exports.mergeGuestCart = mergeGuestCart;
+exports.saveForLater = saveForLater;
+exports.listSaved = listSaved;
+exports.restoreSaved = restoreSaved;
+exports.deleteSaved = deleteSaved;
+exports.bulkAdd = bulkAdd;
+exports.addBundle = addBundle;
+exports.setBundleQty = setBundleQty;
+exports.removeBundle = removeBundle;
+exports.applyPromoCode = applyPromoCode;
+exports.clearPromoCode = clearPromoCode;

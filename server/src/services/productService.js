@@ -1,8 +1,8 @@
-import Product from '../models/Product.js';
-import Taxonomy from '../models/Taxonomy.js';
-import { canSeePricing } from '../middleware/auth.js';
-import { listForProduct as listFaqsForProduct } from './faqService.js';
-import { likeRegex } from '../utils/regex.js';
+const { default: Product } = require('../models/Product.js');
+const { default: Taxonomy } = require('../models/Taxonomy.js');
+const { canSeePricing } = require('../middleware/auth.js');
+const { listForProduct: listFaqsForProduct } = require('./faqService.js');
+const { likeRegex } = require('../utils/regex.js');
 
 const PAGE_SIZE = 24;
 
@@ -27,7 +27,7 @@ const SORTS = {
  * belongs to the admin payload, and shipping it here invited a buyer to plan
  * around a figure that moves between page loads.
  */
-export function serialize(product, user) {
+function serialize(product, user) {
   const showPricing = canSeePricing(user);
   const doc = product.toObject ? product.toObject() : product;
 
@@ -105,7 +105,7 @@ function marketPosition(doc) {
   };
 }
 
-export function serializeDetail(product, user) {
+function serializeDetail(product, user) {
   const doc = product.toObject ? product.toObject() : product;
   return {
     ...serialize(product, user),
@@ -200,7 +200,7 @@ async function buildFacets(params) {
 }
 
 /** The grid query. One call returns products, facet counts and pagination. */
-export async function listProducts(params, user) {
+async function listProducts(params, user) {
   const page = Math.max(1, Number(params.page) || 1);
   const limit = Math.min(96, Number(params.limit) || PAGE_SIZE);
   const query = buildQuery(params);
@@ -240,7 +240,7 @@ export async function listProducts(params, user) {
   };
 }
 
-export async function getProductBySlug(slug, user) {
+async function getProductBySlug(slug, user) {
   const product = await Product.findOne({ slug, isActive: true }).lean();
   if (!product) return null;
 
@@ -269,7 +269,7 @@ export async function getProductBySlug(slug, user) {
  * Payload for the header's live type-ahead (brief §4.3): facet suggestions on
  * the left, live product results on the right, total for the "View All" CTA.
  */
-export async function searchProducts(term, user, { limit = 6 } = {}) {
+async function searchProducts(term, user, { limit = 6 } = {}) {
   // `?q=a&q=b` arrives as an array; anything but a string would throw on `.trim`.
   const q = typeof term === 'string' ? term : '';
   if (q.trim().length < 2) {
@@ -367,3 +367,10 @@ function staticPageMatches(q) {
   const needle = q.trim().toLowerCase();
   return STATIC_PAGES.filter((page) => page.title.toLowerCase().includes(needle)).slice(0, 4);
 }
+
+// --- CommonJS exports -------------------------------------------------
+exports.serialize = serialize;
+exports.serializeDetail = serializeDetail;
+exports.listProducts = listProducts;
+exports.getProductBySlug = getProductBySlug;
+exports.searchProducts = searchProducts;

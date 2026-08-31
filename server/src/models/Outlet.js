@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 /**
  * A physical store (ERP rework §6.14, §0.5).
@@ -15,9 +15,9 @@ import mongoose from 'mongoose';
  * list is deliberately short — these read as distinct at the size a card
  * border actually renders.
  */
-export const OUTLET_COLOR_TOKENS = ['brand', 'info', 'success', 'warn', 'danger', 'ink'];
+const OUTLET_COLOR_TOKENS = ['brand', 'info', 'success', 'warn', 'danger', 'ink'];
 
-export const OUTLET_STATUSES = ['active', 'inactive', 'maintenance'];
+const OUTLET_STATUSES = ['active', 'inactive', 'maintenance'];
 
 const hoursSchema = new mongoose.Schema(
   {
@@ -104,5 +104,10 @@ outletSchema.methods.toPublic = function toPublic() {
   };
 };
 
-export const Outlet = mongoose.model('Outlet', outletSchema);
-export default Outlet;
+const Outlet = mongoose.model('Outlet', outletSchema);
+
+// --- CommonJS exports -------------------------------------------------
+exports.OUTLET_COLOR_TOKENS = OUTLET_COLOR_TOKENS;
+exports.OUTLET_STATUSES = OUTLET_STATUSES;
+exports.Outlet = Outlet;
+exports.default = Outlet;

@@ -1,4 +1,4 @@
-import { TAXONOMY, PART_TYPES, GRADE_MULTIPLIER } from './taxonomy.data.js';
+const { TAXONOMY, PART_TYPES, GRADE_MULTIPLIER } = require('./taxonomy.data.js');
 
 /**
  * Deterministic pseudo-random generator.
@@ -18,7 +18,7 @@ function mulberry32(seed) {
   };
 }
 
-export function slugify(value) {
+function slugify(value) {
   return value
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
@@ -26,7 +26,7 @@ export function slugify(value) {
 }
 
 /** Flattens the nested TAXONOMY literal into Taxonomy documents. */
-export function buildTaxonomyDocs() {
+function buildTaxonomyDocs() {
   const docs = [];
   let order = 0;
 
@@ -129,7 +129,7 @@ function hashString(value) {
  * stock roll after this one — the catalogue is meant to be byte-identical on
  * every reseed, and adding a field here must not silently redraw the store.
  */
-export function buildCompetitors(price, seed) {
+function buildCompetitors(price, seed) {
   const random = mulberry32(typeof seed === 'string' ? hashString(seed) : seed);
   const pool = [...COMPETITORS].sort(() => random() - 0.5);
   const count = random() < 0.55 ? 3 : 2;
@@ -150,7 +150,7 @@ export function buildCompetitors(price, seed) {
  * interesting empty states. The generator picks a deterministic subset so facet
  * counts vary the way a real catalogue does, and so "no results" is reachable.
  */
-export function buildProducts({ targetCount = 420 } = {}) {
+function buildProducts({ targetCount = 420 } = {}) {
   const random = mulberry32(20260819);
   const products = [];
   const models = [];
@@ -279,3 +279,9 @@ export function buildProducts({ targetCount = 420 } = {}) {
 
   return products;
 }
+
+// --- CommonJS exports -------------------------------------------------
+exports.slugify = slugify;
+exports.buildTaxonomyDocs = buildTaxonomyDocs;
+exports.buildCompetitors = buildCompetitors;
+exports.buildProducts = buildProducts;

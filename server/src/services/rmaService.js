@@ -1,14 +1,15 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
-import Rma, { RMA_STATUSES, RMA_OPEN_STATUSES } from '../models/Rma.js';
-import Order from '../models/Order.js';
-import User from '../models/User.js';
-import Settings from '../models/Settings.js';
-import ApiError from '../utils/ApiError.js';
-import { likeRegex } from '../utils/regex.js';
-import * as storeCredit from './storeCreditService.js';
-import { applyStockMovement } from './purchaseService.js';
-import * as notificationService from './notificationService.js';
+const { default: Rma, RMA_STATUSES, RMA_OPEN_STATUSES } = require('../models/Rma.js');
+const { default: Order } = require('../models/Order.js');
+const { default: User } = require('../models/User.js');
+const { default: Settings } = require('../models/Settings.js');
+const { default: ApiError } = require('../utils/ApiError.js');
+const { likeRegex } = require('../utils/regex.js');
+const storeCredit = require('./storeCreditService.js');
+const { applyStockMovement } = require('./purchaseService.js');
+const notificationService = require('./notificationService.js');
+const warrantyService = require('./warrantyService.js');
 
 /**
  * RMA / returns (ERP rework §6.3, phase 7).
@@ -156,7 +157,7 @@ function proposedRefund(rma) {
 
 // ---- read -------------------------------------------------------------------
 
-export async function listRmas({ q, status, from, to } = {}) {
+async function listRmas({ q, status, from, to } = {}) {
   const settings = await Settings.load();
   const slaDays = settings?.operations?.rmaSlaDays ?? 14;
 
@@ -218,22 +219,49 @@ export async function listRmas({ q, status, from, to } = {}) {
   };
 }
 
-export async function getRma(id) {
+async function getRma(id) {
   const settings = await Settings.load();
   const slaDays = settings?.operations?.rmaSlaDays ?? 14;
 
   const query = isObjectId(id) ? { _id: id } : { rmaNumber: String(id) };
   const rma = await Rma.findOne(query)
-    .populate('user', 'businessName contactName email phone storeCredit')
-    .populate('order', 'orderNumber total refundedTotal status createdAt')
+    .populate('user', 'businessName contactName email phone storeCredit tier')
+    // `timeline` and `items` are needed for the warranty answer below: cover
+    // runs from the delivery entry, and the grade is snapshotted on the line.
+    .populate('order', 'orderNumber total refundedTotal status createdAt timeline items')
     .lean();
 
   if (!rma) throw ApiError.notFound('RMA not found.', 'RMA_NOT_FOUND');
 
   const shaped = shapeRma(rma, slaDays);
 
+  /**
+   * Warranty per returned line.
+   *
+   * Reported, never enforced: an out-of-warranty return is a normal commercial
+   * decision — goodwill, or a failure the relationship covers even though the
+   * warranty does not — and the operator makes it with the fact in front of
+   * them rather than being blocked by it (see warrantyService).
+   *
+   * Matched by SKU against the order's own lines, because the RMA line carries
+   * the quantity returned while the grade lives on what was sold.
+   */
+  const soldBySku = new Map((rma.order?.items ?? []).map((item) => [item.sku, item]));
+
+  const warranty = (rma.items ?? []).map((line) => ({
+    sku: line.sku,
+    name: line.name,
+    ...warrantyService.coverFor({
+      settings,
+      grade: soldBySku.get(line.sku)?.grade,
+      tier: rma.user?.tier ?? 'standard',
+      order: rma.order,
+    }),
+  }));
+
   return {
     rma: shaped,
+    warranty,
     // What a refund resolution would propose, and what the order can actually
     // take — shown together so an operator is never asked to guess.
     refund: {
@@ -256,7 +284,7 @@ export async function getRma(id) {
  * snapshotted from the order so a refund can be proposed without re-reading a
  * catalogue that has since moved.
  */
-export async function createRma(body, createdBy) {
+async function createRma(body, createdBy) {
   const order = await Order.findOne({ orderNumber: body.orderNumber }).lean();
   if (!order) throw ApiError.badRequest('That order number does not exist.', 'ORDER_NOT_FOUND');
 
@@ -339,7 +367,7 @@ export async function createRma(body, createdBy) {
  * decision with it. A status route that could silently resolve an RMA would be
  * a status route that moves money.
  */
-export async function setRmaStatus(id, { status, note }) {
+async function setRmaStatus(id, { status, note }) {
   const query = isObjectId(id) ? { _id: id } : { rmaNumber: String(id) };
   const rma = await Rma.findOne(query);
   if (!rma) throw ApiError.notFound('RMA not found.', 'RMA_NOT_FOUND');
@@ -367,7 +395,7 @@ export async function setRmaStatus(id, { status, note }) {
 }
 
 /** Inspection findings — the per-item condition and disposition. */
-export async function inspectRma(id, { items, inspectionNotes }) {
+async function inspectRma(id, { items, inspectionNotes }) {
   const query = isObjectId(id) ? { _id: id } : { rmaNumber: String(id) };
   const rma = await Rma.findOne(query);
   if (!rma) throw ApiError.notFound('RMA not found.', 'RMA_NOT_FOUND');
@@ -408,7 +436,7 @@ export async function inspectRma(id, { items, inspectionNotes }) {
  * phantom inventory. `restockedAt` guards against a second resolve putting the
  * same units back twice.
  */
-export async function resolveRma(id, { resolution, amountDollars, note }, adminId) {
+async function resolveRma(id, { resolution, amountDollars, note }, adminId) {
   const query = isObjectId(id) ? { _id: id } : { rmaNumber: String(id) };
   const rma = await Rma.findOne(query);
   if (!rma) throw ApiError.notFound('RMA not found.', 'RMA_NOT_FOUND');
@@ -497,4 +525,11 @@ export async function resolveRma(id, { resolution, amountDollars, note }, adminI
   return { ...result, restocked, refund };
 }
 
-export { RMA_STATUSES };
+// --- CommonJS exports -------------------------------------------------
+exports.listRmas = listRmas;
+exports.getRma = getRma;
+exports.createRma = createRma;
+exports.setRmaStatus = setRmaStatus;
+exports.inspectRma = inspectRma;
+exports.resolveRma = resolveRma;
+exports.RMA_STATUSES = RMA_STATUSES;

@@ -1,10 +1,10 @@
-import Offer from '../models/Offer.js';
-import Order from '../models/Order.js';
-import Product from '../models/Product.js';
-import ApiError from '../utils/ApiError.js';
-import Settings, { DEFAULT_SHIPPING_METHODS } from '../models/Settings.js';
-import { offerStatus } from './offerService.js';
-import { TAX_RATE } from '../../../shared/schemas/checkout.js';
+const { default: Offer } = require('../models/Offer.js');
+const { default: Order } = require('../models/Order.js');
+const { default: Product } = require('../models/Product.js');
+const { default: ApiError } = require('../utils/ApiError.js');
+const { default: Settings, DEFAULT_SHIPPING_METHODS } = require('../models/Settings.js');
+const { offerStatus } = require('./offerService.js');
+const { TAX_RATE } = require('../../../shared/schemas/checkout.js');
 
 /**
  * THE ONE PLACE A DISCOUNT IS DECIDED.
@@ -36,7 +36,7 @@ import { TAX_RATE } from '../../../shared/schemas/checkout.js';
 // ---- offer resolution -------------------------------------------------------
 
 /** Failures are named so the client can decide what to say, per §5.1. */
-export class OfferRejection extends Error {
+class OfferRejection extends Error {
   constructor(code, message) {
     super(message);
     this.code = code;
@@ -79,7 +79,7 @@ async function alreadyRedeemed(offer, user) {
  * answers with the same `OFFER_NOT_FOUND` — an account-restricted code must not
  * be distinguishable from a code that never existed.
  */
-export async function resolveCode(code, user) {
+async function resolveCode(code, user) {
   const trimmed = String(code ?? '').trim().toUpperCase();
   if (!trimmed) throw new OfferRejection('OFFER_NOT_FOUND', 'Enter a promo code.');
 
@@ -226,7 +226,7 @@ function shapeApplied(offer, result, { automatic }) {
  * into line prices, so an order and its invoice can show what a part costs and
  * what was taken off it — which is what a trade buyer reconciles against.
  */
-export async function priceCart(cart, user, { deliveryCode = 'ground' } = {}) {
+async function priceCart(cart, user, { deliveryCode = 'ground' } = {}) {
   // ---- individual lines ---------------------------------------------------
   const productIds = cart.items.map((item) => item.product);
   const products = await Product.find({ _id: { $in: productIds } }).lean();
@@ -399,7 +399,7 @@ export async function priceCart(cart, user, { deliveryCode = 'ground' } = {}) {
  * `available: false` rather than dropped: silently removing something a buyer
  * put in their cart is worse than showing it and refusing to check out.
  */
-export async function expandBundles(cart, _user) {
+async function expandBundles(cart, _user) {
   if (!cart.bundles?.length) return [];
 
   const offers = await Offer.find({ _id: { $in: cart.bundles.map((b) => b.offer) } }).lean();
@@ -481,7 +481,7 @@ export async function expandBundles(cart, _user) {
 }
 
 /** Refuses checkout on a bundle that cannot be honoured, with the reason. */
-export function assertBundlesOrderable(bundles) {
+function assertBundlesOrderable(bundles) {
   const broken = bundles.find((bundle) => !bundle.available);
   if (broken) {
     throw ApiError.conflict(
@@ -490,3 +490,10 @@ export function assertBundlesOrderable(bundles) {
     );
   }
 }
+
+// --- CommonJS exports -------------------------------------------------
+exports.OfferRejection = OfferRejection;
+exports.resolveCode = resolveCode;
+exports.priceCart = priceCart;
+exports.expandBundles = expandBundles;
+exports.assertBundlesOrderable = assertBundlesOrderable;

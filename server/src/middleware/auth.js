@@ -1,9 +1,9 @@
-import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
-import ApiError from '../utils/ApiError.js';
-import env from '../config/env.js';
-import { clearSession } from '../services/authService.js';
-import Role from '../models/Role.js';
+const jwt = require('jsonwebtoken');
+const { default: User } = require('../models/User.js');
+const { default: ApiError } = require('../utils/ApiError.js');
+const { default: env } = require('../config/env.js');
+const { clearSession } = require('../services/authService.js');
+const { default: Role } = require('../models/Role.js');
 
 const STATUS_ERRORS = {
   pending: [
@@ -28,7 +28,7 @@ const STATUS_ERRORS = {
  * browser keeps presenting a dead token on every request for the rest of its
  * 7-day life, and the UI reads as "signed out" while the cookie says otherwise.
  */
-export async function authenticate(req, res, next) {
+async function authenticate(req, res, next) {
   const token = req.cookies?.[env.COOKIE_NAME];
   req.user = null;
   if (!token) return next();
@@ -51,7 +51,7 @@ export async function authenticate(req, res, next) {
   return next();
 }
 
-export function requireAuth(req, _res, next) {
+function requireAuth(req, _res, next) {
   if (!req.user) return next(ApiError.unauthorized());
   return next();
 }
@@ -60,7 +60,7 @@ export function requireAuth(req, _res, next) {
  * The B2B approval gate. Trade pricing and ordering stay locked until an admin
  * approves the business (brief §8.2).
  */
-export function requireApproved(req, _res, next) {
+function requireApproved(req, _res, next) {
   if (!req.user) return next(ApiError.unauthorized());
   if (req.user.status === 'approved') return next();
 
@@ -84,7 +84,7 @@ export function requireApproved(req, _res, next) {
  * would otherwise be told their account is under review, which is nonsense and
  * would send them looking for an approval that is never coming.
  */
-export function denyAdmin(req, _res, next) {
+function denyAdmin(req, _res, next) {
   if (isStaffAccount(req.user)) {
     return next(
       ApiError.forbidden(
@@ -103,7 +103,7 @@ export function denyAdmin(req, _res, next) {
  * the security log — because a role that can grant itself power is not a
  * permission system.
  */
-export function requireAdmin(req, _res, next) {
+function requireAdmin(req, _res, next) {
   if (!req.user) return next(ApiError.unauthorized());
   if (req.user.role !== 'admin') return next(ApiError.forbidden());
   return next();
@@ -116,7 +116,7 @@ export function requireAdmin(req, _res, next) {
  * never inherited, so an employee nobody has assigned is a locked door rather
  * than a door standing open.
  */
-export function requireStaff(req, _res, next) {
+function requireStaff(req, _res, next) {
   if (!req.user) return next(ApiError.unauthorized());
   if (req.user.role === 'admin') return next();
   if (req.user.role !== 'staff') return next(ApiError.forbidden());
@@ -142,7 +142,7 @@ export function requireStaff(req, _res, next) {
  * or better on `area`, where `view` is genuinely read-only — it must not reach
  * a mutating route, including an export that writes an audit row.
  */
-export function requirePermission(area, level = 'view') {
+function requirePermission(area, level = 'view') {
   return async function permissionGuard(req, _res, next) {
     if (!req.user) return next(ApiError.unauthorized());
     if (req.user.role === 'admin') return next();
@@ -173,11 +173,22 @@ export function requirePermission(area, level = 'view') {
 }
 
 /** True when this account belongs to Cellvix rather than to a customer. */
-export function isStaffAccount(user) {
+function isStaffAccount(user) {
   return Boolean(user && (user.role === 'admin' || user.role === 'staff'));
 }
 
 /** True when this requester may see trade pricing. Used by the product serializer. */
-export function canSeePricing(user) {
+function canSeePricing(user) {
   return Boolean(user && user.status === 'approved');
 }
+
+// --- CommonJS exports -------------------------------------------------
+exports.authenticate = authenticate;
+exports.requireAuth = requireAuth;
+exports.requireApproved = requireApproved;
+exports.denyAdmin = denyAdmin;
+exports.requireAdmin = requireAdmin;
+exports.requireStaff = requireStaff;
+exports.requirePermission = requirePermission;
+exports.isStaffAccount = isStaffAccount;
+exports.canSeePricing = canSeePricing;

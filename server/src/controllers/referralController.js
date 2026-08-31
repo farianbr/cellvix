@@ -1,6 +1,6 @@
-import { asyncHandler } from '../utils/ApiError.js';
-import * as referralService from '../services/referralService.js';
-import * as auditService from '../services/auditService.js';
+const { asyncHandler } = require('../utils/ApiError.js');
+const referralService = require('../services/referralService.js');
+const auditService = require('../services/auditService.js');
 
 /**
  * Referral commission (ERP rework §6.13, phase 10).
@@ -16,7 +16,7 @@ import * as auditService from '../services/auditService.js';
  * is never editable (§6.13).
  */
 
-export const list = asyncHandler(async (req, res) => {
+const list = asyncHandler(async (req, res) => {
   res.json(await referralService.listReferrals(req.query));
 });
 
@@ -25,7 +25,7 @@ export const list = asyncHandler(async (req, res) => {
  * `AuditLog`. This one number multiplies every future payout, so "who raised
  * it, and when" is exactly the question a log has to be able to answer.
  */
-export const setRate = asyncHandler(async (req, res) => {
+const setRate = asyncHandler(async (req, res) => {
   const before = await referralService.currentPercent();
   const result = await referralService.setPercent(req.body.percent);
 
@@ -42,3 +42,7 @@ export const setRate = asyncHandler(async (req, res) => {
 
   res.json(result);
 });
+
+// --- CommonJS exports -------------------------------------------------
+exports.list = list;
+exports.setRate = setRate;

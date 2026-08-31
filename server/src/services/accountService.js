@@ -1,20 +1,20 @@
-import Order from '../models/Order.js';
-import Invoice from '../models/Invoice.js';
-import Product from '../models/Product.js';
-import Cart from '../models/Cart.js';
-import User from '../models/User.js';
-import ApiError from '../utils/ApiError.js';
-import * as storeCredit from './storeCreditService.js';
-import { serializeOrder } from './orderService.js';
-import { serialize as serializeProduct } from './productService.js';
-import { renderInvoiceHtml } from './invoiceDocument.js';
+const { default: Order } = require('../models/Order.js');
+const { default: Invoice } = require('../models/Invoice.js');
+const { default: Product } = require('../models/Product.js');
+const { default: Cart } = require('../models/Cart.js');
+const { default: User } = require('../models/User.js');
+const { default: ApiError } = require('../utils/ApiError.js');
+const storeCredit = require('./storeCreditService.js');
+const { serializeOrder } = require('./orderService.js');
+const { serialize: serializeProduct } = require('./productService.js');
+const { renderInvoiceHtml } = require('./invoiceDocument.js');
 
 /**
  * The dashboard payload (brief §8.3).
  *
  * One request, because an ERP-style overview that fires six is a slow overview.
  */
-export async function summary(user) {
+async function summary(user) {
   const [recentOrders, invoices, reorderRows, savedCarts] = await Promise.all([
     Order.find({ user: user._id }).sort({ createdAt: -1 }).limit(5).lean(),
 
@@ -113,7 +113,7 @@ export async function summary(user) {
   };
 }
 
-export async function updateProfile(user, data) {
+async function updateProfile(user, data) {
   Object.assign(user, data);
   await user.save();
   return user;
@@ -150,7 +150,7 @@ function ensureDefaults(user) {
   }
 }
 
-export async function addAddress(user, data) {
+async function addAddress(user, data) {
   // The first address a business saves is its default, whatever they ticked.
   const isFirst = user.addresses.length === 0;
   user.addresses.push({ ...data, country: data.country ?? 'Canada' });
@@ -166,7 +166,7 @@ export async function addAddress(user, data) {
   return user;
 }
 
-export async function updateAddress(user, addressId, data) {
+async function updateAddress(user, addressId, data) {
   const address = user.addresses.id(addressId);
   if (!address) throw ApiError.notFound('Address not found.', 'ADDRESS_NOT_FOUND');
 
@@ -181,7 +181,7 @@ export async function updateAddress(user, addressId, data) {
   return user;
 }
 
-export async function removeAddress(user, addressId) {
+async function removeAddress(user, addressId) {
   const address = user.addresses.id(addressId);
   if (!address) throw ApiError.notFound('Address not found.', 'ADDRESS_NOT_FOUND');
 
@@ -194,7 +194,7 @@ export async function removeAddress(user, addressId) {
 
 // ---- payment methods --------------------------------------------------------
 
-export async function addPaymentMethod(user, data) {
+async function addPaymentMethod(user, data) {
   const isFirst = user.paymentMethods.length === 0;
   user.paymentMethods.push(data);
   const added = user.paymentMethods[user.paymentMethods.length - 1];
@@ -209,7 +209,7 @@ export async function addPaymentMethod(user, data) {
   return user;
 }
 
-export async function removePaymentMethod(user, methodId) {
+async function removePaymentMethod(user, methodId) {
   const method = user.paymentMethods.id(methodId);
   if (!method) throw ApiError.notFound('Payment method not found.', 'PAYMENT_METHOD_NOT_FOUND');
 
@@ -221,7 +221,7 @@ export async function removePaymentMethod(user, methodId) {
   return user;
 }
 
-export async function changePassword(user, { currentPassword, newPassword }) {
+async function changePassword(user, { currentPassword, newPassword }) {
   const withHash = await User.findById(user._id).select('+passwordHash');
   const ok = await withHash.verifyPassword(currentPassword);
   if (!ok) {
@@ -257,7 +257,7 @@ function serializeInvoice(invoice) {
   };
 }
 
-export async function listInvoices(userId) {
+async function listInvoices(userId) {
   const invoices = await Invoice.find({ user: userId })
     .sort({ issuedAt: -1 })
     .populate('order', 'orderNumber')
@@ -279,7 +279,7 @@ export async function listInvoices(userId) {
   };
 }
 
-export async function getInvoice(userId, number) {
+async function getInvoice(userId, number) {
   const invoice = await Invoice.findOne({ number, user: userId })
     .populate('order')
     .lean();
@@ -295,7 +295,7 @@ export async function getInvoice(userId, number) {
  * The printable invoice — the same document the buyer was emailed when the
  * order was placed, rendered fresh so a later payment shows on it.
  */
-export async function invoiceDocument(user, number, { nonce } = {}) {
+async function invoiceDocument(user, number, { nonce } = {}) {
   const invoice = await Invoice.findOne({ number, user: user._id }).populate('order').lean();
   if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');
 
@@ -316,7 +316,7 @@ export async function invoiceDocument(user, number, { nonce } = {}) {
  * never came off the limit. It is subtracted here for the same reason the
  * invoice shows it as a payment.
  */
-export async function lineOfCreditActivity(user) {
+async function lineOfCreditActivity(user) {
   const invoices = await Invoice.find({ user: user._id, terms: { $ne: 'prepaid' } })
     .sort({ issuedAt: -1 })
     .populate('order', 'orderNumber')
@@ -395,13 +395,29 @@ export async function lineOfCreditActivity(user) {
 }
 
 /** The store-credit statement for the signed-in account. */
-export async function storeCreditStatement(userId) {
+async function storeCreditStatement(userId) {
   return storeCredit.statement(userId);
 }
 
 /** Advance recharge — prepay and hold the money as store credit. */
-export async function rechargeStoreCredit(user, { amountDollars, poNumber }) {
+async function rechargeStoreCredit(user, { amountDollars, poNumber }) {
   const amount = Math.round(Number(amountDollars) * 100);
   const posted = await storeCredit.recharge(user, { amount, poNumber });
   return { ...posted, message: 'Top-up added to your store credit.' };
 }
+
+// --- CommonJS exports -------------------------------------------------
+exports.summary = summary;
+exports.updateProfile = updateProfile;
+exports.addAddress = addAddress;
+exports.updateAddress = updateAddress;
+exports.removeAddress = removeAddress;
+exports.addPaymentMethod = addPaymentMethod;
+exports.removePaymentMethod = removePaymentMethod;
+exports.changePassword = changePassword;
+exports.listInvoices = listInvoices;
+exports.getInvoice = getInvoice;
+exports.invoiceDocument = invoiceDocument;
+exports.lineOfCreditActivity = lineOfCreditActivity;
+exports.storeCreditStatement = storeCreditStatement;
+exports.rechargeStoreCredit = rechargeStoreCredit;

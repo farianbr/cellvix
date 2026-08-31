@@ -14,7 +14,7 @@
  * can fail because an optional package is missing.
  */
 
-import { deflateRawSync } from 'node:zlib';
+const { deflateRawSync } = require('node:zlib');
 
 /**
  * CRC-32, computed here rather than taken from `node:zlib`.
@@ -57,7 +57,7 @@ function csvCell(value) {
  * system codepage and mangles every accented business name — which for a
  * Canadian wholesaler means Québec addresses arrive broken.
  */
-export function toCsv(columns, rows) {
+function toCsv(columns, rows) {
   const header = columns.map((column) => csvCell(column.label)).join(',');
   const body = rows.map((row) => columns.map((column) => csvCell(column.get(row))).join(','));
   return `﻿${[header, ...body].join('\r\n')}\r\n`;
@@ -196,7 +196,7 @@ function zip(files) {
 }
 
 /** Rows to a single-sheet `.xlsx` buffer. */
-export function toXlsx(columns, rows, sheetName = 'Export') {
+function toXlsx(columns, rows, sheetName = 'Export') {
   return zip([
     {
       name: '[Content_Types].xml',
@@ -229,7 +229,7 @@ export function toXlsx(columns, rows, sheetName = 'Export') {
  * somebody exported it. The column definitions below divide cents by 100 and
  * leave formatting to Excel.
  */
-export function send(res, { format, filename, columns, rows, sheetName }) {
+function send(res, { format, filename, columns, rows, sheetName }) {
   const stamp = new Date().toISOString().slice(0, 10);
   const base = `${filename}-${stamp}`;
 
@@ -249,9 +249,16 @@ export function send(res, { format, filename, columns, rows, sheetName }) {
 }
 
 /** Cents to a spreadsheet-native number. */
-export const asMoney = (cents) => (cents ?? 0) / 100;
+const asMoney = (cents) => (cents ?? 0) / 100;
 
 /** A date as `YYYY-MM-DD`, which sorts correctly as text in every locale. */
-export const asDate = (value) => (value ? new Date(value).toISOString().slice(0, 10) : '');
+const asDate = (value) => (value ? new Date(value).toISOString().slice(0, 10) : '');
 
-export default { toCsv, toXlsx, send, asMoney, asDate };
+exports.default = { toCsv, toXlsx, send, asMoney, asDate };
+
+// --- CommonJS exports -------------------------------------------------
+exports.toCsv = toCsv;
+exports.toXlsx = toXlsx;
+exports.send = send;
+exports.asMoney = asMoney;
+exports.asDate = asDate;

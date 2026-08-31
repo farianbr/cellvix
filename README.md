@@ -234,11 +234,12 @@ npm run shoot          # Playwright screenshot set -> docs/screenshots/
 ```
 
 > `smoke`, `a11y` and `shoot` all **write real data** — `shoot` places an actual order, moving
-> stock, invoices and credit. Point them at a throwaway database:
+> stock, invoices and credit. They run against the `cellvix` development database, which holds only
+> dummy data; re-seed whenever the residue gets in the way:
 >
 > ```bash
-> MONGODB_URI="<uri>/cellvix_test" npm run seed
-> MONGODB_URI="<uri>/cellvix_test" npm run smoke
+> npm run seed
+> npm run smoke
 > ```
 
 The seed is deterministic — a seeded PRNG produces the same taxonomy and the same 420 SKUs on every

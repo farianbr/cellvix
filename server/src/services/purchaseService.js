@@ -1,13 +1,13 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
-import Supplier from '../models/Supplier.js';
-import PurchaseOrder from '../models/PurchaseOrder.js';
-import Expense from '../models/Expense.js';
-import ExpenseCategory from '../models/ExpenseCategory.js';
-import StockMovement from '../models/StockMovement.js';
-import Product from '../models/Product.js';
-import ApiError from '../utils/ApiError.js';
-import { likeRegex } from '../utils/regex.js';
+const { default: Supplier } = require('../models/Supplier.js');
+const { default: PurchaseOrder } = require('../models/PurchaseOrder.js');
+const { default: Expense } = require('../models/Expense.js');
+const { default: ExpenseCategory } = require('../models/ExpenseCategory.js');
+const { default: StockMovement } = require('../models/StockMovement.js');
+const { default: Product } = require('../models/Product.js');
+const { default: ApiError } = require('../utils/ApiError.js');
+const { likeRegex } = require('../utils/regex.js');
 
 /**
  * Purchase — suppliers, purchase orders, expenses and the stock ledger
@@ -85,7 +85,7 @@ function isObjectId(value) {
  * silently floored — the operator meant something specific and should be told
  * which part of it could not happen.
  */
-export async function applyStockMovement({
+async function applyStockMovement({
   product,
   type,
   qtyChange,
@@ -146,7 +146,7 @@ function shapeSupplier(supplier) {
   };
 }
 
-export async function listSuppliers({ q, status } = {}) {
+async function listSuppliers({ q, status } = {}) {
   const query = {};
   if (status === 'active') query.isActive = true;
   if (status === 'inactive') query.isActive = false;
@@ -171,7 +171,7 @@ export async function listSuppliers({ q, status } = {}) {
   };
 }
 
-export async function getSupplier(id) {
+async function getSupplier(id) {
   if (!isObjectId(id)) throw ApiError.notFound('Supplier not found.', 'SUPPLIER_NOT_FOUND');
 
   const supplier = await Supplier.findById(id).lean();
@@ -226,12 +226,12 @@ export async function getSupplier(id) {
   };
 }
 
-export async function createSupplier(body) {
+async function createSupplier(body) {
   const supplier = await Supplier.create({ ...body, code: body.code || undefined });
   return { supplier: shapeSupplier(supplier.toObject()) };
 }
 
-export async function updateSupplier(id, body) {
+async function updateSupplier(id, body) {
   if (!isObjectId(id)) throw ApiError.notFound('Supplier not found.', 'SUPPLIER_NOT_FOUND');
 
   const supplier = await Supplier.findByIdAndUpdate(id, body, { new: true, runValidators: true });
@@ -244,7 +244,7 @@ export async function updateSupplier(id, body) {
  * exactly as orders reference a product, and a deleted row would leave a PO
  * whose origin nobody can name. Toggles, so the card's icon button can undo it.
  */
-export async function toggleSupplier(id) {
+async function toggleSupplier(id) {
   if (!isObjectId(id)) throw ApiError.notFound('Supplier not found.', 'SUPPLIER_NOT_FOUND');
 
   const supplier = await Supplier.findById(id);
@@ -373,7 +373,7 @@ function recomputeStatus(po) {
   return po;
 }
 
-export async function listPurchaseOrders({ q, status, supplier, from, to } = {}) {
+async function listPurchaseOrders({ q, status, supplier, from, to } = {}) {
   const query = {};
 
   if (status === 'overdue') {
@@ -428,7 +428,7 @@ export async function listPurchaseOrders({ q, status, supplier, from, to } = {})
   };
 }
 
-export async function getPurchaseOrder(id) {
+async function getPurchaseOrder(id) {
   const query = isObjectId(id) ? { _id: id } : { poNumber: String(id) };
   const po = await PurchaseOrder.findOne(query)
     .populate('supplier', 'name email phone paymentTerms')
@@ -469,7 +469,7 @@ export async function getPurchaseOrder(id) {
  * an order line is — a PO raised in March must still read correctly when the
  * product is renamed in June.
  */
-export async function createPurchaseOrder(body, createdBy) {
+async function createPurchaseOrder(body, createdBy) {
   const supplier = await Supplier.findById(body.supplier).lean();
   if (!supplier) throw ApiError.badRequest('Pick a supplier.', 'SUPPLIER_NOT_FOUND');
 
@@ -516,7 +516,7 @@ export async function createPurchaseOrder(body, createdBy) {
 
 /** Edits stop at `draft` — once a PO has been sent, the supplier is working
  *  from a document this one no longer matches. */
-export async function updatePurchaseOrder(id, body) {
+async function updatePurchaseOrder(id, body) {
   const query = isObjectId(id) ? { _id: id } : { poNumber: String(id) };
   const po = await PurchaseOrder.findOne(query);
   if (!po) throw ApiError.notFound('Purchase order not found.', 'PO_NOT_FOUND');
@@ -579,7 +579,7 @@ export async function updatePurchaseOrder(id, body) {
  * the shelf, and cancelling the paperwork behind it would leave a quantity with
  * no document to explain it. Receive the rest, or leave it partial.
  */
-export async function setPurchaseOrderStatus(id, { status, note }) {
+async function setPurchaseOrderStatus(id, { status, note }) {
   const query = isObjectId(id) ? { _id: id } : { poNumber: String(id) };
   const po = await PurchaseOrder.findOne(query);
   if (!po) throw ApiError.notFound('Purchase order not found.', 'PO_NOT_FOUND');
@@ -627,7 +627,7 @@ export async function setPurchaseOrderStatus(id, { status, note }) {
  * with a reason per skip. Silently receiving nineteen of twenty lines is how an
  * operator comes to trust a button that is lying to them.
  */
-export async function receivePurchaseOrder(id, { lines, note }, receivedBy) {
+async function receivePurchaseOrder(id, { lines, note }, receivedBy) {
   const query = isObjectId(id) ? { _id: id } : { poNumber: String(id) };
   const po = await PurchaseOrder.findOne(query);
   if (!po) throw ApiError.notFound('Purchase order not found.', 'PO_NOT_FOUND');
@@ -719,7 +719,7 @@ export async function receivePurchaseOrder(id, { lines, note }, receivedBy) {
  * The expense amount is `po.total`, read from the order and never from the
  * request — the same rule that stops a client sending a price.
  */
-export async function recordPurchasePayment(id, { method, reference, paidAt, category }, createdBy) {
+async function recordPurchasePayment(id, { method, reference, paidAt, category }, createdBy) {
   const query = isObjectId(id) ? { _id: id } : { poNumber: String(id) };
   const po = await PurchaseOrder.findOne(query).populate('supplier', 'name');
   if (!po) throw ApiError.notFound('Purchase order not found.', 'PO_NOT_FOUND');
@@ -833,7 +833,7 @@ function shapeExpense(expense) {
   };
 }
 
-export async function listExpenses({ q, category, status, from, to } = {}) {
+async function listExpenses({ q, category, status, from, to } = {}) {
   const query = {};
 
   if (status && status !== 'all') query.status = String(status);
@@ -882,7 +882,7 @@ export async function listExpenses({ q, category, status, from, to } = {}) {
   };
 }
 
-export async function createExpense(body, createdBy) {
+async function createExpense(body, createdBy) {
   const category = await ExpenseCategory.findById(body.category).lean();
   if (!category) throw ApiError.badRequest('Pick a category.', 'CATEGORY_NOT_FOUND');
 
@@ -905,7 +905,7 @@ export async function createExpense(body, createdBy) {
  * here — the two would drift, and the P&L would be reading a number the PO no
  * longer agrees with.
  */
-export async function updateExpense(id, body) {
+async function updateExpense(id, body) {
   if (!isObjectId(id)) throw ApiError.notFound('Expense not found.', 'EXPENSE_NOT_FOUND');
 
   const expense = await Expense.findById(id);
@@ -931,7 +931,7 @@ export async function updateExpense(id, body) {
   return { expense: shapeExpense(populated) };
 }
 
-export async function deleteExpense(id) {
+async function deleteExpense(id) {
   if (!isObjectId(id)) throw ApiError.notFound('Expense not found.', 'EXPENSE_NOT_FOUND');
 
   const expense = await Expense.findById(id);
@@ -973,7 +973,7 @@ function shapeCategory(category, usage = 0) {
 
 /** Usage comes back with the list so the UI can explain why a delete will be
  *  refused **before** the operator clicks it, rather than after. */
-export async function listExpenseCategories() {
+async function listExpenseCategories() {
   const [categories, usageRows] = await Promise.all([
     ExpenseCategory.find({}).sort({ order: 1, name: 1 }).lean(),
     Expense.aggregate([{ $group: { _id: '$category', count: { $sum: 1 } } }]),
@@ -987,7 +987,7 @@ export async function listExpenseCategories() {
   };
 }
 
-export async function createExpenseCategory(body) {
+async function createExpenseCategory(body) {
   const slug = slugify(body.name);
   const clash = await ExpenseCategory.findOne({ slug }).lean();
   if (clash) throw ApiError.conflict('A category by that name already exists.', 'CATEGORY_EXISTS');
@@ -996,7 +996,7 @@ export async function createExpenseCategory(body) {
   return { category: shapeCategory(category.toObject()) };
 }
 
-export async function updateExpenseCategory(id, body) {
+async function updateExpenseCategory(id, body) {
   if (!isObjectId(id)) throw ApiError.notFound('Category not found.', 'CATEGORY_NOT_FOUND');
 
   const category = await ExpenseCategory.findById(id);
@@ -1017,7 +1017,7 @@ export async function updateExpenseCategory(id, body) {
  * would change shape for a reason nobody could find later. The response says
  * which of the two happened rather than reporting a delete either way.
  */
-export async function deleteExpenseCategory(id) {
+async function deleteExpenseCategory(id) {
   if (!isObjectId(id)) throw ApiError.notFound('Category not found.', 'CATEGORY_NOT_FOUND');
 
   const category = await ExpenseCategory.findById(id);
@@ -1085,7 +1085,7 @@ function shapeInventoryRow(product) {
   };
 }
 
-export async function listInventory({ q, stock, brand, grade } = {}) {
+async function listInventory({ q, stock, brand, grade } = {}) {
   const query = {};
   if (brand) query.brandSlug = String(brand);
   if (grade) query.grade = String(grade);
@@ -1135,7 +1135,7 @@ export async function listInventory({ q, stock, brand, grade } = {}) {
   };
 }
 
-export async function getInventoryItem(id) {
+async function getInventoryItem(id) {
   if (!isObjectId(id)) throw ApiError.notFound('Product not found.', 'PRODUCT_NOT_FOUND');
 
   const product = await Product.findById(id).populate('supplier', 'name email phone').lean();
@@ -1191,7 +1191,7 @@ export async function getInventoryItem(id) {
 
 /** The ERP fields (§6.10). Kept apart from `updateProduct` so the catalogue
  *  form and the operations form cannot overwrite each other's fields. */
-export async function updateInventoryOps(id, body) {
+async function updateInventoryOps(id, body) {
   if (!isObjectId(id)) throw ApiError.notFound('Product not found.', 'PRODUCT_NOT_FOUND');
 
   const patch = {
@@ -1211,7 +1211,7 @@ export async function updateInventoryOps(id, body) {
 }
 
 /** A manual correction. Goes through the ledger like every other movement. */
-export async function adjustStock(id, { qtyChange, type, note }, createdBy) {
+async function adjustStock(id, { qtyChange, type, note }, createdBy) {
   if (!isObjectId(id)) throw ApiError.notFound('Product not found.', 'PRODUCT_NOT_FOUND');
 
   const qtyAfter = await applyStockMovement({
@@ -1227,7 +1227,7 @@ export async function adjustStock(id, { qtyChange, type, note }, createdBy) {
   return { product: shapeInventoryRow(product), qtyAfter };
 }
 
-export async function listStockMovements({ product, type, from, to } = {}) {
+async function listStockMovements({ product, type, from, to } = {}) {
   const query = {};
   if (product && isObjectId(product)) query.product = product;
   if (type && type !== 'all') query.type = String(type);
@@ -1263,3 +1263,31 @@ export async function listStockMovements({ product, type, from, to } = {}) {
     })),
   };
 }
+
+// --- CommonJS exports -------------------------------------------------
+exports.applyStockMovement = applyStockMovement;
+exports.listSuppliers = listSuppliers;
+exports.getSupplier = getSupplier;
+exports.createSupplier = createSupplier;
+exports.updateSupplier = updateSupplier;
+exports.toggleSupplier = toggleSupplier;
+exports.listPurchaseOrders = listPurchaseOrders;
+exports.getPurchaseOrder = getPurchaseOrder;
+exports.createPurchaseOrder = createPurchaseOrder;
+exports.updatePurchaseOrder = updatePurchaseOrder;
+exports.setPurchaseOrderStatus = setPurchaseOrderStatus;
+exports.receivePurchaseOrder = receivePurchaseOrder;
+exports.recordPurchasePayment = recordPurchasePayment;
+exports.listExpenses = listExpenses;
+exports.createExpense = createExpense;
+exports.updateExpense = updateExpense;
+exports.deleteExpense = deleteExpense;
+exports.listExpenseCategories = listExpenseCategories;
+exports.createExpenseCategory = createExpenseCategory;
+exports.updateExpenseCategory = updateExpenseCategory;
+exports.deleteExpenseCategory = deleteExpenseCategory;
+exports.listInventory = listInventory;
+exports.getInventoryItem = getInventoryItem;
+exports.updateInventoryOps = updateInventoryOps;
+exports.adjustStock = adjustStock;
+exports.listStockMovements = listStockMovements;

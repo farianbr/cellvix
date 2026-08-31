@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 /**
  * A named permission set (ERP rework §7.6).
@@ -14,7 +14,7 @@ import mongoose from 'mongoose';
  */
 
 /** The areas a role can be granted. These are the sidebar's top-level groups. */
-export const PERMISSION_AREAS = [
+const PERMISSION_AREAS = [
   'clients',
   'sales',
   'purchase',
@@ -25,7 +25,7 @@ export const PERMISSION_AREAS = [
 ];
 
 /** Ordered weakest to strongest — `LEVELS.indexOf` is the comparison. */
-export const PERMISSION_LEVELS = ['none', 'view', 'full'];
+const PERMISSION_LEVELS = ['none', 'view', 'full'];
 
 const areaField = {
   type: String,
@@ -89,5 +89,10 @@ roleSchema.methods.toPublic = function toPublic() {
   };
 };
 
-export const Role = mongoose.model('Role', roleSchema);
-export default Role;
+const Role = mongoose.model('Role', roleSchema);
+
+// --- CommonJS exports -------------------------------------------------
+exports.PERMISSION_AREAS = PERMISSION_AREAS;
+exports.PERMISSION_LEVELS = PERMISSION_LEVELS;
+exports.Role = Role;
+exports.default = Role;
