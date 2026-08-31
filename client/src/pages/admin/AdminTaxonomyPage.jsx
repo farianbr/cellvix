@@ -7,6 +7,7 @@ import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Modal from '@/components/ui/Modal';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Pagination from '@/components/ui/Pagination';
 import PageHeader from '@/components/admin/PageHeader';
 import DataTable from '@/components/admin/DataTable';
@@ -127,6 +128,9 @@ function EditDialog({ node, onClose }) {
   const [aliases, setAliases] = useState(node.aliases ?? []);
   const [isActive, setIsActive] = useState(node.isActive);
   const [error, setError] = useState(null);
+  // Delete sat inside the edit dialog and fired on the click. The service still
+  // refuses a node that is in use, but an unused one went straight out.
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const { saveTaxonomyNode, deleteTaxonomyNode } = useAdminMutations();
 
   async function save(event) {
@@ -154,7 +158,8 @@ function EditDialog({ node, onClose }) {
   }
 
   return (
-    <Modal open onClose={onClose} title={`Edit ${node.name}`}>
+    <>
+      <Modal open onClose={onClose} title={`Edit ${node.name}`}>
       <form onSubmit={save} className="space-y-4">
         <div className="flex flex-wrap items-center gap-2 text-[13px] text-ink-500">
           <Badge tone="neutral">{KIND_LABEL[node.kind] ?? node.kind}</Badge>
@@ -204,7 +209,7 @@ function EditDialog({ node, onClose }) {
 
           <button
             type="button"
-            onClick={remove}
+            onClick={() => setConfirmingDelete(true)}
             disabled={deleteTaxonomyNode.isPending}
             className="ml-auto inline-flex h-9 items-center gap-1.5 rounded-[9px] border border-line px-3 text-[13px] font-medium text-ink-500 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger disabled:opacity-50"
           >
@@ -213,7 +218,24 @@ function EditDialog({ node, onClose }) {
           </button>
         </div>
       </form>
-    </Modal>
+      </Modal>
+
+      {/* The service still refuses a node that has products or children, and its
+          message names the count. This stops the unused ones going out on a
+          single click from inside an edit dialog. */}
+      <ConfirmDialog
+        open={confirmingDelete}
+        onClose={() => setConfirmingDelete(false)}
+        onConfirm={async () => {
+          setConfirmingDelete(false);
+          await remove();
+        }}
+        title={`Delete ${node.name}?`}
+        body={`This ${KIND_LABEL[node.kind]?.toLowerCase() ?? 'node'} is removed from the taxonomy. To take it out of the filters without losing it, switch it inactive instead.`}
+        confirmLabel="Delete"
+        loading={deleteTaxonomyNode.isPending}
+      />
+    </>
   );
 }
 

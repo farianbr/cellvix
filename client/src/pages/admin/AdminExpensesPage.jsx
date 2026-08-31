@@ -520,11 +520,8 @@ export function AdminExpensesPage() {
         open={Boolean(deleting)}
         onClose={() => setDeleting(null)}
         title="Delete this expense?"
-        body={
-          deleting
-            ? `${deleting.description} — ${money(deleting.amount)}. This removes it from the P&L and cannot be undone.`
-            : ''
-        }
+        body={deleting ? `${deleting.description}, ${money(deleting.amount)}.` : ''}
+        consequence="It comes off the P&L and the category totals change to match. This cannot be undone."
         confirmLabel="Delete expense"
         loading={deleteExpense.isPending}
         error={deleteExpense.error?.message}

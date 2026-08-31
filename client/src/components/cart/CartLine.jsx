@@ -1,7 +1,7 @@
 import { Link } from 'react-router';
 import { AlertTriangle, Trash2 } from 'lucide-react';
 import cn from '@/lib/cn';
-import { money } from '@/lib/format';
+import { money, productTitle } from '@/lib/format';
 import QtyStepper from '@/components/product/QtyStepper';
 import PartIllustration from '@/components/product/PartIllustration';
 import Badge from '@/components/ui/Badge';
@@ -45,7 +45,9 @@ export function CartLine({ item, onQtyChange, onRemove, compact = false }) {
                 compact ? 'text-[13.5px]' : 'text-[14.5px]',
               )}
             >
-              {item.name}
+              {/* Compact mode drops the eyebrow, so there the part type has to
+                  stay in the name — it is the only place it would appear. */}
+              {compact ? item.name : productTitle(item.name, item.partTypeLabel)}
             </Link>
 
             <p className="mt-0.5 font-mono text-[11px] text-ink-300">{item.sku}</p>

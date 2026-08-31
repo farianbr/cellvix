@@ -70,9 +70,19 @@ export function MegaMenu() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+            onClick={closeMegaMenu}
             className="absolute left-0 right-0 top-full z-40 origin-top"
           >
-            <div className="mx-auto max-w-[1400px] px-4 lg:px-6">
+            {/* The wrapper runs the full width of the viewport while the panel
+                inside it is a centred max-w-[1400px] box, so the gutters either
+                side of the panel sat ABOVE the scrim on z-40 and swallowed the
+                click that should have closed the menu. The wrapper closes on
+                click and the panel stops the event, so those gutters behave like
+                the scrim they look like. */}
+            <div
+              className="mx-auto max-w-[1400px] px-4 lg:px-6"
+              onClick={(event) => event.stopPropagation()}
+            >
               <div className="overflow-hidden rounded-b-[16px] border border-t-0 border-line bg-surface shadow-flyout">
                 <div className="grid grid-cols-[minmax(200px,230px)_1fr_minmax(220px,260px)]">
                   {/* ---- device types ---------------------------------- */}

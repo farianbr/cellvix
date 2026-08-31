@@ -73,6 +73,32 @@ export function useCreditActivity() {
   });
 }
 
+/**
+ * The account's own history — orders, invoices, payments and credit movements
+ * merged into one feed. The same feed the account rep sees on the admin side.
+ */
+export function useAccountActivity() {
+  const { isApproved } = useAuth();
+  return useQuery({
+    queryKey: ['activity'],
+    queryFn: () => api.get('/account/activity'),
+    enabled: isApproved,
+    select: (payload) => payload.activity,
+    staleTime: 60 * 1000,
+  });
+}
+
+/** Referral code, rate, referred accounts and what they have earned. */
+export function useReferrals() {
+  const { isApproved } = useAuth();
+  return useQuery({
+    queryKey: ['referrals'],
+    queryFn: () => api.get('/account/referrals'),
+    enabled: isApproved,
+    staleTime: 60 * 1000,
+  });
+}
+
 export function useSavedCarts() {
   const { isApproved } = useAuth();
   return useQuery({
@@ -81,6 +107,31 @@ export function useSavedCarts() {
     enabled: isApproved,
     select: (payload) => payload.carts,
   });
+}
+
+/**
+ * Everything a payment or a credit movement makes stale.
+ *
+ * Paying an invoice touches more than the invoice: it repays the line of
+ * credit, may spend store credit, can settle a `due` record into a real
+ * invoice, and lands on the activity feed. Listed once here because a caller
+ * that forgets one of them leaves a screen quietly showing money that has
+ * already moved.
+ */
+function afterMoneyMoved(queryClient) {
+  for (const key of [
+    ['invoices'],
+    ['store-credit'],
+    ['credit-activity'],
+    ['activity'],
+    ['account', 'summary'],
+    // The checkout quote carries what credit can cover, so it is stale now.
+    ['quote'],
+    // Commission is earned on payment, so a referrer's standing can change.
+    ['referrals'],
+  ]) {
+    queryClient.invalidateQueries({ queryKey: key });
+  }
 }
 
 /**
@@ -129,11 +180,27 @@ export function useAccountMutations() {
     rechargeStoreCredit: useMutation({
       mutationFn: (data) => api.post('/account/store-credit/recharge', data),
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['store-credit'] });
-        queryClient.invalidateQueries({ queryKey: ['account', 'summary'] });
-        // The checkout quote carries what credit can cover, so it is stale now.
-        queryClient.invalidateQueries({ queryKey: ['quote'] });
+        afterMoneyMoved(queryClient);
       },
+    }),
+
+    /**
+     * Pay one invoice in full.
+     *
+     * No amount is sent: the balance is the server's own fact and §5.3 keeps
+     * the client out of deciding what money moves. `useStoreCredit` asks for
+     * credit to be drawn first, and how much that covers is decided server-side
+     * too.
+     */
+    payInvoice: useMutation({
+      mutationFn: ({ number, ...data }) => api.post(`/invoices/${number}/pay`, data),
+      onSuccess: () => afterMoneyMoved(queryClient),
+    }),
+
+    /** Clear the whole line of credit in one charge, oldest amounts first. */
+    payOffCredit: useMutation({
+      mutationFn: (data) => api.post('/account/credit/payoff', data),
+      onSuccess: () => afterMoneyMoved(queryClient),
     }),
     bulkAdd: useMutation({
       mutationFn: (lines) => api.post('/cart/bulk', { lines }),

@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router';
 import { ArrowUpRight, Facebook, Instagram, Linkedin, Mail, MapPin, Phone, Youtube } from 'lucide-react';
 import cn from '@/lib/cn';
@@ -45,26 +44,6 @@ const SOCIAL = [
 ];
 
 /**
- * Warehouse-local time, so the trade desk hours above it mean something to a
- * buyer in Vancouver. Ticks on the minute rather than the second — nothing here
- * is worth a repaint a second, and the reader cannot see the difference.
- */
-function useEasternTime() {
-  const [now, setNow] = useState(() => new Date());
-
-  useEffect(() => {
-    const id = setInterval(() => setNow(new Date()), 60_000);
-    return () => clearInterval(id);
-  }, []);
-
-  return now.toLocaleTimeString('en-CA', {
-    timeZone: 'America/Toronto',
-    hour: 'numeric',
-    minute: '2-digit',
-  });
-}
-
-/**
  * The footer.
  *
  * One rounded slab that sits IN the page rather than a full-bleed band ruled off
@@ -78,8 +57,6 @@ function useEasternTime() {
  * where nothing has to compete with it.
  */
 export function Footer() {
-  const time = useEasternTime();
-
   return (
     <footer className="mt-14 px-3 pb-3 sm:px-4 sm:pb-4 lg:px-6 lg:pb-6">
       {/* Two boxes, not one: a rounded panel that holds the content and clips
@@ -289,9 +266,6 @@ export function Footer() {
 
         <p className="flex flex-wrap items-center gap-x-3 gap-y-1">
           <span>{BUSINESS_INFO.address.city}</span>
-          <span className="tnum" aria-label={`Warehouse local time ${time}`}>
-            {time}
-          </span>
           <span className="text-ink-300">All prices CAD</span>
         </p>
       </div>

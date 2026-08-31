@@ -7,6 +7,7 @@ import { money } from '@/lib/format';
 import { paymentMethodSchema } from '@shared/schemas/account';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Input from '@/components/ui/Input';
 import SelectField from '@/components/ui/SelectField';
 import Checkbox from '@/components/ui/Checkbox';
@@ -28,6 +29,8 @@ export function AccountPaymentMethodsPage() {
   const { data: creditData } = useStoreCredit();
   const { addPaymentMethod, removePaymentMethod } = useAccountMutations();
   const [adding, setAdding] = useState(false);
+  // The trash icon used to remove the card on the click itself.
+  const [removing, setRemoving] = useState(null);
 
   const {
     register,
@@ -114,7 +117,7 @@ export function AccountPaymentMethodsPage() {
 
                 <button
                   type="button"
-                  onClick={() => removePaymentMethod.mutate(method._id)}
+                  onClick={() => setRemoving(method)}
                   aria-label={`Remove card ending ${method.last4}`}
                   className="flex size-8 shrink-0 items-center justify-center rounded-lg text-ink-300 transition-colors hover:bg-danger-50 hover:text-danger"
                 >
@@ -214,6 +217,31 @@ export function AccountPaymentMethodsPage() {
           </div>
         </form>
       </Modal>
+
+      {/* Removing the default card leaves the account with no card selected at
+          checkout, so the dialog says which one is going and whether it is the
+          default rather than just asking "are you sure". */}
+      <ConfirmDialog
+        open={Boolean(removing)}
+        onClose={() => setRemoving(null)}
+        onConfirm={() =>
+          removePaymentMethod.mutate(removing._id, { onSuccess: () => setRemoving(null) })
+        }
+        title="Remove this card?"
+        body={
+          removing
+            ? `${removing.brand ?? 'Card'} ending ${removing.last4} will be taken off your account.`
+            : ''
+        }
+        consequence={
+          removing?.isDefault
+            ? 'This is your default card. Checkout will have no card selected until you set another one.'
+            : undefined
+        }
+        confirmLabel="Remove card"
+        loading={removePaymentMethod.isPending}
+        error={removePaymentMethod.error?.message}
+      />
     </div>
   );
 }

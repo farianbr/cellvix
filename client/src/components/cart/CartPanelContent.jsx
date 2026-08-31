@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Link } from 'react-router';
 import { Bookmark, Lock, ShoppingCart } from 'lucide-react';
 import { money, date } from '@/lib/format';
 import Button from '@/components/ui/Button';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import CartLine from './CartLine';
 import CartBundleLine from './CartBundleLine';
 import useUiStore from '@/store/uiStore';
@@ -35,6 +37,9 @@ export function CartPanelTitle({ count }) {
 function SavedCartsPicker({ onClose }) {
   const { data: savedCarts } = useSavedCarts();
   const { restoreSavedCart } = useAccountMutations();
+  // Third entry point for the same restore. It asks like the other two, so the
+  // action cannot behave differently depending on where it was clicked.
+  const [restoring, setRestoring] = useState(null);
 
   if (!savedCarts || savedCarts.length === 0) return null;
 
@@ -71,13 +76,32 @@ function SavedCartsPicker({ onClose }) {
               size="xs"
               variant="outline"
               loading={restoreSavedCart.isPending}
-              onClick={() => restoreSavedCart.mutate(cart.id)}
+              onClick={() => setRestoring(cart)}
             >
               Restore
             </Button>
           </li>
         ))}
       </ul>
+
+      <ConfirmDialog
+        open={Boolean(restoring)}
+        onClose={() => setRestoring(null)}
+        onConfirm={() =>
+          restoreSavedCart.mutate(restoring.id, { onSuccess: () => setRestoring(null) })
+        }
+        title="Restore this saved cart?"
+        body={
+          restoring
+            ? `The ${restoring.lineCount} ${restoring.lineCount === 1 ? 'line' : 'lines'} in “${restoring.name}” are added to your current cart. Quantities add on top of anything already there.`
+            : ''
+        }
+        consequence="The saved cart is used up by restoring it and will no longer be in this list."
+        tone="info"
+        confirmLabel="Restore to cart"
+        loading={restoreSavedCart.isPending}
+        error={restoreSavedCart.error?.message}
+      />
     </section>
   );
 }

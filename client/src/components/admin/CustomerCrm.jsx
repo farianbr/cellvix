@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import {
-  Check,
   MessageCircle,
   MessageSquare,
   Phone,
@@ -19,6 +18,8 @@ import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Textarea from '@/components/ui/Textarea';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import ConsentChannels, { CONSENT_CHANNELS } from '@/components/ui/ConsentChannels';
 import SelectMenu from '@/components/ui/SelectMenu';
 
 
@@ -30,12 +31,10 @@ import SelectMenu from '@/components/ui/SelectMenu';
  * the same column on the profile.
  */
 
-const CHANNELS = [
-  { key: 'email', label: 'Email', icon: Mail },
-  { key: 'sms', label: 'SMS', icon: MessageSquare },
-  { key: 'whatsapp', label: 'WhatsApp', icon: MessageCircle },
-  { key: 'call', label: 'Phone call', icon: Phone },
-];
+// The channel list and the chip styling live in `ui/ConsentChannels` so this
+// panel and the two create forms cannot drift apart on what "consented" means
+// or looks like.
+const CHANNELS = CONSENT_CHANNELS;
 
 /**
  * What the customer agreed to be contacted on (CASL, §6.13).
@@ -74,32 +73,7 @@ export function ConsentPanel({ consent, onSave, isPending }) {
           it is lifted from the Marketing screen, which records who lifted it.
         </p>
       )}
-      <div className="flex flex-wrap gap-2">
-        {CHANNELS.map(({ key, label, icon: Icon }) => {
-          const on = draft[key];
-          return (
-            <button
-              key={key}
-              type="button"
-              aria-pressed={on}
-              onClick={() => setDraft((current) => ({ ...current, [key]: !current[key] }))}
-              className={cn(
-                'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors',
-                on
-                  ? 'border-ok/30 bg-ok-50 text-ok'
-                  : 'border-line bg-surface text-ink-500 hover:border-line-strong hover:text-ink-900',
-              )}
-            >
-              {on ? (
-                <Check className="size-3.5 shrink-0" strokeWidth={2.5} aria-hidden="true" />
-              ) : (
-                <Icon className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
-              )}
-              {label}
-            </button>
-          );
-        })}
-      </div>
+      <ConsentChannels value={draft} onChange={setDraft} />
       <p className="mt-3 text-[12px] leading-snug text-ink-400">
         A campaign or a one-to-one message on a channel requires consent for that channel. Granting
         any channel turns marketing consent on; clearing all four turns it off.
@@ -375,6 +349,9 @@ export function ConversationsPanel({
 
 export function NotesPanel({ notes = [], onAdd, onDelete, isPending }) {
   const [body, setBody] = useState('');
+  // The delete control only appears on hover and sits a few pixels from the
+  // note's own text, so it asks before removing what a colleague wrote.
+  const [deleting, setDeleting] = useState(null);
   function submit(event) {
     event.preventDefault();
     if (!body.trim()) return;
@@ -425,7 +402,7 @@ export function NotesPanel({ notes = [], onAdd, onDelete, isPending }) {
                   </p>
                   <button
                     type="button"
-                    onClick={() => onDelete(note.id)}
+                    onClick={() => setDeleting(note)}
                     aria-label="Delete note"
                     className="text-ink-300 opacity-0 transition-opacity hover:text-danger focus-visible:opacity-100 group-hover:opacity-100"
                   >
@@ -437,6 +414,23 @@ export function NotesPanel({ notes = [], onAdd, onDelete, isPending }) {
           </ul>
         )}
       </div>
+
+      <ConfirmDialog
+        open={Boolean(deleting)}
+        onClose={() => setDeleting(null)}
+        onConfirm={() => {
+          onDelete(deleting.id);
+          setDeleting(null);
+        }}
+        title="Delete this note?"
+        body={
+          deleting
+            ? `Written by ${deleting.staffName}. Internal notes are not recoverable once removed.`
+            : ''
+        }
+        confirmLabel="Delete note"
+        loading={isPending}
+      />
     </Panel>
   );
 }

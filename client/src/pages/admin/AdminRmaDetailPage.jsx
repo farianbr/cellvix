@@ -17,6 +17,7 @@ import cn from '@/lib/cn';
 import { money, date, dateTime, count as formatCount } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import SelectField from '@/components/ui/SelectField';
@@ -243,6 +244,7 @@ export function AdminRmaDetailPage() {
   const [inspecting, setInspecting] = useState(false);
   const [resolving, setResolving] = useState(false);
   const [outcome, setOutcome] = useState(null);
+  const [rejecting, setRejecting] = useState(false);
 
   const { data, isLoading, error } = useAdminRma(id);
   const { setRmaStatus, inspectRma, resolveRma } = useAdminMutations();
@@ -334,7 +336,7 @@ export function AdminRmaDetailPage() {
               <Button
                 variant="ghost"
                 icon={Ban}
-                onClick={() => setRmaStatus.mutate({ id: rma.id, status: 'rejected' })}
+                onClick={() => setRejecting(true)}
               >
                 Reject
               </Button>
@@ -604,6 +606,26 @@ export function AdminRmaDetailPage() {
           />
         )}
       </Modal>
+
+      {/* Rejecting closes the RMA against the customer with no credit and no
+          restock. It sat next to Resolve as a bare click. */}
+      <ConfirmDialog
+        open={rejecting}
+        onClose={() => setRejecting(false)}
+        onConfirm={() =>
+          setRmaStatus.mutate(
+            { id: rma.id, status: 'rejected' },
+            { onSuccess: () => setRejecting(false) },
+          )
+        }
+        title="Reject this return?"
+        body={`${rma.rmaNumber} closes with no credit to the customer and nothing back into stock.`}
+        consequence="The customer is told the return was refused. Reopening means raising a new RMA."
+        tone="danger"
+        confirmLabel="Reject return"
+        loading={setRmaStatus.isPending}
+        error={setRmaStatus.error?.message}
+      />
     </>
   );
 }

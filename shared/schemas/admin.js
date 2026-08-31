@@ -48,7 +48,12 @@ const clientSchema = z.object({
   // this one is the account's sign-in identity, so it cannot be blank.
   email: z.string().trim().toLowerCase().email('Enter a valid email address.'),
   phone: z.string().trim().min(7, 'Enter a phone number.').max(40),
-  password: passwordSchema,
+  /**
+   * No `password` field: an admin-opened account gets a generated one and the
+   * credentials are emailed to the customer. An admin typing a password meant
+   * they then had to pass it on out of band, which in practice was a phone
+   * call or a second email nobody could audit.
+   */
   businessType: z.string().trim().max(80).optional(),
   website: z.string().trim().max(200).optional(),
   taxId: z.string().trim().max(40).optional(),
@@ -67,7 +72,90 @@ const clientSchema = z.object({
   status: z.enum(['pending', 'approved']).default('approved'),
   creditLimit: cents.default(0),
   terms: z.enum(['prepaid', 'net15', 'net30', 'net60']).default('prepaid'),
+  /**
+   * What the customer has told the admin they agree to be contacted on (CASL).
+   *
+   * Absent is not the same as all-false. An admin who ticked nothing has
+   * recorded no answer, so `createUser` writes no consent record at all rather
+   * than stamping four declines the customer never gave.
+   */
+  contactConsent: z
+    .object({
+      sms: z.boolean().default(false),
+      whatsapp: z.boolean().default(false),
+      email: z.boolean().default(false),
+      call: z.boolean().default(false),
+    })
+    .optional(),
 });
+
+/**
+ * What the admin's new-customer FORM validates, as opposed to what the endpoint
+ * accepts.
+ *
+ * The difference is the address. On the wire an address is either absent or
+ * complete, which is the right rule for stored data. In a form it is a set of
+ * inputs that all start empty and get filled in some order, so validating them
+ * as a required group would mark a blank optional section invalid the moment
+ * anything else failed. Here the address block is checked only once somebody
+ * has started it, and `ClientForm` drops it entirely when the street is blank.
+ *
+ * The address fields are also flat-optional rather than a nested `.optional()`
+ * object, because React Hook Form always sends the sub-object — with empty
+ * strings in it — and an `.optional()` wrapper never sees `undefined`.
+ */
+const clientFormSchema = z
+  .object({
+    businessName: z.string().trim().min(2, 'Enter a business name.').max(160),
+    contactName: z.string().trim().min(2, 'Enter a contact name.').max(80),
+    email: z.string().trim().toLowerCase().email('Enter a valid email address.'),
+    phone: z.string().trim().min(7, 'Enter a phone number.').max(40),
+    businessType: z.string().trim().max(80).optional(),
+    taxId: z.string().trim().max(40).optional(),
+    status: z.enum(['pending', 'approved']),
+    terms: z.enum(['prepaid', 'net15', 'net30', 'net60']),
+    creditLimitDollars: z.string(),
+    address: z.object({
+      line1: z.string().trim().max(120),
+      line2: z.string().trim().max(120),
+      city: z.string().trim().max(80),
+      region: z.string().trim().max(2),
+      postal: z.string().trim(),
+    }),
+    contactConsent: z.object({
+      sms: z.boolean(),
+      whatsapp: z.boolean(),
+      email: z.boolean(),
+      call: z.boolean(),
+    }),
+  })
+  .superRefine((values, ctx) => {
+    const { line1, city, postal } = values.address;
+    // Untouched block: nothing to check, and the form will not send it.
+    if (!line1 && !city && !postal) return;
+
+    if (line1.length < 2) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['address', 'line1'],
+        message: 'Enter a street address.',
+      });
+    }
+    if (city.length < 2) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['address', 'city'],
+        message: 'Enter a city.',
+      });
+    }
+    if (!/^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/.test(postal)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['address', 'postal'],
+        message: 'Enter a valid postal code.',
+      });
+    }
+  });
 
 /**
  * Editing a customer's profile.
@@ -1277,6 +1365,7 @@ exports.approveUserSchema = approveUserSchema;
 exports.rejectUserSchema = rejectUserSchema;
 exports.creditSchema = creditSchema;
 exports.clientSchema = clientSchema;
+exports.clientFormSchema = clientFormSchema;
 exports.clientUpdateSchema = clientUpdateSchema;
 exports.CONSENT_CHANNELS = CONSENT_CHANNELS;
 exports.contactConsentSchema = contactConsentSchema;

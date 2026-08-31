@@ -5,6 +5,7 @@ import { money, date } from '@/lib/format';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Skeleton from '@/components/ui/Skeleton';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { useAccountMutations } from '@/hooks/useAccount';
 
 /**
@@ -60,6 +61,10 @@ export function StoreCreditCard({ balance, added, spent, className }) {
 export function RechargeForm({ onDone, className }) {
   const { rechargeStoreCredit } = useAccountMutations();
   const [amount, setAmount] = useState('500');
+  // A preset chip sits one click from the submit button, so $2,000 can be taken
+  // in two clicks that look like one choice. The amount is restated on its own
+  // before the money is actually charged.
+  const [confirming, setConfirming] = useState(false);
 
   const dollars = Number(amount);
   const invalid = !Number.isFinite(dollars) || dollars < 25 || dollars > 25_000;
@@ -69,7 +74,7 @@ export function RechargeForm({ onDone, className }) {
       onSubmit={(event) => {
         event.preventDefault();
         if (invalid) return;
-        rechargeStoreCredit.mutate({ amountDollars: dollars }, { onSuccess: () => onDone?.() });
+        setConfirming(true);
       }}
       className={cn('rounded-[14px] border border-line bg-surface-2 p-4', className)}
     >
@@ -119,6 +124,33 @@ export function RechargeForm({ onDone, className }) {
           {rechargeStoreCredit.data.message}
         </p>
       )}
+
+      {/* Store credit is prepayment: it is charged now and comes back only as
+          credit against future orders, never as cash. The amount is stated on
+          its own line so it is read once more before the charge. */}
+      <ConfirmDialog
+        open={confirming}
+        onClose={() => setConfirming(false)}
+        onConfirm={() =>
+          rechargeStoreCredit.mutate(
+            { amountDollars: dollars },
+            {
+              onSuccess: () => {
+                setConfirming(false);
+                onDone?.();
+              },
+            },
+          )
+        }
+        title={`Add ${money(dollars * 100)} to your store credit?`}
+        body="It is charged now and the balance comes off your next order automatically."
+        consequence="The balance is held as store credit and spends itself against Cellvix orders."
+        tone="info"
+        confirmLabel={`Pay ${money(dollars * 100)}`}
+        cancelLabel="Go back"
+        loading={rechargeStoreCredit.isPending}
+        error={rechargeStoreCredit.error?.message}
+      />
     </form>
   );
 }

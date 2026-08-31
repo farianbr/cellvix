@@ -17,6 +17,7 @@ import { ORDER_STATUS_FLOW, CARRIERS } from '@shared/schemas/admin';
 import { ORDER_STATUSES } from '@/lib/constants';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import SelectField from '@/components/ui/SelectField';
@@ -442,6 +443,11 @@ export function AdminOrdersPage() {
   const { data: inventoryData } = useAdminInventory({}, Boolean(creating));
   const { updateOrderStatus, refundOrder, bulkOrderStatus, createOrder } = useAdminMutations();
   const [refunding, setRefunding] = useState(null);
+  // The refund form gathers the amount and reason; this holds that payload back
+  // until the operator has retyped the order number. Money does not move on the
+  // same click that finishes a form.
+  const [refundConfirm, setRefundConfirm] = useState(null);
+  const [bulkConfirm, setBulkConfirm] = useState(null);
 
   const clients = clientData?.users ?? [];
   const products = inventoryData?.products ?? [];
@@ -458,6 +464,7 @@ export function AdminOrdersPage() {
         onSuccess: (result) => {
           setBulkResult(result);
           setSelected([]);
+          setBulkConfirm(null);
         },
       },
     );
@@ -639,7 +646,7 @@ export function AdminOrdersPage() {
               <Button
                 size="xs"
                 variant="outline"
-                onClick={() => setBulkStatus('processing')}
+                onClick={() => setBulkConfirm('processing')}
                 loading={bulkOrderStatus.isPending}
               >
                 Mark processing
@@ -647,7 +654,7 @@ export function AdminOrdersPage() {
               <Button
                 size="xs"
                 variant="outline"
-                onClick={() => setBulkStatus('delivered')}
+                onClick={() => setBulkConfirm('delivered')}
                 loading={bulkOrderStatus.isPending}
               >
                 Mark delivered
@@ -749,17 +756,64 @@ export function AdminOrdersPage() {
           <RefundForm
             order={refunding}
             isPending={refundOrder.isPending}
-            error={refundOrder.error?.message}
+            // The failure is reported on the confirm step, which is where the
+            // send actually happens. Showing it here too would print the same
+            // message twice on stacked dialogs.
+            error={refundConfirm ? undefined : refundOrder.error?.message}
             onCancel={() => setRefunding(null)}
-            onSubmit={(body) =>
-              refundOrder.mutate(
-                { orderNumber: refunding.orderNumber, ...body },
-                { onSuccess: () => setRefunding(null) },
-              )
-            }
+            onSubmit={(body) => setRefundConfirm(body)}
           />
         )}
       </Modal>
+
+      {/* Refunds move store credit, and store credit is money the business
+          already holds. The order number has to be retyped so the operator
+          confirms WHICH order they are crediting, not just that they meant to
+          click refund. */}
+      <ConfirmDialog
+        open={Boolean(refundConfirm)}
+        onClose={() => setRefundConfirm(null)}
+        onConfirm={() =>
+          refundOrder.mutate(
+            { orderNumber: refunding.orderNumber, ...refundConfirm },
+            {
+              onSuccess: () => {
+                setRefundConfirm(null);
+                setRefunding(null);
+              },
+            },
+          )
+        }
+        title="Issue this refund?"
+        body={
+          refunding
+            ? `${money(Math.round((refundConfirm?.amountDollars ?? 0) * 100))} goes to ${refunding.businessName ?? 'this account'} as store credit against order ${refunding.orderNumber}.`
+            : ''
+        }
+        consequence="Store credit is spendable at checkout straight away. Reversing this means a manual adjustment on the credit ledger."
+        confirmPhrase={refunding?.orderNumber}
+        confirmPhraseLabel="the order number"
+        confirmLabel="Issue refund"
+        loading={refundOrder.isPending}
+        error={refundOrder.error?.message}
+      />
+
+      <ConfirmDialog
+        open={Boolean(bulkConfirm)}
+        onClose={() => setBulkConfirm(null)}
+        onConfirm={() => setBulkStatus(bulkConfirm)}
+        title={`Mark ${selected.length} ${selected.length === 1 ? 'order' : 'orders'} ${bulkConfirm}?`}
+        body="The server decides which of the selected orders can actually make this move, and reports back what it changed."
+        consequence={
+          bulkConfirm === 'delivered'
+            ? 'Delivered closes each order out. There is no bulk action to undo it.'
+            : undefined
+        }
+        tone="danger"
+        confirmLabel={`Mark ${bulkConfirm}`}
+        loading={bulkOrderStatus.isPending}
+        error={bulkOrderStatus.error?.message}
+      />
 
       <Modal
         open={Boolean(creating)}

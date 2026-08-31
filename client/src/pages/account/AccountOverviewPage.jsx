@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router';
 import {
   ArrowRight,
@@ -12,9 +13,11 @@ import { money, moneyCompact, date, count as formatCount } from '@/lib/format';
 import Panel, { StatTile, PanelEmpty } from '@/components/ui/Panel';
 import Button from '@/components/ui/Button';
 import Skeleton from '@/components/ui/Skeleton';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { OrderStatusBadge } from '@/components/account/OrderStatusBadge';
+import ActivityFeed from '@/components/account/ActivityFeed';
 import PartIllustration from '@/components/product/PartIllustration';
-import { useAccountSummary, useAccountMutations } from '@/hooks/useAccount';
+import { useAccountSummary, useAccountActivity, useAccountMutations } from '@/hooks/useAccount';
 import { useCart } from '@/hooks/useCart';
 import useUiStore from '@/store/uiStore';
 
@@ -63,9 +66,16 @@ function CreditMeter({ credit }) {
 
 export function AccountOverviewPage() {
   const { data, isLoading } = useAccountSummary();
+  // Its own query rather than a field on the summary: the feed reads three
+  // collections, and an overview that waits for it before painting anything is
+  // a slower overview for the sake of a panel below the fold.
+  const { data: activity } = useAccountActivity();
   const { addItem } = useCart();
   const { restoreSavedCart } = useAccountMutations();
   const openCart = useUiStore((s) => s.openCart);
+  // Restoring consumes the saved cart, same as on the quick order page. Both
+  // entry points ask, so the behaviour cannot differ by where it was clicked.
+  const [restoringCart, setRestoringCart] = useState(null);
 
   if (isLoading || !data) {
     return (
@@ -197,10 +207,7 @@ export function AccountOverviewPage() {
                       size="xs"
                       variant="outline"
                       loading={restoreSavedCart.isPending}
-                      onClick={() => {
-                        restoreSavedCart.mutate(cart.id);
-                        openCart();
-                      }}
+                      onClick={() => setRestoringCart(cart)}
                     >
                       Restore
                     </Button>
@@ -211,6 +218,24 @@ export function AccountOverviewPage() {
           )}
         </div>
       </div>
+
+      {/* ---- recent activity ----------------------------------------------
+          Full width rather than a third column: the rows are a title, a date
+          and an amount, and squeezing that into a sidebar truncates the title,
+          which is the part that says what happened.
+
+          Rendered only once the feed arrives — an empty-state panel that
+          appears and is then replaced by six rows is worse than a panel that
+          appears once, with content. */}
+      {activity && activity.length > 0 && (
+        <Panel
+          title="Recent activity"
+          description="Orders, invoices and credit on this account."
+          flush
+        >
+          <ActivityFeed events={activity} limit={8} />
+        </Panel>
+      )}
 
       {/* ---- quick reorder ------------------------------------------------ */}
       <Panel
@@ -275,6 +300,30 @@ export function AccountOverviewPage() {
           </ul>
         )}
       </Panel>
+
+      <ConfirmDialog
+        open={Boolean(restoringCart)}
+        onClose={() => setRestoringCart(null)}
+        onConfirm={() =>
+          restoreSavedCart.mutate(restoringCart.id, {
+            onSuccess: () => {
+              setRestoringCart(null);
+              openCart();
+            },
+          })
+        }
+        title="Restore this saved cart?"
+        body={
+          restoringCart
+            ? `The ${restoringCart.itemCount} items in “${restoringCart.name}” are added to your current cart. Quantities add on top of anything already there.`
+            : ''
+        }
+        consequence="The saved cart is used up by restoring it and will no longer be in this list."
+        tone="info"
+        confirmLabel="Restore to cart"
+        loading={restoreSavedCart.isPending}
+        error={restoreSavedCart.error?.message}
+      />
     </div>
   );
 }

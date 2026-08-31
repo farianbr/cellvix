@@ -15,6 +15,7 @@ import {
 import { money, date, dateTime, count as formatCount } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import SelectField from '@/components/ui/SelectField';
@@ -253,6 +254,7 @@ export function AdminPurchaseOrderDetailPage() {
   const [receiving, setReceiving] = useState(false);
   const [paying, setPaying] = useState(false);
   const [receiveResult, setReceiveResult] = useState(null);
+  const [cancelling, setCancelling] = useState(false);
 
   const { data, isLoading, error } = useAdminPurchaseOrder(id);
   const { data: categoryData } = useAdminExpenseCategories();
@@ -349,7 +351,7 @@ export function AdminPurchaseOrderDetailPage() {
               <Button
                 variant="ghost"
                 icon={Ban}
-                onClick={() => setPurchaseOrderStatus.mutate({ id: order.id, status: 'cancelled' })}
+                onClick={() => setCancelling(true)}
               >
                 Cancel
               </Button>
@@ -647,6 +649,27 @@ export function AdminPurchaseOrderDetailPage() {
           />
         )}
       </Modal>
+
+      {/* Only offered while nothing has been received, but it still closes the
+          order out against the supplier and there is no un-cancel. */}
+      <ConfirmDialog
+        open={cancelling}
+        onClose={() => setCancelling(false)}
+        onConfirm={() =>
+          setPurchaseOrderStatus.mutate(
+            { id: order.id, status: 'cancelled' },
+            { onSuccess: () => setCancelling(false) },
+          )
+        }
+        title="Cancel this purchase order?"
+        body={`${order.poNumber} to ${order.supplier.name} closes as cancelled. Nothing on it has been received.`}
+        consequence="There is no un-cancel. Ordering these parts again means raising a new PO."
+        tone="danger"
+        confirmLabel="Cancel order"
+        cancelLabel="Keep it open"
+        loading={setPurchaseOrderStatus.isPending}
+        error={setPurchaseOrderStatus.error?.message}
+      />
     </>
   );
 }

@@ -14,6 +14,7 @@ import cn from '@/lib/cn';
 import { money, date, count as formatCount } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -85,6 +86,9 @@ export function AdminApprovalsPage() {
   const [status, setStatus] = useState('pending');
   const [approving, setApproving] = useState(null);
   const [rejecting, setRejecting] = useState(null);
+  // Approve and reject each have a form the admin fills in deliberately.
+  // Suspend was the one account-status change that fired on a single click.
+  const [suspending, setSuspending] = useState(null);
 
   const { data, isLoading } = useAdminUsers({ status });
   const { approveUser, rejectUser, setUserStatus } = useAdminMutations();
@@ -235,7 +239,7 @@ export function AdminApprovalsPage() {
                         size="sm"
                         variant="outline"
                         loading={setUserStatus.isPending}
-                        onClick={() => setUserStatus.mutate({ id: user.id, status: 'suspended' })}
+                        onClick={() => setSuspending(user)}
                       >
                         Suspend
                       </Button>
@@ -294,6 +298,26 @@ export function AdminApprovalsPage() {
           />
         )}
       </Modal>
+
+      {/* Suspending stops the account trading immediately. It is reversible from
+          this same screen with Reinstate, so it asks once rather than asking for
+          the business name to be typed. */}
+      <ConfirmDialog
+        open={Boolean(suspending)}
+        onClose={() => setSuspending(null)}
+        onConfirm={() =>
+          setUserStatus.mutate(
+            { id: suspending.id, status: 'suspended' },
+            { onSuccess: () => setSuspending(null) },
+          )
+        }
+        title={`Suspend ${suspending?.businessName ?? 'this account'}?`}
+        body="They keep their cart and their history, but they cannot place an order or see trade pricing until the account is reinstated."
+        tone="danger"
+        confirmLabel="Suspend account"
+        loading={setUserStatus.isPending}
+        error={setUserStatus.error?.message}
+      />
     </>
   );
 }

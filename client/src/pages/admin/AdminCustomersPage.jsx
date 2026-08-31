@@ -1,24 +1,31 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   AlertCircle,
   Ban,
   Building2,
   Eye,
+  MapPin,
   Pencil,
   Plus,
+  ShieldCheck,
   UserCheck,
   Wallet,
   WalletCards,
 } from 'lucide-react';
 import { PROVINCES } from '@shared/schemas/checkout';
+import { clientFormSchema } from '@shared/schemas/admin';
 import { money, date, count as formatCount } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Input from '@/components/ui/Input';
+import FormSection from '@/components/ui/FormSection';
+import ConsentChannels, { EMPTY_CONSENT } from '@/components/ui/ConsentChannels';
 import SelectField from '@/components/ui/SelectField';
 import SelectMenu from '@/components/ui/SelectMenu';
 import Pagination from '@/components/ui/Pagination';
@@ -77,25 +84,46 @@ const CREATE_STATUS = [
  * carries them: deciding to trade with a business and deciding what credit to
  * extend it is one decision.
  */
+/**
+ * Opening a client account by hand.
+ *
+ * The four fields that make an account — who they are, how to reach them — are
+ * the whole form until an admin asks for more: address and business details sit
+ * in collapsed sections, because they are genuinely optional and a wall of
+ * skippable inputs is what stops a form being finished.
+ *
+ * There is no password field. The server generates one and emails it with the
+ * sign-in link, so the admin no longer has to invent a password and then pass
+ * it on down a phone line.
+ */
 function ClientForm({ onSubmit, onCancel, isPending, error }) {
-  const { register, handleSubmit, watch, control } = useForm({
+  const {
+    register,
+    handleSubmit,
+    watch,
+    control,
+    setValue,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(clientFormSchema),
     defaultValues: {
       businessName: '',
       contactName: '',
       email: '',
       phone: '',
-      password: '',
       businessType: '',
       taxId: '',
       status: 'approved',
       terms: 'prepaid',
       creditLimitDollars: '0.00',
       address: { line1: '', line2: '', city: '', region: 'ON', postal: '' },
+      contactConsent: EMPTY_CONSENT,
     },
   });
 
   const terms = watch('terms');
   const status = watch('status');
+  const consent = watch('contactConsent');
 
   return (
     <form
@@ -105,7 +133,6 @@ function ClientForm({ onSubmit, onCancel, isPending, error }) {
           contactName: values.contactName,
           email: values.email,
           phone: values.phone,
-          password: values.password,
           businessType: values.businessType || undefined,
           taxId: values.taxId || undefined,
           status: values.status,
@@ -115,6 +142,12 @@ function ClientForm({ onSubmit, onCancel, isPending, error }) {
           // sent at all, it has to be complete, so an empty street line means
           // no address rather than a partial one the server has to reject.
           address: values.address.line1 ? values.address : undefined,
+          // Absent rather than four falses when nothing was ticked — see the
+          // note in `createUser`. Ticking nothing means nobody asked, which is
+          // not the same fact as the customer declining every channel.
+          contactConsent: Object.values(values.contactConsent).some(Boolean)
+            ? values.contactConsent
+            : undefined,
         }),
       )}
       className="space-y-4"
@@ -126,66 +159,131 @@ function ClientForm({ onSubmit, onCancel, isPending, error }) {
         </p>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Input label="Business name" {...register('businessName')} />
-        <Input label="Contact name" {...register('contactName')} />
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Input label="Email" type="email" {...register('email')} />
-        <Input label="Phone" type="tel" {...register('phone')} />
-      </div>
-
-      <Input
-        label="Password"
-        type="password"
-        hint="At least 8 characters, with a letter and a number. Pass it on to the client."
-        {...register('password')}
-      />
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Input label="Business type" placeholder="Repair shop" {...register('businessType')} />
-        <Input label="Tax ID" {...register('taxId')} />
-      </div>
-
-      <fieldset className="rounded-[11px] border border-line p-3.5">
-        <legend className="eyebrow px-1 text-ink-400">Address</legend>
+      {/* The required fields in their own slab, matching the storefront
+          sign-up. The two forms open the same kind of account. */}
+      <FormSection title="The business" icon={Building2} collapsible={false}>
         <div className="space-y-3">
           <div className="grid gap-3 sm:grid-cols-2">
-            <Input label="Street" {...register('address.line1')} />
-            <Input label="Unit / suite" {...register('address.line2')} />
+            <Input
+              label="Business name"
+              required
+              placeholder="Northline Device Repair"
+              error={errors.businessName?.message}
+              data-autofocus
+              {...register('businessName')}
+            />
+            <Input
+              label="Contact name"
+              required
+              placeholder="Dana Whitfield"
+              error={errors.contactName?.message}
+              {...register('contactName')}
+            />
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input
+              label="Email"
+              type="email"
+              required
+              placeholder="dana@northline.ca"
+              hint="Their sign-in, and where the credentials go."
+              error={errors.email?.message}
+              {...register('email')}
+            />
+            <Input
+              label="Phone"
+              type="tel"
+              required
+              placeholder="(416) 555-0142"
+              error={errors.phone?.message}
+              {...register('phone')}
+            />
+          </div>
+        </div>
+      </FormSection>
+
+      <FormSection title="Address" hint="optional" icon={MapPin}>
+        <div className="space-y-3">
+          <div className="grid gap-3 sm:grid-cols-[1fr_2fr]">
+            <Input label="Unit / suite" placeholder="101" {...register('address.line2')} />
+            <Input
+              label="Street"
+              placeholder="123 Main Street"
+              error={errors.address?.line1?.message}
+              {...register('address.line1')}
+            />
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
-            <Input label="City" {...register('address.city')} />
+            <Input
+              label="City"
+              placeholder="Toronto"
+              error={errors.address?.city?.message}
+              {...register('address.city')}
+            />
             <SelectField
               control={control}
               name="address.region"
               label="Province"
               options={PROVINCES}
             />
-            <Input label="Postal code" placeholder="A1A 1A1" {...register('address.postal')} />
+            <Input
+              label="Postal code"
+              placeholder="A1A 1A1"
+              error={errors.address?.postal?.message}
+              {...register('address.postal')}
+            />
           </div>
         </div>
-      </fieldset>
+      </FormSection>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <SelectField control={control} name="status" label="Status" options={CREATE_STATUS} />
-        <SelectField control={control} name="terms" label="Payment terms" options={TERMS} />
-        <Input
-          label="Credit limit"
-          inputMode="numeric"
-          suffix="CAD"
-          disabled={terms === 'prepaid'}
-          {...register('creditLimitDollars')}
+      <FormSection title="Business details" hint="optional" icon={Building2}>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Input label="Business type" placeholder="Repair shop" {...register('businessType')} />
+          <Input label="Tax ID" placeholder="RT0001-88213" {...register('taxId')} />
+        </div>
+      </FormSection>
+
+      {/* CASL: what the customer has told us they agreed to. Left blank records
+          nothing, which is what an account opened without asking should say. */}
+      <FormSection
+        title="Communication consent"
+        hint="tick what the customer agreed to (CASL)"
+        icon={ShieldCheck}
+        collapsible={false}
+      >
+        <ConsentChannels
+          value={consent}
+          onChange={(next) => setValue('contactConsent', next, { shouldDirty: true })}
         />
-      </div>
+        <p className="mt-3 text-[12px] leading-snug text-ink-400">
+          Only tick a channel the customer actually agreed to. Leave them all clear if nobody has
+          asked yet — the profile shows that as unrecorded rather than as a refusal.
+        </p>
+      </FormSection>
 
-      <p className="rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12.5px] text-ink-500">
+      {/* Not collapsible: these three decide what the account can do the
+          moment it exists, so they are never something to skip past. */}
+      <FormSection title="Trading terms" icon={Wallet} collapsible={false}>
+        <div className="grid gap-3 sm:grid-cols-3">
+          <SelectField control={control} name="status" label="Status" options={CREATE_STATUS} />
+          <SelectField control={control} name="terms" label="Payment terms" options={TERMS} />
+          <Input
+            label="Credit limit"
+            inputMode="numeric"
+            suffix="CAD"
+            disabled={terms === 'prepaid'}
+            {...register('creditLimitDollars')}
+          />
+        </div>
+      </FormSection>
+
+      <p className="rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12.5px] leading-relaxed text-ink-500">
         {status === 'approved'
           ? 'This account can sign in, see trade pricing and order straight away.'
           : 'This account can sign in and browse, but sees no prices and cannot order until it is approved.'}{' '}
-        Marketing consent is left off — an account opened here has not asked for
-        anything, so there is no implied consent to record.
+        A password is generated on save and emailed to {watch('email') || 'the address above'} with
+        the sign-in link, so there is nothing to pass on by hand.
       </p>
 
       <div className="flex justify-end gap-2">
@@ -207,6 +305,14 @@ export function AdminCustomersPage() {
   // Opened directly by `+ Create` (§7.2), which arrives with `?new=1`.
   const [creating, setCreating] = useCreateParam();
   const [selected, setSelected] = useState([]);
+  // Which bulk status change is waiting to be confirmed. Both write to every
+  // selected account one after another, so the count is what the dialog leads
+  // with.
+  const [bulkConfirm, setBulkConfirm] = useState(null);
+  // Set when the account was created but its credentials email did not send.
+  // Holds the created user so the notice can name them and still go to the
+  // profile afterwards.
+  const [mailWarning, setMailWarning] = useState(null);
   const { createUser, setUserStatus } = useAdminMutations();
 
   const status = searchParams.get('status') ?? 'all';
@@ -640,7 +746,7 @@ export function AdminCustomersPage() {
           variant="outline"
           icon={Ban}
           loading={setUserStatus.isPending}
-          onClick={() => runBulkStatus('suspended')}
+          onClick={() => setBulkConfirm('suspended')}
         >
           Suspend
         </Button>
@@ -649,7 +755,7 @@ export function AdminCustomersPage() {
           variant="outline"
           icon={UserCheck}
           loading={setUserStatus.isPending}
-          onClick={() => runBulkStatus('approved')}
+          onClick={() => setBulkConfirm('approved')}
         >
           Reinstate
         </Button>
@@ -671,6 +777,17 @@ export function AdminCustomersPage() {
               createUser.mutate(values, {
                 onSuccess: (payload) => {
                   setCreating(false);
+                  /**
+                   * The credentials only exist in that email, so a send that
+                   * did not happen has to be said out loud rather than left to
+                   * be discovered when the customer cannot sign in. Without
+                   * SMTP configured the mailer writes to `server/.mail/`, which
+                   * is a working dev setup and not an error.
+                   */
+                  if (payload?.user?.welcomeEmail?.delivered === false) {
+                    setMailWarning(payload.user);
+                    return;
+                  }
                   // Straight to the profile: the next thing an operator does is
                   // set a store-credit balance or look at what they just typed.
                   if (payload?.user?.id) navigate(`/admin/clients/${payload.user.id}`);
@@ -681,6 +798,60 @@ export function AdminCustomersPage() {
         )}
       </Modal>
 
+      {/* The account exists either way. What did not happen is the email that
+          carries the only copy of its password.
+          It deliberately does NOT tell the admin to send a password reset:
+          `authController.forgotPassword` is still a 204 stub that mails
+          nothing, so the only real remedy today is deleting the account and
+          creating it again once mail is working. */}
+      <ConfirmDialog
+        open={Boolean(mailWarning)}
+        onClose={() => {
+          const id = mailWarning?.id;
+          setMailWarning(null);
+          if (id) navigate(`/admin/clients/${id}`);
+        }}
+        onConfirm={() => {
+          const id = mailWarning?.id;
+          setMailWarning(null);
+          if (id) navigate(`/admin/clients/${id}`);
+        }}
+        title="Account created, but the email did not send"
+        body={
+          mailWarning
+            ? `${mailWarning.businessName} exists and can be approved and traded with as normal. What did not reach ${mailWarning.email} is the message carrying their password.`
+            : ''
+        }
+        consequence="They cannot sign in until they have credentials. Check the mail settings, then delete this account and create it again so a fresh email goes out."
+        tone="danger"
+        confirmLabel="Open their profile"
+        cancelLabel="Stay here"
+      />
+
+      {/* Suspend stops every selected account trading; reinstate puts them back
+          but leaves pending registrations alone, which the body says so the
+          count in the dialog is not read as a promise. */}
+      <ConfirmDialog
+        open={Boolean(bulkConfirm)}
+        onClose={() => setBulkConfirm(null)}
+        onConfirm={async () => {
+          await runBulkStatus(bulkConfirm);
+          setBulkConfirm(null);
+        }}
+        title={
+          bulkConfirm === 'suspended'
+            ? `Suspend ${selected.length} ${selected.length === 1 ? 'account' : 'accounts'}?`
+            : `Reinstate ${selected.length} ${selected.length === 1 ? 'account' : 'accounts'}?`
+        }
+        body={
+          bulkConfirm === 'suspended'
+            ? 'They keep their carts and their history, but none of them can place an order or see trade pricing until they are reinstated.'
+            : 'Pending registrations in the selection are left alone: approving sets a credit limit and terms, and that is done one business at a time from the approvals queue.'
+        }
+        tone={bulkConfirm === 'suspended' ? 'danger' : 'info'}
+        confirmLabel={bulkConfirm === 'suspended' ? 'Suspend accounts' : 'Reinstate accounts'}
+        loading={setUserStatus.isPending}
+      />
     </>
   );
 }

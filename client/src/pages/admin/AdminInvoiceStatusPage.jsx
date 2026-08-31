@@ -8,6 +8,7 @@ import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Modal from '@/components/ui/Modal';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import PageHeader from '@/components/admin/PageHeader';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
@@ -226,6 +227,8 @@ export function AdminInvoiceStatusPage() {
   const [editing, setEditing] = useState(null);
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  // The trash icon used to delete on the click itself.
+  const [deleting, setDeleting] = useState(null);
 
   const rules = data?.rules ?? [];
   const triggers = data?.triggers ?? [];
@@ -327,7 +330,7 @@ export function AdminInvoiceStatusPage() {
                 {!rule.isBuiltIn && (
                   <button
                     type="button"
-                    onClick={() => deleteInvoiceRule.mutateAsync(rule.id).catch((e) => setError(e.message))}
+                    onClick={() => setDeleting(rule)}
                     aria-label={`Delete ${rule.label}`}
                     className="flex size-8 shrink-0 items-center justify-center rounded-[8px] border border-line text-ink-400 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger"
                   >
@@ -422,6 +425,25 @@ export function AdminInvoiceStatusPage() {
           onClose={() => setEditing(null)}
         />
       )}
+
+      <ConfirmDialog
+        open={Boolean(deleting)}
+        onClose={() => setDeleting(null)}
+        onConfirm={() =>
+          deleteInvoiceRule
+            .mutateAsync(deleting.id)
+            .then(() => setDeleting(null))
+            .catch((e) => setError(e.message))
+        }
+        title="Delete this rule?"
+        body={
+          deleting
+            ? `“${deleting.label}” stops running. To pause it without losing the setup, switch it inactive instead.`
+            : ''
+        }
+        confirmLabel="Delete rule"
+        loading={deleteInvoiceRule.isPending}
+      />
     </>
   );
 }

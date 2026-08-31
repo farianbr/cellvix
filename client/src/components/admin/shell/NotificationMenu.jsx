@@ -36,6 +36,7 @@ import { adminIcon } from './adminIcons';
 /** Which icon each type gets. Names resolve through the shared `adminIcon` map. */
 const TYPE_ICON = {
   new_registration: 'UserPlus',
+  supplier_application: 'Building2',
   pending_approval: 'UserCheck',
   new_order: 'Package',
   quote_accepted: 'FileSignature',

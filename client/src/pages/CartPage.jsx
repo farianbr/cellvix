@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { Link } from 'react-router';
 import { ArrowLeft, Bookmark, Lock, ShieldCheck, ShoppingCart, Truck } from 'lucide-react';
 import cn from '@/lib/cn';
 import { money } from '@/lib/format';
 import { TAX_RATE } from '@shared/schemas/checkout';
 import Button from '@/components/ui/Button';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Skeleton from '@/components/ui/Skeleton';
 import CartLine from '@/components/cart/CartLine';
 import CartBundleLine from '@/components/cart/CartBundleLine';
@@ -37,6 +39,9 @@ export function CartPage() {
   } = useCart();
   const { isApproved, isAuthenticated } = useAuth();
   const openAccount = useUiStore((s) => s.openAccount);
+  // "Save cart for later" EMPTIES the active cart and drops the promo code —
+  // the button label says none of that, so it is said here before it happens.
+  const [savingConfirm, setSavingConfirm] = useState(false);
 
   // A preview of the checkout arithmetic, computed from what the server already
   // told us the cart is worth. The binding numbers come from /orders/quote —
@@ -239,7 +244,7 @@ export function CartPage() {
                 icon={Bookmark}
                 disabled={!isApproved}
                 loading={isSaving}
-                onClick={() => saveForLater()}
+                onClick={() => setSavingConfirm(true)}
               >
                 Save cart for later
               </Button>
@@ -252,6 +257,29 @@ export function CartPage() {
           </div>
         </aside>
       </div>
+
+      {/* Saving parks the cart under Saved carts and leaves the active one
+          empty. Restoring it later merges the lines back, but the promo code
+          does not come with them, so both halves are stated here. */}
+      <ConfirmDialog
+        open={savingConfirm}
+        onClose={() => setSavingConfirm(false)}
+        onConfirm={() => {
+          saveForLater();
+          setSavingConfirm(false);
+        }}
+        title="Save this cart and empty it?"
+        body={`All ${count} ${count === 1 ? 'item' : 'items'} move to your saved carts, ready to restore from the cart panel or the quick order pad.`}
+        consequence={
+          promo
+            ? 'Your cart is left empty and the promo code comes off. You can apply it again after restoring.'
+            : 'Your cart is left empty until you restore it.'
+        }
+        tone="info"
+        confirmLabel="Save and empty cart"
+        cancelLabel="Keep shopping"
+        loading={isSaving}
+      />
     </div>
   );
 }

@@ -64,6 +64,7 @@ const ACCOUNT_NAV = [
   { key: 'orders', label: 'Orders & tracking', to: '/account/orders', icon: 'Package' },
   { key: 'invoices', label: 'Invoices & statements', to: '/account/invoices', icon: 'FileText' },
   { key: 'credit', label: 'Credit & balance', to: '/account/credit', icon: 'Wallet' },
+  { key: 'referrals', label: 'Refer & earn', to: '/account/referrals', icon: 'Gift' },
   { key: 'quick-order', label: 'Quick order pad', to: '/account/quick-order', icon: 'Zap' },
   { key: 'addresses', label: 'Saved addresses', to: '/account/addresses', icon: 'MapPin' },
   { key: 'payment', label: 'Payment methods', to: '/account/payment-methods', icon: 'CreditCard' },
@@ -83,6 +84,32 @@ const rechargeSchema = z.object({
   poNumber: z.string().trim().max(40).optional(),
 });
 
+/**
+ * Paying an invoice, or paying the line of credit down.
+ *
+ * **No amount.** What is owed is a fact the server already holds, and §5.3 is
+ * explicit that the client never sends a price — an amount here would be a
+ * number a buyer could edit into an underpayment that still marked an invoice
+ * settled. The invoice's own balance is the amount, every time.
+ *
+ * `useStoreCredit` asks for credit to be drawn first and the card charged only
+ * for what is left; how much that turns out to be is decided server-side too.
+ *
+ * The card fields are **display only** and are not read by the payment path.
+ * They exist because the gateway is a mock (`services/payment.js`) and a
+ * payment form with nothing in it does not demonstrate anything. Nothing here
+ * is stored — the repo holds no PAN anywhere, by design.
+ */
+const invoicePaymentSchema = z.object({
+  useStoreCredit: z.boolean().optional().default(false),
+  poNumber: z.string().trim().max(40).optional(),
+});
+
+const creditPayoffSchema = z.object({
+  useStoreCredit: z.boolean().optional().default(false),
+  poNumber: z.string().trim().max(40).optional(),
+});
+
 // --- CommonJS exports -------------------------------------------------
 exports.profileSchema = profileSchema;
 exports.savedAddressSchema = savedAddressSchema;
@@ -91,3 +118,5 @@ exports.bulkAddSchema = bulkAddSchema;
 exports.changePasswordSchema = changePasswordSchema;
 exports.ACCOUNT_NAV = ACCOUNT_NAV;
 exports.rechargeSchema = rechargeSchema;
+exports.invoicePaymentSchema = invoicePaymentSchema;
+exports.creditPayoffSchema = creditPayoffSchema;

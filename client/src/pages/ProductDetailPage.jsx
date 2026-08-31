@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Check, ChevronRight, Lock, ShieldCheck, ShoppingCart } from 'lucide-react';
 import cn from '@/lib/cn';
 import api from '@/lib/api';
-import { money } from '@/lib/format';
+import { money, productTitle } from '@/lib/format';
 import { GRADES } from '@/lib/constants';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -145,7 +145,9 @@ export function ProductDetailPage() {
         {/* ---- detail ------------------------------------------------------ */}
         <div className="min-w-0">
           <p className="eyebrow mb-2 text-ink-300">{product.partTypeLabel}</p>
-          <h1 className="text-[24px] leading-tight sm:text-[30px]">{product.name}</h1>
+          <h1 className="text-[24px] leading-tight sm:text-[30px]">
+            {productTitle(product.name, product.partTypeLabel)}
+          </h1>
 
           {/* Availability is a boolean here and everywhere else on the
               storefront. The on-hand count is warehouse data, and printing it

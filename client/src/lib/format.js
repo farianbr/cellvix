@@ -103,3 +103,28 @@ export function titleize(slug = '') {
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(' ');
 }
+
+/**
+ * A product name with its part type stripped off the end.
+ *
+ * `name` is stored as "<model> <part type>" ("OnePlus 10 Pro Earpiece Speaker")
+ * because an order line, an invoice, a search result and an export all need the
+ * part type inside the one string they print. The catalogue surfaces do not: the
+ * card, the PDP and the cart line already show `partTypeLabel` in the eyebrow
+ * directly above the name, so the full name repeated it a word later.
+ *
+ * The suffix is only removed when it really is a suffix and something is left
+ * over — a bad label, a name that never carried it, or a product whose whole
+ * name IS the part type all fall through to the untouched name.
+ */
+export function productTitle(name = '', partTypeLabel = '') {
+  const label = partTypeLabel.trim();
+  if (!label) return name;
+
+  const trimmed = name.trim();
+  if (trimmed.length <= label.length) return name;
+  if (trimmed.slice(-label.length).toLowerCase() !== label.toLowerCase()) return name;
+
+  const head = trimmed.slice(0, -label.length).trim();
+  return head || name;
+}

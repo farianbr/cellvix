@@ -12,17 +12,33 @@ import useApplyFilterPath from '@/hooks/useApplyFilterPath';
 import { useTaxonomy } from '@/hooks/useCatalog';
 import { useAuth, useSignOut } from '@/hooks/useAuth';
 
+/**
+ * The drawer is the SITE's menu, not the account's.
+ *
+ * The account sections deliberately are not here. They live one tap away in the
+ * bottom bar's account slot (`MobileBottomNav`), which opens the full
+ * `AccountMenu` — all nine of them, always current. Mirroring four of the nine
+ * into this list gave the drawer a second, permanently incomplete copy of a
+ * menu that already exists, and made "where do I find my invoices" a question
+ * with two different answers.
+ */
 const NAV_LINKS = [
   { label: 'Shop all parts', to: '/' },
   { label: 'Offers & combo deals', to: '/offers' },
-  { label: 'My account', to: '/account' },
-  { label: 'Order history', to: '/account/orders' },
-  { label: 'Invoices', to: '/account/invoices' },
-  { label: 'Quick order pad', to: '/account/quick-order' },
   { label: 'Blog', to: '/blog' },
   { label: 'FAQ', to: '/faq' },
   { label: 'About us', to: '/about' },
   { label: 'Contact us', to: '/contact' },
+  // Both point at /contact, which is where the footer's own Privacy and Terms
+  // links already go: neither page has been written yet. Pointed at a real page
+  // rather than a route that 404s, and both move to their own paths the moment
+  // the copy exists.
+  //
+  // `neverActive` because the active test below is an exact path match, and
+  // three entries sharing /contact would otherwise all light up at once — the
+  // highlight is meant to say "you are here", not "one of these three".
+  { label: 'Privacy policy', to: '/contact', neverActive: true },
+  { label: 'Terms & conditions', to: '/contact', neverActive: true },
 ];
 
 // Staff get one door into the console rather than the buyer dashboard links.
@@ -172,9 +188,10 @@ export function MobileDrawer() {
       {tab === 'menu' ? (
         <nav aria-label="Site navigation" className="p-2">
           {navLinks.map((link) => {
-            // Exact match only: every entry is a distinct route, and a prefix
-            // test would light up "My account" while sitting on Order history.
-            const active = pathname === link.to;
+            // Exact match only: a prefix test would light up "Shop all parts"
+            // on every page in the catalogue. `neverActive` opts out the
+            // entries that share a destination with another entry.
+            const active = !link.neverActive && pathname === link.to;
 
             return (
               <Link

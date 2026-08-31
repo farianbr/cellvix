@@ -121,6 +121,9 @@ export function AdminUsersPage() {
   const [roleFilter, setRoleFilter] = useState('all');
   const [adding, setAdding] = useState(false);
   const [confirming, setConfirming] = useState(null);
+  // Locking is reversible from the same menu entry, but it signs the person out
+  // of the admin panel, so it no longer fires straight off the row menu.
+  const [locking, setLocking] = useState(null);
   const [error, setError] = useState(null);
 
   const { user: me } = useAuth();
@@ -158,7 +161,7 @@ export function AdminUsersPage() {
       key: 'lock',
       label: 'Lock / unlock account',
       icon: Lock,
-      onSelect: (row) => updateStaff.mutate({ id: row.id, locked: !row.locked }),
+      onSelect: (row) => setLocking(row),
     },
     {
       key: 'delete',
@@ -297,10 +300,34 @@ export function AdminUsersPage() {
         }}
         onConfirm={confirmDelete}
         title={`Delete ${confirming?.name ?? 'user'}?`}
-        body="This permanently removes the account. Their history stays on the records they touched."
+        body="This permanently removes the staff account and the access that came with it."
+        consequence="Their history stays on the records they touched. To take away access without losing the account, lock it instead."
+        confirmPhrase={confirming?.name}
+        confirmPhraseLabel="their name"
         confirmLabel="Delete account"
         loading={deleteStaff.isPending}
         error={error}
+      />
+
+      <ConfirmDialog
+        open={Boolean(locking)}
+        onClose={() => setLocking(null)}
+        onConfirm={() =>
+          updateStaff.mutate(
+            { id: locking.id, locked: !locking.locked },
+            { onSuccess: () => setLocking(null) },
+          )
+        }
+        title={locking?.locked ? `Unlock ${locking.name}?` : `Lock ${locking?.name ?? 'this account'}?`}
+        body={
+          locking?.locked
+            ? 'They get their admin access back with the same role and permissions they had before.'
+            : 'They are signed out and cannot get back into the admin panel until the account is unlocked. Nothing they have done is changed.'
+        }
+        tone={locking?.locked ? 'info' : 'danger'}
+        confirmLabel={locking?.locked ? 'Unlock account' : 'Lock account'}
+        loading={updateStaff.isPending}
+        error={updateStaff.error?.message}
       />
     </>
   );

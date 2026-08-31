@@ -31,6 +31,7 @@ const AccountOrdersPage = lazy(() => import('@/pages/account/AccountOrdersPage')
 const AccountOrderDetailPage = lazy(() => import('@/pages/account/AccountOrderDetailPage'));
 const AccountInvoicesPage = lazy(() => import('@/pages/account/AccountInvoicesPage'));
 const AccountCreditPage = lazy(() => import('@/pages/account/AccountCreditPage'));
+const AccountReferralsPage = lazy(() => import('@/pages/account/AccountReferralsPage'));
 const AccountQuickOrderPage = lazy(() => import('@/pages/account/AccountQuickOrderPage'));
 const AccountAddressesPage = lazy(() => import('@/pages/account/AccountAddressesPage'));
 const AccountPaymentMethodsPage = lazy(() => import('@/pages/account/AccountPaymentMethodsPage'));
@@ -300,6 +301,7 @@ export function App() {
           <Route path="orders/:orderNumber" element={<AccountOrderDetailPage />} />
           <Route path="invoices" element={<AccountInvoicesPage />} />
           <Route path="credit" element={<AccountCreditPage />} />
+          <Route path="referrals" element={<AccountReferralsPage />} />
           <Route path="quick-order" element={<AccountQuickOrderPage />} />
           <Route path="addresses" element={<AccountAddressesPage />} />
           <Route path="payment-methods" element={<AccountPaymentMethodsPage />} />

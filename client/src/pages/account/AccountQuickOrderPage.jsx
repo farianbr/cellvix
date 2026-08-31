@@ -5,6 +5,7 @@ import { date } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import ProductPicker from '@/components/account/ProductPicker';
 import { useAccountMutations, useSavedCarts } from '@/hooks/useAccount';
 import useUiStore from '@/store/uiStore';
@@ -22,6 +23,10 @@ export function AccountQuickOrderPage() {
   const [rows, setRows] = useState(() => Array.from({ length: 5 }, EMPTY_ROW));
   const [pasted, setPasted] = useState('');
   const [result, setResult] = useState(null);
+  // Deleting a saved cart is permanent, and restoring one CONSUMES it: the
+  // lines merge into the active cart and the saved copy is removed either way.
+  const [deletingCart, setDeletingCart] = useState(null);
+  const [restoringCart, setRestoringCart] = useState(null);
 
   const { bulkAdd, restoreSavedCart, deleteSavedCart } = useAccountMutations();
   const { data: savedCarts } = useSavedCarts();
@@ -227,17 +232,14 @@ export function AccountQuickOrderPage() {
                   size="xs"
                   variant="outline"
                   loading={restoreSavedCart.isPending}
-                  onClick={() => {
-                    restoreSavedCart.mutate(cart.id);
-                    openCart();
-                  }}
+                  onClick={() => setRestoringCart(cart)}
                 >
                   Restore
                 </Button>
 
                 <button
                   type="button"
-                  onClick={() => deleteSavedCart.mutate(cart.id)}
+                  onClick={() => setDeletingCart(cart)}
                   aria-label={`Delete saved cart ${cart.name}`}
                   className="flex size-8 shrink-0 items-center justify-center rounded-lg text-ink-300 transition-colors hover:bg-danger-50 hover:text-danger"
                 >
@@ -248,6 +250,50 @@ export function AccountQuickOrderPage() {
           </ul>
         )}
       </Panel>
+
+      <ConfirmDialog
+        open={Boolean(deletingCart)}
+        onClose={() => setDeletingCart(null)}
+        onConfirm={() =>
+          deleteSavedCart.mutate(deletingCart.id, { onSuccess: () => setDeletingCart(null) })
+        }
+        title="Delete this saved cart?"
+        body={
+          deletingCart
+            ? `“${deletingCart.name}” and its ${deletingCart.lineCount} ${deletingCart.lineCount === 1 ? 'line' : 'lines'} will be removed. Your active cart is not affected.`
+            : ''
+        }
+        confirmLabel="Delete saved cart"
+        loading={deleteSavedCart.isPending}
+        error={deleteSavedCart.error?.message}
+      />
+
+      {/* Restoring merges the saved lines into the active cart and CONSUMES the
+          saved copy — quantities add on top of anything already in the cart, so
+          the saved list is not left behind to restore a second time. */}
+      <ConfirmDialog
+        open={Boolean(restoringCart)}
+        onClose={() => setRestoringCart(null)}
+        onConfirm={() =>
+          restoreSavedCart.mutate(restoringCart.id, {
+            onSuccess: () => {
+              setRestoringCart(null);
+              openCart();
+            },
+          })
+        }
+        title="Restore this saved cart?"
+        body={
+          restoringCart
+            ? `The ${restoringCart.lineCount} ${restoringCart.lineCount === 1 ? 'line' : 'lines'} in “${restoringCart.name}” are added to your current cart. Quantities add on top of anything already there.`
+            : ''
+        }
+        consequence="The saved cart is used up by restoring it and will no longer be in this list."
+        tone="info"
+        confirmLabel="Restore to cart"
+        loading={restoreSavedCart.isPending}
+        error={restoreSavedCart.error?.message}
+      />
     </div>
   );
 }

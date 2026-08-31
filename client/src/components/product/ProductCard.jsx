@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { Check, Loader2, Lock, PackageX, ShoppingCart } from 'lucide-react';
 import { motion } from 'motion/react';
 import cn from '@/lib/cn';
-import { money } from '@/lib/format';
+import { money, productTitle } from '@/lib/format';
 import GradeBadge from './GradeBadge';
 import QtyStepper from './QtyStepper';
 import PartIllustration from './PartIllustration';
@@ -124,7 +124,7 @@ export function ProductCard({ product }) {
               to={`/product/${product.slug}`}
               className="line-clamp-2 transition-colors hover:text-brand"
             >
-              {product.name}
+              {productTitle(product.name, product.partTypeLabel)}
             </Link>
           </h3>
         </div>
@@ -161,14 +161,48 @@ export function ProductCard({ product }) {
             {/* price, gated */}
             <div className="relative">
               <div className={cn(gated && 'price-gated', 'space-y-1')} aria-hidden={gated || undefined}>
+                {/* What the market charges, struck, ABOVE our own price — the
+                    comparison is read before the number it justifies, so the
+                    price lands as "less than that" rather than as a figure on
+                    its own.
+
+                    `compareAtPrice` wins when both exist. Two struck numbers
+                    over one price is a card claiming two different discounts,
+                    and our own former price is the more direct claim of the
+                    two. The market average then stays inside the breakdown,
+                    where MarketCompare still shows it.
+
+                    The row holds its height when there is nothing to show, so
+                    prices stay on one line across a grid row — the same
+                    discipline as the two-line title clamp above. */}
+                <div className="h-3.75 @min-[200px]:h-4">
+                  {!gated && !product.compareAtPrice && product.market && (
+                    <span className="tnum text-[11.5px] text-ink-300 line-through @min-[200px]:text-[12px]">
+                      {money(product.market.average)}
+                    </span>
+                  )}
+                </div>
+
                 <div className="flex items-baseline gap-2">
                   <span className="font-display text-[17px] font-bold tracking-tight text-ink-900 tnum @min-[200px]:text-[19px] @min-[260px]:text-[21px]">
                     {gated ? '$000.00' : money(product.price)}
                   </span>
-                  {!gated && product.compareAtPrice && (
+
+                  {!gated && product.compareAtPrice ? (
                     <span className="tnum text-[12.5px] text-ink-300 line-through">
                       {money(product.compareAtPrice)}
                     </span>
+                  ) : (
+                    !gated &&
+                    product.market && (
+                      // The saving beside the price, not under it: it is a
+                      // property of this number, and a card narrow enough to
+                      // drop the word "save" still reads "21% off".
+                      <span className="tnum shrink-0 rounded-full bg-ok-50 px-1.5 py-0.5 text-[10.5px] font-bold text-ok @min-[200px]:text-[11px]">
+                        <span className="hidden @min-[200px]:inline">Save </span>
+                        {product.market.savingsPercent}%
+                      </span>
+                    )
                   )}
                 </div>
               </div>

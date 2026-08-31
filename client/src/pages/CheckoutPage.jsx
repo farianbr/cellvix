@@ -101,6 +101,17 @@ export function CheckoutPage() {
   const [completed, setCompleted] = useState(new Set());
   const [submitError, setSubmitError] = useState(null);
 
+  // Card fields. Deliberately NOT part of the react-hook-form values and never
+  // put in the order payload: the gateway is a mock, the server takes no card
+  // details, and the repo stores no PAN anywhere. They exist so the payment
+  // step looks like a payment step — the notice at the foot of it says exactly
+  // that, because a convincing form that is not real is only honest if it
+  // admits it.
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvc, setCardCvc] = useState('');
+  const [cardPostal, setCardPostal] = useState('');
+
   const form = useForm({
     resolver: zodResolver(checkoutSchema),
     mode: 'onTouched',
@@ -534,11 +545,82 @@ export function CheckoutPage() {
                   <CreditCard className="size-5 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
                   <span className="min-w-0 flex-1">
                     <span className="block font-display text-[13.5px] font-semibold text-ink-900">
-                      Card on file
+                      Pay by card
                     </span>
-                    <span className="block text-[12.5px] text-ink-500">Visa ending 4242</span>
+                    {/* Was "Visa ending 4242" — a specific card this account
+                        does not have. The test card belongs in the notice at
+                        the foot of the step, not on a row claiming to describe
+                        the buyer's own saved payment method. */}
+                    <span className="block text-[12.5px] text-ink-500">
+                      Charged when you place the order
+                    </span>
                   </span>
                 </label>
+
+                {/* The card fields appear under the option that needs them,
+                    rather than in a dialog: checkout is already a stepped form
+                    and a modal on top of step four is a second layer over a
+                    flow that does not need one. Same facade as the payment
+                    sheet everywhere else — nothing typed here is sent, and the
+                    notice below says so. */}
+                {values.paymentMethod === 'card' && dueNow > 0 && (
+                  <div className="overflow-hidden rounded-[10px] border border-line-strong bg-surface focus-within:border-brand">
+                    <input
+                      aria-label="Card number"
+                      inputMode="numeric"
+                      autoComplete="off"
+                      placeholder="4242 4242 4242 4242"
+                      value={cardNumber}
+                      onChange={(event) =>
+                        setCardNumber(
+                          event.target.value
+                            .replace(/\D/g, '')
+                            .slice(0, 16)
+                            .replace(/(.{4})/g, '$1 ')
+                            .trim(),
+                        )
+                      }
+                      className="h-11 w-full bg-transparent px-3 text-[14px] text-ink-900 outline-none placeholder:text-ink-300"
+                    />
+                    <div className="grid grid-cols-3 border-t border-line">
+                      <input
+                        aria-label="Expiry date"
+                        inputMode="numeric"
+                        autoComplete="off"
+                        placeholder="MM / YY"
+                        value={cardExpiry}
+                        onChange={(event) => {
+                          const digits = event.target.value.replace(/\D/g, '').slice(0, 4);
+                          setCardExpiry(
+                            digits.length <= 2 ? digits : `${digits.slice(0, 2)}/${digits.slice(2)}`,
+                          );
+                        }}
+                        className="h-11 w-full bg-transparent px-3 text-[14px] text-ink-900 outline-none placeholder:text-ink-300"
+                      />
+                      <input
+                        aria-label="Security code"
+                        inputMode="numeric"
+                        autoComplete="off"
+                        placeholder="CVC"
+                        value={cardCvc}
+                        onChange={(event) =>
+                          setCardCvc(event.target.value.replace(/\D/g, '').slice(0, 4))
+                        }
+                        className="h-11 w-full border-l border-line bg-transparent px-3 text-[14px] text-ink-900 outline-none placeholder:text-ink-300"
+                      />
+                      <input
+                        aria-label="Postal code"
+                        autoComplete="off"
+                        placeholder="A1A 1A1"
+                        value={cardPostal}
+                        onChange={(event) =>
+                          setCardPostal(event.target.value.toUpperCase().slice(0, 7))
+                        }
+                        className="h-11 w-full border-l border-line bg-transparent px-3 text-[14px] text-ink-900 outline-none placeholder:text-ink-300"
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {user?.terms && user.terms !== 'prepaid' && (
                   <label
@@ -580,8 +662,11 @@ export function CheckoutPage() {
                 {...register('poNumber')}
               />
 
-              <p className="mt-4 rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12.5px] text-ink-500">
-                Payments are running against a mock gateway in this build. No card is charged.
+              <p className="mt-4 rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12.5px] leading-relaxed text-ink-500">
+                Payments run against a test gateway in this build — no card details are sent or
+                stored, and no card is charged. A PO number starting{' '}
+                <span className="font-semibold text-ink-700">DECLINE</span> shows the failed-payment
+                path.
               </p>
 
               <Button className="mt-4" onClick={() => advance('payment')}>

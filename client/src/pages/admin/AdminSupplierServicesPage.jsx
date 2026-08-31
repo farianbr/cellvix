@@ -17,6 +17,7 @@ import cn from '@/lib/cn';
 import { money, date, count as formatCount } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import SelectField from '@/components/ui/SelectField';
@@ -275,6 +276,8 @@ export function AdminSupplierServicesPage({ mode = 'service' }) {
   const [creating, setCreating] = useCreateParam();
   const [editing, setEditing] = useState(null);
   const [charging, setCharging] = useState(null);
+  const [cancelling, setCancelling] = useState(null);
+  const [deleting, setDeleting] = useState(null);
 
   const status = searchParams.get('status') ?? 'all';
 
@@ -416,7 +419,7 @@ export function AdminSupplierServicesPage({ mode = 'service' }) {
       label: 'Cancel',
       icon: Ban,
       hidden: (row) => row.cancelled,
-      onSelect: (row) => cancelSupplierService.mutate({ id: row.id, cancelled: true }),
+      onSelect: (row) => setCancelling(row),
     },
     {
       key: 'reactivate',
@@ -430,7 +433,7 @@ export function AdminSupplierServicesPage({ mode = 'service' }) {
       label: 'Delete',
       icon: Trash2,
       tone: 'danger',
-      onSelect: (row) => deleteSupplierService.mutate(row.id),
+      onSelect: (row) => setDeleting(row),
     },
   ];
 
@@ -590,6 +593,49 @@ export function AdminSupplierServicesPage({ mode = 'service' }) {
           />
         )}
       </Modal>
+
+      {/* Cancelling stops the recurring charge but keeps the record, and
+          Reactivate in the same menu puts it back, so this asks once. */}
+      <ConfirmDialog
+        open={Boolean(cancelling)}
+        onClose={() => setCancelling(null)}
+        onConfirm={() =>
+          cancelSupplierService.mutate(
+            { id: cancelling.id, cancelled: true },
+            { onSuccess: () => setCancelling(null) },
+          )
+        }
+        title={`Cancel ${cancelling?.name ?? 'this service'}?`}
+        body="It stops billing from the next cycle. Charges already recorded stay on the supplier's account, and Reactivate puts the service back."
+        tone="info"
+        confirmLabel="Cancel service"
+        cancelLabel="Keep it running"
+        loading={cancelSupplierService.isPending}
+        error={cancelSupplierService.error?.message}
+      />
+
+      {/* Delete takes the service and its billing history out for good, so the
+          name is retyped. Cancel is the reversible option and the dialog says
+          so, because from a row menu the two entries sit next to each other. */}
+      <ConfirmDialog
+        open={Boolean(deleting)}
+        onClose={() => setDeleting(null)}
+        onConfirm={() =>
+          deleteSupplierService.mutate(deleting.id, { onSuccess: () => setDeleting(null) })
+        }
+        title="Delete this service?"
+        body={
+          deleting
+            ? `${deleting.name} from ${deleting.supplierName} will be removed permanently. To stop billing without losing the record, cancel it instead.`
+            : ''
+        }
+        consequence="Its recorded charges go with it, and the supplier's spend history changes to match."
+        confirmPhrase={deleting?.name}
+        confirmPhraseLabel="the service name"
+        confirmLabel="Delete service"
+        loading={deleteSupplierService.isPending}
+        error={deleteSupplierService.error?.message}
+      />
     </>
   );
 }

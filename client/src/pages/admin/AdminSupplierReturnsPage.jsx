@@ -7,6 +7,7 @@ import cn from '@/lib/cn';
 import { money, date, count as formatCount, titleize } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import SelectField from '@/components/ui/SelectField';
@@ -282,6 +283,8 @@ export function AdminSupplierReturnsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [creating, setCreating] = useCreateParam();
   const [crediting, setCrediting] = useState(null);
+  const [deleting, setDeleting] = useState(null);
+  const [rejecting, setRejecting] = useState(null);
 
   const status = searchParams.get('status') ?? 'all';
 
@@ -426,7 +429,7 @@ export function AdminSupplierReturnsPage() {
       label: 'Supplier refused',
       icon: AlertCircle,
       hidden: (row) => row.closed,
-      onSelect: (row) => setSupplierReturnStatus.mutate({ id: row.id, status: 'rejected' }),
+      onSelect: (row) => setRejecting(row),
     },
     {
       key: 'delete',
@@ -436,7 +439,7 @@ export function AdminSupplierReturnsPage() {
       // Once stock has moved there are `StockMovement` rows pointing at this
       // number, and deleting would leave them referring to nothing.
       hidden: (row) => ['shipped', 'credited'].includes(row.status),
-      onSelect: (row) => deleteSupplierReturn.mutate(row.id),
+      onSelect: (row) => setDeleting(row),
     },
   ];
 
@@ -580,6 +583,52 @@ export function AdminSupplierReturnsPage() {
           />
         )}
       </Modal>
+
+      {/* Deleting a return is only offered before stock has moved, but it is
+          still a record leaving the system for good, so the return number is
+          retyped rather than clicked past from a row menu. */}
+      <ConfirmDialog
+        open={Boolean(deleting)}
+        onClose={() => setDeleting(null)}
+        onConfirm={() =>
+          deleteSupplierReturn.mutate(deleting.id, { onSuccess: () => setDeleting(null) })
+        }
+        title="Delete this supplier return?"
+        body={
+          deleting
+            ? `${deleting.returnNumber} to ${deleting.supplierName} will be removed permanently.`
+            : ''
+        }
+        consequence="The claim against the supplier goes with it. Raise a new return if the parts still need to go back."
+        confirmPhrase={deleting?.returnNumber}
+        confirmPhraseLabel="the return number"
+        confirmLabel="Delete return"
+        loading={deleteSupplierReturn.isPending}
+        error={deleteSupplierReturn.error?.message}
+      />
+
+      {/* Refused closes the return out. Reversible only by raising a new one,
+          so it asks once. */}
+      <ConfirmDialog
+        open={Boolean(rejecting)}
+        onClose={() => setRejecting(null)}
+        onConfirm={() =>
+          setSupplierReturnStatus.mutate(
+            { id: rejecting.id, status: 'rejected' },
+            { onSuccess: () => setRejecting(null) },
+          )
+        }
+        title="Mark the supplier as having refused?"
+        body={
+          rejecting
+            ? `${rejecting.returnNumber} closes with no credit from ${rejecting.supplierName}.`
+            : ''
+        }
+        tone="danger"
+        confirmLabel="Supplier refused"
+        loading={setSupplierReturnStatus.isPending}
+        error={setSupplierReturnStatus.error?.message}
+      />
     </>
   );
 }

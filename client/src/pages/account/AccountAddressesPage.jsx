@@ -7,6 +7,7 @@ import { PROVINCES } from '@shared/schemas/checkout';
 import { savedAddressSchema } from '@shared/schemas/account';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Input from '@/components/ui/Input';
 import SelectField from '@/components/ui/SelectField';
 import Checkbox from '@/components/ui/Checkbox';
@@ -91,6 +92,9 @@ export function AccountAddressesPage() {
   const { user } = useAuth();
   const { addAddress, updateAddress, removeAddress } = useAccountMutations();
   const [editing, setEditing] = useState(null); // address object, or 'new'
+  // Delete sits one 8px gap from Edit and used to fire on the click, so the two
+  // were a mis-tap apart.
+  const [removing, setRemoving] = useState(null);
 
   const addresses = user?.addresses ?? [];
   const isPending = addAddress.isPending || updateAddress.isPending;
@@ -179,7 +183,7 @@ export function AccountAddressesPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => removeAddress.mutate(address._id)}
+                    onClick={() => setRemoving(address)}
                     aria-label={`Delete ${address.label}`}
                     className="flex size-8 items-center justify-center rounded-lg text-ink-300 transition-colors hover:bg-danger-50 hover:text-danger"
                   >
@@ -208,6 +212,28 @@ export function AccountAddressesPage() {
           />
         )}
       </Modal>
+
+      <ConfirmDialog
+        open={Boolean(removing)}
+        onClose={() => setRemoving(null)}
+        onConfirm={() =>
+          removeAddress.mutate(removing._id, { onSuccess: () => setRemoving(null) })
+        }
+        title="Delete this address?"
+        body={
+          removing
+            ? `“${removing.label}” will be removed from your saved addresses. Orders already placed to it are unaffected.`
+            : ''
+        }
+        consequence={
+          removing?.isDefaultShipping || removing?.isDefaultBilling
+            ? 'This is a default address. Checkout will start blank until you set another one.'
+            : undefined
+        }
+        confirmLabel="Delete address"
+        loading={removeAddress.isPending}
+        error={removeAddress.error?.message}
+      />
     </>
   );
 }

@@ -307,7 +307,7 @@ export function AdminExpenseCategoriesPage() {
         body={
           deleting
             ? deleting.usage > 0
-              ? `${deleting.name} is used by ${formatCount(deleting.usage)} expense(s), so it will be deactivated rather than deleted — deleting it would re-bucket every one of them.`
+              ? `${deleting.name} is used by ${formatCount(deleting.usage)} expense(s), so it will be deactivated rather than deleted. Deleting it would re-bucket every one of them.`
               : `${deleting.name} is not used by any expense and will be removed.`
             : ''
         }

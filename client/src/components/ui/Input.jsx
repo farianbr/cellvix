@@ -17,6 +17,10 @@ export const Input = forwardRef(function Input(
     type = 'text',
     id: idProp,
     suffix,
+    // Draws the red asterisk beside the label AND sets the native attribute, so
+    // the mark and the browser's own validation can never disagree about which
+    // fields are mandatory.
+    required,
     ...props
   },
   ref,
@@ -37,6 +41,11 @@ export const Input = forwardRef(function Input(
           className="mb-1.5 block text-[13px] font-medium text-ink-700"
         >
           {label}
+          {required && (
+            <span className="ml-0.5 text-danger" aria-hidden="true">
+              *
+            </span>
+          )}
         </label>
       )}
 
@@ -53,6 +62,11 @@ export const Input = forwardRef(function Input(
           ref={ref}
           id={id}
           type={resolvedType}
+          // The asterisk is decorative (aria-hidden), so the requirement
+          // reaches a screen reader through the field itself rather than
+          // through a character it never announces.
+          required={required}
+          aria-required={required || undefined}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
           className={cn(

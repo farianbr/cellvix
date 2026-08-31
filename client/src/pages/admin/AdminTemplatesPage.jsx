@@ -7,6 +7,7 @@ import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Modal from '@/components/ui/Modal';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import PageHeader from '@/components/admin/PageHeader';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
@@ -212,6 +213,8 @@ export function AdminTemplatesPage() {
   const [channel, setChannel] = useState('email');
   const [editing, setEditing] = useState(null);
   const [error, setError] = useState(null);
+  // The trash icon used to delete on the click itself.
+  const [deleting, setDeleting] = useState(null);
 
   const { data, isLoading } = useMarketingTemplates();
   const { data: summary } = useMarketingSummary();
@@ -319,7 +322,7 @@ export function AdminTemplatesPage() {
 
                 <button
                   type="button"
-                  onClick={() => deleteTemplate.mutateAsync(template.id).catch((e) => setError(e.message))}
+                  onClick={() => setDeleting(template)}
                   aria-label={`Delete ${template.name}`}
                   className="flex size-8 shrink-0 items-center justify-center rounded-[8px] border border-line text-ink-400 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger"
                 >
@@ -338,6 +341,21 @@ export function AdminTemplatesPage() {
       </div>
 
       {editing && <TemplateDialog template={editing} onClose={() => setEditing(null)} />}
+
+      <ConfirmDialog
+        open={Boolean(deleting)}
+        onClose={() => setDeleting(null)}
+        onConfirm={() =>
+          deleteTemplate
+            .mutateAsync(deleting.id)
+            .then(() => setDeleting(null))
+            .catch((e) => setError(e.message))
+        }
+        title="Delete this template?"
+        body={deleting ? `“${deleting.name}” will be removed permanently.` : ''}
+        confirmLabel="Delete template"
+        loading={deleteTemplate.isPending}
+      />
     </>
   );
 }

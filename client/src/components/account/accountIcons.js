@@ -2,6 +2,7 @@ import {
   Building2,
   CreditCard,
   FileText,
+  Gift,
   LayoutDashboard,
   MapPin,
   Package,
@@ -12,7 +13,7 @@ import {
 /**
  * Icon registry for ACCOUNT_NAV, whose `icon` is a string in the shared schema.
  * One registry so the sidebar and the header dropdown cannot drift, and so the
- * bundle takes eight icons rather than all of lucide.
+ * bundle takes nine icons rather than all of lucide.
  */
 const REGISTRY = {
   LayoutDashboard,
@@ -23,6 +24,7 @@ const REGISTRY = {
   MapPin,
   CreditCard,
   Building2,
+  Gift,
 };
 
 export function accountIcon(name) {

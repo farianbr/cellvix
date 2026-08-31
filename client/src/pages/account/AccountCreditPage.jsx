@@ -1,14 +1,22 @@
-import { ArrowDownLeft, ArrowUpRight, Wallet } from 'lucide-react';
+import { useState } from 'react';
+import { ArrowDownLeft, ArrowUpRight, CreditCard, Wallet } from 'lucide-react';
 import cn from '@/lib/cn';
 import { money, moneyCompact, date } from '@/lib/format';
 import Panel, { StatTile } from '@/components/ui/Panel';
+import Button from '@/components/ui/Button';
 import Skeleton from '@/components/ui/Skeleton';
+import PaymentModal from '@/components/payment/PaymentModal';
 import {
   StoreCreditCard,
   RechargeForm,
   StoreCreditActivity,
 } from '@/components/account/StoreCredit';
-import { useAccountSummary, useCreditActivity, useStoreCredit } from '@/hooks/useAccount';
+import {
+  useAccountSummary,
+  useAccountMutations,
+  useCreditActivity,
+  useStoreCredit,
+} from '@/hooks/useAccount';
 
 const TERMS_COPY = {
   prepaid: 'Payment is taken at checkout. No credit is extended on this account.',
@@ -79,6 +87,9 @@ export function AccountCreditPage() {
   const { data: summary, isLoading } = useAccountSummary();
   const { data: creditData, isLoading: creditLoading } = useStoreCredit();
   const { data: activity, isLoading: activityLoading } = useCreditActivity();
+  const { payOffCredit } = useAccountMutations();
+  const [payingOff, setPayingOff] = useState(false);
+  const [payError, setPayError] = useState(null);
 
   if (isLoading || !summary) {
     return (
@@ -135,6 +146,17 @@ export function AccountCreditPage() {
       <Panel
         title="Line of credit"
         description="What Cellvix extends to this account, and how much of it is drawn."
+        action={
+          // The whole balance, cleared in one charge. Offered here because this
+          // is the page showing the balance — asking a buyer to read the number
+          // here and then go to another screen to act on it is a step with no
+          // purpose. The amounts behind it are settled oldest first, server-side.
+          credit.balance > 0 ? (
+            <Button size="sm" icon={CreditCard} onClick={() => setPayingOff(true)}>
+              Pay balance · {money(credit.balance)}
+            </Button>
+          ) : null
+        }
       >
         <div
           className="h-3 overflow-hidden rounded-full bg-surface-3"
@@ -216,6 +238,29 @@ export function AccountCreditPage() {
           <StoreCreditActivity movements={movements} isLoading={creditLoading} />
         </div>
       </Panel>
+
+      <PaymentModal
+        open={payingOff}
+        onClose={() => {
+          setPayingOff(false);
+          setPayError(null);
+        }}
+        amount={credit.balance}
+        storeCredit={storeCredit}
+        loading={payOffCredit.isPending}
+        error={payError}
+        title="Pay your balance"
+        description="Everything outstanding, settled oldest first in one charge."
+        onSubmit={(values) =>
+          payOffCredit.mutate(values, {
+            onSuccess: () => setPayingOff(false),
+            onError: (error) =>
+              setPayError(
+                error?.message ?? 'That payment could not be completed. Nothing has been charged.',
+              ),
+          })
+        }
+      />
     </div>
   );
 }

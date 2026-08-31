@@ -6,6 +6,7 @@ import { money, date, count as formatCount } from '@/lib/format';
 import { apiUrl } from '@/lib/api';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import SelectField from '@/components/ui/SelectField';
@@ -270,6 +271,9 @@ export function AdminInvoicesPage() {
   const [query, setQuery] = useState('');
   const [paying, setPaying] = useState(null);
   const [voiding, setVoiding] = useState(null);
+  // Holds the void reason until the invoice number has been retyped. Voiding is
+  // the one invoice action with no matching un-void.
+  const [voidConfirm, setVoidConfirm] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   // Opened directly by `+ Create` (§7.2), which arrives with `?new=1`.
@@ -528,17 +532,44 @@ export function AdminInvoicesPage() {
           <VoidForm
             invoice={voiding}
             isPending={voidInvoice.isPending}
-            error={voidInvoice.error?.message}
+            // Reported on the confirm step, where the void is actually sent.
+            error={voidConfirm ? undefined : voidInvoice.error?.message}
             onCancel={() => setVoiding(null)}
-            onSubmit={(values) =>
-              voidInvoice.mutate(
-                { number: voiding.number, reason: values.reason },
-                { onSuccess: () => setVoiding(null) },
-              )
-            }
+            onSubmit={(values) => setVoidConfirm(values)}
           />
         )}
       </Modal>
+
+      {/* A void cannot be undone from the admin panel: the invoice stays on the
+          record as void and a replacement has to be raised by hand. The number
+          is retyped so the operator confirms which invoice they are killing. */}
+      <ConfirmDialog
+        open={Boolean(voidConfirm)}
+        onClose={() => setVoidConfirm(null)}
+        onConfirm={() =>
+          voidInvoice.mutate(
+            { number: voiding.number, reason: voidConfirm.reason },
+            {
+              onSuccess: () => {
+                setVoidConfirm(null);
+                setVoiding(null);
+              },
+            },
+          )
+        }
+        title="Void this invoice?"
+        body={
+          voiding
+            ? `Invoice ${voiding.number} for ${voiding.businessName} will be marked void.`
+            : ''
+        }
+        consequence="There is no un-void. Billing this customer again means raising a replacement invoice."
+        confirmPhrase={voiding?.number}
+        confirmPhraseLabel="the invoice number"
+        confirmLabel="Void invoice"
+        loading={voidInvoice.isPending}
+        error={voidInvoice.error?.message}
+      />
 
       <Modal
         open={Boolean(creating)}

@@ -86,26 +86,32 @@ export function MarketCompare({ market, price, variant = 'card', className }) {
   // edge, while above it is the image, which is the space to borrow.
   return (
     <div className={cn('relative', className)}>
+      {/* A bordered button rather than a text row: the saving now lives beside
+          the price as a badge, so this control's only job is to open the
+          comparison — and a control that opens something should look like one.
+
+          It names the count because "Compare 4 sellers" says what is behind it,
+          while "Compare" asks the reader to click to find out. Below 200px the
+          word "sellers" goes and the number stays, which is the half that
+          carries the information. */}
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
         aria-controls={panelId}
-        className="flex w-full items-center gap-1 rounded-[6px] text-left text-[11px] font-semibold text-ok transition-colors hover:text-ok/80 @min-[200px]:text-[11.5px]"
+        className="flex w-full items-center justify-center gap-1.5 rounded-[8px] border border-line bg-surface px-2 py-1.5 text-[11px] font-semibold text-ink-700 transition-colors hover:border-line-strong hover:bg-surface-2 @min-[200px]:text-[11.5px]"
       >
-        <TrendingDown className="size-3 shrink-0 @min-[200px]:size-3.5" strokeWidth={2.25} aria-hidden="true" />
-        {/* "vs market" is the first thing to go when the card is narrow — the
-            saving is the claim, and the comparison it is against is already
-            implied by a green number under a price. */}
+        <TrendingDown className="size-3 shrink-0 text-ok @min-[200px]:size-3.5" strokeWidth={2.25} aria-hidden="true" />
         <span className="tnum min-w-0 truncate">
-          Save {money(savings)}
-          <span className="hidden @min-[200px]:inline"> vs market</span>
+          Compare {competitors.length}
+          <span className="hidden @min-[200px]:inline">
+            {' '}
+            {competitors.length === 1 ? 'seller' : 'sellers'}
+          </span>
         </span>
-        {/* The chevron needs a card wide enough to spare the width; below that
-            the row itself stays the target and the panel still opens. */}
         <ChevronDown
           className={cn(
-            'ml-auto hidden size-3.5 shrink-0 text-ink-300 transition-transform duration-200 @min-[200px]:block',
+            'hidden size-3.5 shrink-0 text-ink-300 transition-transform duration-200 @min-[200px]:block',
             open && 'rotate-180',
           )}
           strokeWidth={2}

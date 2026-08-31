@@ -51,8 +51,38 @@ const forgotPasswordSchema = z.object({
   email: z.string().trim().toLowerCase().email('Enter a valid email address.'),
 });
 
+/**
+ * A business applying to SELL to Cellvix, from the storefront sign-up.
+ *
+ * Deliberately not `registerSchema`: this creates no account and no password.
+ * Cellvix's suppliers are onboarded by the purchasing team with terms and a
+ * code agreed off-platform, so what the storefront can usefully collect is an
+ * application for a human to review, not a login.
+ *
+ * The four required fields match the buyer form's, so "what a sign-up asks
+ * for" does not change shape depending on which side of the trade you are on.
+ */
+const supplierApplicationSchema = z.object({
+  businessName: z.string().trim().min(2, 'Enter your business name.').max(120),
+  contactName: z.string().trim().min(2, 'Enter a contact name.').max(80),
+  email: z.string().trim().toLowerCase().email('Enter a valid email address.'),
+  phone: z.string().trim().min(7, 'Enter a phone number.').max(40),
+  website: z.string().trim().max(200).optional().or(z.literal('')),
+  supplies: z.string().trim().max(600).optional().or(z.literal('')),
+  address: z
+    .object({
+      line1: z.string().trim().max(120).optional().or(z.literal('')),
+      line2: z.string().trim().max(120).optional().or(z.literal('')),
+      city: z.string().trim().max(80).optional().or(z.literal('')),
+      region: z.string().trim().max(2).optional().or(z.literal('')),
+      postal: z.string().trim().max(10).optional().or(z.literal('')),
+    })
+    .optional(),
+});
+
 // --- CommonJS exports -------------------------------------------------
 exports.passwordSchema = passwordSchema;
 exports.loginSchema = loginSchema;
 exports.registerSchema = registerSchema;
 exports.forgotPasswordSchema = forgotPasswordSchema;
+exports.supplierApplicationSchema = supplierApplicationSchema;
