@@ -171,7 +171,7 @@ export function FaqPage() {
         </h1>
 
         <p className="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-ink-400">
-          Approval, pricing, credit terms, shipping and warranty — the answers the trade desk gives
+          Approval, pricing, credit terms, shipping and warranty — the answers the sales desk gives
           most often. If yours is not here, the desk is a phone call away.
         </p>
 
@@ -208,7 +208,7 @@ export function FaqPage() {
           </span>
           <h2 className="text-[18px]">No answer for that yet</h2>
           <p className="mx-auto mt-2 max-w-sm text-[13.5px] text-ink-500">
-            Ask the trade desk directly — and the answer usually ends up on this page.
+            Ask the sales desk directly — and the answer usually ends up on this page.
           </p>
           <Link
             to="/contact"
@@ -238,11 +238,11 @@ export function FaqPage() {
 
       {/* ---- still stuck ---------------------------------------------------
           The reference closes the list with a single quiet line rather than a
-          panel; the phone number stays because the trade desk is the point. */}
+          panel; the phone number stays because the sales desk is the point. */}
       <section className="mx-auto mt-12 max-w-[860px] text-center lg:mt-16">
         <h2 className="text-[19px] sm:text-[22px]">Have any other questions?</h2>
         <p className="mx-auto mt-2.5 max-w-md text-[14px] leading-relaxed text-ink-400">
-          The trade desk answers sourcing, credit and warranty questions directly — no ticket queue.
+          The sales desk answers sourcing, credit and warranty questions directly — no ticket queue.
         </p>
 
         <div className="mt-6 flex flex-wrap justify-center gap-2.5">

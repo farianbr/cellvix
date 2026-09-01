@@ -106,7 +106,7 @@ export function AdminApprovalsPage() {
 
       <Panel
         title="Registrations"
-        description="Approve a business to unlock trade pricing and ordering."
+        description="Approve a business to unlock wholesale pricing and ordering."
         flush
       >
         <div
@@ -312,7 +312,7 @@ export function AdminApprovalsPage() {
           )
         }
         title={`Suspend ${suspending?.businessName ?? 'this account'}?`}
-        body="They keep their cart and their history, but they cannot place an order or see trade pricing until the account is reinstated."
+        body="They keep their cart and their history, but they cannot place an order or see wholesale pricing until the account is reinstated."
         tone="danger"
         confirmLabel="Suspend account"
         loading={setUserStatus.isPending}

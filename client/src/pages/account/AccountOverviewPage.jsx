@@ -16,7 +16,7 @@ import Skeleton from '@/components/ui/Skeleton';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { OrderStatusBadge } from '@/components/account/OrderStatusBadge';
 import ActivityFeed from '@/components/account/ActivityFeed';
-import PartIllustration from '@/components/product/PartIllustration';
+import { PartVisual } from '@/components/product/PartFrame';
 import { useAccountSummary, useAccountActivity, useAccountMutations } from '@/hooks/useAccount';
 import { useCart } from '@/hooks/useCart';
 import useUiStore from '@/store/uiStore';
@@ -268,7 +268,7 @@ export function AccountOverviewPage() {
                   to={`/product/${product.slug}`}
                   className="flex size-12 shrink-0 items-center justify-center rounded-lg border border-line bg-surface-2 p-1.5"
                 >
-                  <PartIllustration partType={product.partType} />
+                  <PartVisual product={product} />
                 </Link>
 
                 <div className="min-w-0 flex-1">

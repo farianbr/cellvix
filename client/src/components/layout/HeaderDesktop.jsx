@@ -49,7 +49,7 @@ function AccountControl() {
           {!user ? 'Sign in' : isAdmin ? 'Staff' : isApproved ? 'Account' : 'Pending'}
         </span>
         <span className="block truncate font-display text-[13px] font-semibold text-ink-900">
-          {user ? user.businessName : 'My account'}
+          {user ? user.displayName : 'My account'}
         </span>
       </span>
     </>
@@ -140,7 +140,7 @@ export function HeaderDesktop() {
           >
             <Headphones className="size-5 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
             <span className="leading-tight">
-              <span className="eyebrow block text-ink-300">Trade desk</span>
+              <span className="eyebrow block text-ink-300">Sales desk</span>
               <span className="block font-display text-[13px] font-semibold text-ink-900">
                 {BUSINESS_INFO.phone}
               </span>

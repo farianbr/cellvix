@@ -3,7 +3,7 @@ import { GRADES } from '@/lib/constants';
 
 /**
  * The circular grade overlay that sits on the product image (brief §6, "PULL A").
- * Deliberately reads as a stamp, not a sticker — it is the first thing a trade
+ * Deliberately reads as a stamp, not a sticker — it is the first thing a business
  * buyer looks for.
  *
  * Everything here is a fight between a circle and a word:

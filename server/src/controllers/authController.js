@@ -130,10 +130,31 @@ const applyAsSupplier = asyncHandler(async (req, res) => {
   res.status(202).json({ recorded: true });
 });
 
-const forgotPassword = asyncHandler(async (_req, res) => {
-  // Always 204 — never reveal whether an address is registered.
-  // TODO: wire to a transactional mail provider once the client picks one.
+/**
+ * Always 204, whether or not the address is registered.
+ *
+ * The reply cannot depend on whether an account exists: one that did would be
+ * a way to ask "does this business buy from Cellvix", which is the same reason
+ * the supplier application answers the same way to everyone. The service does
+ * the work and stays silent about what it found.
+ */
+const forgotPassword = asyncHandler(async (req, res) => {
+  await authService.forgotPassword(req.body);
   res.status(204).end();
+});
+
+/**
+ * Completes a reset and signs the user in.
+ *
+ * Signing in here is deliberate: they have just proven control of the mailbox
+ * and chosen a password, so asking them to type it again immediately is a step
+ * that protects nothing. `remember` is false — a reset is often done on a
+ * machine that is not theirs.
+ */
+const resetPassword = asyncHandler(async (req, res) => {
+  const user = await authService.resetPassword(req.body);
+  authService.issueSession(res, user, false);
+  res.json({ user: user.toPublic() });
 });
 
 // --- CommonJS exports -------------------------------------------------
@@ -142,4 +163,5 @@ exports.login = login;
 exports.logout = logout;
 exports.me = me;
 exports.forgotPassword = forgotPassword;
+exports.resetPassword = resetPassword;
 exports.applyAsSupplier = applyAsSupplier;

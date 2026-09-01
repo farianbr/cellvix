@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import {
   AlertCircle,
+  ArrowLeft,
   ArrowRight,
   Building2,
   Clock,
@@ -13,6 +15,7 @@ import {
   Phone,
   ShieldCheck,
   ShoppingBag,
+  UserRound,
 } from 'lucide-react';
 import cn from '@/lib/cn';
 import api from '@/lib/api';
@@ -23,9 +26,16 @@ import Textarea from '@/components/ui/Textarea';
 import FormSection from '@/components/ui/FormSection';
 import Button from '@/components/ui/Button';
 import Checkbox from '@/components/ui/Checkbox';
+import PhoneField from '@/components/ui/PhoneField';
+import ConsentChannels, { EMPTY_CONSENT } from '@/components/ui/ConsentChannels';
 import useUiStore from '@/store/uiStore';
 import { useAuth } from '@/hooks/useAuth';
-import { loginSchema, registerSchema, supplierApplicationSchema } from '@shared/schemas/auth';
+import {
+  forgotPasswordSchema,
+  loginSchema,
+  registerSchema,
+  supplierApplicationSchema,
+} from '@shared/schemas/auth';
 
 const TABS = [
   { key: 'signin', label: 'Sign In' },
@@ -33,27 +43,69 @@ const TABS = [
   { key: 'contact', label: 'Contact' },
 ];
 
-/** Value proposition panel beside the forms — the "side visual panel" of brief §8.1. */
+/**
+ * Value proposition panel beside the forms — the "side visual panel" of §8.1.
+ *
+ * The three blocks are spread down the panel rather than pushed to its two
+ * ends. `justify-between` on a heading and a list left a hole in the middle
+ * whose size was whatever the dialog's fixed height happened to leave over —
+ * on a tall viewport it was most of the panel. The figures in the middle are
+ * what fills it: they are the answer to "why this supplier", which a list of
+ * feature lines states but does not evidence.
+ */
 function SidePanel() {
+  const STATS = [
+    { value: '400+', label: 'SKUs in stock' },
+    { value: '24h', label: 'Typical approval' },
+    { value: 'Net 60', label: 'Payment terms' },
+  ];
+
+  // No `h-full`: the panel is sized by its own content so it looks the same on
+  // every tab, and the frame's leftover height shows as dialog below it rather
+  // than as a taller red block.
   return (
-    <aside className="scroll-slim relative hidden h-full overflow-y-auto rounded-[12px] bg-brand-gradient p-6 text-white md:flex md:flex-col md:justify-between">
+    <aside className="scroll-slim relative hidden max-h-full w-full overflow-y-auto rounded-[12px] bg-brand-gradient p-6 text-white md:flex md:flex-col md:gap-6">
       <div>
-        <p className="eyebrow mb-2 opacity-70">Cellvix trade portal</p>
+        <p className="eyebrow mb-2 opacity-70">Cellvix wholesale portal</p>
         <h3 className="text-[22px] leading-tight text-white">
           Wholesale pricing for verified repair businesses
         </h3>
         <p className="mt-3 text-[13.5px] leading-relaxed text-white/75">
-          Accounts are reviewed by our team before trade pricing unlocks. It usually takes one
+          Accounts are reviewed by our team before wholesale pricing unlocks. It usually takes one
           business day.
         </p>
       </div>
 
-      <ul className="mt-8 space-y-3 text-[13px] text-white/85">
+      {/* Hairlines above and below rather than a card: a filled box on the
+          gradient would read as a second surface floating on the accent, and
+          §2.2 keeps the gradient an accent rather than a background things sit
+          on top of. */}
+      <dl className="grid grid-cols-3 gap-3 border-y border-white/15 py-4">
+        {STATS.map((stat) => (
+          <div key={stat.label}>
+            <dt className="sr-only">{stat.label}</dt>
+            <dd>
+              <span className="tnum block font-display text-[19px] font-bold leading-none text-white">
+                {stat.value}
+              </span>
+              <span className="mt-1.5 block text-[11px] leading-tight text-white/70">
+                {stat.label}
+              </span>
+            </dd>
+          </div>
+        ))}
+      </dl>
+
+      {/* Three lines, not four, and each one short enough to hold one line at
+          this width. The panel no longer sits in a fixed-height frame, so its
+          own content is what sets the dialog's height — a fourth wrapped bullet
+          bought two more rows of red beside a five-field sign-in form and
+          nothing else. */}
+      <ul className="space-y-2.5 text-[13px] text-white/85">
         {[
-          '400+ SKUs across phones, tablets, laptops and consoles',
-          'Graded pulls tested before dispatch',
-          'Net 15 / 30 / 60 terms once approved',
+          'Graded pulls, tested before dispatch',
           'Same-day dispatch from Ontario',
+          'A real sales desk, not a ticket queue',
         ].map((line) => (
           <li key={line} className="flex items-start gap-2.5">
             <ShieldCheck className="mt-0.5 size-4 shrink-0 opacity-80" strokeWidth={2} aria-hidden="true" />
@@ -65,11 +117,99 @@ function SidePanel() {
   );
 }
 
+/**
+ * Requesting a reset link.
+ *
+ * **Always reports success**, whether or not the address is registered — the
+ * endpoint answers 204 either way for the same reason, and a form that said
+ * "no such account" would turn this into a way to ask which businesses buy
+ * from Cellvix. So the confirmation is worded as what was done ("if that
+ * address has an account, a link is on its way") rather than as a fact about
+ * the address.
+ */
+function ForgotPasswordView({ onBack }) {
+  const [sent, setSent] = useState(false);
+  const [formError, setFormError] = useState(null);
+
+  const {
+    register,
+    handleSubmit,
+    getValues,
+    formState: { errors, isSubmitting },
+  } = useForm({ resolver: zodResolver(forgotPasswordSchema) });
+
+  async function onSubmit(values) {
+    setFormError(null);
+    try {
+      await api.post('/auth/forgot-password', values);
+      setSent(true);
+    } catch (error) {
+      setFormError(error.message);
+    }
+  }
+
+  if (sent) {
+    return (
+      <div className="flex flex-col items-center gap-4 py-8 text-center">
+        <span className="flex size-14 items-center justify-center rounded-full bg-ok-50 text-ok">
+          <Mail className="size-7" strokeWidth={1.75} />
+        </span>
+        <div>
+          <h3 className="text-[18px]">Check your inbox</h3>
+          <p className="mx-auto mt-2 max-w-sm text-[13.5px] leading-relaxed text-ink-500">
+            If <span className="font-medium text-ink-900">{getValues('email')}</span> has a Cellvix
+            account, a reset link is on its way. It expires in an hour and can only be used once.
+          </p>
+        </div>
+        <Button variant="outline" onClick={onBack}>
+          Back to sign in
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <ChangeAccountType onBack={onBack} label="Back to sign in" />
+
+      {formError && (
+        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+          <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
+          {formError}
+        </p>
+      )}
+
+      <div>
+        <h3 className="text-[17px]">Reset your password</h3>
+        <p className="mt-1.5 text-[13px] leading-relaxed text-ink-500">
+          Enter the address you sign in with and we will email you a link.
+        </p>
+      </div>
+
+      <Input
+        label="Email"
+        type="email"
+        required
+        autoComplete="email"
+        placeholder="you@yourcompany.ca"
+        error={errors.email?.message}
+        data-autofocus
+        {...register('email')}
+      />
+
+      <Button type="submit" fullWidth size="lg" loading={isSubmitting}>
+        Send reset link
+      </Button>
+    </form>
+  );
+}
+
 function SignInTab({ onDone }) {
   const { signIn } = useAuth();
   const navigate = useNavigate();
   const [formError, setFormError] = useState(null);
   const [pendingNotice, setPendingNotice] = useState(false);
+  const [forgot, setForgot] = useState(false);
 
   const {
     register,
@@ -96,6 +236,8 @@ function SignInTab({ onDone }) {
     }
   }
 
+  if (forgot) return <ForgotPasswordView onBack={() => setForgot(false)} />;
+
   if (pendingNotice) {
     return (
       <div className="flex flex-col items-center gap-4 py-8 text-center">
@@ -105,7 +247,7 @@ function SignInTab({ onDone }) {
         <div>
           <h3 className="text-[18px]">Your account is still under review</h3>
           <p className="mx-auto mt-2 max-w-sm text-[13.5px] leading-relaxed text-ink-500">
-            You are signed in, but trade pricing and ordering stay locked until our team verifies
+            You are signed in, but wholesale pricing and ordering stay locked until our team verifies
             your business. We will email you the moment it is approved — usually within one business
             day.
           </p>
@@ -127,7 +269,7 @@ function SignInTab({ onDone }) {
       )}
 
       <Input
-        label="Email address"
+        label="Email"
         type="email"
         autoComplete="email"
         placeholder="you@yourbusiness.ca"
@@ -149,7 +291,8 @@ function SignInTab({ onDone }) {
         <Checkbox label="Remember me" className="-ml-2" {...register('remember')} />
         <button
           type="button"
-          className="text-[12.5px] font-medium text-brand transition-colors hover:text-brand-700"
+          onClick={() => setForgot(true)}
+          className="rounded text-[12.5px] font-medium text-brand transition-colors hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/25"
         >
           Forgot password?
         </button>
@@ -163,7 +306,37 @@ function SignInTab({ onDone }) {
 }
 
 /**
- * Which side of the trade the visitor is on.
+ * The way back out of a view that replaced the whole tab.
+ *
+ * At the top, not beside the submit button at the bottom. Picking "I want to
+ * buy parts" or "Forgot password?" swaps out the entire tab and left no visible
+ * way back — the supplier form had a Back button, but it sat at the end of a
+ * scrolling form next to Send application, which is not where anyone looks for
+ * an escape from a choice they just made by accident.
+ *
+ * The label names its destination rather than saying "Back", so it reads the
+ * same to a screen reader as it does on screen and needs no separate
+ * `aria-label` to explain itself.
+ */
+function ChangeAccountType({ onBack, label = 'Change account type' }) {
+  return (
+    <button
+      type="button"
+      onClick={onBack}
+      className={cn(
+        '-ml-1.5 inline-flex items-center gap-1.5 rounded-[8px] px-1.5 py-1 text-[12.5px] font-medium',
+        'text-ink-500 transition-colors hover:bg-surface-2 hover:text-ink-900',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/25',
+      )}
+    >
+      <ArrowLeft className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+      {label}
+    </button>
+  );
+}
+
+/**
+ * Which side of the transaction the visitor is on.
  *
  * Asked before anything else because the two paths have nothing in common: a
  * buyer gets an account, a password and an approval queue, while a supplier
@@ -178,7 +351,7 @@ function AccountTypeChoice({ onPick }) {
       key: 'buyer',
       icon: ShoppingBag,
       title: 'I want to buy parts',
-      body: 'Open a wholesale account. Trade pricing and ordering unlock once our team approves your business.',
+      body: 'Open a wholesale account. Wholesale pricing and ordering unlock once our team approves your business.',
       cta: 'Open a buying account',
     },
     {
@@ -203,7 +376,10 @@ function AccountTypeChoice({ onPick }) {
           onClick={() => onPick(key)}
           className="group flex w-full items-start gap-3.5 rounded-[12px] border border-line bg-surface p-4 text-left transition-colors hover:border-brand hover:bg-brand-50/40"
         >
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-surface-2 text-ink-500 transition-colors group-hover:bg-brand-gradient group-hover:text-white">
+          {/* Brand tint on hover, not the gradient. The gradient runs to
+              #000000 at one end, so a white glyph landed on near-black and read
+              as an icon that disappears when you point at it. */}
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-surface-2 text-ink-500 transition-colors group-hover:bg-brand-50 group-hover:text-brand">
             <Icon className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />
           </span>
           <span className="min-w-0 flex-1">
@@ -226,7 +402,7 @@ function AccountTypeChoice({ onPick }) {
  * No password and no account: this posts an application the purchasing team
  * reviews on the suppliers screen. The four required fields deliberately match
  * the buyer form's, so a sign-up asks for the same things whichever side of the
- * trade you are on.
+ * transaction you are on.
  */
 function SupplierApplyForm({ onBack }) {
   const [submitted, setSubmitted] = useState(false);
@@ -234,6 +410,7 @@ function SupplierApplyForm({ onBack }) {
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm({
@@ -281,6 +458,8 @@ function SupplierApplyForm({ onBack }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <ChangeAccountType onBack={onBack} />
+
       {formError && (
         <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
@@ -307,18 +486,27 @@ function SupplierApplyForm({ onBack }) {
               error={errors.contactName?.message}
               {...register('contactName')}
             />
-            <Input
-              label="Phone"
-              type="tel"
-              required
-              placeholder="(416) 555-0142"
-              error={errors.phone?.message}
-              {...register('phone')}
+            {/* The same control the buyer form uses. Two phone fields that
+                behave differently in one dialog would be the dialog telling the
+                visitor their side of the transaction is a different product. */}
+            <Controller
+              name="phone"
+              control={control}
+              render={({ field }) => (
+                <PhoneField
+                  label="Phone"
+                  required
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  error={errors.phone?.message}
+                />
+              )}
             />
           </div>
 
           <Input
-            label="Work email"
+            label="Email"
             type="email"
             required
             autoComplete="email"
@@ -372,11 +560,28 @@ function SupplierApplyForm({ onBack }) {
   );
 }
 
+/**
+ * What the buyer sign-up **form** holds, which is not quite what the API takes.
+ *
+ * The contact's name is asked as two fields and stored as one: `contactName` is
+ * what the model, the welcome mail, the approvals queue and every admin screen
+ * read, so the halves are composed on submit rather than split in the model —
+ * the same call as `phone` and its dial code. So the resolver runs over this
+ * shape, and `onSubmit` builds the payload `registerSchema` describes.
+ *
+ * Derived from `registerSchema` rather than restated, so a field added there
+ * cannot go unvalidated here.
+ */
+const signUpFormSchema = registerSchema.omit({ contactName: true }).extend({
+  firstName: z.string().trim().min(1, 'Enter a first name.'),
+  lastName: z.string().trim().min(1, 'Enter a last name.'),
+});
+
 function SignUpTab({ onSwitch }) {
   const { signUp } = useAuth();
   const [submitted, setSubmitted] = useState(false);
   const [formError, setFormError] = useState(null);
-  // Which side of the trade, chosen before any form is shown. Null means the
+  // Which side of the transaction, chosen before any form is shown. Null means the
   // question has not been answered yet.
   const [accountType, setAccountType] = useState(null);
 
@@ -397,17 +602,32 @@ function SignUpTab({ onSwitch }) {
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm({
-    resolver: zodResolver(registerSchema),
-    defaultValues: { referralCode: referredCode },
+    resolver: zodResolver(signUpFormSchema),
+    // Land the cursor on the first field that failed, rather than leaving the
+    // buyer to hunt for the red one — which matters most here, where half the
+    // form can be collapsed out of sight.
+    shouldFocusError: true,
+    defaultValues: {
+      referralCode: referredCode,
+      firstName: '',
+      lastName: '',
+      phone: '',
+      contactConsent: EMPTY_CONSENT,
+    },
   });
 
-  async function onSubmit(values) {
+  async function onSubmit({ firstName, lastName, ...values }) {
     setFormError(null);
     try {
-      await signUp(values);
+      await signUp({
+        ...values,
+        // One stored name, asked as two. See `registerSchema`.
+        contactName: `${firstName} ${lastName}`.trim(),
+      });
       setSubmitted(true);
     } catch (error) {
       setFormError(error.message);
@@ -443,7 +663,9 @@ function SignUpTab({ onSwitch }) {
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
+      <ChangeAccountType onBack={() => setAccountType(null)} />
+
       {formError && (
         <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
@@ -453,110 +675,183 @@ function SignUpTab({ onSwitch }) {
 
       {/* Same shape as the admin's new-customer form: the required fields in
           their own slab, then optional groups below it. The two forms open the
-          same kind of account and should not look like different products. */}
-      <FormSection title="Your business" icon={Building2} collapsible={false}>
-        <div className="space-y-3">
-          <Input
-            label="Business name"
-            required
-            placeholder="Northline Device Repair"
-            error={errors.businessName?.message}
-            data-autofocus
-            {...register('businessName')}
-          />
+          same kind of account and should not look like different products.
 
+          "Business" is gone from every label here. The visitor already chose "I
+          want to buy parts" a screen ago and the panel beside them says
+          wholesale — repeating it on four labels was the form restating its own
+          context instead of naming its fields. `businessName` stays the field
+          name: it is what the model, the API and every admin screen call it.
+
+          The required identity sits in an open section and everything optional
+          behind a collapsed one — progressive disclosure, which is what keeps a
+          form with nine possible fields reading as a form with four. Fields are
+          the default 44px: the 38px `size="sm"` used here before was under the
+          minimum touch target, and the fix for a tall dialog is fewer fields on
+          screen, not smaller ones. */}
+      <FormSection title="Your details" icon={UserRound} collapsible={false}>
+        <div className="space-y-3">
+          {/* Two fields, one stored value.  is what the model, the
+              welcome mail and the approvals queue all read, so the halves are
+              composed on submit rather than split in the model — the same call
+              as  and its dial code. */}
           <div className="grid gap-3 sm:grid-cols-2">
             <Input
-              label="Contact name"
+              label="First name"
               required
-              placeholder="Dana Whitfield"
-              error={errors.contactName?.message}
-              {...register('contactName')}
+              autoComplete="given-name"
+              placeholder="Dana"
+              error={errors.firstName?.message}
+              data-autofocus
+              {...register('firstName')}
             />
             <Input
-              label="Phone"
-              type="tel"
+              label="Last name"
               required
-              placeholder="(416) 555-0142"
-              error={errors.phone?.message}
-              {...register('phone')}
+              autoComplete="family-name"
+              placeholder="Whitfield"
+              error={errors.lastName?.message}
+              {...register('lastName')}
             />
           </div>
 
-          <Input
-            label="Work email"
-            type="email"
-            required
-            autoComplete="email"
-            placeholder="you@yourbusiness.ca"
-            error={errors.email?.message}
-            {...register('email')}
-          />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input
+              label="Email"
+              type="email"
+              required
+              autoComplete="email"
+              placeholder="you@yourcompany.ca"
+              error={errors.email?.message}
+              {...register('email')}
+            />
+            {/* Controlled rather than d: the field's value is one
+                composed string built from two controls, so it needs the value
+                back on every render to know which code is selected and how far
+                through the number the buyer is. */}
+            <Controller
+              name="phone"
+              control={control}
+              render={({ field }) => (
+                <PhoneField
+                  label="Phone"
+                  required
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  error={errors.phone?.message}
+                />
+              )}
+            />
+          </div>
 
-          <Input
-            label="Password"
-            type="password"
-            required
-            autoComplete="new-password"
-            hint="At least 8 characters, with a letter and a number."
-            error={errors.password?.message}
-            {...register('password')}
-          />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input
+              label="Password"
+              type="password"
+              required
+              autoComplete="new-password"
+              hint="At least 8 characters, with a letter and a number."
+              error={errors.password?.message}
+              {...register('password')}
+            />
+            {/* Referral code (§6.13). Beside the password rather than inside the
+                optional company block: somebody who was referred was told a
+                code by a person, and a code they cannot find is a referrer who
+                silently loses their commission — it is only worth asking for
+                where it will actually be seen.
+
+                Set once and never editable afterwards: a referrer that can be
+                changed later is a way to redirect money already earned. An
+                unrecognised code is refused server-side rather than quietly
+                dropped, so nobody is told they were referred when they were
+                not. */}
+            <Input
+              label="Referral code"
+              placeholder="ABCD2345"
+              hint="Optional. Cannot be added later."
+              autoCapitalize="characters"
+              error={errors.referralCode?.message}
+              {...register('referralCode')}
+            />
+          </div>
         </div>
       </FormSection>
 
-      {/* Everything below is optional and collapsed. It used to sit open, which
-          made a five-field sign-up look like an eight-field one. */}
+      {/* Everything optional, collapsed. The company name lives here now: the
+          account is identified by the person, and a sole trader may not have a
+          registered company name at all — so requiring one to sign up was
+          turning an optional detail into a barrier. It can be added later from
+          Account & security. */}
       <FormSection
-        title="Business details"
+        title="Company details"
         hint="optional"
         icon={Building2}
-        // Somebody who followed a referral link arrives with a code already in
-        // the form. Collapsed, they would never see it, could not correct it,
-        // and would have no idea attribution was being recorded.
-        defaultOpen={Boolean(referredCode)}
+        hasError={Boolean(errors.businessName || errors.businessType || errors.taxId)}
       >
         <div className="space-y-3">
           <div className="grid gap-3 sm:grid-cols-2">
             <Input
-              label="Business type"
+              label="Company name"
+              placeholder="Northline Device Repair"
+              error={errors.businessName?.message}
+              {...register('businessName')}
+            />
+            <Input
+              label="Type of company"
               placeholder="Repair shop"
               error={errors.businessType?.message}
               {...register('businessType')}
             />
-            <Input
-              label="Tax / reseller ID"
-              placeholder="RT0001-88213"
-              hint="Speeds up approval."
-              error={errors.taxId?.message}
-              {...register('taxId')}
-            />
           </div>
 
-          {/* Referral code (§6.13). Set once: it cannot be added or changed
-              after the account exists, because a referrer that can be edited
-              later is a way to redirect money already earned. A code that is
-              not recognised is refused rather than quietly dropped, so nobody
-              is told they were referred when they were not. */}
           <Input
-            label="Referral code"
-            placeholder="ABCD2345"
-            hint="If another Cellvix business referred you, enter their code. It cannot be added later."
-            autoCapitalize="characters"
-            error={errors.referralCode?.message}
-            {...register('referralCode')}
+            label="Tax / reseller ID"
+            placeholder="RT0001-88213"
+            hint="Speeds up approval."
+            error={errors.taxId?.message}
+            {...register('taxId')}
           />
         </div>
       </FormSection>
 
-      <p className="rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12.5px] leading-relaxed text-ink-500">
-        Cellvix is a wholesale-only platform. New accounts are reviewed by our team before trade
-        pricing and ordering unlock.
-      </p>
+      {/* ---- CASL consent (§6.13) ----------------------------------------
+          Asked at the point the account is created, because that is when there
+          is a person to ask. Every channel starts off: an untouched control has
+          to record "not asked for", never a fabricated opt-in, and the schema
+          leaves the field unset when nothing is ticked.
 
-      <Button type="submit" fullWidth size="lg" loading={isSubmitting}>
-        Create account
-      </Button>
+          This is narrower than `marketingConsent`, which registration grants on
+          the implied basis of s.10(9) for messages about the relationship
+          itself. Ticking nothing here does not block an invoice reaching them. */}
+      <Controller
+        name="contactConsent"
+        control={control}
+        render={({ field }) => (
+          <div>
+            {/* One line, not two. The longer version wrapped on this column and
+                cost a row of height to restate "optional", which the word
+                already says. */}
+            <p className="text-[12.5px] font-medium text-ink-700">
+              How may we contact you?{' '}
+              <span className="font-normal text-ink-400">Optional.</span>
+            </p>
+            <ConsentChannels className="mt-2" value={field.value} onChange={field.onChange} />
+          </div>
+        )}
+      />
+
+      <div className="space-y-2 pt-0.5">
+        <Button type="submit" fullWidth size="lg" loading={isSubmitting}>
+          Create account
+        </Button>
+        {/* Under the button rather than in a filled slab above it: it is the
+            small print on the action, and as a box it cost a whole block of
+            height to say what one line says. */}
+        <p className="text-center text-[12px] leading-relaxed text-ink-400">
+          Wholesale only. Accounts are reviewed before pricing and ordering unlock.
+        </p>
+      </div>
     </form>
   );
 }
@@ -565,7 +860,7 @@ function ContactTab() {
   return (
     <div className="space-y-5">
       <p className="text-[13.5px] leading-relaxed text-ink-500">
-        Our trade desk answers account, pricing and stock questions during business hours.
+        Our sales desk answers account, pricing and stock questions during business hours.
       </p>
 
       <ul className="space-y-3">
@@ -613,6 +908,11 @@ export function AccountPopup() {
   const setTab = useUiStore((s) => s.setAccountTab);
 
   return (
+    // Width is the sum of what the two columns need, not a round number: a
+    // 480px form column, a 268px panel, and the gaps and insets between and
+    // around them. It was 900px, which left ~90px of unused white between the
+    // capped form and the panel — visible as a blank gutter down the middle of
+    // the dialog.
     // Sized to its content rather than to a breakpoint: a form column wide
     // enough for a two-up field row without the inputs going stubby, beside a
     // fixed-width panel. It was 700/380, which fit sign-in but made the longer
@@ -621,24 +921,32 @@ export function AccountPopup() {
       open={open}
       onClose={close}
       size="lg"
-      className="max-w-[860px]"
-      align="top"
+      className="max-w-[832px]"
       showClose
       bodyClassName="p-0 md:p-0"
     >
-      {/* One fixed height for all three tabs.
-          The dialog used to size to whatever was inside it, so switching from
-          Sign In to Sign Up grew it by a couple of hundred pixels and the side
-          panel grew with it: the panel is the constant thing on this dialog,
-          and it visibly changed size depending on which tab you were on. The
-          shell is now a fixed frame, and the form column scrolls inside it when
-          a tab needs more room than the frame has. `min-h-0` on the scrolling
-          child is what actually lets it scroll rather than stretch the grid. */}
-      {/* 80vh, not more: the panel starts at 8vh (align="top") and Modal caps
-          it at 88vh, so a taller frame would be clipped by that cap rather than
-          scrolling inside it. */}
-      <div className="grid gap-6 md:h-[min(660px,80vh)] md:grid-cols-[minmax(0,1fr)_minmax(0,258px)] md:gap-8">
-        <div className="scroll-slim mx-auto w-full min-w-0 max-w-[480px] overflow-y-auto px-5 pb-6 pt-5 md:mx-0 md:min-h-0 md:max-w-none md:pl-6 md:pr-0">
+      {/* **One height for every tab**, so switching Sign In → Sign Up does not
+          resize the dialog or make the panel beside it jump.
+
+          760px is what the longest tab — buyer sign-up with the optional
+          section closed — actually needs, so nothing scrolls at rest. The
+          shorter tabs do not stretch to fill it: the panel keeps its own height
+          (see the cell below) and the leftover shows as empty dialog under it,
+          which is the trade for a constant frame.
+
+          Capped at 86vh so a short viewport shrinks the frame rather than
+          overflowing it, and the form column scrolls inside it when that
+          happens. `min-h-0` on the scrolling child is what actually lets it
+          scroll rather than stretch the grid. */}
+      <div className="grid h-[min(680px,82vh)] gap-6 md:h-[min(760px,86vh)] md:grid-cols-[minmax(0,516px)_minmax(0,268px)] md:justify-center md:gap-7">
+        {/* The column keeps its 480px cap at every width. It was released at
+            `md` (`md:max-w-none`), so the form stretched to whatever the grid
+            column happened to be — around 600px — and a single email or
+            password input ran the width of the dialog. A text field that wide
+            is harder to read, not more generous, and it made a short form look
+            sprawling. Capped, the two-up rows stay comfortable and the lone
+            fields stop looking like the most important thing on the page. */}
+        <div className="scroll-slim mx-auto min-h-0 w-full min-w-0 max-w-[480px] overflow-y-auto px-5 pb-6 pt-5 md:mx-0 md:pl-6 md:pr-0">
           <div
             role="tablist"
             aria-label="Account"
@@ -668,9 +976,17 @@ export function AccountPopup() {
           {tab === 'contact' && <ContactTab />}
         </div>
 
-        {/* `min-h-0` so the panel fills the fixed frame rather than being sized
-            by its own content, which is what kept it a constant size. */}
-        <div className="hidden min-h-0 p-5 pl-0 md:block">
+        {/* The panel keeps its own height and sits at the top; any slack in the
+            frame falls **below** it as empty dialog rather than stretching it.
+            Stretched, its four blocks spread out to fill whatever the tallest
+            tab needed and the panel visibly changed shape between tabs — the
+            one element on this dialog that should look identical on all three.
+
+            `items-start` on this cell rather than the grid, so only the panel
+            opts out of stretching; the form column still fills the frame and
+            scrolls inside it. Insets match the form column's (`pt-5 pb-6`) so
+            both start on the same line. */}
+        <div className="hidden min-h-0 items-start pb-6 pl-0 pr-5 pt-5 md:flex">
           <SidePanel />
         </div>
       </div>

@@ -19,7 +19,7 @@ import { money, date, relativeDays } from '@/lib/format';
 import { GRADES } from '@/lib/constants';
 import Skeleton from '@/components/ui/Skeleton';
 import Button from '@/components/ui/Button';
-import PartIllustration from '@/components/product/PartIllustration';
+import { PartVisual } from '@/components/product/PartFrame';
 import { useOffers } from '@/hooks/useContent';
 import { useAuth } from '@/hooks/useAuth';
 import useUiStore from '@/store/uiStore';
@@ -285,11 +285,7 @@ function ComboPart({ line, gated }) {
         to={`/product/${line.slug}`}
         className="flex size-[68px] items-center justify-center rounded-[12px] border border-line bg-surface p-2 transition-colors hover:border-brand"
       >
-        {line.image ? (
-          <img src={line.image} alt="" loading="lazy" className="size-full object-contain" />
-        ) : (
-          <PartIllustration partType={line.partType} />
-        )}
+        <PartVisual product={line} />
       </Link>
       <span className="mt-1.5 line-clamp-2 text-[11.5px] font-medium leading-tight text-ink-700">
         {line.partTypeLabel}
@@ -727,7 +723,7 @@ export function OffersPage() {
             to="/contact"
             className="mt-5 inline-flex h-11 items-center rounded-[10px] bg-brand-gradient px-5 font-display text-[14px] font-semibold text-white transition-[filter] hover:brightness-110"
           >
-            Talk to the trade desk
+            Talk to the sales desk
           </Link>
         </div>
       ) : (

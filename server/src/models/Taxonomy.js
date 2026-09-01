@@ -35,7 +35,7 @@ const taxonomySchema = new mongoose.Schema(
     /**
      * What else this node is called (ERP rework §6.15, phase 11d).
      *
-     * **The valuable part of the taxonomy screen.** A trade buyer types `15 PM`
+     * **The valuable part of the taxonomy screen.** A business buyer types `15 PM`
      * or `iphone15pm`, not "iPhone 15 Pro Max", and a wholesale search box that
      * only matches the catalogue name is a search box that returns nothing for
      * the way its users actually type.

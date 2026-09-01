@@ -6,7 +6,7 @@ import Button from '@/components/ui/Button';
 import Skeleton from '@/components/ui/Skeleton';
 import OrderStepper from '@/components/account/OrderStepper';
 import { OrderStatusBadge } from '@/components/account/OrderStatusBadge';
-import PartIllustration from '@/components/product/PartIllustration';
+import { PartVisual } from '@/components/product/PartFrame';
 import { useOrder } from '@/hooks/useAccount';
 import { useCart } from '@/hooks/useCart';
 import { useAccountMutations } from '@/hooks/useAccount';
@@ -133,7 +133,7 @@ export function AccountOrderDetailPage() {
                 to={item.slug ? `/product/${item.slug}` : '/'}
                 className="flex size-14 shrink-0 items-center justify-center rounded-lg border border-line bg-surface-2 p-2"
               >
-                <PartIllustration partType={item.partType} />
+                <PartVisual product={item} />
               </Link>
 
               <div className="min-w-0 flex-1">

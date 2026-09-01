@@ -30,6 +30,9 @@ export function useFilterUrlSync() {
 
     const partType = get('partType');
     const grade = get('grade');
+    // setFacet, not setComponentType: hydrating must not cascade away the very
+    // path the same URL is restoring. The wizard's label for it is filled in
+    // once the taxonomy lands (see TabWizard's componentLabel effect).
     if (partType) store.setFacet('partType', partType.split(','));
     if (grade) store.setFacet('grade', grade.split(','));
     if (get('inStockOnly')) store.setFacet('inStockOnly', true);

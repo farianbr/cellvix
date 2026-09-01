@@ -33,11 +33,21 @@ export function FormSection({
   children,
   defaultOpen = false,
   collapsible = true,
+  /**
+   * Set when the fields inside have failed validation.
+   *
+   * A collapsed section hides its own errors: the form refuses to submit, the
+   * message is real, and it is behind a closed header the buyer has no reason
+   * to open. Passing this forces the section open so the error is visible where
+   * it happened. It only forces open — a section the user has opened by hand
+   * stays open when the error clears.
+   */
+  hasError = false,
   className,
 }) {
   const [open, setOpen] = useState(defaultOpen);
   const bodyId = useId();
-  const expanded = collapsible ? open : true;
+  const expanded = collapsible ? open || hasError : true;
 
   const heading = (
     <>

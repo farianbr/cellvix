@@ -323,8 +323,8 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
             <SelectField
               control={control}
               name="targetPartType"
-              label="Part type"
-              options={[{ value: '', label: 'Any part type' }, ...partTypes]}
+              label="Component type"
+              options={[{ value: '', label: 'Any component type' }, ...partTypes]}
             />
             <SelectField
               control={control}

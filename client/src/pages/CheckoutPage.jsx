@@ -19,7 +19,7 @@ import SelectField from '@/components/ui/SelectField';
 import Button from '@/components/ui/Button';
 import Checkbox from '@/components/ui/Checkbox';
 import StepSection from '@/components/checkout/StepSection';
-import PartIllustration from '@/components/product/PartIllustration';
+import { PartVisual } from '@/components/product/PartFrame';
 import PromoCodeField from '@/components/cart/PromoCodeField';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
@@ -711,7 +711,7 @@ export function CheckoutPage() {
                 {items.map((item) => (
                   <li key={item.productId} className="flex items-center gap-3 p-3">
                     <span className="flex size-12 shrink-0 items-center justify-center rounded-lg border border-line bg-surface-2 p-1.5">
-                      <PartIllustration partType={item.partType} />
+                      <PartVisual product={item} />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="line-clamp-1 text-[13.5px] font-medium text-ink-900">

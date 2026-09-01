@@ -312,7 +312,7 @@ export const ADMIN_ROUTES = {
     section: 'purchase',
     phase: 1,
     title: 'Inventory',
-    description: 'The product catalogue, stock on hand and trade pricing.',
+    description: 'The product catalogue, stock on hand and wholesale pricing.',
   },
   '/admin/inventory/:id': {
     label: 'Product',

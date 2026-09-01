@@ -3,10 +3,10 @@
 B2B wholesale marketplace for replacement electronics parts — screens, batteries, cameras and
 housings for repair shops, refurbishers and resellers across Canada.
 
-It is not a normal shop. The people buying here are businesses with a trade account, so three things
+It is not a normal shop. The people buying here are businesses with a wholesale account, so three things
 work differently from a consumer store, and most of the architecture follows from them:
 
-1. **Prices are private.** Nobody sees trade pricing until an admin has approved their business.
+1. **Prices are private.** Nobody sees wholesale pricing until an admin has approved their business.
    That gate is enforced on the server — the price is simply absent from the API response for
    everyone else.
 2. **Buying happens on credit.** An approved account has a credit limit and payment terms (Net 30
@@ -82,7 +82,7 @@ Password for all three: `Cellvix123!`
 
 | Email | What it demonstrates |
 | --- | --- |
-| `buyer@cellvix.ca` | Approved business — trade pricing, Net 30 terms, order and invoice history |
+| `buyer@cellvix.ca` | Approved business — wholesale pricing, Net 30 terms, order and invoice history |
 | `pending@cellvix.ca` | Awaiting approval — can browse and hold a cart, cannot see prices or order |
 | `admin@cellvix.ca` | Admin — approvals queue, product/order/customer management, editorial consoles |
 

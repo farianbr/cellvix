@@ -3,7 +3,7 @@ import { AlertTriangle, Package, Trash2 } from 'lucide-react';
 import cn from '@/lib/cn';
 import { money } from '@/lib/format';
 import QtyStepper from '@/components/product/QtyStepper';
-import PartIllustration from '@/components/product/PartIllustration';
+import { PartVisual } from '@/components/product/PartFrame';
 
 /**
  * A combo in the cart, as ONE line.
@@ -58,11 +58,7 @@ export function CartBundleLine({ bundle, onQtyChange, onRemove, compact = false 
             {bundle.products.map((line) => (
               <li key={line.sku} className="flex items-center gap-2">
                 <span className="flex size-8 shrink-0 items-center justify-center rounded-lg border border-line bg-surface-2 p-1">
-                  {line.image ? (
-                    <img src={line.image} alt="" loading="lazy" className="size-full object-contain" />
-                  ) : (
-                    <PartIllustration partType={line.partType} />
-                  )}
+                  <PartVisual product={line} />
                 </span>
                 <span className="min-w-0">
                   <Link

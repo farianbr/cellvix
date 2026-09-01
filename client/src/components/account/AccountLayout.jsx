@@ -1,13 +1,173 @@
+import { useEffect, useState } from 'react';
 import { Navigate, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
-import { Clock, LogOut } from 'lucide-react';
+import { ChevronDown, Clock, LogOut } from 'lucide-react';
 import cn from '@/lib/cn';
-import { ACCOUNT_NAV } from '@shared/schemas/account';
+import { ACCOUNT_NAV, ACCOUNT_NAV_ITEMS } from '@shared/schemas/account';
 import { accountIcon } from './accountIcons';
 import Button from '@/components/ui/Button';
 import SelectMenu from '@/components/ui/SelectMenu';
 import Skeleton from '@/components/ui/Skeleton';
 import { useAuth, useSignOut } from '@/hooks/useAuth';
+import { useAccountSummary } from '@/hooks/useAccount';
 import useUiStore from '@/store/uiStore';
+
+/**
+ * Which group and which leaf the current URL is in.
+ *
+ * Longest match wins: `/account` is a prefix of every other account route, so a
+ * plain `startsWith` would report Overview as active on all of them.
+ */
+function activeNavKeys(pathname) {
+  let match = null;
+
+  for (const group of ACCOUNT_NAV) {
+    for (const child of group.children ?? [group]) {
+      const exact = child.to === '/account' ? pathname === '/account' : pathname.startsWith(child.to);
+      if (exact && (!match || child.to.length > match.child.to.length)) {
+        match = { group: group.key, child };
+      }
+    }
+  }
+
+  return { group: match?.group ?? 'overview', child: match?.child ?? null };
+}
+
+/** What each badge counts, for the screen-reader text beside the digit. */
+const BADGE_LABELS = {
+  openOrders: 'open',
+  outstandingInvoices: 'outstanding',
+};
+
+/**
+ * The count beside a nav row. Absent and zero both render nothing.
+ *
+ * The digit is `aria-hidden` and the meaning is carried by visually-hidden text
+ * instead. The badge sits inside the row's own button or link, so its text
+ * becomes part of that control's accessible name — without this a collapsed
+ * group announced as "Orders & billing 3", a bare number with no unit.
+ */
+function NavBadge({ count, label }) {
+  if (!count) return null;
+  return (
+    <>
+      <span
+        className="tnum ml-auto mr-0.5 min-w-[20px] rounded-full bg-surface-3 px-1.5 py-0.5 text-center text-[10.5px] font-semibold leading-none text-ink-600"
+        aria-hidden="true"
+      >
+        {count > 99 ? '99+' : count}
+      </span>
+      <span className="sr-only">{`, ${count} ${label}`}</span>
+    </>
+  );
+}
+
+/**
+ * The account sidebar: a flat Overview row and three expandable groups, the
+ * same two-level tree the admin shell uses.
+ *
+ * One group open at a time, and the open one follows the route — so arriving on
+ * a page always shows you where you are, and the sidebar stays one screen
+ * rather than ten rows a buyer reads end to end to find anything. A deliberate
+ * collapse is kept in state until the route changes, so clicking a heading
+ * closed does not immediately spring back open.
+ */
+function NavTree({ badges, activeGroup, activeChildKey }) {
+  const [openGroup, setOpenGroup] = useState(activeGroup);
+  useEffect(() => setOpenGroup(activeGroup), [activeGroup]);
+
+  return (
+    <ul className="hidden lg:flex lg:flex-col lg:gap-0.5">
+      {ACCOUNT_NAV.map((item) => {
+        const Icon = accountIcon(item.icon);
+
+        if (!item.children) {
+          return (
+            <li key={item.key}>
+              <NavLink
+                to={item.to}
+                end
+                className={({ isActive }) =>
+                  cn(
+                    'flex items-center gap-2.5 whitespace-nowrap rounded-[10px] px-3 py-2.5 text-[13.5px] font-medium transition-colors',
+                    isActive
+                      ? 'bg-brand-50 text-brand-700'
+                      : 'text-ink-600 hover:bg-surface-2 hover:text-ink-900',
+                  )
+                }
+              >
+                <Icon className="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+                {item.label}
+              </NavLink>
+            </li>
+          );
+        }
+
+        const isOpen = openGroup === item.key;
+        const groupBadge = item.children.reduce(
+          (sum, child) => sum + (child.badge ? (badges[child.badge] ?? 0) : 0),
+          0,
+        );
+
+        return (
+          <li key={item.key} className="mt-1 first:mt-0">
+            <button
+              type="button"
+              aria-expanded={isOpen}
+              onClick={() => setOpenGroup(isOpen ? null : item.key)}
+              className={cn(
+                'flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-[13.5px] font-semibold transition-colors',
+                isOpen || activeGroup === item.key
+                  ? 'text-ink-900'
+                  : 'text-ink-600 hover:bg-surface-2 hover:text-ink-900',
+              )}
+            >
+              <Icon className="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+              <span className="flex-1 text-left">{item.label}</span>
+              {/* Only while closed: open, the counts are on the rows themselves,
+                  and showing both makes the heading look like a third number. */}
+              {!isOpen && <NavBadge count={groupBadge} label="needing attention" />}
+              <ChevronDown
+                className={cn(
+                  'size-3.5 shrink-0 text-ink-400 transition-transform',
+                  isOpen && 'rotate-180',
+                )}
+                strokeWidth={2}
+                aria-hidden="true"
+              />
+            </button>
+
+            {isOpen && (
+              <ul className="ml-[19px] mt-0.5 flex flex-col gap-0.5 border-l border-line pl-2.5">
+                {item.children.map((child) => {
+                  const ChildIcon = accountIcon(child.icon);
+                  const isActive = activeChildKey === child.key;
+
+                  return (
+                    <li key={child.key}>
+                      <NavLink
+                        to={child.to}
+                        className={cn(
+                          'flex items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-[12.5px] font-medium transition-colors',
+                          isActive
+                            ? 'bg-brand-50 text-brand-700'
+                            : 'text-ink-600 hover:bg-surface-2 hover:text-ink-900',
+                        )}
+                      >
+                        <ChildIcon className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+                        <span className="min-w-0 truncate">{child.label}</span>
+                        <NavBadge count={child.badge ? badges[child.badge] : 0} label={BADGE_LABELS[child.badge] ?? 'items'} />
+                      </NavLink>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
 
 /**
  * Account shell (brief §8.3): ERP-grade information density in Cellvix's clean
@@ -23,13 +183,29 @@ export function AccountLayout() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
 
+  const { group: activeGroup, child: activeChild } = activeNavKeys(pathname);
+
   // Below lg the section list is a dropdown, not a horizontal scroller. Eight
   // pills in a swipe strip hid half the account behind a gesture nothing on the
   // page advertised — the two sections furthest right were effectively unreachable
-  // on a 360px phone.
-  const activeNav =
-    ACCOUNT_NAV.find((item) => item.to !== '/account' && pathname.startsWith(item.to))?.to ??
-    '/account';
+  // on a 360px phone. It lists the leaves, not the groups: a dropdown is already
+  // a one-level-at-a-time control, so grouping it would add a step rather than
+  // remove one.
+  const activeNav = activeChild?.to ?? '/account';
+
+  /**
+   * Sidebar counts, keyed by the `badge` names in `ACCOUNT_NAV`.
+   *
+   * Mapped here rather than named after the payload's own paths because the
+   * summary nests them under `stats` and `invoices`, and a nav schema that
+   * hard-codes another module's object shape breaks the moment that shape
+   * changes. The schema names what the number *means*; this says where it lives.
+   */
+  const { data: summary } = useAccountSummary();
+  const badges = {
+    openOrders: summary?.stats?.openOrders ?? 0,
+    outstandingInvoices: summary?.invoices?.outstandingCount ?? 0,
+  };
 
   if (isLoading) {
     return (
@@ -48,7 +224,7 @@ export function AccountLayout() {
       <div className="mx-auto flex max-w-lg flex-col items-center px-4 py-20 text-center">
         <h1 className="text-[24px]">Sign in to your account</h1>
         <p className="mt-3 text-[14px] leading-relaxed text-ink-500">
-          Order history, invoices, credit and the quick order pad live behind your Cellvix trade
+          Order history, invoices, credit and the quick order pad live behind your Cellvix wholesale
           account.
         </p>
         <Button className="mt-7" size="lg" onClick={() => openAccount('signin')}>
@@ -70,8 +246,8 @@ export function AccountLayout() {
         </span>
         <h1 className="text-[24px]">Your account is under review</h1>
         <p className="mt-3 text-[14px] leading-relaxed text-ink-500">
-          We are verifying <span className="font-medium text-ink-900">{user.businessName}</span>.
-          Once that is done, trade pricing, ordering and this dashboard all unlock — usually within
+          We are verifying <span className="font-medium text-ink-900">{user.displayName}</span>.
+          Once that is done, wholesale pricing, ordering and this dashboard all unlock — usually within
           one business day.
         </p>
         <p className="mt-6 rounded-[10px] bg-surface-2 px-4 py-3 text-[13px] text-ink-500">
@@ -89,11 +265,19 @@ export function AccountLayout() {
     <div className="mx-auto max-w-[1280px] px-3 py-5 sm:px-4 lg:px-6 lg:py-7">
       <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
-          <p className="eyebrow mb-1 text-ink-400">Trade account</p>
-          <h1 className="truncate text-[22px] sm:text-[26px]">{user.businessName}</h1>
+          <p className="eyebrow mb-1 text-ink-400">Wholesale account</p>
+          <h1 className="truncate text-[22px] sm:text-[26px]">{user.displayName}</h1>
         </div>
+        {/* The company beside the person, not the person twice: the heading is
+            now the account holder's name, so repeating `contactName` here said
+            nothing. An account with no company name shows just the email. */}
         <p className="text-[13px] text-ink-500">
-          {user.contactName} · <span className="text-ink-400">{user.email}</span>
+          {user.businessName && (
+            <>
+              {user.businessName} <span className="text-ink-300">·</span>{' '}
+            </>
+          )}
+          <span className="text-ink-400">{user.email}</span>
         </p>
       </header>
 
@@ -111,7 +295,7 @@ export function AccountLayout() {
               align="left"
               value={activeNav}
               onChange={(to) => navigate(to)}
-              options={ACCOUNT_NAV.map((item) => ({ value: item.to, label: item.label }))}
+              options={ACCOUNT_NAV_ITEMS.map((item) => ({ value: item.to, label: item.label }))}
               className="min-w-0 flex-1"
             />
             <Button variant="outline" icon={LogOut} onClick={signOut} className="shrink-0">
@@ -120,30 +304,9 @@ export function AccountLayout() {
           </div>
 
           {/* ---- sidebar from lg ------------------------------------------ */}
-          <ul className="hidden lg:flex lg:flex-col lg:gap-0.5">
-            {ACCOUNT_NAV.map((item) => {
-              const Icon = accountIcon(item.icon);
-              return (
-                <li key={item.key}>
-                  <NavLink
-                    to={item.to}
-                    end={item.to === '/account'}
-                    className={({ isActive }) =>
-                      cn(
-                        'flex items-center gap-2.5 whitespace-nowrap rounded-[10px] px-3 py-2.5 text-[13.5px] font-medium transition-colors',
-                        isActive
-                          ? 'bg-brand-50 text-brand-700'
-                          : 'text-ink-600 hover:bg-surface-2 hover:text-ink-900',
-                      )
-                    }
-                  >
-                    {Icon && <Icon className="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />}
-                    {item.label}
-                  </NavLink>
-                </li>
-              );
-            })}
+          <NavTree badges={badges} activeGroup={activeGroup} activeChildKey={activeChild?.key} />
 
+          <ul className="hidden lg:block">
             <li className="mt-2 border-t border-line pt-2">
               <button
                 type="button"

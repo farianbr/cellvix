@@ -16,6 +16,7 @@ const ThankYouPage = lazy(() => import('@/pages/ThankYouPage'));
 const PaymentFailedPage = lazy(() => import('@/pages/PaymentFailedPage'));
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'));
 const AboutPage = lazy(() => import('@/pages/AboutPage'));
+const ResetPasswordPage = lazy(() => import('@/pages/ResetPasswordPage'));
 const ContactPage = lazy(() => import('@/pages/ContactPage'));
 const BlogPage = lazy(() => import('@/pages/BlogPage'));
 const BlogPostPage = lazy(() => import('@/pages/BlogPostPage'));
@@ -31,6 +32,7 @@ const AccountOrdersPage = lazy(() => import('@/pages/account/AccountOrdersPage')
 const AccountOrderDetailPage = lazy(() => import('@/pages/account/AccountOrderDetailPage'));
 const AccountInvoicesPage = lazy(() => import('@/pages/account/AccountInvoicesPage'));
 const AccountCreditPage = lazy(() => import('@/pages/account/AccountCreditPage'));
+const AccountActivityPage = lazy(() => import('@/pages/account/AccountActivityPage'));
 const AccountReferralsPage = lazy(() => import('@/pages/account/AccountReferralsPage'));
 const AccountQuickOrderPage = lazy(() => import('@/pages/account/AccountQuickOrderPage'));
 const AccountAddressesPage = lazy(() => import('@/pages/account/AccountAddressesPage'));
@@ -301,12 +303,24 @@ export function App() {
           <Route path="orders/:orderNumber" element={<AccountOrderDetailPage />} />
           <Route path="invoices" element={<AccountInvoicesPage />} />
           <Route path="credit" element={<AccountCreditPage />} />
+          <Route path="activity" element={<AccountActivityPage />} />
           <Route path="referrals" element={<AccountReferralsPage />} />
           <Route path="quick-order" element={<AccountQuickOrderPage />} />
           <Route path="addresses" element={<AccountAddressesPage />} />
           <Route path="payment-methods" element={<AccountPaymentMethodsPage />} />
           <Route path="company" element={<AccountCompanyPage />} />
         </Route>
+
+        {/* Where an emailed reset link lands. Public: the whole point is that
+            nobody is signed in yet. */}
+        <Route
+          path="reset-password"
+          element={
+            <Suspense fallback={<RouteFallback />}>
+              <ResetPasswordPage />
+            </Suspense>
+          }
+        />
 
         <Route
           path="about"

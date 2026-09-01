@@ -6,7 +6,7 @@ import cn from '@/lib/cn';
 import { money, productTitle } from '@/lib/format';
 import GradeBadge from './GradeBadge';
 import QtyStepper from './QtyStepper';
-import PartIllustration from './PartIllustration';
+import PartFrame, { PartVisual } from './PartFrame';
 import MarketCompare from './MarketCompare';
 import { useCart } from '@/hooks/useCart';
 import useUiStore from '@/store/uiStore';
@@ -61,31 +61,40 @@ export function ProductCard({ product }) {
       )}
 
       {/* ---- image ---------------------------------------------------- */}
-      <div className="relative aspect-4/3 shrink-0 overflow-hidden bg-surface-2">
+      <div className="relative shrink-0 overflow-hidden bg-surface-2">
         {/* The dark "Out of stock" pill that used to sit in this corner was a
             third stamp on one image, next to the grade badge and the in-cart
             pill. The part itself carries the state now — drained of colour and
             sat back — and the words live once, down in the body. */}
-        <Link
-          to={`/product/${product.slug}`}
-          className={cn(
-            'block size-full p-4 transition-transform duration-300 group-hover:scale-[1.03] @min-[200px]:p-6',
-            outOfStock && 'opacity-45 grayscale',
-          )}
-          tabIndex={-1}
-          aria-hidden="true"
+        {/* PartFrame sets the part name and model inside the top of the image
+            and insets the drawing below them, so the caption never covers the
+            part. The hover scale lives on the drawing only — a caption that
+            zoomed with it would clip against the frame's own edge. */}
+        <PartFrame
+          product={product}
+          captionSlot={
+            <h3>
+              <Link
+                to={`/product/${product.slug}`}
+                className="transition-colors hover:text-brand"
+              >
+                {productTitle(product.name, product.partTypeLabel)}
+              </Link>
+            </h3>
+          }
         >
-          {product.image ? (
-            <img
-              src={product.image}
-              alt=""
-              loading="lazy"
-              className="size-full object-contain"
-            />
-          ) : (
-            <PartIllustration partType={product.partType} label={product.partTypeLabel} />
-          )}
-        </Link>
+          <Link
+            to={`/product/${product.slug}`}
+            className={cn(
+              'block size-full transition-transform duration-300 group-hover:scale-[1.03]',
+              outOfStock && 'opacity-45 grayscale',
+            )}
+            tabIndex={-1}
+            aria-hidden="true"
+          >
+            <PartVisual product={product} />
+          </Link>
+        </PartFrame>
 
         <GradeBadge grade={product.grade} className="absolute left-2 top-2 @min-[200px]:left-3 @min-[200px]:top-3" />
 
@@ -111,23 +120,15 @@ export function ProductCard({ product }) {
       {/* Every size below is driven by the CARD's width (@container), never the
           viewport's: the same card sits in a 2-, 3- and 4-column grid, and on a
           375px phone the 2-up card is ~169px wide. */}
-      <div className="flex flex-1 flex-col gap-2 p-3 @min-[200px]:gap-2.5 @min-[200px]:p-4">
-        <div className="min-h-0 flex-1">
-          <p className="eyebrow mb-1 text-ink-300 @min-[200px]:mb-1.5">{product.partTypeLabel}</p>
-
-          {/* Two lines of space whether the name needs them or not: a one-line
-              name would otherwise pull the price, stock line and button up and
-              leave the row of cards ragged. 2.75em = two lines at leading-snug,
-              and em tracks the card's own responsive font size. */}
-          <h3 className="min-h-[2.75em] text-[13px] font-semibold leading-snug @min-[200px]:text-[14.5px]">
-            <Link
-              to={`/product/${product.slug}`}
-              className="line-clamp-2 transition-colors hover:text-brand"
-            >
-              {productTitle(product.name, product.partTypeLabel)}
-            </Link>
-          </h3>
-        </div>
+      <div className="flex flex-1 flex-col gap-1.5 p-3 @min-[200px]:gap-2 @min-[200px]:p-3.5">
+        {/* The model used to be repeated here, directly under the same name
+            inside the image frame. PartFrame's caption is the card's heading
+            now — it carries the <h3> and the product link — so the body is a
+            title-block shorter.
+            The part type stays, but only below 200px: that is exactly where the
+            caption drops its own eyebrow to keep room for the drawing, and the
+            part type has to be named somewhere. */}
+        <p className="eyebrow text-ink-300 @min-[200px]:hidden">{product.partTypeLabel}</p>
 
         {/* Availability and price share one slot, because for a part that cannot
             be bought they are one statement.
@@ -175,13 +176,18 @@ export function ProductCard({ product }) {
                     The row holds its height when there is nothing to show, so
                     prices stay on one line across a grid row — the same
                     discipline as the two-line title clamp above. */}
-                <div className="h-3.75 @min-[200px]:h-4">
-                  {!gated && !product.compareAtPrice && product.market && (
-                    <span className="tnum text-[11.5px] text-ink-300 line-through @min-[200px]:text-[12px]">
-                      {money(product.market.average)}
-                    </span>
-                  )}
-                </div>
+                {/* Reserved so prices sit on one line across a grid row — but a
+                    gated card can never fill this row, and every gated card in
+                    the grid is gated, so the row stays level without it. */}
+                {!gated && (
+                  <div className="h-3.75 @min-[200px]:h-4">
+                    {!product.compareAtPrice && product.market && (
+                      <span className="tnum text-[11.5px] text-ink-300 line-through @min-[200px]:text-[12px]">
+                        {money(product.market.average)}
+                      </span>
+                    )}
+                  </div>
+                )}
 
                 <div className="flex items-baseline gap-2">
                   <span className="font-display text-[17px] font-bold tracking-tight text-ink-900 tnum @min-[200px]:text-[19px] @min-[260px]:text-[21px]">
@@ -225,7 +231,7 @@ export function ProductCard({ product }) {
                 server sent a comparison — which it does not when the price is
                 gated, or when we are not actually the cheaper option.
                 Shown at every card width: it is the reason to buy the part, so
-                hiding it on the surface most buyers are on was the wrong trade.
+                hiding it on the surface most buyers are on was the wrong tradeoff.
                 MarketCompare drops its own chevron and tightens its type below
                 200px so it stays one line on a ~169px two-up card. */}
             <MarketCompare market={product.market} price={product.price} />

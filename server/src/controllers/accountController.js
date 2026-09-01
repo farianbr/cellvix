@@ -112,6 +112,27 @@ const activity = asyncHandler(async (req, res) => {
   res.json(await accountService.activity(req.user._id));
 });
 
+/**
+ * The activity page. Filters and paging arrive as query params rather than in a
+ * body because this is a GET that a buyer can bookmark and reload.
+ *
+ * An unknown `kind` falls through to `all` in the service rather than erroring:
+ * a stale bookmark should show the buyer their history, not a validation
+ * failure about a filter they cannot see.
+ */
+const activityPage = asyncHandler(async (req, res) => {
+  const { kind, from, to, page, limit } = req.query;
+  res.json(
+    await accountService.activityPage(req.user._id, {
+      kind,
+      from: from || null,
+      to: to || null,
+      page,
+      limit,
+    }),
+  );
+});
+
 const referrals = asyncHandler(async (req, res) => {
   res.json(await accountService.referrals(req.user));
 });
@@ -134,4 +155,5 @@ exports.rechargeStoreCredit = rechargeStoreCredit;
 exports.payInvoice = payInvoice;
 exports.payOffCredit = payOffCredit;
 exports.activity = activity;
+exports.activityPage = activityPage;
 exports.referrals = referrals;

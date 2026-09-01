@@ -1,5 +1,5 @@
-import { useCallback, useRef, useState } from 'react';
-import { ChevronRight, RotateCcw, X } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Check, ChevronRight, RotateCcw, X } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import cn from '@/lib/cn';
 import { FILTER_LEVELS } from '@/lib/constants';
@@ -7,7 +7,7 @@ import { optionsFor } from '@/lib/taxonomy';
 import { StepIndicator } from '@/components/ui/StepIndicator';
 import WizardOverlay from './WizardOverlay';
 import useFilterStore from '@/store/filterStore';
-import { useTaxonomy } from '@/hooks/useCatalog';
+import { useWizardTaxonomy } from '@/hooks/useCatalog';
 import Skeleton from '@/components/ui/Skeleton';
 
 const LEVEL_KEYS = FILTER_LEVELS.map((l) => l.key);
@@ -23,46 +23,93 @@ const LEVEL_KEYS = FILTER_LEVELS.map((l) => l.key);
  *    through every downstream step again;
  *  - every completed tab stays clickable and clearable, forever.
  *
+ * The steps are Component Type > Device Type > Brand > Series > Model. The
+ * component leads because a business buyer knows they need a screen before they
+ * know whose, and because it lets the server prune every level below it to the
+ * branches that actually stock that component — so the wizard can never offer a
+ * combination that returns an empty grid.
+ *
  * Layout is two shapes, not one that squeezes:
- *  - md and up: four equal cards in a grid;
+ *  - lg and up: five equal cards in a grid; md wraps them 3+2;
  *  - below md: an expanding sequence. Exactly one step is open — the first one
- *    still to answer — and every other step collapses to its number. Four cards
+ *    still to answer — and every other step collapses to its number. Five cards
  *    do not fit on a 375px phone, and the horizontal scroller this replaces put
- *    steps 3 and 4 off the right edge where nobody found them.
+ *    the later steps off the right edge where nobody found them.
  *
  * It writes to the same store the sidebar and mega menu write to — it is a third
  * face on one filter, not a filter of its own.
  */
 export function TabWizard() {
-  const { data: tree, isLoading } = useTaxonomy();
   const [openLevel, setOpenLevel] = useState(null);
 
   // True while the user is walking the steps in order. A non-linear edit clears
   // it so we do not chain-open overlays they did not ask for.
   const inSequence = useRef(false);
 
-  const { path, labels, setPathLevel, clearLevel, resetAll } = useFilterStore(
-    useShallow((s) => ({
-      path: s.path,
-      labels: s.labels,
-      setPathLevel: s.setPathLevel,
-      clearLevel: s.clearLevel,
-      resetAll: s.resetAll,
-    })),
-  );
+  const { path, labels, componentType, componentLabel, setPathLevel, setComponentType, clearLevel, resetAll } =
+    useFilterStore(
+      useShallow((s) => ({
+        path: s.path,
+        labels: s.labels,
+        componentType: s.facets.partType.length === 1 ? s.facets.partType[0] : null,
+        componentLabel: s.componentLabel,
+        setPathLevel: s.setPathLevel,
+        setComponentType: s.setComponentType,
+        clearLevel: s.clearLevel,
+        resetAll: s.resetAll,
+      })),
+    );
 
-  const options = openLevel ? optionsFor(tree, path, openLevel) : [];
+  // The tree is pruned to the chosen component, so steps 2-5 can only offer
+  // combinations that actually return parts.
+  const { data, isLoading } = useWizardTaxonomy(componentType);
+  const tree = data?.tree;
+  const componentTypes = data?.componentTypes ?? [];
+
+  // A deep link carries `?partType=battery` but no display name, so the first
+  // tab would read the slug. Fill it in once the list lands.
+  useEffect(() => {
+    if (!componentType || componentLabel) return;
+    const match = componentTypes.find((c) => c.slug === componentType);
+    if (match) useFilterStore.setState({ componentLabel: match.name });
+  }, [componentType, componentLabel, componentTypes]);
+
+  // Step 1 is not a node in the tree, so it is merged in here rather than
+  // special-cased at every read below. `answers`/`answerLabels` are the path as
+  // the WIZARD sees it: five steps, component type first.
+  const answers = { componentType, ...path };
+  const answerLabels = { componentType: componentLabel, ...labels };
+
+  const options = openLevel
+    ? openLevel === 'componentType'
+      ? componentTypes
+      : optionsFor(tree, path, openLevel)
+    : [];
 
   const handleSelect = useCallback(
     (option) => {
       const level = openLevel;
-      setPathLevel(level, option.slug, option.name);
+
+      // Step 1 writes the component facet and resets the tree beneath it; every
+      // other step is an ordinary path level.
+      if (level === 'componentType') {
+        setComponentType(option.slug, option.name);
+      } else {
+        setPathLevel(level, option.slug, option.name);
+      }
 
       const index = LEVEL_KEYS.indexOf(level);
       const nextLevel = LEVEL_KEYS[index + 1];
 
       if (!inSequence.current || !nextLevel) {
         setOpenLevel(null);
+        return;
+      }
+
+      // Choosing a component refetches a pruned tree, so its device types are
+      // not in hand yet — open the next step and let it render when they land.
+      if (level === 'componentType') {
+        setOpenLevel(nextLevel);
         return;
       }
 
@@ -76,15 +123,15 @@ export function TabWizard() {
 
       setOpenLevel(nextLevel);
     },
-    [openLevel, setPathLevel],
+    [openLevel, setPathLevel, setComponentType],
   );
 
   function openStep(level, index) {
-    const isCompleted = Boolean(path[level]);
+    const isCompleted = Boolean(answers[level]);
     const previousLevel = LEVEL_KEYS[index - 1];
 
-    // Cannot pick a series before a brand.
-    if (previousLevel && !path[previousLevel]) return;
+    // Cannot pick a brand before a device type, nor anything before a component.
+    if (previousLevel && !answers[previousLevel]) return;
 
     // Sequence mode only when stepping into the first unfinished step.
     inSequence.current = !isCompleted;
@@ -93,21 +140,20 @@ export function TabWizard() {
 
   /** Completed / active / upcoming, plus whether the level above is unanswered. */
   function stateOf(level, index) {
-    const locked = index > 0 && !path[LEVEL_KEYS[index - 1]];
-    if (path[level.key]) return { state: 'completed', locked };
+    const locked = index > 0 && !answers[LEVEL_KEYS[index - 1]];
+    if (answers[level.key]) return { state: 'completed', locked };
     return { state: locked ? 'upcoming' : 'active', locked };
   }
 
-  const anySelected = LEVEL_KEYS.some((level) => path[level]);
+  const anySelected = LEVEL_KEYS.some((level) => answers[level]);
 
   // The one step the mobile layout leaves open: the first that is neither
   // answered nor locked. Null once every level has an answer.
   const expandedKey =
     FILTER_LEVELS.find(
-      (level, index) => !path[level.key] && (index === 0 || Boolean(path[LEVEL_KEYS[index - 1]])),
+      (level, index) => !answers[level.key] && (index === 0 || Boolean(answers[LEVEL_KEYS[index - 1]])),
     )?.key ?? null;
 
-  const chosenLabels = FILTER_LEVELS.map((level) => labels[level.key]).filter(Boolean);
 
   if (isLoading) {
     return (
@@ -141,48 +187,76 @@ export function TabWizard() {
         )}
       </header>
 
-      {/* ---- below md: expanding sequence, never a scroller ---------------- */}
+      {/* ---- below md ------------------------------------------------------
+          Two states, because a finished wizard and a running one are asking the
+          reader for different things.
+
+          RUNNING: the answered steps stay as a row of dots — they are progress,
+          not content — and the step in hand gets a full-width row beneath them.
+          Sharing one row with four dots left it ~130px wide on a 375px phone,
+          where a two-word level name wrapped inside a fixed 44px pill and
+          pushed against its own border.
+
+          COMPLETE: the wizard steps back. Five identical ticks said only "done",
+          which the reader already knows, and the concatenated line under them
+          was clipped mid-word. Listing all five answers here instead would just
+          restate the chip row that sits directly below with the result count —
+          ActiveFilterChips is the canonical readout of everything filtering the
+          grid, and two copies of it stacked on a phone is the same mistake in a
+          tidier shape. So this collapses to the narrowest thing it alone owns:
+          the walk is finished, and here is the way back into it. */}
       <div className="p-2.5 md:hidden">
-        <ol className="flex items-stretch gap-1.5">
-          {FILTER_LEVELS.map((level, index) => {
-            const value = path[level.key];
-            const { state, locked } = stateOf(level, index);
+        {expandedKey ? (
+          <>
+            <ol className="flex items-center gap-1.5">
+              {FILTER_LEVELS.map((level, index) => {
+                const value = answers[level.key];
+                const { state, locked } = stateOf(level, index);
+                const isCurrent = level.key === expandedKey;
 
-            if (level.key !== expandedKey) {
+                return (
+                  <li key={level.key} className="shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => openStep(level.key, index)}
+                      disabled={locked}
+                      aria-current={isCurrent ? 'step' : undefined}
+                      aria-label={
+                        value
+                          ? `Step ${index + 1}, ${level.label}: ${answerLabels[level.key]}. Change.`
+                          : `Step ${index + 1}, ${level.label}${locked ? ', locked' : ''}`
+                      }
+                      className={cn(
+                        'flex size-9 items-center justify-center rounded-full transition-opacity',
+                        locked ? 'cursor-not-allowed opacity-55' : 'cursor-pointer',
+                      )}
+                    >
+                      <StepIndicator
+                        state={isCurrent ? 'active' : state}
+                        index={index + 1}
+                        size="md"
+                        glyph="index"
+                      />
+                    </button>
+                  </li>
+                );
+              })}
+            </ol>
+
+            {/* The step in hand, its own full width. */}
+            {(() => {
+              const index = LEVEL_KEYS.indexOf(expandedKey);
+              const level = FILTER_LEVELS[index];
               return (
-                <li key={level.key} className="shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => openStep(level.key, index)}
-                    disabled={locked}
-                    aria-label={
-                      value
-                        ? `Step ${index + 1}, ${level.label}: ${labels[level.key]}. Change.`
-                        : `Step ${index + 1}, ${level.label}${locked ? ', locked' : ''}`
-                    }
-                    className={cn(
-                      'flex size-11 items-center justify-center rounded-full',
-                      locked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer',
-                    )}
-                  >
-                    <StepIndicator state={state} index={index + 1} size="lg" glyph="index" />
-                  </button>
-                </li>
-              );
-            }
-
-            return (
-              <li key={level.key} className="min-w-0 flex-1">
                 <button
                   type="button"
-                  onClick={() => openStep(level.key, index)}
-                  aria-expanded={openLevel === level.key}
-                  className="flex h-11 w-full items-center gap-2 rounded-[11px] border border-brand bg-brand-50 px-2.5 text-left"
+                  onClick={() => openStep(expandedKey, index)}
+                  aria-expanded={openLevel === expandedKey}
+                  className="mt-2 flex w-full items-center gap-3 rounded-[11px] border border-brand bg-brand-50 px-3 py-2.5 text-left"
                 >
-                  <StepIndicator state="active" index={index + 1} size="sm" glyph="index" />
                   <span className="min-w-0 flex-1">
                     <span className="eyebrow block text-brand-700">{level.label}</span>
-                    <span className="mt-0.5 block truncate font-display text-[12.5px] font-semibold text-ink-900">
+                    <span className="mt-0.5 block font-display text-[13.5px] font-semibold text-ink-900">
                       Choose…
                     </span>
                   </span>
@@ -192,25 +266,34 @@ export function TabWizard() {
                     aria-hidden="true"
                   />
                 </button>
-              </li>
-            );
-          })}
-        </ol>
-
-        {/* Every level answered: numbers alone no longer say what was picked, so
-            the chosen path gets one truncating line. */}
-        {!expandedKey && chosenLabels.length > 0 && (
-          <p className="mt-2 truncate rounded-[9px] bg-ok-50/70 px-2.5 py-1.5 text-[12px] font-medium text-ink-700">
-            {chosenLabels.join(' · ')}
-          </p>
+              );
+            })()}
+          </>
+        ) : (
+          <div className="flex items-center gap-2.5 rounded-[10px] border border-ok/25 bg-ok-50/60 py-2 pl-3 pr-2">
+            <Check className="size-4 shrink-0 text-ok" strokeWidth={2.5} aria-hidden="true" />
+            <p className="min-w-0 flex-1 text-[12.5px] font-medium leading-snug text-ink-700">
+              All five steps answered.
+            </p>
+            <button
+              type="button"
+              onClick={() => openStep('model', LEVEL_KEYS.indexOf('model'))}
+              className="shrink-0 rounded-[7px] px-2 py-1 text-[12px] font-semibold text-brand transition-colors hover:bg-surface"
+            >
+              Change model
+            </button>
+          </div>
         )}
       </div>
 
-      {/* ---- md and up: four equal cards ----------------------------------- */}
-      <ol className="hidden gap-2 p-3 md:grid md:grid-cols-4">
+      {/* ---- md and up: equal cards, one per step --------------------------
+          Five across only from lg. At md each card would be ~140px and the
+          model names inside them truncate to nothing, so the steps wrap to a
+          3+2 grid instead — still no scroller, every label still readable. */}
+      <ol className="hidden gap-2 p-3 md:grid md:grid-cols-3 lg:grid-cols-5">
         {FILTER_LEVELS.map((level, index) => {
-          const value = path[level.key];
-          const label = labels[level.key];
+          const value = answers[level.key];
+          const label = answerLabels[level.key];
           const { state, locked } = stateOf(level, index);
           const isOpen = openLevel === level.key;
 
@@ -218,7 +301,9 @@ export function TabWizard() {
             <li key={level.key} className="min-w-0">
               <div
                 className={cn(
-                  'group relative flex h-full items-center gap-3 rounded-[11px] border p-2.5 transition-[border-color,background] duration-[220ms]',
+                  // items-start: the value wraps to two lines, and a centred step
+                  // indicator beside a two-line value floats below its own label.
+                  'group relative flex h-full items-start gap-3 rounded-[11px] border p-2.5 transition-[border-color,background] duration-[220ms]',
                   value
                     ? 'border-ok/30 bg-ok-50/60'
                     : isOpen
@@ -234,7 +319,7 @@ export function TabWizard() {
                   disabled={locked}
                   aria-expanded={isOpen}
                   className={cn(
-                    'flex min-w-0 flex-1 items-center gap-3 text-left',
+                    'flex min-w-0 flex-1 items-start gap-3 text-left',
                     locked ? 'cursor-not-allowed' : 'cursor-pointer',
                   )}
                 >
@@ -251,7 +336,11 @@ export function TabWizard() {
                     </span>
                     <span
                       className={cn(
-                        'mt-0.5 block truncate font-display text-[13.5px] font-semibold',
+                        // Wraps rather than truncates: at lg the five columns
+                        // are ~190px, where "iPhone 15 Pro Max" and "Front
+                        // Camera" both clipped. Two lines, clamped, so a long
+                        // value cannot make one card taller than its row.
+                        'mt-0.5 line-clamp-2 block font-display text-[13.5px] font-semibold leading-snug',
                         value ? 'text-ink-900' : 'text-ink-300',
                       )}
                     >
@@ -294,9 +383,10 @@ export function TabWizard() {
           inSequence.current = false;
         }}
         level={openLevel}
+        label={openLevel ? FILTER_LEVELS.find((l) => l.key === openLevel)?.label : ''}
         title={openLevel ? `Select ${FILTER_LEVELS.find((l) => l.key === openLevel)?.label}` : ''}
         options={options}
-        selected={openLevel ? path[openLevel] : null}
+        selected={openLevel ? answers[openLevel] : null}
         onSelect={handleSelect}
       />
     </section>

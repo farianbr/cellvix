@@ -1,7 +1,7 @@
 /**
  * Seed content for the blog, the FAQ and the offers page.
  *
- * Written as trade copy for a Canadian parts wholesaler rather than lorem —
+ * Written as wholesale copy for a Canadian parts wholesaler rather than lorem —
  * the layouts have to be judged against text of a realistic length, and an
  * admin editing a seeded post should see the house voice, not filler.
  *
@@ -109,11 +109,11 @@ Photograph the diagnostic screen and open the claim through your account rep wit
       'Approved accounts can order on terms instead of prepaying. What the credit limit means, how the balance moves, and how to get a limit raised.',
     category: 'business-tips',
     tags: ['credit', 'accounts', 'invoicing'],
-    author: { name: 'Marc Deveau', role: 'Trade desk' },
+    author: { name: 'Marc Deveau', role: 'Sales desk' },
     status: 'published',
     publishedAt: daysAgo(21),
     isFeatured: false,
-    body: `Once your business is approved, the trade desk sets two things at the same time: a credit limit and payment terms. Both show on your dashboard under Credit.
+    body: `Once your business is approved, the sales desk sets two things at the same time: a credit limit and payment terms. Both show on your dashboard under Credit.
 
 ## The moving parts
 
@@ -126,7 +126,7 @@ Placing an order on terms increases your balance immediately. Paying an invoice 
 
 ## What happens at the limit
 
-An order that would take you past your available credit is not silently rejected at checkout. The trade desk sees it, and you will get a call the same business day with two options: pay down an invoice, or prepay this one order by card. Nothing gets stuck.
+An order that would take you past your available credit is not silently rejected at checkout. The sales desk sees it, and you will get a call the same business day with two options: pay down an invoice, or prepay this one order by card. Nothing gets stuck.
 
 ## Getting a limit raised
 
@@ -224,7 +224,7 @@ const GENERAL_FAQS = [
   {
     question: 'Do I need an account to see prices?',
     answer:
-      'Yes. Cellvix is wholesale-only, so trade pricing is visible to approved business accounts. Anyone can browse the full catalogue, search and read specifications without signing in — prices and ordering unlock once your business is approved.',
+      'Yes. Cellvix is wholesale-only, so pricing is visible to approved business accounts. Anyone can browse the full catalogue, search and read specifications without signing in — prices and ordering unlock once your business is approved.',
     category: 'ordering',
     order: 10,
   },
@@ -268,7 +268,7 @@ const GENERAL_FAQS = [
   {
     question: 'My application was rejected. What now?',
     answer:
-      'The rejection notice includes the reason. It is almost always missing or mismatched registration details rather than a decision about your business. Reply to the notice with the corrected information and the trade desk will re-open the review.',
+      'The rejection notice includes the reason. It is almost always missing or mismatched registration details rather than a decision about your business. Reply to the notice with the corrected information and the sales desk will re-open the review.',
     category: 'accounts',
     order: 30,
   },
@@ -291,7 +291,7 @@ const GENERAL_FAQS = [
   {
     question: 'How do payment terms work?',
     answer:
-      'Approved accounts are set to prepaid, Net 15, Net 30 or Net 60 by the trade desk. Ordering on terms raises an invoice with a due date and draws against your credit limit; the balance drops when the invoice is paid.',
+      'Approved accounts are set to prepaid, Net 15, Net 30 or Net 60 by the sales desk. Ordering on terms raises an invoice with a due date and draws against your credit limit; the balance drops when the invoice is paid.',
     category: 'pricing',
     order: 20,
   },
@@ -305,7 +305,7 @@ const GENERAL_FAQS = [
   {
     question: 'Do you offer volume pricing?',
     answer:
-      'Yes. Standing volume on a model family is priced by the trade desk rather than by a public tier table — send your rep the models and monthly quantities and you will get a quote against your own mix.',
+      'Yes. Standing volume on a model family is priced by the sales desk rather than by a public tier table — send your rep the models and monthly quantities and you will get a quote against your own mix.',
     category: 'pricing',
     order: 40,
   },
@@ -694,9 +694,9 @@ function buildOffers(products) {
     {
       title: '10% off your first order',
       slug: '10-off-first-order',
-      subtitle: 'For newly approved trade accounts',
+      subtitle: 'For newly approved wholesale accounts',
       description:
-        'Newly approved businesses get 10% off their first order, on anything in the catalogue. Applied by the trade desk when the order is picked.',
+        'Newly approved businesses get 10% off their first order, on anything in the catalogue. Applied by the sales desk when the order is picked.',
       kind: 'deal',
       badge: 'New accounts',
       accent: 'brand',

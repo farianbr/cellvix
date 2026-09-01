@@ -57,7 +57,7 @@ function requireAuth(req, _res, next) {
 }
 
 /**
- * The B2B approval gate. Trade pricing and ordering stay locked until an admin
+ * The B2B approval gate. Wholesale pricing and ordering stay locked until an admin
  * approves the business (brief §8.2).
  */
 function requireApproved(req, _res, next) {
@@ -177,7 +177,7 @@ function isStaffAccount(user) {
   return Boolean(user && (user.role === 'admin' || user.role === 'staff'));
 }
 
-/** True when this requester may see trade pricing. Used by the product serializer. */
+/** True when this requester may see wholesale pricing. Used by the product serializer. */
 function canSeePricing(user) {
   return Boolean(user && user.status === 'approved');
 }

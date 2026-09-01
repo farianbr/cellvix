@@ -391,7 +391,7 @@ const bulkUpdateOrderStatus = asyncHandler(async (req, res) => {
  * Same per-response CSP as the buyer-facing route: Helmet's global policy
  * forbids inline script, the page needs exactly one line of it for the print
  * button, and loosening the policy app-wide to serve one document would be the
- * wrong trade. Nothing loads; the one nonced script may run.
+ * wrong tradeoff. Nothing loads; the one nonced script may run.
  */
 const invoiceDocument = asyncHandler(async (req, res) => {
   const nonce = randomBytes(16).toString('base64');

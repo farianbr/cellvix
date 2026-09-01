@@ -3,9 +3,13 @@ import {
   CreditCard,
   FileText,
   Gift,
+  History,
   LayoutDashboard,
   MapPin,
   Package,
+  Receipt,
+  Settings,
+  ShoppingCart,
   Wallet,
   Zap,
 } from 'lucide-react';
@@ -13,7 +17,7 @@ import {
 /**
  * Icon registry for ACCOUNT_NAV, whose `icon` is a string in the shared schema.
  * One registry so the sidebar and the header dropdown cannot drift, and so the
- * bundle takes nine icons rather than all of lucide.
+ * bundle takes thirteen icons rather than all of lucide.
  */
 const REGISTRY = {
   LayoutDashboard,
@@ -25,6 +29,10 @@ const REGISTRY = {
   CreditCard,
   Building2,
   Gift,
+  History,
+  Receipt,
+  Settings,
+  ShoppingCart,
 };
 
 export function accountIcon(name) {

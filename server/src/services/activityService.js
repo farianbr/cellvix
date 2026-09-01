@@ -44,6 +44,25 @@ function creditTitle(credit, forBuyer) {
 }
 
 /**
+ * The kinds a row can carry, grouped the way a buyer thinks about them rather
+ * than the way they are stored. `order` covers both placing an order and every
+ * status step after it, because "show me my orders" means both — splitting them
+ * into two filters would make a filter for "order" that hides half the orders.
+ *
+ * Exported so the client's filter menu and the server's validation are built
+ * from one list and cannot drift into disagreeing about what is filterable.
+ */
+const ACTIVITY_GROUPS = {
+  order: ['order', 'order-status'],
+  invoice: ['invoice', 'receipt'],
+  payment: ['payment', 'void'],
+  credit: ['credit'],
+};
+
+/** Every group key, plus `all`. The filter menu's options. */
+const ACTIVITY_FILTERS = ['all', ...Object.keys(ACTIVITY_GROUPS)];
+
+/**
  * @param {string|object} userId
  * @param {object}  [options]
  * @param {number}  [options.limit]     events returned after merging
@@ -144,7 +163,77 @@ async function activityFeed(userId, { limit = 80, perSource = 40, forBuyer = fal
   return { activity: events.slice(0, limit) };
 }
 
-exports.default = { activityFeed };
+/**
+ * The same feed, filtered and cut into pages.
+ *
+ * **Why the paging happens here and not in Mongo.** The feed is a merge of
+ * three collections, and a single event can be a sub-document (an order's
+ * timeline step, an invoice's payment row) rather than a document — so there is
+ * no one collection to `.skip()` on and no way to ask the database for "page 3
+ * of the merged list". The merge has to happen first, which means the whole
+ * window is assembled and then sliced.
+ *
+ * That is only safe because the window is bounded: `perSource` is raised to
+ * `WINDOW` here rather than left at the 40 the summary uses, so a filtered view
+ * still has enough rows behind it to fill several pages, and `total` is the
+ * count of what matched inside that window. This is an account's own history —
+ * hundreds of rows at the top end, not millions. If an account ever outgrows
+ * the window, the fix is a real `Activity` collection written at the point each
+ * event happens, not a bigger number here.
+ */
+const WINDOW = 400;
+
+async function pagedActivityFeed(
+  userId,
+  { kind = 'all', from = null, to = null, page = 1, limit = 20, forBuyer = false } = {},
+) {
+  const { activity } = await activityFeed(userId, {
+    limit: WINDOW,
+    perSource: WINDOW,
+    forBuyer,
+  });
+
+  const kinds = ACTIVITY_GROUPS[kind] ?? null;
+
+  // Dates arrive as `YYYY-MM-DD`. `from` is the start of that day and `to` the
+  // end of it, so picking the same date for both returns that day rather than
+  // an empty range.
+  const fromTime = from ? new Date(`${from}T00:00:00.000Z`).getTime() : null;
+  const toTime = to ? new Date(`${to}T23:59:59.999Z`).getTime() : null;
+
+  const matched = activity.filter((event) => {
+    if (kinds && !kinds.includes(event.kind)) return false;
+    if (fromTime == null && toTime == null) return true;
+
+    const at = new Date(event.at).getTime();
+    if (Number.isNaN(at)) return false;
+    if (fromTime != null && at < fromTime) return false;
+    if (toTime != null && at > toTime) return false;
+    return true;
+  });
+
+  const pageSize = Math.min(100, Math.max(1, Number(limit) || 20));
+  const pages = Math.max(1, Math.ceil(matched.length / pageSize));
+  // A filter that shrinks the list under the current page would otherwise leave
+  // the buyer on an empty page 6 with no way back except paging down by hand.
+  const pageNumber = Math.min(Math.max(1, Number(page) || 1), pages);
+  const start = (pageNumber - 1) * pageSize;
+
+  return {
+    activity: matched.slice(start, start + pageSize),
+    total: matched.length,
+    page: pageNumber,
+    pages,
+    // What the window held before filtering — the count the "N of M" line reads
+    // against, so a filtered view can say what it is filtering out of.
+    unfiltered: activity.length,
+  };
+}
+
+exports.default = { activityFeed, pagedActivityFeed, ACTIVITY_FILTERS, ACTIVITY_GROUPS };
 
 // --- CommonJS exports -------------------------------------------------
 exports.activityFeed = activityFeed;
+exports.pagedActivityFeed = pagedActivityFeed;
+exports.ACTIVITY_FILTERS = ACTIVITY_FILTERS;
+exports.ACTIVITY_GROUPS = ACTIVITY_GROUPS;

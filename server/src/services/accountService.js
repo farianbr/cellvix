@@ -7,7 +7,7 @@ const { default: ApiError } = require('../utils/ApiError.js');
 const storeCredit = require('./storeCreditService.js');
 const payment = require('./payment.js');
 const invoicePaymentService = require('./invoicePaymentService.js');
-const { activityFeed } = require('./activityService.js');
+const { activityFeed, pagedActivityFeed } = require('./activityService.js');
 const { serializeOrder } = require('./orderService.js');
 const { serialize: serializeProduct } = require('./productService.js');
 const { renderInvoiceHtml } = require('./invoiceDocument.js');
@@ -548,7 +548,7 @@ async function payInvoice(user, number, { useStoreCredit, poNumber } = {}) {
  * `User.balance` is a single rolled-up number with nothing linking it to the
  * records that produced it, so "pay the balance" means settling the amounts
  * behind it: every `due` record on terms, **oldest first**, which is the order
- * a trade account expects and the order that clears the oldest ageing first.
+ * a wholesale account expects and the order that clears the oldest ageing first.
  *
  * One charge covers the lot and is then allocated across the records, rather
  * than one charge per record — a buyer clicking `Pay all` expects one line on
@@ -633,6 +633,16 @@ async function activity(userId, { limit = 40 } = {}) {
 }
 
 /**
+ * The activity page's feed: the same history, filtered by kind and date and cut
+ * into pages. `activity` above stays as it is — the dashboard's "recent
+ * activity" panel wants the last few events and nothing else, and giving it a
+ * paginated envelope it would immediately throw away is worse than two callers.
+ */
+async function activityPage(userId, params = {}) {
+  return pagedActivityFeed(userId, { ...params, forBuyer: true });
+}
+
+/**
  * The buyer's own referral standing: their code, the rate, who they brought and
  * what that has earned them.
  *
@@ -662,4 +672,5 @@ exports.rechargeStoreCredit = rechargeStoreCredit;
 exports.payInvoice = payInvoice;
 exports.payOffCredit = payOffCredit;
 exports.activity = activity;
+exports.activityPage = activityPage;
 exports.referrals = referrals;

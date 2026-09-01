@@ -328,7 +328,7 @@ export function AdminBusinessReportPage() {
           </div>
 
           <div className="mb-3 grid gap-3 lg:grid-cols-2">
-            <Panel title="Units sold" description="Items shipped in the period, by part type.">
+            <Panel title="Units sold" description="Items shipped in the period, by component type.">
               {/* Sub-tiles for the top two categories, as §6.11 asks. */}
               <div className="mb-3 grid grid-cols-2 gap-2">
                 {(data.topCategories ?? []).slice(0, 2).map((row) => (

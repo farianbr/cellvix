@@ -12,7 +12,7 @@ const AuthContext = createContext(null);
  * Three states matter across the whole UI:
  *   guest     — prices hidden, "Login to view" gate on every card
  *   pending   — signed in, still gated, shown "your account is under review"
- *   approved  — full trade pricing and ordering
+ *   approved  — full wholesale pricing and ordering
  */
 export function AuthProvider({ children }) {
   const queryClient = useQueryClient();

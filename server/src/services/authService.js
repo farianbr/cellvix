@@ -1,3 +1,4 @@
+const crypto = require('node:crypto');
 const jwt = require('jsonwebtoken');
 const { default: User } = require('../models/User.js');
 const { default: Supplier } = require('../models/Supplier.js');
@@ -5,7 +6,8 @@ const { default: ApiError } = require('../utils/ApiError.js');
 const { default: env } = require('../config/env.js');
 const referralService = require('./referralService.js');
 const notificationService = require('./notificationService.js');
-const { sendWelcomeEmail } = require('./welcomeMail.js');
+const { sendWelcomeEmail, sendPasswordResetEmail } = require('./welcomeMail.js');
+const { displayNameOf } = require('../utils/displayName.js');
 
 // "Remember me" drives a long-lived cookie so the buyer is auto-signed-in on
 // return visits (brief §8.1).
@@ -59,16 +61,29 @@ async function register(data, { ip } = {}) {
     businessType: data.businessType,
     website: data.website,
     taxId: data.taxId,
-    // Every new B2B account starts gated. An admin unlocks trade pricing.
+    // Every new B2B account starts gated. An admin unlocks wholesale pricing.
     status: 'pending',
     role: 'buyer',
-    // CASL (§6.13). Opening a trade account is implied consent under s.10(9)
+    // CASL (§6.13). Opening a wholesale account is implied consent under s.10(9)
     // for messages about the business relationship — recorded explicitly, with
     // its source and the IP it came from, because an implied basis nobody
     // wrote down is one nobody can defend later. The buyer can withdraw it at
     // any time through the unsubscribe link, which sets `unsubscribedAt` and
     // outranks this.
     marketingConsent: { granted: true, source: 'registration', at: new Date(), ip },
+    // The narrower question of which channels they actively ticked. Written
+    // only when the form sent something: an untouched control must leave the
+    // field unset — "never asked" and "asked and declined every channel" are
+    // different facts, and the model's read path relies on the difference.
+    ...(data.contactConsent
+      ? {
+          contactConsent: {
+            ...data.contactConsent,
+            at: new Date(),
+            source: 'registration',
+          },
+        }
+      : {}),
     // Set once, at signup, and never editable afterwards (§6.13) — a referrer
     // that can be changed later is a way to redirect money already earned.
     referredBy,
@@ -88,9 +103,9 @@ async function register(data, { ip } = {}) {
   await notificationService.emit({
     type: 'new_registration',
     severity: 'info',
-    title: `${user.businessName} registered`,
+    title: `${displayNameOf(user)} registered`,
     detail: `${user.contactName} · ${user.email} · awaiting approval`,
-    entity: { kind: 'user', id: user._id.toString(), label: user.businessName },
+    entity: { kind: 'user', id: user._id.toString(), label: displayNameOf(user) },
     href: `/admin/clients/${user._id}`,
   });
 
@@ -237,6 +252,92 @@ async function login({ email, password }) {
   return user;
 }
 
+/**
+ * How long a reset link is good for.
+ *
+ * An hour: long enough to walk away from the desk and come back, short enough
+ * that a link sitting in a mailbox somebody else later reads is usually dead.
+ */
+const RESET_TTL_MS = 60 * 60 * 1000;
+
+/** `sha256(token)` — what is stored, so a database dump holds no usable link. */
+function hashResetToken(token) {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
+/**
+ * Starts a password reset.
+ *
+ * **Always resolves the same way**, whether or not the address is registered.
+ * The caller returns 204 regardless: an endpoint that answered differently for
+ * a known address would be a way to ask "does this business buy from Cellvix",
+ * which is the same reason `applyAsSupplier` is silent.
+ *
+ * A staff account is deliberately included — staff sign in through the same
+ * form, and excluding them would leak which addresses are staff.
+ */
+async function forgotPassword({ email }, { origin } = {}) {
+  const user = await User.findOne({ email });
+  // No account: return quietly, having done nothing. Deliberately not an error.
+  if (!user) return;
+
+  // A suspended or rejected account must not be able to let itself back in.
+  // Silent for the same reason as above — the reply cannot say which it was.
+  if (user.status === 'suspended' || user.status === 'rejected' || user.lockedAt) return;
+
+  // 32 random bytes. The email carries this; only its hash is stored, and
+  // issuing a new link invalidates any previous one because there is one slot.
+  const token = crypto.randomBytes(32).toString('base64url');
+  user.resetTokenHash = hashResetToken(token);
+  user.resetTokenAt = new Date(Date.now() + RESET_TTL_MS);
+  await user.save();
+
+  await sendPasswordResetEmail({
+    user,
+    token,
+    origin: origin || env.publicOrigin,
+    expiresMinutes: Math.round(RESET_TTL_MS / 60000),
+  });
+}
+
+/**
+ * Completes a password reset.
+ *
+ * The token is the entire authorisation, so every check that makes it safe
+ * lives here: it must hash to a stored value, must not have expired, and is
+ * destroyed on use so the link cannot be replayed.
+ *
+ * The token is looked up **by its hash**, which is also what makes the lookup
+ * constant-work — there is no partial match to time.
+ */
+async function resetPassword({ token, password }) {
+  const user = await User.findOne({ resetTokenHash: hashResetToken(token) }).select(
+    '+resetTokenHash +resetTokenAt',
+  );
+
+  const invalid = ApiError.badRequest(
+    'That reset link is no longer valid. Request a new one.',
+    'RESET_TOKEN_INVALID',
+  );
+
+  if (!user) throw invalid;
+  if (!user.resetTokenAt || user.resetTokenAt.getTime() < Date.now()) {
+    // Expired links are cleared rather than left to be retried forever.
+    user.resetTokenHash = undefined;
+    user.resetTokenAt = undefined;
+    await user.save();
+    throw invalid;
+  }
+
+  await user.setPassword(password);
+  // Single use: the link dies with the reset it performed.
+  user.resetTokenHash = undefined;
+  user.resetTokenAt = undefined;
+  await user.save();
+
+  return user;
+}
+
 // --- CommonJS exports -------------------------------------------------
 exports.issueSession = issueSession;
 exports.clearSession = clearSession;
@@ -244,3 +345,5 @@ exports.register = register;
 exports.applyAsSupplier = applyAsSupplier;
 exports.findForAudit = findForAudit;
 exports.login = login;
+exports.forgotPassword = forgotPassword;
+exports.resetPassword = resetPassword;

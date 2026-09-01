@@ -40,6 +40,7 @@ const {
   loginSchema,
   registerSchema,
   forgotPasswordSchema,
+  resetPasswordSchema,
   supplierApplicationSchema,
 } = require('../../../shared/schemas/auth.js');
 const {
@@ -81,6 +82,14 @@ router.post(
   authLimiter,
   validate(forgotPasswordSchema),
   authController.forgotPassword,
+);
+// Completing the reset. Rate-limited like the request half: the token is the
+// whole authorisation, so this is the endpoint somebody would guess against.
+router.post(
+  '/auth/reset-password',
+  authLimiter,
+  validate(resetPasswordSchema),
+  authController.resetPassword,
 );
 // Creates no account, so it sits with auth rather than under /admin: it is the
 // other half of the storefront sign-up. Rate-limited like every other
@@ -136,7 +145,7 @@ router.delete('/cart/bundles/:offerId', requireAuth, denyAdmin, requireApproved,
 router.post('/cart/promo', requireAuth, denyAdmin, requireApproved, validate(promoCodeSchema), cartController.applyPromo);
 router.delete('/cart/promo', requireAuth, denyAdmin, requireApproved, cartController.clearPromo);
 
-// Saved carts and the quick order pad need trade pricing, so they are gated.
+// Saved carts and the quick order pad need wholesale pricing, so they are gated.
 router.get('/cart/saved', requireAuth, denyAdmin, requireApproved, cartController.listSaved);
 router.post('/cart/saved/:savedCartId/restore', requireAuth, denyAdmin, requireApproved, cartController.restoreSaved);
 router.delete('/cart/saved/:savedCartId', requireAuth, denyAdmin, requireApproved, cartController.deleteSaved);
@@ -186,6 +195,12 @@ router.post('/account/credit/payoff', ...account, validate(creditPayoffSchema), 
 // The account's own history — the same feed the admin client profile reads, so
 // a buyer and their account rep are never looking at two different stories.
 router.get('/account/activity', ...account, accountController.activity);
+
+// The same history, filtered and paged, for the activity screen. A separate
+// route rather than query params on the one above so the dashboard's panel and
+// the page cannot break each other: the panel wants the last few events, the
+// page wants an envelope with counts in it.
+router.get('/account/activity/history', ...account, accountController.activityPage);
 
 // The buyer's referral standing (§6.13). Read-only: a code is minted at
 // approval and a commission is earned by a payment, so there is nothing here

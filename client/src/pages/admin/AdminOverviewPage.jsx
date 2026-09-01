@@ -545,7 +545,7 @@ export function AdminOverviewPage() {
           Cards rather than a list, and the approval happens **here**.
 
           Each waiting business is a decision, not a row of text: the operator
-          needs the trade it is in, who to call and how long it has been sitting
+          needs the industry it is in, who to call and how long it has been sitting
           before they can answer. So each card leads with an avatar and the
           business name, states the contact channels as their own labelled
           lines, and marks anything waiting over a week — the queue's real

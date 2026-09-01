@@ -343,7 +343,7 @@ const EXPENSE_PLANS = [
   { daysAgo: 15, description: 'Commercial general liability premium', slug: 'insurance', payee: 'Northgate Insurance', method: 'Cheque', amount: 214_500, tax: 0, status: 'paid' },
   { daysAgo: 18, description: 'Bookkeeping — quarterly review', slug: 'professional-fees', payee: 'Roy & Associates', method: 'e-Transfer', amount: 95_000, tax: 10_929, status: 'pending' },
   { daysAgo: 21, description: 'Business account monthly fees', slug: 'bank-charges', payee: 'RBC', method: 'Direct debit', amount: 6_500, tax: 0, status: 'paid' },
-  { daysAgo: 24, description: 'Trade directory listing', slug: 'marketing', payee: 'RepairBiz Directory', method: 'Credit card', amount: 45_000, tax: 5_177, status: 'paid' },
+  { daysAgo: 24, description: 'Supplier directory listing', slug: 'marketing', payee: 'RepairBiz Directory', method: 'Credit card', amount: 45_000, tax: 5_177, status: 'paid' },
   { daysAgo: 27, description: 'Anti-static bags and labels', slug: 'supplies', payee: 'Rivet Tools & Consumables', method: 'Credit card', amount: 28_400, tax: 3_268, status: 'paid' },
   { daysAgo: 33, description: 'Staff wages — bi-weekly', slug: 'salaries', payee: 'Payroll', method: 'Direct deposit', amount: 1_240_000, tax: 0, status: 'paid' },
   { daysAgo: 41, description: 'Warehouse rent — previous month', slug: 'rent', payee: 'Meadowvale Holdings', method: 'Pre-authorised debit', amount: 385_000, tax: 0, status: 'paid' },

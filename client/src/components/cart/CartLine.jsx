@@ -3,7 +3,7 @@ import { AlertTriangle, Trash2 } from 'lucide-react';
 import cn from '@/lib/cn';
 import { money, productTitle } from '@/lib/format';
 import QtyStepper from '@/components/product/QtyStepper';
-import PartIllustration from '@/components/product/PartIllustration';
+import { PartVisual } from '@/components/product/PartFrame';
 import Badge from '@/components/ui/Badge';
 
 /**
@@ -24,11 +24,7 @@ export function CartLine({ item, onQtyChange, onRemove, compact = false }) {
           compact ? 'size-16 p-2' : 'size-20 p-2.5 sm:size-24 sm:p-3',
         )}
       >
-        {item.image ? (
-          <img src={item.image} alt="" className="size-full object-contain" loading="lazy" />
-        ) : (
-          <PartIllustration partType={item.partType} label={item.partTypeLabel} />
-        )}
+        <PartVisual product={item} />
       </Link>
 
       <div className="min-w-0 flex-1">

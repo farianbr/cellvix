@@ -4,7 +4,7 @@ import { Search, X } from 'lucide-react';
 import cn from '@/lib/cn';
 import { money } from '@/lib/format';
 import Skeleton from '@/components/ui/Skeleton';
-import PartIllustration from '@/components/product/PartIllustration';
+import { PartVisual } from '@/components/product/PartFrame';
 import { useSearchSuggestions } from '@/hooks/useCatalog';
 import useDebouncedValue from '@/hooks/useDebouncedValue';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
@@ -79,7 +79,7 @@ export function ProductPicker({ value, onChange, label, autoFocus = false, class
         )}
       >
         <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-line bg-surface p-1">
-          <PartIllustration partType={value.partType} />
+          <PartVisual product={value} />
         </span>
 
         <span className="min-w-0 flex-1">
@@ -196,7 +196,7 @@ export function ProductPicker({ value, onChange, label, autoFocus = false, class
                     )}
                   >
                     <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-line bg-surface-2 p-1">
-                      <PartIllustration partType={product.partType} />
+                      <PartVisual product={product} />
                     </span>
 
                     <span className="min-w-0 flex-1">

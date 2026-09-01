@@ -21,7 +21,7 @@ import { useAdminTaxonomy, useAdminMutations } from '@/hooks/useAdmin';
 /**
  * The taxonomy editor (§6.15 — CellShoppe's *Device & Models*, phase 11d).
  *
- * **Aliases are what this screen is for.** A trade buyer types `15 PM` or
+ * **Aliases are what this screen is for.** A business buyer types `15 PM` or
  * `iphone15pm`, and a catalogue that only matches "iPhone 15 Pro Max" returns
  * nothing for the way its users actually type. Aliases live on the model, so
  * one entry covers every part that fits that phone.

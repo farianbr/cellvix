@@ -12,10 +12,14 @@ const orderItemSchema = new mongoose.Schema(
     // Kept so the order history can render the same part illustration as the grid.
     partType: String,
     partTypeLabel: String,
+    // Snapshotted alongside them for the same reason: the storefront picks a
+    // part's stock photo from brand + part type, and an order placed today
+    // should keep showing the picture it showed when it was placed.
+    brandSlug: String,
     qty: { type: Number, required: true },
     // Always the LIST price. Savings live in `bundleDiscount` / `promoDiscount`
     // rather than being folded in here, so an invoice can show what a part costs
-    // and what came off it — which is what a trade buyer reconciles against.
+    // and what came off it — which is what a business buyer reconciles against.
     unitPrice: { type: Number, required: true },
     lineTotal: { type: Number, required: true },
 

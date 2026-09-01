@@ -224,7 +224,7 @@ function shapeApplied(offer, result, { automatic }) {
  * `subtotal` is always the LIST value of everything in the cart. Savings are
  * reported separately as `bundleDiscount` and `promoDiscount` rather than folded
  * into line prices, so an order and its invoice can show what a part costs and
- * what was taken off it — which is what a trade buyer reconciles against.
+ * what was taken off it — which is what a business buyer reconciles against.
  */
 async function priceCart(cart, user, { deliveryCode = 'ground' } = {}) {
   // ---- individual lines ---------------------------------------------------
@@ -246,6 +246,9 @@ async function priceCart(cart, user, { deliveryCode = 'ground' } = {}) {
       grade: product.grade,
       partType: product.partType,
       partTypeLabel: product.partTypeLabel,
+      // Carried so the storefront can pick the brand's stock photo for this
+      // part type — see client/src/lib/partPhoto.js.
+      brandSlug: product.brandSlug ?? null,
       modelName: product.modelName,
       qty: cartItem.qty,
       unitPrice: product.price,
@@ -439,6 +442,7 @@ async function expandBundles(cart, _user) {
         grade: product.grade,
         partType: product.partType,
         partTypeLabel: product.partTypeLabel,
+        brandSlug: product.brandSlug ?? null,
         qty,
         unitPrice: product.price,
         lineTotal: product.price * qty,

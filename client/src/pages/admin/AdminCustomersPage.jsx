@@ -81,7 +81,7 @@ const CREATE_STATUS = [
  * account entered ahead of its paperwork.
  *
  * Credit terms sit beside the status for the same reason `ApproveClientForm`
- * carries them: deciding to trade with a business and deciding what credit to
+ * carries them: deciding to do business with a company and deciding what credit to
  * extend it is one decision.
  */
 /**
@@ -280,7 +280,7 @@ function ClientForm({ onSubmit, onCancel, isPending, error }) {
 
       <p className="rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12.5px] leading-relaxed text-ink-500">
         {status === 'approved'
-          ? 'This account can sign in, see trade pricing and order straight away.'
+          ? 'This account can sign in, see wholesale pricing and order straight away.'
           : 'This account can sign in and browse, but sees no prices and cannot order until it is approved.'}{' '}
         A password is generated on save and emailed to {watch('email') || 'the address above'} with
         the sign-in link, so there is nothing to pass on by hand.
@@ -435,7 +435,7 @@ export function AdminCustomersPage() {
        * The client asked for a "tag". The account model has no free-text tag
        * field, and inventing one that nothing writes would be a column of
        * dashes; `businessType` is the label the account already carries — the
-       * trade it is in, set at registration or on the create form — and it is
+       * industry it is in, set at registration or on the create form — and it is
        * what a tag on a customer would have said anyway.
        */
       key: 'businessType',
@@ -819,7 +819,7 @@ export function AdminCustomersPage() {
         title="Account created, but the email did not send"
         body={
           mailWarning
-            ? `${mailWarning.businessName} exists and can be approved and traded with as normal. What did not reach ${mailWarning.email} is the message carrying their password.`
+            ? `${mailWarning.businessName} exists and can be approved and dealt with as normal. What did not reach ${mailWarning.email} is the message carrying their password.`
             : ''
         }
         consequence="They cannot sign in until they have credentials. Check the mail settings, then delete this account and create it again so a fresh email goes out."
@@ -845,7 +845,7 @@ export function AdminCustomersPage() {
         }
         body={
           bulkConfirm === 'suspended'
-            ? 'They keep their carts and their history, but none of them can place an order or see trade pricing until they are reinstated.'
+            ? 'They keep their carts and their history, but none of them can place an order or see wholesale pricing until they are reinstated.'
             : 'Pending registrations in the selection are left alone: approving sets a credit limit and terms, and that is done one business at a time from the approvals queue.'
         }
         tone={bulkConfirm === 'suspended' ? 'danger' : 'info'}

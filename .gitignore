@@ -5,6 +5,7 @@ client/node_modules/
 # build output
 dist/
 .vite/
+deploy/
 
 # secrets — .env holds live Atlas credentials and the JWT secret.
 # Only .env.example is tracked.

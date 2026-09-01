@@ -63,12 +63,12 @@ const PRINCIPLES = [
   {
     icon: Wrench,
     title: 'Built for repair shops',
-    body: 'Trade pricing, credit terms and a quick order pad — because you are ordering forty lines on a Tuesday, not browsing.',
+    body: 'Wholesale pricing, credit terms and a quick order pad — because you are ordering forty lines on a Tuesday, not browsing.',
   },
   {
     icon: ShieldCheck,
     title: 'Backed for 90 days',
-    body: 'New and OEM parts carry a 90-day warranty, handled by the same trade desk that took the order. No ticket queue.',
+    body: 'New and OEM parts carry a 90-day warranty, handled by the same sales desk that took the order. No ticket queue.',
   },
 ];
 
@@ -85,7 +85,7 @@ const TIMELINE = [
   },
   {
     step: 'Today',
-    title: 'A trade catalogue you can order from in two minutes',
+    title: 'A wholesale catalogue you can order from in two minutes',
     body: 'Four-level filtering, live stock, credit terms and same-day dispatch — for verified businesses only.',
   },
 ];
@@ -100,7 +100,7 @@ const GRADE_MEANING = {
 
 /* --------------------------------------------------------------------------
    Hero artwork. Cellvix has supplied no photography (PROGRESS.md open question
-   #6), and the register of this page is a trade supplier's bench, not a stock
+   #6), and the register of this page is a wholesale supplier's bench, not a stock
    photo of a smiling warehouse. Drawn on tokens, so it recolours with the
    palette and stays crisp at any width.
    -------------------------------------------------------------------------- */
@@ -303,7 +303,7 @@ function Hero() {
             <span className="text-ink-200" aria-hidden="true">
               ·
             </span>
-            Trade accounts only
+            Wholesale accounts only
           </p>
         </div>
       </Reveal>
@@ -603,7 +603,7 @@ function ClosingCta() {
             id="cta-heading"
             className="max-w-2xl text-[28px] leading-[1.06] tracking-[-0.03em] text-white sm:text-[38px] lg:text-[46px]"
           >
-            Open a trade account
+            Open a wholesale account
           </h2>
           <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-white/75">
             Wholesale pricing, credit terms and same-day dispatch. Accounts are verified by our team
@@ -623,7 +623,7 @@ function ClosingCta() {
             to="/contact"
             className="inline-flex h-13 items-center rounded-[12px] border border-white/35 px-7 font-display text-[15px] font-semibold text-white transition-colors hover:bg-white/10"
           >
-            Talk to the trade desk
+            Talk to the sales desk
           </Link>
         </div>
       </Reveal>

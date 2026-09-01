@@ -101,7 +101,7 @@ export function ApproveClientForm({ user, onSubmit, onCancel, isPending, error }
       </fieldset>
 
       <p className="rounded-[10px] bg-brand-50 px-3 py-2.5 text-[12.5px] text-brand-700">
-        Approving unlocks trade pricing, ordering and the account dashboard for this business.
+        Approving unlocks wholesale pricing, ordering and the account dashboard for this business.
       </p>
 
       <div className="flex justify-end gap-2 pt-1">

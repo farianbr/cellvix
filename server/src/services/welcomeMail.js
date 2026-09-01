@@ -2,6 +2,7 @@ const crypto = require('node:crypto');
 const { default: env } = require('../config/env.js');
 const { sendMail } = require('./mailer.js');
 const { BUSINESS_INFO } = require('../../../shared/business.js');
+const { displayNameOf } = require('../utils/displayName.js');
 
 /**
  * The welcome email, for both ways an account comes into being.
@@ -19,7 +20,7 @@ const { BUSINESS_INFO } = require('../../../shared/business.js');
  * plaintext in the recipient's mailbox and on any server that relays it, so the
  * password remains readable there for as long as the message is kept. The email
  * therefore tells the customer to change it and links straight to the page
- * where they can. If that trade is ever revisited, the fix is a one-time
+ * where they can. If that tradeoff is ever revisited, the fix is a one-time
  * set-password link — the customer sets a secret that was never transmitted —
  * and this file is the only place that would need to change.
  *
@@ -133,8 +134,8 @@ function renderHtml({ user, password, origin, approved }) {
           <p style="margin:12px 0 0;font:400 14px/1.65 ${body};color:${ink500};">
             ${
               password
-                ? `We have opened a wholesale account for <strong style="color:${ink900};font-weight:600;">${escapeHtml(user.businessName)}</strong>. Everything you need to sign in is below.`
-                : `We have received the application for <strong style="color:${ink900};font-weight:600;">${escapeHtml(user.businessName)}</strong> and our team is reviewing it now.`
+                ? `We have opened a wholesale account for <strong style="color:${ink900};font-weight:600;">${escapeHtml(displayNameOf(user))}</strong>. Everything you need to sign in is below.`
+                : `We have received the application for <strong style="color:${ink900};font-weight:600;">${escapeHtml(displayNameOf(user))}</strong> and our team is reviewing it now.`
             }
           </p>
         </td></tr>
@@ -178,8 +179,8 @@ function renderHtml({ user, password, origin, approved }) {
             <tr><td style="padding-top:20px;font:400 13.5px/1.65 ${body};color:${ink500};">
               ${
                 approved
-                  ? 'Your account is approved, so trade pricing and ordering are live the moment you sign in.'
-                  : 'Approval usually takes one business day. You can sign in and browse now; trade pricing and ordering unlock once our team has verified your business.'
+                  ? 'Your account is approved, so wholesale pricing and ordering are live the moment you sign in.'
+                  : 'Approval usually takes one business day. You can sign in and browse now; wholesale pricing and ordering unlock once our team has verified your business.'
               }
             </td></tr>
           </table>
@@ -216,8 +217,8 @@ function renderText({ user, password, origin, approved }) {
     password ? 'Your Cellvix account is ready' : 'Thanks for signing up to Cellvix',
     '',
     password
-      ? `We have opened a wholesale account for ${user.businessName}.`
-      : `We have received the application for ${user.businessName} and our team is reviewing it now.`,
+      ? `We have opened a wholesale account for ${displayNameOf(user)}.`
+      : `We have received the application for ${displayNameOf(user)} and our team is reviewing it now.`,
     '',
   ];
 
@@ -240,8 +241,8 @@ function renderText({ user, password, origin, approved }) {
   lines.push(
     '',
     approved
-      ? 'Your account is approved, so trade pricing and ordering are live the moment you sign in.'
-      : 'Approval usually takes one business day. You can sign in and browse now; trade pricing and ordering unlock once our team has verified your business.',
+      ? 'Your account is approved, so wholesale pricing and ordering are live the moment you sign in.'
+      : 'Approval usually takes one business day. You can sign in and browse now; wholesale pricing and ordering unlock once our team has verified your business.',
     '',
     `${BUSINESS_INFO.name} · ${BUSINESS_INFO.address.city}, ${BUSINESS_INFO.address.region}`,
     'Reply to this email and it reaches our team.',
@@ -277,7 +278,112 @@ async function sendWelcomeEmail({ user, password = null }) {
   }
 }
 
+/**
+ * The password reset email.
+ *
+ * Lives here rather than in its own file because it shares this one's palette,
+ * shell and the "never throws" contract — the account state is already written
+ * by the time it runs, and a dead SMTP host must not turn a reset request into
+ * an error the caller reports back to a form.
+ *
+ * **The link is the secret.** Unlike the welcome mail there is no password in
+ * the body: the token in the URL is single-use and expires, so a message left
+ * sitting in a mailbox stops working on its own. The copy says so, because a
+ * reset link that arrived unrequested is how somebody learns an attacker has
+ * their address.
+ */
+async function sendPasswordResetEmail({ user, token, origin, expiresMinutes = 60 }) {
+  if (!user?.email || !token) return { delivered: false, via: 'outbox' };
+
+  try {
+    const base = origin || env.publicOrigin;
+    const link = `${base}/reset-password?token=${encodeURIComponent(token)}`;
+
+    const body = `'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,Arial,sans-serif`;
+    const ink900 = '#18181b';
+    const ink500 = '#5c5c66';
+    const ink300 = '#9b9ba5';
+
+    const html = `<!doctype html>
+<html><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /></head>
+<body style="margin:0;padding:24px 12px;background:#f4f4f5;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:14px;overflow:hidden;">
+      <tr><td style="padding:28px 36px 0;">
+        <p style="margin:0;font:700 17px/1.3 ${body};color:${ink900};">
+          ${escapeHtml(BUSINESS_INFO.name)}
+        </p>
+      </td></tr>
+
+      <tr><td style="padding:20px 36px 0;">
+        <h1 style="margin:0 0 10px;font:700 20px/1.3 ${body};color:${ink900};">Reset your password</h1>
+        <p style="margin:0;font:400 14px/1.7 ${body};color:${ink500};">
+          Somebody asked to reset the password for
+          <strong style="color:${ink900};font-weight:600;">${escapeHtml(user.email)}</strong>.
+          Use the button below within ${expiresMinutes} minutes.
+        </p>
+      </td></tr>
+
+      <tr><td style="padding:22px 36px 0;">
+        <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+          <td style="border-radius:10px;background:#CF3429;">
+            <a href="${link}" style="display:inline-block;padding:12px 22px;font:600 14px/1 ${body};color:#ffffff;text-decoration:none;">
+              Choose a new password
+            </a>
+          </td>
+        </tr></table>
+      </td></tr>
+
+      <tr><td style="padding:18px 36px 28px;">
+        <p style="margin:0 0 10px;font:400 12.5px/1.7 ${body};color:${ink500};">
+          If the button does not work, paste this into your browser:<br />
+          <span style="color:#CF3429;word-break:break-all;">${escapeHtml(link)}</span>
+        </p>
+        <p style="margin:0;font:400 12.5px/1.7 ${body};color:${ink500};">
+          <strong style="color:${ink900};font-weight:600;">If you did not ask for this</strong>, you can
+          ignore this email — your password stays as it is, and the link stops working on its own.
+        </p>
+      </td></tr>
+    </table>
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
+      <tr><td style="padding:18px 36px 0;text-align:center;font:400 11.5px/1.7 ${body};color:${ink300};">
+        ${escapeHtml(BUSINESS_INFO.name)} &nbsp;·&nbsp; ${escapeHtml(BUSINESS_INFO.address.city)}, ${escapeHtml(BUSINESS_INFO.address.region)}<br />
+        This link expires in ${expiresMinutes} minutes and can only be used once.
+      </td></tr>
+    </table>
+
+  </td></tr></table>
+</body></html>`;
+
+    const text = [
+      'Reset your Cellvix password',
+      '',
+      `Somebody asked to reset the password for ${user.email}.`,
+      `Open this link within ${expiresMinutes} minutes to choose a new one:`,
+      '',
+      `  ${link}`,
+      '',
+      'If you did not ask for this, ignore this email — your password stays as it',
+      'is, and the link stops working on its own.',
+    ].join('\n');
+
+    return await sendMail({
+      to: user.email,
+      from: env.MAIL_FROM_ADMIN,
+      subject: 'Reset your Cellvix password',
+      html,
+      text,
+    });
+  } catch (error) {
+    console.error(`  Mail: reset email for ${user?.email} could not be built — ${error.message}`);
+    return { delivered: false, via: 'outbox' };
+  }
+}
+
 // --- CommonJS exports -------------------------------------------------
 exports.generatePassword = generatePassword;
 exports.sendWelcomeEmail = sendWelcomeEmail;
+exports.sendPasswordResetEmail = sendPasswordResetEmail;
 exports.default = sendWelcomeEmail;

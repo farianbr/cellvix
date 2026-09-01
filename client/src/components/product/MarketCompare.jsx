@@ -63,7 +63,7 @@ export function MarketCompare({ market, price, variant = 'card', className }) {
           {isLowest ? 'Lowest price of the parts we track' : `Save ${money(savings)} vs market`}
         </p>
         <p className="mb-3 mt-1 text-[12px] leading-snug text-ink-400">
-          {savingsPercent}% under the average of {competitors.length} comparable trade{' '}
+          {savingsPercent}% under the average of {competitors.length} comparable wholesale{' '}
           {competitors.length === 1 ? 'listing' : 'listings'}. Indicative pricing, checked
           periodically.
         </p>

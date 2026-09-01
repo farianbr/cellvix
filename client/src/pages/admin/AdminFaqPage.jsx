@@ -114,8 +114,8 @@ function FaqForm({ faq, deviceTypes, partTypes, onSubmit, onCancel, isPending, e
             <SelectField
               control={control}
               name="partType"
-              label="Part type"
-              options={[{ value: '', label: 'Every part type' }, ...partTypes]}
+              label="Component type"
+              options={[{ value: '', label: 'Every component type' }, ...partTypes]}
             />
           </div>
           <p className="mt-3 px-1 text-[12px] text-ink-300">

@@ -14,6 +14,27 @@ export function useTaxonomy() {
 }
 
 /**
+ * The taxonomy as the wizard needs it: the component types for step 1, and a
+ * tree pruned to the chosen component for steps 2-5.
+ *
+ * Pruning is the server's job (`?partType=`) because only it can tell which
+ * branches actually stock a component. Without a component chosen this is the
+ * full tree, so the wizard's first step renders against real data too.
+ *
+ * `keepPreviousData` so switching component type does not blank the steps
+ * below while the new tree is in flight — they are about to be reset anyway,
+ * and a flash of empty cards reads as a bug.
+ */
+export function useWizardTaxonomy(partType) {
+  return useQuery({
+    queryKey: ['taxonomy', partType ?? null],
+    queryFn: () => api.get('/taxonomy', partType ? { partType } : undefined),
+    staleTime: 10 * 60 * 1000,
+    placeholderData: (previous) => previous,
+  });
+}
+
+/**
  * Every part type the catalogue actually carries, with its label.
  *
  * Read from the unfiltered facet counts rather than a hardcoded list, so an

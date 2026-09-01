@@ -1,3 +1,6 @@
+import { useId, useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
+import { ChevronDown } from 'lucide-react';
 import cn from '@/lib/cn';
 
 /**
@@ -18,6 +21,139 @@ export function Panel({ title, description, action, children, className, bodyCla
       )}
 
       <div className={cn(!flush && 'p-4 sm:p-5', bodyClassName)}>{children}</div>
+    </section>
+  );
+}
+
+/**
+ * A `Panel` whose body opens and closes.
+ *
+ * **Why this and not `Accordion`.** `Accordion` is the FAQ's disclosure list:
+ * numbered pills, marketing type scale, answers rendered through `RichText`,
+ * and one-open-at-a-time. A dashboard section is none of those — it holds live
+ * components, sits at ERP density, and several of them are usefully open at
+ * once. Forcing the two together would have meant an `Accordion` with half its
+ * behaviour switched off at every dashboard call site.
+ *
+ * What it keeps from `Panel` is the shell, so a collapsible section and a plain
+ * one are visibly the same object — the only additions are a chevron, a hit
+ * area over the whole header, and the summary slot.
+ *
+ * `summary` is the point of the pattern: a closed section still has to answer
+ * the question it exists to answer. "Line of credit" closed over nothing is a
+ * row a buyer has to open to learn anything from; closed over
+ * "$4,200 of $10,000 drawn" is an answer, and opening it is a choice rather
+ * than a requirement.
+ *
+ * Accessibility: the header is a real `<button>` carrying `aria-expanded` and
+ * `aria-controls`, and a closed body is removed from the tree rather than
+ * hidden with CSS, so a screen reader and Ctrl-F agree about what is on the
+ * page. `action` renders outside that button — a control inside the toggle
+ * would be a button nested in a button.
+ */
+export function CollapsiblePanel({
+  title,
+  description,
+  /** Rendered in the header, right of the title, at every state. */
+  summary,
+  /** A control (usually a Button). Sits outside the toggle, so it never nests. */
+  action,
+  defaultOpen = false,
+  children,
+  className,
+  bodyClassName,
+  flush,
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+  const reduce = useReducedMotion();
+  const id = useId();
+  const panelId = `${id}-panel`;
+  const buttonId = `${id}-button`;
+
+  return (
+    <section
+      className={cn('overflow-hidden rounded-[14px] border border-line bg-surface', className)}
+    >
+      <div
+        className={cn(
+          'flex flex-wrap items-center gap-x-3 gap-y-2 px-4 sm:px-5',
+          // The border only exists while the body does. A closed section is one
+          // object; a hairline under a closed header reads as an empty box.
+          open ? 'border-b border-line py-3' : 'py-3',
+        )}
+      >
+        <h2 className="min-w-0 flex-1 font-display text-[14.5px] font-bold">
+          <button
+            type="button"
+            id={buttonId}
+            aria-expanded={open}
+            aria-controls={panelId}
+            onClick={() => setOpen((value) => !value)}
+            className={cn(
+              'group -my-1 flex w-full items-center gap-2.5 rounded-[8px] py-1 text-left',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/25',
+            )}
+          >
+            <span
+              className={cn(
+                'flex size-5 shrink-0 items-center justify-center rounded-full text-ink-400',
+                'transition-[transform,color] duration-[220ms] ease-entrance group-hover:text-ink-900',
+                open && 'rotate-180 text-ink-900',
+              )}
+              aria-hidden="true"
+            >
+              <ChevronDown className="size-4" strokeWidth={2.25} />
+            </span>
+
+            <span className="min-w-0">
+              <span className="block truncate transition-colors group-hover:text-brand">
+                {title}
+              </span>
+              {description && (
+                <span className="mt-0.5 block text-[12.5px] font-normal text-ink-500">
+                  {description}
+                </span>
+              )}
+            </span>
+          </button>
+        </h2>
+
+        {/* The closed section's answer. Hidden once the body is open, where the
+            real figures are — two copies of the same number, one of them
+            abbreviated, is where they start to disagree. */}
+        {summary && !open && (
+          <div className="shrink-0 text-[12.5px] text-ink-500">{summary}</div>
+        )}
+
+        {action}
+      </div>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            id={panelId}
+            role="region"
+            aria-labelledby={buttonId}
+            initial={reduce ? { opacity: 0 } : { height: 0, opacity: 0 }}
+            animate={reduce ? { opacity: 1 } : { height: 'auto', opacity: 1 }}
+            exit={reduce ? { opacity: 0 } : { height: 0, opacity: 0 }}
+            /* Height runs the standard 220ms; the fade is shorter so the
+               content is not still ghosting in while the panel is nearly open.
+               Same split as `Accordion`, at the dashboard's shorter duration. */
+            transition={
+              reduce
+                ? { duration: 0.12 }
+                : {
+                    height: { duration: 0.22, ease: [0.22, 1, 0.36, 1] },
+                    opacity: { duration: 0.16, ease: 'linear' },
+                  }
+            }
+            className="overflow-hidden"
+          >
+            <div className={cn(!flush && 'p-4 sm:p-5', bodyClassName)}>{children}</div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }

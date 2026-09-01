@@ -27,7 +27,7 @@ const productSchema = new mongoose.Schema(
     // cents like every other money field. Placeholder data for now — seeded,
     // not scraped — but it leaves through the SAME price gate as `price` does:
     // a buyer who may not see our number may not see the market's either,
-    // because the two together ARE the trade position being gated.
+    // because the two together ARE the commercial position being gated.
     competitors: [
       {
         _id: false,

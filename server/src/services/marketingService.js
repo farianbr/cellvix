@@ -483,7 +483,7 @@ function decorate(body, account) {
     // CASL: sender identification and a working unsubscribe on every
     // commercial message. Not optional, and not the author's job to remember.
     `<p style="font-size:12px;color:#6B6B6B;margin:0 0 8px">${escape(BUSINESS_INFO.name)}${address ? ` — ${escape(address)}` : ''}</p>`,
-    '<p style="font-size:12px;color:#6B6B6B;margin:0">You are receiving this because you hold a trade account with us. ',
+    '<p style="font-size:12px;color:#6B6B6B;margin:0">You are receiving this because you hold a wholesale account with us. ',
     `<a href="${unsubscribeUrl(account)}" style="color:#CF3429">Unsubscribe</a>.</p>`,
     '</div>',
   ].join('');

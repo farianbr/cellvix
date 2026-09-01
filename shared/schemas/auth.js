@@ -15,7 +15,19 @@ const loginSchema = z.object({
 });
 
 const registerSchema = z.object({
-  businessName: z.string().trim().min(2, 'Enter your business name.'),
+  // Optional: the account is identified by the person (`contactName`), and a
+  // sole trader may not have a registered company name at all. They can add it
+  // later from Account & security.
+  businessName: z.string().trim().min(2, 'Enter your company name.').max(160).optional().or(z.literal('')),
+  /**
+   * Asked as two fields and stored as one.
+   *
+   * `contactName` is what the model, the welcome mail, the approvals queue and
+   * ~150 other references call it, so splitting it in the model to split it on
+   * one form would be the tail wagging the dog — same call as `phone` and its
+   * dial code. The form composes the two halves and sends this; `firstName` and
+   * `lastName` never leave the client.
+   */
   contactName: z.string().trim().min(2, 'Enter a contact name.'),
   email: z.string().trim().toLowerCase().email('Enter a valid email address.'),
   phone: z.string().trim().min(7, 'Enter a phone number.'),
@@ -34,6 +46,23 @@ const registerSchema = z.object({
     .max(16)
     .optional()
     .or(z.literal('')),
+  /**
+   * Which channels the business agreed to be contacted on (CASL §6.13).
+   *
+   * Optional, and every channel defaults to false: registering is implied
+   * consent for transactional mail under s.10(9) regardless of what is ticked
+   * here, and `marketingConsent` records that separately. This is the narrower
+   * question of which channels they actively said yes to, and an untouched
+   * form must record "not asked for" rather than a fabricated opt-in.
+   */
+  contactConsent: z
+    .object({
+      sms: z.boolean().optional().default(false),
+      whatsapp: z.boolean().optional().default(false),
+      email: z.boolean().optional().default(false),
+      call: z.boolean().optional().default(false),
+    })
+    .optional(),
   address: z
     .object({
       line1: z.string().trim().min(2, 'Enter a street address.'),
@@ -52,6 +81,24 @@ const forgotPasswordSchema = z.object({
 });
 
 /**
+ * Setting a new password from a reset link.
+ *
+ * The token is the whole of the authorisation — there is no session yet and no
+ * current password to confirm, which is exactly why it is single-use and
+ * short-lived server-side.
+ */
+const resetPasswordSchema = z
+  .object({
+    token: z.string().trim().min(20, 'That reset link is not valid.'),
+    password: passwordSchema,
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match.',
+    path: ['confirmPassword'],
+  });
+
+/**
  * A business applying to SELL to Cellvix, from the storefront sign-up.
  *
  * Deliberately not `registerSchema`: this creates no account and no password.
@@ -60,7 +107,7 @@ const forgotPasswordSchema = z.object({
  * application for a human to review, not a login.
  *
  * The four required fields match the buyer form's, so "what a sign-up asks
- * for" does not change shape depending on which side of the trade you are on.
+ * for" does not change shape depending on which side of the transaction you are on.
  */
 const supplierApplicationSchema = z.object({
   businessName: z.string().trim().min(2, 'Enter your business name.').max(120),
@@ -85,4 +132,5 @@ exports.passwordSchema = passwordSchema;
 exports.loginSchema = loginSchema;
 exports.registerSchema = registerSchema;
 exports.forgotPasswordSchema = forgotPasswordSchema;
+exports.resetPasswordSchema = resetPasswordSchema;
 exports.supplierApplicationSchema = supplierApplicationSchema;

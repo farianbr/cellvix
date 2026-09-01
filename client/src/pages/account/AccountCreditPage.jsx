@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ArrowDownLeft, ArrowUpRight, CreditCard, Wallet } from 'lucide-react';
 import cn from '@/lib/cn';
 import { money, moneyCompact, date } from '@/lib/format';
-import Panel, { StatTile } from '@/components/ui/Panel';
+import { CollapsiblePanel, StatTile } from '@/components/ui/Panel';
 import Button from '@/components/ui/Button';
 import Skeleton from '@/components/ui/Skeleton';
 import PaymentModal from '@/components/payment/PaymentModal';
@@ -142,10 +142,17 @@ export function AccountCreditPage() {
         </div>
       </div>
 
-      {/* ---- line of credit ---------------------------------------------- */}
-      <Panel
+      {/* ---- line of credit ----------------------------------------------
+          The four sections below are collapsible, and which of them start open
+          is the layout: this page carried two instruments and two statements as
+          four stacked panels, which meant the store-credit top-up sat below a
+          fold on every laptop. Open by default: the two that state a position.
+          Closed by default: the two statements, which are reference. */}
+      <CollapsiblePanel
         title="Line of credit"
         description="What Cellvix extends to this account, and how much of it is drawn."
+        defaultOpen
+        summary={<span className="tnum">{money(credit.available)} available</span>}
         action={
           // The whole balance, cleared in one charge. Offered here because this
           // is the page showing the balance — asking a buyer to read the number
@@ -191,12 +198,19 @@ export function AccountCreditPage() {
             contact your account representative.
           </p>
         </div>
-      </Panel>
+      </CollapsiblePanel>
 
       {/* ---- line of credit activity ------------------------------------- */}
-      <Panel
+      <CollapsiblePanel
         title="Line of credit activity"
         description="Orders that drew against the limit, and the payments that retired them."
+        summary={
+          entries.length > 0 ? (
+            <span className="tnum">
+              {entries.length} {entries.length === 1 ? 'movement' : 'movements'}
+            </span>
+          ) : null
+        }
       >
         {activityLoading ? (
           <div className="space-y-2">
@@ -208,7 +222,7 @@ export function AccountCreditPage() {
           <p className="rounded-[12px] bg-surface-2 px-4 py-6 text-center text-[13px] text-ink-400">
             {credit.limit > 0
               ? 'Nothing drawn against your limit yet. Orders placed on terms will appear here.'
-              : 'No line of credit on this account. Ask your rep about trade terms.'}
+              : 'No line of credit on this account. Ask your rep about credit terms.'}
           </p>
         ) : (
           <>
@@ -224,20 +238,35 @@ export function AccountCreditPage() {
             </div>
           </>
         )}
-      </Panel>
+      </CollapsiblePanel>
 
-      {/* ---- store credit ------------------------------------------------- */}
-      <Panel
-        title="Store credit"
+      {/* ---- store credit -------------------------------------------------
+          Split from its statement below. They were one panel, which made the
+          top-up form — the only thing on this page a buyer can act on — the
+          header of a list they mostly scroll past. */}
+      <CollapsiblePanel
+        title="Top up store credit"
         description="Money you hold with Cellvix. It comes off your next order automatically."
+        defaultOpen
+        summary={<span className="tnum">{money(storeCredit)} on hand</span>}
       >
         <RechargeForm />
+      </CollapsiblePanel>
 
-        <div className="mt-5">
-          <p className="eyebrow mb-2.5 text-ink-400">Store credit activity</p>
-          <StoreCreditActivity movements={movements} isLoading={creditLoading} />
-        </div>
-      </Panel>
+      {/* ---- store credit statement --------------------------------------- */}
+      <CollapsiblePanel
+        title="Store credit activity"
+        description="Refunds, top-ups and allocations, and what has been spent."
+        summary={
+          movements.length > 0 ? (
+            <span className="tnum">
+              {movements.length} {movements.length === 1 ? 'movement' : 'movements'}
+            </span>
+          ) : null
+        }
+      >
+        <StoreCreditActivity movements={movements} isLoading={creditLoading} />
+      </CollapsiblePanel>
 
       <PaymentModal
         open={payingOff}

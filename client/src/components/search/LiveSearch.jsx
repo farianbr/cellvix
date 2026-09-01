@@ -8,7 +8,7 @@ import { useSearchSuggestions } from '@/hooks/useCatalog';
 import useDebouncedValue from '@/hooks/useDebouncedValue';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
 import { useApplyFilterPath, useApplySearchQuery } from '@/hooks/useApplyFilterPath';
-import PartIllustration from '@/components/product/PartIllustration';
+import { PartVisual } from '@/components/product/PartFrame';
 import Skeleton from '@/components/ui/Skeleton';
 
 /**
@@ -271,11 +271,7 @@ export function LiveSearch({
                           className="flex items-center gap-3 rounded-[10px] p-2 transition-colors hover:bg-surface-2"
                         >
                           <span className="flex size-12 shrink-0 items-center justify-center rounded-lg border border-line bg-surface-2 p-1.5">
-                            {product.image ? (
-                              <img src={product.image} alt="" className="size-full object-contain" />
-                            ) : (
-                              <PartIllustration partType={product.partType} />
-                            )}
+                            <PartVisual product={product} />
                           </span>
 
                           <span className="min-w-0 flex-1">

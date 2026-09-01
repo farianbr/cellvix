@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Check, Copy, Gift, Link2, TrendingUp, Users } from 'lucide-react';
 import cn from '@/lib/cn';
 import { money, moneyCompact, date } from '@/lib/format';
-import Panel, { StatTile, PanelEmpty } from '@/components/ui/Panel';
+import Panel, { CollapsiblePanel, StatTile, PanelEmpty } from '@/components/ui/Panel';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Skeleton from '@/components/ui/Skeleton';
@@ -115,7 +115,7 @@ export function AccountReferralsPage() {
                 {
                   icon: Users,
                   title: 'They open an account',
-                  body: 'Once approved, they order the way any trade account does.',
+                  body: 'Once approved, they order the way any wholesale account does.',
                 },
                 {
                   icon: Gift,
@@ -212,11 +212,19 @@ export function AccountReferralsPage() {
         )}
       </Panel>
 
-      {/* ---- how it added up ---------------------------------------------- */}
+      {/* ---- how it added up ----------------------------------------------
+          Collapsed: the tiles above already state what has been earned, and
+          this is the working behind that number — reference a buyer opens when
+          a figure surprises them, not something they need on arrival. */}
       {history.length > 0 && (
-        <Panel
+        <CollapsiblePanel
           title="Commission history"
           description="Each payment your referrals made, and what it earned you."
+          summary={
+            <span className="tnum">
+              {history.length} {history.length === 1 ? 'entry' : 'entries'}
+            </span>
+          }
           flush
         >
           <ul className="divide-y divide-line">
@@ -250,7 +258,7 @@ export function AccountReferralsPage() {
               </li>
             ))}
           </ul>
-        </Panel>
+        </CollapsiblePanel>
       )}
     </div>
   );

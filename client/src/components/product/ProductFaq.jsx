@@ -63,7 +63,7 @@ export function ProductFaq({ faqs = [], product = null, className }) {
 
             <p className="font-display text-[14px] font-bold text-ink-900">Not answered here?</p>
             <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink-500">
-              Fitment, cross-references and lead times on unlisted parts go straight to the trade
+              Fitment, cross-references and lead times on unlisted parts go straight to the sales
               desk.
               {product && ' Your message starts with this SKU already in it.'}
             </p>

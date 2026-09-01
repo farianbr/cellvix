@@ -13,7 +13,7 @@ import cn from '@/lib/cn';
 import { money, date, dateTime, count as formatCount } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Badge from '@/components/ui/Badge';
-import PartIllustration from '@/components/product/PartIllustration';
+import { PartVisual } from '@/components/product/PartFrame';
 import PageHeader from '@/components/admin/PageHeader';
 import KpiRow from '@/components/admin/KpiRow';
 import DataTable from '@/components/admin/DataTable';
@@ -219,7 +219,7 @@ export function AdminInventoryDetailPage() {
           <Panel title="Product">
             <div className="mb-3 flex items-center gap-3">
               <span className="flex size-14 shrink-0 items-center justify-center rounded-[11px] border border-line bg-surface-2 p-1.5">
-                <PartIllustration partType={product.partType} />
+                <PartVisual product={product} />
               </span>
               <div className="min-w-0">
                 <p className="font-mono text-[12px] text-ink-500">{product.sku}</p>

@@ -11,7 +11,7 @@ import Badge from '@/components/ui/Badge';
 import Skeleton from '@/components/ui/Skeleton';
 import QtyStepper from '@/components/product/QtyStepper';
 import GradeBadge from '@/components/product/GradeBadge';
-import PartIllustration from '@/components/product/PartIllustration';
+import PartFrame from '@/components/product/PartFrame';
 import ProductCard from '@/components/product/ProductCard';
 import MarketCompare from '@/components/product/MarketCompare';
 import ProductFaq from '@/components/product/ProductFaq';
@@ -131,14 +131,11 @@ export function ProductDetailPage() {
 
       <div className="grid gap-6 md:grid-cols-2 lg:gap-10">
         {/* ---- visual ------------------------------------------------------ */}
-        <div className="relative @container overflow-hidden rounded-[14px] border border-line bg-surface-2">
-          <div className="aspect-square p-10 lg:p-16">
-            {product.image ? (
-              <img src={product.image} alt={product.name} className="size-full object-contain" />
-            ) : (
-              <PartIllustration partType={product.partType} label={product.partTypeLabel} />
-            )}
-          </div>
+        {/* The same PartFrame the grid card uses, at aspect-square — the part
+            name and model sit inside the top of the image, above the drawing.
+            One component, so the caption cannot drift between the two. */}
+        <div className="relative overflow-hidden rounded-[14px] border border-line bg-surface-2">
+          <PartFrame product={product} aspect="aspect-square" decorative />
           <GradeBadge grade={product.grade} className="absolute left-4 top-4" />
         </div>
 
@@ -182,7 +179,7 @@ export function ProductDetailPage() {
               >
                 <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3.5 py-1.5 text-[13px] font-semibold text-ink-700 shadow-card">
                   <Lock className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
-                  {isAuthenticated ? 'Pending approval' : 'Sign in to view trade pricing'}
+                  {isAuthenticated ? 'Pending approval' : 'Sign in to view wholesale pricing'}
                 </span>
               </button>
             )}

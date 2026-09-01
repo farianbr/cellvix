@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { FILTER_LEVELS } from '@/lib/constants';
+import { TREE_LEVELS } from '@/lib/constants';
 
 /**
  * THE unified filter state (PROJECT_INSTRUCTIONS.md §4).
@@ -9,7 +9,7 @@ import { FILTER_LEVELS } from '@/lib/constants';
  * actions below. The product grid is the only subscriber that triggers a fetch.
  */
 
-const LEVELS = FILTER_LEVELS.map((l) => l.key); // deviceType, brand, series, model
+const LEVELS = TREE_LEVELS.map((l) => l.key); // deviceType, brand, series, model
 
 const emptyPath = () => ({ deviceType: null, brand: null, series: null, model: null });
 
@@ -23,6 +23,9 @@ const emptyFacets = () => ({
 
 const initial = {
   path: emptyPath(),
+  // The display name for the chosen component type, so the wizard's first tab
+  // reads "Battery" rather than "battery" without a lookup.
+  componentLabel: null,
   // Human-readable labels for the active path, so chips and completed wizard
   // tabs can render "Galaxy S23 Ultra" without another lookup.
   labels: emptyPath(),
@@ -60,6 +63,38 @@ export const useFilterStore = create((set, get) => ({
     });
   },
 
+  /**
+   * Step 1 of the wizard: the single component type it is walking.
+   *
+   * The sidebar keeps `facets.partType` a multi-select — a buyer ticking
+   * Battery AND Screen is a legitimate thing to want — so the wizard's notion
+   * of "the" component is "the one selected, when exactly one is". Two ticks
+   * from the sidebar leave the wizard's first tab blank rather than lying about
+   * which of them it means.
+   */
+  componentType() {
+    const list = get().facets.partType;
+    return list.length === 1 ? list[0] : null;
+  },
+
+  /**
+   * Sets the wizard's component type and CASCADES the tree below it, exactly as
+   * setPathLevel does for the levels it owns.
+   *
+   * The cascade is the point: the device types, brands and models on offer are
+   * pruned to what stocks this component, so a path chosen for screens cannot
+   * survive a switch to batteries and quietly return nothing.
+   */
+  setComponentType(slug, label = null) {
+    set((state) => ({
+      facets: { ...state.facets, partType: slug ? [slug] : [] },
+      componentLabel: slug ? label : null,
+      path: emptyPath(),
+      labels: emptyPath(),
+      page: 1,
+    }));
+  },
+
   /** Applies a whole path at once — used when the mega menu jumps straight to a model. */
   setPath(partial, labels = {}) {
     set((state) => {
@@ -70,6 +105,12 @@ export const useFilterStore = create((set, get) => ({
   },
 
   clearLevel(level) {
+    // Clearing step 1 clears everything below it, since the whole tree the
+    // lower steps were chosen from was pruned to that component.
+    if (level === 'componentType') {
+      get().setComponentType(null);
+      return;
+    }
     get().setPathLevel(level, null, null);
   },
 
@@ -114,13 +155,24 @@ export const useFilterStore = create((set, get) => ({
   },
 
   resetAll() {
-    set({ ...initial, path: emptyPath(), labels: emptyPath(), facets: emptyFacets() });
+    set({
+      ...initial,
+      path: emptyPath(),
+      labels: emptyPath(),
+      facets: emptyFacets(),
+      componentLabel: null,
+    });
   },
 
-  /** How many levels of the hierarchy are set — drives the wizard's step state. */
+  /**
+   * How many wizard steps are answered, component type included — it is step 1,
+   * so a set path with no component is depth 1, not depth 2.
+   */
   depth() {
     const { path } = get();
-    let depth = 0;
+    if (!get().componentType()) return 0;
+
+    let depth = 1;
     for (const level of LEVELS) {
       if (!path[level]) break;
       depth += 1;

@@ -15,6 +15,7 @@ const { serializeOrder } = require('./orderService.js');
 const orderBuilder = require('./orderBuilder.js');
 const invoicePaymentService = require('./invoicePaymentService.js');
 const { activityFeed } = require('./activityService.js');
+const { displayNameOf } = require('../utils/displayName.js');
 const { renderInvoiceHtml } = require('./invoiceDocument.js');
 const { invalidateTree } = require('./taxonomyService.js');
 const { ORDER_STATUS_FLOW } = require('../../../shared/schemas/admin.js');
@@ -369,7 +370,8 @@ async function stats({ from, to } = {}) {
 
     recentOrders: recentOrders.map((order) => ({
       ...serializeOrder(order),
-      businessName: order.user?.businessName ?? '—',
+      businessName: order.user?.businessName ?? null,
+      displayName: displayNameOf(order.user),
     })),
     pendingQueue: pendingQueue.map(shapeUser),
     lowStockItems: lowStockItems.map((product) => ({
@@ -389,6 +391,7 @@ function shapeUser(user) {
     id: user._id.toString(),
     businessName: user.businessName,
     contactName: user.contactName,
+    displayName: displayNameOf(user),
     email: user.email,
     phone: user.phone,
     status: user.status,

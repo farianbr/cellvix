@@ -195,8 +195,8 @@ export function CartPage() {
               <p className="flex items-start gap-2 rounded-[10px] bg-warn-50 px-3 py-2.5 text-[12.5px] text-warn">
                 <Lock className="mt-0.5 size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
                 {isAuthenticated
-                  ? 'Trade pricing unlocks once your business account is approved.'
-                  : 'Sign in with an approved business account to see trade pricing.'}
+                  ? 'Wholesale pricing unlocks once your business account is approved.'
+                  : 'Sign in with an approved business account to see wholesale pricing.'}
               </p>
             )}
 

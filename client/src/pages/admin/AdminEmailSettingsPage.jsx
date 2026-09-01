@@ -66,7 +66,7 @@ const TOGGLES = [
     key: 'accountApproved',
     label: 'Email a business when its account is approved',
     detail:
-      'Tells a pending business it can now see trade pricing and place orders. Without this they find out by signing in and noticing.',
+      'Tells a pending business it can now see wholesale pricing and place orders. Without this they find out by signing in and noticing.',
   },
   {
     key: 'accountRejected',

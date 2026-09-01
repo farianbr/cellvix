@@ -130,7 +130,7 @@ export function PaymentFailedPage() {
                   .
                 </li>
                 <li>
-                  <span className="font-medium text-ink-900">Let the trade desk place it.</span>{' '}
+                  <span className="font-medium text-ink-900">Let the sales desk place it.</span>{' '}
                   Quote your cart over the phone and they will raise the order against your account.
                 </li>
               </ul>
@@ -148,7 +148,7 @@ export function PaymentFailedPage() {
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-[10px] border border-line bg-surface-2 font-display text-[13.5px] font-semibold text-ink-700 transition-colors hover:bg-surface-3"
                 >
                   <Mail className="size-4" strokeWidth={1.75} aria-hidden="true" />
-                  Message the trade desk
+                  Message the sales desk
                 </Link>
               </div>
             </div>

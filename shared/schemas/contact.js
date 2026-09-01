@@ -1,7 +1,7 @@
 const { z } = require('zod');
 
 const CONTACT_TOPICS = [
-  { value: 'account', label: 'Trade account or approval' },
+  { value: 'account', label: 'Wholesale account or approval' },
   { value: 'order', label: 'An existing order' },
   { value: 'stock', label: 'Stock or availability' },
   { value: 'warranty', label: 'Warranty or return' },

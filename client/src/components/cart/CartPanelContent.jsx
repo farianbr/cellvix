@@ -200,7 +200,7 @@ export function CartPanelFooter({
       {!isApproved && (
         <p className="flex items-start gap-2 rounded-[10px] bg-warn-50 px-3 py-2.5 text-[12.5px] text-warn">
           <Lock className="mt-0.5 size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
-          Trade pricing and checkout unlock once your business account is approved.
+          Wholesale pricing and checkout unlock once your business account is approved.
         </p>
       )}
 

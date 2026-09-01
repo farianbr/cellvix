@@ -6,7 +6,7 @@ import cn from '@/lib/cn';
  *
  * These are drawn rather than photographed for the same reason `PartIllustration`
  * is: Cellvix has supplied no photography (PROGRESS.md open question #6), and a
- * stock photo of a smiling call-centre would be the wrong register for a trade
+ * stock photo of a smiling call-centre would be the wrong register for a wholesale
  * supplier anyway. Everything here is inline SVG on design tokens, so it recolours
  * with the palette, costs no network request and stays crisp at any size.
  *

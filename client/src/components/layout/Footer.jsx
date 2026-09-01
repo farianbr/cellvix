@@ -76,7 +76,7 @@ export function Footer() {
             {/* ---- statement + reach ------------------------------------- */}
             <div className="lg:col-span-4">
               <h2 className="max-w-sm font-display text-[19px] font-bold leading-snug text-ink-900 sm:text-[21px]">
-                Cellvix keeps Canadian repair shops in graded parts, at trade
+                Cellvix keeps Canadian repair shops in graded parts, at wholesale
                 prices, on terms.
               </h2>
 
@@ -204,7 +204,7 @@ export function Footer() {
                   </span>
                 </span>
                 <span className="mt-1 block text-[12.5px] text-ink-400">
-                  Trade pricing in one business day
+                  Wholesale pricing in one business day
                 </span>
               </Link>
             </div>

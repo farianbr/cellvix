@@ -489,7 +489,7 @@ export function ReferralPanel({ user, percent }) {
               </div>
             ) : (
               <p className="text-[12.5px] text-ink-400">
-                Minted when the account is approved — an account that cannot yet trade cannot refer.
+                Minted when the account is approved — an account that cannot yet order cannot refer.
               </p>
             )}
           </dd>

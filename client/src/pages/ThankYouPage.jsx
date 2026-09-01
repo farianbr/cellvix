@@ -14,7 +14,7 @@ import {
 import api from '@/lib/api';
 import { money, date } from '@/lib/format';
 import Skeleton from '@/components/ui/Skeleton';
-import PartIllustration from '@/components/product/PartIllustration';
+import { PartVisual } from '@/components/product/PartFrame';
 import BrandScene from '@/components/ui/BrandScene';
 
 /**
@@ -196,7 +196,7 @@ export function ThankYouPage() {
           {data.items.map((item) => (
             <li key={item.sku} className="flex items-center gap-3 px-5 py-3.5">
               <span className="flex size-12 shrink-0 items-center justify-center rounded-lg border border-line bg-surface-2 p-1.5">
-                <PartIllustration partType={item.partType} />
+                <PartVisual product={item} />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="line-clamp-1 text-[13.5px] font-medium text-ink-900">

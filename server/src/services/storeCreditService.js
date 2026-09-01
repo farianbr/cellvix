@@ -298,7 +298,7 @@ async function recharge(user, { amount, poNumber }) {
  *
  * Refunding to the original payment method needs a real gateway; refunding to
  * store credit needs nothing but this ledger, keeps the money with Cellvix, and
- * is what a trade account wants anyway — the next order is usually days away.
+ * is what a wholesale account wants anyway — the next order is usually days away.
  * Partial refunds are allowed up to what is left unrefunded on the order.
  */
 async function refundOrder(orderNumber, { amount, note }, adminId) {

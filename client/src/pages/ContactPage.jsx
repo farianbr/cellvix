@@ -32,7 +32,7 @@ import { useAuth } from '@/hooks/useAuth';
 const CHANNELS = [
   {
     icon: Phone,
-    label: 'Trade desk',
+    label: 'Sales desk',
     value: BUSINESS_INFO.phone,
     hint: 'Stock, sourcing and credit',
     href: `tel:${BUSINESS_INFO.phone.replace(/[^\d+]/g, '')}`,
@@ -229,7 +229,7 @@ export function ContactPage() {
             id="contact-heading"
             className="mt-6 text-[34px] leading-[1.04] tracking-[-0.035em] sm:text-[48px] lg:text-[56px]"
           >
-            Talk to the trade desk
+            Talk to the sales desk
           </h1>
 
           <p className="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-ink-400">

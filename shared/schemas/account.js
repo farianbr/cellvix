@@ -2,7 +2,7 @@ const { z } = require('zod');
 const { addressSchema } = require('./checkout.js');
 
 const profileSchema = z.object({
-  businessName: z.string().trim().min(2, 'Enter your business name.'),
+  businessName: z.string().trim().min(2, 'Enter your company name.').max(160).optional().or(z.literal('')),
   contactName: z.string().trim().min(2, 'Enter a contact name.'),
   phone: z.string().trim().min(7, 'Enter a phone number.'),
   website: z.string().trim().max(120).optional(),
@@ -58,23 +58,77 @@ const changePasswordSchema = z
     path: ['confirmPassword'],
   });
 
-/** Sidebar sections, in render order. */
+/**
+ * The account sidebar, two levels deep — the same shape as `ADMIN_NAV`, so one
+ * nav-tree pattern serves both sides of the product.
+ *
+ * A flat `Overview` row, then three groups whose children are the real screens.
+ * Ten flat rows was a list an eye had to read end to end to find anything in;
+ * grouped, the buyer picks the heading first and scans four items instead of
+ * ten. The groups are the three reasons a buyer opens this area: to follow
+ * money owed, to buy something, or to change a setting.
+ *
+ * `icon` names a lucide export that `accountIcons.js` maps — the schema stays a
+ * plain data module the server can also read.
+ *
+ * `badge` names a counter on `GET /account/summary`; the sidebar renders it
+ * only when the count is non-zero.
+ */
 const ACCOUNT_NAV = [
   { key: 'overview', label: 'Overview', to: '/account', icon: 'LayoutDashboard' },
-  { key: 'orders', label: 'Orders & tracking', to: '/account/orders', icon: 'Package' },
-  { key: 'invoices', label: 'Invoices & statements', to: '/account/invoices', icon: 'FileText' },
-  { key: 'credit', label: 'Credit & balance', to: '/account/credit', icon: 'Wallet' },
-  { key: 'referrals', label: 'Refer & earn', to: '/account/referrals', icon: 'Gift' },
-  { key: 'quick-order', label: 'Quick order pad', to: '/account/quick-order', icon: 'Zap' },
-  { key: 'addresses', label: 'Saved addresses', to: '/account/addresses', icon: 'MapPin' },
-  { key: 'payment', label: 'Payment methods', to: '/account/payment-methods', icon: 'CreditCard' },
-  { key: 'company', label: 'Company & security', to: '/account/company', icon: 'Building2' },
+  {
+    key: 'billing',
+    label: 'Orders & billing',
+    icon: 'Receipt',
+    children: [
+      { key: 'orders', label: 'Orders & tracking', to: '/account/orders', icon: 'Package', badge: 'openOrders' },
+      {
+        key: 'invoices',
+        label: 'Invoices & statements',
+        to: '/account/invoices',
+        icon: 'FileText',
+        badge: 'outstandingInvoices',
+      },
+      { key: 'credit', label: 'Credit & balance', to: '/account/credit', icon: 'Wallet' },
+      { key: 'activity', label: 'Activity', to: '/account/activity', icon: 'History' },
+    ],
+  },
+  {
+    key: 'purchasing',
+    label: 'Purchasing',
+    icon: 'ShoppingCart',
+    children: [
+      { key: 'quick-order', label: 'Quick order pad', to: '/account/quick-order', icon: 'Zap' },
+      { key: 'referrals', label: 'Refer & earn', to: '/account/referrals', icon: 'Gift' },
+    ],
+  },
+  {
+    key: 'settings',
+    label: 'Settings',
+    icon: 'Settings',
+    children: [
+      { key: 'addresses', label: 'Saved addresses', to: '/account/addresses', icon: 'MapPin' },
+      { key: 'payment', label: 'Payment methods', to: '/account/payment-methods', icon: 'CreditCard' },
+      { key: 'company', label: 'Account & security', to: '/account/company', icon: 'Building2' },
+    ],
+  },
 ];
+
+/**
+ * Every leaf in `ACCOUNT_NAV`, flat and in render order.
+ *
+ * The tree is the sidebar's shape, but three callers want the destinations and
+ * not the grouping — the mobile section dropdown, the header account menu, and
+ * the active-route lookup. Derived here rather than kept as a second list,
+ * because two hand-maintained lists of the same routes is how a screen goes
+ * missing from one of them.
+ */
+const ACCOUNT_NAV_ITEMS = ACCOUNT_NAV.flatMap((item) => item.children ?? [item]);
 
 /**
  * Advance recharge: the buyer prepays and holds the money as store credit.
  * Bounded at both ends — a $5 top-up costs more in gateway fees than it is
- * worth, and five figures should be a phone call to the trade desk.
+ * worth, and five figures should be a phone call to the sales desk.
  */
 const rechargeSchema = z.object({
   amountDollars: z.coerce
@@ -117,6 +171,7 @@ exports.paymentMethodSchema = paymentMethodSchema;
 exports.bulkAddSchema = bulkAddSchema;
 exports.changePasswordSchema = changePasswordSchema;
 exports.ACCOUNT_NAV = ACCOUNT_NAV;
+exports.ACCOUNT_NAV_ITEMS = ACCOUNT_NAV_ITEMS;
 exports.rechargeSchema = rechargeSchema;
 exports.invoicePaymentSchema = invoicePaymentSchema;
 exports.creditPayoffSchema = creditPayoffSchema;

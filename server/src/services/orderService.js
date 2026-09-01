@@ -32,6 +32,7 @@ async function nextOrderNumber() {
 // before that file existed, and a series that two files can advance
 // independently is a series that collides.
 const { nextInvoiceNumber } = require('./orderBuilder.js');
+const { displayNameOf } = require('../utils/displayName.js');
 
 /**
  * Prices the cart.
@@ -101,6 +102,7 @@ function flattenBundles(bundles) {
       grade: line.grade,
       partType: line.partType,
       partTypeLabel: line.partTypeLabel,
+      brandSlug: line.brandSlug ?? undefined,
       qty: line.qty,
       unitPrice: line.unitPrice,
       lineTotal: line.lineTotal,
@@ -353,7 +355,7 @@ async function createOrder(user, input) {
     type: 'new_order',
     severity: 'success',
     title: `Order ${orderNumber} placed`,
-    detail: `${user.businessName} · ${formatCad(priced.total)}`,
+    detail: `${displayNameOf(user)} · ${formatCad(priced.total)}`,
     entity: { kind: 'order', id: orderNumber, label: orderNumber },
     href: `/admin/orders/${orderNumber}`,
   });

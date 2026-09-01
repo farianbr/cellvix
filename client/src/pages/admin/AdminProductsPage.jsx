@@ -25,7 +25,7 @@ import SelectField from '@/components/ui/SelectField';
 import Checkbox from '@/components/ui/Checkbox';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
-import PartIllustration from '@/components/product/PartIllustration';
+import { PartVisual } from '@/components/product/PartFrame';
 import PageHeader from '@/components/admin/PageHeader';
 import KpiRow from '@/components/admin/KpiRow';
 import FilterStrip from '@/components/admin/FilterStrip';
@@ -160,13 +160,13 @@ function ProductForm({ product, tree, onSubmit, onCancel, isPending, error }) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Input
-          label="Part type slug"
+          label="Component type slug"
           placeholder="screen-assembly"
           className="font-mono"
           {...register('partType', { required: true })}
         />
         <Input
-          label="Part type label"
+          label="Component type label"
           placeholder="Screen Assembly"
           {...register('partTypeLabel', { required: true })}
         />
@@ -471,7 +471,7 @@ export function AdminProductsPage() {
               !product.isActive && 'opacity-45',
             )}
           >
-            <PartIllustration partType={product.partType} />
+            <PartVisual product={product} />
           </span>
           <span className="min-w-0">
             <span className="flex flex-wrap items-center gap-2">

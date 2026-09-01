@@ -4,6 +4,7 @@ const { default: Product } = require('../models/Product.js');
 const { default: Settings } = require('../models/Settings.js');
 const { default: ApiError } = require('../utils/ApiError.js');
 const notificationService = require('./notificationService.js');
+const { displayNameOf } = require('../utils/displayName.js');
 
 /**
  * Raising an order that did not come from a cart.
@@ -89,7 +90,7 @@ function provinceFor(user) {
 async function buildOrderItems(rawItems) {
   const ids = rawItems.map((item) => item.product).filter(Boolean);
   const products = await Product.find({ _id: { $in: ids } })
-    .select('sku name slug price cost stock grade partType partTypeLabel images')
+    .select('sku name slug price cost stock grade partType partTypeLabel brandSlug images')
     .lean();
   const byId = new Map(products.map((product) => [product._id.toString(), product]));
 
@@ -112,6 +113,7 @@ async function buildOrderItems(rawItems) {
       grade: product.grade,
       partType: product.partType,
       partTypeLabel: product.partTypeLabel,
+      brandSlug: product.brandSlug ?? undefined,
       qty: item.qty,
       unitPrice,
       lineTotal: item.qty * unitPrice,
@@ -180,7 +182,7 @@ async function raiseOrder({ user, items, shipping = 0, deliveryCode = 'ground', 
 
   if (user.status !== 'approved') {
     throw ApiError.badRequest(
-      `${user.businessName} is not approved to order yet.`,
+      `${displayNameOf(user)} is not approved to order yet.`,
       'USER_NOT_APPROVED',
     );
   }
@@ -189,7 +191,7 @@ async function raiseOrder({ user, items, shipping = 0, deliveryCode = 'ground', 
     (user.addresses ?? []).find((row) => row.isDefaultShipping) ?? user.addresses?.[0];
   if (!address) {
     throw ApiError.badRequest(
-      `${user.businessName} has no shipping address on file.`,
+      `${displayNameOf(user)} has no shipping address on file.`,
       'NO_SHIPPING_ADDRESS',
     );
   }
@@ -276,7 +278,7 @@ async function raiseOrder({ user, items, shipping = 0, deliveryCode = 'ground', 
     type: 'new_order',
     severity: 'success',
     title: `Order ${orderNumber} placed`,
-    detail: `${user.businessName} · ${formatCad(total)}`,
+    detail: `${displayNameOf(user)} · ${formatCad(total)}`,
     entity: { kind: 'order', id: orderNumber, label: orderNumber },
     href: `/admin/orders/${orderNumber}`,
   });

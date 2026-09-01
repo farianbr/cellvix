@@ -73,7 +73,7 @@ function serialize(product, user) {
  *
  * Returns null when there is nothing honest to claim: no benchmarks, or we are
  * not actually the cheapest. An undercut competitor is not a saving, and
- * dressing one up as one is the kind of number a trade buyer checks once and
+ * dressing one up as one is the kind of number a business buyer checks once and
  * then never trusts again.
  */
 function marketPosition(doc) {
@@ -281,7 +281,7 @@ async function searchProducts(term, user, { limit = 6 } = {}) {
   /**
    * Models whose **alias** matches, resolved first (§6.15, phase 11d).
    *
-   * A trade buyer types `15 PM`, not "iPhone 15 Pro Max". Aliases live on the
+   * A business buyer types `15 PM`, not "iPhone 15 Pro Max". Aliases live on the
    * taxonomy model rather than on each product, so one alias covers all forty
    * parts that fit that phone — which means the alias has to be turned into a
    * model slug here and then folded into the product query below. Without this

@@ -165,7 +165,7 @@ function StatusForm({ order, onSubmit, onCancel, isPending, error }) {
  * Refund to store credit.
  *
  * There is no gateway to send money back through (payments are mocked, and a
- * real one would still need a card reference we do not keep), and a trade
+ * real one would still need a card reference we do not keep), and a wholesale
  * account's next order is usually days away — so a refund credits the account
  * and the credit spends itself at checkout. Partial refunds are allowed up to
  * what is left unrefunded; the server is the one that enforces that.

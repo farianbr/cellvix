@@ -32,23 +32,48 @@ const DRAWINGS = {
     </>
   ),
 
+  // A pouch cell, not a AA: soft-cornered foil envelope with one notched
+  // corner, and the flex tab leaving the top edge into its board connector.
   battery: (
     <>
-      <rect x="20" y="22" width="58" height="56" rx="5" {...common} />
-      <rect x="26" y="28" width="46" height="44" rx="3" stroke={MUTED} strokeWidth="1.2" fill="none" />
-      <path d="M78 38v10" stroke={INK} strokeWidth="1.6" strokeLinecap="round" />
-      <path d="M20 34h-8m8 10h-8" stroke={MUTED} strokeWidth="1.4" strokeLinecap="round" />
-      <path d="M46 36l-8 16h10l-6 12" stroke={ACCENT} strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d="M24 30h48a4 4 0 0 1 4 4v40a4 4 0 0 1-4 4H40l-8-8H24a4 4 0 0 1-4-4V34a4 4 0 0 1 4-4z"
+        {...common}
+      />
+      <path
+        d="M27 34h44v34H39l-8-8h-4z"
+        stroke={MUTED}
+        strokeWidth="1.1"
+        fill="none"
+        strokeLinejoin="round"
+      />
+      {/* flex tail up to the connector */}
+      <path d="M64 30V22h8" stroke={INK} strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="70" y="17" width="12" height="8" rx="2" stroke={ACCENT} strokeWidth="1.5" fill="none" />
+      <path d="M73 19v4M76 19v4M79 19v4" stroke={MUTED} strokeWidth="1" strokeLinecap="round" />
+      <path d="M40 44l-7 14h9l-5 11" stroke={ACCENT} strokeWidth="1.9" fill="none" strokeLinecap="round" strokeLinejoin="round" />
     </>
   ),
 
+  // The charging flex as it actually ships: a long ribbon running up from the
+  // port board at the bottom to the board connectors at the top, not a bare
+  // socket floating in space.
   port: (
     <>
-      <path d="M18 50h34" {...common} />
-      <rect x="52" y="38" width="30" height="24" rx="5" {...common} />
-      <rect x="58" y="45" width="18" height="10" rx="5" stroke={ACCENT} strokeWidth="1.6" fill="none" />
-      <path d="M18 42v16" stroke={MUTED} strokeWidth="1.4" strokeLinecap="round" />
-      <path d="M26 44v12M34 44v12M42 44v12" stroke={MUTED} strokeWidth="1.1" strokeLinecap="round" />
+      {/* port board */}
+      <path d="M22 76h44a3 3 0 0 0 3-3V62h-8V56h-9v-6H31a3 3 0 0 0-3 3v8h-6v12a3 3 0 0 0 0 3z" {...common} />
+      <rect x="38" y="78" width="22" height="6" rx="3" stroke={ACCENT} strokeWidth="1.6" fill="none" />
+      {/* ribbon */}
+      <path d="M69 62V26" stroke={INK} strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M63 62V32" stroke={MUTED} strokeWidth="1.1" strokeLinecap="round" />
+      <path d="M63 32h6" stroke={MUTED} strokeWidth="1.1" strokeLinecap="round" />
+      {/* board connectors */}
+      <rect x="60" y="16" width="14" height="8" rx="2" {...common} />
+      <rect x="76" y="20" width="10" height="7" rx="2" stroke={MUTED} strokeWidth="1.3" fill="none" />
+      <path d="M63 18v4M66 18v4M69 18v4" stroke={MUTED} strokeWidth="1" strokeLinecap="round" />
+      {/* screw bosses */}
+      <circle cx="27" cy="58" r="2" stroke={MUTED} strokeWidth="1.2" fill="none" />
+      <circle cx="64" cy="70" r="2" stroke={MUTED} strokeWidth="1.2" fill="none" />
     </>
   ),
 
@@ -62,13 +87,37 @@ const DRAWINGS = {
     </>
   ),
 
+  // Rear camera: the triple cluster on its stepped bracket, lenses staggered
+  // the way the module actually sits, with the flex leaving the bottom edge.
   camera: (
     <>
-      <rect x="24" y="24" width="52" height="52" rx="12" {...common} />
-      <circle cx="50" cy="50" r="17" stroke={MUTED} strokeWidth="1.3" fill="none" />
-      <circle cx="50" cy="50" r="9" stroke={INK} strokeWidth="1.6" fill="none" />
-      <circle cx="46" cy="46" r="2.5" fill={ACCENT} stroke="none" />
-      <path d="M76 40h8v20h-8" stroke={MUTED} strokeWidth="1.3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M18 20h36v14h28a4 4 0 0 1 4 4v34a4 4 0 0 1-4 4H18a4 4 0 0 1-4-4V24a4 4 0 0 1 4-4z" {...common} />
+      <circle cx="33" cy="35" r="12" stroke={INK} strokeWidth="1.5" fill="none" />
+      <circle cx="33" cy="35" r="7" stroke={MUTED} strokeWidth="1.2" fill="none" />
+      <circle cx="33" cy="61" r="12" stroke={INK} strokeWidth="1.5" fill="none" />
+      <circle cx="33" cy="61" r="7" stroke={MUTED} strokeWidth="1.2" fill="none" />
+      <circle cx="63" cy="50" r="13" stroke={INK} strokeWidth="1.5" fill="none" />
+      <circle cx="63" cy="50" r="8" stroke={MUTED} strokeWidth="1.2" fill="none" />
+      <circle cx="29" cy="31" r="2.2" fill={ACCENT} stroke="none" />
+      {/* mounting holes + flex tail */}
+      <circle cx="22" cy="26" r="1.8" stroke={MUTED} strokeWidth="1.2" fill="none" />
+      <circle cx="80" cy="70" r="1.8" stroke={MUTED} strokeWidth="1.2" fill="none" />
+      <path d="M50 76v8h-14" stroke={INK} strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="24" y="80" width="12" height="8" rx="2" stroke={ACCENT} strokeWidth="1.4" fill="none" />
+    </>
+  ),
+
+  // Front camera: one lens on a narrow flex, not a three-lens island.
+  cameraFront: (
+    <>
+      <rect x="30" y="30" width="40" height="26" rx="8" {...common} />
+      <circle cx="43" cy="43" r="9" stroke={INK} strokeWidth="1.5" fill="none" />
+      <circle cx="43" cy="43" r="4.5" stroke={MUTED} strokeWidth="1.2" fill="none" />
+      <circle cx="40" cy="40" r="1.8" fill={ACCENT} stroke="none" />
+      <circle cx="61" cy="43" r="4" stroke={MUTED} strokeWidth="1.3" fill="none" />
+      <path d="M50 56v14h16" stroke={INK} strokeWidth="1.4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="66" y="66" width="12" height="8" rx="2" stroke={ACCENT} strokeWidth="1.4" fill="none" />
+      <path d="M69 68v4M72 68v4M75 68v4" stroke={MUTED} strokeWidth="1" strokeLinecap="round" />
     </>
   ),
 
@@ -212,7 +261,7 @@ const MAP = {
   'back-cover': 'glass',
   'bottom-cover': 'glass',
   'rear-camera': 'camera',
-  'front-camera': 'camera',
+  'front-camera': 'cameraFront',
   'loud-speaker': 'speaker',
   earpiece: 'speaker',
   'sim-tray': 'tray',

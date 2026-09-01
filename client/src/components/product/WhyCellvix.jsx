@@ -8,7 +8,7 @@ import { BUSINESS_INFO, GRADES } from '@/lib/constants';
  *
  * Deliberately NOT a grid of six icons and six claims — that is what every
  * supplier's page says, and a wholesale buyer comparing two of them learns
- * nothing from it. This is shaped like the document a trade buyer actually
+ * nothing from it. This is shaped like the document a business buyer actually
  * trusts: a bench record with the part's own SKU and grade stamped on it, the
  * four checks that grade was awarded against, and then the commercial terms as
  * numbered clauses rather than marketing tiles.
@@ -36,8 +36,8 @@ const CLAUSES = [
     body: `Stock sits in the ${BUSINESS_INFO.address.city} warehouse. In-stock parts ordered before 3:00 PM ET leave the same business day — no customs step in the middle.`,
   },
   {
-    title: 'Trade pricing, on terms',
-    body: 'Approved businesses buy on Net 15, 30 or 60 against a credit limit set by the trade desk, not a card charged one order at a time.',
+    title: 'Wholesale pricing, on terms',
+    body: 'Approved businesses buy on Net 15, 30 or 60 against a credit limit set by the sales desk, not a card charged one order at a time.',
   },
   {
     title: 'Warranty you can claim',

@@ -148,7 +148,7 @@ function CategoryTree({ tree, path, onSelect }) {
  *
  * Part types run past twenty options on a broad result set, which pushed grade
  * and availability under the fold on a laptop. Everything past `FACET_PREVIEW`
- * folds behind a "See more" — the same trade Amazon makes — with anything
+ * folds behind a "See more" — the same tradeoff Amazon makes — with anything
  * already ticked pulled up into the preview so a live filter is never hidden.
  */
 function FacetList({ options, isChecked, onToggle, renderLabel }) {
@@ -249,6 +249,20 @@ export function SidebarFilter({ facets, className }) {
       {/* pb-4, not py-1: the last section drops its bottom rule, so without it
           the closing row of options sits on the rail's own border. */}
       <div className="px-2 pb-4 pt-1">
+        {/* Component type leads, matching the wizard's order (Component Type >
+            Device Type > Brand > Series > Model). It stays a multi-select here
+            where the wizard takes one: a buyer sourcing a repair kit ticks
+            screen AND battery, and the sidebar is the surface for that. */}
+        {facets?.partType?.length > 0 && (
+          <Section title="Component Type">
+            <FacetList
+              options={facets.partType}
+              isChecked={(value) => facetState.partType.includes(value)}
+              onToggle={(value) => toggleFacet('partType', value)}
+            />
+          </Section>
+        )}
+
         <Section title="Category">
           {isLoading ? (
             <div className="space-y-2 px-2 py-1">
@@ -260,16 +274,6 @@ export function SidebarFilter({ facets, className }) {
             <CategoryTree tree={tree} path={path} onSelect={setPathLevel} />
           )}
         </Section>
-
-        {facets?.partType?.length > 0 && (
-          <Section title="Part Type">
-            <FacetList
-              options={facets.partType}
-              isChecked={(value) => facetState.partType.includes(value)}
-              onToggle={(value) => toggleFacet('partType', value)}
-            />
-          </Section>
-        )}
 
         {gradeOptions.length > 0 && (
           <Section title="Condition Grade">

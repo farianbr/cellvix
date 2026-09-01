@@ -13,7 +13,7 @@ export function AnnouncementBar() {
     <div className="relative bg-brand-gradient text-white">
       <div className="mx-auto flex max-w-[1400px] items-center justify-center gap-2 px-10 py-2 text-center">
         <p className="text-[12.5px] font-medium leading-tight">
-          Free shipping on trade orders over $500 · Same-day dispatch before 2 PM ET
+          Free shipping on wholesale orders over $500 · Same-day dispatch before 2 PM ET
         </p>
 
         {/* The strip is the only always-visible place an offer can be

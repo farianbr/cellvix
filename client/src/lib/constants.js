@@ -56,12 +56,29 @@ export const SORT_OPTIONS = [
 ];
 
 /** The four levels of the shared filter hierarchy, in cascade order. */
+/**
+ * The taxonomy path, in the order the wizard walks it.
+ *
+ * `componentType` leads: a business buyer knows they need a screen long before
+ * they care whose screen, and asking the part first lets every level below it
+ * be pruned to what actually stocks that component (see the server's
+ * getTreeForPartType) — so the wizard cannot offer a combination that returns
+ * nothing.
+ *
+ * It is NOT a node in the taxonomy tree — a battery exists for phones, laptops
+ * and watches alike — so it is stored as a facet and read back through the
+ * store's componentType helpers. Everything below it IS a tree level.
+ */
 export const FILTER_LEVELS = [
+  { key: 'componentType', label: 'Component Type', short: 'Component' },
   { key: 'deviceType', label: 'Device Type', short: 'Device' },
   { key: 'brand', label: 'Brand', short: 'Brand' },
   { key: 'series', label: 'Series', short: 'Series' },
   { key: 'model', label: 'Model', short: 'Model' },
 ];
+
+/** The levels that are real nodes in the taxonomy tree. */
+export const TREE_LEVELS = FILTER_LEVELS.filter((l) => l.key !== 'componentType');
 
 /** Order lifecycle, in the order the tracking stepper renders it. */
 export const ORDER_STATUSES = [

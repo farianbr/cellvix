@@ -3,7 +3,7 @@ import { Link, NavLink } from 'react-router';
 import { LogOut, ShieldCheck } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import cn from '@/lib/cn';
-import { ACCOUNT_NAV } from '@shared/schemas/account';
+import { ACCOUNT_NAV_ITEMS } from '@shared/schemas/account';
 import { accountIcon } from './accountIcons';
 import useUiStore from '@/store/uiStore';
 import { useAuth, useSignOut } from '@/hooks/useAuth';
@@ -62,7 +62,7 @@ export function useAccountMenuTrigger() {
  *
  * Reaching order history used to mean landing on /account first and finding the
  * sidebar; the same eight destinations are one click from any page now. It
- * reads `ACCOUNT_NAV` — the shared list the sidebar uses — so the two cannot
+ * reads `ACCOUNT_NAV_ITEMS` — the shared list the sidebar is built from — so the two cannot
  * fall out of step.
  *
  * Rendered inside <header> next to CartDropdown, and behaves the same way: no
@@ -180,7 +180,7 @@ export function AccountMenu() {
               >
                 <header id={titleId} className={cn('shrink-0 border-b border-line py-3', INSET)}>
                   <p className="truncate font-display text-[14.5px] font-bold text-ink-900">
-                    {user.businessName}
+                    {user.displayName}
                   </p>
                   <p className="mt-0.5 truncate text-[12px] text-ink-400">{user.email}</p>
 
@@ -195,7 +195,7 @@ export function AccountMenu() {
                     )}
                   >
                     <ShieldCheck className="size-3.5" strokeWidth={2} aria-hidden="true" />
-                    {isAdmin ? 'Staff account' : isApproved ? 'Trade account approved' : 'Under review'}
+                    {isAdmin ? 'Staff account' : isApproved ? 'Wholesale account approved' : 'Under review'}
                   </span>
                 </header>
 
@@ -218,7 +218,7 @@ export function AccountMenu() {
                     </Link>
                   ) : (
                     <ul className="space-y-0.5">
-                      {ACCOUNT_NAV.map((item) => {
+                      {ACCOUNT_NAV_ITEMS.map((item) => {
                         const Icon = accountIcon(item.icon);
                         return (
                           <li key={item.key}>

@@ -15,7 +15,7 @@ const EMPTY_ROW = () => ({ id: crypto.randomUUID(), product: null, qty: 1 });
 /**
  * Quick order pad / bulk reorder (brief §8.3).
  *
- * Two ways in, because trade buyers work both ways: a grid of parts picked from
+ * Two ways in, because business buyers work both ways: a grid of parts picked from
  * the catalogue, and a paste box for a column of SKUs copied out of a
  * spreadsheet.
  */

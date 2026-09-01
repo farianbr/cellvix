@@ -5,7 +5,7 @@ import { Banknote, CreditCard, Info, Plus, Star, Trash2 } from 'lucide-react';
 import cn from '@/lib/cn';
 import { money } from '@/lib/format';
 import { paymentMethodSchema } from '@shared/schemas/account';
-import Panel, { PanelEmpty } from '@/components/ui/Panel';
+import Panel, { CollapsiblePanel, PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Input from '@/components/ui/Input';
@@ -148,8 +148,22 @@ export function AccountPaymentMethodsPage() {
         </div>
       </Panel>
 
+      {/* Collapsed by default: terms are a standing fact about the account, not
+          something a buyer opens this page to change. The summary carries the
+          only part of it that moves. */}
       {termsEnabled && (
-        <Panel title="Trade terms">
+        <CollapsiblePanel
+          title="Credit terms"
+          summary={
+            summary?.credit ? (
+              <span className="tnum">
+                {money(summary.credit.available)} available on {user.terms.replace('net', 'Net ')}
+              </span>
+            ) : (
+              <span>{user.terms.replace('net', 'Net ')}</span>
+            )
+          }
+        >
           <div className="flex items-start gap-3">
             <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-ok-50 text-ok" aria-hidden="true">
               <Banknote className="size-4.5" strokeWidth={1.75} />
@@ -171,7 +185,7 @@ export function AccountPaymentMethodsPage() {
               )}
             </div>
           </div>
-        </Panel>
+        </CollapsiblePanel>
       )}
 
       <Modal open={adding} onClose={() => setAdding(false)} title="Add a card" size="sm">

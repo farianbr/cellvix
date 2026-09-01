@@ -33,7 +33,20 @@ const paymentMethodSchema = new mongoose.Schema(
 
 const userSchema = new mongoose.Schema(
   {
-    businessName: { type: String, required: true, trim: true },
+    /**
+     * **The account's identity is the person, not the company.**
+     *
+     * `contactName` is required and is what every screen shows; `businessName`
+     * is an optional detail a buyer can fill in later. It was the other way
+     * round, which meant a sole trader with no registered company name could
+     * not open an account at all, and every screen greeted a person by their
+     * paperwork.
+     *
+     * Nothing reads `businessName` directly for display any more — use
+     * `displayName` below, which falls back to the person and then to the email
+     * so a heading can never render blank.
+     */
+    businessName: { type: String, trim: true },
     contactName: { type: String, required: true, trim: true },
     email: {
       type: String,
@@ -122,7 +135,7 @@ const userSchema = new mongoose.Schema(
     // granted, where it came from, and when — because "we had consent" is a
     // claim that has to be evidenced, not asserted.
     //
-    // Registering a B2B trade account is implied consent under CASL s.10(9) for
+    // Registering a B2B wholesale account is implied consent under CASL s.10(9) for
     // messages about the business relationship. It is recorded explicitly
     // anyway: an implied basis nobody wrote down is one nobody can defend.
     marketingConsent: {
@@ -202,6 +215,23 @@ const userSchema = new mongoose.Schema(
     // earlier opt-in.
     unsubscribedAt: Date,
 
+    /**
+     * Password reset, stored as a **hash of** the token rather than the token.
+     *
+     * The value in the email is the only copy of the secret. What is kept here
+     * is `sha256(token)`, so a leaked database dump cannot be used to reset
+     * anybody's password — the same reason `passwordHash` exists two fields up.
+     * SHA-256 without a salt is right here and wrong for a password: the token
+     * is 32 random bytes, so there is no dictionary to attack and no need for a
+     * slow KDF.
+     *
+     * `resetTokenAt` is the expiry, not the issue time — checked on use, so an
+     * old link fails closed. Both are cleared the moment a reset succeeds,
+     * which is what makes a link single-use.
+     */
+    resetTokenHash: { type: String, select: false },
+    resetTokenAt: { type: Date, select: false },
+
     // Set when an admin locks a staff account out without deleting it — the
     // Users screen's Locked count. Distinct from `status: 'suspended'`, which
     // is the buyer-side approval ladder and has its own error message.
@@ -223,12 +253,30 @@ userSchema.methods.verifyPassword = function verifyPassword(plain) {
   return bcrypt.compare(plain, this.passwordHash);
 };
 
+/**
+ * What to call this account on screen, in one place.
+ *
+ * The person first, because the account is theirs; the company only if there is
+ * no person; the email last so a heading can never come out blank. Every screen
+ * that greets, lists or addresses an account reads this rather than picking a
+ * field itself — otherwise "what is this account called" gets answered
+ * differently on the dashboard, the approvals queue and an invoice, and an
+ * account with no company name renders as an empty heading on some of them.
+ *
+ * A virtual rather than a stored field: it is derived, and a stored copy would
+ * go stale the moment somebody edits their name.
+ */
+userSchema.virtual('displayName').get(function displayName() {
+  return this.contactName?.trim() || this.businessName?.trim() || this.email;
+});
+
 /** The shape sent to the client. Never leaks passwordHash. */
 userSchema.methods.toPublic = function toPublic() {
   return {
     id: this._id.toString(),
     businessName: this.businessName,
     contactName: this.contactName,
+    displayName: this.displayName,
     email: this.email,
     phone: this.phone,
     role: this.role,

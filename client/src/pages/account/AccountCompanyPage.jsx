@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircle, Check, ShieldCheck } from 'lucide-react';
 import { date } from '@/lib/format';
 import { profileSchema, changePasswordSchema } from '@shared/schemas/account';
-import Panel from '@/components/ui/Panel';
+import Panel, { CollapsiblePanel } from '@/components/ui/Panel';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -182,9 +182,15 @@ export function AccountCompanyPage() {
         <ProfileForm />
       </Panel>
 
-      <Panel title="Security">
+      {/* Collapsed: a password form open by default is a form nobody came to
+          fill in, sitting under the details they did come for.
+
+          No `summary` — the account carries no `passwordChangedAt`, and the
+          only line available would restate the title. The description says what
+          opening it offers, which is what a summary would have had to do. */}
+      <CollapsiblePanel title="Security" description="Change your password.">
         <PasswordForm />
-      </Panel>
+      </CollapsiblePanel>
     </div>
   );
 }

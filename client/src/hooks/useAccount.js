@@ -88,6 +88,32 @@ export function useAccountActivity() {
   });
 }
 
+/**
+ * The activity page's feed: the same history, filtered by kind and date and cut
+ * into pages by the server.
+ *
+ * `placeholderData` keeps the previous page on screen while the next one loads,
+ * so paging does not collapse the list to a skeleton and bounce the scroll
+ * position back to the top on every click.
+ */
+export function useActivityHistory({ kind = 'all', from = null, to = null, page = 1, limit = 20 } = {}) {
+  const { isApproved } = useAuth();
+
+  return useQuery({
+    queryKey: ['activity', 'history', { kind, from, to, page, limit }],
+    queryFn: () => {
+      const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+      if (kind && kind !== 'all') params.set('kind', kind);
+      if (from) params.set('from', from);
+      if (to) params.set('to', to);
+      return api.get(`/account/activity/history?${params}`);
+    },
+    enabled: isApproved,
+    placeholderData: (previous) => previous,
+    staleTime: 60 * 1000,
+  });
+}
+
 /** Referral code, rate, referred accounts and what they have earned. */
 export function useReferrals() {
   const { isApproved } = useAuth();

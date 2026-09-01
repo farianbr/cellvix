@@ -220,7 +220,7 @@ export function MegaMenu() {
                   <aside className="border-l border-line p-5">
                     <div className="flex h-full flex-col justify-between gap-6 rounded-[12px] bg-brand-gradient p-5 text-white">
                       <div>
-                        <p className="eyebrow mb-2 opacity-70">Trade programme</p>
+                        <p className="eyebrow mb-2 opacity-70">Partner programme</p>
                         <h4 className="text-[18px] leading-tight text-white">
                           Net 30 terms for approved shops
                         </h4>
