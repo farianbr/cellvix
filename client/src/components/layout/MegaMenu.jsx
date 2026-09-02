@@ -32,9 +32,10 @@ export function MegaMenu() {
   const [hoveredType, setHoveredType] = useState(null);
 
   // The component type is a FACET, not a level of the tree, so it cannot go
-  // through `setPath` — it has its own store action, which also cascades the
-  // tree below it so a device chosen for screens cannot survive unticking the
-  // component it was chosen for.
+  // through `setPath` — it has its own store action. That action leaves the
+  // chosen category path alone: the two are independent filters over one query,
+  // and a buyer who has drilled to a model and then ticks a component wants
+  // that model's component, not a trip back to the top of the tree.
   const toggleComponentType = useFilterStore((s) => s.toggleComponentType);
   const activeComponents = useFilterStore((s) => s.facets.partType);
 

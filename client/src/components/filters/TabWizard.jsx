@@ -52,7 +52,7 @@ export function TabWizard() {
     selectedComponents,
     componentLabels,
     setPathLevel,
-    toggleComponentType,
+    wizardComponentType,
     clearLevel,
     resetAll,
   } = useFilterStore(
@@ -62,7 +62,7 @@ export function TabWizard() {
       selectedComponents: s.facets.partType,
       componentLabels: s.componentLabels,
       setPathLevel: s.setPathLevel,
-      toggleComponentType: s.toggleComponentType,
+      wizardComponentType: s.wizardComponentType,
       clearLevel: s.clearLevel,
       resetAll: s.resetAll,
     })),
@@ -128,7 +128,7 @@ export function TabWizard() {
       // panel on the first would make the second tick a second trip. The buyer
       // closes it themselves — or steps forward — when they are done choosing.
       if (level === 'componentType') {
-        toggleComponentType(option.slug, option.name);
+        wizardComponentType(option.slug, option.name);
         return;
       }
 
@@ -152,7 +152,7 @@ export function TabWizard() {
 
       setOpenLevel(nextLevel);
     },
-    [openLevel, setPathLevel, toggleComponentType],
+    [openLevel, setPathLevel, wizardComponentType],
   );
 
   function openStep(level, index) {

@@ -80,18 +80,25 @@ export const useFilterStore = create((set, get) => ({
   },
 
   /**
-   * Adds or removes one component type and CASCADES the tree below it, exactly
-   * as setPathLevel does for the levels it owns.
+   * Adds or removes one component type. The chosen path is KEPT.
    *
-   * The cascade is the point: the device types, brands and models on offer are
-   * pruned to what stocks these components, so a path chosen for screens cannot
-   * survive unticking Screen and quietly return nothing.
+   * Component type is a facet that cuts across the tree, not a level above it.
+   * A buyer who has drilled to "iPhone 15 Pro" and then ticks Battery is asking
+   * for that model's battery — the most specific thing they have said is the
+   * model, and clearing it throws away the better answer to honour the newer
+   * one. This used to reset the path on every tick, which sent anyone filtering
+   * in that order back to step 1.
    *
-   * The path is cleared on every change rather than only when it goes empty.
-   * Narrowing the selection can strand a path just as easily as switching it
-   * — untick Screen from {Screen, Battery} and a Samsung model that only ever
-   * had a screen is now a dead end — and re-answering the tree is cheap next to
-   * landing on an empty grid.
+   * Nor does keeping it risk an empty grid. The path and the component types are
+   * independent filters over one product query: a model that stocks no battery
+   * simply returns nothing for that pair, which is a true answer, and the
+   * sidebar's own counts show it coming. `ActiveFilterChips` lists both, so
+   * whichever the buyer wants to drop is one click away.
+   *
+   * The wizard is the exception and handles it itself — see `wizardComponentType`,
+   * which is what step 1 calls. There the tree below is genuinely re-derived
+   * from the component, so a stale path would be offered from a tree it was
+   * never chosen in.
    */
   toggleComponentType(slug, label = null) {
     if (!slug) return;
@@ -108,11 +115,25 @@ export const useFilterStore = create((set, get) => ({
       return {
         facets: { ...state.facets, partType },
         componentLabels,
-        path: emptyPath(),
-        labels: emptyPath(),
         page: 1,
       };
     });
+  },
+
+  /**
+   * Step 1 of the WIZARD: the same toggle, but cascading the tree beneath it.
+   *
+   * Only the wizard resets the path, and only because it then walks the buyer
+   * back down a tree that has been re-pruned to the new component — offering
+   * step 2 from one tree while step 5 still holds an answer from another is how
+   * the wizard ends up proposing a combination that stocks nothing. The sidebar
+   * and mega menu are not walking anybody anywhere, so they keep the path.
+   */
+  wizardComponentType(slug, label = null) {
+    if (!slug) return;
+
+    get().toggleComponentType(slug, label);
+    set({ path: emptyPath(), labels: emptyPath() });
   },
 
   /**

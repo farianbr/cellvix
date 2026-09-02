@@ -149,15 +149,28 @@ function CategoryTree({ tree, path, onSelect }) {
  * Part types run past twenty options on a broad result set, which pushed grade
  * and availability under the fold on a laptop. Everything past `FACET_PREVIEW`
  * folds behind a "See more" — the same tradeoff Amazon makes — with anything
- * already ticked pulled up into the preview so a live filter is never hidden.
+ * already ticked kept visible so a live filter is never hidden.
+ *
+ * **The rows do not move when you tick one.** This used to re-sort ticked
+ * options to the top on every render, so the row you clicked jumped out from
+ * under the cursor and the one below took its place — which is how a second
+ * click lands on the wrong filter. The list keeps the server's order.
+ *
+ * The guarantee the sort was there for is kept a cheaper way: the preview is
+ * the first `FACET_PREVIEW` options PLUS any ticked option that falls outside
+ * them, appended in the list's own order. So a tick near the bottom stays
+ * visible without disturbing anything above it, and untickng it removes a row
+ * from the end rather than reshuffling the whole column.
  */
 function FacetList({ options, isChecked, onToggle, renderLabel }) {
   const [expanded, setExpanded] = useState(false);
 
-  const ordered = expanded
-    ? options
-    : [...options].sort((a, b) => Number(isChecked(b.value)) - Number(isChecked(a.value)));
-  const shown = expanded ? ordered : ordered.slice(0, FACET_PREVIEW);
+  const preview = options.slice(0, FACET_PREVIEW);
+  const checkedBeyond = options
+    .slice(FACET_PREVIEW)
+    .filter((option) => isChecked(option.value));
+
+  const shown = expanded ? options : [...preview, ...checkedBeyond];
   const hidden = options.length - shown.length;
 
   return (
@@ -255,10 +268,11 @@ export function SidebarFilter({ facets, className }) {
             surfaces now — a buyer sourcing a repair kit ticks screen AND
             battery, and the wizard and mega menu take the same ticks.
 
-            `toggleComponentType`, not `toggleFacet`: this level CASCADES. The
-            tree below is pruned to the ticked components, so leaving a stale
-            device or model attached after a tick changes would point the grid at
-            a combination that no longer stocks anything. */}
+            `toggleComponentType`, not `toggleFacet`, so the label is recorded
+            for the chips and the wizard's first tab. It does NOT clear the
+            category path: a buyer who has drilled to a model and then ticks
+            Battery wants that model's battery, and resetting them to the top of
+            the tree throws away the more specific thing they said. */}
         {facets?.partType?.length > 0 && (
           <Section title="Component Type">
             <FacetList

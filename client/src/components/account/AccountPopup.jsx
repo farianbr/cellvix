@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   ShoppingBag,
   UserRound,
+  X,
 } from 'lucide-react';
 import cn from '@/lib/cn';
 import api from '@/lib/api';
@@ -922,7 +923,11 @@ export function AccountPopup() {
       onClose={close}
       size="lg"
       className="max-w-[832px]"
-      showClose
+      // The dialog draws its own close button, beside the tabs — see below.
+      // Modal's floating one sits top-right over the content, which is fine on
+      // desktop where it lands on the red panel, and wrong below `md` where the
+      // panel is hidden and it floats over the form with nothing behind it.
+      showClose={false}
       bodyClassName="p-0 md:p-0"
     >
       {/* **The content sets the height.** The frame used to be pinned to the
@@ -950,28 +955,47 @@ export function AccountPopup() {
             sprawling. Capped, the two-up rows stay comfortable and the lone
             fields stop looking like the most important thing on the page. */}
         <div className="scroll-slim mx-auto min-h-0 w-full min-w-0 max-w-[480px] overflow-y-auto px-5 pb-6 pt-5 md:mx-0 md:pl-6 md:pr-0">
-          <div
-            role="tablist"
-            aria-label="Account"
-            className="mb-5 flex gap-1 rounded-[10px] bg-surface-2 p-1"
-          >
-            {TABS.map((item) => (
-              <button
-                key={item.key}
-                role="tab"
-                type="button"
-                aria-selected={tab === item.key}
-                onClick={() => setTab(item.key)}
-                className={cn(
-                  'flex-1 rounded-[8px] py-2 font-display text-[13px] font-semibold transition-[background,color,box-shadow] duration-[120ms]',
-                  tab === item.key
-                    ? 'bg-surface text-ink-900 shadow-card'
-                    : 'text-ink-400 hover:text-ink-700',
-                )}
-              >
-                {item.label}
-              </button>
-            ))}
+          {/* The close button shares this row with the tabs rather than floating
+              over the content. Below `md` the red panel is hidden, so a floating
+              X had nothing behind it and read as stuck to the form; on the row
+              it is part of the layout at every width, and the tabs give it a
+              baseline to sit on. */}
+          <div className="mb-5 flex items-center gap-2">
+            <div
+              role="tablist"
+              aria-label="Account"
+              className="flex min-w-0 flex-1 gap-1 rounded-[10px] bg-surface-2 p-1"
+            >
+              {TABS.map((item) => (
+                <button
+                  key={item.key}
+                  role="tab"
+                  type="button"
+                  aria-selected={tab === item.key}
+                  onClick={() => setTab(item.key)}
+                  className={cn(
+                    'flex-1 rounded-[8px] py-2 font-display text-[13px] font-semibold transition-[background,color,box-shadow] duration-[120ms]',
+                    tab === item.key
+                      ? 'bg-surface text-ink-900 shadow-card'
+                      : 'text-ink-400 hover:text-ink-700',
+                  )}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Hidden at `md` and up, where the dialog's own top-right corner is
+                the red panel and a close button there is conventional — that one
+                is drawn by the grid cell below. */}
+            <button
+              type="button"
+              onClick={close}
+              aria-label="Close dialog"
+              className="flex size-9 shrink-0 items-center justify-center rounded-[8px] text-ink-400 transition-colors hover:bg-surface-2 hover:text-ink-900 active:scale-[0.97] md:hidden"
+            >
+              <X className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />
+            </button>
           </div>
 
           {tab === 'signin' && <SignInTab onDone={close} />}
@@ -989,8 +1013,21 @@ export function AccountPopup() {
             opts out of stretching; the form column still fills the frame and
             scrolls inside it. Insets match the form column's (`pt-5 pb-6`) so
             both start on the same line. */}
-        <div className="hidden min-h-0 items-start pb-6 pl-0 pr-5 pt-5 md:flex">
+        <div className="relative hidden min-h-0 items-start pb-6 pl-0 pr-5 pt-5 md:flex">
           <SidePanel />
+
+          {/* The desktop close, over the red panel where it has a dark ground to
+              sit on and reads as the dialog's corner. Below `md` the panel is
+              hidden and this goes with it — the tab row carries the close there
+              instead. */}
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Close dialog"
+            className="absolute right-8 top-8 z-10 flex size-9 items-center justify-center rounded-lg text-white/70 transition-colors hover:bg-white/15 hover:text-white active:scale-[0.97]"
+          >
+            <X className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />
+          </button>
         </div>
       </div>
     </Modal>
