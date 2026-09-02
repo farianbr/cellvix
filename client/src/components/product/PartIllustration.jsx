@@ -268,6 +268,7 @@ const MAP = {
   'housing-frame': 'frame',
   keyboard: 'keyboard',
   trackpad: 'trackpad',
+  'flex-cable': 'hinge',
   'hinge-set': 'hinge',
   'cooling-fan': 'fan',
   'digital-crown': 'crown',

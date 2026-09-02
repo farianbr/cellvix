@@ -15,8 +15,13 @@ const { default: env } = require('../config/env.js');
  *
  *   - `MOCK_PAYMENT_DECLINE=true` in the environment — declines everything,
  *     which is what the smoke test and the screenshot runner use;
- *   - a PO number starting with `DECLINE` — one order at a time, no restart,
- *     which is how the failure page is demonstrated to the client.
+ *   - a DELIVERY NOTE starting with `DECLINE` — one order at a time, no
+ *     restart, which is how the failure page is demonstrated to the client.
+ *     This used to ride on the PO number, but a PO is supplier paperwork and
+ *     the customer checkout no longer collects one. Delivery notes are the
+ *     remaining free-text field on that form, so the trigger moved there.
+ *     `poNumber` is still honoured for the admin and quick-order paths that
+ *     legitimately carry one.
  *
  * Neither is reachable by accident on a normal order, so the locked "mock always
  * succeeds" decision still holds for every buyer who is not asking for a decline.
@@ -32,12 +37,18 @@ const DECLINE_PREFIX = 'DECLINE';
 
 const DECLINE_REASONS = {
   forced: 'The payment was declined by the card issuer. No charge was made.',
-  po: 'Test decline: this order carried a DECLINE purchase-order number. No charge was made.',
+  marker: 'Test decline: this order carried a DECLINE marker. No charge was made.',
 };
 
-function declineReason({ poNumber }) {
+function startsWithMarker(value) {
+  return String(value ?? '').trim().toUpperCase().startsWith(DECLINE_PREFIX);
+}
+
+function declineReason({ poNumber, deliveryNotes }) {
   if (env.MOCK_PAYMENT_DECLINE) return 'forced';
-  if (String(poNumber ?? '').trim().toUpperCase().startsWith(DECLINE_PREFIX)) return 'po';
+  // Either field — the customer checkout sends a delivery note, the admin and
+  // quick-order paths still send a PO number.
+  if (startsWithMarker(deliveryNotes) || startsWithMarker(poNumber)) return 'marker';
   return null;
 }
 
@@ -47,10 +58,11 @@ function declineReason({ poNumber }) {
  * @param {'card'|'terms'} params.method
  * @param {string} params.orderNumber
  * @param {string} [params.poNumber]
+ * @param {string} [params.deliveryNotes]
  * @returns {Promise<{ status: 'paid'|'pending', reference: string, processedAt: Date }>}
  * @throws {ApiError} 402 PAYMENT_DECLINED
  */
-async function charge({ amount, method, orderNumber, poNumber }) {
+async function charge({ amount, method, orderNumber, poNumber, deliveryNotes }) {
   // A little latency so the checkout's loading state is exercised in dev.
   await new Promise((resolve) => setTimeout(resolve, 350));
 
@@ -58,7 +70,7 @@ async function charge({ amount, method, orderNumber, poNumber }) {
     throw new Error(`Refusing to charge a non-positive amount: ${amount}`);
   }
 
-  const reason = declineReason({ poNumber });
+  const reason = declineReason({ poNumber, deliveryNotes });
   if (reason) throw ApiError.paymentDeclined(DECLINE_REASONS[reason]);
 
   return {

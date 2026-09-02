@@ -65,7 +65,8 @@ function buildDefaults(user) {
     // dark pattern with a friendly face.
     useStoreCredit: true,
     // Smart field memory: last order's free-text values, offered back (brief §7).
-    poNumber: user?.fieldMemory?.poNumber ?? '',
+    // `poNumber` is not among them any more — a PO is supplier paperwork, and
+    // the customer checkout no longer collects one.
     deliveryNotes: user?.fieldMemory?.deliveryNotes ?? '',
   };
 }
@@ -651,21 +652,15 @@ export function CheckoutPage() {
                 )}
               </fieldset>
 
-              <Input
-                label="PO number"
-                containerClassName="mt-4"
-                hint={
-                  user?.fieldMemory?.poNumber
-                    ? 'Pre-filled from your last order.'
-                    : 'Optional — appears on your invoice.'
-                }
-                {...register('poNumber')}
-              />
-
+              {/* The PO number field is gone. A purchase order is a document a
+                  BUYER raises against a SUPPLIER — it belongs to Cellvix's own
+                  purchasing side, where AdminPurchaseOrders already owns it, and
+                  asking a customer for one put a supplier's paperwork on a
+                  retail checkout. */}
               <p className="mt-4 rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12.5px] leading-relaxed text-ink-500">
                 Payments run against a test gateway in this build — no card details are sent or
-                stored, and no card is charged. A PO number starting{' '}
-                <span className="font-semibold text-ink-700">DECLINE</span> shows the failed-payment
+                stored, and no card is charged. Delivery notes starting{' '}
+                <span className="font-semibold text-ink-700">DECLINE</span> show the failed-payment
                 path.
               </p>
 

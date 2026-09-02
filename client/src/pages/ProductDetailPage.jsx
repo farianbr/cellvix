@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
-import { Check, ChevronRight, Lock, ShieldCheck, ShoppingCart } from 'lucide-react';
+import { Check, ChevronRight, Lock, Search, ShieldCheck, ShoppingCart } from 'lucide-react';
 import cn from '@/lib/cn';
 import api from '@/lib/api';
 import { money, productTitle } from '@/lib/format';
@@ -12,6 +12,7 @@ import Skeleton from '@/components/ui/Skeleton';
 import QtyStepper from '@/components/product/QtyStepper';
 import GradeBadge from '@/components/product/GradeBadge';
 import PartFrame from '@/components/product/PartFrame';
+import ImageZoom from '@/components/product/ImageZoom';
 import ProductCard from '@/components/product/ProductCard';
 import MarketCompare from '@/components/product/MarketCompare';
 import ProductFaq from '@/components/product/ProductFaq';
@@ -131,12 +132,28 @@ export function ProductDetailPage() {
 
       <div className="grid gap-6 md:grid-cols-2 lg:gap-10">
         {/* ---- visual ------------------------------------------------------ */}
-        {/* The same PartFrame the grid card uses, at aspect-square — the part
-            name and model sit inside the top of the image, above the drawing.
-            One component, so the caption cannot drift between the two. */}
-        <div className="relative overflow-hidden rounded-[14px] border border-line bg-surface-2">
-          <PartFrame product={product} aspect="aspect-square" decorative />
-          <GradeBadge grade={product.grade} className="absolute left-4 top-4" />
+        {/* The same PartFrame the grid card uses, at aspect-square — the model
+            sits as a watermark behind the part. One component, so the treatment
+            cannot drift between the two. The <h1> beside this owns the name.
+
+            ImageZoom wraps it for the mouse: a wholesale buyer is checking a
+            connector or a stamped number against the part in their hand, which
+            a 600px photo does not settle. It renders its children untouched on
+            touch devices and where there is no photograph. */}
+        <div className="group relative overflow-hidden rounded-[14px] border border-line bg-surface-2">
+          <ImageZoom product={product}>
+            <PartFrame product={product} aspect="aspect-square" />
+          </ImageZoom>
+
+          <GradeBadge grade={product.grade} className="absolute left-4 top-4 z-3" />
+
+          {/* Says the magnifier is there. Hidden from touch, where it is not,
+              and it fades once the pointer is over the image — by then the lens
+              is on screen and saying so twice is clutter over the picture. */}
+          <p className="pointer-events-none absolute bottom-4 right-4 z-3 hidden items-center gap-1.5 rounded-full border border-line bg-surface/90 px-2.5 py-1 text-[11.5px] font-medium text-ink-500 shadow-card backdrop-blur-[2px] transition-opacity duration-200 group-hover:opacity-0 [@media(hover:hover)]:inline-flex">
+            <Search className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+            Hover to magnify
+          </p>
         </div>
 
         {/* ---- detail ------------------------------------------------------ */}
@@ -158,15 +175,39 @@ export function ProductDetailPage() {
 
           {/* price, gated */}
           <div className="relative mt-6">
+            {/* The same shape as the grid card, at detail-page sizes: the
+                struck comparison ABOVE, so it is read before the number it
+                justifies, and the saving as a badge BESIDE that number, because
+                it is a property of it. The two surfaces disagreeing about how a
+                discount looks made the same product read as two different
+                offers.
+
+                `compareAtPrice` wins when both exist — two struck numbers over
+                one price is a card claiming two discounts, and our own former
+                price is the more direct claim. */}
             <div className={cn(gated && 'price-gated')} aria-hidden={gated || undefined}>
-              <div className="flex items-baseline gap-3">
+              {!gated && !product.compareAtPrice && product.market && (
+                <span className="tnum text-[15px] text-ink-300 line-through">
+                  {money(product.market.average)}
+                </span>
+              )}
+
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5">
                 <span className="tnum font-display text-[32px] font-bold tracking-tight text-ink-900">
                   {gated ? '$000.00' : money(product.price)}
                 </span>
-                {!gated && product.compareAtPrice && (
+
+                {!gated && product.compareAtPrice ? (
                   <span className="tnum text-[15px] text-ink-300 line-through">
                     {money(product.compareAtPrice)}
                   </span>
+                ) : (
+                  !gated &&
+                  product.market && (
+                    <span className="tnum shrink-0 rounded-full bg-ok-50 px-2 py-0.5 text-[12.5px] font-bold text-ok">
+                      Save {product.market.savingsPercent}%
+                    </span>
+                  )
                 )}
               </div>
             </div>

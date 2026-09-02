@@ -5,6 +5,7 @@ import MobileBottomNav from './MobileBottomNav';
 import BackToTop from './BackToTop';
 import ScrollToTop from './ScrollToTop';
 import AccountPopup from '@/components/account/AccountPopup';
+import SignOutConfirm from '@/components/account/SignOutConfirm';
 import RouteFallback from './RouteFallback';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -46,6 +47,7 @@ export function RootLayout() {
       <div className="h-[calc(64px+env(safe-area-inset-bottom))] shrink-0 lg:hidden" aria-hidden="true" />
 
       <AccountPopup />
+      <SignOutConfirm />
       <MobileBottomNav />
       <BackToTop />
     </div>

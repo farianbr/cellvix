@@ -187,6 +187,9 @@ async function createOrder(user, input) {
           method: input.paymentMethod,
           orderNumber,
           poNumber: input.poNumber,
+          // Carries the DECLINE marker on the customer checkout, which no
+          // longer collects a PO number. See services/payment.js.
+          deliveryNotes: input.deliveryNotes,
         })
       : { status: 'paid', reference: `store_credit_${orderNumber}`, processedAt: new Date() };
 

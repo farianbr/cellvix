@@ -483,7 +483,7 @@ const PRODUCT_FAQS = [
     answer:
       'The finish is listed in the specifications on this page. Where a chassis shipped in both, Cellvix lists them as separate SKUs so there is nothing to guess at.',
     category: 'products',
-    partType: 'lcd-panel',
+    partType: 'screen-assembly',
     deviceTypeSlug: 'laptop',
     order: 5,
   },
@@ -530,7 +530,7 @@ function buildOffers(products) {
   const [volumeScreen, volumeBackGlass] =
     modelWith('smartphone', ['screen-assembly', 'back-glass'], 1) ?? [];
   const [tabletScreen, tabletBattery] = modelWith('tablet', ['screen-assembly', 'battery']) ?? [];
-  const [laptopPanel, laptopBattery] = modelWith('laptop', ['lcd-panel', 'battery']) ?? [];
+  const [laptopPanel, laptopBattery] = modelWith('laptop', ['screen-assembly', 'battery']) ?? [];
 
   const bundle = (items, discount) => {
     const regular = items.reduce((sum, item) => sum + item.product.price * item.qty, 0);

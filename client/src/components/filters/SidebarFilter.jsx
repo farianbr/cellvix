@@ -168,7 +168,7 @@ function FacetList({ options, isChecked, onToggle, renderLabel }) {
           label={renderLabel ? renderLabel(option) : option.label}
           count={option.count}
           checked={isChecked(option.value)}
-          onChange={() => onToggle(option.value)}
+          onChange={() => onToggle(option.value, option)}
         />
       ))}
 
@@ -222,12 +222,13 @@ function Section({ title, children, defaultOpen = true }) {
 export function SidebarFilter({ facets, className }) {
   const { data: tree, isLoading } = useTaxonomy();
 
-  const { path, facetState, setPathLevel, toggleFacet, setFacet } = useFilterStore(
+  const { path, facetState, setPathLevel, toggleFacet, toggleComponentType, setFacet } = useFilterStore(
     useShallow((s) => ({
       path: s.path,
       facetState: s.facets,
       setPathLevel: s.setPathLevel,
       toggleFacet: s.toggleFacet,
+      toggleComponentType: s.toggleComponentType,
       setFacet: s.setFacet,
     })),
   );
@@ -250,15 +251,20 @@ export function SidebarFilter({ facets, className }) {
           the closing row of options sits on the rail's own border. */}
       <div className="px-2 pb-4 pt-1">
         {/* Component type leads, matching the wizard's order (Component Type >
-            Device Type > Brand > Series > Model). It stays a multi-select here
-            where the wizard takes one: a buyer sourcing a repair kit ticks
-            screen AND battery, and the sidebar is the surface for that. */}
+            Device Type > Brand > Series > Model). Multi-select on all three
+            surfaces now — a buyer sourcing a repair kit ticks screen AND
+            battery, and the wizard and mega menu take the same ticks.
+
+            `toggleComponentType`, not `toggleFacet`: this level CASCADES. The
+            tree below is pruned to the ticked components, so leaving a stale
+            device or model attached after a tick changes would point the grid at
+            a combination that no longer stocks anything. */}
         {facets?.partType?.length > 0 && (
           <Section title="Component Type">
             <FacetList
               options={facets.partType}
               isChecked={(value) => facetState.partType.includes(value)}
-              onToggle={(value) => toggleFacet('partType', value)}
+              onToggle={(value, option) => toggleComponentType(value, option?.label ?? null)}
             />
           </Section>
         )}

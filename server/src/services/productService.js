@@ -3,6 +3,17 @@ const { default: Taxonomy } = require('../models/Taxonomy.js');
 const { canSeePricing } = require('../middleware/auth.js');
 const { listForProduct: listFaqsForProduct } = require('./faqService.js');
 const { likeRegex } = require('../utils/regex.js');
+/**
+ * A product is listable only if it can show a picture: either it carries its
+ * own `image`, or its brand-and-component-type pair has a stock photo.
+ *
+ * Applied in `buildQuery`, which is the ONE place the catalogue's shape is
+ * decided — the listing, the facet counts and the price bounds all build off
+ * it, so a product hidden from the grid is also absent from every count beside
+ * it. `taxonomyService` applies the same clause for the same reason. Admin
+ * queries do not go through here and still see everything.
+ */
+const { HAS_PICTURE } = require('../../../shared/partPhotos.js');
 
 const PAGE_SIZE = 24;
 
@@ -79,6 +90,16 @@ function serialize(product, user) {
 function marketPosition(doc) {
   const competitors = (doc.competitors ?? [])
     .filter((entry) => entry && Number.isFinite(entry.price) && entry.price > 0)
+    // Only sellers we BEAT. A benchmark cheaper than us is a competitor doing
+    // the undercutting, and listing it inside a panel headed "save X vs market"
+    // hands a buyer the cheaper shop's name — the comparison exists to show we
+    // are the better buy, so a row that says otherwise does not belong in it.
+    //
+    // Dropped BEFORE the average, so the figure the card claims is the average
+    // of what is actually shown. Averaging over hidden rows and displaying the
+    // rest is a total the reader cannot reproduce from the numbers in front of
+    // them, which is exactly how a comparison stops being trusted.
+    .filter((entry) => entry.price > doc.price)
     .map((entry) => ({ name: entry.name, price: entry.price }));
 
   if (!competitors.length) return null;
@@ -99,8 +120,11 @@ function marketPosition(doc) {
     // Whole percent — a card has no room for a decimal, and "18%" is the claim
     // a buyer repeats back anyway.
     savingsPercent: Math.round((savings / average) * 100),
-    // True only when we beat every single one, not just their mean. It is a
-    // stronger claim, so it gets a stricter test.
+    // Always true now that dearer-than-us is the filter above: every row that
+    // survives is a seller we beat, so we are the cheapest of what is shown.
+    // Kept on the wire because the clients render on it, and because the day a
+    // product legitimately shows an undercutting benchmark this is the flag
+    // that has to go false rather than a new one that has to be invented.
     isLowest: doc.price < lowest,
   };
 }
@@ -135,10 +159,18 @@ function buildQuery({ deviceType, brand, series, model, partType, grade, inStock
 
   if (inStockOnly) query.stock = { $gt: 0 };
 
+  // Both the search terms and the picture rule are `$or`s, and a Mongo document
+  // holds one `$or` key — the second would silently replace the first and widen
+  // the search to the whole catalogue. `$and` keeps them as two independent
+  // clauses that must both hold.
+  const clauses = [HAS_PICTURE];
+
   if (q) {
     const rx = likeRegex(q);
-    query.$or = [{ name: rx }, { sku: rx }, { searchTerms: rx }, { modelName: rx }];
+    clauses.push({ $or: [{ name: rx }, { sku: rx }, { searchTerms: rx }, { modelName: rx }] });
   }
+
+  query.$and = clauses;
 
   return query;
 }

@@ -23,9 +23,13 @@ const emptyFacets = () => ({
 
 const initial = {
   path: emptyPath(),
-  // The display name for the chosen component type, so the wizard's first tab
-  // reads "Battery" rather than "battery" without a lookup.
-  componentLabel: null,
+  // Display names for the chosen component types, keyed by slug, so the wizard's
+  // first tab reads "Battery" rather than "battery" without a lookup.
+  //
+  // A MAP rather than a single string: component type is multi-select, and a
+  // buyer who has ticked Battery and Screen needs both names — the old scalar
+  // could only ever name one of them.
+  componentLabels: {},
   // Human-readable labels for the active path, so chips and completed wizard
   // tabs can render "Galaxy S23 Ultra" without another lookup.
   labels: emptyPath(),
@@ -64,31 +68,65 @@ export const useFilterStore = create((set, get) => ({
   },
 
   /**
-   * Step 1 of the wizard: the single component type it is walking.
+   * Step 1 of the wizard: the component types it is walking.
    *
-   * The sidebar keeps `facets.partType` a multi-select — a buyer ticking
-   * Battery AND Screen is a legitimate thing to want — so the wizard's notion
-   * of "the" component is "the one selected, when exactly one is". Two ticks
-   * from the sidebar leave the wizard's first tab blank rather than lying about
-   * which of them it means.
+   * Multi-select — a buyer wanting Battery AND Screen is a legitimate thing to
+   * want, and the sidebar always allowed it. The wizard, the mega menu and the
+   * sidebar now all read and write this one list, so a tick in any of them is
+   * the same tick.
    */
-  componentType() {
-    const list = get().facets.partType;
-    return list.length === 1 ? list[0] : null;
+  componentTypes() {
+    return get().facets.partType;
   },
 
   /**
-   * Sets the wizard's component type and CASCADES the tree below it, exactly as
-   * setPathLevel does for the levels it owns.
+   * Adds or removes one component type and CASCADES the tree below it, exactly
+   * as setPathLevel does for the levels it owns.
    *
    * The cascade is the point: the device types, brands and models on offer are
-   * pruned to what stocks this component, so a path chosen for screens cannot
-   * survive a switch to batteries and quietly return nothing.
+   * pruned to what stocks these components, so a path chosen for screens cannot
+   * survive unticking Screen and quietly return nothing.
+   *
+   * The path is cleared on every change rather than only when it goes empty.
+   * Narrowing the selection can strand a path just as easily as switching it
+   * — untick Screen from {Screen, Battery} and a Samsung model that only ever
+   * had a screen is now a dead end — and re-answering the tree is cheap next to
+   * landing on an empty grid.
    */
-  setComponentType(slug, label = null) {
+  toggleComponentType(slug, label = null) {
+    if (!slug) return;
+
+    set((state) => {
+      const current = state.facets.partType;
+      const has = current.includes(slug);
+      const partType = has ? current.filter((v) => v !== slug) : [...current, slug];
+
+      const componentLabels = { ...state.componentLabels };
+      if (has) delete componentLabels[slug];
+      else if (label) componentLabels[slug] = label;
+
+      return {
+        facets: { ...state.facets, partType },
+        componentLabels,
+        path: emptyPath(),
+        labels: emptyPath(),
+        page: 1,
+      };
+    });
+  },
+
+  /**
+   * Replaces the whole component-type selection at once.
+   *
+   * `null` clears it — which is what `clearLevel('componentType')` wants, and
+   * what the wizard's "start over" does.
+   */
+  setComponentTypes(slugs, labels = {}) {
+    const list = Array.isArray(slugs) ? slugs.filter(Boolean) : slugs ? [slugs] : [];
+
     set((state) => ({
-      facets: { ...state.facets, partType: slug ? [slug] : [] },
-      componentLabel: slug ? label : null,
+      facets: { ...state.facets, partType: list },
+      componentLabels: list.length ? { ...labels } : {},
       path: emptyPath(),
       labels: emptyPath(),
       page: 1,
@@ -108,7 +146,7 @@ export const useFilterStore = create((set, get) => ({
     // Clearing step 1 clears everything below it, since the whole tree the
     // lower steps were chosen from was pruned to that component.
     if (level === 'componentType') {
-      get().setComponentType(null);
+      get().setComponentTypes(null);
       return;
     }
     get().setPathLevel(level, null, null);
@@ -160,7 +198,7 @@ export const useFilterStore = create((set, get) => ({
       path: emptyPath(),
       labels: emptyPath(),
       facets: emptyFacets(),
-      componentLabel: null,
+      componentLabels: {},
     });
   },
 
@@ -170,7 +208,7 @@ export const useFilterStore = create((set, get) => ({
    */
   depth() {
     const { path } = get();
-    if (!get().componentType()) return 0;
+    if (get().componentTypes().length === 0) return 0;
 
     let depth = 1;
     for (const level of LEVELS) {

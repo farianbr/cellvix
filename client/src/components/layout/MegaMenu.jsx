@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router';
-import { iconFor } from '@/lib/icons';
+import { componentIconFor, iconFor } from '@/lib/icons';
 import { ArrowRight, ChevronRight } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import cn from '@/lib/cn';
 import { count as formatCount } from '@/lib/format';
-import { useTaxonomy } from '@/hooks/useCatalog';
+import { useTaxonomy, usePartTypes } from '@/hooks/useCatalog';
 import useApplyFilterPath from '@/hooks/useApplyFilterPath';
+import useFilterStore from '@/store/filterStore';
 import useUiStore from '@/store/uiStore';
 import Skeleton from '@/components/ui/Skeleton';
 
@@ -27,7 +28,31 @@ export function MegaMenu() {
   const setPath = useApplyFilterPath();
 
   const { data: tree, isLoading } = useTaxonomy();
+  const { data: componentTypes, isLoading: loadingComponents } = usePartTypes();
   const [hoveredType, setHoveredType] = useState(null);
+
+  // The component type is a FACET, not a level of the tree, so it cannot go
+  // through `setPath` — it has its own store action, which also cascades the
+  // tree below it so a device chosen for screens cannot survive unticking the
+  // component it was chosen for.
+  const toggleComponentType = useFilterStore((s) => s.toggleComponentType);
+  const activeComponents = useFilterStore((s) => s.facets.partType);
+
+  const applyComponentType = useCallback(
+    (slug, label) => {
+      // The menu STAYS OPEN. Component type is multi-select, and closing the
+      // panel on the first tick would make the second one a second trip through
+      // the header. The grid behind updates on every tick, so the buyer can see
+      // the selection working while they build it.
+      //
+      // No navigation here either, for the same reason: jumping to the Shop page
+      // mid-selection would close the menu out from under them. The Shop links
+      // already in this panel are the way there, and they carry the store's
+      // state with them.
+      toggleComponentType(slug, label);
+    },
+    [toggleComponentType],
+  );
 
   const activeType = tree?.find((t) => t.slug === hoveredType) ?? tree?.[0] ?? null;
 
@@ -84,6 +109,73 @@ export function MegaMenu() {
               onClick={(event) => event.stopPropagation()}
             >
               <div className="overflow-hidden rounded-b-[16px] border border-t-0 border-line bg-surface shadow-flyout">
+                {/* ---- component types ------------------------------- */}
+                {/* First, and across the full width, because it is the first
+                    step of the wizard and it cuts ACROSS the tree below: a
+                    battery exists for phones, tablets and watches alike, so it
+                    cannot be a column beside them. Flat `bg-brand` when active —
+                    the gradient is reserved for the promo block on this panel,
+                    and two gradients on one surface is two signatures. */}
+                <div className="border-b border-line bg-surface-2 px-5 py-3">
+                  <div className="mb-2 flex items-baseline justify-between gap-3">
+                    <p className="eyebrow text-ink-300">
+                      Component type
+                    </p>
+
+                    {/* Ticking no longer navigates, so off the Shop page this is
+                        the way through. `applyFilter({})` writes an empty path,
+                        which leaves the component ticks alone and lets
+                        useApplyFilterPath carry the whole store to the grid. */}
+                    {activeComponents.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => applyFilter({}, {})}
+                        className="inline-flex shrink-0 items-center gap-1 text-[12.5px] font-medium text-brand transition-colors hover:text-brand-700"
+                      >
+                        Shop {formatCount(activeComponents.length)} selected
+                        <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    {loadingComponents
+                      ? Array.from({ length: 8 }).map((_, index) => (
+                          <Skeleton key={index} className="h-8 w-28" />
+                        ))
+                      : componentTypes?.map((component) => {
+                          const Icon = componentIconFor(component.value);
+                          const isActive = activeComponents.includes(component.value);
+
+                          return (
+                            <button
+                              key={component.value}
+                              type="button"
+                              aria-pressed={isActive}
+                              onClick={() => applyComponentType(component.value, component.label)}
+                              className={cn(
+                                'inline-flex h-8 items-center gap-1.5 rounded-full border px-3 font-display text-[12.5px] font-semibold transition-colors active:scale-[0.97]',
+                                isActive
+                                  ? 'border-brand bg-brand text-white'
+                                  : 'border-line bg-surface text-ink-700 hover:border-line-strong hover:text-brand',
+                              )}
+                            >
+                              <Icon className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+                              {component.label}
+                              <span
+                                className={cn(
+                                  'tnum text-[11px] font-medium',
+                                  isActive ? 'text-white/70' : 'text-ink-300',
+                                )}
+                              >
+                                {formatCount(component.count)}
+                              </span>
+                            </button>
+                          );
+                        })}
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-[minmax(200px,230px)_1fr_minmax(220px,260px)]">
                   {/* ---- device types ---------------------------------- */}
                   <nav aria-label="Device categories" className="border-r border-line bg-surface-2 p-2.5">

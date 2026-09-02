@@ -6,6 +6,7 @@ import Breadcrumbs from '@/components/admin/Breadcrumbs';
 import { useAuth, useSignOut } from '@/hooks/useAuth';
 import { useAdminStats } from '@/hooks/useAdmin';
 import RouteFallback from '@/components/layout/RouteFallback';
+import SignOutConfirm from '@/components/account/SignOutConfirm';
 import AdminSidebar from './AdminSidebar';
 import AdminTopBar from './AdminTopBar';
 import CommandPalette from './CommandPalette';
@@ -132,6 +133,11 @@ export function AdminShell() {
         </div>
 
         <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
+
+        {/* The admin shell does not sit inside RootLayout, so it mounts its own
+            copy — otherwise the sidebar's Sign out would raise a flag with
+            nothing listening. */}
+        <SignOutConfirm />
       </div>
     </RecordLabelProvider>
   );

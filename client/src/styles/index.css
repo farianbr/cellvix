@@ -1,5 +1,21 @@
 @import 'tailwindcss';
 
+/* Gagalin — the product-card watermark face.
+   Not a Google Font, so it cannot be added to the <link> in index.html; it has
+   to be self-hosted. Drop the licensed file at client/public/fonts/Gagalin.woff2
+   and uncomment this block. `--font-watermark` already lists it first, so every
+   watermark switches over with no component change. Until then it falls back to
+   Archivo, which is the heaviest display face we ship.
+
+@font-face {
+  font-family: 'Gagalin';
+  src: url('/fonts/Gagalin.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+*/
+
 /* ==========================================================================
    Cellvix design tokens
    The single place any brand value is defined. See PROJECT_INSTRUCTIONS.md §2.
@@ -71,6 +87,13 @@
      existed for that one element is gone from here and from index.html. */
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+  /* The product-card watermark — the model name set large behind the part.
+     Gagalin is the intended face; it is not a Google Font and no licensed file
+     is in the repo yet, so this falls through to Archivo's heaviest weight,
+     which is the closest thing we ship. Drop `Gagalin.woff2` into
+     client/public/fonts, add the @font-face below, and every watermark picks it
+     up with no other change. */
+  --font-watermark: 'Gagalin', 'Archivo', ui-sans-serif, system-ui, sans-serif;
 
   /* --- shape ------------------------------------------------------------ */
   --radius-sm: 6px;
@@ -186,6 +209,12 @@
   }
   .font-mono {
     font-family: var(--font-mono);
+  }
+  /* The model name behind a product image. See --font-watermark: once a
+     licensed Gagalin file lands in client/public/fonts, uncomment the
+     @font-face above this layer and nothing else has to change. */
+  .font-watermark {
+    font-family: var(--font-watermark);
   }
 
   /* Screen-reader-only content that cannot stretch the page.

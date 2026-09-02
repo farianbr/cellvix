@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/api';
+import useUiStore from '@/store/uiStore';
 
 const AuthContext = createContext(null);
 
@@ -89,10 +90,35 @@ export function AuthProvider({ children }) {
 }
 
 /**
+ * Asks before signing out.
+ *
+ * Sign out used to fire on the click. It is one press, it is easy to hit by
+ * mistake next to the account links it sits among, and undoing it means finding
+ * the credentials again — on a shared workshop machine, often someone else's.
+ * The cart survives, but the session and anything half-filled on the page do
+ * not, so it gets the same confirmation as any other action that cannot be
+ * taken back.
+ *
+ * The dialog is raised through the UI store and rendered ONCE at the app root
+ * (`SignOutConfirm`), rather than at each of the four buttons — a confirmation
+ * every call site has to remember is one that a fifth button will forget.
+ *
+ * Returns the same zero-argument function the call sites already pass straight
+ * to `onClick`, so none of them change.
+ */
+export function useSignOut() {
+  const askSignOut = useUiStore((s) => s.askSignOut);
+  return askSignOut;
+}
+
+/**
+ * The sign-out that actually runs, once confirmed. Only `SignOutConfirm` calls
+ * this.
+ *
  * Signing out from inside /account or /admin would otherwise leave the viewer
  * staring at that area's own access wall, so it always drops back to the shop.
  */
-export function useSignOut() {
+export function useConfirmedSignOut() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
 

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { componentIconFor, iconFor } from '@/lib/icons';
-import { Check, Search } from 'lucide-react';
+import { ArrowRight, Check, Search } from 'lucide-react';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import cn from '@/lib/cn';
@@ -86,8 +86,19 @@ function monogramsFor(options) {
   return out;
 }
 
-export function WizardOverlay({ open, onClose, level, label, title, options, selected, onSelect }) {
+/**
+ * `selected` is a slug for the single-select steps and an ARRAY of slugs for
+ * component type, which is multi-select. Normalising here rather than at the
+ * two comparison sites keeps them both reading `isSelected` the same way.
+ */
+export function WizardOverlay({ open, onClose, onNext, level, label, title, options, selected, onSelect }) {
   const [query, setQuery] = useState('');
+
+  const selectedSet = useMemo(
+    () => new Set(Array.isArray(selected) ? selected : selected ? [selected] : []),
+    [selected],
+  );
+  const multi = Array.isArray(selected);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -147,7 +158,7 @@ export function WizardOverlay({ open, onClose, level, label, title, options, sel
            options. */
         <div className="grid auto-rows-fr grid-cols-2 items-stretch gap-2 sm:grid-cols-3 lg:grid-cols-4">
           {filtered.map((option) => {
-            const isSelected = selected === option.slug;
+            const isSelected = selectedSet.has(option.slug);
             const Icon =
               level === 'componentType'
                 ? componentIconFor(option.slug)
@@ -224,7 +235,7 @@ export function WizardOverlay({ open, onClose, level, label, title, options, sel
 
           <ul className="divide-y divide-line">
           {filtered.map((option) => {
-            const isSelected = selected === option.slug;
+            const isSelected = selectedSet.has(option.slug);
 
             return (
               <li key={option.slug}>
@@ -263,6 +274,47 @@ export function WizardOverlay({ open, onClose, level, label, title, options, sel
             );
           })}
           </ul>
+        </div>
+      )}
+
+      {/* Multi-select keeps the panel open on every tick, so it needs a way out
+          that is not the X in the corner — and a running total, because the
+          tiles scroll and the ones already ticked go off screen. Single-select
+          steps close themselves and get neither.
+
+          The primary action is NEXT, not Done: this is step 1 of a five-step
+          walk, and a button that only dismissed the panel dropped the buyer
+          back on the wizard to work out for themselves that Device Type was now
+          unlocked. `onNext` advances to step 2, which is the flow the wizard
+          exists to run. Disabled until something is ticked, because there is no
+          step 2 to open without a component to prune the tree by. */}
+      {multi && (
+        <div className="sticky bottom-0 -mx-5 mt-4 flex items-center justify-between gap-3 border-t border-line bg-surface px-5 pb-1 pt-3">
+          <p className="text-[12.5px] text-ink-500">
+            {selectedSet.size === 0
+              ? 'Pick one or more'
+              : `${formatCount(selectedSet.size)} selected`}
+          </p>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              className="inline-flex h-9 items-center rounded-[8px] border border-line px-3 font-display text-[13px] font-semibold text-ink-700 transition-colors hover:border-line-strong hover:bg-surface-2 active:scale-[0.97]"
+            >
+              Done
+            </button>
+
+            <button
+              type="button"
+              onClick={onNext}
+              disabled={selectedSet.size === 0}
+              className="inline-flex h-9 items-center gap-1.5 rounded-[8px] bg-brand-gradient px-4 font-display text-[13px] font-semibold text-white transition-[filter,opacity] duration-[120ms] hover:brightness-110 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40"
+            >
+              Next
+              <ArrowRight className="size-4 shrink-0" strokeWidth={2.25} aria-hidden="true" />
+            </button>
+          </div>
         </div>
       )}
     </Modal>

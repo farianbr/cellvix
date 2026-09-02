@@ -925,20 +925,23 @@ export function AccountPopup() {
       showClose
       bodyClassName="p-0 md:p-0"
     >
-      {/* **One height for every tab**, so switching Sign In → Sign Up does not
-          resize the dialog or make the panel beside it jump.
+      {/* **The content sets the height.** The frame used to be pinned to the
+          tallest tab (760px), so Sign In — which needs barely half of that —
+          opened as a mostly empty box with the form marooned at the top. Each
+          tab is its own size now, and the dialog is only as tall as what it is
+          actually showing.
 
-          760px is what the longest tab — buyer sign-up with the optional
-          section closed — actually needs, so nothing scrolls at rest. The
-          shorter tabs do not stretch to fill it: the panel keeps its own height
-          (see the cell below) and the leftover shows as empty dialog under it,
-          which is the trade for a constant frame.
+          The banner is the exception: it keeps the height it had, so it does
+          not change shape as the form beside it grows and shrinks. `items-start`
+          on its own cell (below) already stopped it stretching; `md:min-h` here
+          is what stops the SHORT tabs from squashing it — the frame will not go
+          under the panel's own height, so Sign In and Sign Up show the same red
+          block.
 
-          Capped at 86vh so a short viewport shrinks the frame rather than
-          overflowing it, and the form column scrolls inside it when that
-          happens. `min-h-0` on the scrolling child is what actually lets it
-          scroll rather than stretch the grid. */}
-      <div className="grid h-[min(680px,82vh)] gap-6 md:h-[min(760px,86vh)] md:grid-cols-[minmax(0,516px)_minmax(0,268px)] md:justify-center md:gap-7">
+          `max-h` rather than `h` so a short viewport caps the frame and the form
+          column scrolls inside it instead of the dialog overflowing. `min-h-0`
+          on the scrolling child is what lets it scroll rather than stretch. */}
+      <div className="grid max-h-[82vh] gap-6 md:max-h-[86vh] md:min-h-[560px] md:grid-cols-[minmax(0,516px)_minmax(0,268px)] md:justify-center md:gap-7">
         {/* The column keeps its 480px cap at every width. It was released at
             `md` (`md:max-w-none`), so the form stretched to whatever the grid
             column happened to be — around 600px — and a single email or

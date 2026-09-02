@@ -1,5 +1,19 @@
 const { default: Taxonomy } = require('../models/Taxonomy.js');
 const { default: Product } = require('../models/Product.js');
+const { HAS_PICTURE } = require('../../../shared/partPhotos.js');
+
+/**
+ * Normalises the component-type argument, which is multi-select.
+ *
+ * The wizard and the mega menu both let a buyer tick several component types at
+ * once, so this arrives as a comma-joined string or an array. One type and many
+ * behave identically everywhere below; the singular case is just a list of one.
+ */
+function toPartTypes(value) {
+  if (!value) return [];
+  const list = Array.isArray(value) ? value : String(value).split(',');
+  return [...new Set(list.map((item) => String(item).trim()).filter(Boolean))].sort();
+}
 
 let cache = null;
 let cachedAt = 0;
@@ -78,17 +92,25 @@ async function getTree({ force = false } = {}) {
  * buyer looking at batteries that Samsung has 97 of them.
  */
 async function getTreeForPartType(partType) {
-  if (!partType) return getTree();
+  const types = toPartTypes(partType);
+  if (types.length === 0) return getTree();
 
-  if (prunedCache.has(partType) && Date.now() - prunedAt < TTL_MS) {
-    return prunedCache.get(partType);
+  // Sorted and joined, so ticking A then B and ticking B then A are one entry.
+  const key = types.join(',');
+
+  if (prunedCache.has(key) && Date.now() - prunedAt < TTL_MS) {
+    return prunedCache.get(key);
   }
 
   // One pass over the matching products gives the exact count for every node in
   // the tree at once: a model's count is its own group, and the levels above it
   // are the rollup that getTree() already does.
+  //
+  // `HAS_PICTURE` because the grid applies it: without it a buyer ticking a
+  // component type would be offered brands and models whose products the grid
+  // then hides, which is the dead end this pruning exists to prevent.
   const groups = await Product.aggregate([
-    { $match: { partType, isActive: true } },
+    { $match: { partType: { $in: types }, isActive: true, ...HAS_PICTURE } },
     {
       $group: {
         _id: {
@@ -140,7 +162,7 @@ async function getTreeForPartType(partType) {
     prunedCache.clear();
     prunedAt = Date.now();
   }
-  prunedCache.set(partType, result);
+  prunedCache.set(key, result);
 
   return result;
 }
@@ -159,8 +181,12 @@ let componentsAt = 0;
 async function getComponentTypes() {
   if (componentCache && Date.now() - componentsAt < TTL_MS) return componentCache;
 
+  // `HAS_PICTURE` so this counts what the grid will actually show. Counted
+  // without it, a component type whose every product is pictureless would be
+  // offered as step 1 of the wizard and lead straight to an empty grid — and
+  // the counts beside the live types would overstate by the hidden rows.
   const rows = await Product.aggregate([
-    { $match: { isActive: true } },
+    { $match: { isActive: true, ...HAS_PICTURE } },
     {
       $group: {
         _id: '$partType',

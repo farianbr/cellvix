@@ -17,6 +17,7 @@ export const useUiStore = create((set) => ({
   accountPopupOpen: false,
   accountPopupTab: 'signin', // signin | signup | contact
   mobileFiltersOpen: false,
+  signOutConfirmOpen: false,
   announcementDismissed: false,
 
   // Bumped, never read for its value: the mobile header's LiveSearch focuses
@@ -112,6 +113,28 @@ export const useUiStore = create((set) => ({
 
   openMobileFilters: () => set({ mobileFiltersOpen: true }),
   closeMobileFilters: () => set({ mobileFiltersOpen: false }),
+
+  /**
+   * Sign-out confirmation.
+   *
+   * Lives in the store rather than in each of the four places that offer a Sign
+   * out button (account menu, account layout, mobile drawer, admin sidebar),
+   * because a confirmation that has to be remembered at every call site is one
+   * that eventually is not. `useSignOut` raises this flag; a single dialog at
+   * the app root renders it and calls back on confirm.
+   *
+   * Every panel that could be covering the dialog closes with it — the account
+   * menu in particular, since that is where the button usually is.
+   */
+  askSignOut: () =>
+    set({
+      signOutConfirmOpen: true,
+      accountMenuOpen: false,
+      mobileNavOpen: false,
+      cartFlyoutOpen: false,
+      megaMenuOpen: false,
+    }),
+  closeSignOutConfirm: () => set({ signOutConfirmOpen: false }),
 
   dismissAnnouncement: () => set({ announcementDismissed: true }),
 }));

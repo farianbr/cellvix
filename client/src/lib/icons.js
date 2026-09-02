@@ -76,6 +76,7 @@ const COMPONENT_ICONS = {
   'housing-frame': Smartphone,
   keyboard: Keyboard,
   trackpad: SquareMousePointer,
+  'flex-cable': Cable,
   'hinge-set': Cable,
   'cooling-fan': Fan,
   'digital-crown': Watch,

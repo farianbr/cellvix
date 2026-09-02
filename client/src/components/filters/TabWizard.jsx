@@ -46,39 +46,72 @@ export function TabWizard() {
   // it so we do not chain-open overlays they did not ask for.
   const inSequence = useRef(false);
 
-  const { path, labels, componentType, componentLabel, setPathLevel, setComponentType, clearLevel, resetAll } =
-    useFilterStore(
-      useShallow((s) => ({
-        path: s.path,
-        labels: s.labels,
-        componentType: s.facets.partType.length === 1 ? s.facets.partType[0] : null,
-        componentLabel: s.componentLabel,
-        setPathLevel: s.setPathLevel,
-        setComponentType: s.setComponentType,
-        clearLevel: s.clearLevel,
-        resetAll: s.resetAll,
-      })),
-    );
+  const {
+    path,
+    labels,
+    selectedComponents,
+    componentLabels,
+    setPathLevel,
+    toggleComponentType,
+    clearLevel,
+    resetAll,
+  } = useFilterStore(
+    useShallow((s) => ({
+      path: s.path,
+      labels: s.labels,
+      selectedComponents: s.facets.partType,
+      componentLabels: s.componentLabels,
+      setPathLevel: s.setPathLevel,
+      toggleComponentType: s.toggleComponentType,
+      clearLevel: s.clearLevel,
+      resetAll: s.resetAll,
+    })),
+  );
 
-  // The tree is pruned to the chosen component, so steps 2-5 can only offer
-  // combinations that actually return parts.
-  const { data, isLoading } = useWizardTaxonomy(componentType);
+  // The tree is pruned to the chosen components, so steps 2-5 can only offer
+  // combinations that actually return parts. Joined because the query key has to
+  // be a stable primitive — a fresh array every render would refetch forever.
+  const componentKey = selectedComponents.join(',');
+  const { data, isLoading } = useWizardTaxonomy(componentKey);
   const tree = data?.tree;
   const componentTypes = data?.componentTypes ?? [];
 
-  // A deep link carries `?partType=battery` but no display name, so the first
-  // tab would read the slug. Fill it in once the list lands.
+  // A deep link carries `?partType=battery,screen-assembly` but no display
+  // names, so the first tab would read slugs. Fill in whichever are missing once
+  // the list lands.
   useEffect(() => {
-    if (!componentType || componentLabel) return;
-    const match = componentTypes.find((c) => c.slug === componentType);
-    if (match) useFilterStore.setState({ componentLabel: match.name });
-  }, [componentType, componentLabel, componentTypes]);
+    if (selectedComponents.length === 0 || componentTypes.length === 0) return;
+
+    const missing = selectedComponents.filter((slug) => !componentLabels[slug]);
+    if (missing.length === 0) return;
+
+    const found = {};
+    for (const slug of missing) {
+      const match = componentTypes.find((c) => c.slug === slug);
+      if (match) found[slug] = match.name;
+    }
+
+    if (Object.keys(found).length) {
+      useFilterStore.setState((s) => ({ componentLabels: { ...s.componentLabels, ...found } }));
+    }
+  }, [selectedComponents, componentLabels, componentTypes]);
 
   // Step 1 is not a node in the tree, so it is merged in here rather than
   // special-cased at every read below. `answers`/`answerLabels` are the path as
   // the WIZARD sees it: five steps, component type first.
-  const answers = { componentType, ...path };
-  const answerLabels = { componentType: componentLabel, ...labels };
+  //
+  // Step 1's "answer" is the count of ticks, not a slug — it is the one
+  // multi-select step, so what the rest of the wizard needs from it is whether
+  // it has been answered at all, and its label is the list read back.
+  const componentSummary =
+    selectedComponents.length === 0
+      ? null
+      : selectedComponents.length === 1
+        ? (componentLabels[selectedComponents[0]] ?? selectedComponents[0])
+        : `${componentLabels[selectedComponents[0]] ?? selectedComponents[0]} +${selectedComponents.length - 1}`;
+
+  const answers = { componentType: selectedComponents.length ? componentKey : null, ...path };
+  const answerLabels = { componentType: componentSummary, ...labels };
 
   const options = openLevel
     ? openLevel === 'componentType'
@@ -90,26 +123,22 @@ export function TabWizard() {
     (option) => {
       const level = openLevel;
 
-      // Step 1 writes the component facet and resets the tree beneath it; every
-      // other step is an ordinary path level.
+      // Step 1 is MULTI-SELECT: it toggles the component facet and the overlay
+      // STAYS OPEN, because one tick is rarely the whole answer and closing the
+      // panel on the first would make the second tick a second trip. The buyer
+      // closes it themselves — or steps forward — when they are done choosing.
       if (level === 'componentType') {
-        setComponentType(option.slug, option.name);
-      } else {
-        setPathLevel(level, option.slug, option.name);
+        toggleComponentType(option.slug, option.name);
+        return;
       }
+
+      setPathLevel(level, option.slug, option.name);
 
       const index = LEVEL_KEYS.indexOf(level);
       const nextLevel = LEVEL_KEYS[index + 1];
 
       if (!inSequence.current || !nextLevel) {
         setOpenLevel(null);
-        return;
-      }
-
-      // Choosing a component refetches a pruned tree, so its device types are
-      // not in hand yet — open the next step and let it render when they land.
-      if (level === 'componentType') {
-        setOpenLevel(nextLevel);
         return;
       }
 
@@ -123,7 +152,7 @@ export function TabWizard() {
 
       setOpenLevel(nextLevel);
     },
-    [openLevel, setPathLevel, setComponentType],
+    [openLevel, setPathLevel, toggleComponentType],
   );
 
   function openStep(level, index) {
@@ -382,11 +411,23 @@ export function TabWizard() {
           setOpenLevel(null);
           inSequence.current = false;
         }}
+        // Step 1's Next: carry the walk into step 2 rather than just dismissing
+        // the panel. The tree is refetching against the new component ticks, so
+        // Device Type opens and renders its options when they land — the same
+        // handoff the old single-select path did automatically.
+        onNext={() => {
+          inSequence.current = true;
+          setOpenLevel(LEVEL_KEYS[1]);
+        }}
         level={openLevel}
         label={openLevel ? FILTER_LEVELS.find((l) => l.key === openLevel)?.label : ''}
         title={openLevel ? `Select ${FILTER_LEVELS.find((l) => l.key === openLevel)?.label}` : ''}
         options={options}
-        selected={openLevel ? answers[openLevel] : null}
+        // An ARRAY for step 1, so the overlay renders it as multi-select and
+        // stays open; a slug for every other step.
+        selected={
+          openLevel === 'componentType' ? selectedComponents : openLevel ? answers[openLevel] : null
+        }
         onSelect={handleSelect}
       />
     </section>

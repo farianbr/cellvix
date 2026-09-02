@@ -66,27 +66,27 @@ export function ProductCard({ product }) {
             third stamp on one image, next to the grade badge and the in-cart
             pill. The part itself carries the state now — drained of colour and
             sat back — and the words live once, down in the body. */}
-        {/* PartFrame sets the part name and model inside the top of the image
-            and insets the drawing below them, so the caption never covers the
-            part. The hover scale lives on the drawing only — a caption that
-            zoomed with it would clip against the frame's own edge. */}
-        <PartFrame
-          product={product}
-          captionSlot={
-            <h3>
-              <Link
-                to={`/product/${product.slug}`}
-                className="transition-colors hover:text-brand"
-              >
-                {productTitle(product.name, product.partTypeLabel)}
-              </Link>
-            </h3>
-          }
-        >
+        {/* PartFrame sets the model name as a watermark BEHIND the part and
+            gives the drawing the whole frame, so the image is the biggest thing
+            on the card while scrolling. The part type and model are read from
+            the body below, with the rest of the text details.
+
+            The zoom lives on the image's own wrapper. Three things were wrong
+            with it: `duration-300` on a linear-ish default curve read as a
+            lurch, the drawing was scaling inside a frame that also had to make
+            room for a caption, and nothing promoted the layer — so the browser
+            rasterised the photo mid-scale and the zoom stepped instead of
+            gliding. `will-change-transform` promotes it up front, and the
+            standard exit curve does the easing. */}
+        <PartFrame product={product} aspect="aspect-square">
           <Link
             to={`/product/${product.slug}`}
             className={cn(
-              'block size-full transition-transform duration-300 group-hover:scale-[1.03]',
+              'block size-full transition-transform duration-400 ease-entrance will-change-transform motion-reduce:transition-none',
+              // Tailwind v4 compiles `hover:` (and so `group-hover:`) behind
+              // `@media (hover: hover)` already, so this does not latch on after
+              // a tap on a touch device.
+              'group-hover:scale-[1.07]',
               outOfStock && 'opacity-45 grayscale',
             )}
             tabIndex={-1}
@@ -121,14 +121,22 @@ export function ProductCard({ product }) {
           viewport's: the same card sits in a 2-, 3- and 4-column grid, and on a
           375px phone the 2-up card is ~169px wide. */}
       <div className="flex flex-1 flex-col gap-1.5 p-3 @min-[200px]:gap-2 @min-[200px]:p-3.5">
-        {/* The model used to be repeated here, directly under the same name
-            inside the image frame. PartFrame's caption is the card's heading
-            now — it carries the <h3> and the product link — so the body is a
-            title-block shorter.
-            The part type stays, but only below 200px: that is exactly where the
-            caption drops its own eyebrow to keep room for the drawing, and the
-            part type has to be named somewhere. */}
-        <p className="eyebrow text-ink-300 @min-[200px]:hidden">{product.partTypeLabel}</p>
+        {/* The component type and the model are back below the image, with the
+            rest of the text details. Above it they sat between the buyer and
+            the picture and cost the part a third of the frame's height; the
+            frame carries the model as a watermark behind the part instead, and
+            the readable copy lives here.
+
+            The <h3> is the card's heading and carries the product link. Clamped
+            to two lines so prices stay level across a grid row. */}
+        <div>
+          <p className="eyebrow text-ink-300">{product.partTypeLabel}</p>
+          <h3 className="mt-0.5 line-clamp-2 font-display text-[13px] font-bold leading-tight tracking-tight text-ink-900 @min-[200px]:text-[14px]">
+            <Link to={`/product/${product.slug}`} className="transition-colors hover:text-brand">
+              {productTitle(product.name, product.partTypeLabel)}
+            </Link>
+          </h3>
+        </div>
 
         {/* Availability and price share one slot, because for a part that cannot
             be bought they are one statement.
@@ -202,11 +210,12 @@ export function ProductCard({ product }) {
                     !gated &&
                     product.market && (
                       // The saving beside the price, not under it: it is a
-                      // property of this number, and a card narrow enough to
-                      // drop the word "save" still reads "21% off".
+                      // property of this number. The word "Save" is kept at
+                      // every width — a bare "21%" beside a price is ambiguous
+                      // enough to read as a rate rather than a discount, and
+                      // the phone grid is where most buyers meet it.
                       <span className="tnum shrink-0 rounded-full bg-ok-50 px-1.5 py-0.5 text-[10.5px] font-bold text-ok @min-[200px]:text-[11px]">
-                        <span className="hidden @min-[200px]:inline">Save </span>
-                        {product.market.savingsPercent}%
+                        Save {product.market.savingsPercent}%
                       </span>
                     )
                   )}
@@ -262,6 +271,12 @@ export function ProductCard({ product }) {
                   : 'bg-brand-gradient text-white hover:brightness-110 active:brightness-95',
               )}
             >
+              {/* Icon only on a narrow card. The trolley is a well-understood
+                  glyph and the button is the full width of the row beside the
+                  stepper, so there is no doubt what it does — and dropping the
+                  word buys the price and the compare control the horizontal
+                  room they actually need. `aria-label` above carries the name
+                  either way, so nothing is lost to a screen reader. */}
               {justAdded ? (
                 <>
                   <Check className="size-4 shrink-0" strokeWidth={2.5} aria-hidden="true" />

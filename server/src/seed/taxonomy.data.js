@@ -322,60 +322,45 @@ const TAXONOMY = [
 ];
 
 /**
- * Which part types exist for each device type, with a base price band in cents
- * and the grades that part is realistically sold in.
+ * The eight component types Cellvix stocks, with a base price band in cents and
+ * the grades that part is realistically sold in.
+ *
+ * **This list is exactly the set we have product photography for.** The
+ * catalogue hides any product without a picture (see `HAS_PICTURE` in
+ * productService), so seeding a ninth type here would generate rows that the
+ * shop can never show. An admin adds the ninth from the panel, alongside the
+ * photo that earns it a place.
+ *
+ * The list used to be per-device-type and ran to twenty-odd entries — keyboards,
+ * trackpads, optical drives, logic boards. None of those had a photograph, so
+ * every one of them seeded products the storefront then filtered out.
+ */
+const COMPONENT_TYPES = [
+  { slug: 'rear-camera', label: 'Back Camera', price: [1800, 9500], grades: ['OEM', 'PULL-A', 'PULL-B'] },
+  { slug: 'front-camera', label: 'Front Camera', price: [1100, 4200], grades: ['OEM', 'PULL-A'] },
+  { slug: 'screen-assembly', label: 'Screen', price: [4500, 32000], grades: ['NEW', 'OEM', 'PULL-A', 'PULL-B', 'AFTERMARKET'] },
+  { slug: 'battery', label: 'Battery', price: [1200, 4800], grades: ['NEW', 'OEM', 'AFTERMARKET'] },
+  { slug: 'charging-port', label: 'Charging Port', price: [800, 3600], grades: ['NEW', 'OEM', 'PULL-A'] },
+  { slug: 'back-glass', label: 'Backglass', price: [900, 5200], grades: ['NEW', 'AFTERMARKET'] },
+  { slug: 'flex-cable', label: 'Flex Cable', price: [700, 3200], grades: ['NEW', 'OEM', 'PULL-A'] },
+  { slug: 'loud-speaker', label: 'Speaker', price: [600, 2400], grades: ['NEW', 'PULL-A'] },
+];
+
+/**
+ * Which component types exist for each device type.
+ *
+ * Every device type gets the same eight. The photography is phone-only, so the
+ * picture filter is what actually decides which of these reach the storefront
+ * for a given brand — this table just stops the generator inventing types that
+ * have no photo anywhere.
  */
 const PART_TYPES = {
-  smartphone: [
-    { slug: 'screen-assembly', label: 'Screen Assembly', price: [4500, 32000], grades: ['NEW', 'OEM', 'PULL-A', 'PULL-B', 'AFTERMARKET'] },
-    { slug: 'battery', label: 'Battery', price: [1200, 4800], grades: ['NEW', 'OEM', 'AFTERMARKET'] },
-    { slug: 'charging-port', label: 'Charging Port Flex', price: [800, 3600], grades: ['NEW', 'OEM', 'PULL-A'] },
-    { slug: 'back-glass', label: 'Back Glass', price: [900, 5200], grades: ['NEW', 'AFTERMARKET'] },
-    { slug: 'rear-camera', label: 'Rear Camera', price: [1800, 9500], grades: ['OEM', 'PULL-A', 'PULL-B'] },
-    { slug: 'front-camera', label: 'Front Camera', price: [1100, 4200], grades: ['OEM', 'PULL-A'] },
-    { slug: 'loud-speaker', label: 'Loud Speaker', price: [600, 2400], grades: ['NEW', 'PULL-A'] },
-    { slug: 'earpiece', label: 'Earpiece Speaker', price: [500, 1900], grades: ['NEW', 'PULL-A'] },
-    { slug: 'sim-tray', label: 'SIM Tray', price: [200, 900], grades: ['NEW', 'AFTERMARKET'] },
-    { slug: 'housing-frame', label: 'Housing / Mid Frame', price: [1600, 7800], grades: ['NEW', 'PULL-A', 'PULL-B'] },
-  ],
-  tablet: [
-    { slug: 'screen-assembly', label: 'Screen Assembly', price: [6800, 44000], grades: ['NEW', 'OEM', 'PULL-A', 'AFTERMARKET'] },
-    { slug: 'battery', label: 'Battery', price: [2400, 8900], grades: ['NEW', 'OEM'] },
-    { slug: 'charging-port', label: 'Charging Port Flex', price: [1100, 4200], grades: ['NEW', 'OEM', 'PULL-A'] },
-    { slug: 'digitizer', label: 'Digitizer Glass', price: [2200, 12000], grades: ['NEW', 'AFTERMARKET'] },
-    { slug: 'housing-frame', label: 'Rear Housing', price: [3200, 14000], grades: ['PULL-A', 'PULL-B'] },
-    { slug: 'loud-speaker', label: 'Speaker Set', price: [900, 3400], grades: ['NEW', 'PULL-A'] },
-  ],
-  laptop: [
-    { slug: 'lcd-panel', label: 'LCD Panel', price: [7900, 46000], grades: ['NEW', 'OEM', 'PULL-A'] },
-    { slug: 'battery', label: 'Battery', price: [4200, 16500], grades: ['NEW', 'OEM', 'AFTERMARKET'] },
-    { slug: 'keyboard', label: 'Keyboard Assembly', price: [2900, 18000], grades: ['NEW', 'OEM', 'PULL-A'] },
-    { slug: 'trackpad', label: 'Trackpad', price: [2400, 12500], grades: ['OEM', 'PULL-A', 'PULL-B'] },
-    { slug: 'hinge-set', label: 'Hinge Set', price: [1400, 5600], grades: ['NEW', 'PULL-A'] },
-    { slug: 'charging-board', label: 'Charging Board', price: [1900, 8800], grades: ['NEW', 'OEM', 'PULL-A'] },
-    { slug: 'cooling-fan', label: 'Cooling Fan', price: [1200, 6400], grades: ['NEW', 'PULL-A'] },
-    { slug: 'bottom-cover', label: 'Bottom Cover', price: [1800, 9200], grades: ['PULL-A', 'PULL-B'] },
-  ],
-  'smart-watch': [
-    { slug: 'screen-assembly', label: 'Screen Assembly', price: [3900, 21000], grades: ['NEW', 'OEM', 'PULL-A'] },
-    { slug: 'battery', label: 'Battery', price: [900, 3800], grades: ['NEW', 'OEM'] },
-    { slug: 'back-cover', label: 'Back Cover Sensor', price: [1400, 6800], grades: ['OEM', 'PULL-A'] },
-    { slug: 'digital-crown', label: 'Digital Crown', price: [1100, 4900], grades: ['OEM', 'PULL-A'] },
-  ],
-  'game-console': [
-    { slug: 'controller-stick', label: 'Controller Joystick', price: [400, 1800], grades: ['NEW', 'AFTERMARKET'] },
-    { slug: 'hdmi-port', label: 'HDMI Port', price: [600, 2600], grades: ['NEW', 'OEM'] },
-    { slug: 'cooling-fan', label: 'Cooling Fan', price: [1800, 7400], grades: ['NEW', 'PULL-A'] },
-    { slug: 'power-supply', label: 'Power Supply Unit', price: [2600, 11000], grades: ['NEW', 'PULL-A'] },
-    { slug: 'optical-drive', label: 'Optical Drive', price: [3400, 14500], grades: ['PULL-A', 'PULL-B'] },
-    { slug: 'housing-frame', label: 'Shell / Housing', price: [1600, 7200], grades: ['NEW', 'AFTERMARKET'] },
-  ],
-  computer: [
-    { slug: 'lcd-panel', label: 'Display Panel', price: [12000, 58000], grades: ['NEW', 'OEM', 'PULL-A'] },
-    { slug: 'power-supply', label: 'Power Supply Unit', price: [3800, 15000], grades: ['NEW', 'PULL-A'] },
-    { slug: 'cooling-fan', label: 'Cooling Fan', price: [1400, 6200], grades: ['NEW', 'PULL-A'] },
-    { slug: 'logic-board', label: 'Logic Board', price: [18000, 92000], grades: ['OEM', 'PULL-A', 'PULL-B'] },
-  ],
+  smartphone: COMPONENT_TYPES,
+  tablet: COMPONENT_TYPES,
+  laptop: COMPONENT_TYPES,
+  'smart-watch': COMPONENT_TYPES,
+  'game-console': COMPONENT_TYPES,
+  computer: COMPONENT_TYPES,
 };
 
 /** Grade affects price: a B-grade pull is worth less than a new part. */
@@ -390,4 +375,5 @@ const GRADE_MULTIPLIER = {
 // --- CommonJS exports -------------------------------------------------
 exports.TAXONOMY = TAXONOMY;
 exports.PART_TYPES = PART_TYPES;
+exports.COMPONENT_TYPES = COMPONENT_TYPES;
 exports.GRADE_MULTIPLIER = GRADE_MULTIPLIER;
