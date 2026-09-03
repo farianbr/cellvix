@@ -21,6 +21,36 @@
 >
 > Read [PROJECT_INSTRUCTIONS.md](../PROJECT_INSTRUCTIONS.md) first — every rule there still binds
 > this work. This file is the *what and where*; the Instructions remain the *how*.
+>
+> ---
+>
+> ## ⚠ Superseded in four places — read [SAAS_PLATFORM.md](../SAAS_PLATFORM.md) §2 first
+>
+> **Decided 2026-09-03:** Cellvix is **tenant #1 of a multi-tenant ERP SaaS**, and the client's
+> requirement is now a **100% CellShoppe section match**, with anything inapplicable to Cellvix
+> **switched off rather than dropped**. That changes four things in this document:
+>
+> 1. **§0.7 and §2b dropped `Web Quote`. Overturned 2026-09-03 — it is being built.** It is the
+>    **storefront Contact Us inbox**, over the `ContactMessage` model that already stores
+>    submissions, converting to a real `Quote` through `pricingService`. SAAS_PLATFORM §2.3.1.
+> 2. **§3's Ticket → RMA rename is overturned 2026-09-03: RMA is dropped as a section and a return
+>    request is a Ticket.** One pipeline record carrying a `type`. §6.3's RMA behaviour — SLA, states,
+>    reason codes — survives as ticket fields; the `Rma` data is **migrated, not dropped**, refunds
+>    still route through `storeCreditService`, and `/admin/rma*` redirects. SAAS_PLATFORM §2.2.1.
+> 3. **§3's Tech Performance → Staff Performance rename is still a pending ruling.** It stays in
+>    force until ruled on. In the platform these nouns become industry-preset vocabulary
+>    (SAAS_PLATFORM §7.3), so ruling it decides what *Cellvix* ships, not what the product allows.
+> 4. **§2's sidebar tree is an accurate record of CellShoppe but no longer of Cellvix.** Tickets,
+>    Supplier Returns, Subscription Plans and Service Products were added after it was written.
+>    **`ADMIN_NAV` in [`shared/schemas/admin.js`](../shared/schemas/admin.js) is the source of truth**
+>    for what exists.
+>
+> Nothing else here is superseded. Every invariant in §11 still binds, and
+> [SAAS_PLATFORM.md](../SAAS_PLATFORM.md) §10 adds ten more.
+>
+> **New sections are gated by a feature flag from now on** (SAAS_PLATFORM §3): a nav row names the
+> flag that gates it, and a disabled feature's routes return `404` server-side. Off is invisible, not
+> broken — and never destructive.
 
 ---
 
@@ -258,6 +288,30 @@ The dashboard and Reports need a line/area chart, a donut and horizontal bars. N
 is currently a dependency. **Inline SVG, hand-rolled, in `components/admin/charts/`** — three chart
 shapes do not justify a dependency, and hand-rolled SVG inherits the design tokens for free. If a
 later phase needs axes, brushing and stacking, revisit then.
+
+> **Revisited 2026-09-03 — axes added, still no dependency.** The parity walk found the first version
+> read as bland next to CellShoppe's, and the diagnosis was not styling: the chart had **no scale**.
+> A bare line shows shape and hides magnitude — the same curve reads identically at $200 and
+> $200,000, and the only number on the screen was a caption the reader had to trust.
+>
+> `TrendChart` now carries a **y-axis on a 1-2-5 "nice" ladder** (so ticks read `$0 · $2K · $4K`, not
+> `$8,350.65`), **gridlines**, a **thinned x-axis** that always keeps the first and last label, a
+> **hover crosshair with a tooltip**, and a **legend** naming the series and the average rule.
+> `BarList` gained optional rank numbers and share percentages.
+>
+> **Three decisions inside it worth not undoing:**
+>
+> 1. **Zero is always on the axis.** A money chart whose baseline is $4,000 makes a 3% move look like
+>    a collapse — the truncated-axis lie. `niceScale` forces zero into range.
+> 2. **The area fill closes on the zero line, not the frame bottom.** With a series that dips
+>    negative — which CellShoppe's own dashboard does — closing at the bottom fills the region below
+>    zero solid and reads as a large positive quantity.
+> 3. **Axis labels are HTML, not `<svg><text>`.** The SVG is `preserveAspectRatio="none"` so it
+>    stretches to its container; text inside it stretches with it, and stretched type is the single
+>    thing that makes a hand-rolled chart look broken.
+>
+> Still deliberately absent: brushing, zoom, stacking and a second y-axis. The moment one is genuinely
+> needed, that is the point to weigh a library rather than grow this file into one.
 
 ### Route shape
 
@@ -1321,6 +1375,9 @@ opt-in per [CLAUDE.md](../CLAUDE.md).
 | **11 — Settings** | The seven categories and ~20 pages (§6.15), minus Users/Roles (phase 8) and Expense Categories (phase 5). Encrypted provider secrets, audit-log screens, and the **Calendar / Appointments UI shells — §6b U1–U2**. **Split into passes — see below.** | 5, 8, 9 |
 | **12 — Cross-cutting** | Global search, notifications dropdown, My Profile, exports. **12a done (Session 35):** search + profile + the order/invoice detail screens; `ADMIN_STUB_PATHS` emptied. **12b done (Session 35):** CSV/XLSX exports honouring the active filters across five lists, and the + Create menu reading the permission map. **12c done (Session 36):** the notification bell — four stored event sources, four derived standing conditions, per-admin read state and role filtering. **Phase 12 complete.** | 3–10 |
 | **13 — Wire the shells** | Clear the §6b register: connect Twilio / WhatsApp / telephony / email provider, Google OAuth, and the calendar's scheduling logic. Each entry is independently shippable. | 9, 11, + client answers |
+| **A — Parity register** | Close [SAAS_PLATFORM.md](../SAAS_PLATFORM.md) §2: the three outstanding rulings, then build whatever they call for. Runs in parallel with 13 — neither blocks the other. | client rulings |
+| **B — Tenancy-ready** | The four no-op items in SAAS_PLATFORM §5: feature registry, one database accessor, `requireFeature`, nav/palette/Create reading the gate. Nothing user-visible changes. | — |
+| **14–18 — Platform** | Control plane · tenant resolution · super-admin console · provisioning · plans & billing. **After Cellvix ships.** Specified in SAAS_PLATFORM §6. | B, Cellvix delivery |
 
 Phases 1–3 are what make the panel *feel* like CellShoppe. If time gets short, protect those.
 
@@ -1462,3 +1519,4 @@ location)**.
 | 2026-08-28 | **Phase 9 verified against the live cluster and in a browser**, the client having confirmed the Atlas data is still dummy. The full CASL loop ran for real: 5 matched → 4 eligible → 1 skipped, four decorated emails, a link followed from the page unsubscribing that account, an idempotent second click, a tampered token refused, and the next campaign's audience dropping 4 → 3 on its own. Permissions confirmed by role (Warehouse 403 everywhere, Account Manager 200 on marketing and still 403 on admin-only `/admin/roles`). All four screens checked at 375 / 768 / 1024 / 1440 with no horizontal overflow and no console errors. **Four fixes came out of it:** a no-consent account was being told it had "unsubscribed" (now `RECIPIENT_NO_CONSENT`, distinct from `RECIPIENT_UNSUBSCRIBED`); **a phase-8 gap — `ensureBuiltInRoles` / `ensureDefaultOutlet` ran only inside the seed, so any database not re-seeded had zero roles and no default outlet; both are additive upserts and now run at boot**; `Campaign.stats.queued` added so a sent campaign no longer reads a bare "0" with no explanation; and the send dialog's "Send to 0" is now disabled and explained rather than being a button that can only fail. The seed was updated so a fresh run reproduces the verified state. |
 | 2026-08-28 | **Phase 10 built and verified live.** `User.referralCode` (minted on approval, unambiguous alphabet) · `User.referredBy` (set once at registration, no route edits it) · `Settings.financial.referralPercent` · `CREDIT_TYPES` gains `referral` · `storeCreditService.creditReferral()`, so referrals are not an exception to "the only place a balance moves". Accrual fires on `recordPayment` and is keyed on invoice number **plus payment index**, so instalments earn separately and a replay cannot pay twice; the rate is snapshotted per accrual and is never retroactive. Reversal fires on void and on full refund, keyed on the accrual it undoes, and is allowed to take the balance to zero where a spend would be refused — refusing it would leave commission standing on money that came back. Guards: self-referral rejected, one level only, `void` rows earn nothing, suspended referrers earn nothing, an unrecognised code is refused rather than silently dropped. **Admin-only, not `marketing: full`** — verified that Account Manager is refused. Verified live: $800 → $40.00 at 5%; rate raised to 10% and the earlier accrual stayed at 5% while the next earned at 10%; a payment then a void netted exactly to zero; replays and re-reversals were no-ops; four widths clean, no console errors. **One bug found and fixed:** totals were computed from each pairing's net, so a fully clawed-back accrual reported zero reversals — accruals and reversals are now tracked gross as well as netted, and the screen names both. Deferred: the buyer-facing half in `/account` (§6.13 puts the admin surface first) and audit-logging of rate changes, which waits on phase 11's `AuditLog`. |
 | 2026-08-29 | **Phase 12c built — the notification bell, and phase 12 with it.** §7.3 names eight sources, and they are answered two different ways on purpose: four are **events** (registration, order, quote accepted, RMA) and are stored `Notification` rows; four are **standing conditions** (invoice overdue, low stock, out of stock, PO overdue) and are **derived from the live records on every read**, never stored. A stored "invoice overdue" row is a lie the moment the invoice is paid, and keeping it honest would need a delete hook on every payment, receipt and stock movement — eight more places to forget. `list()` merges both halves newest-first and the client cannot tell them apart. **Read state is per admin** (`readBy` / `clearedBy` as arrays, not booleans): one order is one event several staff each see separately, and a boolean would let whoever opened the bell first mark it read for everyone. `Clear All` is likewise personal — it writes `clearedBy`, never deletes, and leaves the row unread in every other bell. **Role-filtered server-side** (§7.3): every row carries the permission area that gates it, and the areas are resolved from the caller's role per request, the same rule `searchService` follows — a search result and a notification both leak the existence, the name and usually the money of a record before anybody clicks. Opening the bell marks read but does not clear: "I have seen this" and "I am done with this" are different acts. `emit()` swallows its own failures exactly as `auditService.record()` does, and refuses a derived type outright so the collection cannot accumulate rows that go stale. Polled at 60s per §7.3 ("upgraded to SSE only if that proves necessary"), and not in a background tab. The badge shows a count rather than a dot, because "3 things want you" and "something wants you" are different messages. Verified: build clean; 15 logic assertions against stubbed models covering all four derived conditions and their copy, a `minStock: 0` product correctly not reading as low, warehouse seeing stock and PO but **not** overdue invoices, sales seeing the inverse, a roleless staff account seeing nothing, per-admin read state, an idempotent ``, derived ids skipped without issuing a write, and a derived type refused by `emit`. **Not verified: no database** — no local mongod and `.env` points at the live cluster, so the data paths ran against stubs. Needs a live pass. |
+| 2026-09-03 | **Superseded in three places by [SAAS_PLATFORM.md](../SAAS_PLATFORM.md)** — see the banner at the top. Cellvix is now tenant #1 of a multi-tenant ERP SaaS, and the client's requirement is a **100% CellShoppe section match with inapplicable features switched off rather than dropped**. `Web Quote` (§0.7) is reopened as a pending ruling rather than a settled drop; the Ticket → RMA and Tech → Staff Performance renames (§3) are reopened the same way and become industry-preset vocabulary in the platform. §2's tree is confirmed accurate for CellShoppe but stale for Cellvix — `ADMIN_NAV` is the source of truth, having gained Tickets, Supplier Returns, Subscription Plans and Service Products since. Build order extended with the parity register, the tenancy-ready pass, and platform phases 14–18. New sections are feature-flag-gated from now on: server-side `404`, off is invisible and never destructive. |

@@ -27,6 +27,30 @@ export function moneyCompact(cents) {
   return CAD_COMPACT.format(cents / 100);
 }
 
+/**
+ * 1299500 -> "$13K" — for chart axis ticks, where `moneyCompact`'s "$12,995"
+ * is wide enough to force the plot area narrow on a phone.
+ *
+ * Not `Intl`'s `notation: 'compact'`: it renders 1500 as "1.5K" and 999 as
+ * "999", so a tick column mixes widths and decimal places down its length. An
+ * axis is a ruler — every mark on it should read the same shape.
+ */
+export function moneyAxis(cents) {
+  if (cents === null || cents === undefined || Number.isNaN(cents)) return '—';
+
+  const dollars = cents / 100;
+  const magnitude = Math.abs(dollars);
+  const sign = dollars < 0 ? '-' : '';
+
+  if (magnitude >= 1_000_000) return `${sign}$${Math.round(magnitude / 1_000_000)}M`;
+  if (magnitude >= 1_000) return `${sign}$${Math.round(magnitude / 1_000)}K`;
+  // Rounding to whole dollars below $10 makes a sub-dollar step print the same
+  // label twice — an axis reading `$0 $1 $1 $2 $2 $3`. Keep the cents on a
+  // small scale, and drop them again once they are noise.
+  if (magnitude > 0 && magnitude < 10) return `${sign}$${dollars.toFixed(2).replace('-', '')}`;
+  return `${sign}$${Math.round(magnitude)}`;
+}
+
 const DATE_MED = new Intl.DateTimeFormat('en-CA', {
   month: 'short',
   day: 'numeric',

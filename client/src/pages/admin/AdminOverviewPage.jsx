@@ -17,7 +17,7 @@ import {
   Wallet,
 } from 'lucide-react';
 import cn from '@/lib/cn';
-import { money, moneyCompact, date, count as formatCount } from '@/lib/format';
+import { money, moneyCompact, moneyAxis, date, count as formatCount } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
 import Skeleton from '@/components/ui/Skeleton';
@@ -412,7 +412,12 @@ export function AdminOverviewPage() {
           <TrendChart
             points={trend}
             caption="Order value over the selected period"
-            formatValue={moneyCompact}
+            seriesLabel="Order value"
+            // The tooltip shows the exact figure; the axis and the peak/low
+            // line round, because a tick column is read as a scale rather than
+            // as a set of values.
+            formatValue={money}
+            formatTick={moneyAxis}
           />
         </Panel>
 
@@ -432,6 +437,10 @@ export function AdminOverviewPage() {
               }))}
               caption="Top clients by invoiced value"
               formatValue={money}
+              rank
+              // Share of the top-five total, not of all invoicing — the panel
+              // says "Top clients", so that is the whole this reads against.
+              showShare
             />
           )}
         </Panel>
