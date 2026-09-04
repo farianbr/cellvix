@@ -400,15 +400,25 @@
   }
 
   /* A gradient RING with the surface still showing through the middle.
+
      `border-image` cannot do this on a rounded element — it squares the
      corners off — so the ramp is painted as the background and a second,
      content-box layer of the surface colour is masked on top of it. The
-     2px `padding` is what becomes the visible ring width. */
+     `padding` is what becomes the visible ring width.
+
+     The COMPACT ramp, not the full one. A ring is only ever a couple of pixels
+     wide, so the full ramp's near-black opening lands as a grey corner rather
+     than as depth — the same reason a small filled element uses the compact
+     ramp. Starting at the deep red keeps the ring unmistakably red the whole
+     way round.
+
+     `--ring-w` lets a caller set the width without redefining the whole
+     stack; it defaults to 2px. */
   .ring-brand-gradient {
-    padding: 2px;
+    padding: var(--ring-w, 2px);
     background-image:
       linear-gradient(var(--color-surface), var(--color-surface)),
-      linear-gradient(100deg, #1a0603 0%, #cf3429 60%, #e8564a 100%);
+      linear-gradient(100deg, #8f221b 0%, #cf3429 55%, #e8564a 100%);
     background-origin: border-box;
     background-clip: content-box, border-box;
   }

@@ -63,24 +63,38 @@ export function Pagination({ page, pages, onChange, className, hideWhenSingle = 
               pressable,
               'tnum flex size-9 items-center justify-center rounded-md font-display text-sm font-semibold',
               /**
-               * The current page is a filled brand-gradient chip.
+               * The current page is a gradient RING with nothing inside it, and
+               * its number stays ink.
                *
-               * It was briefly a gradient RING around a white face, which is
-               * the one version that does not work: at 36px the whole ramp is
-               * compressed into a 2px outline, where it reads as a muddy red
-               * edge rather than as the brand. Filled, the ramp has the chip's
-               * full width to travel.
+               * A page number is a position rather than an action, so it is
+               * marked rather than filled: the ring says which page you are on
+               * without turning the number into a button that looks more
+               * pressable than the pages either side of it. Keeping the digit
+               * ink also keeps the whole row one colour, so the eye reads the
+               * sequence and the ring separately.
                *
-               * The COMPACT ramp, for the same reason the filter pills use it —
-               * the full ramp opens at near-black, and inside a 36px square
-               * that first third is a dark corner rather than depth.
+               * `ring-brand-gradient` paints the ramp as the background and
+               * masks a surface-coloured layer over the middle, because
+               * `border-image` squares off the corners of a rounded element.
+               * That means the ring is PADDING, not a border — so the digit
+               * needs its own centred box inside it rather than being centred
+               * by the button.
                */
               item === page
-                ? 'bg-brand-gradient-compact text-white'
+                ? 'ring-brand-gradient text-ink-900'
                 : 'border border-line bg-surface text-ink-700 hover:border-line-strong hover:text-ink-900',
             )}
           >
-            {item}
+            {/* The digit gets its own box because the ring is padding, not a
+                border, so the button's own centring is offset by the ring
+                width. No radius of its own: the outer `rounded-md` already
+                clips the masked surface layer, and 8px — the inner corner a 2px
+                ring inside a 10px outer would want — is not on the scale. */}
+            {item === page ? (
+              <span className="flex size-full items-center justify-center">{item}</span>
+            ) : (
+              item
+            )}
           </button>
         ),
       )}
