@@ -34,6 +34,27 @@ export function ProductCard({ product }) {
   const outOfStock = !product.inStock;
   const gated = !product.priceVisible;
 
+  /**
+   * The one number this card strikes through, and what it saves.
+   *
+   * `compareAtPrice` wins over the market average when both exist. Two struck
+   * numbers over one price is a card claiming two different discounts, and our
+   * own former price is the more direct claim; the market average still shows
+   * inside MarketCompare, where it is labelled.
+   *
+   * The percentage is derived from whichever number won rather than taken from
+   * `market.savingsPercent`, which is computed against the market average. On a
+   * product carrying both, those disagree — a 17% market saving beside a strike
+   * worth 15% — and the badge has to describe the strike it is sitting next to.
+   * Same rounding as the server uses for the market figure, so a card and the
+   * breakdown behind it never differ by a point.
+   */
+  const struckPrice = product.compareAtPrice ?? product.market?.average ?? null;
+  const savedPercent =
+    struckPrice && struckPrice > product.price
+      ? Math.round(((struckPrice - product.price) / struckPrice) * 100)
+      : 0;
+
   function handleAdd() {
     if (outOfStock || isAdding) return;
     addItem(product, qty);
@@ -177,54 +198,59 @@ export function ProductCard({ product }) {
             {/* price, gated */}
             <div className="relative">
               <div className={cn(gated && 'price-gated', 'space-y-1')} aria-hidden={gated || undefined}>
-                {/* What the market charges, struck, ABOVE our own price — the
-                    comparison is read before the number it justifies, so the
-                    price lands as "less than that" rather than as a figure on
-                    its own.
+                {/* One price row, not two.
 
-                    `compareAtPrice` wins when both exist. Two struck numbers
-                    over one price is a card claiming two different discounts,
-                    and our own former price is the more direct claim of the
-                    two. The market average then stays inside the breakdown,
-                    where MarketCompare still shows it.
-
-                    The row holds its height when there is nothing to show, so
-                    prices stay on one line across a grid row — the same
-                    discipline as the two-line title clamp above. */}
-                {/* Reserved so prices sit on one line across a grid row — but a
-                    gated card can never fill this row, and every gated card in
-                    the grid is gated, so the row stays level without it. */}
-                {!gated && (
-                  <div className="h-3.75 @min-[200px]:h-4">
-                    {!product.compareAtPrice && product.market && (
-                      <span className="tnum text-xs text-ink-300 line-through @min-[200px]:text-xs">
-                        {money(product.market.average)}
-                      </span>
-                    )}
-                  </div>
-                )}
-
-                <div className="flex items-baseline gap-2">
+                    A struck market average used to sit on its own line ABOVE
+                    the price, while a struck `compareAtPrice` sat beside it.
+                    So a card with a market saving was two lines tall and a card
+                    with a former price was one — the same information in two
+                    shapes, side by side in the same grid. Everything strikes
+                    inline now, and the reserved spacer that row needed goes
+                    with it. */}
+                {/* `flex-wrap` with the badge allowed to drop to a second line.
+                    A 140px card at 320px cannot hold price + strike + badge on
+                    one line, and with everything `shrink-0` the badge was
+                    simply clipped off the right edge — the card showed "Sa…"
+                    or nothing at all. Wrapping keeps it. */}
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                   <span className="font-display text-lg font-bold tracking-tight text-ink-900 tnum @min-[200px]:text-xl @min-[260px]:text-2xl">
                     {gated ? '$000.00' : money(product.price)}
                   </span>
 
-                  {!gated && product.compareAtPrice ? (
-                    <span className="tnum text-sm text-ink-300 line-through">
-                      {money(product.compareAtPrice)}
-                    </span>
-                  ) : (
-                    !gated &&
-                    product.market && (
-                      // The saving beside the price, not under it: it is a
-                      // property of this number. The word "Save" is kept at
-                      // every width — a bare "21%" beside a price is ambiguous
-                      // enough to read as a rate rather than a discount, and
-                      // the phone grid is where most buyers meet it.
-                      <span className="tnum shrink-0 rounded-full bg-ok-50 px-1.5 py-0.5 text-2xs font-bold text-ok @min-[200px]:text-2xs">
-                        Save {product.market.savingsPercent}%
+                  {/* The struck number and the saving are ONE statement, so
+                      they are rendered together rather than as alternatives.
+
+                      They used to be a ternary: a struck `compareAtPrice`, OR
+                      the market saving. That meant the 17 products carrying
+                      both showed the strike and silently dropped the badge —
+                      the cards a buyer is most likely to compare were the ones
+                      missing the reason to.
+
+                      The percentage is computed from whichever number is
+                      actually struck. Reusing `market.savingsPercent` beside a
+                      struck own-price would label one comparison with the
+                      other one's figure: on the Galaxy Z Flip 5 that is a 17%
+                      market saving printed next to a strike worth 15%. */}
+                  {!gated && struckPrice && (
+                    <>
+                      {/* Hidden on the narrowest card. Of the three figures the
+                          strike is the one that can go: the badge already states
+                          the saving as a number, and MarketCompare below repeats
+                          the struck price with its sellers. */}
+                      <span className="tnum hidden text-sm text-ink-300 line-through @min-[170px]:inline">
+                        {money(struckPrice)}
                       </span>
-                    )
+                      {savedPercent > 0 && (
+                        // The saving beside the price, not under it: it is a
+                        // property of this number. The word "Save" is kept at
+                        // every width — a bare "21%" beside a price is ambiguous
+                        // enough to read as a rate rather than a discount, and
+                        // the phone grid is where most buyers meet it.
+                        <span className="tnum shrink-0 rounded-full bg-ok-50 px-1.5 py-0.5 text-2xs font-bold text-ok">
+                          Save {savedPercent}%
+                        </span>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
