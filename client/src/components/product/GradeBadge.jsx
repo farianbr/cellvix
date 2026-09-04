@@ -21,12 +21,27 @@ import { GRADES } from '@/lib/constants';
 export function GradeBadge({ grade, className }) {
   const meta = GRADES[grade] ?? { short: grade, tone: 'neutral' };
 
+  /**
+   * A pale tint with dark ink, not a saturated fill with white text.
+   *
+   * Four solid discs — green, blue, amber, near-black — sat on the four product
+   * images of a single grid row, and each one was the highest-chroma object in
+   * its card. The grade genuinely matters to a business buyer, which is the
+   * argument for the badge existing at all; it is not the argument for it
+   * outshouting the part it is stamped on. A buyer scans the grid for a PART
+   * and reads the grade once they have found one.
+   *
+   * The tints keep the hue that makes a grade recognisable at a glance while
+   * handing the visual weight back to the product. `brand` also stops using the
+   * gradient here: §2.2 keeps that for CTAs, and it was appearing on every
+   * aftermarket part in the catalogue.
+   */
   const tones = {
-    ok: 'bg-ok text-white',
-    info: 'bg-info text-white',
-    brand: 'bg-brand-gradient text-white',
-    warn: 'bg-warn text-white',
-    neutral: 'bg-ink-900 text-white',
+    ok: 'bg-ok-50 text-ok',
+    info: 'bg-info-50 text-info',
+    brand: 'bg-brand-50 text-brand-700',
+    warn: 'bg-warn-50 text-warn',
+    neutral: 'bg-surface-3 text-ink-700',
   };
 
   const parts = String(meta.short).split(' ');
@@ -46,7 +61,11 @@ export function GradeBadge({ grade, className }) {
   return (
     <span
       className={cn(
-        'flex size-10 flex-col items-center justify-center overflow-hidden rounded-full px-1 text-center shadow-card ring-2 ring-surface @min-[260px]:size-11',
+        // One separator, not two. The badge used to carry a shadow AND a 2px
+        // white ring, which is the same job done twice — the ring alone lifts it
+        // off the photograph, and on a pale tint the shadow was reading as a
+        // smudge under the disc rather than as elevation.
+        'flex size-10 flex-col items-center justify-center overflow-hidden rounded-full px-1 text-center ring-2 ring-surface @min-[260px]:size-11',
         tones[meta.tone],
         className,
       )}
@@ -56,8 +75,8 @@ export function GradeBadge({ grade, className }) {
         <span
           key={part}
           className={cn(
-            // No opacity on the "PULL" line: knocking white back to 80% on the
-            // amber fill drops it under 4.5:1. Size alone carries the hierarchy.
+            // No opacity on the "PULL" line: knocking the ink back on a pale
+            // tint drops it under 4.5:1. Size alone carries the hierarchy.
             'font-display font-bold uppercase tracking-[0.01em]',
             lineClass(index),
           )}

@@ -10,8 +10,9 @@ import PartIllustration from './PartIllustration';
  * The caption used to sit inside the top of the frame and inset the drawing
  * below it, which cost the part a third of its own height on the surface where
  * a buyer is scanning for the part. It is a backdrop now — full-bleed, centred,
- * in the brand red at low opacity — so the picture keeps the whole frame and
- * the model is still readable through it. The part type and the model both
+ * in ink at very low opacity — so the picture keeps the whole frame and the
+ * watermark reads as texture behind it rather than as a label competing with
+ * it. The part type and the model both
  * moved down into the card body, where the rest of the text details live.
  *
  * One component for the card and the detail page: the watermark's type scales
@@ -87,9 +88,20 @@ export function PartFrame({
               Proportional, every frame gets the same treatment at its own size
               and there is no width where it disappears.
 
-              `text-brand/25` over the original /12: at 12% it was invisible
-              against a photo and legible only on an empty frame. */}
-          <span className="w-full break-words text-center font-watermark text-[13cqw] font-extrabold uppercase leading-[0.92] tracking-tight text-brand/25">
+              The opacity was pushed to 25% to make the name readable through a
+              photo, and that was the wrong goal. At 25% brand red the letters
+              compete with the part for the same pixels: the eye tries to read
+              "GALAXY S21 ULTRA" as a label, finds a phone sitting across the
+              middle of it, and the whole frame reads as a rendering fault
+              rather than as a designed surface. It is a watermark, not a
+              caption — the product's name is set properly two lines below it,
+              so nothing is lost by making this texture again.
+
+              8% ink instead of 25% brand does that. Ink, because a red
+              watermark on every card was another way of spending brand colour
+              on chrome; and 8%, which registers as a tonal shift in the frame
+              without ever asking to be read. */}
+          <span className="w-full break-words text-center font-watermark text-[13cqw] font-extrabold uppercase leading-[0.92] tracking-tight text-ink-900/8">
             {model}
           </span>
         </div>

@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { Check, Lock, PackageX, ShoppingCart } from 'lucide-react';
 import { motion } from 'motion/react';
 import cn from '@/lib/cn';
+import { pressable } from '@/lib/motion';
 import { money, productTitle } from '@/lib/format';
 import GradeBadge from './GradeBadge';
 import QtyStepper from './QtyStepper';
@@ -47,7 +48,12 @@ export function ProductCard({ product }) {
     // same card sits in a 2-, 3- and 4-column grid.
     <article
       aria-busy={isAdding || undefined}
-      className="group relative @container flex flex-col overflow-hidden rounded-lg border border-line bg-surface transition-[border-color,box-shadow] duration-200 hover:border-line-strong hover:shadow-card"
+      // Bordered, not shadowed. §2 allows one or the other and this card is
+      // bordered, so hover deepens the border it already has rather than
+      // adding a shadow underneath it — a card that gains an elevation it did
+      // not have at rest reads as lifting off the page, which is a much larger
+      // gesture than "the pointer is here".
+      className="group relative @container flex flex-col overflow-hidden rounded-lg border border-line bg-surface transition-[border-color] duration-snap ease-entrance hover:border-ink-200"
     >
       {/* The whole card goes busy, not just the button: the stepper, the price
           and the in-cart pill are all about to change, and a spinner on one
@@ -266,10 +272,27 @@ export function ProductCard({ product }) {
               disabled={isAdding}
               aria-label={`Add ${product.name} to cart`}
               className={cn(
-                'flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-md font-display text-sm font-semibold transition-[background,color,filter] duration-[120ms]',
+                pressable,
+                'flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-md font-display text-sm font-semibold',
+                /**
+                 * A FLAT fill, not the brand gradient.
+                 *
+                 * §2.2 calls the gradient a signature: primary CTAs and at most
+                 * one hero block per page. A grid of twenty-four product cards
+                 * put twenty-four gradients on one screen, which is the exact
+                 * opposite of a signature — a treatment that appears everywhere
+                 * carries no information, and it left the page's real CTA with
+                 * nothing to distinguish it from an Add button in row nine.
+                 *
+                 * Solid ink at rest, brand on hover. Ink keeps the button
+                 * clearly actionable without spending brand colour on it, and
+                 * the hover fill is where the red now earns its appearance:
+                 * exactly one card wears it at a time, which is what makes it
+                 * read as a response to the user rather than as decoration.
+                 */
                 justAdded
                   ? 'bg-ok text-white'
-                  : 'bg-brand-gradient text-white hover:brightness-110 active:brightness-95',
+                  : 'bg-ink-900 text-white hover:bg-brand',
               )}
             >
               {/* Icon only on a narrow card. The trolley is a well-understood
