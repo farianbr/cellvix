@@ -34,15 +34,16 @@ export function GradeBadge({ grade, className }) {
    * The tints keep the hue that makes a grade recognisable at a glance while
    * handing the visual weight back to the product.
    *
-   * `brand` is the exception and carries the gradient, because AFTERMARKET is
-   * the grade Cellvix sells on its own name rather than a manufacturer's — the
-   * one badge where the brand mark is the information. The compact ramp, since
-   * a 40px disc has no room for the full one's near-black opening.
+   * All five are tints, PULL-A included. It carried the brand gradient for a
+   * while, which made one grade in a five-grade set look like a different kind
+   * of thing — a buyer comparing a PULL A against a PULL B was reading two
+   * different visual languages for one axis. A grade scale has to look like a
+   * scale.
    */
   const tones = {
     ok: 'bg-ok-50 text-ok',
     info: 'bg-info-50 text-info',
-    brand: 'bg-brand-gradient-compact text-white',
+    brand: 'bg-brand-50 text-brand-700',
     warn: 'bg-warn-50 text-warn',
     neutral: 'bg-surface-3 text-ink-700',
   };
@@ -62,31 +63,49 @@ export function GradeBadge({ grade, className }) {
   }
 
   return (
+    // The ring is the BRAND GRADIENT, not white.
+    //
+    // A ring is what lifts the badge off the photograph behind it, and a white
+    // one did that anonymously — the same halo any sticker would have. In brand
+    // colour the separator becomes part of the mark instead of a cutout around
+    // it, and it is the one piece of every card that is Cellvix rather than the
+    // manufacturer.
+    //
+    // Painted as a masked background rather than a `ring-` utility, because a
+    // ring cannot take a gradient: the ramp is the outer layer and the surface
+    // colour is masked over the middle, with the padding becoming the visible
+    // ring width. The compact ramp, since the disc is 40px.
+    //
+    // One separator, not two: no shadow. On a pale tint the shadow read as a
+    // smudge under the disc rather than as elevation, and the ring already does
+    // the lifting.
     <span
       className={cn(
-        // One separator, not two. The badge used to carry a shadow AND a 2px
-        // white ring, which is the same job done twice — the ring alone lifts it
-        // off the photograph, and on a pale tint the shadow was reading as a
-        // smudge under the disc rather than as elevation.
-        'flex size-10 flex-col items-center justify-center overflow-hidden rounded-full px-1 text-center ring-2 ring-surface @min-[260px]:size-11',
-        tones[meta.tone],
+        'ring-brand-gradient flex size-10 shrink-0 rounded-full @min-[260px]:size-11',
         className,
       )}
       title={meta.label ?? grade}
     >
-      {parts.map((part, index) => (
-        <span
-          key={part}
-          className={cn(
-            // No opacity on the "PULL" line: knocking the ink back on a pale
-            // tint drops it under 4.5:1. Size alone carries the hierarchy.
-            'font-display font-bold uppercase tracking-[0.01em]',
-            lineClass(index),
+      <span
+        className={cn(
+          'flex size-full flex-col items-center justify-center overflow-hidden rounded-full px-1 text-center',
+          tones[meta.tone],
+        )}
+      >
+        {parts.map((part, index) => (
+          <span
+            key={part}
+            className={cn(
+              // No opacity on the "PULL" line: knocking the ink back on a pale
+              // tint drops it under 4.5:1. Size alone carries the hierarchy.
+              'font-display font-bold uppercase tracking-[0.01em]',
+              lineClass(index),
           )}
-        >
-          {part}
-        </span>
-      ))}
+          >
+            {part}
+          </span>
+        ))}
+      </span>
     </span>
   );
 }
