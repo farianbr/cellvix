@@ -13,6 +13,7 @@ import scrollToSection from '@/lib/scrollToSection';
 import { useFaqs } from '@/hooks/useContent';
 import useActiveSection from '@/hooks/useActiveSection';
 import useDebouncedValue from '@/hooks/useDebouncedValue';
+import { ease } from '@/lib/motion';
 
 /**
  * The category jump list.
@@ -159,7 +160,7 @@ export function FaqPage() {
       {/* ---- header ------------------------------------------------------- */}
       <motion.header
         {...headerMotion}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.5, ease: ease.entrance }}
         className="mx-auto max-w-2xl text-center"
       >
         {/* No count in the pill: "047 · Help centre" read as a statistic about

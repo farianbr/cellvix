@@ -197,7 +197,7 @@ export function AccountActivityPage() {
               skeleton would flash the layout for no information gained. */}
           <div
             className={cn(
-              'transition-opacity duration-[180ms]',
+              'transition-opacity duration-snap',
               isFetching ? 'opacity-60' : 'opacity-100',
             )}
             aria-busy={isFetching}

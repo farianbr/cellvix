@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { Plus } from 'lucide-react';
 import cn from '@/lib/cn';
 import RichText from '@/lib/richText';
+import { ease } from '@/lib/motion';
 
 /**
  * Disclosure list. One implementation serves the FAQ page and the per-product
@@ -60,7 +61,7 @@ export function Accordion({
             initial={reveal ? hidden : false}
             whileInView={reveal ? shown : undefined}
             viewport={reveal ? { once: true, amount: 0.2 } : undefined}
-            transition={{ duration: 0.5, delay: index * 0.06, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.5, delay: index * 0.06, ease: ease.entrance }}
             className={cn(
               'rounded-xl p-[2px] transition-[background-color,background-image] duration-300',
               isOpen ? 'bg-brand-gradient' : 'bg-line hover:bg-line-strong',
@@ -153,7 +154,7 @@ export function Accordion({
                       reduce
                         ? { duration: 0.2 }
                         : {
-                            height: { duration: 0.44, ease: [0.22, 1, 0.36, 1] },
+                            height: { duration: 0.44, ease: ease.entrance },
                             opacity: { duration: 0.28, ease: 'linear' },
                           }
                     }

@@ -47,7 +47,7 @@ export function StepIndicator({
       aria-hidden="true"
       className={cn(
         'inline-flex shrink-0 items-center justify-center rounded-full font-display font-bold tnum',
-        'transition-[background,border-color,color] duration-[220ms]',
+        'transition-[background,border-color,color] duration-panel',
         s.box,
         STATES[state],
         className,
@@ -80,7 +80,7 @@ export function StepConnector({ complete = false, vertical = false, className })
     >
       <span
         className={cn(
-          'block bg-brand-gradient transition-[width,height] duration-[280ms] ease-[var(--ease-entrance)]',
+          'block bg-brand-gradient transition-[width,height] duration-panel ease-[var(--ease-entrance)]',
           vertical ? 'w-full' : 'h-full',
           complete ? (vertical ? 'h-full' : 'w-full') : vertical ? 'h-0' : 'w-0',
         )}

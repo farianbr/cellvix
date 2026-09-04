@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
 import cn from '@/lib/cn';
 import useToastStore from '@/store/toastStore';
+import { spring, toast as toastMotion } from '@/lib/motion';
 
 /**
  * Where toasts are drawn. Mounted once, at the app root.
@@ -16,9 +17,9 @@ import useToastStore from '@/store/toastStore';
  */
 
 const TONES = {
-  ok: { icon: CheckCircle2, ring: 'border-ok/30', mark: 'text-ok' },
-  info: { icon: Info, ring: 'border-info/30', mark: 'text-info' },
-  danger: { icon: AlertCircle, ring: 'border-danger/30', mark: 'text-danger' },
+  ok: { icon: CheckCircle2, mark: 'text-ok' },
+  info: { icon: Info, mark: 'text-info' },
+  danger: { icon: AlertCircle, mark: 'text-danger' },
 };
 
 export function Toaster() {
@@ -40,15 +41,25 @@ export function Toaster() {
           return (
             <motion.div
               key={toast.id}
+              // `layout` on a SPRING, not a tween. Toasts arrive in bursts —
+              // three saves in a row — and each arrival re-positions every
+              // toast below it. A tween restarts from zero when it is
+              // interrupted mid-flight, so the stack visibly stutters as it
+              // reflows; a spring keeps its velocity through the re-target and
+              // the stack settles smoothly however fast they land.
               layout
-              initial={{ opacity: 0, y: 12, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 8, scale: 0.97 }}
-              transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
+              transition={{ layout: spring.snappy }}
+              variants={toastMotion}
+              initial="initial"
+              animate="animate"
+              exit="exit"
               role={toast.tone === 'danger' ? 'alert' : undefined}
               className={cn(
-                'pointer-events-auto flex items-start gap-2.5 rounded-lg border bg-surface p-3 shadow-pop',
-                tone.ring,
+                // Shadowed, not bordered — §2 allows one. A toast floats over
+                // arbitrary page content, so the shadow is the half that has to
+                // stay: it is what separates the surface from whatever is
+                // underneath it, which a hairline cannot do over a photograph.
+                'pointer-events-auto flex items-start gap-2.5 rounded-lg bg-surface p-3 shadow-pop',
               )}
             >
               <Icon

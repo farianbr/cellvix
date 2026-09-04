@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import { Check, Lock, PackageX, ShoppingCart } from 'lucide-react';
 import { motion } from 'motion/react';
 import cn from '@/lib/cn';
-import { pressable } from '@/lib/motion';
+import { ease, pressable } from '@/lib/motion';
 import { money, productTitle } from '@/lib/format';
 import GradeBadge from './GradeBadge';
 import QtyStepper from './QtyStepper';
@@ -114,7 +114,7 @@ export function ProductCard({ product }) {
             key={inCartQty}
             initial={{ scale: 0.85, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.22, ease: ease.entrance }}
             className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full border border-brand/25 bg-surface/95 py-1 pl-1.5 pr-2 text-2xs font-semibold text-brand-700 shadow-card backdrop-blur-[2px] @min-[200px]:bottom-3 @min-[200px]:right-3"
           >
             <ShoppingCart className="size-3 shrink-0" strokeWidth={2.25} aria-hidden="true" />

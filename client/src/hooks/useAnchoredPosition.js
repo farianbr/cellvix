@@ -13,6 +13,9 @@ const EDGE = 12;
  * a table wrapper. Every one of those is somewhere a select already lives, so
  * the panel is rendered in a portal and given fixed coordinates instead.
  *
+ * Returns [style, placement]. `placement` is "top" or "bottom" — the side the
+ * panel actually landed on, so the caller can set a matching transform-origin.
+ *
  * The returned style also decides:
  *   - which side to open on: below unless the space there is too small and
  *     there is more of it above;
@@ -38,6 +41,11 @@ const EDGE = 12;
 export function useAnchoredPosition(triggerRef, open, options = {}) {
   const { align = 'left', maxHeight = 320, matchWidth = true, rowHeight, padding = 0 } = options;
   const [style, setStyle] = useState(null);
+  // Which side the panel actually landed on. The caller needs it to set a
+  // transform-origin: a menu that opens downward should grow from its top edge
+  // and one that flipped upward from its bottom, so the panel appears to come
+  // out of the control that opened it rather than out of its own middle.
+  const [placement, setPlacement] = useState('bottom');
 
   const measure = useCallback(() => {
     const element = triggerRef.current;
@@ -56,6 +64,8 @@ export function useAnchoredPosition(triggerRef, open, options = {}) {
       const rows = Math.max(1, Math.floor((room - padding) / rowHeight));
       room = rows * rowHeight + padding;
     }
+
+    setPlacement(flip ? 'top' : 'bottom');
 
     setStyle({
       position: 'fixed',
@@ -98,7 +108,7 @@ export function useAnchoredPosition(triggerRef, open, options = {}) {
     return () => observer.disconnect();
   }, [open, measure, triggerRef]);
 
-  return style;
+  return [style, placement];
 }
 
 export default useAnchoredPosition;

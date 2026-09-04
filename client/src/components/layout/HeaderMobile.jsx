@@ -10,6 +10,7 @@ import useScrollProgress from '@/hooks/useScrollProgress';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { useAccountMenuTrigger } from '@/components/account/AccountMenu';
+import { ease } from '@/lib/motion';
 
 /**
  * Tablet / mobile header (brief §4.2, Unimart pattern):
@@ -173,7 +174,7 @@ export function HeaderMobile() {
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.22, ease: ease.entrance }}
             onAnimationStart={() => setCollapsing(true)}
             onAnimationComplete={() => setCollapsing(false)}
             className={collapsing ? 'overflow-hidden' : undefined}

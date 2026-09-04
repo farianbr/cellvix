@@ -37,7 +37,7 @@ export function ActionMenu({ items = [], context, label = 'More actions', trigge
    * disappeared under the panel edge. A portal takes it out of that box, and
    * fixed coordinates from the trigger keep it attached to the button.
    */
-  const panelStyle = useAnchoredPosition(buttonRef, open, {
+  const [panelStyle] = useAnchoredPosition(buttonRef, open, {
     align,
     maxHeight: 320,
     matchWidth: false,

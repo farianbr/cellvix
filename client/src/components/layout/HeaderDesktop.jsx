@@ -117,7 +117,7 @@ export function HeaderDesktop() {
           aria-expanded={megaMenuOpen}
           aria-haspopup="true"
           className={cn(
-            'inline-flex h-11 shrink-0 items-center gap-2 rounded-md px-4 font-display text-md font-semibold transition-[background,filter] duration-[120ms]',
+            'inline-flex h-11 shrink-0 items-center gap-2 rounded-md px-4 font-display text-md font-semibold transition-[background,filter] duration-press',
             'bg-brand-gradient text-white hover:brightness-110',
           )}
         >

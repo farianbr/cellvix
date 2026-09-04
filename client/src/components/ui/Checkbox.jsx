@@ -18,7 +18,7 @@ export const Checkbox = forwardRef(function Checkbox(
       htmlFor={id}
       className={cn(
         'group flex cursor-pointer select-none items-center gap-2.5 rounded-lg px-2 py-1.5 text-md',
-        'transition-colors duration-[120ms]',
+        'transition-colors duration-press',
         disabled ? 'cursor-not-allowed opacity-45' : 'hover:bg-surface-2',
         className,
       )}

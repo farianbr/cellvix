@@ -2,6 +2,7 @@ import { useId, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { ChevronDown } from 'lucide-react';
 import cn from '@/lib/cn';
+import { ease } from '@/lib/motion';
 
 /**
  * The account dashboard's building block: a bordered surface with an optional
@@ -97,7 +98,7 @@ export function CollapsiblePanel({
             <span
               className={cn(
                 'flex size-5 shrink-0 items-center justify-center rounded-full text-ink-400',
-                'transition-[transform,color] duration-[220ms] ease-entrance group-hover:text-ink-900',
+                'transition-[transform,color] duration-panel ease-entrance group-hover:text-ink-900',
                 open && 'rotate-180 text-ink-900',
               )}
               aria-hidden="true"
@@ -144,7 +145,7 @@ export function CollapsiblePanel({
               reduce
                 ? { duration: 0.12 }
                 : {
-                    height: { duration: 0.22, ease: [0.22, 1, 0.36, 1] },
+                    height: { duration: 0.22, ease: ease.entrance },
                     opacity: { duration: 0.16, ease: 'linear' },
                   }
             }

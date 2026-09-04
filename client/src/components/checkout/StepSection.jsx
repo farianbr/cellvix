@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Pencil } from 'lucide-react';
 import cn from '@/lib/cn';
 import { StepIndicator } from '@/components/ui/StepIndicator';
+import { ease } from '@/lib/motion';
 
 /**
  * One section of the conversational checkout (brief §7).
@@ -28,7 +29,7 @@ export function StepSection({
   return (
     <section
       className={cn(
-        'overflow-hidden rounded-lg border bg-surface transition-[border-color,box-shadow] duration-[220ms]',
+        'overflow-hidden rounded-lg border bg-surface transition-[border-color,box-shadow] duration-panel',
         isActive ? 'border-line-strong shadow-card' : 'border-line',
         !isLast && 'mb-3',
       )}
@@ -85,7 +86,7 @@ export function StepSection({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.24, ease: ease.entrance }}
             className="overflow-hidden"
           >
             <div className="border-t border-line px-4 py-4 sm:px-5 sm:py-5">{children}</div>

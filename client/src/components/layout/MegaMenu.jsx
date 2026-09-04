@@ -10,6 +10,7 @@ import useApplyFilterPath from '@/hooks/useApplyFilterPath';
 import useFilterStore from '@/store/filterStore';
 import useUiStore from '@/store/uiStore';
 import Skeleton from '@/components/ui/Skeleton';
+import { ease } from '@/lib/motion';
 
 /**
  * The desktop mega menu (brief §4.1).
@@ -95,7 +96,7 @@ export function MegaMenu() {
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.24, ease: ease.entrance }}
             onClick={closeMegaMenu}
             className="absolute left-0 right-0 top-full z-40 origin-top"
           >

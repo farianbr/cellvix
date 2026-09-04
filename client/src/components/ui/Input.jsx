@@ -76,7 +76,7 @@ export const Input = forwardRef(function Input(
             // the rest of the visit. Same rule in Textarea, Select and LiveSearch.
             'h-11 w-full rounded-md border bg-surface px-3.5 text-lg text-ink-900 sm:text-md',
             'placeholder:text-ink-300',
-            'transition-[border-color,box-shadow] duration-[120ms]',
+            'transition-[border-color,box-shadow] duration-press',
             'hover:border-line-strong',
             'focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25',
             'disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-ink-400',

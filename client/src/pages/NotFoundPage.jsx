@@ -122,7 +122,7 @@ export function NotFoundPage() {
           `Button` renders a real <button> and this has to be an anchor. */}
       <Link
         to="/"
-        className="mt-4 inline-flex h-11 w-full max-w-md items-center justify-center gap-2 rounded-md bg-brand-gradient px-6 font-display text-md font-semibold text-white transition-[filter] duration-[120ms] hover:brightness-110 active:brightness-95 sm:mt-6 sm:w-auto"
+        className="mt-4 inline-flex h-11 w-full max-w-md items-center justify-center gap-2 rounded-md bg-brand-gradient px-6 font-display text-md font-semibold text-white transition-[filter] duration-press hover:brightness-110 active:brightness-95 sm:mt-6 sm:w-auto"
       >
         <Home className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
         Go to home

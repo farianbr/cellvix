@@ -6,6 +6,7 @@ import { COUNTRIES, DEFAULT_DIAL } from '@shared/countries';
 import cn from '@/lib/cn';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
 import useAnchoredPosition from '@/hooks/useAnchoredPosition';
+import { ease } from '@/lib/motion';
 
 /**
  * The dial codes offered: every country, from the one shared list.
@@ -147,7 +148,7 @@ function CountryCodeMenu({ dial, onSelect, disabled }) {
   /** True when the cap is hiding countries a search would still find. */
   const capped = !search.trim() && COUNTRIES.length > VISIBLE_WITHOUT_SEARCH;
 
-  const panelStyle = useAnchoredPosition(buttonRef, open, {
+  const [panelStyle] = useAnchoredPosition(buttonRef, open, {
     align: 'left',
     maxHeight: OPTION_H * 8 + 60,
     padding: 8,
@@ -253,7 +254,7 @@ function CountryCodeMenu({ dial, onSelect, disabled }) {
         {dial}
         <ChevronDown
           className={cn(
-            'size-3.5 shrink-0 text-ink-400 transition-transform duration-[120ms]',
+            'size-3.5 shrink-0 text-ink-400 transition-transform duration-press',
             open && 'rotate-180',
           )}
           strokeWidth={2}
@@ -269,7 +270,7 @@ function CountryCodeMenu({ dial, onSelect, disabled }) {
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
-              transition={{ duration: 0.12, ease: [0.2, 0, 0, 1] }}
+              transition={{ duration: 0.12, ease: ease.entrance }}
               style={panelStyle}
               className="z-[70] w-[300px] max-w-[calc(100vw-24px)] overflow-hidden rounded-lg border border-line bg-surface shadow-pop"
             >
@@ -304,7 +305,7 @@ function CountryCodeMenu({ dial, onSelect, disabled }) {
                     className={cn(
                       'h-9 w-full rounded-md border border-line bg-surface pl-8 pr-2.5',
                       'text-sm text-ink-900 placeholder:text-ink-300',
-                      'transition-[border-color,box-shadow] duration-[120ms]',
+                      'transition-[border-color,box-shadow] duration-press',
                       'focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25',
                     )}
                   />
@@ -438,7 +439,7 @@ export const PhoneField = forwardRef(function PhoneField(
       <div
         className={cn(
           'flex w-full items-stretch overflow-hidden rounded-md border bg-surface',
-          'transition-[border-color,box-shadow] duration-[120ms]',
+          'transition-[border-color,box-shadow] duration-press',
           'focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/25',
           error ? 'border-danger focus-within:border-danger focus-within:ring-danger/20' : 'border-line',
           disabled && 'cursor-not-allowed bg-surface-2',

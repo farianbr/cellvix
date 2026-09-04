@@ -28,6 +28,7 @@ import Button from '@/components/ui/Button';
 import Slab, { EyebrowPill, SectionHeader } from '@/components/ui/Slab';
 import Reveal from '@/components/motion/Reveal';
 import { useAuth } from '@/hooks/useAuth';
+import { ease } from '@/lib/motion';
 
 const CHANNELS = [
   {
@@ -220,7 +221,7 @@ export function ContactPage() {
       <Slab aria-labelledby="contact-heading">
         <motion.div
           {...headerMotion}
-          transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.5, ease: ease.entrance }}
           className="mx-auto max-w-2xl text-center"
         >
           <EyebrowPill>Contact</EyebrowPill>

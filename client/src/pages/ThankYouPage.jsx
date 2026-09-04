@@ -16,6 +16,7 @@ import { money, date } from '@/lib/format';
 import Skeleton from '@/components/ui/Skeleton';
 import { PartVisual } from '@/components/product/PartFrame';
 import BrandScene from '@/components/ui/BrandScene';
+import { ease } from '@/lib/motion';
 
 /**
  * Post-checkout confirmation (brief §9).
@@ -48,7 +49,7 @@ function SuccessMark() {
           strokeLinecap="round"
           initial={{ pathLength: 0, rotate: -90 }}
           animate={{ pathLength: 1 }}
-          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.7, ease: ease.entrance }}
           style={{ transformOrigin: '50% 50%', rotate: -90 }}
         />
         <motion.path
@@ -60,7 +61,7 @@ function SuccessMark() {
           strokeLinejoin="round"
           initial={{ pathLength: 0 }}
           animate={{ pathLength: 1 }}
-          transition={{ duration: 0.35, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.35, delay: 0.5, ease: ease.entrance }}
         />
       </svg>
     </span>
@@ -152,7 +153,7 @@ export function ThankYouPage() {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.4, ease: ease.entrance }}
         className="flex flex-col items-center text-center"
       >
         <SuccessMark />
@@ -176,7 +177,7 @@ export function ThankYouPage() {
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, delay: 0.55, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.45, delay: 0.55, ease: ease.entrance }}
           className="mt-9 flex w-full justify-center"
         >
           <BrandScene variant="success" className="max-w-[380px]" />
@@ -263,7 +264,7 @@ export function ThankYouPage() {
             key={title}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.15 + index * 0.08, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.3, delay: 0.15 + index * 0.08, ease: ease.entrance }}
             className="rounded-lg border border-line bg-surface p-4"
           >
             <span className="mb-3 flex size-9 items-center justify-center rounded-lg bg-surface-2 text-ink-500">

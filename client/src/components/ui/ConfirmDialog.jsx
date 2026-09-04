@@ -150,7 +150,7 @@ export function ConfirmDialog({
                   // same rule as Input.
                   'mt-2 h-11 w-full rounded-md border bg-surface px-3.5 text-lg text-ink-900 sm:text-md',
                   'placeholder:text-ink-300',
-                  'transition-[border-color,box-shadow] duration-[120ms]',
+                  'transition-[border-color,box-shadow] duration-press',
                   'focus:outline-none focus:ring-2',
                   typed && !phraseMatches
                     ? 'border-danger focus:border-danger focus:ring-danger/20'

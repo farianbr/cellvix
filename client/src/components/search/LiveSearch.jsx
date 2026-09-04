@@ -10,6 +10,7 @@ import useOnClickOutside from '@/hooks/useOnClickOutside';
 import { useApplyFilterPath, useApplySearchQuery } from '@/hooks/useApplyFilterPath';
 import { PartVisual } from '@/components/product/PartFrame';
 import Skeleton from '@/components/ui/Skeleton';
+import { ease } from '@/lib/motion';
 
 /**
  * Header search with a live type-ahead panel (brief §4.3).
@@ -135,7 +136,7 @@ export function LiveSearch({
               // viewport and the layout is stuck skewed until a reload.
               'h-11 w-full rounded-md border border-line bg-surface-2 pl-11 pr-10 text-lg text-ink-900 sm:text-md',
               'placeholder:text-ink-300',
-              'transition-[border-color,background,box-shadow] duration-[120ms]',
+              'transition-[border-color,background,box-shadow] duration-press',
               'hover:border-line-strong',
               'focus:border-brand focus:bg-surface focus:outline-none focus:ring-2 focus:ring-brand/20',
               '[&::-webkit-search-cancel-button]:appearance-none',
@@ -164,7 +165,7 @@ export function LiveSearch({
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.22, ease: ease.entrance }}
             className={cn(
               'absolute left-0 right-0 top-[calc(100%+8px)] z-40 overflow-hidden rounded-lg border border-line bg-surface shadow-flyout',
               // The field is only as wide as the header gap allows, and a panel

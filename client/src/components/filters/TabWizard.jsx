@@ -332,7 +332,7 @@ export function TabWizard() {
                 className={cn(
                   // items-start: the value wraps to two lines, and a centred step
                   // indicator beside a two-line value floats below its own label.
-                  'group relative flex h-full items-start gap-3 rounded-md border p-2.5 transition-[border-color,background] duration-[220ms]',
+                  'group relative flex h-full items-start gap-3 rounded-md border p-2.5 transition-[border-color,background] duration-panel',
                   value
                     ? 'border-ok/30 bg-ok-50/60'
                     : isOpen

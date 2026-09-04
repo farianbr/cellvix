@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react';
 import { ArrowUp } from 'lucide-react';
 import useScrollProgress from '@/hooks/useScrollProgress';
+import { ease } from '@/lib/motion';
 
 /** Roughly a screen and a half down — before that, the header is a short flick away. */
 const REVEAL_AT = 480;
@@ -34,7 +35,7 @@ export function BackToTop() {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
-          transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.2, ease: ease.entrance }}
           className="fixed right-3 bottom-[calc(78px+env(safe-area-inset-bottom))] z-30 flex size-12 items-center justify-center rounded-full bg-surface text-ink-700 shadow-pop transition-colors active:bg-surface-2 lg:hidden"
         >
           <svg

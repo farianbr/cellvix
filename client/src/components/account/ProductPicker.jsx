@@ -44,7 +44,7 @@ export function ProductPicker({ value, onChange, label, autoFocus = false, class
   // corners — an absolutely-positioned list was cut off at the panel's edge.
   // Portalled and anchored to the field, so it opens over everything and sizes
   // itself to the room actually left below (or above) the row.
-  const panelStyle = useAnchoredPosition(containerRef, showPanel, {
+  const [panelStyle] = useAnchoredPosition(containerRef, showPanel, {
     align: 'left',
     // Six results at ROW_H plus the list's own 6px of padding, so a full set
     // fits without scrolling and a constrained one ends on a whole row rather
@@ -154,7 +154,7 @@ export function ProductPicker({ value, onChange, label, autoFocus = false, class
             // never zooms back out. Same rule as every other field.
             'h-11 w-full rounded-md border border-line bg-surface pl-9 pr-3 text-lg text-ink-900 sm:text-md',
             'placeholder:text-ink-300',
-            'transition-[border-color,box-shadow] duration-[120ms]',
+            'transition-[border-color,box-shadow] duration-press',
             'hover:border-line-strong',
             'focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25',
           )}

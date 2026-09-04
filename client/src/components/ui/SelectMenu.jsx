@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import cn from '@/lib/cn';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
 import useAnchoredPosition from '@/hooks/useAnchoredPosition';
+import { popover } from '@/lib/motion';
 
 /**
  * The listbox we draw ourselves. **This is the site's dropdown** — a native
@@ -90,7 +91,7 @@ export function SelectMenu({
   // falls back to the first option, which is what a filter control wants.
   const selected = selectedIndex >= 0 ? options[selectedIndex] : placeholder ? null : options[0];
 
-  const panelStyle = useAnchoredPosition(buttonRef, open, {
+  const [panelStyle, placement] = useAnchoredPosition(buttonRef, open, {
     align,
     maxHeight: OPTION_H * 9 + 8,
     // Snapped to whole options: a list cut mid-row reads as clipped rather than
@@ -183,16 +184,29 @@ export function SelectMenu({
           aria-label={label || srLabel}
           aria-activedescendant={activeIndex >= 0 ? `${listId}-${activeIndex}` : undefined}
           onKeyDown={onListKeyDown}
-          initial={{ opacity: 0, y: -4 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -4 }}
-          transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
+          variants={popover}
+          initial="initial"
+          animate="animate"
+          exit="exit"
           style={panelStyle}
           className={cn(
             // w-max sizes to the longest label; the style's maxWidth clamps that
             // to the room actually left on screen, so it can never run off.
             'scroll-slim z-60 w-max overflow-y-auto overflow-x-hidden rounded-lg',
-            'border border-line bg-surface p-1 shadow-flyout focus:outline-none',
+            // Shadowed, not bordered. A flyout sits over arbitrary page content
+            // and the shadow is what separates it from whatever is underneath;
+            // a hairline cannot do that over a photograph or a chart, and §2
+            // allows one or the other.
+            'bg-surface p-1 shadow-flyout focus:outline-none',
+            // Scale from the trigger, not from the panel's own centre. The menu
+            // grows out of the control that opened it — downward menus from
+            // their top edge, a menu that flipped upward from its bottom — so
+            // the relationship between button and panel is visible in the
+            // motion rather than only in the final position. Whether anyone
+            // consciously notices is not the point; details like this are what
+            // separate an interface that feels considered from one that does
+            // not.
+            placement === 'top' ? 'origin-bottom' : 'origin-top',
           )}
         >
           {options.map((option, index) => {
@@ -272,7 +286,7 @@ export function SelectMenu({
           aria-describedby={describedBy}
           className={cn(
             'flex w-full min-w-0 cursor-pointer items-center gap-1.5 border bg-surface text-ink-900',
-            'transition-[border-color,box-shadow] duration-[120ms]',
+            'transition-[border-color,box-shadow] duration-press',
             'hover:border-line-strong',
             'focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25',
             'disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-ink-400',
@@ -293,7 +307,7 @@ export function SelectMenu({
           <Count value={selected?.count} muted />
           <ChevronDown
             className={cn(
-              'size-4 shrink-0 text-ink-400 transition-transform duration-[160ms]',
+              'size-4 shrink-0 text-ink-400 transition-transform duration-fast',
               open && 'rotate-180',
             )}
             strokeWidth={2}

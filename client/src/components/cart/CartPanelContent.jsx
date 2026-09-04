@@ -208,7 +208,7 @@ export function CartPanelFooter({
         <Link
           to="/checkout"
           onClick={onClose}
-          className="inline-flex h-13 w-full items-center justify-center rounded-lg bg-brand-gradient font-display text-lg font-semibold text-white transition-[filter] duration-[120ms] hover:brightness-110"
+          className="inline-flex h-13 w-full items-center justify-center rounded-lg bg-brand-gradient font-display text-lg font-semibold text-white transition-[filter] duration-press hover:brightness-110"
         >
           Proceed to checkout
         </Link>

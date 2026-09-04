@@ -103,7 +103,7 @@ export function ProcessStrip({
                 aria-current={active ? 'step' : undefined}
                 className={cn(
                   'flex flex-1 items-center gap-2.5 rounded-md border bg-surface px-3.5 py-2.5',
-                  'transition-[border-color,box-shadow] duration-[200ms]',
+                  'transition-[border-color,box-shadow] duration-snap',
                   // The live stage is the only solid, shadowed card on the row.
                   // Everything else is quiet, which is what makes it findable.
                   active &&

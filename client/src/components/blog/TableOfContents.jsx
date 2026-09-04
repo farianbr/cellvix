@@ -3,6 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { ChevronDown, List } from 'lucide-react';
 import cn from '@/lib/cn';
 import scrollToSection from '@/lib/scrollToSection';
+import { ease } from '@/lib/motion';
 
 /**
  * An article's table of contents, built from the headings the body actually
@@ -123,7 +124,7 @@ export function TableOfContents({ headings = [], activeId, variant = 'rail', cla
               reduce
                 ? { duration: 0.2 }
                 : {
-                    height: { duration: 0.36, ease: [0.22, 1, 0.36, 1] },
+                    height: { duration: 0.36, ease: ease.entrance },
                     opacity: { duration: 0.24, ease: 'linear' },
                   }
             }

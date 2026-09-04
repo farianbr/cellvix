@@ -5,6 +5,7 @@ import { CartPanelBody, CartPanelFooter, CartPanelTitle } from './CartPanelConte
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import useUiStore from '@/store/uiStore';
+import { ease } from '@/lib/motion';
 
 /**
  * The mini-cart (brief §6). Opens on every Add to Cart and from the cart button
@@ -58,7 +59,7 @@ export function CartDropdown() {
             initial={{ opacity: 0, y: -10, scale: 0.985 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.99 }}
-            transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.24, ease: ease.entrance }}
             className="pointer-events-none absolute left-0 right-0 top-full z-40 origin-top pt-2.5"
           >
             <div className="mx-auto flex max-w-[1400px] justify-end px-3 lg:px-6">

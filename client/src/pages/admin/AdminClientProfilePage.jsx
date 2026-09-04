@@ -1042,7 +1042,7 @@ export function AdminClientProfilePage() {
               key={stat.key}
               className={cn(
                 'rounded-lg border border-line bg-surface px-3.5 py-3',
-                'transition-shadow duration-[160ms] hover:shadow-card',
+                'transition-shadow duration-fast hover:shadow-card',
               )}
             >
               <dt className="flex items-center gap-2">

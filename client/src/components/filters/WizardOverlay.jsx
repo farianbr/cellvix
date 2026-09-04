@@ -176,7 +176,7 @@ export function WizardOverlay({ open, onClose, onNext, level, label, title, opti
                   // The icon sits BESIDE the name rather than above it. Stacked,
                   // a one-line name left a dead band under it in every tile and
                   // only twelve of twenty-five options reached the screen.
-                  'group flex h-full items-start gap-2.5 rounded-lg border p-2.5 text-left transition-[border-color,background,box-shadow] duration-[140ms]',
+                  'group flex h-full items-start gap-2.5 rounded-lg border p-2.5 text-left transition-[border-color,background,box-shadow] duration-press',
                   isSelected
                     ? 'border-brand bg-brand-50 shadow-card'
                     : 'border-line bg-surface hover:border-brand/40 hover:bg-surface-2',
@@ -244,7 +244,7 @@ export function WizardOverlay({ open, onClose, onNext, level, label, title, opti
                   onClick={() => onSelect(option)}
                   aria-pressed={isSelected}
                   className={cn(
-                    'flex min-h-11 w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors duration-[140ms]',
+                    'flex min-h-11 w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors duration-press',
                     isSelected ? 'bg-brand-50' : 'bg-surface hover:bg-surface-2',
                   )}
                 >
@@ -309,7 +309,7 @@ export function WizardOverlay({ open, onClose, onNext, level, label, title, opti
               type="button"
               onClick={onNext}
               disabled={selectedSet.size === 0}
-              className="inline-flex h-9 items-center gap-1.5 rounded-md bg-brand-gradient px-4 font-display text-sm font-semibold text-white transition-[filter,opacity] duration-[120ms] hover:brightness-110 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40"
+              className="inline-flex h-9 items-center gap-1.5 rounded-md bg-brand-gradient px-4 font-display text-sm font-semibold text-white transition-[filter,opacity] duration-press hover:brightness-110 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40"
             >
               Next
               <ArrowRight className="size-4 shrink-0" strokeWidth={2.25} aria-hidden="true" />

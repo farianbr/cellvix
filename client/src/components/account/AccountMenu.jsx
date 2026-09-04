@@ -7,6 +7,7 @@ import { ACCOUNT_NAV_ITEMS } from '@shared/schemas/account';
 import { accountIcon } from './accountIcons';
 import useUiStore from '@/store/uiStore';
 import { useAuth, useSignOut } from '@/hooks/useAuth';
+import { ease } from '@/lib/motion';
 
 /**
  * Panel width. Was 280, which fit the longest label and nothing else: the rows
@@ -155,7 +156,7 @@ export function AccountMenu() {
             initial={{ opacity: 0, y: -10, scale: 0.985 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -8, scale: 0.99 }}
-            transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.24, ease: ease.entrance }}
             style={{ top: anchor?.top, bottom: anchor?.bottom, right: anchor?.right ?? 12 }}
             className={cn('fixed z-40', anchor?.bottom ? 'origin-bottom-right' : 'origin-top-right')}
           >

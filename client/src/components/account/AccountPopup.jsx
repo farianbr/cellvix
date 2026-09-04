@@ -1004,7 +1004,7 @@ export function AccountPopup() {
                   aria-selected={tab === item.key}
                   onClick={() => setTab(item.key)}
                   className={cn(
-                    'flex-1 rounded-md py-2 font-display text-sm font-semibold transition-[background,color,box-shadow] duration-[120ms]',
+                    'flex-1 rounded-md py-2 font-display text-sm font-semibold transition-[background,color,box-shadow] duration-press',
                     tab === item.key
                       ? 'bg-surface text-ink-900 shadow-card'
                       : 'text-ink-400 hover:text-ink-700',

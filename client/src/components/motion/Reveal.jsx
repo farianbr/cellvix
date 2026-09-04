@@ -1,5 +1,6 @@
 import { motion, useReducedMotion } from 'motion/react';
 import cn from '@/lib/cn';
+import { ease } from '@/lib/motion';
 
 /**
  * Scroll-triggered reveal (brief §9).
@@ -18,7 +19,7 @@ export function Reveal({ children, delay = 0, y = 18, className, as = 'div' }) {
       initial={reduce ? { opacity: 0 } : { opacity: 0, y }}
       whileInView={reduce ? { opacity: 1 } : { opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.33 }}
-      transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.5, delay, ease: ease.entrance }}
       className={className}
     >
       {children}

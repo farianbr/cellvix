@@ -8,6 +8,7 @@ import useScrollProgress from '@/hooks/useScrollProgress';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { useAccountMenuTrigger } from '@/components/account/AccountMenu';
+import { ease } from '@/lib/motion';
 
 /**
  * Phone/tablet bottom bar (brief §4.2).
@@ -44,7 +45,7 @@ export function MobileBottomNav() {
           initial={{ y: '110%' }}
           animate={{ y: 0 }}
           exit={{ y: '110%' }}
-          transition={{ duration: 0.24, ease: [0.22, 1, 0.36, 1] }}
+          transition={{ duration: 0.24, ease: ease.entrance }}
           className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md lg:hidden"
           style={{ boxShadow: 'var(--shadow-pop)' }}
         >
@@ -72,7 +73,7 @@ export function MobileBottomNav() {
                 type="button"
                 onClick={focusSearch}
                 aria-label="Search parts"
-                className="-mt-5 flex size-14 flex-col items-center justify-center rounded-full bg-brand-gradient text-white shadow-pop ring-4 ring-surface transition-[filter] duration-[120ms] active:brightness-95"
+                className="-mt-5 flex size-14 flex-col items-center justify-center rounded-full bg-brand-gradient text-white shadow-pop ring-4 ring-surface transition-[filter] duration-press active:brightness-95"
               >
                 <Search className="size-[22px]" strokeWidth={2.25} aria-hidden="true" />
               </button>
