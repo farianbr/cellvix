@@ -32,3 +32,6 @@ scripts
 # OS
 .DS_Store
 Thumbs.db
+
+# playwright-cli session artifacts (snapshots, console logs)
+.playwright-cli/
