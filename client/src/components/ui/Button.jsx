@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
-import { Loader2 } from 'lucide-react';
 import cn from '@/lib/cn';
+import Spinner from './Spinner';
 
 const VARIANTS = {
   // The gradient's primary home. Keep it on CTAs, not on surfaces.
@@ -22,9 +22,23 @@ const SIZES = {
   lg: 'h-13 px-7 text-lg gap-2 rounded-lg',
 };
 
+const SPINNER_SIZE = { xs: 'xs', sm: 'xs', md: 'sm', lg: 'sm' };
+
 /**
  * The one button in the system. Anything that looks like a button uses this —
  * do not hand-roll a styled <button> elsewhere.
+ *
+ * Two details here are the difference between a button that feels responsive
+ * and one that feels like a link with a background:
+ *
+ * `active:scale-[0.97]` gives the press a physical answer. It is the single
+ * cheapest thing that makes an interface feel like it is listening, and it has
+ * to be on the transform transition — not on `all`, which would drag every
+ * colour change onto the press timing.
+ *
+ * The loading state keeps the label in place and cross-fades a spinner over
+ * it, rather than swapping the label out. Replacing the text collapses the
+ * button's width mid-click, which moves the thing the user just pressed.
  */
 export const Button = forwardRef(function Button(
   {
@@ -49,9 +63,13 @@ export const Button = forwardRef(function Button(
       disabled={disabled || loading}
       aria-busy={loading || undefined}
       className={cn(
-        'inline-flex select-none items-center justify-center whitespace-nowrap font-display font-semibold',
-        'transition-[background,color,border-color,filter,box-shadow] duration-[120ms]',
-        'disabled:cursor-not-allowed disabled:opacity-45',
+        'relative inline-flex select-none items-center justify-center whitespace-nowrap font-display font-semibold',
+        // Transform is listed first and the property list is explicit: a
+        // `transition-all` here would animate the spinner's opacity on the same
+        // curve as the press, which reads as the button lagging behind the tap.
+        'transition-[transform,background-color,border-color,color,box-shadow,filter] duration-press ease-entrance',
+        'active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100',
+        'disabled:cursor-not-allowed disabled:opacity-45 disabled:active:scale-100',
         VARIANTS[variant],
         SIZES[size],
         fullWidth && 'w-full',
@@ -59,14 +77,25 @@ export const Button = forwardRef(function Button(
       )}
       {...props}
     >
-      {loading ? (
-        <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-      ) : (
-        Icon && <Icon className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
-      )}
-      {children}
-      {IconRight && !loading && (
-        <IconRight className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
+      {/* The label stays mounted and blurs out under the spinner. Blur is what
+          keeps the crossfade from reading as two separate objects overlapping:
+          it bridges the two states so the eye sees one thing changing. */}
+      <span
+        className={cn(
+          'inline-flex items-center justify-center gap-[inherit]',
+          'transition-[opacity,filter] duration-snap ease-entrance',
+          loading && 'opacity-0 blur-[2px]',
+        )}
+      >
+        {Icon && <Icon className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />}
+        {children}
+        {IconRight && <IconRight className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />}
+      </span>
+
+      {loading && (
+        <span className="absolute inset-0 flex items-center justify-center">
+          <Spinner size={SPINNER_SIZE[size]} />
+        </span>
       )}
     </button>
   );

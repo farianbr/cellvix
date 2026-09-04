@@ -26,6 +26,7 @@ import FilterStrip from '@/components/admin/FilterStrip';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminSuppliers, useAdminMutations } from '@/hooks/useAdmin';
+import Skeleton from '@/components/ui/Skeleton';
 
 /**
  * Suppliers — the businesses Cellvix buys stock from (ERP rework §6.7).
@@ -318,7 +319,7 @@ export function AdminSuppliersPage() {
           {isLoading ? (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
               {Array.from({ length: 5 }).map((_, index) => (
-                <div key={index} className="h-[248px] animate-pulse rounded-lg bg-surface-2" />
+                <Skeleton key={index} className="h-[248px]" rounded="lg" />
               ))}
             </div>
           ) : suppliers.length === 0 ? (

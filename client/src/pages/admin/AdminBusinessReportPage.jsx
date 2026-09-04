@@ -24,6 +24,7 @@ import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminReport } from '@/hooks/useAdmin';
 import { useTaxonomy } from '@/hooks/useCatalog';
+import Skeleton from '@/components/ui/Skeleton';
 
 /**
  * Business Overview — the printable period report (ERP rework §6.11).
@@ -212,8 +213,8 @@ export function AdminBusinessReportPage() {
         </Panel>
       ) : isLoading || !data ? (
         <div className="space-y-3">
-          <div className="h-24 animate-pulse rounded-lg bg-surface-2" />
-          <div className="h-64 animate-pulse rounded-lg bg-surface-2" />
+          <Skeleton className="h-24" rounded="lg" />
+          <Skeleton className="h-64" rounded="lg" />
         </div>
       ) : (
         <>

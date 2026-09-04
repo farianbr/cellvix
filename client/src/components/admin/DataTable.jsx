@@ -3,6 +3,7 @@ import { ArrowDown, ArrowUp, Check, ChevronsUpDown, Minus, MoreHorizontal } from
 import cn from '@/lib/cn';
 import ActionMenu from '@/components/ui/ActionMenu';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
+import Skeleton from '@/components/ui/Skeleton';
 
 /**
  * The admin list table. Fourteen planned screens are this table with different
@@ -150,7 +151,7 @@ export function DataTable({
     return (
       <div className={cn('space-y-2 p-4 sm:p-5', className)}>
         {Array.from({ length: 6 }).map((_, index) => (
-          <div key={index} className="h-14 animate-pulse rounded-md bg-surface-2" />
+          <Skeleton key={index} className="h-14" />
         ))}
       </div>
     );

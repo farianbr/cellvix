@@ -19,6 +19,7 @@ import KpiRow from '@/components/admin/KpiRow';
 import DataTable from '@/components/admin/DataTable';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
 import { useAdminInventoryItem } from '@/hooks/useAdmin';
+import Skeleton from '@/components/ui/Skeleton';
 
 /**
  * One product, seen from the warehouse (ERP rework §6.10).
@@ -87,8 +88,8 @@ export function AdminInventoryDetailPage() {
       <>
         <PageHeader icon={Boxes} title="Product" />
         <div className="space-y-3">
-          <div className="h-24 animate-pulse rounded-lg bg-surface-2" />
-          <div className="h-64 animate-pulse rounded-lg bg-surface-2" />
+          <Skeleton className="h-24" rounded="lg" />
+          <Skeleton className="h-64" rounded="lg" />
         </div>
       </>
     );

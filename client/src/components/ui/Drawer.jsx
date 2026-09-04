@@ -2,21 +2,7 @@ import { useId } from 'react';
 import { X } from 'lucide-react';
 import Overlay from './Overlay';
 import cn from '@/lib/cn';
-
-const SIDE_MOTION = {
-  left: {
-    initial: { x: '-100%' },
-    animate: { x: 0 },
-    exit: { x: '-100%' },
-  },
-  right: {
-    initial: { x: '100%' },
-    animate: { x: 0 },
-    exit: { x: '100%' },
-  },
-};
-
-const TRANSITION = { duration: 0.28, ease: [0.22, 1, 0.36, 1] };
+import { sheet, pressable } from '@/lib/motion';
 
 /**
  * Edge-anchored panel. Used by the mobile navigation drawer and the mobile
@@ -43,7 +29,7 @@ export function Drawer({
       align={side}
       labelledBy={title ? titleId : undefined}
       label={title ? undefined : 'Panel'}
-      panelMotion={{ ...SIDE_MOTION[side], transition: TRANSITION }}
+      panelMotion={sheet[side]}
       panelClassName={cn('h-full', width, className)}
     >
       <div
@@ -65,7 +51,7 @@ export function Drawer({
               type="button"
               onClick={onClose}
               aria-label="Close panel"
-              className="-mr-1 flex size-9 shrink-0 items-center justify-center rounded-lg text-ink-400 transition-colors hover:bg-surface-3 hover:text-ink-900"
+              className={cn(pressable, '-mr-1 flex size-9 shrink-0 items-center justify-center rounded-md text-ink-400 hover:bg-surface-3 hover:text-ink-900')}
             >
               <X className="size-[18px]" strokeWidth={1.75} />
             </button>

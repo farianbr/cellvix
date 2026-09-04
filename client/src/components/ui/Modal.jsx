@@ -2,6 +2,7 @@ import { useId } from 'react';
 import { X } from 'lucide-react';
 import Overlay from './Overlay';
 import cn from '@/lib/cn';
+import { dialog, pressable } from '@/lib/motion';
 
 const SIZES = {
   sm: 'max-w-md',
@@ -9,13 +10,6 @@ const SIZES = {
   lg: 'max-w-3xl',
   xl: 'max-w-5xl',
   full: 'max-w-[min(1100px,95vw)]',
-};
-
-const PANEL_MOTION = {
-  initial: { opacity: 0, y: 8, scale: 0.99 },
-  animate: { opacity: 1, y: 0, scale: 1 },
-  exit: { opacity: 0, y: 4, scale: 0.995 },
-  transition: { duration: 0.28, ease: [0.22, 1, 0.36, 1] },
 };
 
 /** Centred dialog. Use Drawer for edge-anchored panels. */
@@ -43,10 +37,10 @@ export function Modal({
       labelledBy={title ? titleId : undefined}
       label={title ? undefined : 'Dialog'}
       closeOnScrimClick={closeOnScrimClick}
-      panelMotion={PANEL_MOTION}
+      panelMotion={dialog}
       panelClassName={cn('w-full', SIZES[size], className)}
     >
-      <div className="flex max-h-[88vh] flex-col overflow-hidden rounded-lg border border-line bg-surface shadow-flyout">
+      <div className="flex max-h-[88vh] flex-col overflow-hidden rounded-xl border border-line bg-surface shadow-flyout">
         {/* Without a title there is nothing to put in a header bar, so the close
             button floats over the content instead of reserving a whole row. */}
         {!title && showClose && (
@@ -54,7 +48,7 @@ export function Modal({
             type="button"
             onClick={onClose}
             aria-label="Close dialog"
-            className="absolute right-3 top-3 z-10 flex size-9 items-center justify-center rounded-lg bg-surface/80 text-ink-400 backdrop-blur-sm transition-colors hover:bg-surface-3 hover:text-ink-900"
+            className={cn(pressable, 'absolute right-3 top-3 z-10 flex size-9 items-center justify-center rounded-md bg-surface/80 text-ink-400 backdrop-blur-sm hover:bg-surface-3 hover:text-ink-900')}
           >
             <X className="size-[18px]" strokeWidth={1.75} />
           </button>
@@ -75,7 +69,7 @@ export function Modal({
                 type="button"
                 onClick={onClose}
                 aria-label="Close dialog"
-                className="-mr-1.5 -mt-1 flex size-9 shrink-0 items-center justify-center rounded-lg text-ink-400 transition-colors hover:bg-surface-3 hover:text-ink-900"
+                className={cn(pressable, '-mr-1.5 -mt-1 flex size-9 shrink-0 items-center justify-center rounded-md text-ink-400 hover:bg-surface-3 hover:text-ink-900')}
               >
                 <X className="size-[18px]" strokeWidth={1.75} />
               </button>

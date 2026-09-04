@@ -19,6 +19,7 @@ import DataTable from '@/components/admin/DataTable';
 import { BarList } from '@/components/admin/charts/Charts';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
 import { useAdminSupplier } from '@/hooks/useAdmin';
+import Skeleton from '@/components/ui/Skeleton';
 
 /**
  * One supplier — contact details, linked products, PO history and the spend
@@ -102,8 +103,8 @@ export function AdminSupplierProfilePage() {
       <>
         <PageHeader icon={Truck} title="Supplier" />
         <div className="space-y-3">
-          <div className="h-24 animate-pulse rounded-lg bg-surface-2" />
-          <div className="h-64 animate-pulse rounded-lg bg-surface-2" />
+          <Skeleton className="h-24" rounded="lg" />
+          <Skeleton className="h-64" rounded="lg" />
         </div>
       </>
     );

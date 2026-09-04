@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
-import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
 import api from '@/lib/api';
 import { BUSINESS_INFO } from '@shared/business';
+import Spinner from '@/components/ui/Spinner';
 
 /**
  * The unsubscribe landing page (§6.13).
@@ -52,7 +53,7 @@ export function UnsubscribePage() {
     <main className="mx-auto flex min-h-dvh max-w-lg flex-col items-center justify-center px-5 py-16 text-center">
       {state.status === 'working' && (
         <>
-          <Loader2 className="size-7 animate-spin text-ink-300" strokeWidth={1.75} aria-hidden="true" />
+          <Spinner size="lg" className="text-ink-300" />
           <p className="mt-4 text-md text-ink-500">Updating your preferences…</p>
         </>
       )}

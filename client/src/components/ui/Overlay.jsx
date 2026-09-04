@@ -4,13 +4,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import useFocusTrap from '@/hooks/useFocusTrap';
 import useLockBodyScroll from '@/hooks/useLockBodyScroll';
 import cn from '@/lib/cn';
-
-const SCRIM = {
-  initial: { opacity: 0 },
-  animate: { opacity: 1 },
-  exit: { opacity: 0 },
-  transition: { duration: 0.22, ease: [0.4, 0, 0.2, 1] },
-};
+import { scrim } from '@/lib/motion';
 
 /**
  * The base every overlay in the app is built on: portal + scrim + focus trap +
@@ -61,7 +55,7 @@ export function Overlay({
       {open && (
         <div className={cn('fixed inset-0 z-50 flex', alignment, className)}>
           <motion.div
-            {...SCRIM}
+            {...scrim}
             onClick={closeOnScrimClick ? onClose : undefined}
             className={cn('absolute inset-0 bg-ink-900/45 backdrop-blur-[2px]', scrimClassName)}
           />

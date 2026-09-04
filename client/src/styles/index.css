@@ -183,6 +183,51 @@
 }
 
 /* ==========================================================================
+   Hover, gated at the source
+   ==========================================================================
+
+   A touch device fires `:hover` on tap and then keeps it applied until
+   something else is touched, so an ungated hover style stays lit under the
+   finger after it lifts. On a card grid that means the last-tapped card
+   remains highlighted while the user scrolls away from it, which reads as a
+   selection the user did not make.
+
+   PROJECT_INSTRUCTIONS.md requires every hover to sit behind
+   `@media (hover: hover)`. Rather than ask ~1400 call sites to remember,
+   this redefines Tailwind's own `hover:` variant to carry the query. Every
+   existing and future `hover:` class is gated automatically, and nothing in a
+   component has to change.
+
+   `pointer: fine` is deliberately part of the condition: a stylus or a
+   television remote reports `hover: hover` but cannot hover precisely, and
+   hover affordances sized for a mouse are unusable with either. */
+@custom-variant hover {
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      @slot;
+    }
+  }
+}
+
+/* Group and peer hover need the same treatment; they are separate variants in
+   Tailwind and do not inherit the redefinition above. */
+@custom-variant group-hover {
+  @media (hover: hover) and (pointer: fine) {
+    &:is(:where(.group):hover *) {
+      @slot;
+    }
+  }
+}
+
+@custom-variant peer-hover {
+  @media (hover: hover) and (pointer: fine) {
+    &:is(:where(.peer):hover ~ *) {
+      @slot;
+    }
+  }
+}
+
+/* ==========================================================================
    Base
    ========================================================================== */
 
@@ -374,6 +419,54 @@
   }
 }
 
+/* ==========================================================================
+   Loading states
+   ========================================================================== */
+
+/* The spinner arc. 640ms rather than the conventional second: spinner speed
+   changes how long a wait is perceived to be, and a slow spinner makes an
+   identical load feel like the app is struggling. Linear because a spinner
+   that eases is a spinner that appears to stall twice per revolution. */
+@keyframes spinner {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* The skeleton sweep. Replaces `animate-pulse`, which oscillates opacity in
+   place — a whole screen of those beats like a heartbeat and pulls the eye off
+   the content that has already arrived. A sweep has a direction, so it reads
+   as progress, and it keeps overall brightness constant because the highlight
+   only ever covers part of the element.
+
+   The gradient is painted at 200% width and slid across, which is a
+   background-position animation: no layout, no paint of the element itself,
+   and it stays on the compositor while the main thread is busy parsing the
+   response the skeleton is waiting for.
+
+   1.4s is deliberately unhurried. The skeleton is not claiming anything is
+   about to happen; it is holding the shape of content that is on its way. */
+@keyframes skeleton-sweep {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton {
+  background-image: linear-gradient(
+    90deg,
+    transparent 20%,
+    color-mix(in srgb, var(--color-surface) 70%, transparent) 50%,
+    transparent 80%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  animation: skeleton-sweep 1.4s linear infinite;
+}
+
 /* Indeterminate progress sliver shown above the grid while a filter refetches. */
 @keyframes loading {
   0% {
@@ -391,6 +484,25 @@
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+
+  /* The blanket rule below clamps every animation to 0.01ms, which would
+     freeze the skeleton mid-sweep with a bright band stuck across it. Drop the
+     gradient entirely and let the flat tint carry the meaning — "not here yet"
+     survives without any movement.
+
+     The spinner is exempt: it is the only animation in the app that IS the
+     information. A frozen spinner tells the user the page has hung. Reduced
+     motion means less movement and gentler movement, not the removal of
+     feedback the interface depends on, so it keeps turning at a calmer rate. */
+  .skeleton {
+    background-image: none;
+    animation: none;
+  }
+
+  [class*='animate-[spinner'] {
+    animation-duration: 1000ms !important;
+    animation-iteration-count: infinite !important;
   }
   *,
   *::before,

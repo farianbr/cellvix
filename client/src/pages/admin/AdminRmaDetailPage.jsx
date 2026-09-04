@@ -27,6 +27,7 @@ import PageHeader from '@/components/admin/PageHeader';
 import KpiRow from '@/components/admin/KpiRow';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
 import { useAdminRma, useAdminMutations } from '@/hooks/useAdmin';
+import Skeleton from '@/components/ui/Skeleton';
 
 /**
  * One return — per-item disposition, inspection notes, and the resolution
@@ -282,8 +283,8 @@ export function AdminRmaDetailPage() {
       <>
         <PageHeader icon={RotateCcw} title="RMA" />
         <div className="space-y-3">
-          <div className="h-24 animate-pulse rounded-lg bg-surface-2" />
-          <div className="h-64 animate-pulse rounded-lg bg-surface-2" />
+          <Skeleton className="h-24" rounded="lg" />
+          <Skeleton className="h-64" rounded="lg" />
         </div>
       </>
     );

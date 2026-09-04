@@ -24,6 +24,7 @@ import KpiRow from '@/components/admin/KpiRow';
 import ProcessStrip from '@/components/admin/ProcessStrip';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
 import { useAdminQuote, useAdminMutations } from '@/hooks/useAdmin';
+import Skeleton from '@/components/ui/Skeleton';
 
 /**
  * One quote — lines, expiry, the live price comparison, and conversion
@@ -281,8 +282,8 @@ export function AdminQuoteDetailPage() {
       <>
         <PageHeader icon={FileSignature} title="Quote" />
         <div className="space-y-3">
-          <div className="h-24 animate-pulse rounded-lg bg-surface-2" />
-          <div className="h-64 animate-pulse rounded-lg bg-surface-2" />
+          <Skeleton className="h-24" rounded="lg" />
+          <Skeleton className="h-64" rounded="lg" />
         </div>
       </>
     );

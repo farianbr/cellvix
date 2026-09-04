@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
-import { Check, Loader2, Lock, PackageX, ShoppingCart } from 'lucide-react';
+import { Check, Lock, PackageX, ShoppingCart } from 'lucide-react';
 import { motion } from 'motion/react';
 import cn from '@/lib/cn';
 import { money, productTitle } from '@/lib/format';
@@ -11,6 +11,7 @@ import MarketCompare from './MarketCompare';
 import { useCart } from '@/hooks/useCart';
 import useUiStore from '@/store/uiStore';
 import { useAuth } from '@/hooks/useAuth';
+import Spinner from '@/components/ui/Spinner';
 
 /**
  * The product card (brief §6).
@@ -56,7 +57,7 @@ export function ProductCard({ product }) {
           className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-surface/65 backdrop-blur-[1px]"
           aria-hidden="true"
         >
-          <Loader2 className="size-6 animate-spin text-brand" strokeWidth={2} />
+          <Spinner size="md" className="text-brand" />
         </div>
       )}
 
