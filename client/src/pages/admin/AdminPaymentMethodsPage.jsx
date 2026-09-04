@@ -121,7 +121,7 @@ export function AdminPaymentMethodsPage() {
         description={ADMIN_PAGE.description}
       />
 
-      <form onSubmit={save} className="max-w-[680px] space-y-4">
+      <form onSubmit={save} className="max-w-[760px] space-y-4">
         <Panel
           title="Methods"
           description="Used when recording an expense or a payment against an invoice."

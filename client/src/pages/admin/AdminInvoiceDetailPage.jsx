@@ -232,7 +232,7 @@ export function AdminInvoiceDetailPage() {
       />
 
 
-      <div className="max-w-[900px] space-y-4">
+      <div className="max-w-[1280px] space-y-4">
         {/**
          * Payment information, leading the page.
          *
@@ -241,6 +241,16 @@ export function AdminInvoiceDetailPage() {
          * at a size that can be read across a desk, with the history that
          * produced them directly underneath.
          */}
+        {/* Two columns, not one stack.
+
+            The page capped itself at 900px and stacked its panels vertically,
+            so a third of a 1440px screen sat empty while the change history was
+            pushed below the fold. The blocks are related but not equal: the
+            payments are what an operator opened the invoice to see, and the
+            details and the audit trail are reference. Giving the first the wide
+            column says which is which and puts the record on one screen. */}
+        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
+        <div className="space-y-4">
         <Panel
           title="Payment information"
           description="The paid total and the status are recomputed from the rows below."
@@ -263,19 +273,27 @@ export function AdminInvoiceDetailPage() {
                 {money(invoice.amount)}
               </p>
             </div>
-            <div className="rounded-lg border border-ok/25 bg-ok-50 px-4 py-3">
-              <p className="eyebrow text-ok">Total paid</p>
-              <p className="tnum mt-1.5 font-display text-2xl font-bold leading-none text-ok">
+            {/* Plain tiles, like the one beside them.
+
+                These carried a tinted border AND a tinted ground AND a coloured
+                value — three signals for one fact, on a row of three tiles where
+                two were shouting and one was not. A figure does not need a
+                coloured box to be found when it is already set at 22px in a row
+                of three.
+
+                Balance keeps its colour, and only when there IS one: an unpaid
+                balance is the number an operator is chasing, and it is the one
+                thing on this row that can require action. Total paid goes back to
+                ink, because money already received is a fact rather than a
+                prompt. */}
+            <div className="rounded-lg border border-line bg-surface px-4 py-3">
+              <p className="eyebrow text-ink-400">Total paid</p>
+              <p className="tnum mt-1.5 font-display text-2xl font-bold leading-none text-ink-900">
                 {money(invoice.amountPaid)}
               </p>
             </div>
-            <div
-              className={cn(
-                'rounded-lg border px-4 py-3',
-                settled ? 'border-line bg-surface' : 'border-danger/25 bg-danger-50',
-              )}
-            >
-              <p className={cn('eyebrow', settled ? 'text-ink-400' : 'text-danger')}>Balance</p>
+            <div className="rounded-lg border border-line bg-surface px-4 py-3">
+              <p className="eyebrow text-ink-400">Balance</p>
               <p
                 className={cn(
                   'tnum mt-1.5 font-display text-2xl font-bold leading-none',
@@ -393,8 +411,16 @@ export function AdminInvoiceDetailPage() {
           </div>
         </Panel>
 
+        </div>
+
+        <div className="space-y-4">
         <Panel title="Details">
-          <dl className="grid gap-x-6 gap-y-2.5 text-sm sm:grid-cols-2">
+          {/* One column. This panel now sits in the narrower of the two page
+              columns, and two label/value pairs side by side in ~380px left the
+              business name truncated to "Northline Device …" with empty space in
+              the column beside it. A single column gives every value the full
+              width and the list still reads as a compact block. */}
+          <dl className="grid gap-y-2.5 text-sm">
             <div className="flex justify-between gap-3">
               <dt className="text-ink-500">Account</dt>
               <dd className="min-w-0 truncate">
@@ -486,6 +512,9 @@ export function AdminInvoiceDetailPage() {
             </ul>
           )}
         </Panel>
+
+        </div>
+        </div>
 
         {/**
          * The life cycle, last on the page.

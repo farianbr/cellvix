@@ -211,7 +211,7 @@ export function AdminApiKeysPage() {
         </span>
       </div>
 
-      <div className="max-w-[860px] space-y-4">
+      <div className="max-w-[760px] space-y-4">
         {(data?.providers ?? []).map((provider) => (
           <ProviderCard key={provider.provider} provider={provider} />
         ))}

@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router';
+import cn from '@/lib/cn';
 import { ArrowLeft } from 'lucide-react';
 
 import Panel, { StatTile } from '@/components/ui/Panel';
@@ -50,6 +51,26 @@ function Address({ title, address }) {
   );
 }
 
+/** `out_for_delivery` reads as `Out for delivery`. */
+/**
+ * Whether the two addresses would render identically.
+ *
+ * Compared field by field rather than with JSON.stringify: the two objects come
+ * from different places on the order, so they can carry keys in a different
+ * order or hold extras the page never prints, and neither difference is one a
+ * reader would see.
+ */
+function sameAddressAs(a, b) {
+  if (!a || !b) return false;
+  const fields = ['contactName', 'company', 'line1', 'line2', 'city', 'region', 'postal', 'country', 'phone'];
+  return fields.every((f) => (a[f] ?? '') === (b[f] ?? ''));
+}
+
+function titleCase(value) {
+  const spaced = String(value ?? '').replace(/_/g, ' ');
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
 export function AdminOrderDetailPage() {
   const { orderNumber } = useParams();
   const { data, isLoading, error } = useAdminOrder(orderNumber);
@@ -73,6 +94,8 @@ export function AdminOrderDetailPage() {
   const order = data?.order;
   if (!order) return null;
 
+  const sameAddress = sameAddressAs(order.shippingAddress, order.billingAddress);
+
   return (
     <>
       <PageHeader
@@ -90,12 +113,17 @@ export function AdminOrderDetailPage() {
         }
       />
 
-      <div className="max-w-[900px] space-y-4">
+      <div className="max-w-[1280px] space-y-4">
         <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
           <StatTile label="Total" value={money(order.total)} />
+          {/* Title-cased, not the raw enum. Every other status in the app is
+              rendered through a Badge and reads "Placed"; this tile printed the
+              stored value, so the one screen dedicated to a single order was
+              also the one screen that spelled its status differently from the
+              list it was opened from. */}
           <StatTile
             label="Status"
-            value={order.status}
+            value={titleCase(order.status)}
             tone={STATUS_TONE[order.status] ?? 'neutral'}
           />
           <StatTile
@@ -110,6 +138,8 @@ export function AdminOrderDetailPage() {
           />
         </div>
 
+        <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
+        <div className="space-y-4">
         <Panel title="Lines" description="What a warehouse picks. Bundle members are listed as parts.">
           <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
             <table className="w-full min-w-[520px] border-collapse text-sm">
@@ -175,10 +205,25 @@ export function AdminOrderDetailPage() {
           </dl>
         </Panel>
 
+        </div>
+
+        <div className="space-y-4">
         <Panel title="Delivery & account">
-          <div className="grid gap-5 sm:grid-cols-2">
-            <Address title="Ship to" address={order.shippingAddress} />
-            <Address title="Bill to" address={order.billingAddress} />
+          {/* One column when the two addresses are the same, which is the
+              common case for a business buying to its own premises. Printing an
+              identical address twice under two headings makes a reader compare
+              them line by line to find the difference, and there is none. */}
+          <div
+            className={cn(
+              'grid gap-5',
+              sameAddress ? 'sm:grid-cols-1' : 'sm:grid-cols-2',
+            )}
+          >
+            <Address
+              title={sameAddress ? 'Ship & bill to' : 'Ship to'}
+              address={order.shippingAddress}
+            />
+            {!sameAddress && <Address title="Bill to" address={order.billingAddress} />}
           </div>
 
           <dl className="mt-4 grid gap-x-6 gap-y-2 border-t border-line pt-3 text-sm sm:grid-cols-2">
@@ -240,6 +285,8 @@ export function AdminOrderDetailPage() {
             ))}
           </ol>
         </Panel>
+        </div>
+        </div>
       </div>
     </>
   );

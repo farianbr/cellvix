@@ -67,7 +67,7 @@ export function AdminProfilePage() {
         description={ADMIN_PAGE.description}
       />
 
-      <div className="grid max-w-[900px] gap-4 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)] lg:items-start">
+      <div className="grid max-w-[1280px] gap-4 lg:grid-cols-[minmax(0,320px)_minmax(0,1fr)] lg:items-start">
         <div className="space-y-4">
           <Panel>
             <div className="flex items-start gap-3.5">

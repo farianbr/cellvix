@@ -105,7 +105,7 @@ export function AdminShippingSettingsPage() {
         description={ADMIN_PAGE.description}
       />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="max-w-[860px] space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="max-w-[760px] space-y-4">
         {fields.map((field, index) => {
           const row = watched?.[index] ?? {};
           const cost = toCents(row.cost) ?? 0;

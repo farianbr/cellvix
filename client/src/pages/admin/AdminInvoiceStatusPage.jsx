@@ -282,7 +282,7 @@ export function AdminInvoiceStatusPage() {
         </span>
       </p>
 
-      <div className="max-w-[860px] space-y-4">
+      <div className="max-w-[760px] space-y-4">
         <Panel
           title="Messages"
           description={`${activeCount} of ${rules.length} switched on. Built-in messages can be edited and switched off, but not deleted.`}
