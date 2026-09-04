@@ -9,6 +9,8 @@ import { SettingsFormActions } from '@/components/admin/settings/SettingsForm';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminSettings, useAdminMutations } from '@/hooks/useAdmin';
+import cn from '@/lib/cn';
+import { pressable } from '@/lib/motion';
 
 /**
  * Payment Methods (§6.15, category 2).
@@ -133,14 +135,22 @@ export function AdminPaymentMethodsPage() {
                   onChange={(event) => rename(method.code, event.target.value)}
                   containerClassName="flex-1"
                 />
-                <code className="hidden shrink-0 rounded-sm bg-surface-2 px-2 py-1 font-mono text-xs text-ink-500 sm:block">
+                {/* A fixed-width column, not a chip sized by its own content.
+                    `credit-card` is twice the width of `cash`, and because the
+                    field beside it is `flex-1` every row's input ended at a
+                    different point — eight text boxes down the page, each a
+                    different length, with the codes forming a ragged edge
+                    between them. Nothing about the data is ragged; the layout
+                    was. A fixed column lines both edges up and lets the codes
+                    read as the column they are. */}
+                <code className="hidden w-26 shrink-0 truncate rounded-sm bg-surface-2 px-2 py-1 text-center font-mono text-xs text-ink-500 sm:block">
                   {method.code}
                 </code>
                 <button
                   type="button"
                   onClick={() => remove(method.code)}
                   aria-label={`Remove ${method.label}`}
-                  className="flex size-9 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger"
+                  className={cn(pressable, 'flex size-9 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 hover:border-danger hover:bg-danger-50 hover:text-danger')}
                 >
                   <Trash2 className="size-4" strokeWidth={1.75} aria-hidden="true" />
                 </button>

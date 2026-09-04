@@ -127,12 +127,23 @@ function ProviderCard({ provider }) {
                     setValues((current) => ({ ...current, [field.key]: event.target.value }));
                     setSaved(false);
                   }}
+                  /**
+                   * An unconfigured field used to put `field.hint` in the
+                   * placeholder AND below the field, so every empty row said
+                   * "Starts with AC." twice — once in grey inside the box and
+                   * again in grey underneath it. Repeating a line does not make
+                   * it clearer; it makes the reader check whether the two say
+                   * something different, and they never did.
+                   *
+                   * The hint stays below the field, which is where it can be
+                   * read while typing. Empty placeholder here.
+                   */
                   placeholder={
                     fromEnv
                       ? 'Set by an environment variable'
                       : field.configured
                         ? `${field.preview} — type to replace`
-                        : (field.hint ?? '')
+                        : ''
                   }
                   hint={
                     fromEnv ? (

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { AlertCircle, HelpCircle, Pencil, Plus, Search, Trash2 } from 'lucide-react';
 import cn from '@/lib/cn';
+import { pressable } from '@/lib/motion';
 import { date } from '@/lib/format';
 import { FAQ_CATEGORIES, FAQ_SCOPES } from '@shared/schemas/content';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
@@ -14,6 +15,7 @@ import SelectField from '@/components/ui/SelectField';
 import Checkbox from '@/components/ui/Checkbox';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import DataTable, { CountLine } from '@/components/admin/DataTable';
 import Skeleton from '@/components/ui/Skeleton';
 import PageHeader from '@/components/admin/PageHeader';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
@@ -183,6 +185,138 @@ export function AdminFaqPage() {
     [partTypeFacets],
   );
 
+  /**
+   * The columns.
+   *
+   * This was a list where every entry printed its full answer, so a row ran to
+   * two or three lines and six entries filled the screen — an editor looking
+   * for one question had to read every answer on the way to it. The answer is
+   * what the entry says; the QUESTION is what identifies it, and identifying an
+   * entry is the whole job of a list.
+   *
+   * The "FAQ page" badge is gone from the scope column's common case for the
+   * same reason. It appeared on every row because almost every entry is a
+   * FAQ-page entry, and a badge that is always present carries no information —
+   * only the exception, a product-page entry, is worth marking.
+   */
+  const columns = [
+    {
+      key: 'order',
+      header: '#',
+      width: '52px',
+      align: 'right',
+      sortValue: (faq) => faq.order ?? 0,
+      render: (faq) => <span className="tnum text-xs text-ink-300">{faq.order}</span>,
+    },
+    {
+      key: 'question',
+      header: 'Question',
+      width: '46%',
+      render: (faq) => (
+        <div className="min-w-0">
+          <p className="truncate font-medium text-ink-900">{faq.question}</p>
+          {/* One line of the answer, as a reminder of which entry this is —
+              not the entry itself. The editor opens to read it. */}
+          <p className="truncate text-xs text-ink-400">{faq.answer}</p>
+        </div>
+      ),
+    },
+    {
+      key: 'category',
+      header: 'Category',
+      width: '16%',
+      priority: 2,
+      sortValue: (faq) => CATEGORY_LABELS[faq.category] ?? faq.category,
+      render: (faq) => (
+        <span className="text-sm text-ink-700">
+          {CATEGORY_LABELS[faq.category] ?? faq.category}
+        </span>
+      ),
+    },
+    {
+      key: 'scope',
+      header: 'Shown on',
+      width: '16%',
+      priority: 3,
+      render: (faq) => (
+        <div className="flex flex-wrap items-center gap-1">
+          {faq.scope === 'product' ? (
+            <Badge tone="info" size="sm">
+              Product
+            </Badge>
+          ) : (
+            <span className="text-sm text-ink-400">FAQ page</span>
+          )}
+          {(faq.partType || faq.deviceTypeSlug) && (
+            <span className="truncate text-xs text-ink-400">
+              {[faq.deviceTypeSlug, faq.partType].filter(Boolean).join(' · ')}
+            </span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'updatedAt',
+      header: 'Updated',
+      width: '13%',
+      priority: 2,
+      sortValue: (faq) => new Date(faq.updatedAt).getTime(),
+      render: (faq) => (
+        <div className="min-w-0">
+          <span className="tnum text-sm text-ink-500">{date(faq.updatedAt)}</span>
+          {!faq.isPublished && (
+            <p>
+              <Badge tone="warn" size="sm">
+                Hidden
+              </Badge>
+            </p>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'actions',
+      header: '',
+      width: '84px',
+      align: 'right',
+      sortable: false,
+      render: (faq) => (
+        <div className="flex justify-end gap-1">
+          <button
+            type="button"
+            onClick={(event) => {
+              // The row itself opens the editor, so a click that lands on this
+              // button must not also fire the row's handler behind it.
+              event.stopPropagation();
+              setEditing(faq);
+            }}
+            aria-label={`Edit “${faq.question}”`}
+            className={cn(
+              pressable,
+              'flex size-8 items-center justify-center rounded-md text-ink-400 hover:bg-surface-2 hover:text-ink-900',
+            )}
+          >
+            <Pencil className="size-4" strokeWidth={1.75} />
+          </button>
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              setDeleting(faq);
+            }}
+            aria-label={`Delete “${faq.question}”`}
+            className={cn(
+              pressable,
+              'flex size-8 items-center justify-center rounded-md text-ink-400 hover:bg-danger-50 hover:text-danger',
+            )}
+          >
+            <Trash2 className="size-4" strokeWidth={1.75} />
+          </button>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <>
       <PageHeader
@@ -241,60 +375,19 @@ export function AdminFaqPage() {
             }
           />
         ) : (
-          <ul className="divide-y divide-line">
-            {faqs.map((faq) => (
-              <li key={faq.id} className="flex items-start gap-3 px-4 py-3.5 sm:px-5">
-                <div className="min-w-0 flex-1">
-                  <div className="mb-1 flex flex-wrap items-center gap-1.5">
-                    <Badge tone={faq.scope === 'product' ? 'info' : 'neutral'} size="sm">
-                      {faq.scope === 'product' ? 'Product' : 'FAQ page'}
-                    </Badge>
-                    <Badge tone="neutral" size="sm">
-                      {CATEGORY_LABELS[faq.category] ?? faq.category}
-                    </Badge>
-                    {!faq.isPublished && (
-                      <Badge tone="warn" size="sm">
-                        Hidden
-                      </Badge>
-                    )}
-                    {(faq.partType || faq.deviceTypeSlug) && (
-                      <Badge tone="brand" size="sm">
-                        {[faq.deviceTypeSlug, faq.partType].filter(Boolean).join(' · ')}
-                      </Badge>
-                    )}
-                  </div>
+          <>
+            <div className="border-b border-line px-3 py-2 sm:px-4">
+              <CountLine total={faqs.length} noun={faqs.length === 1 ? 'entry' : 'entries'} />
+            </div>
 
-                  <p className="text-md font-medium text-ink-900">{faq.question}</p>
-                  <p className="mt-0.5 line-clamp-2 text-sm text-ink-500">{faq.answer}</p>
-                  <p className="mt-1 text-xs text-ink-300">
-                    order {faq.order} · updated {date(faq.updatedAt)}
-                  </p>
-                </div>
-
-                <div className="flex shrink-0 gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setEditing(faq)}
-                    aria-label={`Edit “${faq.question}”`}
-                    className="flex size-8 items-center justify-center rounded-lg text-ink-400 transition-colors hover:bg-surface-2 hover:text-ink-900"
-                  >
-                    <Pencil className="size-4" strokeWidth={1.75} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDeleting(faq)}
-                    aria-label={`Delete “${faq.question}”`}
-                    className={cn(
-                      'flex size-8 items-center justify-center rounded-lg text-ink-400 transition-colors',
-                      'hover:bg-danger-50 hover:text-danger',
-                    )}
-                  >
-                    <Trash2 className="size-4" strokeWidth={1.75} />
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
+            <DataTable
+              columns={columns}
+              rows={faqs}
+              rowKey={(faq) => faq.id}
+              onRowClick={(faq) => setEditing(faq)}
+              defaultSort={{ key: 'order', direction: 'asc' }}
+            />
+          </>
         )}
       </Panel>
 
