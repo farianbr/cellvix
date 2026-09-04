@@ -1,18 +1,9 @@
 import { useState } from 'react';
 import { Link } from 'react-router';
 import { useForm } from 'react-hook-form';
-import {
-  ArrowUpRight,
-  Building2,
-  Check,
-  Clock,
-  Globe,
-  Mail,
-  Phone,
-  UserCheck,
-  X,
-} from 'lucide-react';
+import { ArrowUpRight, Check, UserCheck, X } from 'lucide-react';
 import cn from '@/lib/cn';
+import { pressable } from '@/lib/motion';
 import { money, date, count as formatCount } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
@@ -22,6 +13,7 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Skeleton from '@/components/ui/Skeleton';
 import PageHeader from '@/components/admin/PageHeader';
+import DataTable, { CountLine } from '@/components/admin/DataTable';
 import ApproveClientForm from '@/components/admin/ApproveClientForm';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
@@ -106,6 +98,148 @@ export function AdminApprovalsPage() {
   const users = data?.users ?? [];
   const counts = data?.counts ?? {};
 
+  /**
+   * The columns.
+   *
+   * This screen was a list of cards, and the card was fighting itself. Every
+   * row printed the account name in the heading and then the contact name again
+   * underneath it, because for a sole trader they are the same person; four
+   * pieces of metadata sat on one wrapped line behind four different icons, so
+   * an operator comparing two applications had to read prose rather than scan a
+   * column; and each card carried its own Approve button in the brand gradient,
+   * which put three gradients on a screen with three pending accounts.
+   *
+   * As a table each fact has a column and comparison is free. The actions
+   * collapse into one column, and Approve is a plain solid button — a table row
+   * is not the place for the page's signature treatment, and the operator is
+   * choosing between two adjacent actions rather than being pointed at one.
+   */
+  const columns = [
+    {
+      key: 'displayName',
+      header: 'Business',
+      width: '22%',
+      sortValue: (user) => user.displayName ?? user.email,
+      render: (user) => (
+        <div className="min-w-0">
+          {/* The name is the link, not the row: the row carries Approve and
+              Reject, and a clickable container wrapping its own buttons is a
+              nested click target that has to fight itself to work. */}
+          <Link
+            to={`/admin/clients/${user.id}`}
+            className="group inline-flex max-w-full items-center gap-1.5 font-display text-sm font-bold text-ink-900 transition-colors hover:text-brand"
+          >
+            <span className="truncate">{user.displayName ?? user.email}</span>
+            <ArrowUpRight
+              className="size-3.5 shrink-0 text-ink-300 opacity-0 transition-opacity group-hover:opacity-100"
+              strokeWidth={2}
+              aria-hidden="true"
+            />
+          </Link>
+          {/* Only when it says something the line above does not. For a sole
+              trader the business IS the person, and printing the same name
+              twice is the card's old habit, not information. */}
+          {user.contactName && user.contactName !== user.displayName && (
+            <p className="truncate text-xs text-ink-400">{user.contactName}</p>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'email',
+      header: 'Contact',
+      width: '20%',
+      priority: 2,
+      render: (user) => (
+        <div className="min-w-0">
+          <p className="truncate text-sm text-ink-700">{user.email}</p>
+          {user.phone && <p className="tnum truncate text-xs text-ink-400">{user.phone}</p>}
+        </div>
+      ),
+    },
+    {
+      key: 'businessType',
+      header: 'Industry',
+      width: '12%',
+      priority: 3,
+      render: (user) => user.businessType || <span className="text-ink-300">—</span>,
+    },
+    {
+      key: 'createdAt',
+      header: 'Registered',
+      width: '12%',
+      priority: 2,
+      sortValue: (user) => new Date(user.createdAt).getTime(),
+      render: (user) => <span className="tnum text-sm">{date(user.createdAt)}</span>,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      width: '13%',
+      render: (user) => (
+        <div className="min-w-0">
+          <Badge tone={STATUS_TONES[user.status]} size="sm">
+            {user.status}
+          </Badge>
+          {/* An approved account's terms belong beside its status, which is the
+              column an operator reads to find out where the account stands. */}
+          {user.status === 'approved' && user.terms && (
+            <p className="tnum mt-1 truncate text-xs text-ink-400">
+              {money(user.creditLimit)} · {user.terms.replace('net', 'Net ')}
+            </p>
+          )}
+          {user.rejectionReason && (
+            <p className="mt-1 truncate text-xs text-danger" title={user.rejectionReason}>
+              {user.rejectionReason}
+            </p>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'actions',
+      header: 'Decision',
+      width: '21%',
+      align: 'right',
+      sortable: false,
+      render: (user) => (
+        <div className="flex justify-end gap-1.5">
+          {user.status === 'pending' && (
+            <>
+              {/* `solid`, not the default gradient. One decision button per row
+                  across a full screen of applications would put the treatment
+                  reserved for a page's single most important action onto every
+                  row of a list. */}
+              <Button size="xs" variant="solid" icon={Check} onClick={() => setApproving(user)}>
+                Approve
+              </Button>
+              <Button size="xs" variant="outline" icon={X} onClick={() => setRejecting(user)}>
+                Reject
+              </Button>
+            </>
+          )}
+
+          {user.status === 'approved' && (
+            <Button
+              size="xs"
+              variant="outline"
+              loading={setUserStatus.isPending}
+              onClick={() => setSuspending(user)}
+            >
+              Suspend
+            </Button>
+          )}
+
+          {(user.status === 'rejected' || user.status === 'suspended') && (
+            <Button size="xs" variant="outline" onClick={() => setApproving(user)}>
+              Reinstate
+            </Button>
+          )}
+        </div>
+      ),
+    },
+  ];
+
   return (
     <>
       <PageHeader
@@ -132,9 +266,15 @@ export function AdminApprovalsPage() {
               aria-selected={status === tab.value}
               onClick={() => setStatus(tab.value)}
               className={cn(
-                'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 font-display text-sm font-semibold transition-colors',
+                pressable,
+                'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 font-display text-sm font-semibold',
+                // Solid brand, matching the filter pills every other list screen
+                // uses. This tab row did the same job with a pale tint, so the
+                // selected view looked selected on one screen and merely
+                // highlighted on another — the same control has to look the same
+                // everywhere or the operator has to re-learn it per page.
                 status === tab.value
-                  ? 'bg-brand-50 text-brand-700'
+                  ? 'bg-brand text-white'
                   : 'text-ink-500 hover:bg-surface-2 hover:text-ink-900',
               )}
             >
@@ -165,118 +305,21 @@ export function AdminApprovalsPage() {
             }
           />
         ) : (
-          <ul className="divide-y divide-line">
-            {users.map((user) => (
-              <li key={user.id} className="p-4 sm:p-5">
-                <div className="flex flex-wrap items-start gap-3">
-                  <span
-                    className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-ink-400"
-                    aria-hidden="true"
-                  >
-                    <Building2 className="size-4.5" strokeWidth={1.75} />
-                  </span>
+          <>
+            <div className="border-b border-line px-3 py-2 sm:px-4">
+              <CountLine
+                total={users.length}
+                noun={users.length === 1 ? 'business' : 'businesses'}
+              />
+            </div>
 
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2">
-                      {/* The name is the link, not the whole card: the card
-                          already carries Approve and Reject, and a clickable
-                          container wrapping its own buttons is a nested click
-                          target that has to fight itself to work. */}
-                      <Link
-                        to={`/admin/clients/${user.id}`}
-                        className="group inline-flex items-center gap-1.5 font-display text-md font-bold text-ink-900 transition-colors hover:text-brand"
-                      >
-                        {user.displayName ?? user.email}
-                        <ArrowUpRight
-                          className="size-3.5 shrink-0 text-ink-300 opacity-0 transition-opacity group-hover:opacity-100"
-                          strokeWidth={2}
-                          aria-hidden="true"
-                        />
-                      </Link>
-                      <Badge tone={STATUS_TONES[user.status]} size="sm">
-                        {user.status}
-                      </Badge>
-                      {user.businessType && (
-                        <span className="text-xs text-ink-400">{user.businessType}</span>
-                      )}
-                    </div>
-
-                    <ul className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink-500">
-                      <li className="flex items-center gap-1.5">
-                        <UserCheck className="size-3.5 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
-                        {user.contactName}
-                      </li>
-                      <li className="flex items-center gap-1.5">
-                        <Mail className="size-3.5 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
-                        {user.email}
-                      </li>
-                      {user.phone && (
-                        <li className="flex items-center gap-1.5">
-                          <Phone className="size-3.5 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
-                          {user.phone}
-                        </li>
-                      )}
-                      {user.website && (
-                        <li className="flex items-center gap-1.5">
-                          <Globe className="size-3.5 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
-                          {user.website}
-                        </li>
-                      )}
-                    </ul>
-
-                    <p className="mt-1.5 flex items-center gap-1.5 text-xs text-ink-400">
-                      <Clock className="size-3" strokeWidth={1.75} aria-hidden="true" />
-                      Registered {date(user.createdAt)}
-                      {user.taxId && ` · Tax ID ${user.taxId}`}
-                      {user.status === 'approved' &&
-                        ` · ${money(user.creditLimit)} limit, ${user.terms.replace('net', 'Net ')}`}
-                    </p>
-
-                    {user.rejectionReason && (
-                      <p className="mt-2 rounded-md bg-danger-50 px-3 py-2 text-sm text-danger">
-                        Rejected: {user.rejectionReason}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex shrink-0 gap-2">
-                    {user.status === 'pending' && (
-                      <>
-                        <Button size="sm" icon={Check} onClick={() => setApproving(user)}>
-                          Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          icon={X}
-                          onClick={() => setRejecting(user)}
-                        >
-                          Reject
-                        </Button>
-                      </>
-                    )}
-
-                    {user.status === 'approved' && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        loading={setUserStatus.isPending}
-                        onClick={() => setSuspending(user)}
-                      >
-                        Suspend
-                      </Button>
-                    )}
-
-                    {(user.status === 'rejected' || user.status === 'suspended') && (
-                      <Button size="sm" variant="outline" onClick={() => setApproving(user)}>
-                        Reinstate
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
+            <DataTable
+              columns={columns}
+              rows={users}
+              rowKey={(user) => user.id}
+              defaultSort={{ key: 'createdAt', direction: 'desc' }}
+            />
+          </>
         )}
       </Panel>
 

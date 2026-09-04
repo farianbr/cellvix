@@ -215,11 +215,20 @@ export function DataTable({
          *
          * Only when widths are declared: a table whose columns carry none still
          * wants auto layout, which is the right default for unknown content.
+         *
+         * `min-w` is what stops fixed layout from destroying the table on a
+         * phone. Declared widths are percentages, and a percentage of 390px is
+         * not enough for the content — every column collapsed at once, names
+         * truncated to "Jordan …", and a two-button action cell overlapped the
+         * column beside it. With a floor the table keeps its proportions and the
+         * wrapper's `overflow-x-auto` lets the operator swipe, which is the
+         * normal way a wide table behaves on a narrow screen; the priority
+         * classes have already folded the columns that were worth folding.
          */}
         <table
           className={cn(
             'w-full text-left',
-            columns.some((column) => column.width) && 'table-fixed',
+            columns.some((column) => column.width) && 'table-fixed min-w-[720px]',
           )}
         >
           <thead>
