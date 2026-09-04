@@ -232,7 +232,7 @@ export function AdminInvoiceDetailPage() {
       />
 
 
-      <div className="max-w-[1280px] space-y-4">
+      <div className="max-w-record space-y-4">
         {/**
          * Payment information, leading the page.
          *

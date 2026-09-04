@@ -88,7 +88,7 @@ export function AdminBusinessInfoPage() {
         which is a stand-in and is not a valid registration.
       </PlaceholderNotice>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="max-w-[760px] space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="max-w-form space-y-4">
         <Panel title="Identity" description="The name and line that appear above every document.">
           <div className="grid gap-4 sm:grid-cols-2">
             <Input label="Business name" error={errors.name?.message} {...register('name')} />

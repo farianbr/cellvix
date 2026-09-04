@@ -88,7 +88,7 @@ export function AdminAppointmentsPage() {
         </Badge>
       </div>
 
-      <Panel flush className="max-w-[760px]">
+      <Panel flush className="max-w-form">
         <ul className="divide-y divide-line">
           {HOURS.map((hour) => {
             const inSlot = booked.filter((row) => {

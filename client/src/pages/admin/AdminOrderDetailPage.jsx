@@ -113,7 +113,7 @@ export function AdminOrderDetailPage() {
         }
       />
 
-      <div className="max-w-[1280px] space-y-4">
+      <div className="max-w-record space-y-4">
         <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
           <StatTile label="Total" value={money(order.total)} />
           {/* Title-cased, not the raw enum. Every other status in the app is

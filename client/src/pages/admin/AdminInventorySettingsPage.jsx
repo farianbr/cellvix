@@ -101,7 +101,7 @@ export function AdminInventorySettingsPage() {
         description={ADMIN_PAGE.description}
       />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="max-w-[760px] space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="max-w-form space-y-4">
         <Panel
           title="Default pricing"
           description="Pre-fills a new product. A price set on the product itself always wins."

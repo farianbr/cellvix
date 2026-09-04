@@ -73,7 +73,7 @@ export function AdminThirdPartyPage() {
         </span>
       </p>
 
-      <div className="max-w-[760px] space-y-4">
+      <div className="max-w-form space-y-4">
         {CONNECTIONS.map((connection) => {
           const Icon = connection.icon;
 

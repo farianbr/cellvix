@@ -144,6 +144,30 @@
   --text-d-xl--line-height: 1;
   --text-d-xl--letter-spacing: -0.04em;
 
+  /* --- page measures ----------------------------------------------------
+     How wide an admin page's content is allowed to be.
+
+     Eleven screens used to cap themselves at five different widths — 680, 760,
+     820, 860 and 900 — with no rule behind any of them: each page picked a
+     number that looked right on the screen its author had open, and the set
+     never agreed. Two shapes cover every page, and the difference between them
+     is real rather than aesthetic.
+
+     `form` is a settings screen. A column of labelled fields has a comfortable
+     measure the same way prose does — past roughly 70 characters the eye loses
+     the line, and a text input stretched to 1400px is a worse target than a
+     short one, not a better one.
+
+     `record` is an order, an invoice, a client: a set of RELATED blocks that
+     want to sit beside each other. Capping those at 900px on a 1440px screen
+     left a third of the width empty while the blocks stacked and pushed the
+     last of them below the fold.
+
+     A list, a board or a dashboard takes neither and runs to the shell's own
+     max-width. */
+  --container-form: 760px;
+  --container-record: 1280px;
+
   /* --- shape ------------------------------------------------------------ */
   --radius-sm: 6px;
   --radius-md: 10px;

@@ -279,7 +279,7 @@ export function AdminTemplatesPage() {
         </p>
       )}
 
-      <div className="max-w-[760px] space-y-3">
+      <div className="max-w-form space-y-3">
         {isLoading ? (
           <p className="text-sm text-ink-500">Loading templates…</p>
         ) : shown.length === 0 ? (

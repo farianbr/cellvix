@@ -190,7 +190,7 @@ export function AdminSaleSettingsPage() {
         confirm them — including whether reseller exemptions apply — before relying on them.
       </PlaceholderNotice>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="max-w-[760px] space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="max-w-form space-y-4">
         <Panel title="Application & regional" description="Where Cellvix operates, and in what currency.">
           <div className="grid gap-4 sm:grid-cols-2">
             <SelectField

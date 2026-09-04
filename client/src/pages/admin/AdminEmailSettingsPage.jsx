@@ -195,7 +195,7 @@ export function AdminEmailSettingsPage() {
         </span>
       </p>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="max-w-[760px] space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="max-w-form space-y-4">
         <Panel title="Automatic emails" description="What the system sends without being asked.">
           <div>
             {TOGGLES.map((toggle) => (
