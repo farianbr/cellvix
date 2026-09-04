@@ -63,49 +63,39 @@ export function GradeBadge({ grade, className }) {
   }
 
   return (
-    // The ring is the BRAND GRADIENT, not white.
+    // A WHITE ring, not a gradient one.
     //
-    // A ring is what lifts the badge off the photograph behind it, and a white
-    // one did that anonymously — the same halo any sticker would have. In brand
-    // colour the separator becomes part of the mark instead of a cutout around
-    // it, and it is the one piece of every card that is Cellvix rather than the
-    // manufacturer.
-    //
-    // Painted as a masked background rather than a `ring-` utility, because a
-    // ring cannot take a gradient: the ramp is the outer layer and the surface
-    // colour is masked over the middle, with the padding becoming the visible
-    // ring width. The compact ramp, since the disc is 40px.
+    // The ring was briefly the brand gradient, on the reasoning that it would
+    // make the separator part of the mark. It does the opposite: the badge sits
+    // on a photograph, and a coloured ring competes with the tint inside it for
+    // the same few pixels, so the disc reads as two rings rather than as one
+    // stamp. White does the one job a ring has here — separating the badge from
+    // whatever is behind it — and then gets out of the way.
     //
     // One separator, not two: no shadow. On a pale tint the shadow read as a
     // smudge under the disc rather than as elevation, and the ring already does
     // the lifting.
     <span
       className={cn(
-        'ring-brand-gradient flex size-10 shrink-0 rounded-full @min-[260px]:size-11',
+        'flex size-10 flex-col items-center justify-center overflow-hidden rounded-full px-1 text-center ring-2 ring-surface @min-[260px]:size-11',
+        tones[meta.tone],
         className,
       )}
       title={meta.label ?? grade}
     >
-      <span
-        className={cn(
-          'flex size-full flex-col items-center justify-center overflow-hidden rounded-full px-1 text-center',
-          tones[meta.tone],
-        )}
-      >
-        {parts.map((part, index) => (
-          <span
-            key={part}
-            className={cn(
-              // No opacity on the "PULL" line: knocking the ink back on a pale
-              // tint drops it under 4.5:1. Size alone carries the hierarchy.
-              'font-display font-bold uppercase tracking-[0.01em]',
-              lineClass(index),
+      {parts.map((part, index) => (
+        <span
+          key={part}
+          className={cn(
+            // No opacity on the "PULL" line: knocking the ink back on a pale
+            // tint drops it under 4.5:1. Size alone carries the hierarchy.
+            'font-display font-bold uppercase tracking-[0.01em]',
+            lineClass(index),
           )}
-          >
-            {part}
-          </span>
-        ))}
-      </span>
+        >
+          {part}
+        </span>
+      ))}
     </span>
   );
 }

@@ -923,7 +923,7 @@ export function AdminClientProfilePage() {
                 (§0's `displayName`). A monogram tells two accounts apart in a
                 way a shared icon cannot. */}
             <span
-              className="flex size-14 shrink-0 items-center justify-center rounded-full bg-brand-gradient font-display text-xl font-bold text-white"
+              className="flex size-14 shrink-0 items-center justify-center rounded-full bg-brand-gradient-orb font-display text-xl font-bold text-white"
               aria-hidden="true"
             >
               {initials}

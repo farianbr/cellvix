@@ -21,19 +21,22 @@ const SIZES = {
 /**
  * The COMPACT ramp on the active step, not the full one.
  *
- * A step indicator is 32-40px. The full ramp spends its first 38% between
- * near-black and deep red, so inside a disc that small the dark opening lands
- * as a hard vertical edge down the left and the bright end as another down the
- * right — the circle reads as having solid stripes on either side rather than
- * as a graded fill. The compact ramp starts at the deep red instead, so the
- * whole disc is red and the ramp reads as depth.
+ * A step indicator is a small CIRCLE, which is the hardest shape for a linear
+ * ramp. Two things go wrong at 32px and the orb ramp fixes both.
  *
- * Same rule as the filter pills, the pagination ring and the email hairline:
- * anything under ~120px takes the compact ramp.
+ * The full ramp spends its first 38% between near-black and deep red, so the
+ * dark opening covers a third of the disc and reads as a stripe rather than as
+ * depth. The orb ramp starts at the deep red, like the compact one.
+ *
+ * And a linear gradient is FLAT before its first stop and after its last, so
+ * those flat regions hug the left and right rims as visible arcs — the circle
+ * looks like it has a thin vertical stroke down each side. The orb ramp puts
+ * its stops at -35% and 135%, outside the element, so both rims land on a
+ * colour that is still changing and neither edge goes flat.
  */
 const STATES = {
   upcoming: 'border border-line bg-surface text-ink-300',
-  active: 'bg-brand-gradient-compact text-white shadow-card border border-transparent',
+  active: 'bg-brand-gradient-orb text-white shadow-card border border-transparent',
   completed: 'border border-ok/30 bg-ok-50 text-ok',
   error: 'border border-danger/30 bg-danger-50 text-danger',
 };

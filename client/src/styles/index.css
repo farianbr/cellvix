@@ -399,6 +399,22 @@
     background-image: linear-gradient(90deg, #1a0603 0%, #cf3429 60%, #e8564a 100%);
   }
 
+  /* The ramp for a small ROUND element — a step indicator, a numbered pill.
+
+     A linear gradient is flat before its first stop and after its last, so on
+     a circle those flat regions hug the left and right rims as visible arcs:
+     the disc looks like it has thin vertical strokes down each side rather
+     than one continuous ramp. On a large element the arcs are a small fraction
+     of the shape and read as shading; at 32px they are a third of it.
+
+     The stops here sit at -35% and 135%, outside the element, so the visible
+     0-100% is entirely mid-ramp — both rims land on a colour that is still
+     changing (#a82920 and #dd473c) instead of on a stop that has stopped.
+     Same colours, same direction, no flat edge. */
+  .bg-brand-gradient-orb {
+    background-image: linear-gradient(100deg, #8f221b -35%, #cf3429 55%, #e8564a 135%);
+  }
+
   /* A gradient RING with the surface still showing through the middle.
 
      `border-image` cannot do this on a rounded element — it squares the
