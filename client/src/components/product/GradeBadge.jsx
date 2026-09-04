@@ -32,14 +32,17 @@ export function GradeBadge({ grade, className }) {
    * and reads the grade once they have found one.
    *
    * The tints keep the hue that makes a grade recognisable at a glance while
-   * handing the visual weight back to the product. `brand` also stops using the
-   * gradient here: §2.2 keeps that for CTAs, and it was appearing on every
-   * aftermarket part in the catalogue.
+   * handing the visual weight back to the product.
+   *
+   * `brand` is the exception and carries the gradient, because AFTERMARKET is
+   * the grade Cellvix sells on its own name rather than a manufacturer's — the
+   * one badge where the brand mark is the information. The compact ramp, since
+   * a 40px disc has no room for the full one's near-black opening.
    */
   const tones = {
     ok: 'bg-ok-50 text-ok',
     info: 'bg-info-50 text-info',
-    brand: 'bg-brand-50 text-brand-700',
+    brand: 'bg-brand-gradient-compact text-white',
     warn: 'bg-warn-50 text-warn',
     neutral: 'bg-surface-3 text-ink-700',
   };

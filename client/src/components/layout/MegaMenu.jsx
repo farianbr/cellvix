@@ -209,7 +209,7 @@ export function MegaMenu() {
                               <span
                                 className={cn(
                                   'flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors',
-                                  isActive ? 'bg-brand text-white' : 'bg-surface-3 text-ink-500',
+                                  isActive ? 'bg-brand-gradient text-white' : 'bg-surface-3 text-ink-500',
                                 )}
                                 aria-hidden="true"
                               >

@@ -462,7 +462,9 @@ function FeaturedTicket({ offer, onAdd, onShop, addState }) {
   return (
     <section
       aria-label="Featured offer"
-      className="relative mb-10 overflow-hidden rounded-lg bg-brand-gradient md:flex"
+      // The PANEL ramp: the hero carries body copy at white/75 and white/80,
+      // which the standard ramp's bright end cannot support at 4.5:1.
+      className="relative mb-10 overflow-hidden rounded-lg bg-brand-gradient-panel md:flex"
     >
       {/* A diagonal hatch over the gradient — it stops the block reading as a
           flat coloured rectangle without adding a second colour. */}

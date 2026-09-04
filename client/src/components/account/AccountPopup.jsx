@@ -68,20 +68,22 @@ function SidePanel() {
   // every tab, and the frame's leftover height shows as dialog below it rather
   // than as a taller red block.
   return (
-    // A SOLID inverted panel, not a second gradient.
+    // The brand panel — the dialog's one editorial block, in the gradient.
     //
-    // The dialog was running the gradient twice on one surface: this panel and
-    // the submit button beside it. §2.2 allows the gradient on primary CTAs and
-    // at most one hero block per page, and when both are wearing it neither
-    // reads as the more important — the eye has no way to tell the thing you
-    // click from the thing you read.
+    // This is the first surface a business sees before it has an account, so it
+    // is the place the brand should be loudest.
     //
-    // The CTA keeps it, because that is the gradient's stated home and it is
-    // the one action of this dialog. This panel takes `ink-deep`, the near-black
-    // mixed toward brand that exists for exactly this: an inverted editorial
-    // block that belongs to the palette without competing with the button. White
-    // sits at ~18:1 on it and white/70 at ~7:1, so both clear AA comfortably.
-    <aside className="scroll-slim relative hidden max-h-full w-full overflow-y-auto rounded-lg bg-ink-deep p-6 text-white md:flex md:flex-col md:gap-6">
+    // The PANEL ramp, not the standard one. White needs 4.5:1 as body copy and
+    // the standard ramp ends at #e8564a, where white manages 3.58 — fine on a
+    // button whose label is bold and short, not fine on a tall block of
+    // paragraphs. This ramp stops at #9d251d, where white clears 7.7:1 and even
+    // white/70 clears 4.5, so the secondary lines can still fade.
+    //
+    // The submit button beside it also carries the gradient. They are not
+    // competing: the panel is a filled block and the button is a control inside
+    // a white column, so their contexts separate them without needing different
+    // treatments.
+    <aside className="scroll-slim relative hidden max-h-full w-full overflow-y-auto rounded-lg bg-brand-gradient-panel p-6 text-white md:flex md:flex-col md:gap-6">
       <div>
         <p className="eyebrow mb-2 opacity-70">Cellvix wholesale portal</p>
         <h3 className="text-2xl leading-tight text-white">

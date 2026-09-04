@@ -105,17 +105,13 @@ export function FilterStrip({
               pressable,
               'flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 text-sm font-medium',
               /**
-               * The active pill is a FLAT brand fill, not the gradient.
+               * The active pill carries the brand gradient.
                *
-               * PROJECT_INSTRUCTIONS §2.2 reserves the gradient for primary
-               * CTAs and at most one hero block per page; active states, nav
-               * and pagination take flat `bg-brand`. A filter row is the
-               * clearest case for that rule. The gradient appeared on whichever
-               * pill the operator had selected, so the one treatment meant to
-               * mark the single most important action on a screen was being
-               * spent on a list filter — and the actual primary button sitting
-               * a few pixels above it no longer read as more important than the
-               * filter, because they wore the same clothes.
+               * The COMPACT ramp, not the full one: the full ramp opens at
+               * near-black, and across an 80px pill that first third reads as a
+               * stray dark stripe down one side rather than as depth. The
+               * compact ramp starts at the deep red instead — same identity, no
+               * stripe.
                *
                * The active pill also has **no border at all**, not a
                * transparent one. `border-transparent` still reserves the border
@@ -124,7 +120,7 @@ export function FilterStrip({
                * `border` and the active one gets that pixel back as padding.
                */
               isActive
-                ? 'bg-brand px-2.75 text-white'
+                ? 'bg-brand-gradient-compact px-2.75 text-white'
                 : 'border border-line bg-surface text-ink-600 hover:border-line-strong hover:text-ink-900',
             )}
           >

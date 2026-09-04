@@ -370,6 +370,22 @@
     background-image: linear-gradient(100deg, #1a0603 0%, #8f221b 38%, #cf3429 72%, #e8564a 100%);
   }
 
+  /* The ramp for a LARGE surface carrying small text.
+
+     White needs 4.5:1 to be readable as body copy, and the standard ramp ends
+     at #e8564a where white manages only 3.58 — fine on a button, whose label is
+     bold and short, and not fine on a tall panel holding paragraphs. That is a
+     property of the colour, not of the design: no amount of care with the text
+     fixes a ground that bright behind 14px copy.
+
+     So a text-bearing block uses this instead. Same identity, same direction,
+     stopping at #9d251d — where white clears 7.7:1 and even white/70 clears
+     4.5, so the panel can still fade its secondary lines. Everything that is
+     NOT a large text surface keeps the vivid ramp above. */
+  .bg-brand-gradient-panel {
+    background-image: linear-gradient(100deg, #1a0603 0%, #7d1e17 45%, #9d251d 100%);
+  }
+
   /* The same ramp for something small — a filter pill, a badge, a count chip.
      It starts at the deep red rather than the near-black: across 80px the full
      gradient puts its darkest stop inside the chip, which reads as a stray

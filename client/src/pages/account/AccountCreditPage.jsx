@@ -176,7 +176,7 @@ export function AccountCreditPage() {
           <div
             className={cn(
               'h-full rounded-full transition-[width] duration-500',
-              tone === 'danger' ? 'bg-danger' : tone === 'warn' ? 'bg-warn' : 'bg-brand',
+              tone === 'danger' ? 'bg-danger' : tone === 'warn' ? 'bg-warn' : 'bg-brand-gradient',
             )}
             style={{ width: `${Math.max(2, credit.utilisation)}%` }}
           />

@@ -297,7 +297,7 @@ export function TabWizard() {
                    */
                   className={cn(
                     pressableSurface,
-                    'mt-2 flex w-full items-center gap-3 rounded-md border border-brand bg-surface px-3 py-2.5 text-left',
+                    'mt-2 flex w-full items-center gap-3 rounded-md border border-brand bg-brand-50 px-3 py-2.5 text-left',
                   )}
                 >
                   <span className="min-w-0 flex-1">

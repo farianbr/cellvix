@@ -274,7 +274,7 @@ export function AdminApprovalsPage() {
                 // highlighted on another — the same control has to look the same
                 // everywhere or the operator has to re-learn it per page.
                 status === tab.value
-                  ? 'bg-brand text-white'
+                  ? 'bg-brand-gradient-compact text-white'
                   : 'text-ink-500 hover:bg-surface-2 hover:text-ink-900',
               )}
             >

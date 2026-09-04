@@ -63,24 +63,20 @@ export function Pagination({ page, pages, onChange, className, hideWhenSingle = 
               pressable,
               'tnum flex size-9 items-center justify-center rounded-md font-display text-sm font-semibold',
               /**
-               * The current page is a FLAT brand chip.
+               * The current page is a filled brand-gradient chip.
                *
-               * It used to be a gradient ring around a white face — an attempt
-               * to mark the page without competing with the CTA, which ended up
-               * doing neither well. §2.2 is explicit that pagination is one of
-               * the places that takes flat `bg-brand` and not the gradient, and
-               * a gradient ring is still the gradient: it put the signature
-               * treatment on a control that marks a position rather than offers
-               * an action, and at 36px the whole ramp was compressed into a 2px
-               * outline where it read as a muddy red edge rather than as the
-               * brand.
+               * It was briefly a gradient RING around a white face, which is
+               * the one version that does not work: at 36px the whole ramp is
+               * compressed into a 2px outline, where it reads as a muddy red
+               * edge rather than as the brand. Filled, the ramp has the chip's
+               * full width to travel.
                *
-               * Flat brand is unambiguous at this size, matches the active
-               * filter pill it will often share a screen with, and leaves the
-               * gradient to the one CTA on the page.
+               * The COMPACT ramp, for the same reason the filter pills use it —
+               * the full ramp opens at near-black, and inside a 36px square
+               * that first third is a dark corner rather than depth.
                */
               item === page
-                ? 'bg-brand text-white'
+                ? 'bg-brand-gradient-compact text-white'
                 : 'border border-line bg-surface text-ink-700 hover:border-line-strong hover:text-ink-900',
             )}
           >

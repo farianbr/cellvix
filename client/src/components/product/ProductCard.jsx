@@ -275,24 +275,18 @@ export function ProductCard({ product }) {
                 pressable,
                 'flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-md font-display text-sm font-semibold',
                 /**
-                 * A FLAT fill, not the brand gradient.
+                 * The brand gradient. Add to cart is the card's primary
+                 * action, and the client's direction is that the gradient IS
+                 * the brand rather than a treatment to be rationed — a grid of
+                 * cards each carrying it reads as Cellvix, which is the point.
                  *
-                 * §2.2 calls the gradient a signature: primary CTAs and at most
-                 * one hero block per page. A grid of twenty-four product cards
-                 * put twenty-four gradients on one screen, which is the exact
-                 * opposite of a signature — a treatment that appears everywhere
-                 * carries no information, and it left the page's real CTA with
-                 * nothing to distinguish it from an Add button in row nine.
-                 *
-                 * Solid ink at rest, brand on hover. Ink keeps the button
-                 * clearly actionable without spending brand colour on it, and
-                 * the hover fill is where the red now earns its appearance:
-                 * exactly one card wears it at a time, which is what makes it
-                 * read as a response to the user rather than as decoration.
+                 * `justAdded` flips to solid green for its 1.4s, because that
+                 * moment is confirmation rather than invitation and needs to be
+                 * unmistakably a different state, not a different shade.
                  */
                 justAdded
                   ? 'bg-ok text-white'
-                  : 'bg-ink-900 text-white hover:bg-brand',
+                  : 'bg-brand-gradient text-white hover:brightness-110',
               )}
             >
               {/* Icon only on a narrow card. The trolley is a well-understood

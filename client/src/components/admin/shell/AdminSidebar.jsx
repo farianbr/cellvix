@@ -67,7 +67,7 @@ function navRowClass(isActive, extra) {
   return cn(
     pressable,
     'flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm font-medium',
-    isActive ? 'bg-brand text-white' : 'text-ink-200 hover:bg-white/[0.08] hover:text-white',
+    isActive ? 'bg-brand-gradient text-white' : 'text-ink-200 hover:bg-white/[0.08] hover:text-white',
     extra,
   );
 }
@@ -204,7 +204,7 @@ function IconRail({ badges }) {
                 className={cn(
                   pressable,
                   'relative flex size-10 items-center justify-center rounded-md',
-                  isActive ? 'bg-brand text-white' : 'text-ink-200 hover:bg-white/[0.08] hover:text-white',
+                  isActive ? 'bg-brand-gradient text-white' : 'text-ink-200 hover:bg-white/[0.08] hover:text-white',
                 )}
               >
                 {Icon && <Icon className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />}

@@ -35,7 +35,10 @@ const TOP_UPS = [250, 500, 1000];
 /** The balance, as the one card on the dashboard that carries the gradient. */
 export function StoreCreditCard({ balance, added, spent, className }) {
   return (
-    <div className={cn('rounded-lg bg-brand-gradient p-5 text-white', className)}>
+    // The PANEL ramp: this block carries small copy at white/65 and white/75,
+    // and the standard ramp's bright end leaves those under 4.5:1. Same brand,
+    // dark enough to read on.
+    <div className={cn('rounded-lg bg-brand-gradient-panel p-5 text-white', className)}>
       <span className="flex size-10 items-center justify-center rounded-md bg-white/15">
         <WalletCards className="size-5" strokeWidth={1.5} aria-hidden="true" />
       </span>
