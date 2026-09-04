@@ -12,6 +12,7 @@ import {
   X,
 } from 'lucide-react';
 import cn from '@/lib/cn';
+import { pressable } from '@/lib/motion';
 import { money, date } from '@/lib/format';
 import { GRADE_ORDER, GRADES } from '@/lib/constants';
 import { DISCOUNT_TYPES, OFFER_KINDS } from '@shared/schemas/content';
@@ -26,6 +27,7 @@ import SelectField from '@/components/ui/SelectField';
 import Checkbox from '@/components/ui/Checkbox';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import DataTable, { CountLine } from '@/components/admin/DataTable';
 import Skeleton from '@/components/ui/Skeleton';
 import PageHeader from '@/components/admin/PageHeader';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
@@ -496,6 +498,191 @@ export function AdminOffersPage() {
   const { data: partTypeFacets } = usePartTypes();
 
   const offers = data?.offers ?? [];
+
+  /**
+   * The columns.
+   *
+   * The list stacked up to six badges above every offer and then ran its
+   * numbers together into one middot-separated sentence — and the sentence said
+   * something DIFFERENT depending on the offer's kind. A combo read "3 SKUs ·
+   * $220.00 (saves $35.90) · immediate → Sep 23"; a deal read "15% off ·
+   * CELLS15 · immediate → Sep 20 · redeemed 0". Two shapes of prose in one
+   * list, so nothing lined up and nothing could be compared: an operator asking
+   * "which of these expires first" had to find the third or fourth clause of
+   * every row and read it out of a different position each time.
+   *
+   * Columns fix that by construction. The "Value" column is the one place the
+   * two kinds still differ, because a combo's bundle price and a deal's
+   * discount genuinely are different facts — but they now sit in the same place
+   * on every row, which is what makes them scannable.
+   *
+   * The badge stack collapses to the two that are exceptions worth flagging:
+   * a combo with an unavailable SKU, which stops the offer working, and a
+   * restriction, which changes who sees it. Featured, single-use and the
+   * kind itself all become columns or glyphs — a badge that appears on most
+   * rows is decoration.
+   */
+  const columns = [
+    {
+      key: 'title',
+      header: 'Offer',
+      width: '34%',
+      render: (offer) => (
+        <div className="min-w-0">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <p className="truncate font-medium text-ink-900">{offer.title}</p>
+            {offer.isFeatured && (
+              <Star className="size-3.5 shrink-0 text-brand" strokeWidth={2} aria-label="Featured" />
+            )}
+          </div>
+          {offer.subtitle && <p className="truncate text-xs text-ink-400">{offer.subtitle}</p>}
+        </div>
+      ),
+    },
+    {
+      key: 'kind',
+      header: 'Kind',
+      width: '9%',
+      priority: 2,
+      render: (offer) => (
+        <span className="text-sm text-ink-700">{offer.kind === 'combo' ? 'Combo' : 'Deal'}</span>
+      ),
+    },
+    {
+      key: 'value',
+      header: 'Value',
+      width: '17%',
+      sortable: false,
+      render: (offer) =>
+        offer.kind === 'combo' ? (
+          <div className="min-w-0">
+            <p className="tnum text-sm font-medium text-ink-900">{money(offer.bundlePrice)}</p>
+            <p className="tnum truncate text-xs text-ink-400">
+              {offer.items.length} SKU{offer.items.length === 1 ? '' : 's'}
+              {offer.savings > 0 ? ` · saves ${money(offer.savings)}` : ''}
+            </p>
+          </div>
+        ) : (
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-ink-900">
+              {offer.discountType === 'percent'
+                ? `${offer.discountPercent}% off`
+                : offer.discountType === 'amount'
+                  ? `${money(offer.discountAmount)} off`
+                  : 'Free shipping'}
+            </p>
+            {offer.code && <p className="truncate font-mono text-xs text-ink-400">{offer.code}</p>}
+          </div>
+        ),
+    },
+    {
+      key: 'redeemed',
+      header: 'Redeemed',
+      width: '10%',
+      align: 'right',
+      priority: 3,
+      sortValue: (offer) => offer.usageCount ?? 0,
+      render: (offer) =>
+        offer.kind === 'deal' ? (
+          <span className="tnum text-sm text-ink-700">
+            {offer.usageCount}
+            {offer.usageLimit > 0 && <span className="text-ink-300">/{offer.usageLimit}</span>}
+          </span>
+        ) : (
+          <span className="text-ink-300">—</span>
+        ),
+    },
+    {
+      key: 'window',
+      header: 'Runs',
+      width: '16%',
+      priority: 2,
+      sortValue: (offer) => (offer.endsAt ? new Date(offer.endsAt).getTime() : Infinity),
+      render: (offer) => (
+        <div className="min-w-0">
+          <p className="tnum truncate text-sm text-ink-700">
+            {offer.endsAt ? `Ends ${date(offer.endsAt)}` : 'No end date'}
+          </p>
+          <p className="tnum truncate text-xs text-ink-400">
+            From {offer.startsAt ? date(offer.startsAt) : 'immediate'}
+          </p>
+        </div>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      width: '14%',
+      render: (offer) => (
+        <div className="min-w-0 space-y-1">
+          <Badge tone={STATUS_TONES[offer.status] ?? 'neutral'} size="sm">
+            {offer.status}
+          </Badge>
+          {/* Only the exceptions. An unavailable SKU stops a combo working, and
+              a restriction changes who can see the offer at all — everything
+              else that used to be a badge is now a column. */}
+          {offer.kind === 'combo' && !offer.available && (
+            <p>
+              <Badge tone="warn" size="sm">
+                SKU unavailable
+              </Badge>
+            </p>
+          )}
+          {offer.eligibility === 'accounts' && (
+            <p>
+              <Badge tone="info" size="sm" icon={Users}>
+                {offer.allowedUsers.length} account{offer.allowedUsers.length === 1 ? '' : 's'}
+              </Badge>
+            </p>
+          )}
+          {offer.redemption === 'single' && (
+            <p className="text-xs text-ink-400">Single-use</p>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'actions',
+      header: '',
+      width: '84px',
+      align: 'right',
+      sortable: false,
+      render: (offer) => (
+        <div className="flex justify-end gap-1">
+          <button
+            type="button"
+            onClick={(event) => {
+              // The row opens the editor, so a click that lands on this button
+              // must not fire the row's handler behind it as well.
+              event.stopPropagation();
+              setEditing(offer);
+            }}
+            aria-label={`Edit “${offer.title}”`}
+            className={cn(
+              pressable,
+              'flex size-8 items-center justify-center rounded-md text-ink-400 hover:bg-surface-2 hover:text-ink-900',
+            )}
+          >
+            <Pencil className="size-4" strokeWidth={1.75} />
+          </button>
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              setDeleting(offer);
+            }}
+            aria-label={`Delete “${offer.title}”`}
+            className={cn(
+              pressable,
+              'flex size-8 items-center justify-center rounded-md text-ink-400 hover:bg-danger-50 hover:text-danger',
+            )}
+          >
+            <Trash2 className="size-4" strokeWidth={1.75} />
+          </button>
+        </div>
+      ),
+    },
+  ];
   const isPending = createOffer.isPending || updateOffer.isPending;
   const error = (createOffer.error ?? updateOffer.error)?.message;
 
@@ -564,115 +751,18 @@ export function AdminOffersPage() {
             }
           />
         ) : (
-          <ul className="divide-y divide-line">
-            {offers.map((offer) => (
-              <li key={offer.id} className="flex items-start gap-3 px-4 py-3.5 sm:px-5">
-                <div className="min-w-0 flex-1">
-                  <div className="mb-1 flex flex-wrap items-center gap-1.5">
-                    <Badge tone={STATUS_TONES[offer.status] ?? 'neutral'} size="sm">
-                      {offer.status}
-                    </Badge>
-                    <Badge tone="neutral" size="sm">
-                      {offer.kind === 'combo' ? 'Combo' : 'Deal'}
-                    </Badge>
-                    {offer.isFeatured && (
-                      <Badge tone="brand" size="sm" icon={Star}>
-                        Featured
-                      </Badge>
-                    )}
-                    {offer.kind === 'combo' && !offer.available && (
-                      <Badge tone="warn" size="sm">
-                        A SKU is unavailable
-                      </Badge>
-                    )}
-                    {offer.eligibility === 'accounts' && (
-                      <Badge tone="info" size="sm" icon={Users}>
-                        {offer.allowedUsers.length} account
-                        {offer.allowedUsers.length === 1 ? '' : 's'}
-                      </Badge>
-                    )}
-                    {offer.redemption === 'single' && (
-                      <Badge tone="neutral" size="sm">
-                        Single-use
-                      </Badge>
-                    )}
-                  </div>
+          <>
+            <div className="border-b border-line px-3 py-2 sm:px-4">
+              <CountLine total={offers.length} noun={offers.length === 1 ? 'offer' : 'offers'} />
+            </div>
 
-                  <p className="truncate text-md font-medium text-ink-900">{offer.title}</p>
-                  {offer.subtitle && (
-                    <p className="mt-0.5 line-clamp-1 text-sm text-ink-500">
-                      {offer.subtitle}
-                    </p>
-                  )}
-
-                  <p className="mt-1 flex flex-wrap gap-x-2 text-xs text-ink-300">
-                    {offer.kind === 'combo' ? (
-                      <>
-                        <span>{offer.items.length} SKUs</span>
-                        <span>·</span>
-                        <span className="tnum">
-                          {money(offer.bundlePrice)}
-                          {offer.savings > 0 ? ` (saves ${money(offer.savings)})` : ''}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <span>
-                          {offer.discountType === 'percent'
-                            ? `${offer.discountPercent}% off`
-                            : offer.discountType === 'amount'
-                              ? `${money(offer.discountAmount)} off`
-                              : 'Free shipping'}
-                        </span>
-                        {offer.code && (
-                          <>
-                            <span>·</span>
-                            <span className="font-mono">{offer.code}</span>
-                          </>
-                        )}
-                      </>
-                    )}
-                    <span>·</span>
-                    <span>
-                      {offer.startsAt ? date(offer.startsAt) : 'immediate'} →{' '}
-                      {offer.endsAt ? date(offer.endsAt) : 'no end date'}
-                    </span>
-                    {offer.kind === 'deal' && (
-                      <>
-                        <span>·</span>
-                        <span className="tnum">
-                          redeemed {offer.usageCount}
-                          {offer.usageLimit > 0 ? ` / ${offer.usageLimit}` : ''}
-                        </span>
-                      </>
-                    )}
-                  </p>
-                </div>
-
-                <div className="flex shrink-0 gap-1">
-                  <button
-                    type="button"
-                    onClick={() => setEditing(offer)}
-                    aria-label={`Edit “${offer.title}”`}
-                    className="flex size-8 items-center justify-center rounded-lg text-ink-400 transition-colors hover:bg-surface-2 hover:text-ink-900"
-                  >
-                    <Pencil className="size-4" strokeWidth={1.75} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDeleting(offer)}
-                    aria-label={`Delete “${offer.title}”`}
-                    className={cn(
-                      'flex size-8 items-center justify-center rounded-lg text-ink-400 transition-colors',
-                      'hover:bg-danger-50 hover:text-danger',
-                    )}
-                  >
-                    <Trash2 className="size-4" strokeWidth={1.75} />
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
+            <DataTable
+              columns={columns}
+              rows={offers}
+              rowKey={(offer) => offer.id}
+              onRowClick={(offer) => setEditing(offer)}
+            />
+          </>
         )}
       </Panel>
 

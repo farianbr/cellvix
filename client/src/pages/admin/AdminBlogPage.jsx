@@ -14,6 +14,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import cn from '@/lib/cn';
+import { pressable } from '@/lib/motion';
 import { date } from '@/lib/format';
 import { BLOG_CATEGORIES } from '@shared/schemas/content';
 import RichText from '@/lib/richText';
@@ -27,6 +28,7 @@ import SelectField from '@/components/ui/SelectField';
 import Checkbox from '@/components/ui/Checkbox';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import DataTable, { CountLine } from '@/components/admin/DataTable';
 import Skeleton from '@/components/ui/Skeleton';
 import PostCover from '@/components/blog/PostCover';
 import PageHeader from '@/components/admin/PageHeader';
@@ -300,6 +302,157 @@ export function AdminBlogPage() {
   const { createPost, updatePost, deletePost } = useAdminMutations();
 
   const posts = data?.posts ?? [];
+
+  /**
+   * The columns.
+   *
+   * The list put the cover, three badges, the title, the excerpt and a
+   * four-part metadata line into every row, which made a row 100px tall and
+   * meant six posts filled the screen. Worse, the four metadata facts —
+   * author, read time, publish date, updated date — were run together into one
+   * sentence separated by middots, so comparing when two posts were published
+   * meant reading two sentences and finding the third clause in each.
+   *
+   * The cover stays: for a blog the image IS part of what identifies a post,
+   * unlike the answer text on an FAQ entry. Everything else becomes a column
+   * that can be sorted and compared down the page.
+   */
+  const columns = [
+    {
+      key: 'cover',
+      header: '',
+      width: '76px',
+      sortable: false,
+      render: (post) => (
+        <PostCover post={post} ratio="aspect-4/3" className="w-14 rounded-md border border-line" />
+      ),
+    },
+    {
+      key: 'title',
+      header: 'Post',
+      width: '40%',
+      render: (post) => (
+        <div className="min-w-0">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <p className="truncate font-medium text-ink-900">{post.title}</p>
+            {post.isFeatured && (
+              <Star
+                className="size-3.5 shrink-0 text-brand"
+                strokeWidth={2}
+                aria-label="Featured"
+              />
+            )}
+          </div>
+          <p className="truncate text-xs text-ink-400">{post.excerpt}</p>
+        </div>
+      ),
+    },
+    {
+      key: 'category',
+      header: 'Category',
+      width: '15%',
+      priority: 2,
+      sortValue: (post) => CATEGORY_LABELS[post.category] ?? post.category,
+      render: (post) => (
+        <span className="text-sm text-ink-700">
+          {CATEGORY_LABELS[post.category] ?? post.category}
+        </span>
+      ),
+    },
+    {
+      key: 'author',
+      header: 'Author',
+      width: '14%',
+      priority: 3,
+      sortValue: (post) => post.author.name,
+      render: (post) => (
+        <div className="min-w-0">
+          <p className="truncate text-sm text-ink-700">{post.author.name}</p>
+          <p className="tnum text-xs text-ink-400">{post.readMinutes} min read</p>
+        </div>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      width: '14%',
+      sortValue: (post) => post.status,
+      render: (post) => (
+        <div className="min-w-0">
+          <Badge tone={post.status === 'published' ? 'ok' : 'warn'} size="sm">
+            {post.status === 'published' ? 'Live' : 'Draft'}
+          </Badge>
+          <p className="tnum truncate text-xs text-ink-400">
+            {post.publishedAt ? date(post.publishedAt) : 'No publish date'}
+          </p>
+        </div>
+      ),
+    },
+    {
+      key: 'updatedAt',
+      header: 'Updated',
+      width: '11%',
+      priority: 2,
+      sortValue: (post) => new Date(post.updatedAt).getTime(),
+      render: (post) => <span className="tnum text-sm text-ink-500">{date(post.updatedAt)}</span>,
+    },
+    {
+      key: 'actions',
+      header: '',
+      width: '112px',
+      align: 'right',
+      sortable: false,
+      render: (post) => (
+        <div className="flex justify-end gap-1">
+          {post.status === 'published' && (
+            <Link
+              to={`/blog/${post.slug}`}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(event) => event.stopPropagation()}
+              aria-label={`View “${post.title}” on the site`}
+              className={cn(
+                pressable,
+                'flex size-8 items-center justify-center rounded-md text-ink-400 hover:bg-surface-2 hover:text-ink-900',
+              )}
+            >
+              <ExternalLink className="size-4" strokeWidth={1.75} />
+            </Link>
+          )}
+          <button
+            type="button"
+            onClick={(event) => {
+              // The row opens the editor, so a click landing on this button
+              // must not fire the row's handler behind it as well.
+              event.stopPropagation();
+              setEditingId(post.id);
+            }}
+            aria-label={`Edit “${post.title}”`}
+            className={cn(
+              pressable,
+              'flex size-8 items-center justify-center rounded-md text-ink-400 hover:bg-surface-2 hover:text-ink-900',
+            )}
+          >
+            <Pencil className="size-4" strokeWidth={1.75} />
+          </button>
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              setDeleting(post);
+            }}
+            aria-label={`Delete “${post.title}”`}
+            className={cn(
+              pressable,
+              'flex size-8 items-center justify-center rounded-md text-ink-400 hover:bg-danger-50 hover:text-danger',
+            )}
+          >
+            <Trash2 className="size-4" strokeWidth={1.75} />
+          </button>
+        </div>
+      ),
+    },
+  ];
   const isPending = createPost.isPending || updatePost.isPending;
   const error = (createPost.error ?? updatePost.error)?.message;
 
@@ -361,71 +514,19 @@ export function AdminBlogPage() {
             }
           />
         ) : (
-          <ul className="divide-y divide-line">
-            {posts.map((post) => (
-              <li key={post.id} className="flex items-center gap-3 px-4 py-3.5 sm:px-5">
-                <PostCover
-                  post={post}
-                  ratio="aspect-4/3"
-                  className="w-16 shrink-0 rounded-md border border-line"
-                />
+          <>
+            <div className="border-b border-line px-3 py-2 sm:px-4">
+              <CountLine total={posts.length} noun={posts.length === 1 ? 'post' : 'posts'} />
+            </div>
 
-                <div className="min-w-0 flex-1">
-                  <div className="mb-1 flex flex-wrap items-center gap-1.5">
-                    <Badge tone={post.status === 'published' ? 'ok' : 'warn'} size="sm">
-                      {post.status === 'published' ? 'Live' : 'Draft'}
-                    </Badge>
-                    <Badge tone="neutral" size="sm">
-                      {CATEGORY_LABELS[post.category] ?? post.category}
-                    </Badge>
-                    {post.isFeatured && (
-                      <Badge tone="brand" size="sm" icon={Star}>
-                        Featured
-                      </Badge>
-                    )}
-                  </div>
-
-                  <p className="truncate text-md font-medium text-ink-900">{post.title}</p>
-                  <p className="mt-0.5 line-clamp-1 text-sm text-ink-500">{post.excerpt}</p>
-                  <p className="mt-1 text-xs text-ink-300">
-                    {post.author.name} · {post.readMinutes} min ·{' '}
-                    {post.publishedAt ? date(post.publishedAt) : 'no publish date'} · updated{' '}
-                    {date(post.updatedAt)}
-                  </p>
-                </div>
-
-                <div className="flex shrink-0 gap-1">
-                  {post.status === 'published' && (
-                    <Link
-                      to={`/blog/${post.slug}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      aria-label={`View “${post.title}” on the site`}
-                      className="flex size-8 items-center justify-center rounded-lg text-ink-400 transition-colors hover:bg-surface-2 hover:text-ink-900"
-                    >
-                      <ExternalLink className="size-4" strokeWidth={1.75} />
-                    </Link>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => setEditingId(post.id)}
-                    aria-label={`Edit “${post.title}”`}
-                    className="flex size-8 items-center justify-center rounded-lg text-ink-400 transition-colors hover:bg-surface-2 hover:text-ink-900"
-                  >
-                    <Pencil className="size-4" strokeWidth={1.75} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDeleting(post)}
-                    aria-label={`Delete “${post.title}”`}
-                    className="flex size-8 items-center justify-center rounded-lg text-ink-400 transition-colors hover:bg-danger-50 hover:text-danger"
-                  >
-                    <Trash2 className="size-4" strokeWidth={1.75} />
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
+            <DataTable
+              columns={columns}
+              rows={posts}
+              rowKey={(post) => post.id}
+              onRowClick={(post) => setEditingId(post.id)}
+              defaultSort={{ key: 'updatedAt', direction: 'desc' }}
+            />
+          </>
         )}
       </Panel>
 
