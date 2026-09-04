@@ -393,7 +393,7 @@ export function AdminInvoiceDetailPage() {
                                 type="button"
                                 onClick={() => setReversing(index)}
                                 aria-label={`Reverse the ${money(payment.amount)} payment`}
-                                className="-m-1 rounded-sm p-1 text-ink-300 transition-colors hover:text-danger active:scale-[0.97]"
+                                className={cn(pressable, '-m-1 rounded-sm p-1 text-ink-300 hover:text-danger')}
                               >
                                 <Trash2 className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                               </button>

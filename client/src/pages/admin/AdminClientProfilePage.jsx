@@ -1094,7 +1094,7 @@ export function AdminClientProfilePage() {
               aria-current={active ? 'page' : undefined}
               className={cn(
                 'relative flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-3 text-sm font-medium',
-                'transition-colors active:scale-[0.97]',
+                pressable,
                 active ? 'text-brand' : 'text-ink-400 hover:text-ink-700',
               )}
             >
@@ -1114,7 +1114,7 @@ export function AdminClientProfilePage() {
               )}
               {active && (
                 <span
-                  className="absolute inset-x-2 bottom-0 h-0.5 rounded-t-full bg-brand-gradient"
+                  className="absolute inset-x-2 bottom-0 h-0.5 rounded-t-full bg-brand"
                   aria-hidden="true"
                 />
               )}

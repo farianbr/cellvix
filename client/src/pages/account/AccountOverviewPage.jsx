@@ -52,7 +52,7 @@ function CreditMeter({ credit }) {
         <div
           className={cn(
             'h-full rounded-full transition-[width] duration-500',
-            tone === 'danger' ? 'bg-danger' : tone === 'warn' ? 'bg-warn' : 'bg-brand-gradient',
+            tone === 'danger' ? 'bg-danger' : tone === 'warn' ? 'bg-warn' : 'bg-brand',
           )}
           style={{ width: `${Math.max(2, credit.utilisation)}%` }}
         />

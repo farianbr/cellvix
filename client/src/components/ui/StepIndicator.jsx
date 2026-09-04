@@ -20,7 +20,7 @@ const SIZES = {
 
 const STATES = {
   upcoming: 'border border-line bg-surface text-ink-300',
-  active: 'bg-brand-gradient text-white shadow-card border border-transparent',
+  active: 'bg-brand text-white shadow-card border border-transparent',
   completed: 'border border-ok/30 bg-ok-50 text-ok',
   error: 'border border-danger/30 bg-danger-50 text-danger',
 };
@@ -80,7 +80,7 @@ export function StepConnector({ complete = false, vertical = false, className })
     >
       <span
         className={cn(
-          'block bg-brand-gradient transition-[width,height] duration-panel ease-[var(--ease-entrance)]',
+          'block bg-brand transition-[width,height] duration-panel ease-[var(--ease-entrance)]',
           vertical ? 'w-full' : 'h-full',
           complete ? (vertical ? 'h-full' : 'w-full') : vertical ? 'h-0' : 'w-0',
         )}

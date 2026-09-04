@@ -214,7 +214,7 @@ export function FaqPage() {
           </p>
           <Link
             to="/contact"
-            className="mt-6 inline-flex h-12 items-center rounded-lg bg-brand-gradient px-6 font-display text-md font-semibold text-white transition-[filter] hover:brightness-110"
+            className={cn(pressable, 'mt-6 inline-flex h-12 items-center rounded-lg border border-line-strong bg-surface px-6 font-display text-md font-semibold text-ink-900 hover:border-ink-300 hover:bg-surface-2')}
           >
             Contact us
           </Link>
