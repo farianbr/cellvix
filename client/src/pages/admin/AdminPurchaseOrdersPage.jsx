@@ -29,6 +29,7 @@ import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { pressable } from '@/lib/motion';
 import cn from '@/lib/cn';
+import SelectMenu from '@/components/ui/SelectMenu';
 import {
   useAdminPurchaseOrders,
   useAdminSuppliers,
@@ -468,18 +469,16 @@ export function AdminPurchaseOrdersPage() {
           filters={
             <div>
               <p className="eyebrow mb-1.5 text-ink-400">Supplier</p>
-              <select
+              <SelectMenu
+                srLabel="Filter by supplier"
                 value={supplierId}
-                onChange={(event) => setParam('supplier', event.target.value)}
-                className="h-9 w-full rounded-md border border-line bg-surface px-2.5 text-sm text-ink-700"
-              >
-                <option value="">All suppliers</option>
-                {suppliers.map((supplier) => (
-                  <option key={supplier.id} value={supplier.id}>
-                    {supplier.name}
-                  </option>
-                ))}
-              </select>
+                onChange={(next) => setParam('supplier', next)}
+                options={[
+                  { value: '', label: 'All suppliers' },
+                  ...suppliers.map((supplier) => ({ value: supplier.id, label: supplier.name })),
+                ]}
+                containerClassName="w-full"
+              />
             </div>
           }
           onExport={(format) =>

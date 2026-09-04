@@ -14,6 +14,7 @@ import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { GRADES, GRADE_ORDER } from '@/lib/constants';
 import { MEMBERSHIP_TIERS } from '@shared/schemas/admin';
 import { useAdminSettings, useAdminMutations } from '@/hooks/useAdmin';
+import SelectMenu from '@/components/ui/SelectMenu';
 
 /**
  * Sale Settings (§6.15, category 2) — the regional and invoicing defaults every
@@ -288,18 +289,18 @@ export function AdminSaleSettingsPage() {
                         {/* A plain select: this is inside a hand-managed table
                             row, so there is no RHF field for SelectField to
                             control. */}
-                        <select
-                          aria-label={`${province.label} tax kind`}
+                        {/* SelectMenu, not a native select. The comment here
+                            used to say SelectField could not control it because
+                            the row has no react-hook-form field — true, but
+                            SelectField is only the RHF wrapper; SelectMenu is
+                            the primitive and takes value/onChange directly. */}
+                        <SelectMenu
+                          srLabel={`${province.label} tax kind`}
                           value={row.kind}
-                          onChange={(event) => editRate(province.value, { kind: event.target.value })}
-                          className="h-10 w-full min-w-[9rem] rounded-md border border-line bg-surface px-3 text-sm text-ink-900 transition-colors focus:border-ink-400 focus:ring-2 focus:ring-ink-900/15 focus:outline-none"
-                        >
-                          {TAX_KINDS.map((kind) => (
-                            <option key={kind.value} value={kind.value}>
-                              {kind.label}
-                            </option>
-                          ))}
-                        </select>
+                          onChange={(next) => editRate(province.value, { kind: next })}
+                          options={TAX_KINDS}
+                          containerClassName="w-full min-w-[9rem]"
+                        />
                       </td>
                     </tr>
                   );

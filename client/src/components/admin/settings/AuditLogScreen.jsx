@@ -11,6 +11,7 @@ import FilterStrip from '@/components/admin/FilterStrip';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useAuditLog } from '@/hooks/useAdmin';
 import { dateTime } from '@/lib/format';
+import SelectMenu from '@/components/ui/SelectMenu';
 
 /**
  * The Activity and Security logs (§6.15, category 6, phase 11b).
@@ -196,21 +197,18 @@ export function AuditLogScreen({ kind, page: meta, notice }) {
         filters={
           <label className="flex items-center gap-2 text-sm text-ink-600">
             <span className="shrink-0">Action</span>
-            <select
+            <SelectMenu
+              srLabel="Filter by action"
               value={action}
-              onChange={(event) => {
-                setAction(event.target.value);
+              onChange={(next) => {
+                setAction(next);
                 setPage(1);
               }}
-              className="h-9 min-w-0 rounded-md border border-line bg-surface px-2.5 text-sm text-ink-900 focus:border-ink-400 focus:ring-2 focus:ring-ink-900/15 focus:outline-none"
-            >
-              <option value="all">All actions</option>
-              {(data?.actions ?? []).map((value) => (
-                <option key={value} value={value}>
-                  {actionLabel(value)}
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: 'all', label: 'All actions' },
+                ...(data?.actions ?? []).map((value) => ({ value, label: value })),
+              ]}
+            />
           </label>
         }
         activeFilterCount={action === 'all' ? 0 : 1}

@@ -18,6 +18,7 @@ import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useAdminTaxonomy, useAdminMutations } from '@/hooks/useAdmin';
 import { pressable } from '@/lib/motion';
+import SelectMenu from '@/components/ui/SelectMenu';
 
 /**
  * The taxonomy editor (§6.15 — CellShoppe's *Device & Models*, phase 11d).
@@ -366,20 +367,15 @@ export function AdminTaxonomyPage() {
           <div className="flex flex-wrap items-center gap-3">
             <label className="flex items-center gap-2 text-sm text-ink-600">
               <span className="shrink-0">Type</span>
-              <select
+              <SelectMenu
+                srLabel="Filter by level"
                 value={kind}
-                onChange={(event) => {
-                  setKind(event.target.value);
+                onChange={(next) => {
+                  setKind(next);
                   setPage(1);
                 }}
-                className="h-9 rounded-md border border-line bg-surface px-2.5 text-sm text-ink-900 focus:border-ink-400 focus:ring-2 focus:ring-ink-900/15 focus:outline-none"
-              >
-                {KINDS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                options={KINDS}
+              />
             </label>
 
             <label className="flex items-center gap-2 text-sm text-ink-600">

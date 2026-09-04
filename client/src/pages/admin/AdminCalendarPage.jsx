@@ -9,6 +9,7 @@ import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminAppointments } from '@/hooks/useAdmin';
 import { pressable } from '@/lib/motion';
+import SelectMenu from '@/components/ui/SelectMenu';
 
 /**
  * The scheduling board (§6.15 category 4 — **UI only, §6b U1**, phase 11e).
@@ -144,18 +145,15 @@ export function AdminCalendarPage() {
 
         <label className="flex items-center gap-2 text-sm text-ink-600">
           <span className="shrink-0">Staff</span>
-          <select
+          <SelectMenu
+            srLabel="Filter by staff member"
             value={staffFilter}
-            onChange={(event) => setStaffFilter(event.target.value)}
-            className="h-9 rounded-md border border-line bg-surface px-2.5 text-sm text-ink-900 focus:border-ink-400 focus:ring-2 focus:ring-ink-900/15 focus:outline-none"
-          >
-            <option value="all">Everyone</option>
-            {(data?.staff ?? []).map((person) => (
-              <option key={person.id} value={person.id}>
-                {person.name}
-              </option>
-            ))}
-          </select>
+            onChange={setStaffFilter}
+            options={[
+              { value: 'all', label: 'Everyone' },
+              ...(data?.staff ?? []).map((person) => ({ value: person.id, label: person.name })),
+            ]}
+          />
         </label>
       </div>
 

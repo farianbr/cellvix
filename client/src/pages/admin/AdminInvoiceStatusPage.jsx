@@ -15,6 +15,7 @@ import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminInvoiceRules, useAdminMutations } from '@/hooks/useAdmin';
 import { dateTime } from '@/lib/format';
 import { pressable } from '@/lib/motion';
+import SelectMenu from '@/components/ui/SelectMenu';
 
 /**
  * Time-lapse invoice messages (§6.15 category 2, phase 11d).
@@ -107,17 +108,14 @@ function RuleDialog({ rule, triggers, tokens, channels, onClose }) {
 
           <label className="block">
             <span className="mb-1.5 block text-sm font-medium text-ink-700">Counting from</span>
-            <select
+            <SelectMenu
+              srLabel="Trigger"
+              size="md"
               value={form.trigger}
-              onChange={(event) => set({ trigger: event.target.value })}
-              className="h-11 w-full rounded-md border border-line bg-surface px-3 text-md text-ink-900 focus:border-ink-400 focus:ring-2 focus:ring-ink-900/15 focus:outline-none"
-            >
-              {triggers.map((trigger) => (
-                <option key={trigger.value} value={trigger.value}>
-                  {trigger.label}
-                </option>
-              ))}
-            </select>
+              onChange={(next) => set({ trigger: next })}
+              options={triggers}
+              containerClassName="w-full"
+            />
             <span className="mt-1.5 block text-sm text-ink-400">
               {timingText({ ...form, delayDays: Number(form.delayDays) }, triggers)}.
             </span>
@@ -126,15 +124,18 @@ function RuleDialog({ rule, triggers, tokens, channels, onClose }) {
 
         <label className="block">
           <span className="mb-1.5 block text-sm font-medium text-ink-700">Channel</span>
-          <select
+          <SelectMenu
+            srLabel="Channel"
+            size="md"
             value={form.channel}
-            onChange={(event) => set({ channel: event.target.value })}
-            className="h-11 w-full rounded-md border border-line bg-surface px-3 text-md text-ink-900 focus:border-ink-400 focus:ring-2 focus:ring-ink-900/15 focus:outline-none"
-          >
-            <option value="email">Email</option>
-            <option value="sms">SMS</option>
-            <option value="whatsapp">WhatsApp</option>
-          </select>
+            onChange={(next) => set({ channel: next })}
+            options={[
+              { value: 'email', label: 'Email' },
+              { value: 'sms', label: 'SMS' },
+              { value: 'whatsapp', label: 'WhatsApp' },
+            ]}
+            containerClassName="w-full"
+          />
           {/* Named at the point of choosing, not after saving: picking a channel
               that cannot send is a decision worth interrupting. */}
           {channelStatus && !channelStatus.delivers && (

@@ -33,6 +33,7 @@ import { adminIcon } from '@/components/admin/shell/adminIcons';
 import downloadExport from '@/lib/exportDownload';
 import { pressable } from '@/lib/motion';
 import cn from '@/lib/cn';
+import SelectMenu from '@/components/ui/SelectMenu';
 import {
   useAdminExpenses,
   useAdminExpenseCategories,
@@ -397,18 +398,19 @@ export function AdminExpensesPage() {
             <div className="space-y-3">
               <div>
                 <p className="eyebrow mb-1.5 text-ink-400">Category</p>
-                <select
+                <SelectMenu
+                  srLabel="Filter by category"
                   value={category}
-                  onChange={(event) => setParam('category', event.target.value)}
-                  className="h-9 w-full rounded-md border border-line bg-surface px-2.5 text-sm text-ink-700"
-                >
-                  <option value="">All categories</option>
-                  {(categoryData?.categories ?? []).map((row) => (
-                    <option key={row.id} value={row.id}>
-                      {row.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(next) => setParam('category', next)}
+                  options={[
+                    { value: '', label: 'All categories' },
+                    ...(categoryData?.categories ?? []).map((row) => ({
+                      value: row.id,
+                      label: row.name,
+                    })),
+                  ]}
+                  containerClassName="w-full"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-2">

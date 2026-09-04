@@ -13,6 +13,7 @@ import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useMarketingTemplates, useMarketingSummary, useAdminMutations } from '@/hooks/useAdmin';
 import { pressable } from '@/lib/motion';
+import SelectMenu from '@/components/ui/SelectMenu';
 
 /**
  * Message Templates (§6.15 category 5, phase 11e).
@@ -90,32 +91,26 @@ function TemplateDialog({ template, onClose }) {
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block">
             <span className="mb-1.5 block text-sm font-medium text-ink-700">Channel</span>
-            <select
+            <SelectMenu
+              srLabel="Channel"
+              size="md"
               value={form.channel}
-              onChange={(e) => set({ channel: e.target.value })}
-              className="h-11 w-full rounded-md border border-line bg-surface px-3 text-md text-ink-900 focus:border-ink-400 focus:ring-2 focus:ring-ink-900/15 focus:outline-none"
-            >
-              {CHANNELS.map((c) => (
-                <option key={c.value} value={c.value}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
+              onChange={(next) => set({ channel: next })}
+              options={CHANNELS}
+              containerClassName="w-full"
+            />
           </label>
 
           <label className="block">
             <span className="mb-1.5 block text-sm font-medium text-ink-700">Document</span>
-            <select
+            <SelectMenu
+              srLabel="Document"
+              size="md"
               value={form.document}
-              onChange={(e) => set({ document: e.target.value })}
-              className="h-11 w-full rounded-md border border-line bg-surface px-3 text-md text-ink-900 focus:border-ink-400 focus:ring-2 focus:ring-ink-900/15 focus:outline-none"
-            >
-              {DOCUMENTS.map((d) => (
-                <option key={d.value} value={d.value}>
-                  {d.label}
-                </option>
-              ))}
-            </select>
+              onChange={(next) => set({ document: next })}
+              options={DOCUMENTS}
+              containerClassName="w-full"
+            />
             <span className="mt-1.5 block text-sm text-ink-400">
               Tying a template to a record type is what lets a screen offer the ones that make sense
               there instead of the whole list.

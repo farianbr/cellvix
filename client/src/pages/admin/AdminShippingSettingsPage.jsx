@@ -132,9 +132,16 @@ export function AdminShippingSettingsPage() {
                   hint="What the buyer sees at checkout."
                   {...register(`methods.${index}.label`)}
                 />
+                {/* The hint used to quote “2–4 business days” as its example,
+                    which is the Ground band's own value. On every other band it
+                    sat directly under a field reading something else — "Next
+                    business day" on Express — so the hint appeared to be
+                    correcting the value beside it rather than describing the
+                    field. An example is only an example while it is not also
+                    one of the answers on screen. */}
                 <Input
                   label="Description"
-                  hint="The line under the name — “2–4 business days”."
+                  hint="The line shown under the name at checkout."
                   {...register(`methods.${index}.detail`)}
                 />
                 <Input

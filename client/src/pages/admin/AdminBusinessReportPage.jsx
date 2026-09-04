@@ -26,6 +26,7 @@ import { useAdminReport } from '@/hooks/useAdmin';
 import { useTaxonomy } from '@/hooks/useCatalog';
 import Skeleton from '@/components/ui/Skeleton';
 import { pressable } from '@/lib/motion';
+import SelectMenu from '@/components/ui/SelectMenu';
 
 /**
  * Business Overview — the printable period report (ERP rework §6.11).
@@ -178,18 +179,16 @@ export function AdminBusinessReportPage() {
         <div className="mb-4 flex flex-wrap items-end gap-2.5 rounded-lg border border-line bg-surface p-3">
           <label className="flex flex-col gap-1">
             <span className="eyebrow text-ink-400">Brand / category</span>
-            <select
+            <SelectMenu
+              srLabel="Filter by brand"
               value={brand}
-              onChange={(event) => setBrand(event.target.value)}
-              className="h-9 min-w-[200px] rounded-md border border-line bg-surface px-2.5 text-sm text-ink-900"
-            >
-              <option value="">Every brand</option>
-              {(brands ?? []).map((row) => (
-                <option key={row.slug} value={row.slug}>
-                  {row.name}
-                </option>
-              ))}
-            </select>
+              onChange={setBrand}
+              options={[
+                { value: '', label: 'Every brand' },
+                ...(brands ?? []).map((row) => ({ value: row.slug, label: row.name })),
+              ]}
+              className="min-w-[200px]"
+            />
           </label>
           <p className="pb-1.5 text-xs text-ink-400">
             Narrows every figure below to parts for one brand. Filtering happens per line, so an

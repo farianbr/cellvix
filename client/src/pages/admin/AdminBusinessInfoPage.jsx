@@ -130,7 +130,11 @@ export function AdminBusinessInfoPage() {
             />
             <Input
               label="Unit / suite"
-              containerClassName="sm:col-span-2"
+              // Half width, unlike the street line above it. "Unit 12" is the
+              // shortest value on the page and it was sitting in the widest box,
+              // which reads as the field expecting more than it wants. The
+              // street line keeps its full span because addresses genuinely run
+              // long.
               error={errors.address?.line2?.message}
               {...register('address.line2')}
             />
