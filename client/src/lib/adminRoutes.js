@@ -562,7 +562,12 @@ export const ADMIN_ROUTES = {
     phase: 11,
     built: true,
     title: 'Inventory defaults',
-    description: 'Default markup and margin, general categories, groups.',
+    // Describes the page as it is. It used to promise "general categories,
+    // groups" as well, and neither is here: expense categories are their own
+    // screen under Financial, and product groups were never built. A page
+    // header that names sections the page does not have sends an operator
+    // scrolling for something that is not below.
+    description: 'The markup and margin a new product is pre-filled with.',
   },
   '/admin/settings/users': {
     label: 'Users',

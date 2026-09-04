@@ -142,8 +142,14 @@ export function AdminPaymentMethodsPage() {
                     different length, with the codes forming a ragged edge
                     between them. Nothing about the data is ragged; the layout
                     was. A fixed column lines both edges up and lets the codes
-                    read as the column they are. */}
-                <code className="hidden w-26 shrink-0 truncate rounded-sm bg-surface-2 px-2 py-1 text-center font-mono text-xs text-ink-500 sm:block">
+                    read as the column they are.
+
+                    Wide enough for the longest code the seed data ships,
+                    `bank-transfer` at ~110px — the first attempt at 104px
+                    truncated it to `bank-transf…`, which is worse than the
+                    ragged edge it replaced: a code that cannot be read in full
+                    is the one thing this column exists to show. */}
+                <code className="hidden w-32 shrink-0 truncate rounded-sm bg-surface-2 px-2 py-1 text-center font-mono text-xs text-ink-500 sm:block">
                   {method.code}
                 </code>
                 <button

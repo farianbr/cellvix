@@ -3,9 +3,23 @@ import cn from '@/lib/cn';
 import Spinner from './Spinner';
 
 const VARIANTS = {
-  // The gradient's primary home. Keep it on CTAs, not on surfaces.
+  /**
+   * The gradient's primary home. Keep it on CTAs, not on surfaces.
+   *
+   * A DISABLED primary drops the gradient for a flat grey. Faded to 45% the
+   * ramp becomes a muddy smear rather than a brand mark — and a control that
+   * cannot be pressed has no business wearing the treatment reserved for the
+   * one action a page most wants taken. The settings screens show this most:
+   * their save button is disabled until something changes, so the unmodified
+   * state of every one of them was a washed-out gradient sitting under the
+   * form.
+   *
+   * `disabled:shadow-none` goes with it, because the elevation was lifting a
+   * button that cannot be pressed.
+   */
   primary:
-    'bg-brand-gradient text-white shadow-card hover:brightness-110 active:brightness-95 disabled:brightness-100',
+    'bg-brand-gradient text-white shadow-card hover:brightness-110 active:brightness-95 ' +
+    'disabled:bg-none disabled:bg-surface-3 disabled:text-ink-400 disabled:shadow-none disabled:opacity-100',
   solid: 'bg-ink-900 text-white hover:bg-ink-700 active:bg-ink-900',
   outline:
     'border border-line-strong bg-surface text-ink-700 hover:border-ink-300 hover:bg-surface-2 active:bg-surface-3',
@@ -69,7 +83,24 @@ export const Button = forwardRef(function Button(
         // curve as the press, which reads as the button lagging behind the tap.
         'transition-[transform,background-color,border-color,color,box-shadow,filter] duration-press ease-entrance',
         'active:scale-[0.97] motion-reduce:transition-none motion-reduce:active:scale-100',
-        'disabled:cursor-not-allowed disabled:opacity-45 disabled:active:scale-100',
+        /**
+         * 60%, not 45%, and `primary` opts out of it entirely.
+         *
+         * Every other variant needs SOME fade, because their disabled colours
+         * are otherwise identical to their enabled ones — a `danger` button
+         * that looks completely live but does nothing is the worst case, since
+         * the action it names is destructive. So the fade stays for them.
+         *
+         * But 45% put the label under 3:1, which is illegible rather than
+         * quiet, and disabled still has to be readable: an operator needs to
+         * know what the thing they cannot press would do. 60% keeps every
+         * variant's label above 3:1 while still reading as unavailable.
+         *
+         * `primary` is exempt via `disabled:opacity-100` because it now states
+         * its own disabled colours above, and fading those a second time is
+         * what made the old gradient a smear.
+         */
+        'disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100',
         VARIANTS[variant],
         SIZES[size],
         fullWidth && 'w-full',
