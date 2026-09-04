@@ -377,7 +377,7 @@ export function TrendChart({
         {hovered && (
           <div
             className={cn(
-              'pointer-events-none absolute top-2 z-10 rounded-md border border-line bg-surface px-2.5 py-1.5 shadow-sm',
+              'pointer-events-none absolute top-2 z-10 rounded-md bg-surface px-2.5 py-1.5 shadow-pop',
               active > points.length / 2 ? '-translate-x-full -ml-3' : 'ml-3',
             )}
             style={{ left: `${(x(active) / width) * 100}%` }}

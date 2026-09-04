@@ -262,7 +262,7 @@ export function NotificationMenu() {
           // count and the row icons. Fixed on small screens pins it to the
           // viewport itself, which is the only box that knows where the edges
           // are; from the sm breakpoint up it returns to the anchor.
-          className="fixed inset-x-3 top-14 z-40 mt-1.5 overflow-hidden rounded-lg border border-line bg-surface shadow-pop ring-1 ring-ink-900/5 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:w-[min(420px,calc(100vw-1.5rem))]"
+          className="fixed inset-x-3 top-14 z-40 mt-1.5 overflow-hidden rounded-lg bg-surface shadow-pop ring-1 ring-ink-900/5 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:w-[min(420px,calc(100vw-1.5rem))]"
         >
           <div className="border-b border-line px-4 py-3">
             <div className="flex items-center justify-between gap-2">

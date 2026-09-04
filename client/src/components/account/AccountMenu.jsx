@@ -177,7 +177,7 @@ export function AccountMenu() {
                 role="dialog"
                 aria-labelledby={titleId}
                 style={{ width: `min(${PANEL_W}px, calc(100vw - 24px))` }}
-                className="flex max-h-[min(72vh,620px)] flex-col overflow-hidden rounded-lg border border-line bg-surface shadow-flyout"
+                className="flex max-h-[min(72vh,620px)] flex-col overflow-hidden rounded-lg bg-surface shadow-flyout"
               >
                 <header id={titleId} className={cn('shrink-0 border-b border-line py-3', INSET)}>
                   <p className="truncate font-display text-md font-bold text-ink-900">

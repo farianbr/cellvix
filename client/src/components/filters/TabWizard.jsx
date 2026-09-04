@@ -197,7 +197,7 @@ export function TabWizard() {
   return (
     <section
       aria-label="Guided part finder"
-      className="overflow-hidden rounded-lg border border-line bg-surface shadow-card"
+      className="overflow-hidden rounded-lg border border-line bg-surface"
     >
       <header className="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
         <p className="eyebrow text-ink-400">Find your part</p>

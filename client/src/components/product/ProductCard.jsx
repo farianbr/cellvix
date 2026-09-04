@@ -115,7 +115,7 @@ export function ProductCard({ product }) {
             initial={{ scale: 0.85, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.22, ease: ease.entrance }}
-            className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full border border-brand/25 bg-surface/95 py-1 pl-1.5 pr-2 text-2xs font-semibold text-brand-700 shadow-card backdrop-blur-[2px] @min-[200px]:bottom-3 @min-[200px]:right-3"
+            className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full border border-brand/25 bg-surface/95 py-1 pl-1.5 pr-2 text-2xs font-semibold text-brand-700 backdrop-blur-[2px] @min-[200px]:bottom-3 @min-[200px]:right-3"
           >
             <ShoppingCart className="size-3 shrink-0" strokeWidth={2.25} aria-hidden="true" />
             <span className="tnum">{inCartQty} in cart</span>
@@ -235,7 +235,7 @@ export function ProductCard({ product }) {
                   onClick={() => openAccount('signin')}
                   className="absolute inset-0 -m-1 flex items-center justify-center rounded-lg bg-surface/45 backdrop-blur-[1px] transition-colors hover:bg-surface/25"
                 >
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-2.5 py-1 text-xs font-semibold text-ink-700 shadow-card">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-2.5 py-1 text-xs font-semibold text-ink-700">
                     <Lock className="size-3" strokeWidth={2.25} aria-hidden="true" />
                     {isAuthenticated ? 'Pending approval' : 'Login to view price'}
                   </span>

@@ -191,7 +191,7 @@ function DealCoupon({ offer, onShop }) {
   const applies = targetLabel(offer.target);
 
   return (
-    <article className="relative flex overflow-hidden rounded-lg border border-line bg-surface transition-[border-color,box-shadow] duration-200 hover:border-line-strong hover:shadow-card">
+    <article className="relative flex overflow-hidden rounded-lg border border-line bg-surface transition-[border-color] duration-snap ease-entrance hover:border-ink-200">
       {/* ---- body -------------------------------------------------------- */}
       <div className="min-w-0 flex-1 p-4 sm:p-5">
         <div className="mb-2 flex flex-wrap items-center gap-1.5">

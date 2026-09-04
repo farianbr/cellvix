@@ -560,7 +560,7 @@ function LatestPosts() {
             ))
           : posts.map((post, index) => (
               <Reveal key={post.slug} delay={index * 0.08}>
-                <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-line bg-surface-2 transition-[border-color,box-shadow] duration-200 hover:border-line-strong hover:shadow-card">
+                <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-line bg-surface-2 transition-[border-color] duration-snap ease-entrance hover:border-ink-200">
                   <PostCover post={post} className="shrink-0 border-b border-line" />
 
                   <div className="flex flex-1 flex-col p-5">

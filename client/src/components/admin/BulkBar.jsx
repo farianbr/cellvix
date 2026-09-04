@@ -36,7 +36,7 @@ export function BulkBar({ count, noun = 'selected', onClear, children, className
     >
       <div
         className={cn(
-          'scroll-slim pointer-events-auto flex max-w-full items-center gap-2 overflow-x-auto rounded-full border border-line bg-surface px-2 py-2 shadow-card',
+          'scroll-slim pointer-events-auto flex max-w-full items-center gap-2 overflow-x-auto rounded-full bg-surface px-2 py-2 shadow-card',
           className,
         )}
       >

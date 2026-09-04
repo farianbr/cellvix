@@ -230,7 +230,7 @@ export function CommandPalette({ open, onClose }) {
         role="dialog"
         aria-modal="true"
         aria-label="Search"
-        className="relative w-full max-w-[540px] overflow-hidden rounded-lg border border-line bg-surface shadow-card"
+        className="relative w-full max-w-[540px] overflow-hidden rounded-lg bg-surface shadow-card"
       >
         <div className="flex items-center gap-2.5 border-b border-line px-3.5">
           <Search className="size-4 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />

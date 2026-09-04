@@ -59,7 +59,7 @@ export function ActionMenu({ items = [], context, label = 'More actions', trigge
       ref={panelRef}
       role="menu"
       style={panelStyle}
-      className="z-[70] w-[200px] max-w-[calc(100vw-24px)] overflow-hidden rounded-md border border-line bg-surface py-1 shadow-pop"
+      className="z-[70] w-[200px] max-w-[calc(100vw-24px)] overflow-hidden rounded-md bg-surface py-1 shadow-pop"
     >
       {usable.map((item) => {
         const Icon = item.icon;

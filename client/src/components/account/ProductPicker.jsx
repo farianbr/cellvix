@@ -169,7 +169,7 @@ export function ProductPicker({ value, onChange, label, autoFocus = false, class
             id={listId}
             role="listbox"
             style={panelStyle}
-            className="scroll-slim z-60 overflow-y-auto rounded-lg border border-line bg-surface p-1.5 shadow-flyout"
+            className="scroll-slim z-60 overflow-y-auto rounded-lg bg-surface p-1.5 shadow-flyout"
           >
             {isFetching && !data ? (
               <li className="space-y-1.5 p-1">

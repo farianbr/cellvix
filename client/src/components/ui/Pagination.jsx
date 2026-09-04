@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import cn from '@/lib/cn';
+import { pressable } from '@/lib/motion';
 
 /** Builds a page list with ellipses: 1 … 4 5 6 … 20 */
 function pageList(page, pages) {
@@ -16,6 +17,14 @@ function pageList(page, pages) {
 
   return items;
 }
+
+/** The two arrows. Identical but for direction, so they are declared once. */
+const ARROW_CLASS = cn(
+  pressable,
+  'flex size-9 items-center justify-center rounded-md border border-line bg-surface text-ink-500',
+  'hover:border-line-strong hover:text-ink-900',
+  'disabled:cursor-not-allowed disabled:opacity-40 disabled:active:scale-100',
+);
 
 /**
  * @param {boolean} [hideWhenSingle] Collapse to nothing at one page. Off by
@@ -34,7 +43,7 @@ export function Pagination({ page, pages, onChange, className, hideWhenSingle = 
         onClick={() => onChange(page - 1)}
         disabled={page <= 1}
         aria-label="Previous page"
-        className="flex size-9 items-center justify-center rounded-md border border-line bg-surface text-ink-500 transition-colors hover:border-line-strong hover:text-ink-900 disabled:cursor-not-allowed disabled:opacity-40"
+        className={ARROW_CLASS}
       >
         <ChevronLeft className="size-4" strokeWidth={2} />
       </button>
@@ -51,13 +60,27 @@ export function Pagination({ page, pages, onChange, className, hideWhenSingle = 
             onClick={() => onChange(item)}
             aria-current={item === page ? 'page' : undefined}
             className={cn(
-              'tnum flex size-9 items-center justify-center rounded-md font-display text-sm font-semibold transition-[background,color,border-color]',
-              // Outlined, not filled: the ring carries the brand ramp while the
-              // face stays white, so the current page is marked without a solid
-              // chip competing with the primary CTA on the same screen. A page
-              // number is a position, not an action.
+              pressable,
+              'tnum flex size-9 items-center justify-center rounded-md font-display text-sm font-semibold',
+              /**
+               * The current page is a FLAT brand chip.
+               *
+               * It used to be a gradient ring around a white face — an attempt
+               * to mark the page without competing with the CTA, which ended up
+               * doing neither well. §2.2 is explicit that pagination is one of
+               * the places that takes flat `bg-brand` and not the gradient, and
+               * a gradient ring is still the gradient: it put the signature
+               * treatment on a control that marks a position rather than offers
+               * an action, and at 36px the whole ramp was compressed into a 2px
+               * outline where it read as a muddy red edge rather than as the
+               * brand.
+               *
+               * Flat brand is unambiguous at this size, matches the active
+               * filter pill it will often share a screen with, and leaves the
+               * gradient to the one CTA on the page.
+               */
               item === page
-                ? 'ring-brand-gradient font-bold text-brand'
+                ? 'bg-brand text-white'
                 : 'border border-line bg-surface text-ink-700 hover:border-line-strong hover:text-ink-900',
             )}
           >
@@ -71,7 +94,7 @@ export function Pagination({ page, pages, onChange, className, hideWhenSingle = 
         onClick={() => onChange(page + 1)}
         disabled={page >= pages}
         aria-label="Next page"
-        className="flex size-9 items-center justify-center rounded-md border border-line bg-surface text-ink-500 transition-colors hover:border-line-strong hover:text-ink-900 disabled:cursor-not-allowed disabled:opacity-40"
+        className={ARROW_CLASS}
       >
         <ChevronRight className="size-4" strokeWidth={2} />
       </button>

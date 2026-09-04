@@ -40,7 +40,7 @@ export function Modal({
       panelMotion={dialog}
       panelClassName={cn('w-full', SIZES[size], className)}
     >
-      <div className="flex max-h-[88vh] flex-col overflow-hidden rounded-xl border border-line bg-surface shadow-flyout">
+      <div className="flex max-h-[88vh] flex-col overflow-hidden rounded-xl bg-surface shadow-flyout">
         {/* Without a title there is nothing to put in a header bar, so the close
             button floats over the content instead of reserving a whole row. */}
         {!title && showClose && (

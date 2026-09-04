@@ -167,7 +167,7 @@ export function LiveSearch({
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.22, ease: ease.entrance }}
             className={cn(
-              'absolute left-0 right-0 top-[calc(100%+8px)] z-40 overflow-hidden rounded-lg border border-line bg-surface shadow-flyout',
+              'absolute left-0 right-0 top-[calc(100%+8px)] z-40 overflow-hidden rounded-lg bg-surface shadow-flyout',
               // The field is only as wide as the header gap allows, and a panel
               // that width clips part names two words in. From md the panel
               // stops matching the input and takes the width the results need,

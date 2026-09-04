@@ -300,7 +300,7 @@ export function ThankYouPage() {
             <li key={to}>
               <Link
                 to={to}
-                className="group flex h-full flex-col rounded-lg border border-line bg-surface p-4 transition-[border-color,box-shadow] duration-200 hover:border-line-strong hover:shadow-card"
+                className="group flex h-full flex-col rounded-lg border border-line bg-surface p-4 transition-[border-color] duration-snap ease-entrance hover:border-ink-200"
               >
                 <span className="mb-2.5 flex size-8 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
                   <Icon className="size-4" strokeWidth={1.75} aria-hidden="true" />

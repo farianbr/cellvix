@@ -272,7 +272,7 @@ function CountryCodeMenu({ dial, onSelect, disabled }) {
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.12, ease: ease.entrance }}
               style={panelStyle}
-              className="z-[70] w-[300px] max-w-[calc(100vw-24px)] overflow-hidden rounded-lg border border-line bg-surface shadow-pop"
+              className="z-[70] w-[300px] max-w-[calc(100vw-24px)] overflow-hidden rounded-lg bg-surface shadow-pop"
             >
               {/* The search box is pinned above the scrolling list rather than
                   scrolling with it: it is the control that makes a 200-row list

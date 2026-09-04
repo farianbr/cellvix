@@ -125,7 +125,7 @@ export function CreateMenu() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-full z-40 mt-1.5 w-[230px] overflow-hidden rounded-md border border-line bg-surface py-1.5 shadow-card"
+          className="absolute right-0 top-full z-40 mt-1.5 w-[230px] overflow-hidden rounded-md bg-surface py-1.5 shadow-card"
         >
           {visibleGroups.map((group, index) => (
             <div key={group.key} className={cn(index > 0 && 'mt-1 border-t border-line pt-1')}>

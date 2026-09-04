@@ -150,7 +150,7 @@ export function ProductDetailPage() {
           {/* Says the magnifier is there. Hidden from touch, where it is not,
               and it fades once the pointer is over the image — by then the lens
               is on screen and saying so twice is clutter over the picture. */}
-          <p className="pointer-events-none absolute bottom-4 right-4 z-3 hidden items-center gap-1.5 rounded-full border border-line bg-surface/90 px-2.5 py-1 text-xs font-medium text-ink-500 shadow-card backdrop-blur-[2px] transition-opacity duration-200 group-hover:opacity-0 [@media(hover:hover)]:inline-flex">
+          <p className="pointer-events-none absolute bottom-4 right-4 z-3 hidden items-center gap-1.5 rounded-full border border-line bg-surface/90 px-2.5 py-1 text-xs font-medium text-ink-500 backdrop-blur-[2px] transition-opacity duration-200 group-hover:opacity-0 [@media(hover:hover)]:inline-flex">
             <Search className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
             Hover to magnify
           </p>
@@ -218,7 +218,7 @@ export function ProductDetailPage() {
                 onClick={() => openAccount('signin')}
                 className="absolute inset-0 -m-2 flex items-center justify-start rounded-lg bg-surface/40 backdrop-blur-[1px] transition-colors hover:bg-surface/20"
               >
-                <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3.5 py-1.5 text-sm font-semibold text-ink-700 shadow-card">
+                <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3.5 py-1.5 text-sm font-semibold text-ink-700">
                   <Lock className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                   {isAuthenticated ? 'Pending approval' : 'Sign in to view wholesale pricing'}
                 </span>

@@ -253,7 +253,7 @@ export function DateRangeBar({ presets = RANGE_PRESETS, defaultPreset = 'this-mo
             aria-label="Custom date range"
             // `max-w-[calc(100vw-2rem)]` so the popover never hangs off a phone
             // screen; it is right-anchored, so it grows inward.
-            className="absolute right-0 top-full z-40 mt-1.5 w-[268px] max-w-[calc(100vw-2rem)] rounded-md border border-line bg-surface p-3 shadow-card"
+            className="absolute right-0 top-full z-40 mt-1.5 w-[268px] max-w-[calc(100vw-2rem)] rounded-md bg-surface p-3 shadow-card"
           >
             <div className="flex gap-2">
               <label className="flex min-w-0 flex-1 flex-col gap-1">

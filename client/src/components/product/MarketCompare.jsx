@@ -121,7 +121,7 @@ export function MarketCompare({ market, price, variant = 'card', className }) {
       {open && (
         <div
           id={panelId}
-          className="absolute inset-x-0 bottom-full z-20 mb-1.5 rounded-md border border-line bg-surface p-2.5 shadow-flyout"
+          className="absolute inset-x-0 bottom-full z-20 mb-1.5 rounded-md bg-surface p-2.5 shadow-flyout"
         >
           {breakdown}
         </div>

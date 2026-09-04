@@ -45,7 +45,7 @@ function CategoryTag({ value, className }) {
 
 function PostCard({ post }) {
   return (
-    <article className="group flex flex-col overflow-hidden rounded-lg border border-line bg-surface transition-[border-color,box-shadow] duration-200 hover:border-line-strong hover:shadow-card">
+    <article className="group flex flex-col overflow-hidden rounded-lg border border-line bg-surface transition-[border-color] duration-snap ease-entrance hover:border-ink-200">
       <PostCover post={post} className="shrink-0 border-b border-line" />
 
       <div className="flex flex-1 flex-col p-4">
@@ -71,7 +71,7 @@ function PostCard({ post }) {
 
 function FeaturedPost({ post }) {
   return (
-    <article className="group mb-8 overflow-hidden rounded-lg border border-line bg-surface transition-[border-color,box-shadow] duration-200 hover:border-line-strong hover:shadow-card md:grid md:grid-cols-2 md:items-stretch">
+    <article className="group mb-8 overflow-hidden rounded-lg border border-line bg-surface transition-[border-color] duration-snap ease-entrance hover:border-ink-200 md:grid md:grid-cols-2 md:items-stretch">
       <PostCover post={post} ratio="aspect-16/10 md:aspect-auto md:h-full" className="md:min-h-[280px]" />
 
       <div className="flex flex-col justify-center p-5 lg:p-8">

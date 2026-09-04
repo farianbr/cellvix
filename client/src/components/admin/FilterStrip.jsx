@@ -48,7 +48,7 @@ function Popover({ label, icon: Icon, children, align = 'left', badge }) {
       {open && (
         <div
           className={cn(
-            'absolute top-full z-20 mt-1 min-w-[220px] rounded-md border border-line bg-surface p-3 shadow-card',
+            'absolute top-full z-20 mt-1 min-w-[220px] rounded-md bg-surface p-3 shadow-card',
             align === 'right' ? 'right-0' : 'left-0',
           )}
           onClick={(event) => {

@@ -291,7 +291,7 @@ export function BrandScene({ variant = 'success', className, showMark = true }) 
           width="512"
           height="512"
           loading="lazy"
-          className="absolute -bottom-3 -right-3 size-14 rounded-lg border border-line bg-surface object-contain p-1.5 shadow-card"
+          className="absolute -bottom-3 -right-3 size-14 rounded-lg border border-line bg-surface object-contain p-1.5"
         />
       )}
     </div>
