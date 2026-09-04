@@ -40,7 +40,7 @@ export function Breadcrumbs({ recordLabel, className }) {
           className="mr-1 flex items-center text-ink-300 transition-colors hover:text-ink-900 sm:hidden"
           aria-label={`Back to ${parent.label}`}
         >
-          <ChevronLeft className="size-3.5" strokeWidth={2} aria-hidden="true" />
+          <ChevronLeft className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
         </Link>
       )}
 
@@ -51,7 +51,7 @@ export function Breadcrumbs({ recordLabel, className }) {
               aria-current="page"
               className="flex items-center gap-1 font-medium text-ink-900"
             >
-              <Home className="size-3.5" strokeWidth={2} aria-hidden="true" />
+              <Home className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
               Home
             </span>
           ) : (
@@ -60,7 +60,7 @@ export function Breadcrumbs({ recordLabel, className }) {
               className="flex items-center text-ink-300 transition-colors hover:text-ink-900"
               aria-label="Home"
             >
-              <Home className="size-3.5" strokeWidth={2} aria-hidden="true" />
+              <Home className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
             </Link>
           )}
         </li>
@@ -86,7 +86,7 @@ export function Breadcrumbs({ recordLabel, className }) {
                     'size-3 shrink-0 text-ink-200',
                     leadingOnMobile && 'hidden sm:block',
                   )}
-                  strokeWidth={2}
+                  strokeWidth={2.5}
                   aria-hidden="true"
                 />
                 {isLast ? (

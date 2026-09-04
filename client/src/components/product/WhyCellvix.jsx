@@ -63,7 +63,7 @@ export function WhyCellvix({ product = null, className }) {
         {/* ---- the bench record ------------------------------------------- */}
         <div className="border-b border-line bg-surface-2 p-5 lg:border-b-0 lg:border-r lg:p-6">
           <p className="eyebrow mb-4 flex items-center gap-1.5 text-ink-400">
-            <Stamp className="size-3.5" strokeWidth={2} aria-hidden="true" />
+            <Stamp className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
             Bench record
           </p>
 
@@ -89,7 +89,7 @@ export function WhyCellvix({ product = null, className }) {
                   warranty
                 </span>
                 <span className="mt-1.5 inline-flex items-center gap-1 text-xs text-ink-400">
-                  <MapPin className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+                  <MapPin className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                   {BUSINESS_INFO.address.city}, {BUSINESS_INFO.address.region}
                 </span>
               </span>
@@ -139,7 +139,7 @@ export function WhyCellvix({ product = null, className }) {
               className="inline-flex items-center gap-0.5 text-sm font-semibold text-brand transition-colors hover:text-brand-700"
             >
               About us
-              <ArrowUpRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
+              <ArrowUpRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
             </Link>
           </div>
 

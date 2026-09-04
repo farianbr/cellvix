@@ -23,7 +23,7 @@ function PostMeta({ post, className }) {
       <time dateTime={post.publishedAt ?? undefined}>{date(post.publishedAt)}</time>
       <span aria-hidden="true">·</span>
       <span className="inline-flex items-center gap-1">
-        <Clock className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+        <Clock className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
         {post.readMinutes} min read
       </span>
     </p>

@@ -79,13 +79,13 @@ export function KpiTile({
     <>
       <div className="mb-2.5 flex items-center gap-1.5">
         {Icon && (
-          <Icon className="size-3.5 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
+          <Icon className="size-3.5 shrink-0 text-ink-300" strokeWidth={2.25} aria-hidden="true" />
         )}
         <p className="eyebrow min-w-0 flex-1 truncate text-ink-400">{label}</p>
         {to && (
           <ArrowUpRight
             className="size-3.5 shrink-0 text-ink-300 opacity-0 transition-opacity duration-fast group-hover:opacity-100"
-            strokeWidth={2}
+            strokeWidth={2.25}
             aria-hidden="true"
           />
         )}

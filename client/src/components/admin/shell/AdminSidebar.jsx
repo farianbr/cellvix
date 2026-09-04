@@ -51,7 +51,7 @@ function QuickSearch({ onOpenSearch }) {
         onClick={onOpenSearch}
         className="flex w-full items-center gap-2 rounded-md border border-white/12 bg-white/[0.06] px-2.5 py-2 text-sm text-ink-200 transition-colors hover:border-white/25 hover:text-white"
       >
-        <Search className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+        <Search className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
         <span className="flex-1 text-left">Quick search</span>
         <kbd className="rounded border border-white/15 px-1 py-px font-sans text-2xs leading-none text-ink-200">
           Ctrl K
@@ -103,7 +103,7 @@ function NavTree({ badges, onNavigate }) {
             return (
               <li key={item.key}>
                 <NavLink to={item.to} end onClick={onNavigate} className={({ isActive }) => navRowClass(isActive)}>
-                  {Icon && <Icon className="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />}
+                  {Icon && <Icon className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />}
                   <span>{item.label}</span>
                 </NavLink>
               </li>
@@ -129,12 +129,12 @@ function NavTree({ badges, onNavigate }) {
                     : 'text-ink-200 hover:bg-white/[0.08] hover:text-white',
                 )}
               >
-                {Icon && <Icon className="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />}
+                {Icon && <Icon className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />}
                 <span className="flex-1 text-left">{item.label}</span>
                 {!isOpen && <Badge count={groupBadge} />}
                 <ChevronDown
                   className={cn('size-3.5 shrink-0 transition-transform', isOpen && 'rotate-180')}
-                  strokeWidth={2}
+                  strokeWidth={2.25}
                   aria-hidden="true"
                 />
               </button>
@@ -153,7 +153,7 @@ function NavTree({ badges, onNavigate }) {
                           className={navRowClass(isActive, 'text-sm')}
                         >
                           {ChildIcon && (
-                            <ChildIcon className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+                            <ChildIcon className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
                           )}
                           <span className="min-w-0 truncate">{child.label}</span>
                           <Badge count={child.badge ? badges[child.badge] : 0} />
@@ -240,7 +240,7 @@ function UserFooter({ user, onSignOut, compact }) {
           aria-label="Sign out"
           className="flex size-10 items-center justify-center rounded-md text-ink-200 transition-colors hover:bg-danger/20 hover:text-white"
         >
-          <LogOut className="size-4" strokeWidth={1.75} aria-hidden="true" />
+          <LogOut className="size-4" strokeWidth={2} aria-hidden="true" />
         </button>
       </div>
     );
@@ -264,7 +264,7 @@ function UserFooter({ user, onSignOut, compact }) {
           aria-label="Sign out"
           className="flex size-8 shrink-0 items-center justify-center rounded-md text-ink-200 transition-colors hover:bg-danger/25 hover:text-white"
         >
-          <LogOut className="size-4" strokeWidth={1.75} aria-hidden="true" />
+          <LogOut className="size-4" strokeWidth={2} aria-hidden="true" />
         </button>
       </div>
     </div>
@@ -309,7 +309,7 @@ export function AdminSidebar({ user, badges = {}, onSignOut, onOpenSearch, mobil
                 aria-label="Close navigation"
                 className="flex size-9 shrink-0 items-center justify-center rounded-md text-ink-200 hover:bg-white/10 hover:text-white"
               >
-                <X className="size-4.5" strokeWidth={2} aria-hidden="true" />
+                <X className="size-4.5" strokeWidth={1.75} aria-hidden="true" />
               </button>
             </div>
             <QuickSearch

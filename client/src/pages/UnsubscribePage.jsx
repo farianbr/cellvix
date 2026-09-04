@@ -61,7 +61,7 @@ export function UnsubscribePage() {
       {state.status === 'done' && (
         <>
           <span className="flex size-14 items-center justify-center rounded-full bg-ok-50 text-ok">
-            <CheckCircle2 className="size-7" strokeWidth={1.75} aria-hidden="true" />
+            <CheckCircle2 className="size-7" strokeWidth={1.5} aria-hidden="true" />
           </span>
 
           <h1 className="mt-5 font-display text-2xl font-bold text-ink-900">You are unsubscribed</h1>
@@ -91,7 +91,7 @@ export function UnsubscribePage() {
       {state.status === 'error' && (
         <>
           <span className="flex size-14 items-center justify-center rounded-full bg-danger-50 text-danger">
-            <AlertCircle className="size-7" strokeWidth={1.75} aria-hidden="true" />
+            <AlertCircle className="size-7" strokeWidth={1.5} aria-hidden="true" />
           </span>
 
           <h1 className="mt-5 font-display text-2xl font-bold text-ink-900">

@@ -51,7 +51,7 @@ function Breadcrumbs({ product }) {
       </Link>
       {crumbs.map((crumb) => (
         <span key={crumb.label} className="flex items-center gap-1">
-          <ChevronRight className="size-3.5 text-ink-300" strokeWidth={2} aria-hidden="true" />
+          <ChevronRight className="size-3.5 text-ink-300" strokeWidth={2.25} aria-hidden="true" />
           <Link
             to="/"
             onClick={() => setPath(crumb.path)}
@@ -151,7 +151,7 @@ export function ProductDetailPage() {
               and it fades once the pointer is over the image — by then the lens
               is on screen and saying so twice is clutter over the picture. */}
           <p className="pointer-events-none absolute bottom-4 right-4 z-3 hidden items-center gap-1.5 rounded-full border border-line bg-surface/90 px-2.5 py-1 text-xs font-medium text-ink-500 backdrop-blur-[2px] transition-opacity duration-200 group-hover:opacity-0 [@media(hover:hover)]:inline-flex">
-            <Search className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+            <Search className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
             Hover to magnify
           </p>
         </div>
@@ -248,7 +248,7 @@ export function ProductDetailPage() {
           </div>
 
           <p className="mt-4 flex items-start gap-2 text-sm text-ink-400">
-            <ShieldCheck className="mt-0.5 size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+            <ShieldCheck className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
             Tested before dispatch · {product.specs?.Warranty ?? '30 days'} warranty · Ships from
             Ontario
           </p>

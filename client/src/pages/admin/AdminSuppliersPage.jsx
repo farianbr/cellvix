@@ -183,20 +183,20 @@ function SupplierCard({ supplier, onEdit, onToggle }) {
           aria-label={`Edit ${supplier.name}`}
           className="flex size-7 shrink-0 items-center justify-center rounded-sm text-ink-300 transition-colors hover:bg-surface-2 hover:text-ink-700"
         >
-          <Pencil className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+          <Pencil className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
         </button>
       </div>
 
       <dl className="mb-3 space-y-1 text-xs text-ink-500">
         {supplier.email && (
           <div className="flex items-center gap-1.5">
-            <Mail className="size-3 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
+            <Mail className="size-3 shrink-0 text-ink-300" strokeWidth={2.5} aria-hidden="true" />
             <dd className="truncate">{supplier.email}</dd>
           </div>
         )}
         {supplier.phone && (
           <div className="flex items-center gap-1.5">
-            <Phone className="size-3 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
+            <Phone className="size-3 shrink-0 text-ink-300" strokeWidth={2.5} aria-hidden="true" />
             <dd className="truncate">{supplier.phone}</dd>
           </div>
         )}
@@ -238,7 +238,7 @@ function SupplierCard({ supplier, onEdit, onToggle }) {
             aria-label={`Open ${supplier.name} website`}
             className="flex size-8 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 transition-colors hover:border-line-strong hover:text-ink-700"
           >
-            <ExternalLink className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+            <ExternalLink className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
           </a>
         )}
 
@@ -248,7 +248,7 @@ function SupplierCard({ supplier, onEdit, onToggle }) {
           aria-label={`${supplier.isActive ? 'Deactivate' : 'Reactivate'} ${supplier.name}`}
           className="flex size-8 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 transition-colors hover:border-danger/30 hover:bg-danger-50 hover:text-danger"
         >
-          <Power className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+          <Power className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
         </button>
       </div>
     </article>

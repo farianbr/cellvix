@@ -144,7 +144,7 @@ function TemplateDialog({ template, onClose }) {
               point of writing it stops somebody composing it as an SMS. */}
           {isCall && (
             <span className="mt-1.5 flex items-start gap-1.5 text-sm text-ink-500">
-              <Phone className="mt-px size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+              <Phone className="mt-px size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
               A call template is a script for staff to read on the phone. Nothing is sent.
             </span>
           )}
@@ -326,7 +326,7 @@ export function AdminTemplatesPage() {
                   aria-label={`Delete ${template.name}`}
                   className="flex size-8 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger"
                 >
-                  <Trash2 className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+                  <Trash2 className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                 </button>
               </div>
             </Panel>

@@ -149,7 +149,7 @@ function RoleCard({ role, onEdit, onDelete }) {
             )}
           </div>
           <p className="mt-1 flex items-center gap-1.5 text-sm text-ink-400">
-            <Users className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+            <Users className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
             {role.memberCount} {role.memberCount === 1 ? 'member' : 'members'}
           </p>
         </div>
@@ -159,7 +159,7 @@ function RoleCard({ role, onEdit, onDelete }) {
         {!role.isSystem && (
           <div className="flex shrink-0 gap-1">
             <Button variant="ghost" size="sm" onClick={() => onEdit(role)} aria-label={`Edit ${role.name}`}>
-              <Pencil className="size-4" strokeWidth={1.75} aria-hidden="true" />
+              <Pencil className="size-4" strokeWidth={2} aria-hidden="true" />
             </Button>
             {!role.isBuiltIn && (
               <Button
@@ -169,7 +169,7 @@ function RoleCard({ role, onEdit, onDelete }) {
                 onClick={() => onDelete(role)}
                 aria-label={`Delete ${role.name}`}
               >
-                <Trash2 className="size-4" strokeWidth={1.75} aria-hidden="true" />
+                <Trash2 className="size-4" strokeWidth={2} aria-hidden="true" />
               </Button>
             )}
           </div>

@@ -304,7 +304,7 @@ export function DataTable({
                         {column.header}
                         <Arrow
                           className={cn('size-3', isSorted ? 'text-brand' : 'text-ink-200')}
-                          strokeWidth={2.25}
+                          strokeWidth={2.5}
                           aria-hidden="true"
                         />
                       </button>
@@ -394,7 +394,7 @@ export function DataTable({
                               aria-label={isExpanded ? 'Hide details' : 'Show details'}
                               className="flex size-5 shrink-0 items-center justify-center rounded text-ink-300 hover:bg-surface-3 hover:text-ink-700 lg:hidden"
                             >
-                              <ChevronsUpDown className="size-3" strokeWidth={2.25} aria-hidden="true" />
+                              <ChevronsUpDown className="size-3" strokeWidth={2.5} aria-hidden="true" />
                             </button>
                             <span className="min-w-0">
                               {column.render ? column.render(row) : row[column.key]}

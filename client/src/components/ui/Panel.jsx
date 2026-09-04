@@ -103,7 +103,7 @@ export function CollapsiblePanel({
               )}
               aria-hidden="true"
             >
-              <ChevronDown className="size-4" strokeWidth={2.25} />
+              <ChevronDown className="size-4" strokeWidth={2} />
             </span>
 
             <span className="min-w-0">
@@ -174,7 +174,7 @@ export function StatTile({ label, value, hint, tone = 'neutral', icon: Icon, cla
       <div className="mb-2 flex items-center gap-2">
         {Icon && (
           <span className="flex size-7 items-center justify-center rounded-lg bg-surface-2 text-ink-400">
-            <Icon className="size-4" strokeWidth={1.75} aria-hidden="true" />
+            <Icon className="size-4" strokeWidth={2} aria-hidden="true" />
           </span>
         )}
         <p className="eyebrow text-ink-400">{label}</p>

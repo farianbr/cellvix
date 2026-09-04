@@ -169,7 +169,7 @@ function ForgotPasswordView({ onBack }) {
     return (
       <div className="flex flex-col items-center gap-4 py-8 text-center">
         <span className="flex size-14 items-center justify-center rounded-full bg-ok-50 text-ok">
-          <Mail className="size-7" strokeWidth={1.75} />
+          <Mail className="size-7" strokeWidth={1.5} />
         </span>
         <div>
           <h3 className="text-xl">Check your inbox</h3>
@@ -259,7 +259,7 @@ function SignInTab({ onDone }) {
     return (
       <div className="flex flex-col items-center gap-4 py-8 text-center">
         <span className="flex size-14 items-center justify-center rounded-full bg-warn-50 text-warn">
-          <Clock className="size-7" strokeWidth={1.75} />
+          <Clock className="size-7" strokeWidth={1.5} />
         </span>
         <div>
           <h3 className="text-xl">Your account is still under review</h3>
@@ -346,7 +346,7 @@ function ChangeAccountType({ onBack, label = 'Change account type' }) {
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900/15',
       )}
     >
-      <ArrowLeft className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+      <ArrowLeft className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
       {label}
     </button>
   );
@@ -404,7 +404,7 @@ function AccountTypeChoice({ onPick }) {
             <span className="mt-1 block text-sm leading-relaxed text-ink-500">{body}</span>
             <span className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand">
               {cta}
-              <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
+              <ArrowRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
             </span>
           </span>
         </button>
@@ -457,7 +457,7 @@ function SupplierApplyForm({ onBack }) {
     return (
       <div className="flex flex-col items-center gap-4 py-8 text-center">
         <span className="flex size-14 items-center justify-center rounded-full bg-ok-50 text-ok">
-          <ShieldCheck className="size-7" strokeWidth={1.75} />
+          <ShieldCheck className="size-7" strokeWidth={1.5} />
         </span>
         <div>
           <h3 className="text-xl">Application received</h3>
@@ -665,7 +665,7 @@ function SignUpTab({ onSwitch }) {
     return (
       <div className="flex flex-col items-center gap-4 py-8 text-center">
         <span className="flex size-14 items-center justify-center rounded-full bg-ok-50 text-ok">
-          <ShieldCheck className="size-7" strokeWidth={1.75} />
+          <ShieldCheck className="size-7" strokeWidth={1.5} />
         </span>
         <div>
           <h3 className="text-xl">Thanks for signing up</h3>
@@ -901,7 +901,7 @@ function ContactTab() {
         ].map(({ icon: Icon, label, value }) => (
           <li key={label} className="flex items-start gap-3 rounded-md border border-line p-3">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-ink-500" aria-hidden="true">
-              <Icon className="size-4" strokeWidth={1.75} />
+              <Icon className="size-4" strokeWidth={2} />
             </span>
             <span>
               <span className="eyebrow block text-ink-300">{label}</span>

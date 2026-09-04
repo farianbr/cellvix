@@ -58,7 +58,7 @@ export function AdminTopBar({ user, onOpenSearch, onOpenMobileNav }) {
         onClick={onOpenSearch}
         className="ml-auto hidden max-w-[380px] flex-1 items-center gap-2 rounded-md border border-line bg-surface-2 px-3 py-1.5 text-sm text-ink-300 transition-colors hover:border-line-strong hover:text-ink-500 lg:flex"
       >
-        <Search className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+        <Search className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
         <span className="flex-1 text-left">Search clients, orders, products…</span>
         <kbd className="rounded border border-line px-1 py-px text-2xs leading-none text-ink-300">
           Ctrl K

@@ -62,14 +62,14 @@ export function CartLine({ item, onQtyChange, onRemove, compact = false }) {
               aria-label={`Remove ${item.name}`}
               className="-mr-1 -mt-1 flex size-8 shrink-0 items-center justify-center rounded-lg text-ink-300 transition-colors hover:bg-danger-50 hover:text-danger"
             >
-              <Trash2 className="size-4" strokeWidth={1.75} />
+              <Trash2 className="size-4" strokeWidth={2} />
             </button>
           )}
         </div>
 
         {item.exceedsStock && (
           <p className="mt-2 flex items-center gap-1.5 text-xs text-warn">
-            <AlertTriangle className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+            <AlertTriangle className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
             Not enough stock for this quantity — the stepper is capped at what
             is available.
           </p>

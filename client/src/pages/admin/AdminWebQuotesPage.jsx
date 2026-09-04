@@ -326,7 +326,7 @@ export function AdminWebQuotesPage() {
                 href={`mailto:${reading.email}`}
                 className="inline-flex items-center gap-1.5 transition-colors hover:text-ink-900"
               >
-                <Mail className="size-3.5 shrink-0 text-brand" strokeWidth={2} aria-hidden="true" />
+                <Mail className="size-3.5 shrink-0 text-brand" strokeWidth={2.25} aria-hidden="true" />
                 {reading.email}
               </a>
               {reading.phone && (
@@ -334,7 +334,7 @@ export function AdminWebQuotesPage() {
                   href={`tel:${reading.phone.replace(/[^\d+]/g, '')}`}
                   className="inline-flex items-center gap-1.5 transition-colors hover:text-ink-900"
                 >
-                  <Phone className="size-3.5 shrink-0 text-brand" strokeWidth={2} aria-hidden="true" />
+                  <Phone className="size-3.5 shrink-0 text-brand" strokeWidth={2.25} aria-hidden="true" />
                   {reading.phone}
                 </a>
               )}

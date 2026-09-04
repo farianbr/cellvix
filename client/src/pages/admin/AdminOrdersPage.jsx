@@ -204,7 +204,7 @@ function RefundForm({ order, onSubmit, onCancel, isPending, error }) {
 
       {error && (
         <p className="flex items-start gap-2 text-sm text-danger">
-          <AlertCircle className="mt-0.5 size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+          <AlertCircle className="mt-0.5 size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
           {error}
         </p>
       )}
@@ -349,7 +349,7 @@ function OrderForm({ clients, products, onSubmit, onCancel, isPending, error }) 
                   aria-label={`Remove line ${index + 1}`}
                   className="flex size-9 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 transition-colors hover:border-danger/30 hover:bg-danger-50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40"
                 >
-                  <Trash2 className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+                  <Trash2 className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                 </button>
               </div>
             );

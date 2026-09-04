@@ -32,7 +32,7 @@ export function SettingsFormActions({ dirty, saving, saved, error, onReset, save
           onClick={onReset}
           className="inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-surface px-3.5 text-sm font-medium text-ink-600 transition-colors hover:border-line-strong hover:text-ink-900"
         >
-          <RotateCcw className="size-3.5" strokeWidth={2} aria-hidden="true" />
+          <RotateCcw className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
           Discard changes
         </button>
       )}

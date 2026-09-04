@@ -74,7 +74,7 @@ export function StepSection({
 
         {isCompleted && (
           <span className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-semibold text-brand">
-            <Pencil className="size-3.5" strokeWidth={2} aria-hidden="true" />
+            <Pencil className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
             Edit
           </span>
         )}

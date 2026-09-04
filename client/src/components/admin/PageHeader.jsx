@@ -16,7 +16,7 @@ export function PageHeader({ icon: Icon, title, description, action, badge, clas
       <div className="flex min-w-0 items-start gap-3">
         {Icon && (
           <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-md border border-brand/15 bg-brand-50 text-brand">
-            <Icon className="size-5" strokeWidth={1.75} aria-hidden="true" />
+            <Icon className="size-5" strokeWidth={1.5} aria-hidden="true" />
           </span>
         )}
         <div className="min-w-0">

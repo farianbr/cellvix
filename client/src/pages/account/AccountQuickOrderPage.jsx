@@ -79,7 +79,7 @@ export function AccountQuickOrderPage() {
         <div className="space-y-2">
           {result.added.length > 0 && (
             <p className="flex items-start gap-2 rounded-md bg-ok-50 px-4 py-3 text-sm text-ok">
-              <Check className="mt-0.5 size-4 shrink-0" strokeWidth={2.5} aria-hidden="true" />
+              <Check className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
               Added {result.added.length}{' '}
               {result.added.length === 1 ? 'line' : 'lines'} to your cart.
             </p>
@@ -149,7 +149,7 @@ export function AccountQuickOrderPage() {
                 aria-label={`Remove line ${index + 1}`}
                 className="mt-1 flex size-9 shrink-0 items-center justify-center rounded-lg text-ink-300 transition-colors hover:bg-danger-50 hover:text-danger disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-ink-300"
               >
-                <Trash2 className="size-4" strokeWidth={1.75} />
+                <Trash2 className="size-4" strokeWidth={2} />
               </button>
             </li>
           ))}
@@ -218,7 +218,7 @@ export function AccountQuickOrderPage() {
           <ul className="divide-y divide-line">
             {savedCarts.map((cart) => (
               <li key={cart.id} className="flex items-center gap-3 px-4 py-3 sm:px-5">
-                <Bookmark className="size-4 shrink-0 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
+                <Bookmark className="size-4 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
 
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-md font-medium text-ink-900">{cart.name}</p>
@@ -243,7 +243,7 @@ export function AccountQuickOrderPage() {
                   aria-label={`Delete saved cart ${cart.name}`}
                   className="flex size-8 shrink-0 items-center justify-center rounded-lg text-ink-300 transition-colors hover:bg-danger-50 hover:text-danger"
                 >
-                  <Trash2 className="size-4" strokeWidth={1.75} />
+                  <Trash2 className="size-4" strokeWidth={2} />
                 </button>
               </li>
             ))}

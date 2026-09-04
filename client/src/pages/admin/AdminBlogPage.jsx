@@ -156,7 +156,7 @@ function PostForm({ post, onSubmit, onCancel, isPending, error }) {
                     : 'text-ink-400 hover:bg-surface-2 hover:text-ink-900',
                 )}
               >
-                <Icon className="size-3.5" strokeWidth={2} aria-hidden="true" />
+                <Icon className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                 {label}
               </button>
             ))}
@@ -338,7 +338,7 @@ export function AdminBlogPage() {
             {post.isFeatured && (
               <Star
                 className="size-3.5 shrink-0 text-brand"
-                strokeWidth={2}
+                strokeWidth={2.25}
                 aria-label="Featured"
               />
             )}
@@ -416,7 +416,7 @@ export function AdminBlogPage() {
                 'flex size-8 items-center justify-center rounded-md text-ink-400 hover:bg-surface-2 hover:text-ink-900',
               )}
             >
-              <ExternalLink className="size-4" strokeWidth={1.75} />
+              <ExternalLink className="size-4" strokeWidth={2} />
             </Link>
           )}
           <button
@@ -433,7 +433,7 @@ export function AdminBlogPage() {
               'flex size-8 items-center justify-center rounded-md text-ink-400 hover:bg-surface-2 hover:text-ink-900',
             )}
           >
-            <Pencil className="size-4" strokeWidth={1.75} />
+            <Pencil className="size-4" strokeWidth={2} />
           </button>
           <button
             type="button"
@@ -447,7 +447,7 @@ export function AdminBlogPage() {
               'flex size-8 items-center justify-center rounded-md text-ink-400 hover:bg-danger-50 hover:text-danger',
             )}
           >
-            <Trash2 className="size-4" strokeWidth={1.75} />
+            <Trash2 className="size-4" strokeWidth={2} />
           </button>
         </div>
       ),

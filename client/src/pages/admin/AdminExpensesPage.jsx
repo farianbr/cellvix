@@ -231,7 +231,7 @@ export function AdminExpensesPage() {
               onClick={(event) => event.stopPropagation()}
               className="mt-0.5 inline-flex items-center gap-1 text-2xs text-ink-400 hover:text-brand"
             >
-              <ClipboardList className="size-3 shrink-0" strokeWidth={2} aria-hidden="true" />
+              <ClipboardList className="size-3 shrink-0" strokeWidth={2.5} aria-hidden="true" />
               {expense.purchaseOrder.poNumber ?? 'Purchase order'}
             </Link>
           )}

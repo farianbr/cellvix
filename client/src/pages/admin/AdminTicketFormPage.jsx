@@ -99,7 +99,7 @@ export function AdminTicketFormPage() {
         to="/admin/tickets"
         className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-ink-500 transition-colors hover:text-ink-900"
       >
-        <ArrowLeft className="size-3.5" strokeWidth={2} aria-hidden="true" />
+        <ArrowLeft className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
         Back to tickets
       </Link>
 

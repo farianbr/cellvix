@@ -77,7 +77,7 @@ function ProfileForm() {
 
         {saved && (
           <span className="flex items-center gap-1.5 text-sm font-medium text-ok">
-            <Check className="size-4" strokeWidth={2.5} aria-hidden="true" />
+            <Check className="size-4" strokeWidth={2} aria-hidden="true" />
             Saved
           </span>
         )}
@@ -152,7 +152,7 @@ function PasswordForm() {
 
         {done && (
           <span className="flex items-center gap-1.5 text-sm font-medium text-ok">
-            <Check className="size-4" strokeWidth={2.5} aria-hidden="true" />
+            <Check className="size-4" strokeWidth={2} aria-hidden="true" />
             Password updated
           </span>
         )}

@@ -129,7 +129,7 @@ export function IconTile({ icon: Icon, className, solid = true }) {
       )}
       aria-hidden="true"
     >
-      <Icon className="size-5" strokeWidth={1.75} />
+      <Icon className="size-5" strokeWidth={1.5} />
     </span>
   );
 }

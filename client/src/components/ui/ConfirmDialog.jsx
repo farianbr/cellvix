@@ -103,7 +103,7 @@ export function ConfirmDialog({
             iconClass,
           )}
         >
-          <Icon className="size-5" strokeWidth={1.75} aria-hidden="true" />
+          <Icon className="size-5" strokeWidth={1.5} aria-hidden="true" />
         </span>
 
         <div className="min-w-0 flex-1">

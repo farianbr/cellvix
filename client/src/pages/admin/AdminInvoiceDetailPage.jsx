@@ -156,7 +156,7 @@ export function AdminInvoiceDetailPage() {
               to="/admin/invoices"
               className="inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-surface px-3 text-sm font-medium text-ink-600 transition-colors hover:border-ink-300 hover:bg-surface-2"
             >
-              <ArrowLeft className="size-3.5" strokeWidth={2} aria-hidden="true" />
+              <ArrowLeft className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
               All invoices
             </Link>
 
@@ -289,7 +289,7 @@ export function AdminInvoiceDetailPage() {
 
           <div className="mt-4">
             <p className="eyebrow mb-2 flex items-center gap-1.5 text-ink-400">
-              <History className="size-3.5 text-brand" strokeWidth={2} aria-hidden="true" />
+              <History className="size-3.5 text-brand" strokeWidth={2.25} aria-hidden="true" />
               Payment history
             </p>
 
@@ -376,7 +376,7 @@ export function AdminInvoiceDetailPage() {
                                 aria-label={`Reverse the ${money(payment.amount)} payment`}
                                 className="-m-1 rounded-sm p-1 text-ink-300 transition-colors hover:text-danger active:scale-[0.97]"
                               >
-                                <Trash2 className="size-3.5" strokeWidth={2} aria-hidden="true" />
+                                <Trash2 className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                               </button>
                             )}
                             {reversed && (

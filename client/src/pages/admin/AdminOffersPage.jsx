@@ -532,7 +532,7 @@ export function AdminOffersPage() {
           <div className="flex min-w-0 items-center gap-1.5">
             <p className="truncate font-medium text-ink-900">{offer.title}</p>
             {offer.isFeatured && (
-              <Star className="size-3.5 shrink-0 text-brand" strokeWidth={2} aria-label="Featured" />
+              <Star className="size-3.5 shrink-0 text-brand" strokeWidth={2.25} aria-label="Featured" />
             )}
           </div>
           {offer.subtitle && <p className="truncate text-xs text-ink-400">{offer.subtitle}</p>}
@@ -663,7 +663,7 @@ export function AdminOffersPage() {
               'flex size-8 items-center justify-center rounded-md text-ink-400 hover:bg-surface-2 hover:text-ink-900',
             )}
           >
-            <Pencil className="size-4" strokeWidth={1.75} />
+            <Pencil className="size-4" strokeWidth={2} />
           </button>
           <button
             type="button"
@@ -677,7 +677,7 @@ export function AdminOffersPage() {
               'flex size-8 items-center justify-center rounded-md text-ink-400 hover:bg-danger-50 hover:text-danger',
             )}
           >
-            <Trash2 className="size-4" strokeWidth={1.75} />
+            <Trash2 className="size-4" strokeWidth={2} />
           </button>
         </div>
       ),

@@ -503,7 +503,7 @@ export function AdminPurchaseOrderDetailPage() {
                 {movements.map((movement) => (
                   <li key={movement.id} className="flex items-start gap-3 px-4 py-3">
                     <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md bg-ok-50 text-ok">
-                      <Boxes className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+                      <Boxes className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm text-ink-900">
@@ -565,7 +565,7 @@ export function AdminPurchaseOrderDetailPage() {
               {order.timeline.map((entry, index) => (
                 <li key={`${entry.status}-${index}`} className="flex items-start gap-2.5 px-4 py-3">
                   <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-surface-2 text-ink-400">
-                    <CheckCircle2 className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+                    <CheckCircle2 className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                   </span>
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-ink-900">{entry.status}</p>

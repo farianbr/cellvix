@@ -65,7 +65,7 @@ export function AdminOutletDetailPage() {
             <div className="flex gap-2">
               {!outlet.isDefault && outlet.status === 'active' && (
                 <Button variant="outline" size="sm" onClick={() => setDefaultOutlet.mutate(outlet.id)}>
-                  <Star className="size-4" strokeWidth={1.75} aria-hidden="true" />
+                  <Star className="size-4" strokeWidth={2} aria-hidden="true" />
                   Make default
                 </Button>
               )}
@@ -73,7 +73,7 @@ export function AdminOutletDetailPage() {
                 to={`/admin/outlets/${outlet.id}/edit`}
                 className="inline-flex h-9 items-center gap-1.5 rounded-md bg-ink-900 px-3.5 text-sm font-medium text-white transition-colors hover:bg-ink-800"
               >
-                <Pencil className="size-4" strokeWidth={1.75} aria-hidden="true" />
+                <Pencil className="size-4" strokeWidth={2} aria-hidden="true" />
                 Edit
               </Link>
             </div>
@@ -86,28 +86,28 @@ export function AdminOutletDetailPage() {
           <Panel title="Contact & location">
             <dl className="flex flex-col gap-3 text-md">
               <div className="flex items-start gap-2.5">
-                <MapPin className="mt-0.5 size-4 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
+                <MapPin className="mt-0.5 size-4 shrink-0 text-ink-400" strokeWidth={2} aria-hidden="true" />
                 <div>
                   <dt className="text-xs text-ink-400">Address</dt>
                   <dd className="text-ink-900">{address || 'Not set'}</dd>
                 </div>
               </div>
               <div className="flex items-start gap-2.5">
-                <Phone className="mt-0.5 size-4 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
+                <Phone className="mt-0.5 size-4 shrink-0 text-ink-400" strokeWidth={2} aria-hidden="true" />
                 <div>
                   <dt className="text-xs text-ink-400">Phone</dt>
                   <dd className="text-ink-900">{outlet.phone || 'Not set'}</dd>
                 </div>
               </div>
               <div className="flex items-start gap-2.5">
-                <Mail className="mt-0.5 size-4 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
+                <Mail className="mt-0.5 size-4 shrink-0 text-ink-400" strokeWidth={2} aria-hidden="true" />
                 <div>
                   <dt className="text-xs text-ink-400">Email</dt>
                   <dd className="text-ink-900">{outlet.email || 'Not set'}</dd>
                 </div>
               </div>
               <div className="flex items-start gap-2.5">
-                <UserRound className="mt-0.5 size-4 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
+                <UserRound className="mt-0.5 size-4 shrink-0 text-ink-400" strokeWidth={2} aria-hidden="true" />
                 <div>
                   <dt className="text-xs text-ink-400">Manager</dt>
                   <dd className="text-ink-900">{outlet.manager || 'Not set'}</dd>

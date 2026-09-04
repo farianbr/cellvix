@@ -70,7 +70,7 @@ function MessageRow({ message }) {
               'size-3.5 shrink-0',
               message.direction === 'inbound' ? 'text-info' : 'text-ink-400',
             )}
-            strokeWidth={2}
+            strokeWidth={2.25}
             aria-label={message.direction === 'inbound' ? 'Inbound' : 'Outbound'}
           />
           <p className="truncate text-md font-medium text-ink-900">{message.businessName}</p>

@@ -211,7 +211,7 @@ export function TabWizard() {
             }}
             className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-400 transition-colors hover:text-brand"
           >
-            <RotateCcw className="size-3.5" strokeWidth={2} aria-hidden="true" />
+            <RotateCcw className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
             Start over
           </button>
         )}
@@ -308,7 +308,7 @@ export function TabWizard() {
                   </span>
                   <ChevronRight
                     className="size-4 shrink-0 text-ink-300"
-                    strokeWidth={2.25}
+                    strokeWidth={2}
                     aria-hidden="true"
                   />
                 </button>
@@ -317,7 +317,7 @@ export function TabWizard() {
           </>
         ) : (
           <div className="flex items-center gap-2.5 rounded-md border border-ok/25 bg-ok-50/60 py-2 pl-3 pr-2">
-            <Check className="size-4 shrink-0 text-ok" strokeWidth={2.5} aria-hidden="true" />
+            <Check className="size-4 shrink-0 text-ok" strokeWidth={2} aria-hidden="true" />
             <p className="min-w-0 flex-1 text-sm font-medium leading-snug text-ink-700">
               All five steps answered.
             </p>

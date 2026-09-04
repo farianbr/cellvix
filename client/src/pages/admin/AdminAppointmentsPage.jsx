@@ -56,7 +56,7 @@ export function AdminAppointmentsPage() {
             disabled
             className="inline-flex h-9 cursor-not-allowed items-center gap-1.5 rounded-md border border-line bg-surface-2 px-3.5 text-sm font-medium text-ink-400"
           >
-            <CalendarClock className="size-4" strokeWidth={1.75} aria-hidden="true" />
+            <CalendarClock className="size-4" strokeWidth={2} aria-hidden="true" />
             Book appointment
           </button>
         }

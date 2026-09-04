@@ -145,7 +145,7 @@ export function PaymentModal({
               onChange={(event) => setUseStoreCredit(event.target.checked)}
               label={
                 <span className="flex items-center gap-1.5">
-                  <Wallet className="size-3.5 shrink-0 text-ink-400" strokeWidth={2} aria-hidden="true" />
+                  <Wallet className="size-3.5 shrink-0 text-ink-400" strokeWidth={2.25} aria-hidden="true" />
                   Use my store credit
                 </span>
               }
@@ -166,7 +166,7 @@ export function PaymentModal({
         {cardNeeded && (
           <fieldset className="space-y-2">
             <legend className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-ink-700">
-              <CreditCard className="size-3.5 text-ink-400" strokeWidth={2} aria-hidden="true" />
+              <CreditCard className="size-3.5 text-ink-400" strokeWidth={2.25} aria-hidden="true" />
               Card details
             </legend>
 

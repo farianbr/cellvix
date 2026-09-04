@@ -81,7 +81,7 @@ export function Toaster() {
                 aria-label="Dismiss"
                 className="-m-1 shrink-0 rounded-sm p-1 text-ink-300 transition-colors hover:text-ink-900 active:scale-[0.97]"
               >
-                <X className="size-3.5" strokeWidth={2} aria-hidden="true" />
+                <X className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
               </button>
             </motion.div>
           );

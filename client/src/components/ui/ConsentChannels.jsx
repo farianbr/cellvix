@@ -48,9 +48,9 @@ export function ConsentChannels({ value = EMPTY_CONSENT, onChange, disabled = fa
             )}
           >
             {on ? (
-              <Check className="size-3.5 shrink-0" strokeWidth={2.5} aria-hidden="true" />
+              <Check className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
             ) : (
-              <Icon className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+              <Icon className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
             )}
             {label}
           </button>

@@ -529,7 +529,7 @@ function SummaryPanel({ title, cta, onOpen, children }) {
           className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700"
         >
           {cta}
-          <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
+          <ArrowRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
         </button>
       }
     >
@@ -949,7 +949,7 @@ export function AdminClientProfilePage() {
               <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-500">
                 {user.businessName && user.businessName !== user.displayName && (
                   <span className="inline-flex items-center gap-1.5">
-                    <Building2 className="size-3.5 shrink-0 text-brand" strokeWidth={2} aria-hidden="true" />
+                    <Building2 className="size-3.5 shrink-0 text-brand" strokeWidth={2.25} aria-hidden="true" />
                     {user.businessName}
                   </span>
                 )}
@@ -957,7 +957,7 @@ export function AdminClientProfilePage() {
                   href={`mailto:${user.email}`}
                   className="inline-flex items-center gap-1.5 transition-colors hover:text-ink-900"
                 >
-                  <Mail className="size-3.5 shrink-0 text-brand" strokeWidth={2} aria-hidden="true" />
+                  <Mail className="size-3.5 shrink-0 text-brand" strokeWidth={2.25} aria-hidden="true" />
                   {user.email}
                 </a>
                 {user.phone && (
@@ -965,12 +965,12 @@ export function AdminClientProfilePage() {
                     href={`tel:${user.phone.replace(/[^\d+]/g, '')}`}
                     className="inline-flex items-center gap-1.5 transition-colors hover:text-ink-900"
                   >
-                    <Phone className="size-3.5 shrink-0 text-brand" strokeWidth={2} aria-hidden="true" />
+                    <Phone className="size-3.5 shrink-0 text-brand" strokeWidth={2.25} aria-hidden="true" />
                     {user.phone}
                   </a>
                 )}
                 <span className="inline-flex items-center gap-1.5">
-                  <CalendarDays className="size-3.5 shrink-0 text-brand" strokeWidth={2} aria-hidden="true" />
+                  <CalendarDays className="size-3.5 shrink-0 text-brand" strokeWidth={2.25} aria-hidden="true" />
                   Since {date(user.createdAt)}
                 </span>
               </div>
@@ -1137,7 +1137,7 @@ export function AdminClientProfilePage() {
                 to={`/admin/clients/${id}/edit`}
                 className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700"
               >
-                <Pencil className="size-3.5" strokeWidth={2} aria-hidden="true" />
+                <Pencil className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                 Edit
               </Link>
             }
@@ -1179,7 +1179,7 @@ export function AdminClientProfilePage() {
                   className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700"
                 >
                   View all
-                  <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
+                  <ArrowRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                 </button>
               </div>
             }
@@ -1204,7 +1204,7 @@ export function AdminClientProfilePage() {
                         <span className="truncate">{invoice.number}</span>
                         <Eye
                           className="size-3.5 shrink-0 text-ink-300 opacity-0 transition-opacity group-hover:opacity-100"
-                          strokeWidth={2}
+                          strokeWidth={2.25}
                           aria-hidden="true"
                         />
                       </span>
@@ -1234,7 +1234,7 @@ export function AdminClientProfilePage() {
                 className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700"
               >
                 Full history
-                <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
+                <ArrowRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
               </button>
             }
           >
@@ -1251,12 +1251,12 @@ export function AdminClientProfilePage() {
                       to={`/admin/orders/${order.orderNumber}`}
                       className="group flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-surface-2 active:scale-[0.99]"
                     >
-                      <Package className="size-3.5 shrink-0 text-info" strokeWidth={2} aria-hidden="true" />
+                      <Package className="size-3.5 shrink-0 text-info" strokeWidth={2.25} aria-hidden="true" />
                       <span className="flex min-w-0 flex-1 items-center gap-1.5 text-ink-700 group-hover:text-brand">
                         <span className="truncate">Order {order.orderNumber}</span>
                         <Eye
                           className="size-3.5 shrink-0 text-ink-300 opacity-0 transition-opacity group-hover:opacity-100"
-                          strokeWidth={2}
+                          strokeWidth={2.25}
                           aria-hidden="true"
                         />
                       </span>
@@ -1270,12 +1270,12 @@ export function AdminClientProfilePage() {
                       to={`/admin/invoices/${invoice.number}`}
                       className="group flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-surface-2 active:scale-[0.99]"
                     >
-                      <Receipt className="size-3.5 shrink-0 text-brand" strokeWidth={2} aria-hidden="true" />
+                      <Receipt className="size-3.5 shrink-0 text-brand" strokeWidth={2.25} aria-hidden="true" />
                       <span className="flex min-w-0 flex-1 items-center gap-1.5 text-ink-700 group-hover:text-brand">
                         <span className="truncate">Invoice {invoice.number}</span>
                         <Eye
                           className="size-3.5 shrink-0 text-ink-300 opacity-0 transition-opacity group-hover:opacity-100"
-                          strokeWidth={2}
+                          strokeWidth={2.25}
                           aria-hidden="true"
                         />
                       </span>
@@ -1341,7 +1341,7 @@ export function AdminClientProfilePage() {
                   <li key={message.id} className="flex items-start gap-2.5 text-sm">
                     <MessageCircle
                       className="mt-0.5 size-3.5 shrink-0 text-ink-300"
-                      strokeWidth={2}
+                      strokeWidth={2.25}
                       aria-hidden="true"
                     />
                     <span className="min-w-0 flex-1">
@@ -1570,7 +1570,7 @@ export function AdminClientProfilePage() {
               className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700"
             >
               All enquiries
-              <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
+              <ArrowRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
             </Link>
           }
         >
@@ -1621,7 +1621,7 @@ export function AdminClientProfilePage() {
                   >
                     <Icon
                       className={cn('mt-0.5 size-3.5 shrink-0', style.tone)}
-                      strokeWidth={2}
+                      strokeWidth={2.25}
                       aria-hidden="true"
                     />
                     <span className="min-w-0 flex-1">

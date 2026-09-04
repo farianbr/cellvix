@@ -301,7 +301,7 @@ export function ConversationsPanel({
                       meta.tone,
                     )}
                   >
-                    <Icon className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+                    <Icon className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
@@ -406,7 +406,7 @@ export function NotesPanel({ notes = [], onAdd, onDelete, isPending }) {
                     aria-label="Delete note"
                     className="text-ink-300 opacity-0 transition-opacity hover:text-danger focus-visible:opacity-100 group-hover:opacity-100"
                   >
-                    <Trash2 className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+                    <Trash2 className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                   </button>
                 </div>
               </li>

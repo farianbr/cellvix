@@ -56,7 +56,7 @@ function ContactRow({ icon: Icon, children }) {
   if (!children) return null;
   return (
     <div className="flex items-start gap-2 text-sm text-ink-600">
-      <Icon className="mt-0.5 size-3.5 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
+      <Icon className="mt-0.5 size-3.5 shrink-0 text-ink-300" strokeWidth={2.25} aria-hidden="true" />
       <span className="min-w-0 break-words">{children}</span>
     </div>
   );

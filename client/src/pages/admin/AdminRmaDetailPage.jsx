@@ -215,7 +215,7 @@ function ResolveForm({ rma, refund, onSubmit, onCancel, isPending, error }) {
 
       {restocking.length > 0 && (
         <p className="flex items-start gap-2 rounded-md bg-info-50 px-3 py-2.5 text-sm leading-relaxed text-info">
-          <Boxes className="mt-0.5 size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+          <Boxes className="mt-0.5 size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
           <span>
             Resolving will put{' '}
             <strong className="font-semibold">
@@ -527,7 +527,7 @@ export function AdminRmaDetailPage() {
               {rma.timeline.map((entry, index) => (
                 <li key={`${entry.status}-${index}`} className="flex items-start gap-2.5 px-4 py-3">
                   <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-surface-2 text-ink-400">
-                    <CheckCircle2 className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+                    <CheckCircle2 className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                   </span>
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-ink-900">

@@ -58,7 +58,7 @@ export function AccountPaymentMethodsPage() {
   return (
     <div className="space-y-4">
       <p className="flex items-start gap-2 rounded-md bg-surface-2 px-4 py-3 text-sm text-ink-500">
-        <Info className="mt-0.5 size-4 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
+        <Info className="mt-0.5 size-4 shrink-0 text-ink-400" strokeWidth={2} aria-hidden="true" />
         This build runs against a mock payment gateway. Cards stored here are records only — no card
         number is collected, transmitted or charged.
       </p>
@@ -121,7 +121,7 @@ export function AccountPaymentMethodsPage() {
                   aria-label={`Remove card ending ${method.last4}`}
                   className="flex size-8 shrink-0 items-center justify-center rounded-lg text-ink-300 transition-colors hover:bg-danger-50 hover:text-danger"
                 >
-                  <Trash2 className="size-4" strokeWidth={1.75} />
+                  <Trash2 className="size-4" strokeWidth={2} />
                 </button>
               </li>
             ))}

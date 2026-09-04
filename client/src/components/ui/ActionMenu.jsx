@@ -81,7 +81,7 @@ export function ActionMenu({ items = [], context, label = 'More actions', trigge
                 : 'text-ink-700 hover:bg-surface-2 hover:text-ink-900',
             )}
           >
-            {Icon && <Icon className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />}
+            {Icon && <Icon className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />}
             {typeof item.label === 'function' ? item.label(context) : item.label}
           </button>
         );

@@ -116,7 +116,7 @@ export function AdminShippingSettingsPage() {
               key={field.id}
               title={
                 <span className="flex items-center gap-2">
-                  <Truck className="size-4 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
+                  <Truck className="size-4 text-ink-400" strokeWidth={2} aria-hidden="true" />
                   {field.label || field.code}
                 </span>
               }

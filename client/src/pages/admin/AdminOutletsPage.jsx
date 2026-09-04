@@ -94,7 +94,7 @@ function OutletCard({ outlet, editable, onDelete, onMakeDefault }) {
     >
       <div className="flex items-start gap-3">
         <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-md', wash)}>
-          <Building2 className="size-5" strokeWidth={1.75} aria-hidden="true" />
+          <Building2 className="size-5" strokeWidth={1.5} aria-hidden="true" />
         </span>
 
         <div className="min-w-0 flex-1">
@@ -119,24 +119,24 @@ function OutletCard({ outlet, editable, onDelete, onMakeDefault }) {
       <dl className="mt-4 flex flex-col gap-1.5 text-sm text-ink-500">
         {addressLine(outlet.address) && (
           <div className="flex items-start gap-2">
-            <MapPin className="mt-0.5 size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+            <MapPin className="mt-0.5 size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
             <dd className="min-w-0">{addressLine(outlet.address)}</dd>
           </div>
         )}
         {outlet.phone && (
           <div className="flex items-center gap-2">
-            <Phone className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+            <Phone className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
             <dd>{outlet.phone}</dd>
           </div>
         )}
         {outlet.email && (
           <div className="flex items-center gap-2">
-            <Mail className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+            <Mail className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
             <dd className="truncate">{outlet.email}</dd>
           </div>
         )}
         <div className="flex items-center gap-2">
-          <UserRound className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+          <UserRound className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
           <dd>
             {outlet.manager || 'No manager set'}
             <span className="text-ink-400">
@@ -158,7 +158,7 @@ function OutletCard({ outlet, editable, onDelete, onMakeDefault }) {
               className={LINK_ICON_BTN}
               aria-label={`Edit ${outlet.name}`}
             >
-              <Pencil className="size-4" strokeWidth={1.75} aria-hidden="true" />
+              <Pencil className="size-4" strokeWidth={2} aria-hidden="true" />
             </Link>
             {!outlet.isDefault && (
               <>
@@ -168,7 +168,7 @@ function OutletCard({ outlet, editable, onDelete, onMakeDefault }) {
                   onClick={() => onMakeDefault(outlet)}
                   aria-label={`Make ${outlet.name} the default outlet`}
                 >
-                  <Star className="size-4" strokeWidth={1.75} aria-hidden="true" />
+                  <Star className="size-4" strokeWidth={2} aria-hidden="true" />
                 </Button>
                 <Button
                   variant="ghost"
@@ -177,7 +177,7 @@ function OutletCard({ outlet, editable, onDelete, onMakeDefault }) {
                   onClick={() => onDelete(outlet)}
                   aria-label={`Delete ${outlet.name}`}
                 >
-                  <Trash2 className="size-4" strokeWidth={1.75} aria-hidden="true" />
+                  <Trash2 className="size-4" strokeWidth={2} aria-hidden="true" />
                 </Button>
               </>
             )}

@@ -193,7 +193,7 @@ export function CartPage() {
               </dl>
             ) : (
               <p className="flex items-start gap-2 rounded-md bg-warn-50 px-3 py-2.5 text-sm text-warn">
-                <Lock className="mt-0.5 size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+                <Lock className="mt-0.5 size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
                 {isAuthenticated
                   ? 'Wholesale pricing unlocks once your business account is approved.'
                   : 'Sign in with an approved business account to see wholesale pricing.'}
@@ -206,7 +206,7 @@ export function CartPage() {
 
             {priceVisible && awayFromFreeShipping > 0 && !promo?.freeShipping && (
               <p className="mt-3 flex items-start gap-2 rounded-md bg-surface-2 px-3 py-2.5 text-sm text-ink-500">
-                <Truck className="mt-0.5 size-3.5 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
+                <Truck className="mt-0.5 size-3.5 shrink-0 text-ink-400" strokeWidth={2.25} aria-hidden="true" />
                 Add {money(awayFromFreeShipping)} more for free ground shipping.
               </p>
             )}
@@ -251,7 +251,7 @@ export function CartPage() {
             </div>
 
             <p className="mt-4 flex items-start gap-2 text-xs text-ink-400">
-              <ShieldCheck className="mt-0.5 size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+              <ShieldCheck className="mt-0.5 size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
               All parts are tested before dispatch. 90-day warranty on new and OEM stock.
             </p>
           </div>

@@ -82,7 +82,7 @@ export function AdminThirdPartyPage() {
               key={connection.key}
               title={
                 <span className="flex flex-wrap items-center gap-2">
-                  <Icon className="size-4 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
+                  <Icon className="size-4 text-ink-400" strokeWidth={2} aria-hidden="true" />
                   {connection.label}
                   <Badge tone="neutral">Not connected</Badge>
                 </span>
@@ -104,7 +104,7 @@ export function AdminThirdPartyPage() {
                   className="inline-flex h-9 shrink-0 cursor-not-allowed items-center gap-1.5 rounded-md border border-line bg-surface-2 px-3.5 text-sm font-medium text-ink-400"
                 >
                   Connect
-                  <ExternalLink className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+                  <ExternalLink className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                 </button>
               </div>
             </Panel>

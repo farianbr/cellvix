@@ -104,7 +104,7 @@ export function AdminProfilePage() {
                 <div className="flex justify-between gap-3">
                   <dt className="text-ink-500">Outlet</dt>
                   <dd className="flex items-center gap-1.5 text-ink-900">
-                    <Store className="size-3.5 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
+                    <Store className="size-3.5 text-ink-400" strokeWidth={2.25} aria-hidden="true" />
                     {profile.outlet.name}
                   </dd>
                 </div>
@@ -129,7 +129,7 @@ export function AdminProfilePage() {
                   to="/admin/settings/users"
                   className="inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-surface px-3 text-sm font-medium text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
                 >
-                  <UsersRound className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+                  <UsersRound className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                   Manage users
                 </Link>
               )}
@@ -139,7 +139,7 @@ export function AdminProfilePage() {
                 onClick={() => signOut()}
                 className="inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-surface px-3 text-sm font-medium text-ink-600 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger"
               >
-                <LogOut className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+                <LogOut className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                 Sign out
               </button>
             </div>
@@ -177,7 +177,7 @@ export function AdminProfilePage() {
 
             {isAdmin && (
               <p className="mt-3 flex items-start gap-2 border-t border-line pt-3 text-sm leading-relaxed text-ink-500">
-                <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-brand" strokeWidth={2} aria-hidden="true" />
+                <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-brand" strokeWidth={2.25} aria-hidden="true" />
                 An administrator bypasses the role system entirely — this grid is what that means in
                 practice, not a role that could be edited.
               </p>
@@ -190,7 +190,7 @@ export function AdminProfilePage() {
           >
             {(data?.activity ?? []).length === 0 ? (
               <p className="flex items-center gap-2 text-sm text-ink-500">
-                <CircleUser className="size-4 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
+                <CircleUser className="size-4 text-ink-300" strokeWidth={2} aria-hidden="true" />
                 Nothing recorded yet.
               </p>
             ) : (

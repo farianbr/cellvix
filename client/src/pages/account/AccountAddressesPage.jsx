@@ -139,7 +139,7 @@ export function AccountAddressesPage() {
                   )}
                   aria-hidden="true"
                 >
-                  <MapPin className="size-4" strokeWidth={1.75} />
+                  <MapPin className="size-4" strokeWidth={2} />
                 </span>
 
                 <div className="min-w-0 flex-1">
@@ -179,7 +179,7 @@ export function AccountAddressesPage() {
                     aria-label={`Edit ${address.label}`}
                     className="flex size-8 items-center justify-center rounded-lg text-ink-400 transition-colors hover:bg-surface-2 hover:text-ink-900"
                   >
-                    <Pencil className="size-4" strokeWidth={1.75} />
+                    <Pencil className="size-4" strokeWidth={2} />
                   </button>
                   <button
                     type="button"
@@ -187,7 +187,7 @@ export function AccountAddressesPage() {
                     aria-label={`Delete ${address.label}`}
                     className="flex size-8 items-center justify-center rounded-lg text-ink-300 transition-colors hover:bg-danger-50 hover:text-danger"
                   >
-                    <Trash2 className="size-4" strokeWidth={1.75} />
+                    <Trash2 className="size-4" strokeWidth={2} />
                   </button>
                 </div>
               </li>

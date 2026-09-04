@@ -36,7 +36,7 @@ export function StoreCreditCard({ balance, added, spent, className }) {
   return (
     <div className={cn('rounded-lg bg-brand-gradient p-5 text-white', className)}>
       <span className="flex size-10 items-center justify-center rounded-md bg-white/15">
-        <WalletCards className="size-5" strokeWidth={1.75} aria-hidden="true" />
+        <WalletCards className="size-5" strokeWidth={1.5} aria-hidden="true" />
       </span>
       <p className="tnum mt-4 font-display text-d-sm font-bold leading-none">{money(balance)}</p>
       <p className="mt-2 text-sm text-white/75">Store credit available to spend</p>
@@ -120,7 +120,7 @@ export function RechargeForm({ onDone, className }) {
       )}
       {rechargeStoreCredit.isSuccess && (
         <p className="mt-2.5 flex items-center gap-1.5 text-sm text-ok">
-          <Check className="size-3.5" strokeWidth={2.5} aria-hidden="true" />
+          <Check className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
           {rechargeStoreCredit.data.message}
         </p>
       )}

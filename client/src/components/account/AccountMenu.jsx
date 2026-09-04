@@ -195,7 +195,7 @@ export function AccountMenu() {
                           : 'bg-warn-50 text-warn',
                     )}
                   >
-                    <ShieldCheck className="size-3.5" strokeWidth={2} aria-hidden="true" />
+                    <ShieldCheck className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                     {isAdmin ? 'Staff account' : isApproved ? 'Wholesale account approved' : 'Under review'}
                   </span>
                 </header>
@@ -236,7 +236,7 @@ export function AccountMenu() {
                                 )
                               }
                             >
-                              <Icon className="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+                              <Icon className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
                               {item.label}
                             </NavLink>
                           </li>
@@ -257,7 +257,7 @@ export function AccountMenu() {
                     }}
                     className="flex w-full items-center gap-3 rounded-md px-1.5 py-2 text-left text-sm font-medium text-ink-500 transition-colors hover:bg-danger-50 hover:text-danger"
                   >
-                    <LogOut className="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+                    <LogOut className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
                     Sign out
                   </button>
                 </footer>

@@ -90,7 +90,7 @@ export function PromoCodeField({ className }) {
               aria-label={`Remove promo code ${promo.code}`}
               className="-mr-1 -mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg text-ink-400 transition-colors hover:bg-surface hover:text-ink-900"
             >
-              <X className="size-3.5" strokeWidth={2.5} />
+              <X className="size-3.5" strokeWidth={2.25} />
             </button>
           )}
         </div>
@@ -101,7 +101,7 @@ export function PromoCodeField({ className }) {
           typed it for a reason. */}
       {promoNotice && (
         <div className="mt-2 flex items-start gap-2 rounded-md bg-warn-50 px-3 py-2.5 text-sm text-warn">
-          <AlertCircle className="mt-0.5 size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+          <AlertCircle className="mt-0.5 size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
           <span className="min-w-0 flex-1">{promoNotice.message}</span>
           {promoCode && (
             <button
@@ -120,7 +120,7 @@ export function PromoCodeField({ className }) {
           <div className="relative min-w-0 flex-1">
             <Tag
               className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-ink-300"
-              strokeWidth={1.75}
+              strokeWidth={2}
               aria-hidden="true"
             />
             <input
@@ -150,7 +150,7 @@ export function PromoCodeField({ className }) {
 
       {error && (
         <p className="mt-2 flex items-start gap-1.5 text-sm text-danger" role="alert">
-          <AlertCircle className="mt-0.5 size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+          <AlertCircle className="mt-0.5 size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
           {error}
         </p>
       )}

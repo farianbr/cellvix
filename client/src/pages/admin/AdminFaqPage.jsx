@@ -296,7 +296,7 @@ export function AdminFaqPage() {
               'flex size-8 items-center justify-center rounded-md text-ink-400 hover:bg-surface-2 hover:text-ink-900',
             )}
           >
-            <Pencil className="size-4" strokeWidth={1.75} />
+            <Pencil className="size-4" strokeWidth={2} />
           </button>
           <button
             type="button"
@@ -310,7 +310,7 @@ export function AdminFaqPage() {
               'flex size-8 items-center justify-center rounded-md text-ink-400 hover:bg-danger-50 hover:text-danger',
             )}
           >
-            <Trash2 className="size-4" strokeWidth={1.75} />
+            <Trash2 className="size-4" strokeWidth={2} />
           </button>
         </div>
       ),

@@ -136,7 +136,7 @@ function VoidForm({ invoice, onSubmit, onCancel, isPending, error }) {
 
       {error && (
         <p className="flex items-start gap-2 text-sm text-danger">
-          <AlertCircle className="mt-0.5 size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+          <AlertCircle className="mt-0.5 size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
           {error}
         </p>
       )}

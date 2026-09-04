@@ -39,7 +39,7 @@ function InvoiceDocumentLink({ number, className }) {
         className,
       )}
     >
-      <Download className="size-3.5" strokeWidth={2} aria-hidden="true" />
+      <Download className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
       PDF
       <span className="sr-only"> for {number}</span>
     </a>
@@ -284,7 +284,7 @@ export function AccountInvoicesPage() {
                           {invoice.kind === 'receipt' && (
                             <Receipt
                               className="size-3.5 shrink-0 text-ink-300"
-                              strokeWidth={2}
+                              strokeWidth={2.25}
                               aria-label="Receipt"
                             />
                           )}
@@ -344,7 +344,7 @@ export function AccountInvoicesPage() {
                       {invoice.kind === 'receipt' && (
                         <Receipt
                           className="size-3.5 shrink-0 text-ink-300"
-                          strokeWidth={2}
+                          strokeWidth={2.25}
                           aria-label="Receipt"
                         />
                       )}

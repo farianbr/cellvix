@@ -139,7 +139,7 @@ export function AccountOverviewPage() {
               className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700"
             >
               View all
-              <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
+              <ArrowRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
             </Link>
           }
           flush
@@ -196,7 +196,7 @@ export function AccountOverviewPage() {
               <ul className="divide-y divide-line">
                 {savedCarts.map((cart) => (
                   <li key={cart.id} className="flex items-center gap-3 px-4 py-3">
-                    <Bookmark className="size-4 shrink-0 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
+                    <Bookmark className="size-4 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-ink-900">{cart.name}</p>
                       <p className="tnum text-xs text-ink-400">
@@ -247,7 +247,7 @@ export function AccountOverviewPage() {
             className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700"
           >
             Bulk order pad
-            <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
+            <ArrowRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
           </Link>
         }
       >

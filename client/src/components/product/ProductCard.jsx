@@ -117,7 +117,7 @@ export function ProductCard({ product }) {
             transition={{ duration: 0.22, ease: ease.entrance }}
             className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full border border-brand/25 bg-surface/95 py-1 pl-1.5 pr-2 text-2xs font-semibold text-brand-700 backdrop-blur-[2px] @min-[200px]:bottom-3 @min-[200px]:right-3"
           >
-            <ShoppingCart className="size-3 shrink-0" strokeWidth={2.25} aria-hidden="true" />
+            <ShoppingCart className="size-3 shrink-0" strokeWidth={2.5} aria-hidden="true" />
             <span className="tnum">{inCartQty} in cart</span>
           </motion.span>
         )}
@@ -158,7 +158,7 @@ export function ProductCard({ product }) {
         {outOfStock ? (
           <div className="rounded-md border border-line bg-surface-2 px-2.5 py-2">
             <p className="flex items-center gap-1.5 font-display text-sm font-semibold text-ink-500 @min-[200px]:text-sm">
-              <PackageX className="size-3.5 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
+              <PackageX className="size-3.5 shrink-0 text-ink-300" strokeWidth={2.25} aria-hidden="true" />
               Out of stock
             </p>
             <p className="mt-0.5 text-2xs leading-snug text-ink-300 @min-[200px]:text-xs">
@@ -236,7 +236,7 @@ export function ProductCard({ product }) {
                   className="absolute inset-0 -m-1 flex items-center justify-center rounded-lg bg-surface/45 backdrop-blur-[1px] transition-colors hover:bg-surface/25"
                 >
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-2.5 py-1 text-xs font-semibold text-ink-700">
-                    <Lock className="size-3" strokeWidth={2.25} aria-hidden="true" />
+                    <Lock className="size-3" strokeWidth={2.5} aria-hidden="true" />
                     {isAuthenticated ? 'Pending approval' : 'Login to view price'}
                   </span>
                 </button>
@@ -303,7 +303,7 @@ export function ProductCard({ product }) {
                   either way, so nothing is lost to a screen reader. */}
               {justAdded ? (
                 <>
-                  <Check className="size-4 shrink-0" strokeWidth={2.5} aria-hidden="true" />
+                  <Check className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
                   <span className="hidden @min-[200px]:inline">Added</span>
                 </>
               ) : (

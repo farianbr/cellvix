@@ -93,7 +93,7 @@ function PreviewCard({ values, code }) {
             COLOR_WASH[token] ?? COLOR_WASH.ink,
           )}
         >
-          <Building2 className="size-5" strokeWidth={1.75} aria-hidden="true" />
+          <Building2 className="size-5" strokeWidth={1.5} aria-hidden="true" />
         </span>
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-lg font-medium text-ink-900">
@@ -108,19 +108,19 @@ function PreviewCard({ values, code }) {
 
       <dl className="mt-4 flex flex-col gap-1.5 text-sm text-ink-500">
         <div className="flex items-start gap-2">
-          <MapPin className="mt-0.5 size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+          <MapPin className="mt-0.5 size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
           <dd className="min-w-0">{address || 'No address yet'}</dd>
         </div>
         <div className="flex items-center gap-2">
-          <Phone className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+          <Phone className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
           <dd>{values.phone || 'No phone'}</dd>
         </div>
         <div className="flex items-center gap-2">
-          <Mail className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+          <Mail className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
           <dd className="truncate">{values.email || 'No email'}</dd>
         </div>
         <div className="flex items-center gap-2">
-          <UserRound className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+          <UserRound className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
           <dd>{values.manager || 'No manager set'}</dd>
         </div>
       </dl>

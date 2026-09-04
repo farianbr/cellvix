@@ -211,7 +211,7 @@ export function AdminCalendarPage() {
           <Panel title="Unscheduled" description="Waiting for a slot.">
             {(data?.unscheduled ?? []).length === 0 ? (
               <p className="flex items-center gap-2 text-sm text-ink-500">
-                <Inbox className="size-4 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
+                <Inbox className="size-4 text-ink-300" strokeWidth={2} aria-hidden="true" />
                 Nothing waiting.
               </p>
             ) : (
@@ -239,7 +239,7 @@ export function AdminCalendarPage() {
             <ul className="space-y-1.5 text-sm text-ink-600">
               {(data?.kinds ?? []).map((kind) => (
                 <li key={kind.value} className="flex items-center gap-2">
-                  <CalendarDays className="size-3.5 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
+                  <CalendarDays className="size-3.5 text-ink-300" strokeWidth={2.25} aria-hidden="true" />
                   {kind.label}
                 </li>
               ))}

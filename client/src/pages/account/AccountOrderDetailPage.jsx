@@ -79,7 +79,7 @@ export function AccountOrderDetailPage() {
             to="/account/orders"
             className="mb-1.5 inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:text-brand-700"
           >
-            <ArrowLeft className="size-3.5" strokeWidth={2} aria-hidden="true" />
+            <ArrowLeft className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
             All orders
           </Link>
           <div className="flex flex-wrap items-center gap-2.5">
@@ -117,7 +117,7 @@ export function AccountOrderDetailPage() {
                 className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:text-brand-700"
               >
                 Track with {order.tracking.carrier}
-                <ExternalLink className="size-3.5" strokeWidth={2} aria-hidden="true" />
+                <ExternalLink className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
               </a>
             )}
           </div>

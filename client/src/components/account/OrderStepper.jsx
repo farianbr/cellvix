@@ -20,7 +20,7 @@ export function OrderStepper({ order, className }) {
     return (
       <div className={cn('flex items-center gap-3 rounded-lg bg-surface-2 p-4', className)}>
         <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface text-ink-400">
-          <CircleSlash className="size-5" strokeWidth={1.75} aria-hidden="true" />
+          <CircleSlash className="size-5" strokeWidth={1.5} aria-hidden="true" />
         </span>
         <div>
           <p className="font-display text-md font-bold text-ink-900">Order cancelled</p>

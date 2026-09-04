@@ -63,7 +63,7 @@ export function Badge({ tone = 'neutral', size = 'md', icon: Icon, dot = true, c
         className,
       )}
     >
-      {Icon && <Icon className="size-3 shrink-0" strokeWidth={2.25} aria-hidden="true" />}
+      {Icon && <Icon className="size-3 shrink-0" strokeWidth={2.5} aria-hidden="true" />}
       {dotClass && (
         <span className={cn('size-[5px] shrink-0 rounded-full', dotClass)} aria-hidden="true" />
       )}

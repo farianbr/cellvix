@@ -238,11 +238,11 @@ export function DateRangeBar({ presets = RANGE_PRESETS, defaultPreset = 'this-mo
               : 'border-line bg-surface text-ink-700 hover:border-line-strong hover:text-ink-900',
           )}
         >
-          <CalendarRange className="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+          <CalendarRange className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           <span className="tnum truncate">{customLabel}</span>
           <ChevronDown
             className={cn('size-3.5 shrink-0 transition-transform', open && 'rotate-180')}
-            strokeWidth={2}
+            strokeWidth={2.25}
             aria-hidden="true"
           />
         </button>

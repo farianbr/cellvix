@@ -67,7 +67,7 @@ export function AdminShell() {
     return (
       <div className="mx-auto flex max-w-lg flex-col items-center px-4 py-20 text-center">
         <span className="mb-5 flex size-14 items-center justify-center rounded-full bg-danger-50 text-danger">
-          <ShieldAlert className="size-7" strokeWidth={1.75} />
+          <ShieldAlert className="size-7" strokeWidth={1.5} />
         </span>
         <h1 className="text-2xl">{unassigned ? 'No access yet' : 'Admin access only'}</h1>
         <p className="mt-3 text-md leading-relaxed text-ink-500">

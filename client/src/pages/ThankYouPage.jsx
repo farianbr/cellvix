@@ -303,7 +303,7 @@ export function ThankYouPage() {
                 className="group flex h-full flex-col rounded-lg border border-line bg-surface p-4 transition-[border-color] duration-snap ease-entrance hover:border-ink-200"
               >
                 <span className="mb-2.5 flex size-8 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
-                  <Icon className="size-4" strokeWidth={1.75} aria-hidden="true" />
+                  <Icon className="size-4" strokeWidth={2} aria-hidden="true" />
                 </span>
                 <span className="font-display text-md font-bold text-ink-900 group-hover:text-brand">
                   {title}

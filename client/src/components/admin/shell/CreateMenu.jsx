@@ -118,7 +118,7 @@ export function CreateMenu() {
         title="Create (C)"
         className="hidden h-9 items-center gap-1.5 rounded-md bg-brand-gradient px-3 text-sm font-semibold text-white transition-[filter] hover:brightness-110 sm:inline-flex"
       >
-        <Plus className="size-4" strokeWidth={2.25} aria-hidden="true" />
+        <Plus className="size-4" strokeWidth={2} aria-hidden="true" />
         Create
       </button>
 
@@ -146,7 +146,7 @@ export function CreateMenu() {
                     className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-sm text-ink-700 transition-colors hover:bg-surface-2 hover:text-ink-900"
                   >
                     {Icon && (
-                      <Icon className="size-3.5 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
+                      <Icon className="size-3.5 shrink-0 text-ink-400" strokeWidth={2.25} aria-hidden="true" />
                     )}
                     <span className="flex-1">{item.label}</span>
                   </button>

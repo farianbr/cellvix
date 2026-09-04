@@ -115,7 +115,7 @@ export const Input = forwardRef(function Input(
           id={`${id}-error`}
           className="mt-1.5 flex items-center gap-1.5 text-sm text-danger"
         >
-          <AlertCircle className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+          <AlertCircle className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
           {error}
         </p>
       ) : hint ? (

@@ -88,7 +88,7 @@ function ProviderCard({ provider }) {
             onClick={clearAll}
             className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-2.5 text-sm font-medium text-ink-500 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger"
           >
-            <Trash2 className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+            <Trash2 className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
             Remove keys
           </button>
         )
@@ -218,7 +218,7 @@ export function AdminApiKeysPage() {
       </div>
 
       <p className="mt-5 flex items-start gap-2 text-sm leading-relaxed text-ink-500">
-        <Lock className="mt-0.5 size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+        <Lock className="mt-0.5 size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
         <span>
           Only an administrator can view or set these — a role with full Settings access cannot.
           Every change is recorded in the security log with who made it and from where, never with

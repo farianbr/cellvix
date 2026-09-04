@@ -282,7 +282,7 @@ export function CheckoutPage() {
     return (
       <div className="mx-auto flex max-w-lg flex-col items-center px-4 py-20 text-center">
         <span className="mb-5 flex size-14 items-center justify-center rounded-full bg-warn-50 text-warn">
-          <Lock className="size-7" strokeWidth={1.75} />
+          <Lock className="size-7" strokeWidth={1.5} />
         </span>
         <h1 className="text-2xl">Checkout is not open yet</h1>
         <p className="mt-3 text-md leading-relaxed text-ink-500">
@@ -445,7 +445,7 @@ export function CheckoutPage() {
                       />
                       <Truck
                         className={cn('size-5 shrink-0', isSelected ? 'text-brand' : 'text-ink-400')}
-                        strokeWidth={1.75}
+                        strokeWidth={1.5}
                         aria-hidden="true"
                       />
                       <span className="min-w-0 flex-1">
@@ -505,7 +505,7 @@ export function CheckoutPage() {
                     disabled={creditLocked}
                     {...register('useStoreCredit')}
                   />
-                  <WalletCards className="mt-0.5 size-5 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
+                  <WalletCards className="mt-0.5 size-5 shrink-0 text-ink-400" strokeWidth={1.5} aria-hidden="true" />
                   <span className="min-w-0 flex-1">
                     <span className="block font-display text-md font-semibold text-ink-900">
                       Store credit{creditLocked ? ' — applied first' : ''}
@@ -543,7 +543,7 @@ export function CheckoutPage() {
                     className="size-4 accent-[var(--color-brand)]"
                     {...register('paymentMethod')}
                   />
-                  <CreditCard className="size-5 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
+                  <CreditCard className="size-5 shrink-0 text-ink-400" strokeWidth={1.5} aria-hidden="true" />
                   <span className="min-w-0 flex-1">
                     <span className="block font-display text-md font-semibold text-ink-900">
                       Pay by card
@@ -638,7 +638,7 @@ export function CheckoutPage() {
                       className="size-4 accent-[var(--color-brand)]"
                       {...register('paymentMethod')}
                     />
-                    <Banknote className="size-5 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
+                    <Banknote className="size-5 shrink-0 text-ink-400" strokeWidth={1.5} aria-hidden="true" />
                     <span className="min-w-0 flex-1">
                       <span className="block font-display text-md font-semibold text-ink-900">
                         On account — {user.terms.replace('net', 'Net ')}
@@ -683,7 +683,7 @@ export function CheckoutPage() {
                 {bundles.map((bundle) => (
                   <li key={bundle.offerId} className="flex items-center gap-3 p-3">
                     <span className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-brand-gradient text-white">
-                      <Package className="size-5" strokeWidth={1.75} aria-hidden="true" />
+                      <Package className="size-5" strokeWidth={1.5} aria-hidden="true" />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="line-clamp-1 text-md font-medium text-ink-900">
@@ -752,7 +752,7 @@ export function CheckoutPage() {
               </Button>
 
               <p className="mt-3 flex items-start justify-center gap-2 text-xs text-ink-400">
-                <ShieldCheck className="mt-0.5 size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+                <ShieldCheck className="mt-0.5 size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
                 Every section above stays editable until you place the order.
               </p>
             </StepSection>

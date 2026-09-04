@@ -82,7 +82,7 @@ export function Footer() {
 
               <ul className="mt-6 space-y-2.5 text-sm text-ink-500">
                 <li className="flex items-center gap-2.5">
-                  <Phone className="size-4 shrink-0 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
+                  <Phone className="size-4 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
                   <a
                     href={`tel:${BUSINESS_INFO.phone.replace(/[^\d+]/g, '')}`}
                     className="transition-colors hover:text-brand"
@@ -91,7 +91,7 @@ export function Footer() {
                   </a>
                 </li>
                 <li className="flex items-center gap-2.5">
-                  <Mail className="size-4 shrink-0 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
+                  <Mail className="size-4 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
                   <a
                     href={`mailto:${BUSINESS_INFO.email}`}
                     className="transition-colors hover:text-brand"
@@ -100,7 +100,7 @@ export function Footer() {
                   </a>
                 </li>
                 <li className="flex items-start gap-2.5">
-                  <MapPin className="mt-0.5 size-4 shrink-0 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
+                  <MapPin className="mt-0.5 size-4 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
                   <span>
                     {BUSINESS_INFO.address.line1}
                     <br />
@@ -122,7 +122,7 @@ export function Footer() {
                         aria-label={label}
                         className="flex items-center gap-1.5 rounded-full border border-line bg-surface py-1.5 pl-2 pr-2.5 text-xs font-medium text-ink-500 transition-colors hover:border-brand hover:text-brand"
                       >
-                        <Icon className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+                        <Icon className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
                         {BUSINESS_INFO.handles[key]}
                       </a>
                     </li>
@@ -185,7 +185,7 @@ export function Footer() {
                 <span className="flex items-center gap-2 font-display text-lg font-bold text-brand transition-colors group-hover:text-brand-700">
                   Call the desk
                   <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-brand text-white transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5">
-                    <ArrowUpRight className="size-3.5" strokeWidth={2.5} aria-hidden="true" />
+                    <ArrowUpRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                   </span>
                 </span>
                 <span className="mt-1 block text-sm text-ink-400">
@@ -200,7 +200,7 @@ export function Footer() {
                 <span className="flex items-center gap-2 font-display text-lg font-bold text-ink-900 transition-colors group-hover:text-brand">
                   Open an account
                   <span className="flex size-5 shrink-0 items-center justify-center rounded-full border border-line-strong text-ink-500 transition-[transform,border-color,color] duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:border-brand group-hover:text-brand">
-                    <ArrowUpRight className="size-3.5" strokeWidth={2.5} aria-hidden="true" />
+                    <ArrowUpRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                   </span>
                 </span>
                 <span className="mt-1 block text-sm text-ink-400">

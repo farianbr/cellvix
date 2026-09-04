@@ -121,7 +121,7 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
       <div className="grid gap-6 lg:grid-cols-2">
         <section>
           <h2 className="eyebrow mb-3 flex items-center gap-1.5 border-b border-line pb-2 text-ink-400">
-            <UserRound className="size-3.5 text-brand" strokeWidth={2} aria-hidden="true" />
+            <UserRound className="size-3.5 text-brand" strokeWidth={2.25} aria-hidden="true" />
             Personal information
           </h2>
 
@@ -171,7 +171,7 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
               account is identified by the person (§0), and a private customer
               has no company to name. */}
           <h2 className="eyebrow mb-3 mt-5 flex items-center gap-1.5 border-b border-line pb-2 text-ink-400">
-            <Building2 className="size-3.5 text-brand" strokeWidth={2} aria-hidden="true" />
+            <Building2 className="size-3.5 text-brand" strokeWidth={2.25} aria-hidden="true" />
             Business details <span className="font-normal normal-case text-ink-300">— optional</span>
           </h2>
 
@@ -198,7 +198,7 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
 
         <section>
           <h2 className="eyebrow mb-3 flex items-center gap-1.5 border-b border-line pb-2 text-ink-400">
-            <MapPin className="size-3.5 text-brand" strokeWidth={2} aria-hidden="true" />
+            <MapPin className="size-3.5 text-brand" strokeWidth={2.25} aria-hidden="true" />
             Address <span className="font-normal normal-case text-ink-300">— optional</span>
           </h2>
 
@@ -238,7 +238,7 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
               sending them to a different screen to record it is how the answer
               gets lost. Both write through the same endpoint. */}
           <h2 className="eyebrow mb-3 mt-5 flex items-center gap-1.5 border-b border-line pb-2 text-ink-400">
-            <ShieldCheck className="size-3.5 text-brand" strokeWidth={2} aria-hidden="true" />
+            <ShieldCheck className="size-3.5 text-brand" strokeWidth={2.25} aria-hidden="true" />
             Communication consent
           </h2>
 

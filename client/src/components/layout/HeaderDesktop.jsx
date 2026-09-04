@@ -34,7 +34,7 @@ function AccountControl() {
       <span className="relative shrink-0">
         <User
           className={cn('size-5', open ? 'text-brand' : 'text-ink-400')}
-          strokeWidth={1.75}
+          strokeWidth={1.5}
           aria-hidden="true"
         />
         {isPending && (
@@ -138,7 +138,7 @@ export function HeaderDesktop() {
             href={`tel:${BUSINESS_INFO.phone.replace(/[^\d+]/g, '')}`}
             className="hidden items-center gap-2.5 rounded-md px-3 py-2 transition-colors hover:bg-surface-2 xl:flex"
           >
-            <Headphones className="size-5 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
+            <Headphones className="size-5 shrink-0 text-ink-400" strokeWidth={1.5} aria-hidden="true" />
             <span className="leading-tight">
               <span className="eyebrow block text-ink-300">Sales desk</span>
               <span className="block font-display text-sm font-semibold text-ink-900">
@@ -163,7 +163,7 @@ export function HeaderDesktop() {
             <span className="relative shrink-0">
               <ShoppingCart
                 className={cn('size-5', cartOpen ? 'text-brand' : 'text-ink-400')}
-                strokeWidth={1.75}
+                strokeWidth={1.5}
                 aria-hidden="true"
               />
               {cartCount > 0 && (

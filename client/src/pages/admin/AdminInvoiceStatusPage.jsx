@@ -138,7 +138,7 @@ function RuleDialog({ rule, triggers, tokens, channels, onClose }) {
               that cannot send is a decision worth interrupting. */}
           {channelStatus && !channelStatus.delivers && (
             <span className="mt-1.5 flex items-start gap-1.5 text-sm text-warn">
-              <AlertCircle className="mt-px size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+              <AlertCircle className="mt-px size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
               {channelStatus.reason}
             </span>
           )}
@@ -334,7 +334,7 @@ export function AdminInvoiceStatusPage() {
                     aria-label={`Delete ${rule.label}`}
                     className="flex size-8 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger"
                   >
-                    <Trash2 className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+                    <Trash2 className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                   </button>
                 )}
               </li>

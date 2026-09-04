@@ -257,7 +257,7 @@ export function AdminInventoryDetailPage() {
           <Panel title="Warehouse">
             <dl className="space-y-2 text-sm">
               <div className="flex items-start gap-2">
-                <MapPin className="mt-0.5 size-3.5 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
+                <MapPin className="mt-0.5 size-3.5 shrink-0 text-ink-300" strokeWidth={2.25} aria-hidden="true" />
                 <div className="min-w-0">
                   <dt className="text-ink-400">Location</dt>
                   <dd className="text-ink-700">{product.location ?? 'Not set'}</dd>
@@ -265,7 +265,7 @@ export function AdminInventoryDetailPage() {
               </div>
 
               <div className="flex items-start gap-2">
-                <Truck className="mt-0.5 size-3.5 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
+                <Truck className="mt-0.5 size-3.5 shrink-0 text-ink-300" strokeWidth={2.25} aria-hidden="true" />
                 <div className="min-w-0">
                   <dt className="text-ink-400">Default supplier</dt>
                   <dd className="text-ink-700">
@@ -351,7 +351,7 @@ export function AdminInventoryDetailPage() {
                           positive ? 'bg-ok-50 text-ok' : 'bg-warn-50 text-warn',
                         )}
                       >
-                        <Icon className="size-3.5" strokeWidth={2} aria-hidden="true" />
+                        <Icon className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                       </span>
 
                       <div className="min-w-0 flex-1">

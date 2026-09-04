@@ -192,7 +192,7 @@ export function WizardOverlay({ open, onClose, onNext, level, label, title, opti
                   aria-hidden="true"
                 >
                   {Icon ? (
-                    <Icon className="size-4" strokeWidth={1.75} />
+                    <Icon className="size-4" strokeWidth={2} />
                   ) : (
                     <span className="font-display text-xs font-bold">
                       {monograms.get(option.slug)}
@@ -266,7 +266,7 @@ export function WizardOverlay({ open, onClose, onNext, level, label, title, opti
                       'size-4 shrink-0 transition-opacity',
                       isSelected ? 'text-brand opacity-100' : 'opacity-0',
                     )}
-                    strokeWidth={2.5}
+                    strokeWidth={2}
                     aria-hidden="true"
                   />
                 </button>
@@ -312,7 +312,7 @@ export function WizardOverlay({ open, onClose, onNext, level, label, title, opti
               className="inline-flex h-9 items-center gap-1.5 rounded-md bg-brand-gradient px-4 font-display text-sm font-semibold text-white transition-[filter,opacity] duration-press hover:brightness-110 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40"
             >
               Next
-              <ArrowRight className="size-4 shrink-0" strokeWidth={2.25} aria-hidden="true" />
+              <ArrowRight className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
             </button>
           </div>
         </div>

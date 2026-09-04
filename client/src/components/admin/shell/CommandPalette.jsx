@@ -281,7 +281,7 @@ export function CommandPalette({ open, onClose }) {
                     )}
                   >
                     {Icon && (
-                      <Icon className="size-4 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
+                      <Icon className="size-4 shrink-0 text-ink-400" strokeWidth={2} aria-hidden="true" />
                     )}
                     <span className="min-w-0 flex-1 truncate">
                       {row.kind === 'screen' && row.group && (
@@ -296,7 +296,7 @@ export function CommandPalette({ open, onClose }) {
                       <span className="eyebrow shrink-0 text-ink-200">Recent</span>
                     )}
                     {active && (
-                      <CornerDownLeft className="size-3.5 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
+                      <CornerDownLeft className="size-3.5 shrink-0 text-ink-300" strokeWidth={2.25} aria-hidden="true" />
                     )}
                   </button>
                 </div>

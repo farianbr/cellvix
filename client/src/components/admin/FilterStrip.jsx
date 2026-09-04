@@ -35,7 +35,7 @@ function Popover({ label, icon: Icon, children, align = 'left', badge }) {
             : 'border-line bg-surface text-ink-600 hover:border-line-strong hover:text-ink-900',
         )}
       >
-        {Icon && <Icon className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />}
+        {Icon && <Icon className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />}
         {label}
         {badge > 0 && (
           <span className="tnum rounded-full bg-brand px-1.5 text-2xs font-semibold leading-[16px] text-white">
@@ -182,7 +182,7 @@ export function FilterStrip({
         <div className="relative w-full min-w-[180px] shrink sm:w-[260px]">
           <Search
             className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-ink-300"
-            strokeWidth={2}
+            strokeWidth={2.25}
             aria-hidden="true"
           />
           <input
@@ -199,7 +199,7 @@ export function FilterStrip({
               aria-label="Clear search"
               className="absolute right-2 top-1/2 flex size-5 -translate-y-1/2 items-center justify-center rounded text-ink-300 hover:text-ink-700"
             >
-              <X className="size-3.5" strokeWidth={2.5} aria-hidden="true" />
+              <X className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
             </button>
           )}
         </div>

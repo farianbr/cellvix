@@ -213,7 +213,7 @@ function EditDialog({ node, onClose }) {
             disabled={deleteTaxonomyNode.isPending}
             className="ml-auto inline-flex h-9 items-center gap-1.5 rounded-md border border-line px-3 text-sm font-medium text-ink-500 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger disabled:opacity-50"
           >
-            <Trash2 className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+            <Trash2 className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
             Delete
           </button>
         </div>

@@ -142,7 +142,7 @@ export function AdminSettingsPage() {
             to="/admin/settings"
             className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-line-strong bg-surface px-3 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
           >
-            <ArrowLeft className="size-3.5" strokeWidth={2} aria-hidden="true" />
+            <ArrowLeft className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
             Summary
           </Link>
 

@@ -200,7 +200,7 @@ function UnsubscribesModal({ open, onClose }) {
                   onClick={() => handleResubscribe(row)}
                   loading={resubscribe.isPending}
                 >
-                  <Undo2 className="size-3.5" strokeWidth={2} aria-hidden="true" />
+                  <Undo2 className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                   Re-subscribe
                 </Button>
               </li>

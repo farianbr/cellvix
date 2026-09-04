@@ -132,7 +132,7 @@ export function AdminApprovalsPage() {
             <span className="truncate">{user.displayName ?? user.email}</span>
             <ArrowUpRight
               className="size-3.5 shrink-0 text-ink-300 opacity-0 transition-opacity group-hover:opacity-100"
-              strokeWidth={2}
+              strokeWidth={2.25}
               aria-hidden="true"
             />
           </Link>

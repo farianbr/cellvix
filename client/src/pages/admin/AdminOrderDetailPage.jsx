@@ -84,7 +84,7 @@ export function AdminOrderDetailPage() {
             to="/admin/orders"
             className="inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-surface px-3 text-sm font-medium text-ink-600 transition-colors hover:border-ink-300 hover:bg-surface-2"
           >
-            <ArrowLeft className="size-3.5" strokeWidth={2} aria-hidden="true" />
+            <ArrowLeft className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
             All orders
           </Link>
         }

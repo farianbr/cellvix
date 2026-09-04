@@ -131,22 +131,22 @@ export function MobileDrawer() {
                 aria-label={label}
                 className="flex size-9 items-center justify-center rounded-full border border-line bg-surface text-ink-500 transition-colors hover:border-brand hover:text-brand"
               >
-                <Icon className="size-4" strokeWidth={1.75} />
+                <Icon className="size-4" strokeWidth={2} />
               </a>
             ))}
           </div>
 
           <ul className="space-y-1.5 text-sm text-ink-500">
             <li className="flex items-center gap-2">
-              <Phone className="size-3.5 shrink-0 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
+              <Phone className="size-3.5 shrink-0 text-ink-300" strokeWidth={2.25} aria-hidden="true" />
               {BUSINESS_INFO.phone}
             </li>
             <li className="flex items-center gap-2">
-              <Mail className="size-3.5 shrink-0 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
+              <Mail className="size-3.5 shrink-0 text-ink-300" strokeWidth={2.25} aria-hidden="true" />
               {BUSINESS_INFO.email}
             </li>
             <li className="flex items-start gap-2">
-              <MapPin className="mt-0.5 size-3.5 shrink-0 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
+              <MapPin className="mt-0.5 size-3.5 shrink-0 text-ink-300" strokeWidth={2.25} aria-hidden="true" />
               <span>
                 {BUSINESS_INFO.address.line1}, {BUSINESS_INFO.address.city},{' '}
                 {BUSINESS_INFO.address.region}
@@ -231,7 +231,7 @@ export function MobileDrawer() {
               }}
               className="mt-1 flex w-full items-center gap-2 border-t border-line px-3 py-2.5 pt-3.5 text-md font-medium text-ink-500 transition-colors hover:text-danger"
             >
-              <LogOut className="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+              <LogOut className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
               Sign out
             </button>
           )}
@@ -275,7 +275,7 @@ export function MobileDrawer() {
                   >
                     {Icon && (
                       <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-surface-3 text-ink-500" aria-hidden="true">
-                        <Icon className="size-4" strokeWidth={1.75} />
+                        <Icon className="size-4" strokeWidth={2} />
                       </span>
                     )}
                     <span className="min-w-0 flex-1">

@@ -75,7 +75,7 @@ function TodoCard({ icon: Icon, tone, title, body, to, cta }) {
         {cta}
         <ArrowRight
           className="size-3.5 transition-transform group-hover:translate-x-0.5"
-          strokeWidth={2}
+          strokeWidth={2.25}
           aria-hidden="true"
         />
       </span>
@@ -469,7 +469,7 @@ export function AdminOverviewPage() {
               className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700"
             >
               All orders
-              <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
+              <ArrowRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
             </Link>
           }
           flush={recentOrders.length > 0}
@@ -507,7 +507,7 @@ export function AdminOverviewPage() {
 
                     <ArrowUpRight
                       className="size-3.5 shrink-0 text-ink-300 opacity-0 transition-opacity group-hover:opacity-100"
-                      strokeWidth={2}
+                      strokeWidth={2.25}
                       aria-hidden="true"
                     />
                   </button>
@@ -526,7 +526,7 @@ export function AdminOverviewPage() {
               className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700"
             >
               Review stock
-              <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
+              <ArrowRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
             </Link>
           }
           flush={lowStockItems.length > 0}
@@ -590,7 +590,7 @@ export function AdminOverviewPage() {
               className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700"
             >
               Open queue
-              <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
+              <ArrowRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
             </Link>
           }
         >
@@ -635,17 +635,17 @@ export function AdminOverviewPage() {
 
                   <ul className="mt-2.5 space-y-1 text-xs text-ink-500">
                     <li className="flex items-center gap-1.5">
-                      <Mail className="size-3.5 shrink-0 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
+                      <Mail className="size-3.5 shrink-0 text-ink-300" strokeWidth={2.25} aria-hidden="true" />
                       <span className="truncate">{account.email}</span>
                     </li>
                     {account.phone && (
                       <li className="flex items-center gap-1.5">
-                        <Phone className="size-3.5 shrink-0 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
+                        <Phone className="size-3.5 shrink-0 text-ink-300" strokeWidth={2.25} aria-hidden="true" />
                         <span className="truncate">{account.phone}</span>
                       </li>
                     )}
                     <li className={cn('flex items-center gap-1.5', stale && 'text-warn')}>
-                      <Clock className="size-3.5 shrink-0 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
+                      <Clock className="size-3.5 shrink-0 text-ink-300" strokeWidth={2.25} aria-hidden="true" />
                       <span className="truncate">
                         {waitingDays === 0
                           ? 'Registered today'

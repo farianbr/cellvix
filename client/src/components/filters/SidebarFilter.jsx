@@ -67,7 +67,7 @@ function CategoryTree({ tree, path, onSelect }) {
             onClick={() => onSelect('deviceType', null, null)}
             className="flex w-full items-center gap-1 rounded-lg px-2 py-1.5 text-left text-sm font-medium text-brand transition-colors hover:bg-brand-50"
           >
-            <ChevronLeft className="size-3.5 shrink-0" strokeWidth={2.5} aria-hidden="true" />
+            <ChevronLeft className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
             All categories
           </button>
 
@@ -92,7 +92,7 @@ function CategoryTree({ tree, path, onSelect }) {
                       onClick={() => onSelect(level, node.slug, node.name)}
                       className="flex w-full items-center gap-1 rounded-lg px-2 py-1.5 text-left text-sm text-ink-500 transition-colors hover:bg-surface-2 hover:text-ink-900"
                     >
-                      <ChevronLeft className="size-3.5 shrink-0 text-ink-300" strokeWidth={2.5} aria-hidden="true" />
+                      <ChevronLeft className="size-3.5 shrink-0 text-ink-300" strokeWidth={2.25} aria-hidden="true" />
                       <span className="min-w-0 flex-1 truncate">{node.name}</span>
                     </button>
                   )}

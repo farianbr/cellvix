@@ -142,7 +142,7 @@ function LineEditor({ control, register, name, label, addLabel }) {
               aria-label={`Remove this ${label.toLowerCase()} line`}
               className="flex size-9 shrink-0 items-center justify-center self-end rounded-md border border-line text-ink-400 transition-colors hover:border-danger/40 hover:text-danger active:scale-[0.97]"
             >
-              <Trash2 className="size-3.5" strokeWidth={2} aria-hidden="true" />
+              <Trash2 className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
             </button>
           </div>
         ))}
@@ -168,7 +168,7 @@ function DeviceBlock({ control, register, index, canRemove, onRemove }) {
     <div className="rounded-md border border-line bg-surface-2/50 p-3.5">
       <div className="mb-3 flex items-center justify-between gap-2">
         <p className="flex items-center gap-1.5 font-display text-sm font-bold text-ink-900">
-          <Smartphone className="size-3.5 text-brand" strokeWidth={2} aria-hidden="true" />
+          <Smartphone className="size-3.5 text-brand" strokeWidth={2.25} aria-hidden="true" />
           Device #{index + 1}
         </p>
         {canRemove && (
@@ -204,7 +204,7 @@ function DeviceBlock({ control, register, index, canRemove, onRemove }) {
       {/* Graded at drop-off — see the note at the top of this file. */}
       <div className="mt-3">
         <p className="eyebrow mb-2 flex items-center gap-1.5 text-ink-400">
-          <ClipboardCheck className="size-3.5 text-brand" strokeWidth={2} aria-hidden="true" />
+          <ClipboardCheck className="size-3.5 text-brand" strokeWidth={2.25} aria-hidden="true" />
           Device condition <span className="normal-case tracking-normal">(at drop-off)</span>
         </p>
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
@@ -438,7 +438,7 @@ export function TicketForm({ ticket, seed, technicians = [], onSubmit, onCancel,
           <Textarea
             label={
               <span className="flex items-center gap-1.5">
-                <Lock className="size-3.5 text-warn" strokeWidth={2} aria-hidden="true" />
+                <Lock className="size-3.5 text-warn" strokeWidth={2.25} aria-hidden="true" />
                 Internal notes
                 <span className="text-2xs font-normal text-warn">
                   confidential — never printed

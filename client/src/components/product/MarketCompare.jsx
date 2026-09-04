@@ -59,7 +59,7 @@ export function MarketCompare({ market, price, variant = 'card', className }) {
     return (
       <div className={cn('rounded-lg border border-line bg-surface-2 p-4', className)}>
         <p className="flex items-center gap-2 font-display text-md font-bold text-ok">
-          <TrendingDown className="size-4 shrink-0" strokeWidth={2.25} aria-hidden="true" />
+          <TrendingDown className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {isLowest ? 'Lowest price of the parts we track' : `Save ${money(savings)} vs market`}
         </p>
         <p className="mb-3 mt-1 text-xs leading-snug text-ink-400">
@@ -104,7 +104,7 @@ export function MarketCompare({ market, price, variant = 'card', className }) {
         aria-controls={panelId}
         className="flex w-full items-center justify-center gap-1.5 rounded-md border border-line bg-surface px-2 py-1.5 text-2xs font-semibold leading-tight text-ink-700 transition-colors hover:border-line-strong hover:bg-surface-2 @min-[200px]:text-xs"
       >
-        <TrendingDown className="size-3 shrink-0 text-ok @min-[200px]:size-3.5" strokeWidth={2.25} aria-hidden="true" />
+        <TrendingDown className="size-3 shrink-0 text-ok @min-[200px]:size-3.5" strokeWidth={2.5} aria-hidden="true" />
         <span className="tnum min-w-0 text-center">
           Compare {competitors.length} {competitors.length === 1 ? 'seller' : 'sellers'}
         </span>
@@ -113,7 +113,7 @@ export function MarketCompare({ market, price, variant = 'card', className }) {
             'size-3.5 shrink-0 text-ink-300 transition-transform duration-200',
             open && 'rotate-180',
           )}
-          strokeWidth={2}
+          strokeWidth={2.25}
           aria-hidden="true"
         />
       </button>

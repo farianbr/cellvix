@@ -152,7 +152,7 @@ export function AdminPaymentMethodsPage() {
                   aria-label={`Remove ${method.label}`}
                   className={cn(pressable, 'flex size-9 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 hover:border-danger hover:bg-danger-50 hover:text-danger')}
                 >
-                  <Trash2 className="size-4" strokeWidth={1.75} aria-hidden="true" />
+                  <Trash2 className="size-4" strokeWidth={2} aria-hidden="true" />
                 </button>
               </li>
             ))}

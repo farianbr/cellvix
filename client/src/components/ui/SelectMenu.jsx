@@ -235,7 +235,7 @@ export function SelectMenu({
                       selected one's and made the list read as ragged. */}
                   <Check
                     className={cn('size-3.5 shrink-0 text-brand', !isSelected && 'invisible')}
-                    strokeWidth={2.5}
+                    strokeWidth={2.25}
                     aria-hidden="true"
                   />
                 </button>

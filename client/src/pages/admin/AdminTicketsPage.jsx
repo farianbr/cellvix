@@ -270,7 +270,7 @@ export function AdminTicketsPage() {
           )}
         >
           {ticket.overSla && (
-            <AlertTriangle className="size-3 shrink-0" strokeWidth={2.25} aria-hidden="true" />
+            <AlertTriangle className="size-3 shrink-0" strokeWidth={2.5} aria-hidden="true" />
           )}
           {ticket.age}d
         </span>

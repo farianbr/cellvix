@@ -145,7 +145,7 @@ function CodeStub({ code, className }) {
       ) : (
         <Copy
           className="size-3.5 shrink-0 text-ink-300 transition-colors group-hover:text-brand"
-          strokeWidth={1.75}
+          strokeWidth={2.25}
           aria-hidden="true"
         />
       )}
@@ -160,7 +160,7 @@ function EndsIn({ endsAt, className }) {
   if (!endsAt) return null;
   return (
     <span className={cn('inline-flex items-center gap-1.5 text-xs text-ink-400', className)}>
-      <Timer className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+      <Timer className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
       Ends {relativeDays(endsAt)} · {date(endsAt)}
     </span>
   );
@@ -171,14 +171,14 @@ function HowItApplies({ offer, className }) {
   if (offer.requiresCode) {
     return (
       <span className={cn('inline-flex items-center gap-1.5 text-xs text-ink-500', className)}>
-        <Tag className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+        <Tag className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
         Enter the code in your cart
       </span>
     );
   }
   return (
     <span className={cn('inline-flex items-center gap-1.5 text-xs text-ok', className)}>
-      <Zap className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+      <Zap className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
       Applied automatically at checkout
     </span>
   );
@@ -237,7 +237,7 @@ function DealCoupon({ offer, onShop }) {
             className="inline-flex items-center gap-1 text-sm font-semibold text-brand transition-colors hover:text-brand-700"
           >
             Shop these parts
-            <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
+            <ArrowRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -257,7 +257,7 @@ function DealCoupon({ offer, onShop }) {
         ) : (
           <>
             <span className="flex size-9 items-center justify-center rounded-full bg-ok-50 text-ok">
-              <Zap className="size-4.5" strokeWidth={2} aria-hidden="true" />
+              <Zap className="size-4.5" strokeWidth={1.75} aria-hidden="true" />
             </span>
             <span className="text-xs font-medium leading-tight text-ink-500">
               No code
@@ -363,7 +363,7 @@ function ComboCard({ offer, onAdd, addState }) {
               <li key={line.id} className="flex items-start gap-2">
                 {index > 0 && (
                   <span className="mt-7 shrink-0 text-ink-300" aria-hidden="true">
-                    <Plus className="size-4" strokeWidth={2.5} />
+                    <Plus className="size-4" strokeWidth={2} />
                   </span>
                 )}
                 <ComboPart line={line} gated={gated} />
@@ -500,7 +500,7 @@ function FeaturedTicket({ offer, onAdd, onShop, addState }) {
         <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/70">
           {offer.endsAt && (
             <span className="inline-flex items-center gap-1.5">
-              <Timer className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+              <Timer className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
               Ends {relativeDays(offer.endsAt)}
             </span>
           )}
@@ -550,7 +550,7 @@ function FeaturedTicket({ offer, onAdd, onShop, addState }) {
                   )}
                 >
                   {addState === 'added' ? (
-                    <Check className="size-4" strokeWidth={2.5} aria-hidden="true" />
+                    <Check className="size-4" strokeWidth={2} aria-hidden="true" />
                   ) : (
                     <ShoppingCart className="size-4" strokeWidth={2} aria-hidden="true" />
                   )}
@@ -586,7 +586,7 @@ function FeaturedTicket({ offer, onAdd, onShop, addState }) {
               <CodeStub code={offer.code} className="justify-center border-white/40 bg-white/95" />
             ) : (
               <span className="inline-flex items-center justify-center gap-1.5 rounded-md bg-white/15 px-3 py-2 text-sm font-medium text-white">
-                <Zap className="size-3.5" strokeWidth={2} aria-hidden="true" />
+                <Zap className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                 No code needed
               </span>
             )}

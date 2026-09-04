@@ -95,7 +95,7 @@ function NavTree({ badges, activeGroup, activeChildKey }) {
                   )
                 }
               >
-                <Icon className="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+                <Icon className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
                 {item.label}
               </NavLink>
             </li>
@@ -121,7 +121,7 @@ function NavTree({ badges, activeGroup, activeChildKey }) {
                   : 'text-ink-600 hover:bg-surface-2 hover:text-ink-900',
               )}
             >
-              <Icon className="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+              <Icon className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
               <span className="flex-1 text-left">{item.label}</span>
               {/* Only while closed: open, the counts are on the rows themselves,
                   and showing both makes the heading look like a third number. */}
@@ -131,7 +131,7 @@ function NavTree({ badges, activeGroup, activeChildKey }) {
                   'size-3.5 shrink-0 text-ink-400 transition-transform',
                   isOpen && 'rotate-180',
                 )}
-                strokeWidth={2}
+                strokeWidth={2.25}
                 aria-hidden="true"
               />
             </button>
@@ -153,7 +153,7 @@ function NavTree({ badges, activeGroup, activeChildKey }) {
                             : 'text-ink-600 hover:bg-surface-2 hover:text-ink-900',
                         )}
                       >
-                        <ChildIcon className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+                        <ChildIcon className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
                         <span className="min-w-0 truncate">{child.label}</span>
                         <NavBadge count={child.badge ? badges[child.badge] : 0} label={BADGE_LABELS[child.badge] ?? 'items'} />
                       </NavLink>
@@ -242,7 +242,7 @@ export function AccountLayout() {
     return (
       <div className="mx-auto flex max-w-lg flex-col items-center px-4 py-20 text-center">
         <span className="mb-5 flex size-14 items-center justify-center rounded-full bg-warn-50 text-warn">
-          <Clock className="size-7" strokeWidth={1.75} />
+          <Clock className="size-7" strokeWidth={1.5} />
         </span>
         <h1 className="text-2xl">Your account is under review</h1>
         <p className="mt-3 text-md leading-relaxed text-ink-500">
@@ -313,7 +313,7 @@ export function AccountLayout() {
                 onClick={signOut}
                 className="flex w-full items-center gap-2.5 whitespace-nowrap rounded-md px-3 py-2.5 text-md font-medium text-ink-500 transition-colors hover:bg-danger-50 hover:text-danger"
               >
-                <LogOut className="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+                <LogOut className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
                 Sign out
               </button>
             </li>

@@ -59,7 +59,7 @@ export function FormSection({
           className="flex size-6 shrink-0 items-center justify-center rounded-sm bg-brand-50 text-brand ring-1 ring-brand/15"
           aria-hidden="true"
         >
-          <Icon className="size-3.5" strokeWidth={1.75} />
+          <Icon className="size-3.5" strokeWidth={2.25} />
         </span>
       )}
       <span className="eyebrow text-ink-600">{title}</span>

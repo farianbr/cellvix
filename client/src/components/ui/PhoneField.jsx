@@ -257,7 +257,7 @@ function CountryCodeMenu({ dial, onSelect, disabled }) {
             'size-3.5 shrink-0 text-ink-400 transition-transform duration-press',
             open && 'rotate-180',
           )}
-          strokeWidth={2}
+          strokeWidth={2.25}
           aria-hidden="true"
         />
       </button>
@@ -282,7 +282,7 @@ function CountryCodeMenu({ dial, onSelect, disabled }) {
                 <div className="relative">
                   <Search
                     className="pointer-events-none absolute left-2.5 top-1/2 size-3.5 -translate-y-1/2 text-ink-400"
-                    strokeWidth={2}
+                    strokeWidth={2.25}
                     aria-hidden="true"
                   />
                   <input
@@ -483,7 +483,7 @@ export const PhoneField = forwardRef(function PhoneField(
 
       {error ? (
         <p id={`${id}-error`} className="mt-1.5 flex items-center gap-1.5 text-sm text-danger">
-          <AlertCircle className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+          <AlertCircle className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
           {error}
         </p>
       ) : hint ? (

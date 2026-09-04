@@ -47,7 +47,7 @@ export function ProductFaq({ faqs = [], product = null, className }) {
           className="inline-flex items-center gap-0.5 text-sm font-semibold text-brand transition-colors hover:text-brand-700"
         >
           The full FAQ
-          <ArrowUpRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
+          <ArrowUpRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
         </Link>
       </div>
 

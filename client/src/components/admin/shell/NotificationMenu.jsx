@@ -99,7 +99,7 @@ function NotificationRow({ entry, onOpen, onApprove }) {
       >
         <Icon
           className={cn('mt-px size-4 shrink-0', SEVERITY_CLASS[entry.severity] ?? 'text-ink-400')}
-          strokeWidth={1.75}
+          strokeWidth={2}
           aria-hidden="true"
         />
 
@@ -317,7 +317,7 @@ export function NotificationMenu() {
             {approvals.length > 0 && (
               <>
                 <p className="sticky top-0 z-10 flex items-center gap-1.5 border-b border-line bg-brand-50 px-4 py-2 text-2xs font-semibold uppercase tracking-wider text-brand">
-                  <UserCheck className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+                  <UserCheck className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
                   Waiting on you
                   <span className="tnum ml-auto rounded-full bg-brand px-1.5 text-2xs leading-[15px] text-white">
                     {approvals.length}

@@ -50,7 +50,7 @@ function ActivityRow({ event }) {
           event.kind === 'void' ? 'bg-danger-50 text-danger' : 'bg-surface-2 text-ink-400',
         )}
       >
-        <Icon className="size-4" strokeWidth={1.75} aria-hidden="true" />
+        <Icon className="size-4" strokeWidth={2} aria-hidden="true" />
       </span>
 
       <span className="min-w-0 flex-1">

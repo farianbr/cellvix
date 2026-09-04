@@ -142,7 +142,7 @@ export function BlogPostPage() {
               <span className="ml-auto flex items-center gap-3">
                 <time dateTime={post.publishedAt ?? undefined}>{date(post.publishedAt)}</time>
                 <span className="inline-flex items-center gap-1">
-                  <Clock className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+                  <Clock className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                   {post.readMinutes} min read
                 </span>
               </span>
@@ -165,7 +165,7 @@ export function BlogPostPage() {
           {post.tags?.length > 0 && (
             <ul className="mt-9 flex flex-wrap items-center gap-2 border-t border-line pt-6">
               <li className="text-ink-300">
-                <Tag className="size-4" strokeWidth={1.75} aria-hidden="true" />
+                <Tag className="size-4" strokeWidth={2} aria-hidden="true" />
                 <span className="sr-only">Tags</span>
               </li>
               {post.tags.map((tag) => (

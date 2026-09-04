@@ -298,7 +298,7 @@ function Hero() {
             price, grade and stock figure on this site is one you can build a quote around.
           </p>
           <p className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-500">
-            <MapPin className="size-4 text-brand" strokeWidth={1.75} aria-hidden="true" />
+            <MapPin className="size-4 text-brand" strokeWidth={2} aria-hidden="true" />
             Shipped from {BUSINESS_INFO.address.city}, {BUSINESS_INFO.address.region}
             <span className="text-ink-200" aria-hidden="true">
               ·
@@ -318,7 +318,7 @@ function Hero() {
                 key={label}
                 className="flex flex-col items-center gap-2 rounded-lg bg-surface px-2 py-3 text-center"
               >
-                <Icon className="size-5 text-brand" strokeWidth={1.75} aria-hidden="true" />
+                <Icon className="size-5 text-brand" strokeWidth={1.5} aria-hidden="true" />
                 <span className="font-display text-sm font-bold text-ink-900">{label}</span>
               </li>
             ))}
@@ -394,7 +394,7 @@ function Principles() {
                 className="mb-5 flex size-11 items-center justify-center rounded-lg bg-brand text-white"
                 aria-hidden="true"
               >
-                <Icon className="size-5" strokeWidth={1.75} />
+                <Icon className="size-5" strokeWidth={1.5} />
               </span>
               <h3 className="text-lg">{title}</h3>
               <p className="mt-2.5 text-md leading-relaxed text-ink-500">{body}</p>
@@ -510,7 +510,7 @@ function Warehouse() {
                   className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-ok-50 text-ok"
                   aria-hidden="true"
                 >
-                  <Icon className="size-3.5" strokeWidth={2} />
+                  <Icon className="size-3.5" strokeWidth={2.25} />
                 </span>
                 {text}
               </li>

@@ -175,7 +175,7 @@ function PurchaseOrderForm({ suppliers, products, onSubmit, onCancel, isPending,
                 aria-label={`Remove line ${index + 1}`}
                 className="flex size-9 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 transition-colors hover:border-danger/30 hover:bg-danger-50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40"
               >
-                <Trash2 className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+                <Trash2 className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
               </button>
             </div>
           ))}
@@ -306,7 +306,7 @@ export function AdminPurchaseOrdersPage() {
             }`}
           >
             {order.overdue && (
-              <AlertTriangle className="size-3 shrink-0" strokeWidth={2.25} aria-hidden="true" />
+              <AlertTriangle className="size-3 shrink-0" strokeWidth={2.5} aria-hidden="true" />
             )}
             {date(order.expectedDate)}
           </span>

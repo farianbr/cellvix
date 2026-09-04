@@ -47,7 +47,7 @@ function SavedCartsPicker({ onClose }) {
     <section className="border-t border-line bg-surface-2">
       <header className="flex items-center justify-between gap-3 px-4 pb-2 pt-3.5">
         <h3 className="eyebrow flex items-center gap-1.5 text-ink-400">
-          <Bookmark className="size-3.5" strokeWidth={2} aria-hidden="true" />
+          <Bookmark className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
           Saved carts
         </h3>
         <Link
@@ -199,7 +199,7 @@ export function CartPanelFooter({
 
       {!isApproved && (
         <p className="flex items-start gap-2 rounded-md bg-warn-50 px-3 py-2.5 text-sm text-warn">
-          <Lock className="mt-0.5 size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+          <Lock className="mt-0.5 size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
           Wholesale pricing and checkout unlock once your business account is approved.
         </p>
       )}

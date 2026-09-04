@@ -246,7 +246,7 @@ export function AdminBusinessReportPage() {
 
           {data.costCoverage?.uncostedLines > 0 && (
             <p className="mb-3 flex items-start gap-2 rounded-md bg-warn-50 px-3 py-2.5 text-sm leading-relaxed text-warn print:border print:border-black print:bg-white print:text-black">
-              <Info className="mt-0.5 size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+              <Info className="mt-0.5 size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
               <span>
                 Net profit excludes{' '}
                 <strong className="font-semibold">{formatCount(data.costCoverage.uncostedLines)}</strong>{' '}

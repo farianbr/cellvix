@@ -135,7 +135,7 @@ export function MegaMenu() {
                         className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-brand transition-colors hover:text-brand-700"
                       >
                         Shop {formatCount(activeComponents.length)} selected
-                        <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
+                        <ArrowRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                       </button>
                     )}
                   </div>
@@ -162,7 +162,7 @@ export function MegaMenu() {
                                   : 'border-line bg-surface text-ink-700 hover:border-line-strong hover:text-brand',
                               )}
                             >
-                              <Icon className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
+                              <Icon className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
                               {component.label}
                               <span
                                 className={cn(
@@ -212,7 +212,7 @@ export function MegaMenu() {
                                 )}
                                 aria-hidden="true"
                               >
-                                <Icon className="size-4" strokeWidth={1.75} />
+                                <Icon className="size-4" strokeWidth={2} />
                               </span>
 
                               <span className="min-w-0 flex-1">
@@ -254,7 +254,7 @@ export function MegaMenu() {
                             className="inline-flex items-center gap-1 text-sm font-medium text-brand transition-colors hover:text-brand-700"
                           >
                             Shop all
-                            <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
+                            <ArrowRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                           </button>
                         </div>
 

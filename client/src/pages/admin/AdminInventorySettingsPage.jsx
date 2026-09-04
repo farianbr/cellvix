@@ -169,7 +169,7 @@ export function AdminInventorySettingsPage() {
                     setSaved(false);
                   }}
                 >
-                  <ArrowLeftRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
+                  <ArrowLeftRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                   Match markup to margin
                 </Button>
               </div>

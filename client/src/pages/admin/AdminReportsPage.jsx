@@ -97,7 +97,7 @@ function CostCoverageNote({ coverage }) {
 
   return (
     <p className="mb-3 flex items-start gap-2 rounded-md bg-warn-50 px-3 py-2.5 text-sm leading-relaxed text-warn">
-      <Info className="mt-0.5 size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+      <Info className="mt-0.5 size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
       <span>
         Margin excludes <strong className="font-semibold">{formatCount(coverage.uncostedLines)}</strong>{' '}
         line{coverage.uncostedLines === 1 ? '' : 's'} with no recorded cost, worth{' '}
@@ -591,7 +591,7 @@ function ExpenseTab({ data }) {
                     to={`/admin/purchase-orders/${row.purchaseOrder.id}`}
                     className="mt-0.5 inline-flex items-center gap-1 text-2xs text-ink-400 hover:text-brand"
                   >
-                    <ClipboardList className="size-3 shrink-0" strokeWidth={2} aria-hidden="true" />
+                    <ClipboardList className="size-3 shrink-0" strokeWidth={2.5} aria-hidden="true" />
                     {row.purchaseOrder.poNumber ?? 'Purchase order'}
                   </Link>
                 )}
@@ -986,7 +986,7 @@ export function AdminReportsPage() {
                   : 'border border-line bg-surface text-ink-600 hover:border-line-strong hover:text-ink-900',
               )}
             >
-              <Icon className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+              <Icon className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
               {item.label}
             </button>
           );

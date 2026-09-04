@@ -28,7 +28,7 @@ export function CartBundleLine({ bundle, onQtyChange, onRemove, compact = false 
     >
       <div className="flex items-start gap-3">
         <span className="flex size-11 shrink-0 items-center justify-center rounded-md bg-brand-gradient text-white">
-          <Package className="size-5" strokeWidth={1.75} aria-hidden="true" />
+          <Package className="size-5" strokeWidth={1.5} aria-hidden="true" />
         </span>
 
         <div className="min-w-0 flex-1">
@@ -48,7 +48,7 @@ export function CartBundleLine({ bundle, onQtyChange, onRemove, compact = false 
                 aria-label={`Remove ${bundle.title}`}
                 className="-mr-1 -mt-1 flex size-8 shrink-0 items-center justify-center rounded-lg text-ink-300 transition-colors hover:bg-danger-50 hover:text-danger"
               >
-                <Trash2 className="size-4" strokeWidth={1.75} />
+                <Trash2 className="size-4" strokeWidth={2} />
               </button>
             )}
           </div>
@@ -77,7 +77,7 @@ export function CartBundleLine({ bundle, onQtyChange, onRemove, compact = false 
 
           {!bundle.available && bundle.reason && (
             <p className="mt-2.5 flex items-center gap-1.5 text-xs text-warn">
-              <AlertTriangle className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+              <AlertTriangle className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
               {bundle.reason}
             </p>
           )}

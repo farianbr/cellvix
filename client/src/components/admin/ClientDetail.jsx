@@ -60,7 +60,7 @@ export function StoreCreditPanel({ id, balance }) {
   return (
     <div className="rounded-md border border-line p-4">
       <div className="mb-3 flex items-center gap-2">
-        <WalletCards className="size-4 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
+        <WalletCards className="size-4 text-ink-400" strokeWidth={2} aria-hidden="true" />
         <h3 className="font-display text-md font-bold">Store credit</h3>
         <span className="tnum ml-auto font-display text-lg font-bold text-ink-900">
           {money(data?.balance ?? balance ?? 0)}
@@ -160,7 +160,7 @@ export function CreditForm({ id, user }) {
       className="rounded-md border border-line p-4"
     >
       <div className="mb-3 flex items-center gap-2">
-        <Wallet className="size-4 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
+        <Wallet className="size-4 text-ink-400" strokeWidth={2} aria-hidden="true" />
         <h3 className="font-display text-md font-bold">Credit &amp; terms</h3>
       </div>
 
@@ -245,7 +245,7 @@ export function CreditRepaymentForm({ id, user }) {
     return (
       <div className="rounded-md border border-line p-4">
         <div className="mb-2 flex items-center gap-2">
-          <Wallet className="size-4 text-ok" strokeWidth={1.75} aria-hidden="true" />
+          <Wallet className="size-4 text-ok" strokeWidth={2} aria-hidden="true" />
           <h3 className="font-display text-md font-bold">Record a payment</h3>
         </div>
         <p className="text-sm leading-relaxed text-ink-500">
@@ -277,7 +277,7 @@ export function CreditRepaymentForm({ id, user }) {
       className="rounded-md border border-line p-4"
     >
       <div className="mb-3 flex items-center gap-2">
-        <Wallet className="size-4 text-brand" strokeWidth={1.75} aria-hidden="true" />
+        <Wallet className="size-4 text-brand" strokeWidth={2} aria-hidden="true" />
         <h3 className="font-display text-md font-bold">Record a payment</h3>
       </div>
 

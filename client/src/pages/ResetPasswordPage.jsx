@@ -61,7 +61,7 @@ export function ResetPasswordPage() {
     return (
       <div className="mx-auto flex max-w-md flex-col items-center px-4 py-20 text-center">
         <span className="flex size-14 items-center justify-center rounded-full bg-warn-50 text-warn">
-          <AlertCircle className="size-7" strokeWidth={1.75} />
+          <AlertCircle className="size-7" strokeWidth={1.5} />
         </span>
         <h1 className="mt-4 text-2xl">That link is incomplete</h1>
         <p className="mt-2 text-md leading-relaxed text-ink-500">
@@ -79,7 +79,7 @@ export function ResetPasswordPage() {
     <div className="mx-auto max-w-md px-4 py-14 sm:py-20">
       <div className="mb-6 flex flex-col items-center text-center">
         <span className="flex size-12 items-center justify-center rounded-full bg-brand-50 text-brand">
-          <KeyRound className="size-6" strokeWidth={1.75} />
+          <KeyRound className="size-6" strokeWidth={1.5} />
         </span>
         <h1 className="mt-4 text-2xl">Choose a new password</h1>
         <p className="mt-2 text-md leading-relaxed text-ink-500">
@@ -127,7 +127,7 @@ export function ResetPasswordPage() {
         </Button>
 
         <p className="flex items-start gap-2 text-xs leading-relaxed text-ink-400">
-          <ShieldCheck className="mt-0.5 size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+          <ShieldCheck className="mt-0.5 size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
           This link stops working once it is used, and expires an hour after it was sent.
         </p>
       </form>

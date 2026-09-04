@@ -259,7 +259,7 @@ export function ContactPage() {
                     className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-ink-500 transition-colors group-hover:bg-brand group-hover:text-white sm:mb-4 sm:size-11"
                     aria-hidden="true"
                   >
-                    <Icon className="size-5" strokeWidth={1.75} />
+                    <Icon className="size-5" strokeWidth={1.5} />
                   </span>
 
                   <span className="min-w-0 flex-1">
@@ -303,7 +303,7 @@ export function ContactPage() {
               >
                 {sent && (
                   <p className="mb-5 flex items-start gap-2.5 rounded-lg bg-ok-50 px-4 py-3 text-md text-ok">
-                    <Check className="mt-0.5 size-4 shrink-0" strokeWidth={2.5} aria-hidden="true" />
+                    <Check className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
                     {sent}
                   </p>
                 )}
@@ -377,7 +377,7 @@ export function ContactPage() {
             <Reveal delay={0.12}>
               <div className="rounded-xl border border-line bg-surface-2 p-5 sm:p-6">
                 <p className="eyebrow mb-4 flex items-center gap-1.5 text-ink-400">
-                  <Clock className="size-3.5" strokeWidth={2} aria-hidden="true" />
+                  <Clock className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                   Hours
                 </p>
                 <ul className="space-y-2.5">
@@ -400,7 +400,7 @@ export function ContactPage() {
                   className="mb-4 flex size-11 items-center justify-center rounded-lg bg-brand text-white"
                   aria-hidden="true"
                 >
-                  <Package className="size-5" strokeWidth={1.75} />
+                  <Package className="size-5" strokeWidth={1.5} />
                 </span>
                 <h3 className="text-lg">Warehouse pickup</h3>
                 <p className="mt-2 text-md leading-relaxed text-ink-500">
@@ -416,7 +416,7 @@ export function ContactPage() {
                   className="mb-4 flex size-11 items-center justify-center rounded-lg bg-brand-50 text-brand"
                   aria-hidden="true"
                 >
-                  <Truck className="size-5" strokeWidth={1.75} />
+                  <Truck className="size-5" strokeWidth={1.5} />
                 </span>
                 <h3 className="text-lg">Ordering, not asking?</h3>
                 <p className="mt-2 text-md leading-relaxed text-ink-500">
@@ -428,7 +428,7 @@ export function ContactPage() {
                   className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-brand transition-colors hover:text-brand-700"
                 >
                   Browse the catalogue
-                  <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
+                  <ArrowRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                 </Link>
               </div>
             </Reveal>

@@ -75,7 +75,7 @@ export function PaymentFailedPage() {
             {REASSURANCES.map(({ icon: Icon, text }) => (
               <li key={text} className="flex items-start gap-3 text-md text-ink-500">
                 <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-ok-50 text-ok">
-                  <Icon className="size-4" strokeWidth={1.75} aria-hidden="true" />
+                  <Icon className="size-4" strokeWidth={2} aria-hidden="true" />
                 </span>
                 {text}
               </li>
@@ -140,14 +140,14 @@ export function PaymentFailedPage() {
                   href={`tel:${BUSINESS_INFO.phone.replace(/[^\d+]/g, '')}`}
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-line-strong bg-surface font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
                 >
-                  <Headphones className="size-4" strokeWidth={1.75} aria-hidden="true" />
+                  <Headphones className="size-4" strokeWidth={2} aria-hidden="true" />
                   {BUSINESS_INFO.phone}
                 </a>
                 <Link
                   to="/contact"
                   className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-line bg-surface-2 font-display text-md font-semibold text-ink-700 transition-colors hover:bg-surface-3"
                 >
-                  <Mail className="size-4" strokeWidth={1.75} aria-hidden="true" />
+                  <Mail className="size-4" strokeWidth={2} aria-hidden="true" />
                   Message the sales desk
                 </Link>
               </div>

@@ -207,9 +207,9 @@ function QuoteLifecycle({ quote, className }) {
           )}
         >
           {rejected ? (
-            <XCircle className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+            <XCircle className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
           ) : (
-            <Clock className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+            <Clock className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
           )}
           <span className="font-semibold">
             {rejected ? 'Rejected' : 'Expired'} at the {reached} stage.
@@ -566,7 +566,7 @@ export function AdminQuoteDetailPage() {
               {quote.timeline.map((entry, index) => (
                 <li key={`${entry.status}-${index}`} className="flex items-start gap-2.5 px-4 py-3">
                   <span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-surface-2 text-ink-400">
-                    <CheckCircle2 className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
+                    <CheckCircle2 className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                   </span>
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-ink-900">{entry.status}</p>
@@ -623,7 +623,7 @@ export function AdminQuoteDetailPage() {
 
           {convertQuote.error && convertQuote.error.code !== 'QUOTE_PRICE_DRIFT' && (
             <p className="flex items-start gap-2 text-sm text-danger">
-              <AlertCircle className="mt-0.5 size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+              <AlertCircle className="mt-0.5 size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
               {convertQuote.error.message}
             </p>
           )}
