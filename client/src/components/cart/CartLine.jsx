@@ -5,6 +5,7 @@ import { money, productTitle } from '@/lib/format';
 import QtyStepper from '@/components/product/QtyStepper';
 import { PartVisual } from '@/components/product/PartFrame';
 import Badge from '@/components/ui/Badge';
+import { pressable } from '@/lib/motion';
 
 /**
  * One cart row. Shared by the mini-cart dropdown and the cart page so quantity behaviour,
@@ -37,7 +38,8 @@ export function CartLine({ item, onQtyChange, onRemove, compact = false }) {
             <Link
               to={`/product/${item.slug}`}
               className={cn(
-                'line-clamp-2 font-medium text-ink-900 transition-colors hover:text-brand',
+                pressable,
+                'line-clamp-2 font-medium text-ink-900 hover:text-brand',
                 compact ? 'text-md' : 'text-md',
               )}
             >

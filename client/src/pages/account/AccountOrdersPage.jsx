@@ -11,6 +11,7 @@ import Button from '@/components/ui/Button';
 import Skeleton from '@/components/ui/Skeleton';
 import { OrderStatusBadge } from '@/components/account/OrderStatusBadge';
 import { useOrders } from '@/hooks/useAccount';
+import { pressable } from '@/lib/motion';
 
 const STATUS_FILTERS = [
   { value: 'all', label: 'All statuses' },
@@ -81,7 +82,8 @@ function SortHeader({ column, sort, onSort }) {
         type="button"
         onClick={() => onSort(column.key)}
         className={cn(
-          'eyebrow group inline-flex items-center gap-1 rounded transition-colors hover:text-ink-900',
+          pressable,
+          'eyebrow group inline-flex items-center gap-1 rounded hover:text-ink-900',
           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900/15',
           column.align === 'right' && 'flex-row-reverse',
           active ? 'text-ink-900' : 'text-ink-400',
@@ -290,7 +292,7 @@ export function AccountOrdersPage() {
                       <Link
                         to={`/account/orders/${order.orderNumber}`}
                         aria-label={`Open order ${order.orderNumber}`}
-                        className="inline-flex text-ink-300 transition-colors hover:text-brand"
+                        className={cn(pressable, 'inline-flex text-ink-300 hover:text-brand')}
                       >
                         <ChevronRight className="size-4" strokeWidth={2} aria-hidden="true" />
                       </Link>
@@ -307,7 +309,7 @@ export function AccountOrdersPage() {
               <li key={order.orderNumber}>
                 <Link
                   to={`/account/orders/${order.orderNumber}`}
-                  className="flex items-center gap-3 px-4 py-4 transition-colors hover:bg-surface-2 sm:px-5"
+                  className={cn(pressable, 'flex items-center gap-3 px-4 py-4 hover:bg-surface-2 sm:px-5')}
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">

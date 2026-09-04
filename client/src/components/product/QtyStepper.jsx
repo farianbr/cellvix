@@ -1,5 +1,6 @@
 import { Minus, Plus } from 'lucide-react';
 import cn from '@/lib/cn';
+import { pressable } from '@/lib/motion';
 
 const SIZES = {
   sm: { wrap: 'h-9', btn: 'size-9', input: 'w-9 text-sm', icon: 'size-3.5' },
@@ -50,7 +51,8 @@ export function QtyStepper({
         disabled={disabled || value <= min}
         aria-label={`Decrease ${label.toLowerCase()}`}
         className={cn(
-          'flex shrink-0 items-center justify-center text-ink-500 transition-colors',
+          pressable,
+          'flex shrink-0 items-center justify-center text-ink-500',
           'hover:bg-surface-2 hover:text-ink-900 disabled:cursor-not-allowed disabled:text-ink-300 disabled:hover:bg-transparent',
           s.btn,
         )}
@@ -81,7 +83,8 @@ export function QtyStepper({
         disabled={disabled || value >= max}
         aria-label={`Increase ${label.toLowerCase()}`}
         className={cn(
-          'flex shrink-0 items-center justify-center text-ink-500 transition-colors',
+          pressable,
+          'flex shrink-0 items-center justify-center text-ink-500',
           'hover:bg-surface-2 hover:text-ink-900 disabled:cursor-not-allowed disabled:text-ink-300 disabled:hover:bg-transparent',
           s.btn,
         )}

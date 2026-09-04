@@ -8,6 +8,8 @@ import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
 import { useAdminUser, useAdminMutations } from '@/hooks/useAdmin';
+import { pressable } from '@/lib/motion';
+import cn from '@/lib/cn';
 
 const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/clients/:id/edit'], icon: adminIcon('Users') };
 
@@ -51,7 +53,7 @@ export function AdminCustomerEditPage() {
     <>
       <Link
         to={profile}
-        className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-ink-500 transition-colors hover:text-ink-900"
+        className={cn(pressable, 'mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-ink-500 hover:text-ink-900')}
       >
         <ArrowLeft className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
         Back to {user.displayName}

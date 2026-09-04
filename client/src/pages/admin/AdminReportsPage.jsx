@@ -33,6 +33,7 @@ import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminReport } from '@/hooks/useAdmin';
 import Skeleton from '@/components/ui/Skeleton';
+import { pressable } from '@/lib/motion';
 
 /**
  * Reports — the eight analytics tabs (ERP rework §6.12).
@@ -942,7 +943,7 @@ export function AdminReportsPage() {
           <>
             <Link
               to="/admin/reports/business"
-              className="inline-flex h-11 select-none items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+              className={cn(pressable, 'inline-flex h-11 select-none items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
             >
               <LineChart className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
               Business overview

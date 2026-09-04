@@ -20,6 +20,7 @@ import { PartVisual } from '@/components/product/PartFrame';
 import { useAccountSummary, useAccountActivity, useAccountMutations } from '@/hooks/useAccount';
 import { useCart } from '@/hooks/useCart';
 import useUiStore from '@/store/uiStore';
+import { pressable } from '@/lib/motion';
 
 /** Credit utilisation meter — the one place the gradient earns a progress fill. */
 function CreditMeter({ credit }) {
@@ -163,7 +164,7 @@ export function AccountOverviewPage() {
                 <li key={order.orderNumber}>
                   <Link
                     to={`/account/orders/${order.orderNumber}`}
-                    className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2 sm:px-5"
+                    className={cn(pressable, 'flex items-center gap-3 px-4 py-3 hover:bg-surface-2 sm:px-5')}
                   >
                     <div className="min-w-0 flex-1">
                       <p className="font-mono text-sm font-medium text-ink-900">

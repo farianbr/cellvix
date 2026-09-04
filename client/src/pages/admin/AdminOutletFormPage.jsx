@@ -15,6 +15,7 @@ import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminOutlet, useNextOutletCode, useAdminMutations } from '@/hooks/useAdmin';
 import cn from '@/lib/cn';
+import { pressable } from '@/lib/motion';
 
 /**
  * Add / edit an outlet (§6.14) — form on the left, **live preview card** on the
@@ -216,7 +217,7 @@ export function AdminOutletFormPage() {
         action={
           <Link
             to={editing ? `/admin/outlets/${id}` : '/admin/outlets'}
-            className="inline-flex h-9 items-center rounded-md border border-line bg-surface px-3.5 text-sm font-medium text-ink-600 transition-colors hover:border-line-strong hover:text-ink-900"
+            className={cn(pressable, 'inline-flex h-9 items-center rounded-md border border-line bg-surface px-3.5 text-sm font-medium text-ink-600 hover:border-line-strong hover:text-ink-900')}
           >
             Cancel
           </Link>

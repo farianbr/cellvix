@@ -3,7 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { Plus } from 'lucide-react';
 import cn from '@/lib/cn';
 import RichText from '@/lib/richText';
-import { ease } from '@/lib/motion';
+import { ease, pressable } from '@/lib/motion';
 
 /**
  * Disclosure list. One implementation serves the FAQ page and the per-product
@@ -101,7 +101,8 @@ export function Accordion({
 
                   <span
                     className={cn(
-                      'min-w-0 flex-1 font-display text-lg font-bold leading-snug transition-colors sm:text-lg',
+                      pressable,
+                      'min-w-0 flex-1 font-display text-lg font-bold leading-snug sm:text-lg',
                       isOpen ? 'text-ink-900' : 'text-ink-900 group-hover:text-brand',
                     )}
                   >

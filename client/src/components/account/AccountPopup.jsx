@@ -341,8 +341,9 @@ function ChangeAccountType({ onBack, label = 'Change account type' }) {
       type="button"
       onClick={onBack}
       className={cn(
+        pressable,
         '-ml-1.5 inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-sm font-medium',
-        'text-ink-500 transition-colors hover:bg-surface-2 hover:text-ink-900',
+        'text-ink-500 hover:bg-surface-2 hover:text-ink-900',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900/15',
       )}
     >
@@ -1036,7 +1037,7 @@ export function AccountPopup() {
               type="button"
               onClick={close}
               aria-label="Close dialog"
-              className="flex size-9 shrink-0 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-surface-2 hover:text-ink-900 active:scale-[0.97] md:hidden"
+              className={cn(pressable, 'flex size-9 shrink-0 items-center justify-center rounded-md text-ink-400 hover:bg-surface-2 hover:text-ink-900 md:hidden')}
             >
               <X className="size-4.5" strokeWidth={1.75} aria-hidden="true" />
             </button>
@@ -1076,8 +1077,8 @@ export function AccountPopup() {
             onClick={close}
             aria-label="Close dialog"
             className={cn(
-              pressable,
-              'absolute right-6 top-6 z-10 flex size-9 items-center justify-center rounded-md text-white/70 hover:bg-white/15 hover:text-white',
+            pressable,
+            'absolute right-6 top-6 z-10 flex size-9 items-center justify-center rounded-md text-white/70 hover:bg-white/15 hover:text-white',
             )}
           >
             <X className="size-4.5" strokeWidth={1.75} aria-hidden="true" />

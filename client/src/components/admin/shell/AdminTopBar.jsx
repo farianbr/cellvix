@@ -4,6 +4,7 @@ import cn from '@/lib/cn';
 import { matchAdminRoute } from '@/lib/adminRoutes';
 import CreateMenu from './CreateMenu';
 import NotificationMenu from './NotificationMenu';
+import { pressable } from '@/lib/motion';
 
 /**
  * The ERP top bar (§4, convention 4): page-title chip with a back arrow,
@@ -56,7 +57,7 @@ export function AdminTopBar({ user, onOpenSearch, onOpenMobileNav }) {
       <button
         type="button"
         onClick={onOpenSearch}
-        className="ml-auto hidden max-w-[380px] flex-1 items-center gap-2 rounded-md border border-line bg-surface-2 px-3 py-1.5 text-sm text-ink-300 transition-colors hover:border-line-strong hover:text-ink-500 lg:flex"
+        className={cn(pressable, 'ml-auto hidden max-w-[380px] flex-1 items-center gap-2 rounded-md border border-line bg-surface-2 px-3 py-1.5 text-sm text-ink-300 hover:border-line-strong hover:text-ink-500 lg:flex')}
       >
         <Search className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
         <span className="flex-1 text-left">Search clients, orders, products…</span>

@@ -10,6 +10,7 @@ import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminProfile } from '@/hooks/useAdmin';
 import { useAuth } from '@/hooks/useAuth';
 import { date, dateTime } from '@/lib/format';
+import { pressable } from '@/lib/motion';
 
 /**
  * My Profile (§6.15, phase 12) — the screen behind the top bar's user chip.
@@ -127,7 +128,7 @@ export function AdminProfilePage() {
               {isAdmin && (
                 <Link
                   to="/admin/settings/users"
-                  className="inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-surface px-3 text-sm font-medium text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+                  className={cn(pressable, 'inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-surface px-3 text-sm font-medium text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
                 >
                   <UsersRound className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                   Manage users

@@ -5,7 +5,8 @@ import { CartPanelBody, CartPanelFooter, CartPanelTitle } from './CartPanelConte
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import useUiStore from '@/store/uiStore';
-import { ease } from '@/lib/motion';
+import { ease, pressable } from '@/lib/motion';
+import cn from '@/lib/cn';
 
 /**
  * The mini-cart (brief §6). Opens on every Add to Cart and from the cart button
@@ -76,7 +77,7 @@ export function CartDropdown() {
                     type="button"
                     onClick={close}
                     aria-label="Close cart"
-                    className="-mr-1 flex size-9 shrink-0 items-center justify-center rounded-lg text-ink-400 transition-colors hover:bg-surface-3 hover:text-ink-900"
+                    className={cn(pressable, '-mr-1 flex size-9 shrink-0 items-center justify-center rounded-lg text-ink-400 hover:bg-surface-3 hover:text-ink-900')}
                   >
                     <X className="size-[18px]" strokeWidth={1.75} />
                   </button>

@@ -12,6 +12,7 @@ import PageHeader from '@/components/admin/PageHeader';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useMarketingTemplates, useMarketingSummary, useAdminMutations } from '@/hooks/useAdmin';
+import { pressable } from '@/lib/motion';
 
 /**
  * Message Templates (§6.15 category 5, phase 11e).
@@ -199,7 +200,7 @@ function TemplateDialog({ template, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-9 items-center rounded-md border border-line bg-surface px-3.5 text-sm font-medium text-ink-600 transition-colors hover:border-line-strong hover:text-ink-900"
+            className={cn(pressable, 'inline-flex h-9 items-center rounded-md border border-line bg-surface px-3.5 text-sm font-medium text-ink-600 hover:border-line-strong hover:text-ink-900')}
           >
             Cancel
           </button>

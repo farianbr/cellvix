@@ -28,7 +28,7 @@ import Button from '@/components/ui/Button';
 import Slab, { EyebrowPill, SectionHeader } from '@/components/ui/Slab';
 import Reveal from '@/components/motion/Reveal';
 import { useAuth } from '@/hooks/useAuth';
-import { ease } from '@/lib/motion';
+import { ease, pressable } from '@/lib/motion';
 
 const CHANNELS = [
   {
@@ -425,7 +425,7 @@ export function ContactPage() {
                 </p>
                 <Link
                   to="/"
-                  className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-brand transition-colors hover:text-brand-700"
+                  className={cn(pressable, 'mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:text-brand-700')}
                 >
                   Browse the catalogue
                   <ArrowRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
@@ -523,7 +523,7 @@ export function ContactPage() {
           </Link>
           <Link
             to="/about"
-            className="inline-flex h-12 items-center rounded-full border border-line-strong bg-surface px-6 font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+            className={cn(pressable, 'inline-flex h-12 items-center rounded-full border border-line-strong bg-surface px-6 font-display text-md font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
           >
             About Cellvix
           </Link>

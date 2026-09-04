@@ -16,7 +16,8 @@ import { money, date } from '@/lib/format';
 import Skeleton from '@/components/ui/Skeleton';
 import { PartVisual } from '@/components/product/PartFrame';
 import BrandScene from '@/components/ui/BrandScene';
-import { ease } from '@/lib/motion';
+import { ease, pressable } from '@/lib/motion';
+import cn from '@/lib/cn';
 
 /**
  * Post-checkout confirmation (brief §9).
@@ -286,7 +287,7 @@ export function ThankYouPage() {
         </Link>
         <Link
           to={`/account/orders/${data.orderNumber}`}
-          className="inline-flex h-12 items-center rounded-lg border border-line-strong bg-surface px-6 font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+          className={cn(pressable, 'inline-flex h-12 items-center rounded-lg border border-line-strong bg-surface px-6 font-display text-md font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
         >
           Track this order
         </Link>

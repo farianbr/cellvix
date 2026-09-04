@@ -8,6 +8,8 @@ import CartLine from './CartLine';
 import CartBundleLine from './CartBundleLine';
 import useUiStore from '@/store/uiStore';
 import { useSavedCarts, useAccountMutations } from '@/hooks/useAccount';
+import { pressable } from '@/lib/motion';
+import cn from '@/lib/cn';
 
 /**
  * The mini-cart's title, body and footer. The dropdown is the only consumer
@@ -128,7 +130,7 @@ export function CartPanelBody({ items, bundles = [], onQtyChange, onRemove, onRe
               <Link
                 to="/account/quick-order"
                 onClick={onClose}
-                className="inline-flex h-9 select-none items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3.5 font-display text-sm font-semibold text-ink-500 transition-colors hover:bg-surface-3 hover:text-ink-900"
+                className={cn(pressable, 'inline-flex h-9 select-none items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3.5 font-display text-sm font-semibold text-ink-500 hover:bg-surface-3 hover:text-ink-900')}
               >
                 <Bookmark className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
                 Saved carts
@@ -222,7 +224,7 @@ export function CartPanelFooter({
         <Link
           to="/cart"
           onClick={onClose}
-          className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-line-strong bg-surface font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+          className={cn(pressable, 'inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-line-strong bg-surface font-display text-sm font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
         >
           <ShoppingCart className="size-4" strokeWidth={2} aria-hidden="true" />
           View cart

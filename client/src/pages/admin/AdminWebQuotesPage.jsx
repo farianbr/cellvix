@@ -17,6 +17,7 @@ import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminWebQuotes, useAdminMutations } from '@/hooks/useAdmin';
 import { toast } from '@/store/toastStore';
+import { pressable } from '@/lib/motion';
 
 /**
  * Web quotes — the enquiries the storefront's contact form sends in.
@@ -324,7 +325,7 @@ export function AdminWebQuotesPage() {
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-ink-500">
               <a
                 href={`mailto:${reading.email}`}
-                className="inline-flex items-center gap-1.5 transition-colors hover:text-ink-900"
+                className={cn(pressable, 'inline-flex items-center gap-1.5 hover:text-ink-900')}
               >
                 <Mail className="size-3.5 shrink-0 text-brand" strokeWidth={2.25} aria-hidden="true" />
                 {reading.email}
@@ -332,7 +333,7 @@ export function AdminWebQuotesPage() {
               {reading.phone && (
                 <a
                   href={`tel:${reading.phone.replace(/[^\d+]/g, '')}`}
-                  className="inline-flex items-center gap-1.5 transition-colors hover:text-ink-900"
+                  className={cn(pressable, 'inline-flex items-center gap-1.5 hover:text-ink-900')}
                 >
                   <Phone className="size-3.5 shrink-0 text-brand" strokeWidth={2.25} aria-hidden="true" />
                   {reading.phone}

@@ -7,6 +7,7 @@ import { activeNavKeys } from '@/lib/adminRoutes';
 import { adminIcon } from './adminIcons';
 import { visibleNav } from '@/lib/permissions';
 import { useAuth } from '@/hooks/useAuth';
+import { pressable } from '@/lib/motion';
 
 /**
  * The ERP sidebar (§4). Three shapes, one component:
@@ -49,7 +50,7 @@ function QuickSearch({ onOpenSearch }) {
       <button
         type="button"
         onClick={onOpenSearch}
-        className="flex w-full items-center gap-2 rounded-md border border-white/12 bg-white/[0.06] px-2.5 py-2 text-sm text-ink-200 transition-colors hover:border-white/25 hover:text-white"
+        className={cn(pressable, 'flex w-full items-center gap-2 rounded-md border border-white/12 bg-white/[0.06] px-2.5 py-2 text-sm text-ink-200 hover:border-white/25 hover:text-white')}
       >
         <Search className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
         <span className="flex-1 text-left">Quick search</span>
@@ -64,7 +65,8 @@ function QuickSearch({ onOpenSearch }) {
 /** A resting/hover/active nav row. The gradient fill is the active state (§2b). */
 function navRowClass(isActive, extra) {
   return cn(
-    'flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm font-medium transition-colors',
+    pressable,
+    'flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm font-medium',
     isActive ? 'bg-brand-gradient text-white' : 'text-ink-200 hover:bg-white/[0.08] hover:text-white',
     extra,
   );
@@ -199,7 +201,8 @@ function IconRail({ badges }) {
                 end={item.to === '/admin'}
                 aria-label={item.label}
                 className={cn(
-                  'relative flex size-10 items-center justify-center rounded-md transition-colors',
+                  pressable,
+                  'relative flex size-10 items-center justify-center rounded-md',
                   isActive ? 'bg-brand-gradient text-white' : 'text-ink-200 hover:bg-white/[0.08] hover:text-white',
                 )}
               >
@@ -238,7 +241,7 @@ function UserFooter({ user, onSignOut, compact }) {
           type="button"
           onClick={onSignOut}
           aria-label="Sign out"
-          className="flex size-10 items-center justify-center rounded-md text-ink-200 transition-colors hover:bg-danger/20 hover:text-white"
+          className={cn(pressable, 'flex size-10 items-center justify-center rounded-md text-ink-200 hover:bg-danger/20 hover:text-white')}
         >
           <LogOut className="size-4" strokeWidth={2} aria-hidden="true" />
         </button>
@@ -262,7 +265,7 @@ function UserFooter({ user, onSignOut, compact }) {
           type="button"
           onClick={onSignOut}
           aria-label="Sign out"
-          className="flex size-8 shrink-0 items-center justify-center rounded-md text-ink-200 transition-colors hover:bg-danger/25 hover:text-white"
+          className={cn(pressable, 'flex size-8 shrink-0 items-center justify-center rounded-md text-ink-200 hover:bg-danger/25 hover:text-white')}
         >
           <LogOut className="size-4" strokeWidth={2} aria-hidden="true" />
         </button>

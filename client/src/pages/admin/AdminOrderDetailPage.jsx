@@ -9,6 +9,7 @@ import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminOrder } from '@/hooks/useAdmin';
 import { money, date, dateTime } from '@/lib/format';
+import { pressable } from '@/lib/motion';
 
 /**
  * One order (§4b.6, phase 12).
@@ -105,7 +106,7 @@ export function AdminOrderDetailPage() {
         action={
           <Link
             to="/admin/orders"
-            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-surface px-3 text-sm font-medium text-ink-600 transition-colors hover:border-ink-300 hover:bg-surface-2"
+            className={cn(pressable, 'inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-surface px-3 text-sm font-medium text-ink-600 hover:border-ink-300 hover:bg-surface-2')}
           >
             <ArrowLeft className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
             All orders

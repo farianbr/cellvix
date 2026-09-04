@@ -34,6 +34,7 @@ import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAuth } from '@/hooks/useAuth';
 
 import { useAdminStats, useAdminMutations } from '@/hooks/useAdmin';
+import { pressable } from '@/lib/motion';
 
 /**
  * Header metadata read from the same table the breadcrumb uses, so a page
@@ -58,7 +59,7 @@ function TodoCard({ icon: Icon, tone, title, body, to, cta }) {
   return (
     <Link
       to={to}
-      className="group flex items-center gap-3 rounded-lg border border-line bg-surface p-3.5 transition-colors hover:border-line-strong"
+      className={cn(pressable, 'group flex items-center gap-3 rounded-lg border border-line bg-surface p-3.5 hover:border-line-strong')}
     >
       <span
         className={`flex size-9 shrink-0 items-center justify-center rounded-md border ${tones[tone]}`}

@@ -10,7 +10,7 @@ import useApplyFilterPath from '@/hooks/useApplyFilterPath';
 import useFilterStore from '@/store/filterStore';
 import useUiStore from '@/store/uiStore';
 import Skeleton from '@/components/ui/Skeleton';
-import { ease } from '@/lib/motion';
+import { ease, pressable } from '@/lib/motion';
 
 /**
  * The desktop mega menu (brief §4.1).
@@ -336,7 +336,7 @@ export function MegaMenu() {
                         <Link
                           to="/offers"
                           onClick={closeMegaMenu}
-                          className="mt-4 inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-md bg-surface font-display text-md font-semibold text-ink-900 transition-colors hover:bg-surface-2"
+                          className={cn(pressable, 'mt-4 inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-md bg-surface font-display text-md font-semibold text-ink-900 hover:bg-surface-2')}
                         >
                           See running offers
                           <ArrowRight className="size-4" strokeWidth={2} aria-hidden="true" />

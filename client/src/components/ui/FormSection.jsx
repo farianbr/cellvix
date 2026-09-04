@@ -1,6 +1,7 @@
 import { useId, useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import cn from '@/lib/cn';
+import { pressable } from '@/lib/motion';
 
 /**
  * A titled group of fields, optionally collapsible.
@@ -81,7 +82,8 @@ export function FormSection({
           aria-controls={bodyId}
           className={cn(
             'flex w-full items-center gap-2.5 bg-surface-2 px-3.5 py-2.5 text-left',
-            'transition-colors hover:bg-surface-3',
+            pressable,
+            'hover:bg-surface-3',
           )}
         >
           {heading}

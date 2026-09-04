@@ -3,6 +3,7 @@ import { AlertCircle, Check, Tag, X, Zap } from 'lucide-react';
 import cn from '@/lib/cn';
 import { money } from '@/lib/format';
 import { useCart } from '@/hooks/useCart';
+import { pressable } from '@/lib/motion';
 
 /**
  * The one promo code a cart may carry.
@@ -88,7 +89,7 @@ export function PromoCodeField({ className }) {
               type="button"
               onClick={clearPromo}
               aria-label={`Remove promo code ${promo.code}`}
-              className="-mr-1 -mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg text-ink-400 transition-colors hover:bg-surface hover:text-ink-900"
+              className={cn(pressable, '-mr-1 -mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-lg text-ink-400 hover:bg-surface hover:text-ink-900')}
             >
               <X className="size-3.5" strokeWidth={2.25} />
             </button>
@@ -141,7 +142,7 @@ export function PromoCodeField({ className }) {
           <button
             type="submit"
             disabled={!value.trim() || isApplyingPromo}
-            className="h-10 shrink-0 rounded-md border border-line-strong bg-surface px-4 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-45"
+            className={cn(pressable, 'h-10 shrink-0 rounded-md border border-line-strong bg-surface px-4 font-display text-sm font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-45')}
           >
             {isApplyingPromo ? 'Checking…' : 'Apply'}
           </button>

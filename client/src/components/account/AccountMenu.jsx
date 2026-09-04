@@ -7,7 +7,7 @@ import { ACCOUNT_NAV_ITEMS } from '@shared/schemas/account';
 import { accountIcon } from './accountIcons';
 import useUiStore from '@/store/uiStore';
 import { useAuth, useSignOut } from '@/hooks/useAuth';
-import { ease } from '@/lib/motion';
+import { ease, pressable } from '@/lib/motion';
 
 /**
  * Panel width. Was 280, which fit the longest label and nothing else: the rows
@@ -213,7 +213,7 @@ export function AccountMenu() {
                     <Link
                       to="/admin"
                       onClick={close}
-                      className="flex items-center gap-3 rounded-md px-1.5 py-2 text-sm font-medium text-ink-700 transition-colors hover:bg-surface-2 hover:text-ink-900"
+                      className={cn(pressable, 'flex items-center gap-3 rounded-md px-1.5 py-2 text-sm font-medium text-ink-700 hover:bg-surface-2 hover:text-ink-900')}
                     >
                       Admin console
                     </Link>

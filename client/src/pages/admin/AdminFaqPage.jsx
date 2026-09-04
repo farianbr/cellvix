@@ -292,8 +292,8 @@ export function AdminFaqPage() {
             }}
             aria-label={`Edit “${faq.question}”`}
             className={cn(
-              pressable,
-              'flex size-8 items-center justify-center rounded-md text-ink-400 hover:bg-surface-2 hover:text-ink-900',
+            pressable,
+            'flex size-8 items-center justify-center rounded-md text-ink-400 hover:bg-surface-2 hover:text-ink-900',
             )}
           >
             <Pencil className="size-4" strokeWidth={2} />
@@ -306,8 +306,8 @@ export function AdminFaqPage() {
             }}
             aria-label={`Delete “${faq.question}”`}
             className={cn(
-              pressable,
-              'flex size-8 items-center justify-center rounded-md text-ink-400 hover:bg-danger-50 hover:text-danger',
+            pressable,
+            'flex size-8 items-center justify-center rounded-md text-ink-400 hover:bg-danger-50 hover:text-danger',
             )}
           >
             <Trash2 className="size-4" strokeWidth={2} />

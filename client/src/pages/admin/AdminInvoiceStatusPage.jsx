@@ -14,6 +14,7 @@ import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminInvoiceRules, useAdminMutations } from '@/hooks/useAdmin';
 import { dateTime } from '@/lib/format';
+import { pressable } from '@/lib/motion';
 
 /**
  * Time-lapse invoice messages (§6.15 category 2, phase 11d).
@@ -211,7 +212,7 @@ function RuleDialog({ rule, triggers, tokens, channels, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-9 items-center rounded-md border border-line bg-surface px-3.5 text-sm font-medium text-ink-600 transition-colors hover:border-line-strong hover:text-ink-900"
+            className={cn(pressable, 'inline-flex h-9 items-center rounded-md border border-line bg-surface px-3.5 text-sm font-medium text-ink-600 hover:border-line-strong hover:text-ink-900')}
           >
             Cancel
           </button>

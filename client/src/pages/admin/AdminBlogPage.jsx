@@ -412,8 +412,8 @@ export function AdminBlogPage() {
               onClick={(event) => event.stopPropagation()}
               aria-label={`View “${post.title}” on the site`}
               className={cn(
-                pressable,
-                'flex size-8 items-center justify-center rounded-md text-ink-400 hover:bg-surface-2 hover:text-ink-900',
+              pressable,
+              'flex size-8 items-center justify-center rounded-md text-ink-400 hover:bg-surface-2 hover:text-ink-900',
               )}
             >
               <ExternalLink className="size-4" strokeWidth={2} />
@@ -429,8 +429,8 @@ export function AdminBlogPage() {
             }}
             aria-label={`Edit “${post.title}”`}
             className={cn(
-              pressable,
-              'flex size-8 items-center justify-center rounded-md text-ink-400 hover:bg-surface-2 hover:text-ink-900',
+            pressable,
+            'flex size-8 items-center justify-center rounded-md text-ink-400 hover:bg-surface-2 hover:text-ink-900',
             )}
           >
             <Pencil className="size-4" strokeWidth={2} />
@@ -443,8 +443,8 @@ export function AdminBlogPage() {
             }}
             aria-label={`Delete “${post.title}”`}
             className={cn(
-              pressable,
-              'flex size-8 items-center justify-center rounded-md text-ink-400 hover:bg-danger-50 hover:text-danger',
+            pressable,
+            'flex size-8 items-center justify-center rounded-md text-ink-400 hover:bg-danger-50 hover:text-danger',
             )}
           >
             <Trash2 className="size-4" strokeWidth={2} />

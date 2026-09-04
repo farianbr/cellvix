@@ -219,7 +219,7 @@ export function FilterStrip({
                   type="button"
                   data-close-on-select
                   onClick={onClearFilters}
-                  className="w-full rounded-sm border border-line px-2 py-1.5 text-sm text-ink-500 transition-colors hover:border-line-strong hover:text-ink-900"
+                  className={cn(pressable, 'w-full rounded-sm border border-line px-2 py-1.5 text-sm text-ink-500 hover:border-line-strong hover:text-ink-900')}
                 >
                   Clear {activeFilterCount} filter{activeFilterCount === 1 ? '' : 's'}
                 </button>

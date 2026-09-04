@@ -28,6 +28,7 @@ import KpiRow from '@/components/admin/KpiRow';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
 import { useAdminRma, useAdminMutations } from '@/hooks/useAdmin';
 import Skeleton from '@/components/ui/Skeleton';
+import { pressable } from '@/lib/motion';
 
 /**
  * One return — per-item disposition, inspection notes, and the resolution
@@ -267,7 +268,7 @@ export function AdminRmaDetailPage() {
             action={
               <Link
                 to="/admin/rma"
-                className="inline-flex h-9 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3.5 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+                className={cn(pressable, 'inline-flex h-9 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3.5 font-display text-sm font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
               >
                 Back to returns
               </Link>
@@ -507,7 +508,7 @@ export function AdminRmaDetailPage() {
             {rma.user.id && (
               <Link
                 to={`/admin/clients/${rma.user.id}`}
-                className="mt-3 inline-flex h-8 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+                className={cn(pressable, 'mt-3 inline-flex h-8 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3 font-display text-sm font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
               >
                 View profile
               </Link>

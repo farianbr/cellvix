@@ -9,6 +9,8 @@ import { useAdminOutlet, useAdminMutations } from '@/hooks/useAdmin';
 import { useAuth } from '@/hooks/useAuth';
 import { canEdit } from '@/lib/permissions';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
+import { pressable } from '@/lib/motion';
+import cn from '@/lib/cn';
 
 /** One store: its details and the staff standing in it (§6.14). */
 const STATUS_TONE = { active: 'ok', inactive: 'neutral', maintenance: 'warn' };
@@ -71,7 +73,7 @@ export function AdminOutletDetailPage() {
               )}
               <Link
                 to={`/admin/outlets/${outlet.id}/edit`}
-                className="inline-flex h-9 items-center gap-1.5 rounded-md bg-ink-900 px-3.5 text-sm font-medium text-white transition-colors hover:bg-ink-800"
+                className={cn(pressable, 'inline-flex h-9 items-center gap-1.5 rounded-md bg-ink-900 px-3.5 text-sm font-medium text-white hover:bg-ink-800')}
               >
                 <Pencil className="size-4" strokeWidth={2} aria-hidden="true" />
                 Edit

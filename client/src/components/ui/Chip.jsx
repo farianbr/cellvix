@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import cn from '@/lib/cn';
+import { pressable } from '@/lib/motion';
 
 /**
  * A removable token representing one active filter. Rendered above the grid so
@@ -30,7 +31,7 @@ export function Chip({ label, value, onRemove, tone = 'brand', className }) {
           type="button"
           onClick={onRemove}
           aria-label={`Remove ${label ? `${label} ` : ''}${value} filter`}
-          className="flex size-5 items-center justify-center rounded-full transition-colors hover:bg-brand/15"
+          className={cn(pressable, 'flex size-5 items-center justify-center rounded-full hover:bg-brand/15')}
         >
           <X className="size-3" strokeWidth={2.5} />
         </button>

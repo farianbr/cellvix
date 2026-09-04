@@ -23,6 +23,7 @@ import { PartVisual } from '@/components/product/PartFrame';
 import PromoCodeField from '@/components/cart/PromoCodeField';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
+import { pressable } from '@/lib/motion';
 
 const STEP_FIELDS = {
   contact: ['email'],
@@ -305,7 +306,7 @@ export function CheckoutPage() {
         <h1 className="text-2xl sm:text-3xl">Checkout</h1>
         <Link
           to="/cart"
-          className="inline-flex items-center gap-1.5 text-md font-semibold text-brand transition-colors hover:text-brand-700"
+          className={cn(pressable, 'inline-flex items-center gap-1.5 text-md font-semibold text-brand hover:text-brand-700')}
         >
           <ArrowLeft className="size-4" strokeWidth={2} aria-hidden="true" />
           Back to cart

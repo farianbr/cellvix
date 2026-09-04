@@ -27,6 +27,8 @@ import DataTable, { CountLine } from '@/components/admin/DataTable';
 import ProcessStrip from '@/components/admin/ProcessStrip';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
+import { pressable } from '@/lib/motion';
+import cn from '@/lib/cn';
 import {
   useAdminPurchaseOrders,
   useAdminSuppliers,
@@ -391,7 +393,7 @@ export function AdminPurchaseOrdersPage() {
           <>
             <Link
               to="/admin/suppliers"
-              className="inline-flex h-11 select-none items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+              className={cn(pressable, 'inline-flex h-11 select-none items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
             >
               <Truck className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
               Suppliers

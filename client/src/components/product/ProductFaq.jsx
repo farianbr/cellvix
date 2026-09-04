@@ -3,6 +3,7 @@ import { ArrowUpRight, Headphones } from 'lucide-react';
 import cn from '@/lib/cn';
 import { BUSINESS_INFO } from '@/lib/constants';
 import Accordion from '@/components/ui/Accordion';
+import { pressable } from '@/lib/motion';
 
 /**
  * Per-product FAQ.
@@ -44,7 +45,7 @@ export function ProductFaq({ faqs = [], product = null, className }) {
 
         <Link
           to="/faq"
-          className="inline-flex items-center gap-0.5 text-sm font-semibold text-brand transition-colors hover:text-brand-700"
+          className={cn(pressable, 'inline-flex items-center gap-0.5 text-sm font-semibold text-brand hover:text-brand-700')}
         >
           The full FAQ
           <ArrowUpRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
@@ -77,7 +78,7 @@ export function ProductFaq({ faqs = [], product = null, className }) {
 
             <a
               href={`tel:${BUSINESS_INFO.phone.replace(/[^\d+]/g, '')}`}
-              className="mt-2 flex h-11 w-full items-center justify-center rounded-full border border-line-strong bg-surface font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300"
+              className={cn(pressable, 'mt-2 flex h-11 w-full items-center justify-center rounded-full border border-line-strong bg-surface font-display text-sm font-semibold text-ink-700 hover:border-ink-300')}
             >
               {BUSINESS_INFO.phone}
             </a>

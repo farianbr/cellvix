@@ -11,6 +11,7 @@ import {
 import cn from '@/lib/cn';
 import { money, date } from '@/lib/format';
 import { PanelEmpty } from '@/components/ui/Panel';
+import { pressable } from '@/lib/motion';
 
 /**
  * The account's history: orders, invoices, payments and credit movements, in
@@ -82,7 +83,9 @@ function ActivityRow({ event }) {
   // plain row rather than becoming a link to nowhere.
   return event.href ? (
     <li>
-      <Link to={event.href} className={cn(shared, 'transition-colors hover:bg-surface-2')}>
+      <Link to={event.href} className={cn(
+        pressable,
+        shared, ' hover:bg-surface-2')}>
         {body}
       </Link>
     </li>

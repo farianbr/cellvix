@@ -20,6 +20,8 @@ import { BarList } from '@/components/admin/charts/Charts';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
 import { useAdminSupplier } from '@/hooks/useAdmin';
 import Skeleton from '@/components/ui/Skeleton';
+import { pressable } from '@/lib/motion';
+import cn from '@/lib/cn';
 
 /**
  * One supplier — contact details, linked products, PO history and the spend
@@ -87,7 +89,7 @@ export function AdminSupplierProfilePage() {
             action={
               <Link
                 to="/admin/suppliers"
-                className="inline-flex h-9 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3.5 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+                className={cn(pressable, 'inline-flex h-9 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3.5 font-display text-sm font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
               >
                 Back to suppliers
               </Link>
@@ -261,7 +263,7 @@ export function AdminSupplierProfilePage() {
         action={
           <Link
             to="/admin/suppliers"
-            className="inline-flex h-11 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+            className={cn(pressable, 'inline-flex h-11 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
           >
             All suppliers
           </Link>

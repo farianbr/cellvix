@@ -5,6 +5,8 @@ import { BUSINESS_INFO } from '@/lib/constants';
 import Button from '@/components/ui/Button';
 import BrandScene from '@/components/ui/BrandScene';
 import { useCart } from '@/hooks/useCart';
+import { pressable } from '@/lib/motion';
+import cn from '@/lib/cn';
 
 /**
  * Payment failed.
@@ -92,7 +94,7 @@ export function PaymentFailedPage() {
             </Button>
             <Link
               to="/cart"
-              className="inline-flex h-13 items-center gap-2 rounded-lg border border-line-strong bg-surface px-6 font-display text-lg font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+              className={cn(pressable, 'inline-flex h-13 items-center gap-2 rounded-lg border border-line-strong bg-surface px-6 font-display text-lg font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
             >
               <ArrowLeft className="size-4" strokeWidth={2} aria-hidden="true" />
               Back to cart
@@ -138,14 +140,14 @@ export function PaymentFailedPage() {
               <div className="mt-5 flex flex-col gap-2">
                 <a
                   href={`tel:${BUSINESS_INFO.phone.replace(/[^\d+]/g, '')}`}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-line-strong bg-surface font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+                  className={cn(pressable, 'inline-flex h-11 items-center justify-center gap-2 rounded-md border border-line-strong bg-surface font-display text-md font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
                 >
                   <Headphones className="size-4" strokeWidth={2} aria-hidden="true" />
                   {BUSINESS_INFO.phone}
                 </a>
                 <Link
                   to="/contact"
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-line bg-surface-2 font-display text-md font-semibold text-ink-700 transition-colors hover:bg-surface-3"
+                  className={cn(pressable, 'inline-flex h-11 items-center justify-center gap-2 rounded-md border border-line bg-surface-2 font-display text-md font-semibold text-ink-700 hover:bg-surface-3')}
                 >
                   <Mail className="size-4" strokeWidth={2} aria-hidden="true" />
                   Message the sales desk

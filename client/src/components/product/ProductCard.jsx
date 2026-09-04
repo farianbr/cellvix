@@ -139,7 +139,7 @@ export function ProductCard({ product }) {
         <div>
           <p className="eyebrow text-ink-300">{product.partTypeLabel}</p>
           <h3 className="mt-0.5 line-clamp-2 font-display text-sm font-bold leading-tight tracking-tight text-ink-900 @min-[200px]:text-md">
-            <Link to={`/product/${product.slug}`} className="transition-colors hover:text-brand">
+            <Link to={`/product/${product.slug}`} className={cn(pressable, ' hover:text-brand')}>
               {productTitle(product.name, product.partTypeLabel)}
             </Link>
           </h3>

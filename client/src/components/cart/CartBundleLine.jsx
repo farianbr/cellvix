@@ -4,6 +4,7 @@ import cn from '@/lib/cn';
 import { money } from '@/lib/format';
 import QtyStepper from '@/components/product/QtyStepper';
 import { PartVisual } from '@/components/product/PartFrame';
+import { pressable } from '@/lib/motion';
 
 /**
  * A combo in the cart, as ONE line.
@@ -63,7 +64,7 @@ export function CartBundleLine({ bundle, onQtyChange, onRemove, compact = false 
                 <span className="min-w-0">
                   <Link
                     to={`/product/${line.slug}`}
-                    className="block max-w-[190px] truncate text-xs text-ink-700 transition-colors hover:text-brand"
+                    className={cn(pressable, 'block max-w-[190px] truncate text-xs text-ink-700 hover:text-brand')}
                   >
                     {line.name}
                   </Link>

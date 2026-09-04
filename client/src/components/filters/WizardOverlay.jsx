@@ -5,6 +5,7 @@ import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import cn from '@/lib/cn';
 import { count as formatCount } from '@/lib/format';
+import { pressable } from '@/lib/motion';
 
 /**
  * The option list a wizard step opens into (brief §5.3).
@@ -244,7 +245,8 @@ export function WizardOverlay({ open, onClose, onNext, level, label, title, opti
                   onClick={() => onSelect(option)}
                   aria-pressed={isSelected}
                   className={cn(
-                    'flex min-h-11 w-full items-center gap-3 px-3.5 py-2.5 text-left transition-colors duration-press',
+                    pressable,
+                    'flex min-h-11 w-full items-center gap-3 px-3.5 py-2.5 text-left duration-press',
                     isSelected ? 'bg-brand-50' : 'bg-surface hover:bg-surface-2',
                   )}
                 >
@@ -300,7 +302,7 @@ export function WizardOverlay({ open, onClose, onNext, level, label, title, opti
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-9 items-center rounded-md border border-line px-3 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-line-strong hover:bg-surface-2 active:scale-[0.97]"
+              className={cn(pressable, 'inline-flex h-9 items-center rounded-md border border-line px-3 font-display text-sm font-semibold text-ink-700 hover:border-line-strong hover:bg-surface-2')}
             >
               Done
             </button>

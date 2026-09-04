@@ -13,7 +13,7 @@ import scrollToSection from '@/lib/scrollToSection';
 import { useFaqs } from '@/hooks/useContent';
 import useActiveSection from '@/hooks/useActiveSection';
 import useDebouncedValue from '@/hooks/useDebouncedValue';
-import { ease } from '@/lib/motion';
+import { ease, pressable } from '@/lib/motion';
 
 /**
  * The category jump list.
@@ -256,7 +256,7 @@ export function FaqPage() {
           </Link>
           <a
             href={`tel:${BUSINESS_INFO.phone.replace(/[^\d+]/g, '')}`}
-            className="inline-flex h-12 items-center gap-2 rounded-full border border-line-strong bg-surface px-6 font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+            className={cn(pressable, 'inline-flex h-12 items-center gap-2 rounded-full border border-line-strong bg-surface px-6 font-display text-md font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
           >
             <Headphones className="size-4" strokeWidth={2} aria-hidden="true" />
             {BUSINESS_INFO.phone}

@@ -17,6 +17,7 @@ import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useAdminTaxonomy, useAdminMutations } from '@/hooks/useAdmin';
+import { pressable } from '@/lib/motion';
 
 /**
  * The taxonomy editor (§6.15 — CellShoppe's *Device & Models*, phase 11d).
@@ -202,7 +203,7 @@ function EditDialog({ node, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-9 items-center rounded-md border border-line bg-surface px-3.5 text-sm font-medium text-ink-600 transition-colors hover:border-line-strong hover:text-ink-900"
+            className={cn(pressable, 'inline-flex h-9 items-center rounded-md border border-line bg-surface px-3.5 text-sm font-medium text-ink-600 hover:border-line-strong hover:text-ink-900')}
           >
             Cancel
           </button>

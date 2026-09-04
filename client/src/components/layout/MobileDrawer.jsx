@@ -11,6 +11,7 @@ import useUiStore from '@/store/uiStore';
 import useApplyFilterPath from '@/hooks/useApplyFilterPath';
 import { useTaxonomy } from '@/hooks/useCatalog';
 import { useAuth, useSignOut } from '@/hooks/useAuth';
+import { pressable } from '@/lib/motion';
 
 /**
  * The drawer is the SITE's menu, not the account's.
@@ -129,7 +130,7 @@ export function MobileDrawer() {
                 key={key}
                 href={BUSINESS_INFO.social[key]}
                 aria-label={label}
-                className="flex size-9 items-center justify-center rounded-full border border-line bg-surface text-ink-500 transition-colors hover:border-brand hover:text-brand"
+                className={cn(pressable, 'flex size-9 items-center justify-center rounded-full border border-line bg-surface text-ink-500 hover:border-brand hover:text-brand')}
               >
                 <Icon className="size-4" strokeWidth={2} />
               </a>
@@ -200,7 +201,8 @@ export function MobileDrawer() {
                 onClick={close}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'relative flex items-center justify-between gap-2 rounded-md px-3 py-2.5 text-md transition-colors',
+                  pressable,
+                  'relative flex items-center justify-between gap-2 rounded-md px-3 py-2.5 text-md',
                   active
                     ? 'bg-brand/8 font-semibold text-brand-700'
                     : 'font-medium text-ink-700 hover:bg-surface-2 hover:text-ink-900',

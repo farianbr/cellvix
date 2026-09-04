@@ -9,6 +9,7 @@ import useUiStore from '@/store/uiStore';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { useAccountMenuTrigger } from '@/components/account/AccountMenu';
+import { pressable } from '@/lib/motion';
 
 /**
  * Account control. Guests get the sign-in popup; a signed-in user gets the
@@ -25,7 +26,8 @@ function AccountControl() {
   // hang off this cluster and the lit button is what says which one you opened.
   const open = isAuthenticated && accountMenuOpen;
   const className = cn(
-    'flex items-center gap-2.5 rounded-md px-3 py-2 transition-colors',
+    pressable,
+    'flex items-center gap-2.5 rounded-md px-3 py-2',
     open ? 'bg-brand-50' : 'hover:bg-surface-2',
   );
 
@@ -136,7 +138,7 @@ export function HeaderDesktop() {
         <div className="flex shrink-0 items-center gap-1">
           <a
             href={`tel:${BUSINESS_INFO.phone.replace(/[^\d+]/g, '')}`}
-            className="hidden items-center gap-2.5 rounded-md px-3 py-2 transition-colors hover:bg-surface-2 xl:flex"
+            className={cn(pressable, 'hidden items-center gap-2.5 rounded-md px-3 py-2 hover:bg-surface-2 xl:flex')}
           >
             <Headphones className="size-5 shrink-0 text-ink-400" strokeWidth={1.5} aria-hidden="true" />
             <span className="leading-tight">
@@ -155,7 +157,8 @@ export function HeaderDesktop() {
             aria-expanded={cartOpen}
             aria-haspopup="dialog"
             className={cn(
-              'flex items-center gap-2.5 rounded-md px-3 py-2 transition-colors',
+              pressable,
+              'flex items-center gap-2.5 rounded-md px-3 py-2',
               cartOpen ? 'bg-brand-50' : 'hover:bg-surface-2',
             )}
             aria-label={`Cart, ${cartCount} items`}

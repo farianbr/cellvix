@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 import { ArrowUpRight, Facebook, Instagram, Linkedin, Mail, MapPin, Phone, Youtube } from 'lucide-react';
 import cn from '@/lib/cn';
 import { BUSINESS_INFO } from '@/lib/constants';
+import { pressable } from '@/lib/motion';
 
 const COLUMNS = [
   {
@@ -85,7 +86,7 @@ export function Footer() {
                   <Phone className="size-4 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
                   <a
                     href={`tel:${BUSINESS_INFO.phone.replace(/[^\d+]/g, '')}`}
-                    className="transition-colors hover:text-brand"
+                    className={cn(pressable, ' hover:text-brand')}
                   >
                     {BUSINESS_INFO.phone}
                   </a>
@@ -94,7 +95,7 @@ export function Footer() {
                   <Mail className="size-4 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
                   <a
                     href={`mailto:${BUSINESS_INFO.email}`}
-                    className="transition-colors hover:text-brand"
+                    className={cn(pressable, ' hover:text-brand')}
                   >
                     {BUSINESS_INFO.email}
                   </a>
@@ -120,7 +121,7 @@ export function Footer() {
                       <a
                         href={BUSINESS_INFO.social[key]}
                         aria-label={label}
-                        className="flex items-center gap-1.5 rounded-full border border-line bg-surface py-1.5 pl-2 pr-2.5 text-xs font-medium text-ink-500 transition-colors hover:border-brand hover:text-brand"
+                        className={cn(pressable, 'flex items-center gap-1.5 rounded-full border border-line bg-surface py-1.5 pl-2 pr-2.5 text-xs font-medium text-ink-500 hover:border-brand hover:text-brand')}
                       >
                         <Icon className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
                         {BUSINESS_INFO.handles[key]}
@@ -161,7 +162,7 @@ export function Footer() {
                       <li key={link.label}>
                         <Link
                           to={link.to}
-                          className="text-md text-ink-500 transition-colors hover:text-brand"
+                          className={cn(pressable, 'text-md text-ink-500 hover:text-brand')}
                         >
                           {link.label}
                         </Link>
@@ -256,10 +257,10 @@ export function Footer() {
           <span>
             {BUSINESS_INFO.name} ©{new Date().getFullYear()}
           </span>
-          <Link to="/contact" className="transition-colors hover:text-brand">
+          <Link to="/contact" className={cn(pressable, ' hover:text-brand')}>
             Privacy
           </Link>
-          <Link to="/contact" className="transition-colors hover:text-brand">
+          <Link to="/contact" className={cn(pressable, ' hover:text-brand')}>
             Terms
           </Link>
         </p>

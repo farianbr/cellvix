@@ -11,6 +11,8 @@ import WhyCellvix from '@/components/product/WhyCellvix';
 import useActiveSection from '@/hooks/useActiveSection';
 import useScrollProgress from '@/hooks/useScrollProgress';
 import { useBlogPost } from '@/hooks/useContent';
+import { pressable } from '@/lib/motion';
+import cn from '@/lib/cn';
 
 const LABELS = Object.fromEntries(BLOG_CATEGORIES.map((c) => [c.value, c.label]));
 
@@ -116,7 +118,7 @@ export function BlogPostPage() {
         <article className="min-w-0">
           <Link
             to="/blog"
-            className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-400 transition-colors hover:text-brand"
+            className={cn(pressable, 'mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-400 hover:text-brand')}
           >
             <ArrowLeft className="size-4" strokeWidth={2} aria-hidden="true" />
             Journal
@@ -172,7 +174,7 @@ export function BlogPostPage() {
                 <li key={tag}>
                   <Link
                     to={`/blog?tag=${encodeURIComponent(tag)}`}
-                    className="inline-flex h-7 items-center rounded-full border border-line bg-surface px-3 text-sm text-ink-500 transition-colors hover:border-brand hover:text-brand"
+                    className={cn(pressable, 'inline-flex h-7 items-center rounded-full border border-line bg-surface px-3 text-sm text-ink-500 hover:border-brand hover:text-brand')}
                   >
                     {tag}
                   </Link>
@@ -191,7 +193,7 @@ export function BlogPostPage() {
                   <li key={item.id}>
                     <Link
                       to={`/blog/${item.slug}`}
-                      className="group flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-surface-2 sm:px-5"
+                      className={cn(pressable, 'group flex items-center gap-4 px-4 py-3.5 hover:bg-surface-2 sm:px-5')}
                     >
                       <PostCover
                         post={item}

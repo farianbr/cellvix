@@ -10,7 +10,7 @@ import useScrollProgress from '@/hooks/useScrollProgress';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import { useAccountMenuTrigger } from '@/components/account/AccountMenu';
-import { ease } from '@/lib/motion';
+import { ease, pressable } from '@/lib/motion';
 
 /**
  * Tablet / mobile header (brief §4.2, Unimart pattern):
@@ -92,7 +92,8 @@ export function HeaderMobile() {
   // saying which button put it there.
   const iconButton = (open) =>
     cn(
-      'relative flex size-10 shrink-0 items-center justify-center rounded-md transition-colors',
+      pressable,
+      'relative flex size-10 shrink-0 items-center justify-center rounded-md',
       open ? 'bg-brand-50 text-brand' : 'text-ink-700 hover:bg-surface-2',
     );
 

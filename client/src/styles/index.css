@@ -1,5 +1,30 @@
 @import 'tailwindcss';
 
+/* ==========================================================================
+   Classes Tailwind cannot see
+   ==========================================================================
+
+   Tailwind v4 finds utilities by scanning source files for literal class
+   names. `lib/motion.js` composes the press-feedback classes into a string at
+   runtime, so no file contains the literal `active:scale-[0.97]` and Tailwind
+   emitted no rule for it — the class reached the DOM and did nothing.
+
+   That is the whole failure mode of a shared class-string helper: it is exactly
+   the abstraction Tailwind's scanner cannot follow. Declaring the utilities
+   here keeps the helper (one definition of what a press looks like) without
+   depending on the scanner to infer it.
+
+   Anything added to `pressable` or `pressableSurface` must be listed here too,
+   or it will silently do nothing. */
+@source inline("transition-[transform,background-color,border-color,color,box-shadow,filter]");
+@source inline("transition-[transform,background-color,border-color,box-shadow]");
+@source inline("duration-press");
+@source inline("ease-entrance");
+@source inline("active:scale-[0.97]");
+@source inline("active:scale-[0.995]");
+@source inline("motion-reduce:active:scale-100");
+@source inline("motion-reduce:transition-none");
+
 /* Gagalin — the product-card watermark face.
    Not a Google Font, so it cannot be added to the <link> in index.html; it has
    to be self-hosted. Drop the licensed file at client/public/fonts/Gagalin.woff2
@@ -198,12 +223,18 @@
   /* Durations, named for what is moving. Nothing in the UI exceeds 300ms;
      past that the interface feels like it is thinking rather than responding.
      Exits are faster than entrances — the system responding should always
-     outpace the user deciding. */
-  --duration-press: 140ms;
-  --duration-fast: 160ms;
-  --duration-snap: 200ms;
-  --duration-panel: 260ms;
-  --duration-exit: 140ms;
+     outpace the user deciding.
+
+     Namespaced `--transition-duration-*`, not `--duration-*`. Tailwind v4
+     builds its `duration-` utilities from the transition-duration namespace
+     only; `--duration-press` looked like a token and read like one at every
+     call site, but generated no utility at all, so every class using it fell
+     through to the framework default of 150ms. */
+  --transition-duration-press: 140ms;
+  --transition-duration-fast: 160ms;
+  --transition-duration-snap: 200ms;
+  --transition-duration-panel: 260ms;
+  --transition-duration-exit: 140ms;
 }
 
 /* ==========================================================================

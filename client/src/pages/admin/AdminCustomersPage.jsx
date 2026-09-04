@@ -44,6 +44,8 @@ import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminUsers, useAdminMutations } from '@/hooks/useAdmin';
 import useCreateParam from '@/hooks/useCreateParam';
 import downloadExport from '@/lib/exportDownload';
+import { pressable } from '@/lib/motion';
+import cn from '@/lib/cn';
 
 /**
  * Header metadata read from the same table the breadcrumb uses, so a page
@@ -649,7 +651,7 @@ export function AdminCustomersPage() {
             {(counts.pending ?? 0) > 0 && (
               <Link
                 to="/admin/approvals"
-                className="flex h-10 items-center gap-1.5 rounded-md border border-warn/30 bg-warn-50 px-3.5 text-md font-medium text-warn transition-colors active:scale-[0.97] hover:border-warn/50"
+                className={cn(pressable, 'flex h-10 items-center gap-1.5 rounded-md border border-warn/30 bg-warn-50 px-3.5 text-md font-medium text-warn hover:border-warn/50')}
               >
                 <UserCheck className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
                 Review {counts.pending}

@@ -3,6 +3,8 @@ import { Hammer } from 'lucide-react';
 import PageHeader from '@/components/admin/PageHeader';
 import { matchAdminRoute } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
+import { pressable } from '@/lib/motion';
+import cn from '@/lib/cn';
 
 /**
  * Placeholder for a screen whose phase has not landed yet.
@@ -60,7 +62,7 @@ export function AdminStubPage() {
 
         <Link
           to="/admin"
-          className="mt-6 inline-flex h-9 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3.5 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+          className={cn(pressable, 'mt-6 inline-flex h-9 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3.5 font-display text-sm font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
         >
           Back to dashboard
         </Link>

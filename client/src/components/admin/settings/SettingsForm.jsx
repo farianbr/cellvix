@@ -1,6 +1,8 @@
 import { AlertCircle, CheckCircle2, RotateCcw } from 'lucide-react';
 
 import Button from '@/components/ui/Button';
+import { pressable } from '@/lib/motion';
+import cn from '@/lib/cn';
 
 /**
  * The chrome every settings form shares (§6.15, phase 11).
@@ -30,7 +32,7 @@ export function SettingsFormActions({ dirty, saving, saved, error, onReset, save
         <button
           type="button"
           onClick={onReset}
-          className="inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-surface px-3.5 text-sm font-medium text-ink-600 transition-colors hover:border-line-strong hover:text-ink-900"
+          className={cn(pressable, 'inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-surface px-3.5 text-sm font-medium text-ink-600 hover:border-line-strong hover:text-ink-900')}
         >
           <RotateCcw className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
           Discard changes

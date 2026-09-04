@@ -20,6 +20,7 @@ import DataTable from '@/components/admin/DataTable';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
 import { useAdminInventoryItem } from '@/hooks/useAdmin';
 import Skeleton from '@/components/ui/Skeleton';
+import { pressable } from '@/lib/motion';
 
 /**
  * One product, seen from the warehouse (ERP rework §6.10).
@@ -72,7 +73,7 @@ export function AdminInventoryDetailPage() {
             action={
               <Link
                 to="/admin/inventory"
-                className="inline-flex h-9 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3.5 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+                className={cn(pressable, 'inline-flex h-9 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3.5 font-display text-sm font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
               >
                 Back to inventory
               </Link>
@@ -168,7 +169,7 @@ export function AdminInventoryDetailPage() {
         action={
           <Link
             to="/admin/inventory"
-            className="inline-flex h-11 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+            className={cn(pressable, 'inline-flex h-11 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
           >
             All inventory
           </Link>

@@ -27,6 +27,8 @@ import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminSuppliers, useAdminMutations } from '@/hooks/useAdmin';
 import Skeleton from '@/components/ui/Skeleton';
+import { pressable } from '@/lib/motion';
+import cn from '@/lib/cn';
 
 /**
  * Suppliers — the businesses Cellvix buys stock from (ERP rework §6.7).
@@ -225,7 +227,7 @@ function SupplierCard({ supplier, onEdit, onToggle }) {
             in one. */}
         <Link
           to={`/admin/suppliers/${supplier.id}`}
-          className="inline-flex h-9 flex-1 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3.5 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+          className={cn(pressable, 'inline-flex h-9 flex-1 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3.5 font-display text-sm font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
         >
           View profile
         </Link>
@@ -236,7 +238,7 @@ function SupplierCard({ supplier, onEdit, onToggle }) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`Open ${supplier.name} website`}
-            className="flex size-8 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 transition-colors hover:border-line-strong hover:text-ink-700"
+            className={cn(pressable, 'flex size-8 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 hover:border-line-strong hover:text-ink-700')}
           >
             <ExternalLink className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
           </a>
@@ -288,7 +290,7 @@ export function AdminSuppliersPage() {
           <>
             <Link
               to="/admin/purchase-orders"
-              className="inline-flex h-11 select-none items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+              className={cn(pressable, 'inline-flex h-11 select-none items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
             >
               <ClipboardList className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
               Purchase orders

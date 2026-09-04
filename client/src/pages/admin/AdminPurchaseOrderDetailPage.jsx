@@ -31,6 +31,8 @@ import {
   useAdminMutations,
 } from '@/hooks/useAdmin';
 import Skeleton from '@/components/ui/Skeleton';
+import { pressable } from '@/lib/motion';
+import cn from '@/lib/cn';
 
 /**
  * One purchase order — lines, receiving, landed cost and the stage actions
@@ -280,7 +282,7 @@ export function AdminPurchaseOrderDetailPage() {
             action={
               <Link
                 to="/admin/purchase-orders"
-                className="inline-flex h-9 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3.5 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+                className={cn(pressable, 'inline-flex h-9 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3.5 font-display text-sm font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
               >
                 Back to purchase orders
               </Link>
@@ -545,7 +547,7 @@ export function AdminPurchaseOrderDetailPage() {
             {order.supplier.id && (
               <Link
                 to={`/admin/suppliers/${order.supplier.id}`}
-                className="mt-3 inline-flex h-8 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+                className={cn(pressable, 'mt-3 inline-flex h-8 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3 font-display text-sm font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
               >
                 View profile
               </Link>

@@ -127,7 +127,7 @@ export function AdminApprovalsPage() {
               nested click target that has to fight itself to work. */}
           <Link
             to={`/admin/clients/${user.id}`}
-            className="group inline-flex max-w-full items-center gap-1.5 font-display text-sm font-bold text-ink-900 transition-colors hover:text-brand"
+            className={cn(pressable, 'group inline-flex max-w-full items-center gap-1.5 font-display text-sm font-bold text-ink-900 hover:text-brand')}
           >
             <span className="truncate">{user.displayName ?? user.email}</span>
             <ArrowUpRight

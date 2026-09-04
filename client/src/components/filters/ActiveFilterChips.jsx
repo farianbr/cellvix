@@ -2,6 +2,8 @@ import { useShallow } from 'zustand/react/shallow';
 import Chip from '@/components/ui/Chip';
 import { FILTER_LEVELS, GRADES } from '@/lib/constants';
 import useFilterStore from '@/store/filterStore';
+import { pressable } from '@/lib/motion';
+import cn from '@/lib/cn';
 
 /**
  * A single readout of everything the three filter systems have set. Without it
@@ -80,7 +82,7 @@ export function ActiveFilterChips({ facetMeta }) {
         <button
           type="button"
           onClick={resetAll}
-          className="ml-1 text-sm font-medium text-ink-400 underline-offset-2 transition-colors hover:text-brand hover:underline"
+          className={cn(pressable, 'ml-1 text-sm font-medium text-ink-400 underline-offset-2 hover:text-brand hover:underline')}
         >
           Clear all
         </button>

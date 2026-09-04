@@ -56,6 +56,7 @@ import {
 } from '@/components/admin/CustomerCrm';
 import { MEMBERSHIP_TIERS } from '@shared/schemas/admin';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
+import { pressable } from '@/lib/motion';
 import {
   useAdminUser,
   useAdminUserActivity,
@@ -955,7 +956,7 @@ export function AdminClientProfilePage() {
                 )}
                 <a
                   href={`mailto:${user.email}`}
-                  className="inline-flex items-center gap-1.5 transition-colors hover:text-ink-900"
+                  className={cn(pressable, 'inline-flex items-center gap-1.5 hover:text-ink-900')}
                 >
                   <Mail className="size-3.5 shrink-0 text-brand" strokeWidth={2.25} aria-hidden="true" />
                   {user.email}
@@ -963,7 +964,7 @@ export function AdminClientProfilePage() {
                 {user.phone && (
                   <a
                     href={`tel:${user.phone.replace(/[^\d+]/g, '')}`}
-                    className="inline-flex items-center gap-1.5 transition-colors hover:text-ink-900"
+                    className={cn(pressable, 'inline-flex items-center gap-1.5 hover:text-ink-900')}
                   >
                     <Phone className="size-3.5 shrink-0 text-brand" strokeWidth={2.25} aria-hidden="true" />
                     {user.phone}
@@ -1197,7 +1198,7 @@ export function AdminClientProfilePage() {
                   <li key={invoice.number} className="first:pt-0 last:pb-0">
                     <Link
                       to={`/admin/invoices/${invoice.number}`}
-                      className="group -mx-2 flex items-center gap-3 rounded-md px-2 py-2.5 transition-colors hover:bg-surface-2 active:scale-[0.99]"
+                      className={cn(pressable, 'group -mx-2 flex items-center gap-3 rounded-md px-2 py-2.5 hover:bg-surface-2')}
                     >
                     <div className="min-w-0 flex-1">
                       <span className="flex items-center gap-1.5 text-sm font-semibold text-ink-900 group-hover:text-brand">
@@ -1249,7 +1250,7 @@ export function AdminClientProfilePage() {
                   <li key={order.orderNumber}>
                     <Link
                       to={`/admin/orders/${order.orderNumber}`}
-                      className="group flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-surface-2 active:scale-[0.99]"
+                      className={cn(pressable, 'group flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm hover:bg-surface-2')}
                     >
                       <Package className="size-3.5 shrink-0 text-info" strokeWidth={2.25} aria-hidden="true" />
                       <span className="flex min-w-0 flex-1 items-center gap-1.5 text-ink-700 group-hover:text-brand">
@@ -1268,7 +1269,7 @@ export function AdminClientProfilePage() {
                   <li key={invoice.number}>
                     <Link
                       to={`/admin/invoices/${invoice.number}`}
-                      className="group flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-surface-2 active:scale-[0.99]"
+                      className={cn(pressable, 'group flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm hover:bg-surface-2')}
                     >
                       <Receipt className="size-3.5 shrink-0 text-brand" strokeWidth={2.25} aria-hidden="true" />
                       <span className="flex min-w-0 flex-1 items-center gap-1.5 text-ink-700 group-hover:text-brand">

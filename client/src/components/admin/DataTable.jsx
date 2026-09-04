@@ -6,7 +6,7 @@ import useOnClickOutside from '@/hooks/useOnClickOutside';
 import Skeleton from '@/components/ui/Skeleton';
 import useTableDensity from '@/hooks/useTableDensity';
 import DensityToggle from '@/components/admin/DensityToggle';
-import { pressableSurface } from '@/lib/motion';
+import { pressable, pressableSurface } from '@/lib/motion';
 
 /**
  * The admin list table. Fourteen planned screens are this table with different
@@ -297,7 +297,8 @@ export function DataTable({
                         // box — so it is pushed to the right edge by that
                         // text-align on its own, with nothing to do here.
                         className={cn(
-                          'eyebrow inline-flex items-center gap-1 transition-colors hover:text-ink-700',
+                          pressable,
+                          'eyebrow inline-flex items-center gap-1 hover:text-ink-700',
                           isSorted && 'text-ink-900',
                         )}
                       >

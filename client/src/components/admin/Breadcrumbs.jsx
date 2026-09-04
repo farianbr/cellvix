@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Home } from 'lucide-react';
 import cn from '@/lib/cn';
 import { adminBreadcrumbTrail } from '@/lib/adminRoutes';
 import { useRecordLabel } from '@/components/admin/shell/recordLabel';
+import { pressable } from '@/lib/motion';
 
 /**
  * The admin breadcrumb (§4b). Built from route metadata, never parsed from the
@@ -37,7 +38,7 @@ export function Breadcrumbs({ recordLabel, className }) {
       {parent && (
         <Link
           to={parent.to}
-          className="mr-1 flex items-center text-ink-300 transition-colors hover:text-ink-900 sm:hidden"
+          className={cn(pressable, 'mr-1 flex items-center text-ink-300 hover:text-ink-900 sm:hidden')}
           aria-label={`Back to ${parent.label}`}
         >
           <ChevronLeft className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
@@ -57,7 +58,7 @@ export function Breadcrumbs({ recordLabel, className }) {
           ) : (
             <Link
               to="/admin"
-              className="flex items-center text-ink-300 transition-colors hover:text-ink-900"
+              className={cn(pressable, 'flex items-center text-ink-300 hover:text-ink-900')}
               aria-label="Home"
             >
               <Home className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
@@ -101,7 +102,7 @@ export function Breadcrumbs({ recordLabel, className }) {
                   <Link
                     to={crumb.to}
                     title={crumb.label}
-                    className="max-w-[160px] truncate text-ink-300 transition-colors hover:text-ink-900"
+                    className={cn(pressable, 'max-w-[160px] truncate text-ink-300 hover:text-ink-900')}
                   >
                     {crumb.label}
                   </Link>

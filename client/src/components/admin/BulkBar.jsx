@@ -1,5 +1,6 @@
 import { X } from 'lucide-react';
 import cn from '@/lib/cn';
+import { pressable } from '@/lib/motion';
 
 /**
  * The floating action bar that appears when rows are selected.
@@ -50,7 +51,7 @@ export function BulkBar({ count, noun = 'selected', onClear, children, className
           type="button"
           onClick={onClear}
           aria-label="Clear selection"
-          className="flex size-7 shrink-0 items-center justify-center rounded-full text-ink-400 transition-colors hover:bg-surface-2 hover:text-ink-900"
+          className={cn(pressable, 'flex size-7 shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-surface-2 hover:text-ink-900')}
         >
           <X className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
         </button>

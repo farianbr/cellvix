@@ -11,6 +11,7 @@ import Skeleton from '@/components/ui/Skeleton';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import PaymentModal from '@/components/payment/PaymentModal';
 import { useInvoices, useStoreCredit, useAccountMutations } from '@/hooks/useAccount';
+import { pressable } from '@/lib/motion';
 
 /**
  * Billing, in two panels.
@@ -35,7 +36,8 @@ function InvoiceDocumentLink({ number, className }) {
       target="_blank"
       rel="noreferrer"
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-semibold text-brand transition-colors hover:bg-brand-50',
+        pressable,
+        'inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-semibold text-brand hover:bg-brand-50',
         className,
       )}
     >

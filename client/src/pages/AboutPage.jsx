@@ -27,6 +27,7 @@ import Slab, { SectionHeader } from '@/components/ui/Slab';
 import GradeBadge from '@/components/product/GradeBadge';
 import PostCover from '@/components/blog/PostCover';
 import { useBlogPosts } from '@/hooks/useContent';
+import { pressable } from '@/lib/motion';
 
 const MILESTONES = [
   { value: 420, suffix: '+', label: 'SKUs in stock', hint: 'Across six device categories' },
@@ -565,7 +566,7 @@ function LatestPosts() {
 
                   <div className="flex flex-1 flex-col p-5">
                     <h3 className="text-lg leading-snug">
-                      <Link to={`/blog/${post.slug}`} className="transition-colors hover:text-brand">
+                      <Link to={`/blog/${post.slug}`} className={cn(pressable, ' hover:text-brand')}>
                         {post.title}
                       </Link>
                     </h3>
@@ -614,14 +615,14 @@ function ClosingCta() {
         <div className="flex flex-wrap gap-3">
           <Link
             to="/"
-            className="inline-flex h-13 items-center gap-2 rounded-lg bg-white px-7 font-display text-lg font-semibold text-ink-900 transition-colors hover:bg-white/90"
+            className={cn(pressable, 'inline-flex h-13 items-center gap-2 rounded-lg bg-white px-7 font-display text-lg font-semibold text-ink-900 hover:bg-white/90')}
           >
             Browse the catalogue
             <ArrowRight className="size-4" strokeWidth={2} aria-hidden="true" />
           </Link>
           <Link
             to="/contact"
-            className="inline-flex h-13 items-center rounded-lg border border-white/35 px-7 font-display text-lg font-semibold text-white transition-colors hover:bg-white/10"
+            className={cn(pressable, 'inline-flex h-13 items-center rounded-lg border border-white/35 px-7 font-display text-lg font-semibold text-white hover:bg-white/10')}
           >
             Talk to the sales desk
           </Link>

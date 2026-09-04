@@ -6,7 +6,7 @@ import { COUNTRIES, DEFAULT_DIAL } from '@shared/countries';
 import cn from '@/lib/cn';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
 import useAnchoredPosition from '@/hooks/useAnchoredPosition';
-import { ease } from '@/lib/motion';
+import { ease, pressable } from '@/lib/motion';
 
 /**
  * The dial codes offered: every country, from the one shared list.
@@ -247,7 +247,8 @@ function CountryCodeMenu({ dial, onSelect, disabled }) {
         className={cn(
           'flex h-full items-center gap-1 py-0 pl-3 pr-2.5',
           'tnum text-lg text-ink-900 sm:text-md',
-          'transition-colors focus:outline-none',
+          pressable,
+          'focus:outline-none',
           'hover:bg-surface-2 disabled:cursor-not-allowed disabled:text-ink-400',
         )}
       >

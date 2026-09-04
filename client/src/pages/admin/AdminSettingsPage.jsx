@@ -5,6 +5,7 @@ import cn from '@/lib/cn';
 import PageHeader from '@/components/admin/PageHeader';
 import { ADMIN_ROUTES, SETTINGS_CATEGORIES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
+import { pressable } from '@/lib/motion';
 
 /**
  * Settings — Summary and the seven category landings (§6.15, phase 11).
@@ -140,7 +141,7 @@ export function AdminSettingsPage() {
         >
           <Link
             to="/admin/settings"
-            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-line-strong bg-surface px-3 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+            className={cn(pressable, 'inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-line-strong bg-surface px-3 font-display text-sm font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
           >
             <ArrowLeft className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
             Summary
@@ -152,7 +153,8 @@ export function AdminSettingsPage() {
               to={`/admin/settings?cat=${tab.key}`}
               aria-current={tab.key === category.key ? 'page' : undefined}
               className={cn(
-                'inline-flex h-8 shrink-0 items-center rounded-md px-3 font-display text-sm font-semibold transition-colors',
+                pressable,
+                'inline-flex h-8 shrink-0 items-center rounded-md px-3 font-display text-sm font-semibold',
                 tab.key === category.key
                   ? 'bg-ink-900 text-white'
                   : 'text-ink-500 hover:bg-surface-2 hover:text-ink-700',

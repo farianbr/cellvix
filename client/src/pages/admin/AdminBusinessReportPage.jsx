@@ -25,6 +25,7 @@ import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminReport } from '@/hooks/useAdmin';
 import { useTaxonomy } from '@/hooks/useCatalog';
 import Skeleton from '@/components/ui/Skeleton';
+import { pressable } from '@/lib/motion';
 
 /**
  * Business Overview — the printable period report (ERP rework §6.11).
@@ -161,7 +162,7 @@ export function AdminBusinessReportPage() {
             <>
               <Link
                 to="/admin/reports"
-                className="inline-flex h-11 select-none items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+                className={cn(pressable, 'inline-flex h-11 select-none items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
               >
                 All reports
               </Link>

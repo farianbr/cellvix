@@ -21,6 +21,7 @@ import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import useUiStore from '@/store/uiStore';
 import useFilterStore from '@/store/filterStore';
+import { pressable } from '@/lib/motion';
 
 function Breadcrumbs({ product }) {
   const setPath = useFilterStore((s) => s.setPath);
@@ -46,7 +47,7 @@ function Breadcrumbs({ product }) {
 
   return (
     <nav aria-label="Breadcrumb" className="mb-4 flex flex-wrap items-center gap-1 text-sm">
-      <Link to="/" className="text-ink-400 transition-colors hover:text-brand">
+      <Link to="/" className={cn(pressable, 'text-ink-400 hover:text-brand')}>
         Shop
       </Link>
       {crumbs.map((crumb) => (

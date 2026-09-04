@@ -5,6 +5,8 @@ import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import api from '@/lib/api';
 import { BUSINESS_INFO } from '@shared/business';
 import Spinner from '@/components/ui/Spinner';
+import { pressable } from '@/lib/motion';
+import cn from '@/lib/cn';
 
 /**
  * The unsubscribe landing page (§6.13).
@@ -81,7 +83,7 @@ export function UnsubscribePage() {
 
           <Link
             to="/"
-            className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+            className={cn(pressable, 'mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
           >
             Back to the shop
           </Link>
@@ -114,7 +116,7 @@ export function UnsubscribePage() {
 
           <Link
             to="/"
-            className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+            className={cn(pressable, 'mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
           >
             Back to the shop
           </Link>

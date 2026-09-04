@@ -24,6 +24,7 @@ import { useOffers } from '@/hooks/useContent';
 import { useAuth } from '@/hooks/useAuth';
 import useUiStore from '@/store/uiStore';
 import { useFilterStore } from '@/store/filterStore';
+import { pressable } from '@/lib/motion';
 
 /**
  * Offers and combo deals.
@@ -135,7 +136,8 @@ function CodeStub({ code, className }) {
       onClick={copy}
       aria-label={`Copy promo code ${code}`}
       className={cn(
-        'group inline-flex items-center gap-2 rounded-md border border-dashed border-line-strong bg-surface px-3 py-2 transition-colors hover:border-brand',
+        pressable,
+        'group inline-flex items-center gap-2 rounded-md border border-dashed border-line-strong bg-surface px-3 py-2 hover:border-brand',
         className,
       )}
     >
@@ -283,7 +285,7 @@ function ComboPart({ line, gated }) {
     <div className="flex w-[92px] shrink-0 flex-col items-center text-center">
       <Link
         to={`/product/${line.slug}`}
-        className="flex size-[68px] items-center justify-center rounded-lg border border-line bg-surface p-2 transition-colors hover:border-brand"
+        className={cn(pressable, 'flex size-[68px] items-center justify-center rounded-lg border border-line bg-surface p-2 hover:border-brand')}
       >
         <PartVisual product={line} />
       </Link>

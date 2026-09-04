@@ -8,6 +8,7 @@ import Modal from '@/components/ui/Modal';
 import ApproveClientForm from '@/components/admin/ApproveClientForm';
 import { useNotifications, useNotificationActions, useAdminMutations } from '@/hooks/useAdmin';
 import { adminIcon } from './adminIcons';
+import { pressable } from '@/lib/motion';
 
 /**
  * The notification bell and its dropdown (ERP rework §7.3, §6.15, phase 12c).
@@ -86,7 +87,8 @@ function NotificationRow({ entry, onOpen, onApprove }) {
   return (
     <div
       className={cn(
-        'flex w-full items-start border-b border-line transition-colors last:border-b-0 hover:bg-surface-2',
+        pressable,
+        'flex w-full items-start border-b border-line last:border-b-0 hover:bg-surface-2',
         // An unread row is tinted, not bolded alone: weight shifts reflow the
         // text and make the list twitch as rows are read.
         !entry.read && 'bg-surface-2/60',
@@ -142,7 +144,7 @@ function NotificationRow({ entry, onOpen, onApprove }) {
           // operator their place in the queue.
           onClick={onApprove}
           aria-label={`Approve ${entry.entity?.label ?? 'this account'}`}
-          className="my-2.5 mr-3 shrink-0 self-center rounded-sm border border-brand/40 bg-brand-50 px-2 py-1 text-xs font-medium text-brand transition-colors hover:border-brand"
+          className={cn(pressable, 'my-2.5 mr-3 shrink-0 self-center rounded-sm border border-brand/40 bg-brand-50 px-2 py-1 text-xs font-medium text-brand hover:border-brand')}
         >
           {entry.action.label}
         </button>

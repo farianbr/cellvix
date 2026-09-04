@@ -10,6 +10,7 @@ import Skeleton from '@/components/ui/Skeleton';
 import { useAuth, useSignOut } from '@/hooks/useAuth';
 import { useAccountSummary } from '@/hooks/useAccount';
 import useUiStore from '@/store/uiStore';
+import { pressable } from '@/lib/motion';
 
 /**
  * Which group and which leaf the current URL is in.
@@ -147,7 +148,8 @@ function NavTree({ badges, activeGroup, activeChildKey }) {
                       <NavLink
                         to={child.to}
                         className={cn(
-                          'flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm font-medium transition-colors',
+                          pressable,
+                          'flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm font-medium',
                           isActive
                             ? 'bg-brand-50 text-brand-700'
                             : 'text-ink-600 hover:bg-surface-2 hover:text-ink-900',
@@ -311,7 +313,7 @@ export function AccountLayout() {
               <button
                 type="button"
                 onClick={signOut}
-                className="flex w-full items-center gap-2.5 whitespace-nowrap rounded-md px-3 py-2.5 text-md font-medium text-ink-500 transition-colors hover:bg-danger-50 hover:text-danger"
+                className={cn(pressable, 'flex w-full items-center gap-2.5 whitespace-nowrap rounded-md px-3 py-2.5 text-md font-medium text-ink-500 hover:bg-danger-50 hover:text-danger')}
               >
                 <LogOut className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
                 Sign out

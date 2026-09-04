@@ -12,6 +12,7 @@ import Pagination from '@/components/ui/Pagination';
 import PostCover from '@/components/blog/PostCover';
 import { useBlogPosts } from '@/hooks/useContent';
 import useDebouncedValue from '@/hooks/useDebouncedValue';
+import { pressable } from '@/lib/motion';
 
 const LABELS = Object.fromEntries(BLOG_CATEGORIES.map((c) => [c.value, c.label]));
 
@@ -54,7 +55,7 @@ function PostCard({ post }) {
         <h2 className="text-lg leading-snug">
           {/* The whole card is not a link: the title is, so the accessible name
               is the title rather than the entire card's text. */}
-          <Link to={`/blog/${post.slug}`} className="transition-colors hover:text-brand">
+          <Link to={`/blog/${post.slug}`} className={cn(pressable, ' hover:text-brand')}>
             {post.title}
           </Link>
         </h2>
@@ -83,7 +84,7 @@ function FeaturedPost({ post }) {
         </div>
 
         <h2 className="text-2xl leading-tight lg:text-3xl">
-          <Link to={`/blog/${post.slug}`} className="transition-colors hover:text-brand">
+          <Link to={`/blog/${post.slug}`} className={cn(pressable, ' hover:text-brand')}>
             {post.title}
           </Link>
         </h2>
@@ -94,7 +95,7 @@ function FeaturedPost({ post }) {
 
         <Link
           to={`/blog/${post.slug}`}
-          className="mt-5 inline-flex items-center gap-1.5 self-start text-md font-semibold text-brand transition-colors hover:text-brand-700"
+          className={cn(pressable, 'mt-5 inline-flex items-center gap-1.5 self-start text-md font-semibold text-brand hover:text-brand-700')}
         >
           Read the article
           <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" strokeWidth={2} aria-hidden="true" />

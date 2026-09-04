@@ -13,6 +13,7 @@ import PromoCodeField from '@/components/cart/PromoCodeField';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
 import useUiStore from '@/store/uiStore';
+import { pressable } from '@/lib/motion';
 
 
 export function CartPage() {
@@ -107,7 +108,7 @@ export function CartPage() {
         </h1>
         <Link
           to="/"
-          className="inline-flex items-center gap-1.5 text-md font-semibold text-brand transition-colors hover:text-brand-700"
+          className={cn(pressable, 'inline-flex items-center gap-1.5 text-md font-semibold text-brand hover:text-brand-700')}
         >
           <ArrowLeft className="size-4" strokeWidth={2} aria-hidden="true" />
           Continue shopping

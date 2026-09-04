@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 import { ArrowUpRight, Check, MapPin, Stamp } from 'lucide-react';
 import cn from '@/lib/cn';
 import { BUSINESS_INFO, GRADES } from '@/lib/constants';
+import { pressable } from '@/lib/motion';
 
 /**
  * The trust block on a product page.
@@ -136,7 +137,7 @@ export function WhyCellvix({ product = null, className }) {
             </h2>
             <Link
               to="/about"
-              className="inline-flex items-center gap-0.5 text-sm font-semibold text-brand transition-colors hover:text-brand-700"
+              className={cn(pressable, 'inline-flex items-center gap-0.5 text-sm font-semibold text-brand hover:text-brand-700')}
             >
               About us
               <ArrowUpRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />

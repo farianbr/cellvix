@@ -10,6 +10,7 @@ import PageHeader from '@/components/admin/PageHeader';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminCredentials, useAdminMutations } from '@/hooks/useAdmin';
+import { pressable } from '@/lib/motion';
 
 /**
  * API Keys (§6.15, category 7, phase 11c).
@@ -86,7 +87,7 @@ function ProviderCard({ provider }) {
           <button
             type="button"
             onClick={clearAll}
-            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-2.5 text-sm font-medium text-ink-500 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger"
+            className={cn(pressable, 'inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-2.5 text-sm font-medium text-ink-500 hover:border-danger hover:bg-danger-50 hover:text-danger')}
           >
             <Trash2 className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
             Remove keys

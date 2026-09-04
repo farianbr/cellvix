@@ -25,6 +25,7 @@ import ProcessStrip from '@/components/admin/ProcessStrip';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
 import { useAdminQuote, useAdminMutations } from '@/hooks/useAdmin';
 import Skeleton from '@/components/ui/Skeleton';
+import { pressable } from '@/lib/motion';
 
 /**
  * One quote — lines, expiry, the live price comparison, and conversion
@@ -266,7 +267,7 @@ export function AdminQuoteDetailPage() {
             action={
               <Link
                 to="/admin/quotes"
-                className="inline-flex h-9 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3.5 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+                className={cn(pressable, 'inline-flex h-9 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3.5 font-display text-sm font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
               >
                 Back to quotes
               </Link>
@@ -534,7 +535,7 @@ export function AdminQuoteDetailPage() {
             {quote.user.id && (
               <Link
                 to={`/admin/clients/${quote.user.id}`}
-                className="mt-3 inline-flex h-8 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+                className={cn(pressable, 'mt-3 inline-flex h-8 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3 font-display text-sm font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
               >
                 View profile
               </Link>

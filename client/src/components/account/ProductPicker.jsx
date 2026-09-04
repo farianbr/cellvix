@@ -9,6 +9,7 @@ import { useSearchSuggestions } from '@/hooks/useCatalog';
 import useDebouncedValue from '@/hooks/useDebouncedValue';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
 import useAnchoredPosition from '@/hooks/useAnchoredPosition';
+import { pressable } from '@/lib/motion';
 
 /** Height of one result row — see the row markup below (p-1.5 + a size-8 tile). */
 const ROW_H = 51;
@@ -191,7 +192,8 @@ export function ProductPicker({ value, onChange, label, autoFocus = false, class
                     onMouseEnter={() => setHighlight(index)}
                     onClick={() => choose(product)}
                     className={cn(
-                      'flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors',
+                      pressable,
+                      'flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left',
                       index === highlight ? 'bg-surface-2' : 'hover:bg-surface-2',
                     )}
                   >
