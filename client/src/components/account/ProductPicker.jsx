@@ -102,7 +102,7 @@ export function ProductPicker({ value, onChange, label, autoFocus = false, class
             requestAnimationFrame(() => inputRef.current?.focus());
           }}
           aria-label={`Clear ${value.name}`}
-          className="flex size-7 shrink-0 items-center justify-center rounded-lg text-ink-300 transition-colors hover:bg-surface-3 hover:text-ink-900"
+          className={cn(pressable, 'flex size-7 shrink-0 items-center justify-center rounded-lg text-ink-300 hover:bg-surface-3 hover:text-ink-900')}
         >
           <X className="size-4" strokeWidth={2} />
         </button>

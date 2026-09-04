@@ -9,6 +9,7 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import ProductPicker from '@/components/account/ProductPicker';
 import { useAccountMutations, useSavedCarts } from '@/hooks/useAccount';
 import useUiStore from '@/store/uiStore';
+import { pressable } from '@/lib/motion';
 
 const EMPTY_ROW = () => ({ id: crypto.randomUUID(), product: null, qty: 1 });
 
@@ -147,7 +148,7 @@ export function AccountQuickOrderPage() {
                 onClick={() => setRows((current) => current.filter((r) => r.id !== row.id))}
                 disabled={rows.length === 1}
                 aria-label={`Remove line ${index + 1}`}
-                className="mt-1 flex size-9 shrink-0 items-center justify-center rounded-lg text-ink-300 transition-colors hover:bg-danger-50 hover:text-danger disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-ink-300"
+                className={cn(pressable, 'mt-1 flex size-9 shrink-0 items-center justify-center rounded-lg text-ink-300 hover:bg-danger-50 hover:text-danger disabled:opacity-30 disabled:hover:bg-transparent disabled:hover:text-ink-300')}
               >
                 <Trash2 className="size-4" strokeWidth={2} />
               </button>
@@ -241,7 +242,7 @@ export function AccountQuickOrderPage() {
                   type="button"
                   onClick={() => setDeletingCart(cart)}
                   aria-label={`Delete saved cart ${cart.name}`}
-                  className="flex size-8 shrink-0 items-center justify-center rounded-lg text-ink-300 transition-colors hover:bg-danger-50 hover:text-danger"
+                  className={cn(pressable, 'flex size-8 shrink-0 items-center justify-center rounded-lg text-ink-300 hover:bg-danger-50 hover:text-danger')}
                 >
                   <Trash2 className="size-4" strokeWidth={2} />
                 </button>

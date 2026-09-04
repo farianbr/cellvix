@@ -7,6 +7,7 @@ import Input from '@/components/ui/Input';
 import Skeleton from '@/components/ui/Skeleton';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { useAccountMutations } from '@/hooks/useAccount';
+import { pressable } from '@/lib/motion';
 
 /**
  * Store credit — money the account already holds with Cellvix.
@@ -90,7 +91,8 @@ export function RechargeForm({ onDone, className }) {
             type="button"
             onClick={() => setAmount(String(value))}
             className={cn(
-              'tnum h-9 rounded-full border px-3.5 text-sm font-medium transition-colors',
+              pressable,
+              'tnum h-9 rounded-full border px-3.5 text-sm font-medium',
               Number(amount) === value
                 ? 'border-brand bg-brand-50 text-brand-700'
                 : 'border-line bg-surface text-ink-500 hover:border-line-strong',

@@ -89,7 +89,8 @@ function NavTree({ badges, activeGroup, activeChildKey }) {
                 end
                 className={({ isActive }) =>
                   cn(
-                    'flex items-center gap-2.5 whitespace-nowrap rounded-md px-3 py-2.5 text-md font-medium transition-colors',
+                    pressable,
+                    'flex items-center gap-2.5 whitespace-nowrap rounded-md px-3 py-2.5 text-md font-medium',
                     isActive
                       ? 'bg-brand-50 text-brand-700'
                       : 'text-ink-600 hover:bg-surface-2 hover:text-ink-900',
@@ -116,7 +117,8 @@ function NavTree({ badges, activeGroup, activeChildKey }) {
               aria-expanded={isOpen}
               onClick={() => setOpenGroup(isOpen ? null : item.key)}
               className={cn(
-                'flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-md font-semibold transition-colors',
+                pressable,
+                'flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-md font-semibold',
                 isOpen || activeGroup === item.key
                   ? 'text-ink-900'
                   : 'text-ink-600 hover:bg-surface-2 hover:text-ink-900',

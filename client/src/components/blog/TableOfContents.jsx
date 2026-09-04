@@ -3,7 +3,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { ChevronDown, List } from 'lucide-react';
 import cn from '@/lib/cn';
 import scrollToSection from '@/lib/scrollToSection';
-import { ease } from '@/lib/motion';
+import { ease, pressable } from '@/lib/motion';
 
 /**
  * An article's table of contents, built from the headings the body actually
@@ -50,7 +50,8 @@ export function TableOfContents({ headings = [], activeId, variant = 'rail', cla
               }}
               aria-current={isActive ? 'true' : undefined}
               className={cn(
-                'relative block rounded-md py-1.5 pr-2 text-sm leading-snug transition-colors duration-200',
+                pressable,
+                'relative block rounded-md py-1.5 pr-2 text-sm leading-snug duration-200',
                 heading.level === 3 ? 'pl-6' : 'pl-3',
                 isActive
                   ? 'bg-brand-50 font-semibold text-brand-700'

@@ -10,7 +10,7 @@ import useOnClickOutside from '@/hooks/useOnClickOutside';
 import { useApplyFilterPath, useApplySearchQuery } from '@/hooks/useApplyFilterPath';
 import { PartVisual } from '@/components/product/PartFrame';
 import Skeleton from '@/components/ui/Skeleton';
-import { ease } from '@/lib/motion';
+import { ease, pressable } from '@/lib/motion';
 
 /**
  * Header search with a live type-ahead panel (brief §4.3).
@@ -150,7 +150,7 @@ export function LiveSearch({
                 inputRef.current?.focus();
               }}
               aria-label="Clear search"
-              className="absolute right-1.5 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-ink-400 transition-colors hover:bg-surface-3 hover:text-ink-900"
+              className={cn(pressable, 'absolute right-1.5 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-lg text-ink-400 hover:bg-surface-3 hover:text-ink-900')}
             >
               <X className="size-4" strokeWidth={2} />
             </button>
@@ -193,7 +193,7 @@ export function LiveSearch({
                           <button
                             type="button"
                             onClick={() => chooseModel(model)}
-                            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-ink-700 transition-colors hover:bg-surface-3 hover:text-ink-900"
+                            className={cn(pressable, 'flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-ink-700 hover:bg-surface-3 hover:text-ink-900')}
                           >
                             <span className="min-w-0 flex-1 truncate">{model.name}</span>
                             <span className="tnum shrink-0 text-xs text-ink-300">
@@ -215,7 +215,7 @@ export function LiveSearch({
                           <button
                             type="button"
                             onClick={() => commitSearch(`${value} ${suggestion.label}`)}
-                            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-ink-700 transition-colors hover:bg-surface-3 hover:text-ink-900"
+                            className={cn(pressable, 'flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-ink-700 hover:bg-surface-3 hover:text-ink-900')}
                           >
                             <span className="min-w-0 flex-1 truncate">{suggestion.label}</span>
                             <span className="tnum shrink-0 text-xs text-ink-300">
@@ -237,7 +237,7 @@ export function LiveSearch({
                           <Link
                             to={page.href}
                             onClick={() => setOpen(false)}
-                            className="block truncate rounded-lg px-2 py-1.5 text-sm text-ink-700 transition-colors hover:bg-surface-3 hover:text-ink-900"
+                            className={cn(pressable, 'block truncate rounded-lg px-2 py-1.5 text-sm text-ink-700 hover:bg-surface-3 hover:text-ink-900')}
                           >
                             {page.title}
                           </Link>
@@ -269,7 +269,7 @@ export function LiveSearch({
                         <Link
                           to={`/product/${product.slug}`}
                           onClick={() => setOpen(false)}
-                          className="flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-surface-2"
+                          className={cn(pressable, 'flex items-center gap-3 rounded-md p-2 hover:bg-surface-2')}
                         >
                           <span className="flex size-12 shrink-0 items-center justify-center rounded-lg border border-line bg-surface-2 p-1.5">
                             <PartVisual product={product} />
@@ -315,7 +315,7 @@ export function LiveSearch({
               <button
                 type="button"
                 onClick={() => commitSearch()}
-                className="flex w-full items-center justify-center gap-2 border-t border-line bg-surface-2 py-3 font-display text-sm font-semibold text-ink-900 transition-colors hover:bg-surface-3"
+                className={cn(pressable, 'flex w-full items-center justify-center gap-2 border-t border-line bg-surface-2 py-3 font-display text-sm font-semibold text-ink-900 hover:bg-surface-3')}
               >
                 View all {formatCount(data.total)} items
                 <ArrowRight className="size-4" strokeWidth={2} aria-hidden="true" />

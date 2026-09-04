@@ -8,6 +8,7 @@ import Checkbox from '@/components/ui/Checkbox';
 import Skeleton from '@/components/ui/Skeleton';
 import useFilterStore from '@/store/filterStore';
 import { useTaxonomy } from '@/hooks/useCatalog';
+import { pressable } from '@/lib/motion';
 
 const LEVEL_BY_DEPTH = ['deviceType', 'brand', 'series', 'model'];
 
@@ -65,7 +66,7 @@ function CategoryTree({ tree, path, onSelect }) {
           <button
             type="button"
             onClick={() => onSelect('deviceType', null, null)}
-            className="flex w-full items-center gap-1 rounded-lg px-2 py-1.5 text-left text-sm font-medium text-brand transition-colors hover:bg-brand-50"
+            className={cn(pressable, 'flex w-full items-center gap-1 rounded-lg px-2 py-1.5 text-left text-sm font-medium text-brand hover:bg-brand-50')}
           >
             <ChevronLeft className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
             All categories
@@ -90,7 +91,7 @@ function CategoryTree({ tree, path, onSelect }) {
                     <button
                       type="button"
                       onClick={() => onSelect(level, node.slug, node.name)}
-                      className="flex w-full items-center gap-1 rounded-lg px-2 py-1.5 text-left text-sm text-ink-500 transition-colors hover:bg-surface-2 hover:text-ink-900"
+                      className={cn(pressable, 'flex w-full items-center gap-1 rounded-lg px-2 py-1.5 text-left text-sm text-ink-500 hover:bg-surface-2 hover:text-ink-900')}
                     >
                       <ChevronLeft className="size-3.5 shrink-0 text-ink-300" strokeWidth={2.25} aria-hidden="true" />
                       <span className="min-w-0 flex-1 truncate">{node.name}</span>
@@ -114,7 +115,7 @@ function CategoryTree({ tree, path, onSelect }) {
                 <button
                   type="button"
                   onClick={() => onSelect(level, node.slug, node.name)}
-                  className="group flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-md text-ink-700 transition-colors hover:bg-surface-2 hover:text-brand-700"
+                  className={cn(pressable, 'group flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-md text-ink-700 hover:bg-surface-2 hover:text-brand-700')}
                 >
                   <span className="min-w-0 flex-1 truncate">{node.name}</span>
                   <span className="tnum shrink-0 text-xs text-ink-300">
@@ -189,7 +190,7 @@ function FacetList({ options, isChecked, onToggle, renderLabel }) {
         <button
           type="button"
           onClick={() => setExpanded((value) => !value)}
-          className="mt-0.5 flex items-center gap-1 px-2 py-1 text-sm font-medium text-brand transition-colors hover:text-brand-700"
+          className={cn(pressable, 'mt-0.5 flex items-center gap-1 px-2 py-1 text-sm font-medium text-brand hover:text-brand-700')}
         >
           <ChevronDown
             className={cn('size-3.5 transition-transform duration-200', expanded && 'rotate-180')}

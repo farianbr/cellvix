@@ -4,6 +4,7 @@ import { MoreHorizontal } from 'lucide-react';
 import cn from '@/lib/cn';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
 import useAnchoredPosition from '@/hooks/useAnchoredPosition';
+import { pressable } from '@/lib/motion';
 
 /**
  * The `···` overflow menu, as its own component.
@@ -74,7 +75,8 @@ export function ActionMenu({ items = [], context, label = 'More actions', trigge
               item.onSelect?.(context);
             }}
             className={cn(
-              'flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors',
+              pressable,
+              'flex w-full items-center gap-2 px-3 py-2 text-left text-sm',
               'disabled:cursor-not-allowed disabled:opacity-40',
               item.tone === 'danger'
                 ? 'text-danger hover:bg-danger-50'
@@ -101,11 +103,16 @@ export function ActionMenu({ items = [], context, label = 'More actions', trigge
         aria-label={label}
         aria-haspopup="menu"
         aria-expanded={open}
-        className={
+        className={cn(
+          // Both branches carried an `active:scale` with only a colour
+          // transition beside it, so the scale snapped rather than eased — a
+          // jump that reads as a glitch instead of as feedback. The helper
+          // names transform alongside the colours.
+          pressable,
           trigger
-            ? 'active:scale-[0.97]'
-            : 'flex size-8 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-surface-2 hover:text-ink-900 active:scale-[0.97]'
-        }
+            ? ''
+            : 'flex size-8 items-center justify-center rounded-md text-ink-400 hover:bg-surface-2 hover:text-ink-900',
+        )}
       >
         {trigger ?? <MoreHorizontal className="size-4" strokeWidth={2} aria-hidden="true" />}
       </button>

@@ -29,7 +29,8 @@ function Popover({ label, icon: Icon, children, align = 'left', badge }) {
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
         className={cn(
-          'flex h-9 items-center gap-1.5 rounded-md border px-2.5 text-sm font-medium transition-colors',
+          pressable,
+          'flex h-9 items-center gap-1.5 rounded-md border px-2.5 text-sm font-medium',
           badge
             ? 'border-brand-100 bg-brand-50 text-brand-700'
             : 'border-line bg-surface text-ink-600 hover:border-line-strong hover:text-ink-900',
@@ -237,7 +238,7 @@ export function FilterStrip({
                   type="button"
                   data-close-on-select
                   onClick={() => onExport(format)}
-                  className="rounded-sm px-2.5 py-2 text-left text-sm text-ink-700 transition-colors hover:bg-surface-2 hover:text-ink-900"
+                  className={cn(pressable, 'rounded-sm px-2.5 py-2 text-left text-sm text-ink-700 hover:bg-surface-2 hover:text-ink-900')}
                 >
                   Export {format}
                 </button>

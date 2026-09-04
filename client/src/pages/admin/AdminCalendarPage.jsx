@@ -8,6 +8,7 @@ import PageHeader from '@/components/admin/PageHeader';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminAppointments } from '@/hooks/useAdmin';
+import { pressable } from '@/lib/motion';
 
 /**
  * The scheduling board (§6.15 category 4 — **UI only, §6b U1**, phase 11e).
@@ -105,7 +106,7 @@ export function AdminCalendarPage() {
               setWeekStart(previous);
             }}
             aria-label="Previous week"
-            className="flex size-9 items-center justify-center rounded-md border border-line bg-surface text-ink-600 transition-colors hover:border-ink-300 hover:bg-surface-2"
+            className={cn(pressable, 'flex size-9 items-center justify-center rounded-md border border-line bg-surface text-ink-600 hover:border-ink-300 hover:bg-surface-2')}
           >
             <ChevronLeft className="size-4" strokeWidth={2} aria-hidden="true" />
           </button>
@@ -127,7 +128,7 @@ export function AdminCalendarPage() {
               setWeekStart(next);
             }}
             aria-label="Next week"
-            className="flex size-9 items-center justify-center rounded-md border border-line bg-surface text-ink-600 transition-colors hover:border-ink-300 hover:bg-surface-2"
+            className={cn(pressable, 'flex size-9 items-center justify-center rounded-md border border-line bg-surface text-ink-600 hover:border-ink-300 hover:bg-surface-2')}
           >
             <ChevronRight className="size-4" strokeWidth={2} aria-hidden="true" />
           </button>
@@ -135,7 +136,7 @@ export function AdminCalendarPage() {
           <button
             type="button"
             onClick={() => setWeekStart(startOfWeek(new Date()))}
-            className="ml-1 inline-flex h-9 items-center rounded-md border border-line bg-surface px-3 text-sm font-medium text-ink-600 transition-colors hover:border-ink-300 hover:bg-surface-2"
+            className={cn(pressable, 'ml-1 inline-flex h-9 items-center rounded-md border border-line bg-surface px-3 text-sm font-medium text-ink-600 hover:border-ink-300 hover:bg-surface-2')}
           >
             This week
           </button>

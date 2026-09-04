@@ -25,6 +25,7 @@ import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import Button from '@/components/ui/Button';
 import SelectField from '@/components/ui/SelectField';
+import { pressable } from '@/lib/motion';
 
 /**
  * Taking a repair in at the counter.
@@ -140,7 +141,7 @@ function LineEditor({ control, register, name, label, addLabel }) {
               type="button"
               onClick={() => remove(index)}
               aria-label={`Remove this ${label.toLowerCase()} line`}
-              className="flex size-9 shrink-0 items-center justify-center self-end rounded-md border border-line text-ink-400 transition-colors hover:border-danger/40 hover:text-danger active:scale-[0.97]"
+              className={cn(pressable, 'flex size-9 shrink-0 items-center justify-center self-end rounded-md border border-line text-ink-400 hover:border-danger/40 hover:text-danger')}
             >
               <Trash2 className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
             </button>

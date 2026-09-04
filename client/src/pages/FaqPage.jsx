@@ -70,7 +70,8 @@ function CategoryNav({ groups, activeId }) {
                     aria-current={isActive ? 'true' : undefined}
                     className={cn(
                       'relative flex items-center gap-2 rounded-md py-2 pl-3 pr-2.5',
-                      'text-md font-medium transition-colors duration-200',
+                      pressable,
+                      'text-md font-medium duration-200',
                       isActive
                         ? 'bg-brand-50 text-brand-700'
                         : 'text-ink-500 hover:bg-surface-2 hover:text-ink-900',

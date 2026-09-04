@@ -37,6 +37,7 @@ import {
 } from '@/hooks/useAdmin';
 import useCreateParam from '@/hooks/useCreateParam';
 import downloadExport from '@/lib/exportDownload';
+import { pressable } from '@/lib/motion';
 
 /** How the order is going out. Matches `adminOrderSchema`'s enum. */
 const DELIVERY = [
@@ -347,7 +348,7 @@ function OrderForm({ clients, products, onSubmit, onCancel, isPending, error }) 
                   onClick={() => remove(index)}
                   disabled={fields.length === 1}
                   aria-label={`Remove line ${index + 1}`}
-                  className="flex size-9 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 transition-colors hover:border-danger/30 hover:bg-danger-50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40"
+                  className={cn(pressable, 'flex size-9 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 hover:border-danger/30 hover:bg-danger-50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40')}
                 >
                   <Trash2 className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                 </button>

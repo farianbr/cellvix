@@ -1,6 +1,7 @@
 import { forwardRef, useId, useState } from 'react';
 import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import cn from '@/lib/cn';
+import { pressable } from '@/lib/motion';
 
 /**
  * Large-touch-target text field. The checkout brief asks for friction-free fields,
@@ -93,7 +94,7 @@ export const Input = forwardRef(function Input(
             type="button"
             onClick={() => setRevealed((v) => !v)}
             aria-label={revealed ? 'Hide password' : 'Show password'}
-            className="absolute right-1 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-lg text-ink-400 transition-colors hover:bg-surface-3 hover:text-ink-700"
+            className={cn(pressable, 'absolute right-1 top-1/2 flex size-9 -translate-y-1/2 items-center justify-center rounded-lg text-ink-400 hover:bg-surface-3 hover:text-ink-700')}
           >
             {revealed ? (
               <EyeOff className="size-[18px]" strokeWidth={1.75} />

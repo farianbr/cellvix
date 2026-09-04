@@ -183,7 +183,7 @@ function SupplierCard({ supplier, onEdit, onToggle }) {
           type="button"
           onClick={() => onEdit(supplier)}
           aria-label={`Edit ${supplier.name}`}
-          className="flex size-7 shrink-0 items-center justify-center rounded-sm text-ink-300 transition-colors hover:bg-surface-2 hover:text-ink-700"
+          className={cn(pressable, 'flex size-7 shrink-0 items-center justify-center rounded-sm text-ink-300 hover:bg-surface-2 hover:text-ink-700')}
         >
           <Pencil className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
         </button>
@@ -248,7 +248,7 @@ function SupplierCard({ supplier, onEdit, onToggle }) {
           type="button"
           onClick={() => onToggle(supplier)}
           aria-label={`${supplier.isActive ? 'Deactivate' : 'Reactivate'} ${supplier.name}`}
-          className="flex size-8 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 transition-colors hover:border-danger/30 hover:bg-danger-50 hover:text-danger"
+          className={cn(pressable, 'flex size-8 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 hover:border-danger/30 hover:bg-danger-50 hover:text-danger')}
         >
           <Power className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
         </button>

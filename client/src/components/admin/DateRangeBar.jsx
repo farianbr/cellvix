@@ -4,6 +4,7 @@ import { CalendarRange, ChevronDown } from 'lucide-react';
 import cn from '@/lib/cn';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
 import Button from '@/components/ui/Button';
+import { pressable } from '@/lib/motion';
 
 /**
  * The date control every Reports tab and the dashboard share (ERP rework §4,
@@ -210,7 +211,8 @@ export function DateRangeBar({ presets = RANGE_PRESETS, defaultPreset = 'this-mo
             onClick={() => commit(preset.resolve())}
             aria-pressed={isActive}
             className={cn(
-              'shrink-0 whitespace-nowrap rounded-md px-2.5 py-1.5 text-md font-medium transition-colors',
+              pressable,
+              'shrink-0 whitespace-nowrap rounded-md px-2.5 py-1.5 text-md font-medium',
               isActive
                 ? 'font-semibold text-brand'
                 : 'text-ink-500 hover:bg-surface-2 hover:text-ink-900',
@@ -232,7 +234,8 @@ export function DateRangeBar({ presets = RANGE_PRESETS, defaultPreset = 'this-mo
           aria-expanded={open}
           aria-haspopup="dialog"
           className={cn(
-            'flex h-9 max-w-full items-center gap-1.5 rounded-md border px-3 text-md font-medium transition-colors',
+            pressable,
+            'flex h-9 max-w-full items-center gap-1.5 rounded-md border px-3 text-md font-medium',
             isCustom
               ? 'border-brand/30 bg-brand-50 text-brand-700'
               : 'border-line bg-surface text-ink-700 hover:border-line-strong hover:text-ink-900',

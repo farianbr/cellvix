@@ -220,7 +220,7 @@ export function NotificationMenu() {
         aria-label={
           unread > 0 ? `Notifications, ${unread} unread` : 'Notifications, none unread'
         }
-        className="relative flex size-9 items-center justify-center rounded-md text-ink-500 transition-colors hover:bg-surface-2 hover:text-ink-900"
+        className={cn(pressable, 'relative flex size-9 items-center justify-center rounded-md text-ink-500 hover:bg-surface-2 hover:text-ink-900')}
       >
         <Bell className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />
         {unread > 0 && (
@@ -285,7 +285,7 @@ export function NotificationMenu() {
                     ? 'These alerts stay until the underlying condition clears.'
                     : undefined
                 }
-                className="text-xs font-medium text-ink-400 transition-colors hover:text-ink-900 disabled:cursor-not-allowed disabled:opacity-45"
+                className={cn(pressable, 'text-xs font-medium text-ink-400 hover:text-ink-900 disabled:cursor-not-allowed disabled:opacity-45')}
               >
                 Clear All
               </button>

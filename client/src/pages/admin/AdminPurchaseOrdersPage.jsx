@@ -175,7 +175,7 @@ function PurchaseOrderForm({ suppliers, products, onSubmit, onCancel, isPending,
                 onClick={() => remove(index)}
                 disabled={fields.length === 1}
                 aria-label={`Remove line ${index + 1}`}
-                className="flex size-9 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 transition-colors hover:border-danger/30 hover:bg-danger-50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40"
+                className={cn(pressable, 'flex size-9 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 hover:border-danger/30 hover:bg-danger-50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40')}
               >
                 <Trash2 className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
               </button>

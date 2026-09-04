@@ -27,6 +27,7 @@ import { useAdminOutlets, useAdminMutations } from '@/hooks/useAdmin';
 import { useAuth } from '@/hooks/useAuth';
 import { canEdit } from '@/lib/permissions';
 import cn from '@/lib/cn';
+import { pressable } from '@/lib/motion';
 
 /**
  * Outlets — physical stores (§6.14).
@@ -48,11 +49,14 @@ const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/outlets'], icon: adminIcon('Store')
  * navigates is not reachable by middle-click or "open in new tab".
  */
 const LINK_BTN =
-  'inline-flex h-8 items-center rounded-md border border-line bg-surface px-3 text-sm font-medium text-ink-600 transition-colors hover:border-line-strong hover:text-ink-900';
+  pressable +
+  ' inline-flex h-8 items-center rounded-md border border-line bg-surface px-3 text-sm font-medium text-ink-600 hover:border-line-strong hover:text-ink-900';
 const LINK_ICON_BTN =
-  'inline-flex size-8 items-center justify-center rounded-md text-ink-500 transition-colors hover:bg-surface-2 hover:text-ink-900';
+  pressable +
+  ' inline-flex size-8 items-center justify-center rounded-md text-ink-500 hover:bg-surface-2 hover:text-ink-900';
 const PRIMARY_LINK_BTN =
-  'inline-flex h-9 items-center gap-1.5 rounded-md bg-ink-900 px-3.5 text-sm font-medium text-white transition-colors hover:bg-ink-800';
+  pressable +
+  ' inline-flex h-9 items-center gap-1.5 rounded-md bg-ink-900 px-3.5 text-sm font-medium text-white hover:bg-ink-800';
 
 const STATUS_TONE = { active: 'ok', inactive: 'neutral', maintenance: 'warn' };
 const STATUS_LABEL = { active: 'Active', inactive: 'Inactive', maintenance: 'Maintenance' };

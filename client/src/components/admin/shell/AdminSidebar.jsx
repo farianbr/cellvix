@@ -125,7 +125,8 @@ function NavTree({ badges, onNavigate }) {
                 aria-expanded={isOpen}
                 onClick={() => setOpenGroup(isOpen ? null : item.key)}
                 className={cn(
-                  'flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm font-semibold transition-colors',
+                  pressable,
+                  'flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm font-semibold',
                   isOpen || activeGroup === item.key
                     ? 'text-white'
                     : 'text-ink-200 hover:bg-white/[0.08] hover:text-white',

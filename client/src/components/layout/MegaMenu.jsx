@@ -132,7 +132,7 @@ export function MegaMenu() {
                       <button
                         type="button"
                         onClick={() => applyFilter({}, {})}
-                        className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-brand transition-colors hover:text-brand-700"
+                        className={cn(pressable, 'inline-flex shrink-0 items-center gap-1 text-sm font-medium text-brand hover:text-brand-700')}
                       >
                         Shop {formatCount(activeComponents.length)} selected
                         <ArrowRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
@@ -199,7 +199,8 @@ export function MegaMenu() {
                                 applyFilter({ deviceType: type.slug }, { deviceType: type.name })
                               }
                               className={cn(
-                                'flex w-full items-center gap-2.5 rounded-md px-2.5 py-2.5 text-left transition-colors',
+                                pressable,
+                                'flex w-full items-center gap-2.5 rounded-md px-2.5 py-2.5 text-left',
                                 isActive
                                   ? 'bg-surface text-ink-900 shadow-card'
                                   : 'text-ink-700 hover:bg-surface-3',
@@ -251,7 +252,7 @@ export function MegaMenu() {
                                 { deviceType: activeType.name },
                               )
                             }
-                            className="inline-flex items-center gap-1 text-sm font-medium text-brand transition-colors hover:text-brand-700"
+                            className={cn(pressable, 'inline-flex items-center gap-1 text-sm font-medium text-brand hover:text-brand-700')}
                           >
                             Shop all
                             <ArrowRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
@@ -269,7 +270,7 @@ export function MegaMenu() {
                                     { deviceType: activeType.name, brand: brand.name },
                                   )
                                 }
-                                className="mb-1.5 flex w-full items-center gap-1.5 text-left font-display text-sm font-bold text-ink-900 transition-colors hover:text-brand"
+                                className={cn(pressable, 'mb-1.5 flex w-full items-center gap-1.5 text-left font-display text-sm font-bold text-ink-900 hover:text-brand')}
                               >
                                 {brand.name}
                                 <span className="tnum text-2xs font-medium text-ink-300">
@@ -296,7 +297,7 @@ export function MegaMenu() {
                                           },
                                         )
                                       }
-                                      className="block w-full truncate text-left text-sm text-ink-500 transition-colors hover:text-brand"
+                                      className={cn(pressable, 'block w-full truncate text-left text-sm text-ink-500 hover:text-brand')}
                                     >
                                       {series.name}
                                     </button>

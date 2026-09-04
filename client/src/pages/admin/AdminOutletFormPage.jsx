@@ -283,7 +283,8 @@ export function AdminOutletFormPage() {
                             aria-label={COLOR_LABEL[token]}
                             title={COLOR_LABEL[token]}
                             className={cn(
-                              'flex size-8 items-center justify-center rounded-md border transition-colors',
+                              pressable,
+                              'flex size-8 items-center justify-center rounded-md border',
                               field.value === token
                                 ? 'border-ink-900'
                                 : 'border-line hover:border-line-strong',

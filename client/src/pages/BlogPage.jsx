@@ -233,7 +233,8 @@ export function BlogPage() {
                 onClick={() => setCategory(option.value)}
                 aria-pressed={isActive}
                 className={cn(
-                  'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium transition-colors',
+                  pressable,
+                  'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium',
                   isActive
                     ? 'border-brand bg-brand-50 text-brand-700'
                     : 'border-line bg-surface text-ink-500 hover:border-line-strong hover:text-ink-900',

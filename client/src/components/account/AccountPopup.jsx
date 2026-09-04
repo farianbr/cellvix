@@ -309,7 +309,7 @@ function SignInTab({ onDone }) {
         <button
           type="button"
           onClick={() => setForgot(true)}
-          className="rounded text-sm font-medium text-brand transition-colors hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900/15"
+          className={cn(pressable, 'rounded text-sm font-medium text-brand hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900/15')}
         >
           Forgot password?
         </button>
@@ -392,7 +392,7 @@ function AccountTypeChoice({ onPick }) {
           key={key}
           type="button"
           onClick={() => onPick(key)}
-          className="group flex w-full items-start gap-3.5 rounded-lg border border-line bg-surface p-4 text-left transition-colors hover:border-brand hover:bg-brand-50/40"
+          className={cn(pressable, 'group flex w-full items-start gap-3.5 rounded-lg border border-line bg-surface p-4 text-left hover:border-brand hover:bg-brand-50/40')}
         >
           {/* Brand tint on hover, not the gradient. The gradient runs to
               #000000 at one end, so a white glyph landed on near-black and read

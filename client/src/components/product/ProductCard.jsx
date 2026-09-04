@@ -233,7 +233,7 @@ export function ProductCard({ product }) {
                 <button
                   type="button"
                   onClick={() => openAccount('signin')}
-                  className="absolute inset-0 -m-1 flex items-center justify-center rounded-lg bg-surface/45 backdrop-blur-[1px] transition-colors hover:bg-surface/25"
+                  className={cn(pressable, 'absolute inset-0 -m-1 flex items-center justify-center rounded-lg bg-surface/45 backdrop-blur-[1px] hover:bg-surface/25')}
                 >
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-2.5 py-1 text-xs font-semibold text-ink-700">
                     <Lock className="size-3" strokeWidth={2.5} aria-hidden="true" />

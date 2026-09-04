@@ -85,7 +85,7 @@ function AliasField({ value, onChange }) {
                   type="button"
                   onClick={() => onChange(value.filter((item) => item !== alias))}
                   aria-label={`Remove alias ${alias}`}
-                  className="flex size-4 items-center justify-center rounded-sm text-ink-400 transition-colors hover:bg-danger-50 hover:text-danger"
+                  className={cn(pressable, 'flex size-4 items-center justify-center rounded-sm text-ink-400 hover:bg-danger-50 hover:text-danger')}
                 >
                   <X className="size-3" strokeWidth={2.5} aria-hidden="true" />
                 </button>
@@ -212,7 +212,7 @@ function EditDialog({ node, onClose }) {
             type="button"
             onClick={() => setConfirmingDelete(true)}
             disabled={deleteTaxonomyNode.isPending}
-            className="ml-auto inline-flex h-9 items-center gap-1.5 rounded-md border border-line px-3 text-sm font-medium text-ink-500 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger disabled:opacity-50"
+            className={cn(pressable, 'ml-auto inline-flex h-9 items-center gap-1.5 rounded-md border border-line px-3 text-sm font-medium text-ink-500 hover:border-danger hover:bg-danger-50 hover:text-danger disabled:opacity-50')}
           >
             <Trash2 className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
             Delete

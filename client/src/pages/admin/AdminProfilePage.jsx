@@ -138,7 +138,7 @@ export function AdminProfilePage() {
               <button
                 type="button"
                 onClick={() => signOut()}
-                className="inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-surface px-3 text-sm font-medium text-ink-600 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger"
+                className={cn(pressable, 'inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-surface px-3 text-sm font-medium text-ink-600 hover:border-danger hover:bg-danger-50 hover:text-danger')}
               >
                 <LogOut className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                 Sign out

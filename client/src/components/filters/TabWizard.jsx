@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, ChevronRight, RotateCcw, X } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import cn from '@/lib/cn';
-import { pressableSurface } from '@/lib/motion';
+import { pressable, pressableSurface } from '@/lib/motion';
 import { FILTER_LEVELS } from '@/lib/constants';
 import { optionsFor } from '@/lib/taxonomy';
 import { StepIndicator } from '@/components/ui/StepIndicator';
@@ -209,7 +209,7 @@ export function TabWizard() {
               resetAll();
               inSequence.current = false;
             }}
-            className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-400 transition-colors hover:text-brand"
+            className={cn(pressable, 'inline-flex items-center gap-1.5 text-xs font-medium text-ink-400 hover:text-brand')}
           >
             <RotateCcw className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
             Start over
@@ -324,7 +324,7 @@ export function TabWizard() {
             <button
               type="button"
               onClick={() => openStep('model', LEVEL_KEYS.indexOf('model'))}
-              className="shrink-0 rounded-sm px-2 py-1 text-xs font-semibold text-brand transition-colors hover:bg-surface"
+              className={cn(pressable, 'shrink-0 rounded-sm px-2 py-1 text-xs font-semibold text-brand hover:bg-surface')}
             >
               Change model
             </button>
@@ -411,7 +411,7 @@ export function TabWizard() {
                       inSequence.current = false;
                     }}
                     aria-label={`Clear ${level.label}`}
-                    className="flex size-6 shrink-0 items-center justify-center rounded-full text-ink-400 transition-colors hover:bg-surface-3 hover:text-ink-900"
+                    className={cn(pressable, 'flex size-6 shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-surface-3 hover:text-ink-900')}
                   >
                     <X className="size-3.5" strokeWidth={2.25} />
                   </button>

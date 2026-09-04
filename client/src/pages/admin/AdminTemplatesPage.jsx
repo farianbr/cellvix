@@ -160,7 +160,7 @@ function TemplateDialog({ template, onClose }) {
                 type="button"
                 title={token.label}
                 onClick={() => set({ body: `${form.body}${token.token}` })}
-                className="rounded-sm bg-surface px-1.5 py-1 font-mono text-xs text-ink-600 transition-colors hover:bg-brand-50 hover:text-brand"
+                className={cn(pressable, 'rounded-sm bg-surface px-1.5 py-1 font-mono text-xs text-ink-600 hover:bg-brand-50 hover:text-brand')}
               >
                 {token.token}
               </button>
@@ -257,7 +257,8 @@ export function AdminTemplatesPage() {
               onClick={() => setChannel(tab.value)}
               aria-current={tab.value === channel ? 'page' : undefined}
               className={cn(
-                'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md px-3 font-display text-sm font-semibold transition-colors',
+                pressable,
+                'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md px-3 font-display text-sm font-semibold',
                 tab.value === channel
                   ? 'bg-ink-900 text-white'
                   : 'text-ink-500 hover:bg-surface-2 hover:text-ink-700',
@@ -331,7 +332,7 @@ export function AdminTemplatesPage() {
                   type="button"
                   onClick={() => setDeleting(template)}
                   aria-label={`Delete ${template.name}`}
-                  className="flex size-8 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger"
+                  className={cn(pressable, 'flex size-8 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 hover:border-danger hover:bg-danger-50 hover:text-danger')}
                 >
                   <Trash2 className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                 </button>

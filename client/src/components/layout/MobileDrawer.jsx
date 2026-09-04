@@ -172,7 +172,8 @@ export function MobileDrawer() {
             onClick={() => setTab(item.key)}
             aria-pressed={tab === item.key}
             className={cn(
-              'relative py-3 font-display text-sm font-semibold transition-colors',
+              pressable,
+              'relative py-3 font-display text-sm font-semibold',
               tab === item.key
                 ? 'bg-brand/6 text-ink-900'
                 : 'text-ink-400 hover:text-ink-700',
@@ -231,7 +232,7 @@ export function MobileDrawer() {
                 close();
                 signOut();
               }}
-              className="mt-1 flex w-full items-center gap-2 border-t border-line px-3 py-2.5 pt-3.5 text-md font-medium text-ink-500 transition-colors hover:text-danger"
+              className={cn(pressable, 'mt-1 flex w-full items-center gap-2 border-t border-line px-3 py-2.5 pt-3.5 text-md font-medium text-ink-500 hover:text-danger')}
             >
               <LogOut className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
               Sign out
@@ -244,7 +245,7 @@ export function MobileDrawer() {
             <button
               type="button"
               onClick={() => setStack((s) => s.slice(0, -1))}
-              className="mb-1 flex w-full items-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold text-ink-500 transition-colors hover:bg-surface-2"
+              className={cn(pressable, 'mb-1 flex w-full items-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold text-ink-500 hover:bg-surface-2')}
             >
               <ChevronLeft className="size-4" strokeWidth={2} aria-hidden="true" />
               {stack.length === 1 ? 'All categories' : stack[stack.length - 2].name}
@@ -255,7 +256,7 @@ export function MobileDrawer() {
             <button
               type="button"
               onClick={() => applyAndClose(stack)}
-              className="mb-2 flex w-full items-center justify-between rounded-md bg-brand-50 px-3 py-2.5 text-md font-semibold text-brand-700 transition-colors hover:bg-brand-100"
+              className={cn(pressable, 'mb-2 flex w-full items-center justify-between rounded-md bg-brand-50 px-3 py-2.5 text-md font-semibold text-brand-700 hover:bg-brand-100')}
             >
               Shop all {stack[stack.length - 1].name}
               <ChevronRight className="size-4" strokeWidth={2} aria-hidden="true" />
@@ -273,7 +274,7 @@ export function MobileDrawer() {
                   <button
                     type="button"
                     onClick={() => (hasChildren ? setStack(nextStack) : applyAndClose(nextStack))}
-                    className="flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-surface-2"
+                    className={cn(pressable, 'flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-left hover:bg-surface-2')}
                   >
                     {Icon && (
                       <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-surface-3 text-ink-500" aria-hidden="true">

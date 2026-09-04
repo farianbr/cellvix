@@ -62,7 +62,7 @@ export function CartLine({ item, onQtyChange, onRemove, compact = false }) {
               type="button"
               onClick={() => onRemove(item.productId)}
               aria-label={`Remove ${item.name}`}
-              className="-mr-1 -mt-1 flex size-8 shrink-0 items-center justify-center rounded-lg text-ink-300 transition-colors hover:bg-danger-50 hover:text-danger"
+              className={cn(pressable, '-mr-1 -mt-1 flex size-8 shrink-0 items-center justify-center rounded-lg text-ink-300 hover:bg-danger-50 hover:text-danger')}
             >
               <Trash2 className="size-4" strokeWidth={2} />
             </button>

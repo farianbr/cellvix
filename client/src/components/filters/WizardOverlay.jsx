@@ -145,7 +145,7 @@ export function WizardOverlay({ open, onClose, onNext, level, label, title, opti
           <button
             type="button"
             onClick={() => setQuery('')}
-            className="mt-2 text-sm font-semibold text-brand transition-colors hover:text-brand-700"
+            className={cn(pressable, 'mt-2 text-sm font-semibold text-brand hover:text-brand-700')}
           >
             Clear the search
           </button>
@@ -185,7 +185,8 @@ export function WizardOverlay({ open, onClose, onNext, level, label, title, opti
               >
                 <span
                   className={cn(
-                    'flex size-8 shrink-0 items-center justify-center rounded-md transition-colors',
+                    pressable,
+                    'flex size-8 shrink-0 items-center justify-center rounded-md',
                     isSelected
                       ? 'bg-brand text-white'
                       : 'bg-surface-3 text-ink-500 group-hover:bg-brand-50 group-hover:text-brand',

@@ -236,7 +236,7 @@ function DealCoupon({ offer, onShop }) {
           <button
             type="button"
             onClick={() => onShop(offer)}
-            className="inline-flex items-center gap-1 text-sm font-semibold text-brand transition-colors hover:text-brand-700"
+            className={cn(pressable, 'inline-flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700')}
           >
             Shop these parts
             <ArrowRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
@@ -385,7 +385,7 @@ function ComboCard({ offer, onAdd, addState }) {
               <button
                 type="button"
                 onClick={() => openAccount('signin')}
-                className="inline-flex items-center gap-2 rounded-md border border-line bg-surface px-3 py-2.5 text-left transition-colors hover:border-brand"
+                className={cn(pressable, 'inline-flex items-center gap-2 rounded-md border border-line bg-surface px-3 py-2.5 text-left hover:border-brand')}
               >
                 <Lock className="size-4 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
                 <span className="text-sm font-semibold leading-tight text-ink-700">
@@ -545,7 +545,8 @@ function FeaturedTicket({ offer, onAdd, onShop, addState }) {
                   disabled={!offer.available || addState === 'adding'}
                   onClick={() => onAdd(offer)}
                   className={cn(
-                    'inline-flex h-12 items-center justify-center gap-2 rounded-lg font-display text-md font-semibold transition-colors',
+                    pressable,
+                    'inline-flex h-12 items-center justify-center gap-2 rounded-lg font-display text-md font-semibold',
                     addState === 'added'
                       ? 'bg-ok text-white'
                       : 'bg-surface text-ink-900 hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-60',
@@ -596,7 +597,7 @@ function FeaturedTicket({ offer, onAdd, onShop, addState }) {
             <button
               type="button"
               onClick={() => onShop(offer)}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-surface font-display text-md font-semibold text-ink-900 transition-colors hover:bg-surface-2"
+              className={cn(pressable, 'inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-surface font-display text-md font-semibold text-ink-900 hover:bg-surface-2')}
             >
               Shop these parts
               <ArrowRight className="size-4" strokeWidth={2} aria-hidden="true" />

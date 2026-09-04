@@ -981,7 +981,8 @@ export function AdminReportsPage() {
               aria-selected={isActive}
               onClick={() => setTab(item.key)}
               className={cn(
-                'inline-flex h-9 shrink-0 select-none items-center gap-1.5 rounded-md px-3 font-display text-sm font-semibold transition-colors',
+                pressable,
+                'inline-flex h-9 shrink-0 select-none items-center gap-1.5 rounded-md px-3 font-display text-sm font-semibold',
                 isActive
                   ? 'bg-brand-gradient text-white'
                   : 'border border-line bg-surface text-ink-600 hover:border-line-strong hover:text-ink-900',

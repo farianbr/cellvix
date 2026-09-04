@@ -2,6 +2,7 @@ import { useId, useState } from 'react';
 import { ChevronDown, TrendingDown } from 'lucide-react';
 import cn from '@/lib/cn';
 import { money } from '@/lib/format';
+import { pressable } from '@/lib/motion';
 
 /**
  * The competitor comparison.
@@ -102,7 +103,7 @@ export function MarketCompare({ market, price, variant = 'card', className }) {
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
         aria-controls={panelId}
-        className="flex w-full items-center justify-center gap-1.5 rounded-md border border-line bg-surface px-2 py-1.5 text-2xs font-semibold leading-tight text-ink-700 transition-colors hover:border-line-strong hover:bg-surface-2 @min-[200px]:text-xs"
+        className={cn(pressable, 'flex w-full items-center justify-center gap-1.5 rounded-md border border-line bg-surface px-2 py-1.5 text-2xs font-semibold leading-tight text-ink-700 hover:border-line-strong hover:bg-surface-2 @min-[200px]:text-xs')}
       >
         <TrendingDown className="size-3 shrink-0 text-ok @min-[200px]:size-3.5" strokeWidth={2.5} aria-hidden="true" />
         <span className="tnum min-w-0 text-center">

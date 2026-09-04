@@ -150,7 +150,8 @@ function PostForm({ post, onSubmit, onCancel, isPending, error }) {
                 onClick={() => setTab(key)}
                 aria-pressed={tab === key}
                 className={cn(
-                  'inline-flex h-7 items-center gap-1.5 rounded-sm px-2.5 text-sm font-medium transition-colors',
+                  pressable,
+                  'inline-flex h-7 items-center gap-1.5 rounded-sm px-2.5 text-sm font-medium',
                   tab === key
                     ? 'bg-brand-50 text-brand-700'
                     : 'text-ink-400 hover:bg-surface-2 hover:text-ink-900',

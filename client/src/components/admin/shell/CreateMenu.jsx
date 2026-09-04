@@ -6,6 +6,7 @@ import useOnClickOutside from '@/hooks/useOnClickOutside';
 import { useAuth } from '@/hooks/useAuth';
 import { can } from '@/lib/permissions';
 import { adminIcon } from './adminIcons';
+import { pressable } from '@/lib/motion';
 
 /**
  * The `+ Create` dropdown, shortcut `C` (ERP rework §7.2).
@@ -143,7 +144,7 @@ export function CreateMenu() {
                       setOpen(false);
                       navigate(`${item.to}?new=1`);
                     }}
-                    className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-sm text-ink-700 transition-colors hover:bg-surface-2 hover:text-ink-900"
+                    className={cn(pressable, 'flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-sm text-ink-700 hover:bg-surface-2 hover:text-ink-900')}
                   >
                     {Icon && (
                       <Icon className="size-3.5 shrink-0 text-ink-400" strokeWidth={2.25} aria-hidden="true" />

@@ -19,6 +19,7 @@ import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminRoles, useAdminMutations } from '@/hooks/useAdmin';
 import cn from '@/lib/cn';
+import { pressable } from '@/lib/motion';
 
 /**
  * Roles & Access (§6.15/3, §7.6).
@@ -101,7 +102,8 @@ function RoleForm({ role, onSubmit, onCancel, isPending, error }) {
                         onClick={() => field.onChange(level)}
                         aria-pressed={field.value === level}
                         className={cn(
-                          'rounded-sm px-2.5 py-1 text-sm transition-colors',
+                          pressable,
+                          'rounded-sm px-2.5 py-1 text-sm',
                           field.value === level
                             ? 'bg-ink-900 text-white'
                             : 'text-ink-500 hover:bg-surface-2',

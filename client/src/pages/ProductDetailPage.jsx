@@ -56,7 +56,7 @@ function Breadcrumbs({ product }) {
           <Link
             to="/"
             onClick={() => setPath(crumb.path)}
-            className="text-ink-400 transition-colors hover:text-brand"
+            className={cn(pressable, 'text-ink-400 hover:text-brand')}
           >
             {crumb.label}
           </Link>
@@ -217,7 +217,7 @@ export function ProductDetailPage() {
               <button
                 type="button"
                 onClick={() => openAccount('signin')}
-                className="absolute inset-0 -m-2 flex items-center justify-start rounded-lg bg-surface/40 backdrop-blur-[1px] transition-colors hover:bg-surface/20"
+                className={cn(pressable, 'absolute inset-0 -m-2 flex items-center justify-start rounded-lg bg-surface/40 backdrop-blur-[1px] hover:bg-surface/20')}
               >
                 <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3.5 py-1.5 text-sm font-semibold text-ink-700">
                   <Lock className="size-3.5" strokeWidth={2.25} aria-hidden="true" />

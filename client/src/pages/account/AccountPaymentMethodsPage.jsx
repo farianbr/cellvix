@@ -16,6 +16,7 @@ import Badge from '@/components/ui/Badge';
 import { StoreCreditCard, RechargeForm } from '@/components/account/StoreCredit';
 import { useAuth } from '@/hooks/useAuth';
 import { useAccountMutations, useAccountSummary, useStoreCredit } from '@/hooks/useAccount';
+import { pressable } from '@/lib/motion';
 
 const BRANDS = [
   { value: 'Visa', label: 'Visa' },
@@ -119,7 +120,7 @@ export function AccountPaymentMethodsPage() {
                   type="button"
                   onClick={() => setRemoving(method)}
                   aria-label={`Remove card ending ${method.last4}`}
-                  className="flex size-8 shrink-0 items-center justify-center rounded-lg text-ink-300 transition-colors hover:bg-danger-50 hover:text-danger"
+                  className={cn(pressable, 'flex size-8 shrink-0 items-center justify-center rounded-lg text-ink-300 hover:bg-danger-50 hover:text-danger')}
                 >
                   <Trash2 className="size-4" strokeWidth={2} />
                 </button>

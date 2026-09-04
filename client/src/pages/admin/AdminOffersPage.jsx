@@ -364,7 +364,7 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
                   onClick={() => remove(index)}
                   disabled={fields.length <= 2}
                   aria-label={`Remove line ${index + 1}`}
-                  className="mb-0.5 flex size-11 shrink-0 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-danger-50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink-400"
+                  className={cn(pressable, 'mb-0.5 flex size-11 shrink-0 items-center justify-center rounded-md text-ink-400 hover:bg-danger-50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink-400')}
                 >
                   <X className="size-4" strokeWidth={2} />
                 </button>

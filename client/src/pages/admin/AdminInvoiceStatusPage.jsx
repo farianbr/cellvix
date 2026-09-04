@@ -172,7 +172,7 @@ function RuleDialog({ rule, triggers, tokens, channels, onClose }) {
                 type="button"
                 onClick={() => set({ message: `${form.message}${token.token}` })}
                 title={token.label}
-                className="rounded-sm bg-surface px-1.5 py-1 font-mono text-xs text-ink-600 transition-colors hover:bg-brand-50 hover:text-brand"
+                className={cn(pressable, 'rounded-sm bg-surface px-1.5 py-1 font-mono text-xs text-ink-600 hover:bg-brand-50 hover:text-brand')}
               >
                 {token.token}
               </button>
@@ -340,7 +340,7 @@ export function AdminInvoiceStatusPage() {
                     type="button"
                     onClick={() => setDeleting(rule)}
                     aria-label={`Delete ${rule.label}`}
-                    className="flex size-8 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger"
+                    className={cn(pressable, 'flex size-8 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 hover:border-danger hover:bg-danger-50 hover:text-danger')}
                   >
                     <Trash2 className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                   </button>

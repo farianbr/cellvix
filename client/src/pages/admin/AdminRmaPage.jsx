@@ -26,6 +26,7 @@ import DataTable, { CountLine } from '@/components/admin/DataTable';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminRmas, useAdminMutations } from '@/hooks/useAdmin';
+import { pressable } from '@/lib/motion';
 
 /**
  * RMA / returns (ERP rework §6.3).
@@ -128,7 +129,7 @@ function RmaForm({ onSubmit, onCancel, isPending, error }) {
                 onClick={() => remove(index)}
                 disabled={fields.length === 1}
                 aria-label={`Remove line ${index + 1}`}
-                className="flex size-9 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 transition-colors hover:border-danger/30 hover:bg-danger-50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40"
+                className={cn(pressable, 'flex size-9 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 hover:border-danger/30 hover:bg-danger-50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40')}
               >
                 <Trash2 className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
               </button>

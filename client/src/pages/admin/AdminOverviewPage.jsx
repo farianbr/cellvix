@@ -488,7 +488,7 @@ export function AdminOverviewPage() {
                   <button
                     type="button"
                     onClick={() => setPreviewing(order)}
-                    className="group flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-surface-2 sm:px-5"
+                    className={cn(pressable, 'group flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-surface-2 sm:px-5')}
                   >
                     <div className="min-w-0 flex-1">
                       <p className="whitespace-nowrap font-mono text-sm font-medium text-ink-900">

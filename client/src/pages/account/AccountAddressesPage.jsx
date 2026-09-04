@@ -15,6 +15,7 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { useAuth } from '@/hooks/useAuth';
 import { useAccountMutations } from '@/hooks/useAccount';
+import { pressable } from '@/lib/motion';
 
 function AddressForm({ address, onSubmit, onCancel, isPending }) {
   const {
@@ -177,7 +178,7 @@ export function AccountAddressesPage() {
                     type="button"
                     onClick={() => setEditing(address)}
                     aria-label={`Edit ${address.label}`}
-                    className="flex size-8 items-center justify-center rounded-lg text-ink-400 transition-colors hover:bg-surface-2 hover:text-ink-900"
+                    className={cn(pressable, 'flex size-8 items-center justify-center rounded-lg text-ink-400 hover:bg-surface-2 hover:text-ink-900')}
                   >
                     <Pencil className="size-4" strokeWidth={2} />
                   </button>
@@ -185,7 +186,7 @@ export function AccountAddressesPage() {
                     type="button"
                     onClick={() => setRemoving(address)}
                     aria-label={`Delete ${address.label}`}
-                    className="flex size-8 items-center justify-center rounded-lg text-ink-300 transition-colors hover:bg-danger-50 hover:text-danger"
+                    className={cn(pressable, 'flex size-8 items-center justify-center rounded-lg text-ink-300 hover:bg-danger-50 hover:text-danger')}
                   >
                     <Trash2 className="size-4" strokeWidth={2} />
                   </button>

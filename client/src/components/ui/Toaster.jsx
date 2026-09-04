@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { AlertCircle, CheckCircle2, Info, X } from 'lucide-react';
 import cn from '@/lib/cn';
 import useToastStore from '@/store/toastStore';
-import { spring, toast as toastMotion } from '@/lib/motion';
+import { pressable, spring, toast as toastMotion } from '@/lib/motion';
 
 /**
  * Where toasts are drawn. Mounted once, at the app root.
@@ -79,7 +79,7 @@ export function Toaster() {
                 type="button"
                 onClick={() => dismiss(toast.id)}
                 aria-label="Dismiss"
-                className="-m-1 shrink-0 rounded-sm p-1 text-ink-300 transition-colors hover:text-ink-900 active:scale-[0.97]"
+                className={cn(pressable, '-m-1 shrink-0 rounded-sm p-1 text-ink-300 hover:text-ink-900')}
               >
                 <X className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
               </button>

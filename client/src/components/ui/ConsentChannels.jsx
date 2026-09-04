@@ -1,5 +1,6 @@
 import { Check, Mail, MessageCircle, MessageSquare, Phone } from 'lucide-react';
 import cn from '@/lib/cn';
+import { pressable } from '@/lib/motion';
 
 /**
  * The four channels a customer can agree to be contacted on (CASL, §6.13).
@@ -40,7 +41,8 @@ export function ConsentChannels({ value = EMPTY_CONSENT, onChange, disabled = fa
             disabled={disabled}
             onClick={() => onChange?.({ ...value, [key]: !on })}
             className={cn(
-              'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
+              pressable,
+              'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium',
               'disabled:cursor-not-allowed disabled:opacity-50',
               on
                 ? 'border-ok/30 bg-ok-50 text-ok'
