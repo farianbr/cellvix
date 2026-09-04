@@ -67,10 +67,46 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;');
 }
 
+/**
+ * Spelled-out country names for the non-domestic case. A two-letter code on a
+ * printed address reads as a database field; the name reads as an address.
+ */
+const COUNTRY_NAMES = {
+  US: 'United States',
+  GB: 'United Kingdom',
+  AU: 'Australia',
+  NZ: 'New Zealand',
+  IE: 'Ireland',
+  DE: 'Germany',
+  FR: 'France',
+  MX: 'Mexico',
+};
+
 const INK = '#111113';
 const MUTED = '#6b6b73';
 const LINE = '#e4e4e8';
 const BRAND = '#CF3429';
+
+/**
+ * The document's type scale.
+ *
+ * Inline styles cannot inherit from the app's design tokens, so the sizes here
+ * were being written per element and had drifted to nine of them — 9.5, 10, 11,
+ * 12, 12.5, 13, 13.5, 17, 25, 30 — several within half a pixel of each other.
+ * The same drift the app carried, for the same reason: no named scale to reach
+ * for.
+ *
+ * Six steps, mirroring the client's, and the invoice's hierarchy is built from
+ * these rather than from arbitrary numbers.
+ */
+const T = {
+  micro: '10px', // column headers, the SKU under a line
+  small: '11px', // section eyebrows, meta
+  body: '12px', // supporting copy, addresses
+  item: '13px', // A LINE ITEM. See below.
+  lead: '15px', // the totals rows
+  figure: '26px', // the amount due, and INVOICE
+};
 
 function addressBlock(title, address) {
   if (!address) return '';
@@ -81,19 +117,26 @@ function addressBlock(title, address) {
     address.line2,
     [address.city, address.region].filter(Boolean).join(', ') +
       (address.postal ? ` ${address.postal}` : ''),
-    address.country,
+    // Canada is not printed on a Canadian invoice. Every address in the system
+    // is domestic by default, so "CA" on its own line was a stray country code
+    // under every address — it reads as a data field that leaked onto the page
+    // rather than as part of an address. A genuinely foreign address still
+    // prints its country, spelled out, because there it is information.
+    address.country && String(address.country).toUpperCase() !== 'CA'
+      ? COUNTRY_NAMES[String(address.country).toUpperCase()] ?? address.country
+      : null,
     address.phone,
   ]
     .filter((line) => line && String(line).trim())
     .map(
       (line) =>
-        `<div style="font-size:12px;line-height:1.65;color:${MUTED};">${escapeHtml(line)}</div>`,
+        `<div style="font-size:${T.body};line-height:1.65;color:${MUTED};">${escapeHtml(line)}</div>`,
     )
     .join('');
 
   return `
     <td style="vertical-align:top;padding:22px 24px;width:50%;">
-      <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:${INK};margin-bottom:10px;">${escapeHtml(title)}</div>
+      <div style="font-size:${T.small};font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:${INK};margin-bottom:10px;">${escapeHtml(title)}</div>
       ${rows}
     </td>`;
 }
@@ -103,16 +146,16 @@ function itemRows(order) {
     .map(
       (item, index) => `
         <tr>
-          <td style="padding:11px 10px;border-bottom:1px solid ${LINE};font-size:12px;color:${MUTED};vertical-align:top;">${index + 1}.</td>
-          <td style="padding:11px 10px;border-bottom:1px solid ${LINE};font-size:12px;color:${INK};vertical-align:top;">
+          <td style="padding:13px 10px;border-bottom:1px solid ${LINE};font-size:${T.body};color:${MUTED};vertical-align:top;">${index + 1}.</td>
+          <td style="padding:13px 10px;border-bottom:1px solid ${LINE};font-size:${T.item};color:${INK};vertical-align:top;">
             <div style="font-weight:600;">${escapeHtml(item.name)}</div>
-            <div style="font-size:11px;color:${MUTED};margin-top:2px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">
+            <div style="font-size:${T.micro};color:${MUTED};margin-top:3px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;">
               ${escapeHtml(item.sku ?? '')}${item.grade ? ` · ${escapeHtml(item.grade)}` : ''}
             </div>
           </td>
-          <td style="padding:11px 10px;border-bottom:1px solid ${LINE};font-size:12px;color:${MUTED};text-align:right;vertical-align:top;white-space:nowrap;">${money(item.unitPrice)}</td>
-          <td style="padding:11px 10px;border-bottom:1px solid ${LINE};font-size:12px;color:${MUTED};text-align:right;vertical-align:top;">${item.qty}</td>
-          <td style="padding:11px 10px;border-bottom:1px solid ${LINE};font-size:12px;color:${INK};text-align:right;vertical-align:top;white-space:nowrap;font-weight:600;">${money(item.lineTotal)}</td>
+          <td style="padding:13px 10px;border-bottom:1px solid ${LINE};font-size:${T.item};color:${INK};text-align:right;vertical-align:top;white-space:nowrap;">${money(item.unitPrice)}</td>
+          <td style="padding:13px 10px;border-bottom:1px solid ${LINE};font-size:${T.item};color:${INK};text-align:right;vertical-align:top;">${item.qty}</td>
+          <td style="padding:13px 10px;border-bottom:1px solid ${LINE};font-size:${T.item};color:${INK};text-align:right;vertical-align:top;white-space:nowrap;font-weight:700;">${money(item.lineTotal)}</td>
         </tr>`,
     )
     .join('');
@@ -121,8 +164,8 @@ function itemRows(order) {
 function totalsRow(label, value, { strong = false, tone } = {}) {
   return `
     <tr>
-      <td style="padding:5px 0;font-size:${strong ? '12.5px' : '12px'};letter-spacing:.04em;text-transform:uppercase;color:${strong ? INK : MUTED};font-weight:${strong ? 700 : 500};">${escapeHtml(label)}</td>
-      <td style="padding:5px 0 5px 28px;font-size:${strong ? '13.5px' : '12.5px'};text-align:right;white-space:nowrap;color:${tone ?? (strong ? INK : MUTED)};font-weight:${strong ? 700 : 600};">${escapeHtml(value)}</td>
+      <td style="padding:6px 0;font-size:${T.body};letter-spacing:.04em;text-transform:uppercase;color:${strong ? INK : MUTED};font-weight:${strong ? 700 : 500};">${escapeHtml(label)}</td>
+      <td style="padding:6px 0 6px 28px;font-size:${strong ? T.lead : T.body};text-align:right;white-space:nowrap;color:${tone ?? (strong ? INK : MUTED)};font-weight:${strong ? 700 : 600};">${escapeHtml(value)}</td>
     </tr>`;
 }
 
@@ -153,7 +196,7 @@ function renderInvoiceHtml({ invoice, order, user, origin, nonce }) {
   const payments = (invoice.payments ?? [])
     .map(
       (payment) => `
-        <div style="font-size:12px;line-height:1.7;color:${MUTED};">
+        <div style="font-size:${T.body};line-height:1.7;color:${MUTED};">
           ${escapeHtml(day(payment.at))} · ${escapeHtml(payment.method ?? 'payment')} · ${money(payment.amount)}
         </div>`,
     )
@@ -188,7 +231,7 @@ function renderInvoiceHtml({ invoice, order, user, origin, nonce }) {
 ${
   nonce
     ? `<div class="no-print" style="max-width:760px;margin:0 auto 14px;text-align:right;">
-  <button type="button" id="print-invoice" style="cursor:pointer;border:0;border-radius:9px;padding:9px 16px;font-size:13px;font-weight:600;color:#fff;background:${BRAND};">
+  <button type="button" id="print-invoice" style="cursor:pointer;border:0;border-radius:10px;padding:9px 16px;font-size:${T.item};font-weight:600;color:#fff;background:${BRAND};">
     Print / save as PDF
   </button>
 </div>
@@ -214,16 +257,16 @@ ${
               <tr>
                 <td style="width:34px;height:34px;background:${INK};border-radius:6px;"></td>
                 <td style="padding-left:11px;vertical-align:middle;">
-                  <div style="font-size:17px;font-weight:800;letter-spacing:.02em;color:${INK};">${escapeHtml(business.name.toUpperCase())}</div>
-                  <div style="font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:${MUTED};margin-top:2px;">${escapeHtml(business.tagline)}</div>
+                  <div style="font-size:${T.figure};font-weight:800;letter-spacing:-.01em;color:${INK};">${escapeHtml(business.name.toUpperCase())}</div>
+                  <div style="font-size:${T.micro};letter-spacing:.16em;text-transform:uppercase;color:${MUTED};margin-top:2px;">${escapeHtml(business.tagline)}</div>
                 </td>
               </tr>
             </table>`
             }
           </td>
           <td style="vertical-align:top;text-align:right;">
-            <div style="font-size:30px;font-weight:800;letter-spacing:.02em;color:${INK};line-height:1;">INVOICE</div>
-            <div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:${MUTED};margin-top:7px;">Issued ${escapeHtml(day(invoice.issuedAt))}</div>
+            <div style="font-size:${T.figure};font-weight:800;letter-spacing:-.01em;color:${INK};line-height:1;">INVOICE</div>
+            <div style="font-size:${T.small};letter-spacing:.06em;text-transform:uppercase;color:${MUTED};margin-top:8px;">Issued ${escapeHtml(day(invoice.issuedAt))}</div>
           </td>
         </tr>
       </table>
@@ -239,10 +282,10 @@ ${
       <!-- ---- meta ----------------------------------------------------- -->
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:22px;">
         <tr>
-          <td style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:${MUTED};">
+          <td style="font-size:${T.small};letter-spacing:.06em;text-transform:uppercase;color:${MUTED};">
             Due ${escapeHtml(day(invoice.dueDate))}${order?.poNumber ? ` &nbsp;·&nbsp; PO ${escapeHtml(order.poNumber)}` : ''}
           </td>
-          <td style="text-align:right;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:${INK};font-weight:700;">
+          <td style="text-align:right;font-size:${T.small};letter-spacing:.06em;text-transform:uppercase;color:${INK};font-weight:700;">
             ${escapeHtml(numberLabel)} ${escapeHtml(invoice.number)}${order?.orderNumber ? ` &nbsp;·&nbsp; Order ${escapeHtml(order.orderNumber)}` : ''}
           </td>
         </tr>
@@ -252,17 +295,17 @@ ${
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:14px;border-collapse:collapse;">
         <thead>
           <tr>
-            <th style="text-align:left;padding:9px 10px;border-top:1px solid ${LINE};border-bottom:1px solid ${LINE};font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:${MUTED};width:34px;">No</th>
-            <th style="text-align:left;padding:9px 10px;border-top:1px solid ${LINE};border-bottom:1px solid ${LINE};font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:${MUTED};">Item description</th>
-            <th style="text-align:right;padding:9px 10px;border-top:1px solid ${LINE};border-bottom:1px solid ${LINE};font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:${MUTED};">Price</th>
-            <th style="text-align:right;padding:9px 10px;border-top:1px solid ${LINE};border-bottom:1px solid ${LINE};font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:${MUTED};">Qty</th>
-            <th style="text-align:right;padding:9px 10px;border-top:1px solid ${LINE};border-bottom:1px solid ${LINE};font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:${MUTED};">Total</th>
+            <th style="text-align:left;padding:9px 10px;border-top:1px solid ${LINE};border-bottom:1px solid ${LINE};font-size:${T.micro};letter-spacing:.08em;text-transform:uppercase;color:${MUTED};width:34px;">No</th>
+            <th style="text-align:left;padding:9px 10px;border-top:1px solid ${LINE};border-bottom:1px solid ${LINE};font-size:${T.micro};letter-spacing:.08em;text-transform:uppercase;color:${MUTED};">Item description</th>
+            <th style="text-align:right;padding:9px 10px;border-top:1px solid ${LINE};border-bottom:1px solid ${LINE};font-size:${T.micro};letter-spacing:.08em;text-transform:uppercase;color:${MUTED};">Price</th>
+            <th style="text-align:right;padding:9px 10px;border-top:1px solid ${LINE};border-bottom:1px solid ${LINE};font-size:${T.micro};letter-spacing:.08em;text-transform:uppercase;color:${MUTED};">Qty</th>
+            <th style="text-align:right;padding:9px 10px;border-top:1px solid ${LINE};border-bottom:1px solid ${LINE};font-size:${T.micro};letter-spacing:.08em;text-transform:uppercase;color:${MUTED};">Total</th>
           </tr>
         </thead>
         <tbody>
           ${
             itemRows(order) ||
-            `<tr><td colspan="5" style="padding:16px 10px;border-bottom:1px solid ${LINE};font-size:12px;color:${MUTED};">${escapeHtml(`Account charge — ${invoice.number}`)}</td></tr>`
+            `<tr><td colspan="5" style="padding:16px 10px;border-bottom:1px solid ${LINE};font-size:${T.item};color:${MUTED};">${escapeHtml(`Account charge — ${invoice.number}`)}</td></tr>`
           }
         </tbody>
       </table>
@@ -271,9 +314,24 @@ ${
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px;">
         <tr>
           <td style="vertical-align:top;width:47%;">
-            <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:${INK};">${settled ? 'Paid in full' : 'Total due'}</div>
-            <div style="margin-top:9px;display:inline-block;padding:13px 20px;background:#f7f7f9;border-radius:8px;">
-              <span style="font-size:25px;font-weight:800;color:${settled ? INK : BRAND};letter-spacing:-.01em;">${money(settled ? invoice.amount : balance)}</span>
+            <div style="font-size:${T.small};font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:${MUTED};">${settled ? 'Paid in full' : 'Total due'}</div>
+            ${/*
+                The figure is INK, not brand, even when there is money outstanding.
+
+                Three red things were stacked here — this number, the "Balance
+                due" row beside it, and the Pay button below it — and a reader
+                cannot tell which of three identical signals is the one to act
+                on. The number's job is to be READ, and it is already the largest
+                thing in this half of the page; size is what makes it findable,
+                not colour.
+
+                Red is left to the button, which is the one thing here that is
+                actually clicked, and to the balance-due row, which is the line an
+                overdue account is scanning for. That keeps the accent doing one
+                job apiece instead of three at once.
+              */''}
+            <div style="margin-top:10px;">
+              <span style="font-size:${T.figure};font-weight:800;color:${INK};letter-spacing:-.02em;">${money(settled ? invoice.amount : balance)}</span>
             </div>
             ${
               // Pay from the document itself — the shortest path from "I am
@@ -290,10 +348,10 @@ ${
               !settled && origin
                 ? `<div class="no-print" style="margin-top:12px;">
               <a href="${escapeHtml(origin)}/account/invoices?pay=${encodeURIComponent(invoice.number)}"
-                 style="display:inline-block;padding:11px 20px;border-radius:9px;background:${BRAND};color:#fff;font-size:13px;font-weight:700;text-decoration:none;">
+                 style="display:inline-block;padding:11px 20px;border-radius:10px;background:${BRAND};color:#fff;font-size:${T.item};font-weight:700;text-decoration:none;">
                 Pay ${money(balance)} now
               </a>
-              <div style="margin-top:7px;font-size:11px;line-height:1.6;color:${MUTED};">
+              <div style="margin-top:8px;font-size:${T.small};line-height:1.6;color:${MUTED};">
                 Pay by card or with your store credit.
               </div>
             </div>`
@@ -318,15 +376,15 @@ ${
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:30px;border-top:1px solid ${LINE};">
         <tr>
           <td style="vertical-align:top;width:50%;padding:20px 20px 0 0;">
-            <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:${INK};margin-bottom:8px;">Payment</div>
-            <div style="font-size:12px;line-height:1.7;color:${MUTED};">Terms: ${escapeHtml((invoice.terms ?? 'prepaid').replace('net', 'Net '))}</div>
-            <div style="font-size:12px;line-height:1.7;color:${MUTED};">Remit to: ${escapeHtml(business.billingEmail ?? business.email)}</div>
-            ${business.gstNumber ? `<div style="font-size:12px;line-height:1.7;color:${MUTED};">GST/HST no. ${escapeHtml(business.gstNumber)}</div>` : ''}
+            <div style="font-size:${T.small};font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:${INK};margin-bottom:8px;">Payment</div>
+            <div style="font-size:${T.body};line-height:1.7;color:${MUTED};">Terms: ${escapeHtml((invoice.terms ?? 'prepaid').replace('net', 'Net '))}</div>
+            <div style="font-size:${T.body};line-height:1.7;color:${MUTED};">Remit to: ${escapeHtml(business.billingEmail ?? business.email)}</div>
+            ${business.gstNumber ? `<div style="font-size:${T.body};line-height:1.7;color:${MUTED};">GST/HST no. ${escapeHtml(business.gstNumber)}</div>` : ''}
             ${payments}
           </td>
           <td style="vertical-align:top;width:50%;padding:20px 0 0 20px;">
-            <div style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:${INK};margin-bottom:8px;">Terms &amp; conditions</div>
-            <div style="font-size:12px;line-height:1.7;color:${MUTED};">
+            <div style="font-size:${T.small};font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:${INK};margin-bottom:8px;">Terms &amp; conditions</div>
+            <div style="font-size:${T.body};line-height:1.7;color:${MUTED};">
               ${escapeHtml(TERMS_COPY[invoice.terms] ?? TERMS_COPY.prepaid)}
               All amounts are in Canadian dollars. Parts are covered by the warranty stated on the
               product page at the time of purchase.
@@ -338,7 +396,7 @@ ${
       <!-- ---- footer --------------------------------------------------- -->
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:28px;border-top:1px solid ${LINE};">
         <tr>
-          <td style="padding:16px 0 30px;font-size:11px;line-height:1.7;color:${MUTED};">
+          <td style="padding:16px 0 30px;font-size:${T.small};line-height:1.7;color:${MUTED};">
             Questions? Email <a href="mailto:${escapeHtml(business.email)}" style="color:${BRAND};text-decoration:none;">${escapeHtml(business.email)}</a>
             or call ${escapeHtml(business.phone)}.<br />
             ${escapeHtml(business.address.line1)}, ${escapeHtml(business.address.city)}, ${escapeHtml(business.address.region)} ${escapeHtml(business.address.postal)} · ${escapeHtml(business.domain)}
