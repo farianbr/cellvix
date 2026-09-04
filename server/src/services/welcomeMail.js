@@ -84,24 +84,51 @@ function escapeHtml(value) {
  * The one deliberate exception to the storefront palette is the credentials
  * block, which is the only thing in the message the reader must not miss.
  */
+/**
+ * The palette and type scale both messages are built from.
+ *
+ * These used to be declared inside each renderer, so the welcome mail and the
+ * password-reset mail each carried their own copy — and they had already
+ * diverged: different card radii, different greys, twelve font sizes between
+ * them with several a half-pixel apart. Mail cannot import a stylesheet, but
+ * that is an argument for defining the values once in the module, not for
+ * writing them out per element.
+ */
+const MAIL = {
+  display: "'Archivo','Segoe UI',-apple-system,BlinkMacSystemFont,Arial,sans-serif",
+  body: "'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,Arial,sans-serif",
+  mono: "ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,monospace",
+
+  ink900: '#18181b',
+  ink500: '#5c5c66',
+  ink300: '#9b9ba5',
+  line: '#e7e7ea',
+  surface2: '#f7f7f8',
+  brand: '#CF3429',
+
+  /* Six steps, mirroring the client's scale. */
+  micro: '11px',
+  small: '12px',
+  base: '14px',
+  lead: '15px',
+  title: '20px',
+  hero: '26px',
+
+  /* Two radii: the card, and everything inside it. */
+  radiusCard: '14px',
+  radiusInner: '10px',
+};
+
 function renderHtml({ user, password, origin, approved }) {
   const account = `${origin}/account`;
   const security = `${origin}/account/company`;
 
-  const display = `'Archivo','Segoe UI',-apple-system,BlinkMacSystemFont,Arial,sans-serif`;
-  const body = `'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,Arial,sans-serif`;
-  const mono = `ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,monospace`;
-
-  const ink900 = '#18181b';
-  const ink500 = '#5c5c66';
-  const ink300 = '#9b9ba5';
-  const line = '#e7e7ea';
-  const surface2 = '#f7f7f8';
+  const { display, body, mono, ink900, ink500, ink300, line, surface2 } = MAIL;
 
   const row = (label, value, isMono) => `
         <tr>
-          <td style="padding:11px 16px;border-top:1px solid ${line};font:400 12px/1.4 ${body};color:${ink500};white-space:nowrap;">${label}</td>
-          <td style="padding:11px 16px;border-top:1px solid ${line};font:${isMono ? `700 15px/1.4 ${mono};letter-spacing:0.4px` : `600 14px/1.4 ${body}`};color:${ink900};">${value}</td>
+          <td style="padding:11px 16px;border-top:1px solid ${line};font:400 ${MAIL.small}/1.4 ${body};color:${ink500};white-space:nowrap;">${label}</td>
+          <td style="padding:11px 16px;border-top:1px solid ${line};font:${isMono ? `700 ${MAIL.lead}/1.4 ${mono};letter-spacing:0.4px` : `600 ${MAIL.base}/1.4 ${body}`};color:${ink900};">${value}</td>
         </tr>`;
 
   return `<!doctype html>
@@ -117,21 +144,32 @@ function renderHtml({ user, password, origin, approved }) {
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${surface2};">
     <tr><td align="center" style="padding:32px 16px;">
 
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border:1px solid ${line};border-radius:16px;overflow:hidden;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border:1px solid ${line};border-radius:${MAIL.radiusCard};overflow:hidden;">
 
-        <!-- The gradient as a hairline rule: accent, not a filled header. -->
-        <tr><td style="height:3px;line-height:3px;font-size:0;background:#CF3429;">
-          <div style="height:3px;background:linear-gradient(90deg,#CF3429,#000000);">&nbsp;</div>
+        <!-- The gradient as a hairline rule: accent, not a filled header.
+
+             It ran red-to-black, which is the brand ramp backwards, so the rule
+             faded to black at its right end — and because the card clips its
+             corners, that dark end was cut by the radius and read as a printing
+             fault rather than as a brand mark. Black-to-red is the direction the
+             brand sheet shows. The COMPACT ramp, though, starting at the deep
+             red rather than at the near-black: across a 3px rule the full
+             gradient spends its first third in something indistinguishable from
+             black, which reads as a dark stub bolted to one end rather than as
+             depth. Same identity, no stub — this mirrors bg-brand-gradient-compact
+             in the client, which exists for exactly this reason. -->
+        <tr><td style="height:3px;line-height:3px;font-size:0;background:${MAIL.brand};">
+          <div style="height:3px;background:linear-gradient(90deg,#8f221b 0%,#cf3429 55%,#e8564a 100%);">&nbsp;</div>
         </td></tr>
 
         <tr><td style="padding:36px 36px 8px;">
-          <div style="font:700 11px/1 ${display};letter-spacing:0.14em;text-transform:uppercase;color:${ink300};">
+          <div style="font:700 ${MAIL.micro}/1 ${display};letter-spacing:0.14em;text-transform:uppercase;color:${ink300};">
             ${escapeHtml(BUSINESS_INFO.name)}
           </div>
-          <h1 style="margin:14px 0 0;font:700 26px/1.2 ${display};letter-spacing:-0.02em;color:${ink900};">
+          <h1 style="margin:14px 0 0;font:700 ${MAIL.hero}/1.2 ${display};letter-spacing:-0.02em;color:${ink900};">
             ${password ? 'Your account is ready' : 'Thanks for signing up'}
           </h1>
-          <p style="margin:12px 0 0;font:400 14px/1.65 ${body};color:${ink500};">
+          <p style="margin:12px 0 0;font:400 ${MAIL.base}/1.65 ${body};color:${ink500};">
             ${
               password
                 ? `We have opened a wholesale account for <strong style="color:${ink900};font-weight:600;">${escapeHtml(displayNameOf(user))}</strong>. Everything you need to sign in is below.`
@@ -145,16 +183,30 @@ function renderHtml({ user, password, origin, approved }) {
             ? `
         <!-- Credentials. The one block in the message that must not be missed. -->
         <tr><td style="padding:26px 36px 0;">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${line};border-radius:12px;overflow:hidden;">
-            <tr><td colspan="2" style="padding:12px 16px;background:${surface2};font:700 10.5px/1 ${display};letter-spacing:0.13em;text-transform:uppercase;color:${ink300};">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${line};border-radius:${MAIL.radiusInner};overflow:hidden;">
+            <tr><td colspan="2" style="padding:12px 16px;background:${surface2};font:700 ${MAIL.micro}/1 ${display};letter-spacing:0.13em;text-transform:uppercase;color:${ink300};">
               Sign-in details
             </td></tr>
             ${row('Email', escapeHtml(user.email), false)}
             ${row('Password', escapeHtml(password), true)}
           </table>
 
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:12px;background:#fef2f2;border-radius:10px;">
-            <tr><td style="padding:12px 14px;font:400 12.5px/1.6 ${body};color:#b91c1c;">
+          ${/*
+              A quiet note, not a red panel.
+
+              This was a filled pink block in danger red, sitting directly above
+              the sign-in button — so the loudest thing in the message was a
+              caveat, and the action the message exists to prompt was the
+              quieter of the two. The warning is real and it stays, but nothing
+              here is wrong yet: the reader is being told what to do afterwards,
+              which is a note, not an error.
+
+              A left rule in brand plus ink text carries it without competing:
+              it is plainly a callout, and the button beside it is plainly the
+              thing to press.
+            */''}
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:14px;background:${surface2};border-left:3px solid ${MAIL.brand};border-radius:0 ${MAIL.radiusInner} ${MAIL.radiusInner} 0;">
+            <tr><td style="padding:12px 14px;font:400 ${MAIL.small}/1.6 ${body};color:${ink500};">
               This password is written in this email. Anyone who can read the message can sign in as
               you, so please change it once you are in and delete this afterwards.
             </td></tr>
@@ -166,8 +218,8 @@ function renderHtml({ user, password, origin, approved }) {
         <!-- Bulletproof-ish button: a padded table cell, not a styled <div>. -->
         <tr><td style="padding:26px 36px 0;">
           <table role="presentation" cellpadding="0" cellspacing="0">
-            <tr><td style="border-radius:10px;background:#CF3429;">
-              <a href="${password ? origin : account}" style="display:inline-block;padding:13px 26px;font:600 14px/1 ${display};color:#ffffff;text-decoration:none;">
+            <tr><td style="border-radius:${MAIL.radiusInner};background:${MAIL.brand};">
+              <a href="${password ? origin : account}" style="display:inline-block;padding:13px 26px;font:600 ${MAIL.base}/1 ${display};color:#ffffff;text-decoration:none;">
                 ${password ? 'Sign in to Cellvix' : 'Go to your dashboard'}
               </a>
             </td></tr>
@@ -176,7 +228,7 @@ function renderHtml({ user, password, origin, approved }) {
 
         <tr><td style="padding:24px 36px 0;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid ${line};">
-            <tr><td style="padding-top:20px;font:400 13.5px/1.65 ${body};color:${ink500};">
+            <tr><td style="padding-top:20px;font:400 ${MAIL.base}/1.65 ${body};color:${ink500};">
               ${
                 approved
                   ? 'Your account is approved, so wholesale pricing and ordering are live the moment you sign in.'
@@ -189,9 +241,9 @@ function renderHtml({ user, password, origin, approved }) {
         <tr><td style="padding:20px 36px 34px;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
             <tr>
-              <td style="font:400 13px/2 ${body};color:${ink500};">
-                ${password ? `Change your password &nbsp;<a href="${security}" style="color:#CF3429;text-decoration:none;font-weight:600;">${security.replace(/^https?:\/\//, '')}</a><br />` : ''}
-                Your dashboard &nbsp;<a href="${account}" style="color:#CF3429;text-decoration:none;font-weight:600;">${account.replace(/^https?:\/\//, '')}</a>
+              <td style="font:400 ${MAIL.small}/2 ${body};color:${ink500};">
+                ${password ? `Change your password &nbsp;<a href="${security}" style="color:${MAIL.brand};text-decoration:none;font-weight:600;">${security.replace(/^https?:\/\//, '')}</a><br />` : ''}
+                Your dashboard &nbsp;<a href="${account}" style="color:${MAIL.brand};text-decoration:none;font-weight:600;">${account.replace(/^https?:\/\//, '')}</a>
               </td>
             </tr>
           </table>
@@ -199,7 +251,7 @@ function renderHtml({ user, password, origin, approved }) {
       </table>
 
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
-        <tr><td style="padding:18px 36px 0;text-align:center;font:400 11.5px/1.7 ${body};color:${ink300};">
+        <tr><td style="padding:18px 36px 0;text-align:center;font:400 ${MAIL.micro}/1.7 ${body};color:${ink300};">
           ${escapeHtml(BUSINESS_INFO.name)} &nbsp;·&nbsp; ${escapeHtml(BUSINESS_INFO.address.city)}, ${escapeHtml(BUSINESS_INFO.address.region)}<br />
           You are receiving this because an account was opened for this address.
           Reply to this email and it reaches our team.
@@ -301,48 +353,57 @@ async function sendPasswordResetEmail({ user, token, origin, expiresMinutes = 60
     const base = origin || env.publicOrigin;
     const link = `${base}/reset-password?token=${encodeURIComponent(token)}`;
 
-    const body = `'Inter','Segoe UI',-apple-system,BlinkMacSystemFont,Arial,sans-serif`;
-    const ink900 = '#18181b';
-    const ink500 = '#5c5c66';
-    const ink300 = '#9b9ba5';
+    const { display, body, ink900, ink500, ink300, line, surface2 } = MAIL;
 
     const html = `<!doctype html>
 <html><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width,initial-scale=1" /></head>
-<body style="margin:0;padding:24px 12px;background:#f4f4f5;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+<body style="margin:0;padding:0;background:${surface2};">
+  <!-- Preheader: the line inboxes show beside the subject. Hidden in the body. -->
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">
+    Choose a new password. The link expires in ${expiresMinutes} minutes.
+  </div>
 
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:14px;overflow:hidden;">
-      <tr><td style="padding:28px 36px 0;">
-        <p style="margin:0;font:700 17px/1.3 ${body};color:${ink900};">
-          ${escapeHtml(BUSINESS_INFO.name)}
-        </p>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${surface2};">
+    <tr><td align="center" style="padding:32px 16px;">
+
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border:1px solid ${line};border-radius:${MAIL.radiusCard};overflow:hidden;">
+
+      <!-- The same brand hairline the welcome mail carries. -->
+      <tr><td style="height:3px;line-height:3px;font-size:0;background:${MAIL.brand};">
+        <div style="height:3px;background:linear-gradient(90deg,#8f221b 0%,#cf3429 55%,#e8564a 100%);">&nbsp;</div>
       </td></tr>
 
-      <tr><td style="padding:20px 36px 0;">
-        <h1 style="margin:0 0 10px;font:700 20px/1.3 ${body};color:${ink900};">Reset your password</h1>
-        <p style="margin:0;font:400 14px/1.7 ${body};color:${ink500};">
+      <tr><td style="padding:36px 36px 8px;">
+        <div style="font:700 ${MAIL.micro}/1 ${display};letter-spacing:0.14em;text-transform:uppercase;color:${ink300};">
+          ${escapeHtml(BUSINESS_INFO.name)}
+        </div>
+      </td></tr>
+
+      <tr><td style="padding:0 36px;">
+        <h1 style="margin:14px 0 0;font:700 ${MAIL.hero}/1.2 ${display};letter-spacing:-0.02em;color:${ink900};">Reset your password</h1>
+        <p style="margin:12px 0 0;font:400 ${MAIL.base}/1.65 ${body};color:${ink500};">
           Somebody asked to reset the password for
           <strong style="color:${ink900};font-weight:600;">${escapeHtml(user.email)}</strong>.
           Use the button below within ${expiresMinutes} minutes.
         </p>
       </td></tr>
 
-      <tr><td style="padding:22px 36px 0;">
+      <tr><td style="padding:24px 36px 0;">
         <table role="presentation" cellpadding="0" cellspacing="0"><tr>
-          <td style="border-radius:10px;background:#CF3429;">
-            <a href="${link}" style="display:inline-block;padding:12px 22px;font:600 14px/1 ${body};color:#ffffff;text-decoration:none;">
+          <td style="border-radius:${MAIL.radiusInner};background:${MAIL.brand};">
+            <a href="${link}" style="display:inline-block;padding:13px 26px;font:600 ${MAIL.base}/1 ${display};color:#ffffff;text-decoration:none;">
               Choose a new password
             </a>
           </td>
         </tr></table>
       </td></tr>
 
-      <tr><td style="padding:18px 36px 28px;">
-        <p style="margin:0 0 10px;font:400 12.5px/1.7 ${body};color:${ink500};">
+      <tr><td style="padding:20px 36px 32px;">
+        <p style="margin:0 0 10px;font:400 ${MAIL.small}/1.7 ${body};color:${ink500};">
           If the button does not work, paste this into your browser:<br />
-          <span style="color:#CF3429;word-break:break-all;">${escapeHtml(link)}</span>
+          <span style="color:${MAIL.brand};word-break:break-all;">${escapeHtml(link)}</span>
         </p>
-        <p style="margin:0;font:400 12.5px/1.7 ${body};color:${ink500};">
+        <p style="margin:0;font:400 ${MAIL.small}/1.7 ${body};color:${ink500};">
           <strong style="color:${ink900};font-weight:600;">If you did not ask for this</strong>, you can
           ignore this email — your password stays as it is, and the link stops working on its own.
         </p>
@@ -350,7 +411,7 @@ async function sendPasswordResetEmail({ user, token, origin, expiresMinutes = 60
     </table>
 
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;">
-      <tr><td style="padding:18px 36px 0;text-align:center;font:400 11.5px/1.7 ${body};color:${ink300};">
+      <tr><td style="padding:18px 36px 0;text-align:center;font:400 ${MAIL.micro}/1.7 ${body};color:${ink300};">
         ${escapeHtml(BUSINESS_INFO.name)} &nbsp;·&nbsp; ${escapeHtml(BUSINESS_INFO.address.city)}, ${escapeHtml(BUSINESS_INFO.address.region)}<br />
         This link expires in ${expiresMinutes} minutes and can only be used once.
       </td></tr>
