@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 /**
  * A bulk email campaign (ERP rework §6.13, §8).
@@ -57,12 +57,12 @@ const campaignSchema = new mongoose.Schema(
       clicked: { type: Number, default: 0 },
       bounced: { type: Number, default: 0 },
       unsubscribed: { type: Number, default: 0 },
-      // Written but not delivered — no SMTP transport, so the message went to
-      // the local outbox. Its own field rather than being folded into `sent`,
-      // because a campaign that reads "sent 0" with no further explanation
-      // looks like a failure when it is a configuration state. The list column
-      // shows this beside the sent count so the row explains itself without
-      // anyone having to reopen the send dialog.
+      // Saved but not sent, because the channel has no provider connected —
+      // SMS and WhatsApp (§6b). Its own field rather than being folded into
+      // `sent`, because a campaign that reads "sent 0" with no further
+      // explanation looks like a failure when it is a configuration state. The
+      // list column shows this beside the sent count so the row explains
+      // itself without anyone having to reopen the send dialog.
       queued: { type: Number, default: 0 },
       // Recipients the audience matched but consent excluded. Shown on the
       // detail so a small send against a large audience is explained rather
@@ -79,8 +79,5 @@ campaignSchema.index({ createdAt: -1 });
 
 const Campaign = mongoose.model('Campaign', campaignSchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.CAMPAIGN_STATUSES = CAMPAIGN_STATUSES;
-exports.CAMPAIGN_AUDIENCES = CAMPAIGN_AUDIENCES;
-exports.Campaign = Campaign;
-exports.default = Campaign;
+export { CAMPAIGN_STATUSES, CAMPAIGN_AUDIENCES, Campaign };
+export default Campaign;

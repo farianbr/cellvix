@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 /**
  * Stock on order from a supplier (ERP rework §6.8).
@@ -92,7 +92,5 @@ purchaseOrderSchema.index({ supplier: 1, orderDate: -1 });
 
 const PurchaseOrder = mongoose.model('PurchaseOrder', purchaseOrderSchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.PO_STATUSES = PO_STATUSES;
-exports.PurchaseOrder = PurchaseOrder;
-exports.default = PurchaseOrder;
+export { PO_STATUSES, PurchaseOrder };
+export default PurchaseOrder;

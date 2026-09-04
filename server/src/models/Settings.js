@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 /**
  * The settings singleton (ERP rework §8, §6.15).
@@ -297,10 +297,5 @@ settingsSchema.statics.shippingFor = function shippingFor(settings, code) {
 
 const Settings = mongoose.model('Settings', settingsSchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.DEFAULT_TAX_RATES = DEFAULT_TAX_RATES;
-exports.DEFAULT_TIER_WARRANTY_BONUS = DEFAULT_TIER_WARRANTY_BONUS;
-exports.DEFAULT_PAYMENT_METHODS = DEFAULT_PAYMENT_METHODS;
-exports.DEFAULT_SHIPPING_METHODS = DEFAULT_SHIPPING_METHODS;
-exports.Settings = Settings;
-exports.default = Settings;
+export { DEFAULT_TAX_RATES, DEFAULT_TIER_WARRANTY_BONUS, DEFAULT_PAYMENT_METHODS, DEFAULT_SHIPPING_METHODS, Settings };
+export default Settings;

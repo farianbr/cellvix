@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 /**
  * A price quote built for an account (ERP rework §6.6).
@@ -83,7 +83,5 @@ quoteSchema.index({ user: 1, createdAt: -1 });
 
 const Quote = mongoose.model('Quote', quoteSchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.QUOTE_STATUSES = QUOTE_STATUSES;
-exports.Quote = Quote;
-exports.default = Quote;
+export { QUOTE_STATUSES, Quote };
+export default Quote;

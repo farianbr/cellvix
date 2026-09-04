@@ -21,6 +21,7 @@ import {
 import cn from '@/lib/cn';
 import api from '@/lib/api';
 import { BUSINESS_INFO } from '@/lib/constants';
+import { COUNTRY_OPTIONS, DEFAULT_COUNTRY } from '@shared/countries';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
@@ -28,6 +29,7 @@ import FormSection from '@/components/ui/FormSection';
 import Button from '@/components/ui/Button';
 import Checkbox from '@/components/ui/Checkbox';
 import PhoneField from '@/components/ui/PhoneField';
+import SelectField from '@/components/ui/SelectField';
 import ConsentChannels, { EMPTY_CONSENT } from '@/components/ui/ConsentChannels';
 import useUiStore from '@/store/uiStore';
 import { useAuth } from '@/hooks/useAuth';
@@ -423,7 +425,7 @@ function SupplierApplyForm({ onBack }) {
       phone: '',
       website: '',
       supplies: '',
-      address: { line1: '', line2: '', city: '', region: '', postal: '' },
+      address: { line1: '', line2: '', city: '', region: '', postal: '', country: DEFAULT_COUNTRY },
     },
   });
 
@@ -541,6 +543,15 @@ function SupplierApplyForm({ onBack }) {
             <Input label="Province" placeholder="ON" maxLength={2} {...register('address.region')} />
             <Input label="Postal code" placeholder="A1A 1A1" {...register('address.postal')} />
           </div>
+          {/* Prefilled with Canada. Suppliers are the one group who genuinely
+              are often not Canadian, so the field is asked rather than
+              assumed. */}
+          <SelectField
+            control={control}
+            name="address.country"
+            label="Country"
+            options={COUNTRY_OPTIONS}
+          />
         </div>
       </FormSection>
 
@@ -928,7 +939,19 @@ export function AccountPopup() {
       // desktop where it lands on the red panel, and wrong below `md` where the
       // panel is hidden and it floats over the form with nothing behind it.
       showClose={false}
-      bodyClassName="p-0 md:p-0"
+      /**
+       * `overflow-hidden` overrides `Modal`'s own `overflow-y-auto` on the
+       * body, and it is what keeps the red panel still.
+       *
+       * With the body scrolling, expanding "Company details" grew the grid past
+       * the frame and the **whole dialog** scrolled — banner included, so the
+       * panel slid up out of view and the tab row went with it. The scroll
+       * belongs to the form column alone (it already has `overflow-y-auto` and
+       * `min-h-0`); the grid must therefore be the thing that cannot overflow,
+       * which is what this does. `md:overflow-hidden` repeats it because the
+       * base utility is otherwise re-applied at the breakpoint.
+       */
+      bodyClassName="p-0 md:p-0 overflow-hidden md:overflow-hidden"
     >
       {/* **The content sets the height.** The frame used to be pinned to the
           tallest tab (760px), so Sign In — which needs barely half of that —
@@ -946,7 +969,14 @@ export function AccountPopup() {
           `max-h` rather than `h` so a short viewport caps the frame and the form
           column scrolls inside it instead of the dialog overflowing. `min-h-0`
           on the scrolling child is what lets it scroll rather than stretch. */}
-      <div className="grid max-h-[82vh] gap-6 md:max-h-[86vh] md:min-h-[560px] md:grid-cols-[minmax(0,516px)_minmax(0,268px)] md:justify-center md:gap-7">
+      {/* `grid-rows-[minmax(0,1fr)]` is what makes the form column scroll
+          rather than overflow. A grid row defaults to `auto`, which sizes to
+          its tallest child and ignores the container's `max-h` — so the column
+          grew to its full content height, pushed past the frame and took the
+          banner with it. Pinning the row to a shrinkable `1fr` gives the
+          column a real height to scroll inside; `min-h-0` on the column itself
+          (below) is the other half of that rule. */}
+      <div className="grid max-h-[82vh] grid-rows-[minmax(0,1fr)] gap-6 md:max-h-[86vh] md:min-h-[560px] md:grid-cols-[minmax(0,516px)_minmax(0,268px)] md:justify-center md:gap-7">
         {/* The column keeps its 480px cap at every width. It was released at
             `md` (`md:max-w-none`), so the form stretched to whatever the grid
             column happened to be — around 600px — and a single email or

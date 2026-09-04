@@ -1,6 +1,6 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const productService = require('../services/productService.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import ApiError from '../utils/ApiError.js';
+import * as productService from '../services/productService.js';
 
 const list = asyncHandler(async (req, res) => {
   const result = await productService.listProducts(req.query, req.user);
@@ -18,7 +18,4 @@ const detail = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.list = list;
-exports.search = search;
-exports.detail = detail;
+export { list, search, detail };

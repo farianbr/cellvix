@@ -1,5 +1,5 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const orderService = require('../services/orderService.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import * as orderService from '../services/orderService.js';
 
 /**
  * The binding price of the current cart.
@@ -54,8 +54,4 @@ const detail = asyncHandler(async (req, res) => {
   res.json({ order: await orderService.getOrder(req.user._id, req.params.orderNumber) });
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.quote = quote;
-exports.create = create;
-exports.list = list;
-exports.detail = detail;
+export { quote, create, list, detail };

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 /**
  * Things Cellvix **buys** that are not stock (Purchase § Service Products) and
@@ -88,8 +88,5 @@ supplierServiceSchema.index({ billing: 1, nextRenewalAt: 1 });
 
 const SupplierService = mongoose.model('SupplierService', supplierServiceSchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.BILLING_CYCLES = BILLING_CYCLES;
-exports.CYCLE_DAYS = CYCLE_DAYS;
-exports.SupplierService = SupplierService;
-exports.default = SupplierService;
+export { BILLING_CYCLES, CYCLE_DAYS, SupplierService };
+export default SupplierService;

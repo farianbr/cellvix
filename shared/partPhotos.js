@@ -134,11 +134,4 @@ const HAS_PICTURE = {
   ],
 };
 
-// --- CommonJS exports -------------------------------------------------
-exports.DIR = DIR;
-exports.PHOTOS = PHOTOS;
-exports.BRAND_KEY = BRAND_KEY;
-exports.photoFile = photoFile;
-exports.partPhoto = partPhoto;
-exports.photographedPairs = photographedPairs;
-exports.HAS_PICTURE = HAS_PICTURE;
+export { DIR, PHOTOS, BRAND_KEY, photoFile, partPhoto, photographedPairs, HAS_PICTURE };

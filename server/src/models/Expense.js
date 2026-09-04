@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 /**
  * Money out. Feeds the P&L and the expense report (ERP rework §6.9).
@@ -54,6 +54,5 @@ expenseSchema.index({ date: -1 });
 
 const Expense = mongoose.model('Expense', expenseSchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.Expense = Expense;
-exports.default = Expense;
+export { Expense };
+export default Expense;

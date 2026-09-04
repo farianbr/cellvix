@@ -1,6 +1,6 @@
-const { connectDb, disconnectDb } = require('../config/db.js');
-const { default: Product } = require('../models/Product.js');
-const { buildCompetitors } = require('./generate.js');
+import { connectDb, disconnectDb } from '../config/db.js';
+import Product from '../models/Product.js';
+import { buildCompetitors } from './generate.js';
 
 /**
  * Backfills the `competitors` benchmark prices onto products that predate the
@@ -79,5 +79,4 @@ if (process.argv[1] && process.argv[1].endsWith('backfill-competitors.js')) {
   });
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.backfillCompetitors = backfillCompetitors;
+export { backfillCompetitors };

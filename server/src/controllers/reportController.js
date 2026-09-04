@@ -1,5 +1,5 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const reportService = require('../services/reportService.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import * as reportService from '../services/reportService.js';
 
 /**
  * Reports (ERP rework §6.11–6.12).
@@ -12,5 +12,4 @@ const report = asyncHandler(async (req, res) => {
   res.json(await reportService.report(req.params.tab, req.query));
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.report = report;
+export { report };

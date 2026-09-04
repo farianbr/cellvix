@@ -1,4 +1,4 @@
-const { z } = require('zod');
+import { z } from 'zod';
 
 /** Canadian provinces and territories — the only shipping destinations Cellvix serves. */
 const PROVINCES = [
@@ -71,10 +71,4 @@ const CHECKOUT_STEPS = [
 /** Placeholder rate — awaiting the client's real tax rules (PROGRESS.md Q4). */
 const TAX_RATE = 0.13;
 
-// --- CommonJS exports -------------------------------------------------
-exports.PROVINCES = PROVINCES;
-exports.addressSchema = addressSchema;
-exports.DELIVERY_METHODS = DELIVERY_METHODS;
-exports.checkoutSchema = checkoutSchema;
-exports.CHECKOUT_STEPS = CHECKOUT_STEPS;
-exports.TAX_RATE = TAX_RATE;
+export { PROVINCES, addressSchema, DELIVERY_METHODS, checkoutSchema, CHECKOUT_STEPS, TAX_RATE };

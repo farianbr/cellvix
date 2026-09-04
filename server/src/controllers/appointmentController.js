@@ -1,9 +1,9 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const {
-  default: Appointment,
-  APPOINTMENT_KINDS, APPOINTMENT_STATUSES,
-} = require('../models/Appointment.js');
-const { default: User } = require('../models/User.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import Appointment, {
+  APPOINTMENT_KINDS,
+  APPOINTMENT_STATUSES,
+} from '../models/Appointment.js';
+import User from '../models/User.js';
 
 /**
  * The scheduling board (§6.15 category 4 — **UI only, §6b U1–U2**, phase 11e).
@@ -65,5 +65,4 @@ const list = asyncHandler(async (req, res) => {
   });
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.list = list;
+export { list };

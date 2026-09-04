@@ -1,23 +1,17 @@
-const { default: env } = require('./config/env.js');
-const { connectDb, disconnectDb } = require('./config/db.js');
-const { createApp } = require('./app.js');
-const { isDatabaseEmpty } = require('./seed/run.js');
-const { ensureBuiltInRoles, ensureDefaultOutlet } = require('./services/accessService.js');
-const { ensureBuiltInRules } = require('./models/InvoiceStatusRule.js');
+import env from './config/env.js';
+import { connectDb, disconnectDb } from './config/db.js';
+import { createApp } from './app.js';
+import { isDatabaseEmpty } from './seed/run.js';
+import { ensureBuiltInRoles, ensureDefaultOutlet } from './services/accessService.js';
+import { ensureBuiltInRules } from './models/InvoiceStatusRule.js';
 
 /**
  * Everything boots inside `main` rather than at module scope.
  *
- * Phusion Passenger — the Node runner behind cPanel's "Setup Node.js App" —
- * loads this file itself and expects the module body to evaluate without
- * suspending. Top-level `await` makes the module's evaluation a promise, and
- * Passenger's loader has no way to wait on it: the app reports "started" while
- * the database is still connecting, and the first request arrives before
- * `app.listen` ever ran. Wrapping the sequence in an async function keeps the
- * module body synchronous and the boot order intact.
- *
- * Nothing changes for `npm run dev` — `node --watch src/index.js` runs the
- * same sequence, in the same order.
+ * The sequence is order-dependent — the database must be connected before the
+ * role and outlet upserts run, and those must finish before the app listens —
+ * so it is kept in one async function with explicit `await`s and a single
+ * failure path, rather than spread across top-level awaits.
  */
 async function main() {
   await connectDb();

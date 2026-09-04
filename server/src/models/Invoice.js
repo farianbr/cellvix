@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const invoiceSchema = new mongoose.Schema(
   {
@@ -75,6 +75,11 @@ const invoiceSchema = new mongoose.Schema(
         at: { type: Date, default: Date.now },
         method: String,
         reference: String,
+        // Set on the ORIGINAL row when it is reversed, so the UI can strike it
+        // through without pairing rows up by amount and guessing which
+        // reversal belongs to which payment. The reversal itself is a separate
+        // row carrying the negative amount.
+        reversedAt: Date,
         _id: false,
       },
     ],
@@ -93,6 +98,5 @@ invoiceSchema.index({ creditTransaction: 1 }, { sparse: true });
 
 const Invoice = mongoose.model('Invoice', invoiceSchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.Invoice = Invoice;
-exports.default = Invoice;
+export { Invoice };
+export default Invoice;

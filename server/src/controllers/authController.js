@@ -1,7 +1,7 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const authService = require('../services/authService.js');
-const auditService = require('../services/auditService.js');
-const { default: Role, PERMISSION_AREAS } = require('../models/Role.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import * as authService from '../services/authService.js';
+import auditService from '../services/auditService.js';
+import Role, { PERMISSION_AREAS } from '../models/Role.js';
 
 /**
  * The session shape, plus the resolved permission map for Cellvix staff.
@@ -157,11 +157,4 @@ const resetPassword = asyncHandler(async (req, res) => {
   res.json({ user: user.toPublic() });
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.register = register;
-exports.login = login;
-exports.logout = logout;
-exports.me = me;
-exports.forgotPassword = forgotPassword;
-exports.resetPassword = resetPassword;
-exports.applyAsSupplier = applyAsSupplier;
+export { register, login, logout, me, forgotPassword, resetPassword, applyAsSupplier };

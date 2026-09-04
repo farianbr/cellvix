@@ -9,6 +9,5 @@ const validate = (schema, source = 'body') => (req, _res, next) => {
   return next();
 };
 
-// --- CommonJS exports -------------------------------------------------
-exports.validate = validate;
-exports.default = validate;
+export { validate };
+export default validate;

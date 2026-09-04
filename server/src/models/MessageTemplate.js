@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const { MESSAGE_CHANNELS } = require('./MessageLog.js');
+import mongoose from 'mongoose';
+import { MESSAGE_CHANNELS } from './MessageLog.js';
 
 /**
  * Reusable message bodies (ERP rework §6.13, §8, §6.15).
@@ -69,8 +69,5 @@ messageTemplateSchema.statics.render = function render(body, user) {
 
 const MessageTemplate = mongoose.model('MessageTemplate', messageTemplateSchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.TEMPLATE_DOCUMENTS = TEMPLATE_DOCUMENTS;
-exports.TEMPLATE_TOKENS = TEMPLATE_TOKENS;
-exports.MessageTemplate = MessageTemplate;
-exports.default = MessageTemplate;
+export { TEMPLATE_DOCUMENTS, TEMPLATE_TOKENS, MessageTemplate };
+export default MessageTemplate;

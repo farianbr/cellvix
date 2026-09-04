@@ -2,6 +2,6 @@
   "name": "@cellvix/shared",
   "private": true,
   "version": "0.1.0",
-  "type": "commonjs",
+  "type": "module",
   "description": "Validation schemas and business constants shared by the client and the server."
 }

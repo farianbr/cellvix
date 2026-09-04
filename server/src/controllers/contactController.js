@@ -1,5 +1,5 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const { default: ContactMessage } = require('../models/ContactMessage.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import ContactMessage from '../models/ContactMessage.js';
 
 /**
  * Accepts a contact enquiry.
@@ -16,5 +16,4 @@ const submit = asyncHandler(async (req, res) => {
   });
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.submit = submit;
+export { submit };

@@ -1,7 +1,7 @@
-const { randomBytes } = require('node:crypto');
-const { asyncHandler } = require('../utils/ApiError.js');
-const { default: env } = require('../config/env.js');
-const accountService = require('../services/accountService.js');
+import { randomBytes } from 'node:crypto';
+import { asyncHandler } from '../utils/ApiError.js';
+import env from '../config/env.js';
+import * as accountService from '../services/accountService.js';
 
 const summary = asyncHandler(async (req, res) => {
   res.json(await accountService.summary(req.user));
@@ -137,23 +137,4 @@ const referrals = asyncHandler(async (req, res) => {
   res.json(await accountService.referrals(req.user));
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.summary = summary;
-exports.updateProfile = updateProfile;
-exports.addAddress = addAddress;
-exports.updateAddress = updateAddress;
-exports.removeAddress = removeAddress;
-exports.addPaymentMethod = addPaymentMethod;
-exports.removePaymentMethod = removePaymentMethod;
-exports.changePassword = changePassword;
-exports.listInvoices = listInvoices;
-exports.getInvoice = getInvoice;
-exports.invoiceDocument = invoiceDocument;
-exports.storeCredit = storeCredit;
-exports.creditActivity = creditActivity;
-exports.rechargeStoreCredit = rechargeStoreCredit;
-exports.payInvoice = payInvoice;
-exports.payOffCredit = payOffCredit;
-exports.activity = activity;
-exports.activityPage = activityPage;
-exports.referrals = referrals;
+export { summary, updateProfile, addAddress, updateAddress, removeAddress, addPaymentMethod, removePaymentMethod, changePassword, listInvoices, getInvoice, invoiceDocument, storeCredit, creditActivity, rechargeStoreCredit, payInvoice, payOffCredit, activity, activityPage, referrals };

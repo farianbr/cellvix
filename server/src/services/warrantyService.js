@@ -1,4 +1,4 @@
-const { default: Settings } = require('../models/Settings.js');
+import Settings from '../models/Settings.js';
 
 /**
  * How long a part is covered for, and whether a given line still is.
@@ -140,6 +140,4 @@ async function coverForOrder(order, tier, { settings, at } = {}) {
   }));
 }
 
-exports.coverFor = coverFor;
-exports.coverForOrder = coverForOrder;
-exports.deliveredAt = deliveredAt;
+export { coverFor, coverForOrder, deliveredAt };

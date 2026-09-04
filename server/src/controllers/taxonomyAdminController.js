@@ -1,6 +1,6 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const taxonomyAdminService = require('../services/taxonomyAdminService.js');
-const auditService = require('../services/auditService.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import taxonomyAdminService from '../services/taxonomyAdminService.js';
+import auditService from '../services/auditService.js';
 
 /**
  * The taxonomy editor (§6.15 — CellShoppe's *Device & Models*, phase 11d).
@@ -62,8 +62,4 @@ const remove = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.list = list;
-exports.get = get;
-exports.update = update;
-exports.remove = remove;
+export { list, get, update, remove };

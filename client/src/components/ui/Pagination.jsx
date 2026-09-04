@@ -17,8 +17,15 @@ function pageList(page, pages) {
   return items;
 }
 
-export function Pagination({ page, pages, onChange, className }) {
-  if (pages <= 1) return null;
+/**
+ * @param {boolean} [hideWhenSingle] Collapse to nothing at one page. Off by
+ *   default: a lone "1" tells an operator they are looking at the whole set,
+ *   and a control that disappears at small row counts makes the foot of a
+ *   table change shape for no reason the reader can see. Pass it where the
+ *   surrounding layout genuinely has no room.
+ */
+export function Pagination({ page, pages, onChange, className, hideWhenSingle = false }) {
+  if (pages <= 1 && hideWhenSingle) return null;
 
   return (
     <nav aria-label="Pagination" className={cn('flex items-center justify-center gap-1', className)}>
@@ -45,8 +52,12 @@ export function Pagination({ page, pages, onChange, className }) {
             aria-current={item === page ? 'page' : undefined}
             className={cn(
               'tnum flex size-9 items-center justify-center rounded-[8px] font-display text-[13px] font-semibold transition-[background,color,border-color]',
+              // Outlined, not filled: the ring carries the brand ramp while the
+              // face stays white, so the current page is marked without a solid
+              // chip competing with the primary CTA on the same screen. A page
+              // number is a position, not an action.
               item === page
-                ? 'bg-brand-gradient text-white'
+                ? 'ring-brand-gradient font-bold text-brand'
                 : 'border border-line bg-surface text-ink-700 hover:border-line-strong hover:text-ink-900',
             )}
           >

@@ -1,5 +1,5 @@
-const { default: ApiError } = require('../utils/ApiError.js');
-const { default: env } = require('../config/env.js');
+import ApiError from '../utils/ApiError.js';
+import env from '../config/env.js';
 
 /**
  * Payment gateway — MOCK.
@@ -81,7 +81,6 @@ async function charge({ amount, method, orderNumber, poNumber, deliveryNotes }) 
   };
 }
 
-exports.default = { charge };
+export default { charge };
 
-// --- CommonJS exports -------------------------------------------------
-exports.charge = charge;
+export { charge };

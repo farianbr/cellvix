@@ -1,10 +1,10 @@
-const {
-  default: ProviderCredential,
-  PROVIDER_FIELDS, PROVIDER_BY_KEY,
-} = require('../models/ProviderCredential.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const { encrypt, decrypt, maskPreview } = require('../utils/secrets.js');
-const { default: env } = require('../config/env.js');
+import ProviderCredential, {
+  PROVIDER_FIELDS,
+  PROVIDER_BY_KEY,
+} from '../models/ProviderCredential.js';
+import ApiError from '../utils/ApiError.js';
+import { encrypt, decrypt, maskPreview } from '../utils/secrets.js';
+import env from '../config/env.js';
 
 /**
  * Provider credentials (ERP rework §6.15 category 7, phase 11c).
@@ -218,11 +218,6 @@ async function isConfigured(provider) {
   return entry.fields.every((definition) => Boolean(values[definition.key]));
 }
 
-exports.default = { list, save, clear, valuesFor, isConfigured };
+export default { list, save, clear, valuesFor, isConfigured };
 
-// --- CommonJS exports -------------------------------------------------
-exports.list = list;
-exports.save = save;
-exports.clear = clear;
-exports.valuesFor = valuesFor;
-exports.isConfigured = isConfigured;
+export { list, save, clear, valuesFor, isConfigured };

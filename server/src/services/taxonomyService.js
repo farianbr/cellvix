@@ -1,6 +1,6 @@
-const { default: Taxonomy } = require('../models/Taxonomy.js');
-const { default: Product } = require('../models/Product.js');
-const { HAS_PICTURE } = require('../../../shared/partPhotos.js');
+import Taxonomy from '../models/Taxonomy.js';
+import Product from '../models/Product.js';
+import { HAS_PICTURE } from '../../../shared/partPhotos.js';
 
 /**
  * Normalises the component-type argument, which is multi-select.
@@ -216,8 +216,4 @@ function invalidateTree() {
   componentsAt = 0;
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.getTree = getTree;
-exports.getTreeForPartType = getTreeForPartType;
-exports.getComponentTypes = getComponentTypes;
-exports.invalidateTree = invalidateTree;
+export { getTree, getTreeForPartType, getComponentTypes, invalidateTree };

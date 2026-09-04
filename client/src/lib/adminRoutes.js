@@ -139,6 +139,15 @@ export const ADMIN_ROUTES = {
     title: 'Tickets',
     description: 'Track every repair from intake to completion.',
   },
+  '/admin/tickets/new': {
+    label: 'New ticket',
+    parent: '/admin/tickets',
+    icon: 'ClipboardList',
+    section: 'sales',
+    phase: 1,
+    title: 'New repair ticket',
+    description: 'Capture the whole job — device, condition, services, parts and pricing.',
+  },
   '/admin/tickets/:id': {
     label: 'Ticket',
     parent: '/admin/tickets',
@@ -147,6 +156,15 @@ export const ADMIN_ROUTES = {
     phase: 1,
     title: 'Ticket detail',
     description: 'The device, the fault, who is on it and what has happened so far.',
+  },
+  '/admin/web-quotes': {
+    label: 'Web Quote',
+    parent: 'sales',
+    icon: 'Globe',
+    section: 'sales',
+    phase: 1,
+    title: 'Web quotes',
+    description: 'Enquiries from the website, before anybody has priced them.',
   },
   '/admin/rma': {
     label: 'RMA / Returns',

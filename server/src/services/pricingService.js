@@ -1,10 +1,10 @@
-const { default: Offer } = require('../models/Offer.js');
-const { default: Order } = require('../models/Order.js');
-const { default: Product } = require('../models/Product.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const { default: Settings, DEFAULT_SHIPPING_METHODS } = require('../models/Settings.js');
-const { offerStatus } = require('./offerService.js');
-const { TAX_RATE } = require('../../../shared/schemas/checkout.js');
+import Offer from '../models/Offer.js';
+import Order from '../models/Order.js';
+import Product from '../models/Product.js';
+import ApiError from '../utils/ApiError.js';
+import Settings, { DEFAULT_SHIPPING_METHODS } from '../models/Settings.js';
+import { offerStatus } from './offerService.js';
+import { TAX_RATE } from '../../../shared/schemas/checkout.js';
 
 /**
  * THE ONE PLACE A DISCOUNT IS DECIDED.
@@ -495,9 +495,4 @@ function assertBundlesOrderable(bundles) {
   }
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.OfferRejection = OfferRejection;
-exports.resolveCode = resolveCode;
-exports.priceCart = priceCart;
-exports.expandBundles = expandBundles;
-exports.assertBundlesOrderable = assertBundlesOrderable;
+export { OfferRejection, resolveCode, priceCart, expandBundles, assertBundlesOrderable };

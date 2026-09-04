@@ -1,10 +1,10 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
-const { default: Role, PERMISSION_AREAS, PERMISSION_LEVELS } = require('../models/Role.js');
-const { default: Outlet } = require('../models/Outlet.js');
-const { default: User } = require('../models/User.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const { likeRegex } = require('../utils/regex.js');
+import Role, { PERMISSION_AREAS, PERMISSION_LEVELS } from '../models/Role.js';
+import Outlet from '../models/Outlet.js';
+import User from '../models/User.js';
+import ApiError from '../utils/ApiError.js';
+import { likeRegex } from '../utils/regex.js';
 
 /**
  * Outlets, roles and staff accounts (ERP rework §6.14, §6.15/3, §7.6 — phase 8).
@@ -612,7 +612,7 @@ async function getStaffSnapshot(id) {
   };
 }
 
-exports.default = {
+export default {
   ensureBuiltInRoles,
   ensureDefaultOutlet,
   getRoleSnapshot,
@@ -634,23 +634,4 @@ exports.default = {
   deleteStaff,
 };
 
-// --- CommonJS exports -------------------------------------------------
-exports.ensureBuiltInRoles = ensureBuiltInRoles;
-exports.ensureDefaultOutlet = ensureDefaultOutlet;
-exports.nextOutletCode = nextOutletCode;
-exports.listOutlets = listOutlets;
-exports.getOutlet = getOutlet;
-exports.createOutlet = createOutlet;
-exports.updateOutlet = updateOutlet;
-exports.setDefaultOutlet = setDefaultOutlet;
-exports.deleteOutlet = deleteOutlet;
-exports.listRoles = listRoles;
-exports.createRole = createRole;
-exports.updateRole = updateRole;
-exports.deleteRole = deleteRole;
-exports.listStaff = listStaff;
-exports.createStaff = createStaff;
-exports.updateStaff = updateStaff;
-exports.deleteStaff = deleteStaff;
-exports.getRoleSnapshot = getRoleSnapshot;
-exports.getStaffSnapshot = getStaffSnapshot;
+export { ensureBuiltInRoles, ensureDefaultOutlet, nextOutletCode, listOutlets, getOutlet, createOutlet, updateOutlet, setDefaultOutlet, deleteOutlet, listRoles, createRole, updateRole, deleteRole, listStaff, createStaff, updateStaff, deleteStaff, getRoleSnapshot, getStaffSnapshot };

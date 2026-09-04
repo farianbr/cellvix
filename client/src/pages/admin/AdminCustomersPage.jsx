@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   AlertCircle,
@@ -12,11 +12,13 @@ import {
   Plus,
   ShieldCheck,
   UserCheck,
+  UserRound,
   Wallet,
   WalletCards,
 } from 'lucide-react';
 import { PROVINCES } from '@shared/schemas/checkout';
-import { clientFormSchema } from '@shared/schemas/admin';
+import { COUNTRY_OPTIONS, DEFAULT_COUNTRY } from '@shared/countries';
+import { clientCreateFormSchema } from '@shared/schemas/admin';
 import { money, date, count as formatCount } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Badge from '@/components/ui/Badge';
@@ -24,6 +26,7 @@ import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Input from '@/components/ui/Input';
+import PhoneField from '@/components/ui/PhoneField';
 import FormSection from '@/components/ui/FormSection';
 import ConsentChannels, { EMPTY_CONSENT } from '@/components/ui/ConsentChannels';
 import SelectField from '@/components/ui/SelectField';
@@ -105,10 +108,11 @@ function ClientForm({ onSubmit, onCancel, isPending, error }) {
     setValue,
     formState: { errors },
   } = useForm({
-    resolver: zodResolver(clientFormSchema),
+    resolver: zodResolver(clientCreateFormSchema),
     defaultValues: {
+      firstName: '',
+      lastName: '',
       businessName: '',
-      contactName: '',
       email: '',
       phone: '',
       businessType: '',
@@ -116,7 +120,14 @@ function ClientForm({ onSubmit, onCancel, isPending, error }) {
       status: 'approved',
       terms: 'prepaid',
       creditLimitDollars: '0.00',
-      address: { line1: '', line2: '', city: '', region: 'ON', postal: '' },
+      address: {
+        line1: '',
+        line2: '',
+        city: '',
+        region: 'ON',
+        postal: '',
+        country: DEFAULT_COUNTRY,
+      },
       contactConsent: EMPTY_CONSENT,
     },
   });
@@ -129,8 +140,11 @@ function ClientForm({ onSubmit, onCancel, isPending, error }) {
     <form
       onSubmit={handleSubmit((values) =>
         onSubmit({
-          businessName: values.businessName,
-          contactName: values.contactName,
+          // Composed here, exactly as the storefront sign-up does it:
+          // `firstName` and `lastName` are a form affordance and never leave
+          // the client.
+          contactName: `${values.firstName} ${values.lastName}`.trim(),
+          businessName: values.businessName || undefined,
           email: values.email,
           phone: values.phone,
           businessType: values.businessType || undefined,
@@ -160,46 +174,64 @@ function ClientForm({ onSubmit, onCancel, isPending, error }) {
       )}
 
       {/* The required fields in their own slab, matching the storefront
-          sign-up. The two forms open the same kind of account. */}
-      <FormSection title="The business" icon={Building2} collapsible={false}>
+          sign-up. The two forms open the same kind of account, and both now
+          ask for a **person** first: the company name moved down into the
+          optional business block, because an account is identified by who it
+          is (§0) and plenty of customers are not a company at all. */}
+      <FormSection title="Personal information" icon={UserRound} collapsible={false}>
         <div className="space-y-3">
+          {/* Two fields, one stored value — `contactName` is what the model,
+              the welcome mail and the approvals queue read, so the halves are
+              composed on submit rather than split in the model. The same call
+              as `PhoneField` and its dial code. */}
           <div className="grid gap-3 sm:grid-cols-2">
             <Input
-              label="Business name"
+              label="First name"
               required
-              placeholder="Northline Device Repair"
-              error={errors.businessName?.message}
+              autoComplete="given-name"
+              placeholder="John"
+              error={errors.firstName?.message}
               data-autofocus
-              {...register('businessName')}
+              {...register('firstName')}
             />
             <Input
-              label="Contact name"
+              label="Last name"
               required
-              placeholder="Dana Whitfield"
-              error={errors.contactName?.message}
-              {...register('contactName')}
+              autoComplete="family-name"
+              placeholder="Doe"
+              error={errors.lastName?.message}
+              {...register('lastName')}
             />
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Input
-              label="Email"
-              type="email"
-              required
-              placeholder="dana@northline.ca"
-              hint="Their sign-in, and where the credentials go."
-              error={errors.email?.message}
-              {...register('email')}
-            />
-            <Input
-              label="Phone"
-              type="tel"
-              required
-              placeholder="(416) 555-0142"
-              error={errors.phone?.message}
-              {...register('phone')}
-            />
-          </div>
+          <Input
+            label="Email"
+            type="email"
+            required
+            placeholder="john@example.com"
+            hint="Their sign-in, and where the credentials go."
+            error={errors.email?.message}
+            {...register('email')}
+          />
+
+          {/* Controlled rather than `register`d: the value is one composed
+              string built from two controls, so the field needs it back on
+              every render to know which code is selected. */}
+          <Controller
+            name="phone"
+            control={control}
+            render={({ field }) => (
+              <PhoneField
+                label="Phone"
+                required
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                hint="Country code (default +1) + number — needed for WhatsApp."
+                error={errors.phone?.message}
+              />
+            )}
+          />
         </div>
       </FormSection>
 
@@ -234,13 +266,36 @@ function ClientForm({ onSubmit, onCancel, isPending, error }) {
               {...register('address.postal')}
             />
           </div>
+
+          {/* Prefilled with Canada, which is the answer for almost every
+              account. It is asked at all because the postal-code rule depends
+              on it: `A1A 1A1` is Canadian and validating a UK address against
+              it would reject a correct one. */}
+          <SelectField
+            control={control}
+            name="address.country"
+            label="Country"
+            options={COUNTRY_OPTIONS}
+          />
         </div>
       </FormSection>
 
+      {/* The company name lives here rather than at the top of the form. A
+          customer may be a business or a person, and asking for a company name
+          first told every private customer they were filling in the wrong
+          form. */}
       <FormSection title="Business details" hint="optional" icon={Building2}>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Input label="Business type" placeholder="Repair shop" {...register('businessType')} />
-          <Input label="Tax ID" placeholder="RT0001-88213" {...register('taxId')} />
+        <div className="space-y-3">
+          <Input
+            label="Business name"
+            placeholder="Northline Device Repair"
+            error={errors.businessName?.message}
+            {...register('businessName')}
+          />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input label="Business type" placeholder="Repair shop" {...register('businessType')} />
+            <Input label="Tax ID" placeholder="RT0001-88213" {...register('taxId')} />
+          </div>
         </div>
       </FormSection>
 
@@ -414,52 +469,38 @@ export function AdminCustomersPage() {
       key: 'businessName',
       header: 'Customer',
       priority: 1,
+      // `displayName`, never `businessName` directly (§0): the company name is
+      // optional now, and a private customer would have rendered as a blank
+      // cell. The server falls back to the contact's name.
+      sortValue: (user) => user.displayName ?? user.contactName ?? '',
       render: (user) => (
         <>
           <span className="flex flex-wrap items-center gap-2">
             <span className="truncate text-[13.5px] font-semibold text-ink-900">
-              {user.businessName}
+              {user.displayName}
             </span>
             <Badge tone={STATUS_TONES[user.status]} size="sm">
               {user.status}
             </Badge>
+            {/* The tier badge moved here when the Tag column went. Standard is
+                the default and every account has it, so showing it forty times
+                would be a column of the same word — only a tier somebody
+                deliberately set is worth the ink. */}
+            {user.tier && user.tier !== 'standard' && (
+              <Badge tone={TIER_TONE[user.tier] ?? 'neutral'} size="sm">
+                {user.tier}
+              </Badge>
+            )}
           </span>
+          {/* The contact's name only when it is not already the line above:
+              for a private customer `displayName` IS the contact name, and
+              printing it twice reads as a rendering fault. */}
           <span className="block truncate text-[12px] text-ink-500">
-            {user.contactName} · {user.email}
+            {user.displayName === user.contactName
+              ? user.email
+              : `${user.contactName} · ${user.email}`}
           </span>
         </>
-      ),
-    },
-    {
-      /**
-       * The client asked for a "tag". The account model has no free-text tag
-       * field, and inventing one that nothing writes would be a column of
-       * dashes; `businessType` is the label the account already carries — the
-       * industry it is in, set at registration or on the create form — and it is
-       * what a tag on a customer would have said anyway.
-       */
-      key: 'businessType',
-      header: 'Tag',
-      priority: 3,
-      sortValue: (user) => user.businessType ?? '',
-      render: (user) => (
-        <span className="flex flex-wrap items-center gap-1">
-          {user.businessType ? (
-            <Badge tone="neutral" size="sm">
-              {user.businessType}
-            </Badge>
-          ) : (
-            <span className="text-[12px] text-ink-300">—</span>
-          )}
-          {/* Standard is the default and every account has it, so showing it
-              forty times would be a column of the same word. Only a tier
-              somebody deliberately set is worth the ink. */}
-          {user.tier && user.tier !== 'standard' && (
-            <Badge tone={TIER_TONE[user.tier] ?? 'neutral'} size="sm">
-              {user.tier}
-            </Badge>
-          )}
-        </span>
       ),
     },
     {
@@ -492,7 +533,7 @@ export function AdminCustomersPage() {
        * subtitle underneath.
        */
       key: 'overdue',
-      header: 'Overdue',
+      header: 'Due amount',
       priority: 2,
       align: 'right',
       className: 'tnum',
@@ -598,9 +639,26 @@ export function AdminCustomersPage() {
         title={ADMIN_PAGE.title}
         description={ADMIN_PAGE.description}
         action={
-          <Button onClick={() => setCreating(true)} icon={Plus}>
-            New customer
-          </Button>
+          <>
+            {/* Review sits **beside** New customer rather than in the filter
+                strip. It is the most time-sensitive thing on this screen —
+                accounts waiting on approval cannot see a price or place an
+                order — and down in the toolbar it read as one more filter
+                chip. Still absent when the queue is empty: a button that
+                always says "Review 0" stops being read at all. */}
+            {(counts.pending ?? 0) > 0 && (
+              <Link
+                to="/admin/approvals"
+                className="flex h-10 items-center gap-1.5 rounded-[10px] border border-warn/30 bg-warn-50 px-3.5 text-[13.5px] font-medium text-warn transition-colors active:scale-[0.97] hover:border-warn/50"
+              >
+                <UserCheck className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
+                Review {counts.pending}
+              </Link>
+            )}
+            <Button onClick={() => setCreating(true)} icon={Plus}>
+              New customer
+            </Button>
+          </>
         }
       />
 
@@ -624,7 +682,10 @@ export function AdminCustomersPage() {
           },
           {
             key: 'balance',
-            label: 'Overdue',
+            // Named to match the column, which shows the same figure — a tile
+            // and a column that disagree about what to call one number read as
+            // two different numbers.
+            label: 'Due amount',
             value: money(overdue),
             // The tile shows what is late; the hint states what is merely owed,
             // so the two figures are never confused for each other.
@@ -676,21 +737,6 @@ export function AdminCustomersPage() {
             </div>
           }
           onExport={(format) => downloadExport('clients', format, { q: query || undefined, status })}
-          actions={
-            // The approve/reject flow sets credit terms and an account rep in
-            // one payload, and requires a reason to reject — none of which the
-            // account drawer here does. It keeps its own screen until phase 4
-            // folds it into the client profile properly (plan §6.2).
-            (counts.pending ?? 0) > 0 && (
-              <Link
-                to="/admin/approvals"
-                className="flex h-9 items-center gap-1.5 rounded-[8px] border border-warn/30 bg-warn-50 px-2.5 text-[13px] font-medium text-warn transition-colors hover:border-warn/50"
-              >
-                <UserCheck className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
-                Review {counts.pending}
-              </Link>
-            )
-          }
         />
 
         <div className="border-b border-line px-3 py-2 sm:px-4">
@@ -723,7 +769,12 @@ export function AdminCustomersPage() {
           }
         />
 
-        {totalPages > 1 && (
+        {/* Shown even at one page, where it is a single disabled "1".
+            Hidden entirely, the foot of the table changed shape depending on
+            how many rows came back, and there was nothing to tell an operator
+            whether they were looking at all of them — a lone page 1 answers
+            that. It still goes when there is nothing to page through at all. */}
+        {users.length > 0 && (
           <div className="border-t border-line p-3">
             <Pagination
               page={currentPage}
@@ -780,9 +831,9 @@ export function AdminCustomersPage() {
                   /**
                    * The credentials only exist in that email, so a send that
                    * did not happen has to be said out loud rather than left to
-                   * be discovered when the customer cannot sign in. Without
-                   * SMTP configured the mailer writes to `server/.mail/`, which
-                   * is a working dev setup and not an error.
+                   * be discovered when the customer cannot sign in. Nothing is
+                   * held locally and nothing is retried, so this warning is the
+                   * only notice the admin gets.
                    */
                   if (payload?.user?.welcomeEmail?.delivered === false) {
                     setMailWarning(payload.user);
@@ -819,7 +870,7 @@ export function AdminCustomersPage() {
         title="Account created, but the email did not send"
         body={
           mailWarning
-            ? `${mailWarning.businessName} exists and can be approved and dealt with as normal. What did not reach ${mailWarning.email} is the message carrying their password.`
+            ? `${mailWarning.displayName ?? mailWarning.email} exists and can be approved and dealt with as normal. What did not reach ${mailWarning.email} is the message carrying their password.`
             : ''
         }
         consequence="They cannot sign in until they have credentials. Check the mail settings, then delete this account and create it again so a fresh email goes out."

@@ -1,7 +1,7 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const { default: Role, PERMISSION_AREAS } = require('../models/Role.js');
-const { default: Outlet } = require('../models/Outlet.js');
-const { default: AuditLog } = require('../models/AuditLog.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import Role, { PERMISSION_AREAS } from '../models/Role.js';
+import Outlet from '../models/Outlet.js';
+import AuditLog from '../models/AuditLog.js';
 
 /**
  * My Profile (§6.15, phase 12) — the screen behind the top bar's user chip.
@@ -57,5 +57,4 @@ const me = asyncHandler(async (req, res) => {
   });
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.me = me;
+export { me };

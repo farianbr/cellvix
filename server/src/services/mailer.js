@@ -1,25 +1,16 @@
-const fs = require('node:fs/promises');
-const path = require('node:path');
-const { default: env } = require('../config/env.js');
+import env from '../config/env.js';
 
 /**
- * Outbound mail.
+ * Outbound mail. `SMTP_URL` plus nodemailer sends; anything else cannot.
  *
- * Two modes, and the difference is configuration rather than code:
- *
- *   - `SMTP_URL` set and nodemailer installed → the message is sent.
- *   - anything else → the message is written to `server/.mail/` and logged.
- *
- * The fallback is not a stub for its own sake. Mail is a side effect of placing
- * an order, and a side effect must never be able to fail the order: a dead SMTP
- * host, a bad credential or a missing dependency has to end in a log line, not
- * a rejected checkout. Every path through `sendMail` resolves.
+ * Mail is a side effect of placing an order, and a side effect must never be
+ * able to fail the order: a dead SMTP host, a bad credential or a missing
+ * dependency has to end in a logged failure, not a rejected checkout. Every
+ * path through `sendMail` resolves — callers read `delivered` to know what
+ * happened, and none of them may throw on a false.
  */
 
-const here = __dirname;
-const OUTBOX = path.resolve(here, '..', '..', '.mail');
-
-/** Resolved once. `null` means "no transport — use the outbox". */
+/** Resolved once. `null` means no transport is available. */
 let transportPromise = null;
 
 async function getTransport() {
@@ -31,7 +22,7 @@ async function getTransport() {
       /**
        * `secure` is decided here rather than left to the URL scheme.
        *
-       * cPanel's outgoing server is mail.<domain> on port 465, which is
+       * A typical outgoing server is mail.<domain> on port 465, which is
        * *implicit* TLS: the connection is encrypted from the first byte. A
        * plain `smtp://` URL makes nodemailer default to `secure: false` and
        * open in cleartext expecting a STARTTLS upgrade that a 465 listener
@@ -48,7 +39,7 @@ async function getTransport() {
         secure: port === 465 || url.protocol === 'smtps:',
         auth: url.username
           ? {
-              // A cPanel mailbox name is a full address, so the `@` arrives
+              // A hosted mailbox name is usually a full address, so the `@` arrives
               // percent-encoded in the URL and must be decoded before it goes
               // out as the AUTH username, or the login is rejected.
               user: decodeURIComponent(url.username),
@@ -59,7 +50,7 @@ async function getTransport() {
     } catch (error) {
       // Optional dependency: SMTP_URL is set but nodemailer was never installed.
       console.warn(`  Mail: SMTP_URL is set but nodemailer is unavailable (${error.message}).`);
-      console.warn('  Mail: falling back to the outbox. Run `npm i nodemailer -w server`.');
+      console.warn('  Mail: nothing can be sent. Run `npm i nodemailer -w server`.');
       return null;
     }
   })();
@@ -71,57 +62,38 @@ async function getTransport() {
  * Whether a real transport is available, without sending anything.
  *
  * Exists for the invoice-message dry run (phase 11d): a preview that says
- * "would send" against a server whose real run writes to the outbox is a
- * preview that disagrees with the thing it previews. Resolves the transport
- * through the same path `sendMail` uses, so the two can never differ.
+ * "would send" against a server that cannot send is a preview that disagrees
+ * with the thing it previews. Resolves the transport through the same path
+ * `sendMail` uses, so the two can never differ.
  */
 async function mailerConfigured() {
   return Boolean(await getTransport());
 }
 
-const slug = (value) =>
-  String(value ?? 'message')
-    .replace(/[^a-z0-9]+/gi, '-')
-    .replace(/^-|-$/g, '')
-    .slice(0, 60)
-    .toLowerCase();
-
 /**
- * @returns {Promise<{ delivered: boolean, via: 'smtp' | 'outbox', path?: string }>}
+ * Sends a message. Never throws — a caller reads the result instead.
+ *
+ * @returns {Promise<{ delivered: boolean, via: 'smtp' | null, error?: string }>}
+ *   `via` is `'smtp'` only on a real delivery. A `false` `delivered` carries
+ *   `error` saying why, and the message is gone — there is no local copy.
  */
 async function sendMail({ to, subject, html, text, from = env.MAIL_FROM }) {
   const transport = await getTransport();
 
-  if (transport) {
-    try {
-      await transport.sendMail({ from, to, subject, html, text });
-      return { delivered: true, via: 'smtp' };
-    } catch (error) {
-      console.error(`  Mail: send to ${to} failed — ${error.message}`);
-      // Fall through to the outbox so the message is not simply lost.
-    }
+  if (!transport) {
+    const error = 'No SMTP transport is configured.';
+    console.error(`  Mail: "${subject}" for ${to} not sent — ${error}`);
+    return { delivered: false, via: null, error };
   }
 
   try {
-    await fs.mkdir(OUTBOX, { recursive: true });
-    const file = path.join(
-      OUTBOX,
-      `${new Date().toISOString().replace(/[:.]/g, '-')}-${slug(subject)}.html`,
-    );
-    await fs.writeFile(
-      file,
-      `<!-- to: ${to}\n     from: ${from}\n     subject: ${subject} -->\n${html ?? `<pre>${text ?? ''}</pre>`}`,
-      'utf8',
-    );
-    console.log(`  Mail: "${subject}" for ${to} written to ${path.relative(process.cwd(), file)}`);
-    return { delivered: false, via: 'outbox', path: file };
+    await transport.sendMail({ from, to, subject, html, text });
+    return { delivered: true, via: 'smtp' };
   } catch (error) {
-    console.error(`  Mail: could not write the outbox copy — ${error.message}`);
-    return { delivered: false, via: 'outbox' };
+    console.error(`  Mail: send to ${to} failed — ${error.message}`);
+    return { delivered: false, via: null, error: error.message };
   }
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.mailerConfigured = mailerConfigured;
-exports.sendMail = sendMail;
-exports.default = sendMail;
+export { mailerConfigured, sendMail };
+export default sendMail;

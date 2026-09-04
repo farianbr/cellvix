@@ -1,4 +1,4 @@
-const { z } = require('zod');
+import { z } from 'zod';
 
 const CONTACT_TOPICS = [
   { value: 'account', label: 'Wholesale account or approval' },
@@ -18,6 +18,4 @@ const contactSchema = z.object({
   message: z.string().trim().min(10, 'Tell us a little more — at least 10 characters.').max(2000),
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.CONTACT_TOPICS = CONTACT_TOPICS;
-exports.contactSchema = contactSchema;
+export { CONTACT_TOPICS, contactSchema };

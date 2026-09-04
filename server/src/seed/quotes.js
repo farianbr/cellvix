@@ -1,10 +1,10 @@
-const { connectDb, disconnectDb } = require('../config/db.js');
-const { default: Quote } = require('../models/Quote.js');
-const { default: Order } = require('../models/Order.js');
-const { default: User } = require('../models/User.js');
-const { default: Product } = require('../models/Product.js');
-const { default: Settings } = require('../models/Settings.js');
-const { buildQuotes } = require('./sales.data.js');
+import { connectDb, disconnectDb } from '../config/db.js';
+import Quote from '../models/Quote.js';
+import Order from '../models/Order.js';
+import User from '../models/User.js';
+import Product from '../models/Product.js';
+import Settings from '../models/Settings.js';
+import { buildQuotes } from './sales.data.js';
 
 /**
  * Demo quotes, added to a database that already has real data.

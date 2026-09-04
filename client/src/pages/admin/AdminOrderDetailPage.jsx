@@ -78,7 +78,7 @@ export function AdminOrderDetailPage() {
       <PageHeader
         icon={ADMIN_PAGE.icon}
         title={order.orderNumber}
-        description={`Placed ${date(order.createdAt)} by ${order.businessName}.`}
+        description={`Placed ${date(order.createdAt)} by ${order.displayName ?? order.businessName}.`}
         action={
           <Link
             to="/admin/orders"
@@ -187,10 +187,10 @@ export function AdminOrderDetailPage() {
               <dd className="min-w-0 truncate">
                 {order.userId ? (
                   <Link to={`/admin/clients/${order.userId}`} className="font-medium text-brand hover:underline">
-                    {order.businessName}
+                    {order.displayName ?? order.businessName}
                   </Link>
                 ) : (
-                  order.businessName
+                  order.displayName ?? order.businessName
                 )}
               </dd>
             </div>

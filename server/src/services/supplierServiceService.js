@@ -1,14 +1,13 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
-const {
-  default: SupplierService,
+import SupplierService, {
   CYCLE_DAYS,
-} = require('../models/SupplierService.js');
-const { default: Supplier } = require('../models/Supplier.js');
-const { default: ExpenseCategory } = require('../models/ExpenseCategory.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const { likeRegex } = require('../utils/regex.js');
-const purchaseService = require('./purchaseService.js');
+} from '../models/SupplierService.js';
+import Supplier from '../models/Supplier.js';
+import ExpenseCategory from '../models/ExpenseCategory.js';
+import ApiError from '../utils/ApiError.js';
+import { likeRegex } from '../utils/regex.js';
+import * as purchaseService from './purchaseService.js';
 
 /**
  * Bought-in services and supplier subscriptions (Purchase § Service Products,
@@ -359,10 +358,4 @@ async function deleteService(id) {
   return { ok: true };
 }
 
-exports.listServices = listServices;
-exports.getService = getService;
-exports.createService = createService;
-exports.updateService = updateService;
-exports.recordCharge = recordCharge;
-exports.setCancelled = setCancelled;
-exports.deleteService = deleteService;
+export { listServices, getService, createService, updateService, recordCharge, setCancelled, deleteService };

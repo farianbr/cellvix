@@ -1,6 +1,6 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const service = require('../services/supplierReturnService.js');
-const auditService = require('../services/auditService.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import * as service from '../services/supplierReturnService.js';
+import auditService from '../services/auditService.js';
 
 /**
  * Returns to a supplier. Audit hooks live here rather than in the service, for
@@ -104,9 +104,4 @@ const remove = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
-exports.list = list;
-exports.get = get;
-exports.create = create;
-exports.setStatus = setStatus;
-exports.recordCredit = recordCredit;
-exports.remove = remove;
+export { list, get, create, setStatus, recordCredit, remove };

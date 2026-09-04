@@ -45,11 +45,10 @@ import cn from '@/lib/cn';
 /**
  * Email campaigns (§6.13).
  *
- * **The one marketing channel that genuinely sends.** `mailer.js` has a
- * transport, so this is not on the §6b register: there is no provider to wait
- * for. With no `SMTP_URL` set, messages land in `server/.mail/` — a real,
- * inspectable artefact — and the result panel says that is what happened rather
- * than reporting a delivery.
+ * **The one marketing channel that genuinely sends**, whenever `SMTP_URL` is
+ * configured — so this is not on the §6b register waiting for a provider.
+ * Without a transport nothing is delivered and nothing is kept: the result
+ * panel reports the failures rather than implying a delivery.
  *
  * **CASL is enforced on the server and explained here.** The audience picker
  * chooses a population; consent then removes from it, at send time, and there
@@ -184,7 +183,7 @@ function UnsubscribesModal({ open, onClose }) {
               <li key={row.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
                   <p className="truncate text-[13.5px] font-medium text-ink-900">
-                    {row.businessName}
+                    {row.displayName ?? row.businessName}
                   </p>
                   <p className="truncate text-[12px] text-ink-400">{row.email}</p>
                   <p className="mt-0.5 text-[11.5px] text-ink-400">
@@ -251,12 +250,11 @@ function SendDialog({ campaign, audience, open, onClose, onSent }) {
             The run finished. Every message is in the history, whatever happened to it.
           </p>
 
-          {/* Four numbers rather than one, because four different things can
-              happen to a message and reporting only "sent" would hide three. */}
-          <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {/* Three numbers rather than one, because three different things can
+              happen to a message and reporting only "sent" would hide two. */}
+          <dl className="grid grid-cols-3 gap-2">
             {[
               { label: 'Sent', value: result.sent, tone: 'ok' },
-              { label: 'To outbox', value: result.queued, tone: 'warn' },
               { label: 'Failed', value: result.failed, tone: 'danger' },
               { label: 'Skipped', value: result.skipped, tone: 'neutral' },
             ].map((row) => (
@@ -277,11 +275,11 @@ function SendDialog({ campaign, audience, open, onClose, onSent }) {
             ))}
           </dl>
 
-          {result.queued > 0 && (
-            <p className="rounded-[10px] bg-warn-50 px-3 py-2.5 text-[12.5px] leading-relaxed text-ink-700">
-              No SMTP transport is configured, so {result.queued}{' '}
-              {result.queued === 1 ? 'message was' : 'messages were'} written to the local outbox
-              instead of being delivered. They are not counted as sent.
+          {result.failed > 0 && (
+            <p className="rounded-[10px] bg-danger-50 px-3 py-2.5 text-[12.5px] leading-relaxed text-ink-700">
+              {result.failed} {result.failed === 1 ? 'message' : 'messages'} could not be delivered
+              and {result.failed === 1 ? 'was' : 'were'} not sent. Check that an SMTP transport is
+              connected under Settings, then send again — nothing is retried automatically.
             </p>
           )}
           {result.skipped > 0 && (
@@ -446,16 +444,22 @@ export function AdminEmailPage() {
       // links, neither of which exists — so those columns are absent rather
       // than showing an invented engagement rate.
       //
-      // Messages written to the outbox are named here rather than left to be
-      // inferred: a sent campaign reading a bare "0" looks like a failure when
-      // it is a configuration state, and the operator should not have to
-      // reopen the send dialog to find that out.
+      // Undelivered messages are named here rather than left to be inferred: a
+      // campaign reading a bare "0" gives no hint whether it reached nobody or
+      // failed, and the operator should not have to reopen the send dialog to
+      // find that out. Older campaigns can still carry a `queued` count from
+      // when unsent email was held locally, so both are shown.
       render: (row) => (
         <span className="tnum">
           {row.stats.sent}
+          {row.stats.bounced > 0 && (
+            <span className="ml-1.5 text-[12px] font-normal text-danger">
+              +{row.stats.bounced} failed
+            </span>
+          )}
           {row.stats.queued > 0 && (
             <span className="ml-1.5 text-[12px] font-normal text-warn">
-              +{row.stats.queued} to outbox
+              +{row.stats.queued} not sent
             </span>
           )}
         </span>

@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, Check, ChevronsUpDown, Minus, MoreHorizontal } from 'lucide-react';
 import cn from '@/lib/cn';
+import ActionMenu from '@/components/ui/ActionMenu';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
 
 /**
@@ -70,56 +71,9 @@ function CellCheckbox({ checked, indeterminate, onChange, label }) {
   );
 }
 
-/** The `···` menu in the last column. One open at a time, closes on outside click. */
+/** The row-actions menu. One implementation, shared with any record screen that needs the same control. */
 function RowMenu({ items, row }) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-  useOnClickOutside(ref, () => setOpen(false));
-
-  const usable = items.filter((item) => !item.hidden?.(row));
-  if (!usable.length) return null;
-
-  return (
-    <div ref={ref} className="relative flex justify-end">
-      <button
-        type="button"
-        onClick={() => setOpen((value) => !value)}
-        aria-label="Row actions"
-        aria-expanded={open}
-        className="flex size-8 items-center justify-center rounded-[8px] text-ink-400 transition-colors hover:bg-surface-2 hover:text-ink-900"
-      >
-        <MoreHorizontal className="size-4" strokeWidth={2} aria-hidden="true" />
-      </button>
-
-      {open && (
-        <div className="absolute right-0 top-full z-20 mt-1 min-w-[180px] overflow-hidden rounded-[10px] border border-line bg-surface py-1 shadow-card">
-          {usable.map((item) => {
-            const Icon = item.icon;
-            return (
-              <button
-                key={item.key ?? item.label}
-                type="button"
-                disabled={item.disabled?.(row)}
-                onClick={() => {
-                  setOpen(false);
-                  item.onSelect?.(row);
-                }}
-                className={cn(
-                  'flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors disabled:cursor-not-allowed disabled:opacity-40',
-                  item.tone === 'danger'
-                    ? 'text-danger hover:bg-danger-50'
-                    : 'text-ink-700 hover:bg-surface-2 hover:text-ink-900',
-                )}
-              >
-                {Icon && <Icon className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />}
-                {typeof item.label === 'function' ? item.label(row) : item.label}
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
+  return <ActionMenu items={items} context={row} label="Row actions" />;
 }
 
 const PRIORITY_CLASS = {
@@ -211,7 +165,25 @@ export function DataTable({
   return (
     <div className={className}>
       <div className="overflow-x-auto">
-        <table className="w-full text-left">
+        {/**
+         * `table-fixed` whenever the caller has declared widths.
+         *
+         * Auto layout sizes every column by its content, which means a column's
+         * width is decided by the longest cell that happens to be on the page —
+         * so a `width` on a column definition was quietly ignored, the money
+         * column landed somewhere different on every table, and one long
+         * description could swallow the row. Fixed layout honours the declared
+         * widths and keeps a column of figures in a straight line down the page.
+         *
+         * Only when widths are declared: a table whose columns carry none still
+         * wants auto layout, which is the right default for unknown content.
+         */}
+        <table
+          className={cn(
+            'w-full text-left',
+            columns.some((column) => column.width) && 'table-fixed',
+          )}
+        >
           <thead>
             <tr className="border-b border-line">
               {selectable && (

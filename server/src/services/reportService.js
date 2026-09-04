@@ -1,13 +1,13 @@
-const { default: Order } = require('../models/Order.js');
-const { default: Invoice } = require('../models/Invoice.js');
-const { default: Product } = require('../models/Product.js');
-const { default: Expense } = require('../models/Expense.js');
-const { default: PurchaseOrder } = require('../models/PurchaseOrder.js');
-const { default: StockMovement } = require('../models/StockMovement.js');
-const { default: Supplier } = require('../models/Supplier.js');
-const { default: CreditTransaction } = require('../models/CreditTransaction.js');
-const { default: Settings } = require('../models/Settings.js');
-const { default: ApiError } = require('../utils/ApiError.js');
+import Order from '../models/Order.js';
+import Invoice from '../models/Invoice.js';
+import Product from '../models/Product.js';
+import Expense from '../models/Expense.js';
+import PurchaseOrder from '../models/PurchaseOrder.js';
+import StockMovement from '../models/StockMovement.js';
+import Supplier from '../models/Supplier.js';
+import CreditTransaction from '../models/CreditTransaction.js';
+import Settings from '../models/Settings.js';
+import ApiError from '../utils/ApiError.js';
 
 /**
  * Reports (ERP rework §6.11–6.12, phase 6).
@@ -907,6 +907,4 @@ async function report(tab, query = {}) {
 
 const REPORT_TABS = Object.keys(TABS);
 
-// --- CommonJS exports -------------------------------------------------
-exports.report = report;
-exports.REPORT_TABS = REPORT_TABS;
+export { report, REPORT_TABS };

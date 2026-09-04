@@ -1,10 +1,10 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
-const { default: Taxonomy } = require('../models/Taxonomy.js');
-const { default: Product } = require('../models/Product.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const { likeRegex } = require('../utils/regex.js');
-const { invalidateTree } = require('./taxonomyService.js');
+import Taxonomy from '../models/Taxonomy.js';
+import Product from '../models/Product.js';
+import ApiError from '../utils/ApiError.js';
+import { likeRegex } from '../utils/regex.js';
+import { invalidateTree } from './taxonomyService.js';
 
 /**
  * The taxonomy editor (ERP rework §6.15 — CellShoppe's *Device & Models*,
@@ -253,11 +253,6 @@ async function remove(id) {
   return { removed: true, name: node.name };
 }
 
-exports.default = { list, get, update, remove, normaliseAliases };
+export default { list, get, update, remove, normaliseAliases };
 
-// --- CommonJS exports -------------------------------------------------
-exports.normaliseAliases = normaliseAliases;
-exports.list = list;
-exports.get = get;
-exports.update = update;
-exports.remove = remove;
+export { normaliseAliases, list, get, update, remove };

@@ -1,4 +1,4 @@
-const { TAXONOMY, PART_TYPES, GRADE_MULTIPLIER } = require('./taxonomy.data.js');
+import { TAXONOMY, PART_TYPES, GRADE_MULTIPLIER } from './taxonomy.data.js';
 
 /**
  * Deterministic pseudo-random generator.
@@ -280,8 +280,4 @@ function buildProducts({ targetCount = 420 } = {}) {
   return products;
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.slugify = slugify;
-exports.buildTaxonomyDocs = buildTaxonomyDocs;
-exports.buildCompetitors = buildCompetitors;
-exports.buildProducts = buildProducts;
+export { slugify, buildTaxonomyDocs, buildCompetitors, buildProducts };

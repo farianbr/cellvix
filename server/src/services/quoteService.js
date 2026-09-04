@@ -1,13 +1,14 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
+import { displayNameOf } from '../utils/displayName.js';
 
-const { default: Quote } = require('../models/Quote.js');
-const { default: Product } = require('../models/Product.js');
-const { default: User } = require('../models/User.js');
-const { default: Settings } = require('../models/Settings.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const { likeRegex } = require('../utils/regex.js');
-const notificationService = require('./notificationService.js');
-const orderBuilder = require('./orderBuilder.js');
+import Quote from '../models/Quote.js';
+import Product from '../models/Product.js';
+import User from '../models/User.js';
+import Settings from '../models/Settings.js';
+import ApiError from '../utils/ApiError.js';
+import { likeRegex } from '../utils/regex.js';
+import notificationService from './notificationService.js';
+import orderBuilder from './orderBuilder.js';
 
 /**
  * Quotes (ERP rework §6.6, phase 7).
@@ -80,14 +81,29 @@ function shapeQuote(quote) {
     id: quote._id.toString(),
     quoteNumber: quote.quoteNumber,
     source: quote.source,
-    user: quote.user?.businessName
+    /**
+     * Populated when the account came back with it, a bare id otherwise.
+     *
+     * Keyed on `_id` rather than `businessName`: an account is identified by
+     * the person (§0), and a private customer has no company — so testing for
+     * one meant every such quote fell through to the `—` branch and lost the
+     * account's name, email and link entirely.
+     */
+    user: quote.user?._id
       ? {
           id: quote.user._id.toString(),
-          businessName: quote.user.businessName,
+          businessName: quote.user.businessName ?? null,
           contactName: quote.user.contactName ?? null,
+          displayName: displayNameOf(quote.user),
           email: quote.user.email ?? null,
         }
-      : { id: quote.user?.toString() ?? null, businessName: '—', contactName: null, email: null },
+      : {
+          id: quote.user?.toString() ?? null,
+          businessName: null,
+          contactName: null,
+          displayName: '—',
+          email: null,
+        },
     status: expired ? 'expired' : quote.status,
     // Kept alongside the derived status so a screen can say "expired, and it
     // was sent" rather than losing which rung it reached.
@@ -149,7 +165,7 @@ function provinceFor(user) {
 
 // ---- read -------------------------------------------------------------------
 
-async function listQuotes({ q, status, from, to } = {}) {
+async function listQuotes({ q, status, user, from, to } = {}) {
   const now = new Date();
   const query = {};
 
@@ -162,6 +178,10 @@ async function listQuotes({ q, status, from, to } = {}) {
     query.status = String(status);
   }
 
+  // The customer profile's Quotes tab. A quote always belongs to an account, so
+  // this is a plain scope rather than the optional link a ticket carries.
+  if (user && mongoose.Types.ObjectId.isValid(String(user))) query.user = user;
+
   if (from || to) {
     query.createdAt = {};
     if (from) query.createdAt.$gte = toDate(from);
@@ -170,10 +190,17 @@ async function listQuotes({ q, status, from, to } = {}) {
 
   if (q) {
     const rx = likeRegex(q);
-    const users = await User.find({ $or: [{ businessName: rx }, { email: rx }] })
+    // `contactName` as well as `businessName`: an account is identified by the
+    // person, so searching only the company missed every private customer.
+    const matches = await User.find({
+      $or: [{ businessName: rx }, { contactName: rx }, { email: rx }],
+    })
       .select('_id')
       .lean();
-    query.$or = [{ quoteNumber: rx }, { user: { $in: users.map((user) => user._id) } }];
+    // Named `matches`, not `users` — the callback parameter used to shadow this
+    // function's own `user` scope argument, which is how a search would have
+    // silently dropped the account filter.
+    query.$or = [{ quoteNumber: rx }, { user: { $in: matches.map((row) => row._id) } }];
   }
 
   const quotes = await Quote.find(query)
@@ -570,11 +597,4 @@ async function deleteQuote(id) {
   return { ok: true };
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.listQuotes = listQuotes;
-exports.getQuote = getQuote;
-exports.createQuote = createQuote;
-exports.updateQuote = updateQuote;
-exports.setQuoteStatus = setQuoteStatus;
-exports.convertQuote = convertQuote;
-exports.deleteQuote = deleteQuote;
+export { listQuotes, getQuote, createQuote, updateQuote, setQuoteStatus, convertQuote, deleteQuote };

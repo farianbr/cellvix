@@ -209,8 +209,4 @@ function buildRmas({ orders, year = new Date().getFullYear() }) {
   });
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.daysAgo = daysAgo;
-exports.daysAhead = daysAhead;
-exports.buildQuotes = buildQuotes;
-exports.buildRmas = buildRmas;
+export { daysAgo, daysAhead, buildQuotes, buildRmas };

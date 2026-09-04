@@ -1,6 +1,6 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const referralService = require('../services/referralService.js');
-const auditService = require('../services/auditService.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import referralService from '../services/referralService.js';
+import auditService from '../services/auditService.js';
 
 /**
  * Referral commission (ERP rework §6.13, phase 10).
@@ -43,6 +43,4 @@ const setRate = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.list = list;
-exports.setRate = setRate;
+export { list, setRate };

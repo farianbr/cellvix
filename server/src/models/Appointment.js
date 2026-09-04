@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 /**
  * The scheduling board's data model (ERP rework §6.15 category 4, §6b U1–U2,
@@ -92,8 +92,5 @@ appointmentSchema.index({ startAt: 1, status: 1 });
 
 const Appointment = mongoose.model('Appointment', appointmentSchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.APPOINTMENT_KINDS = APPOINTMENT_KINDS;
-exports.APPOINTMENT_STATUSES = APPOINTMENT_STATUSES;
-exports.Appointment = Appointment;
-exports.default = Appointment;
+export { APPOINTMENT_KINDS, APPOINTMENT_STATUSES, Appointment };
+export default Appointment;

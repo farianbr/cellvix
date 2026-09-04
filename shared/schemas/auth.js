@@ -1,4 +1,4 @@
-const { z } = require('zod');
+import { z } from 'zod';
 
 /** Shared by the server's validate() middleware and the client's React Hook Form resolvers. */
 
@@ -123,14 +123,11 @@ const supplierApplicationSchema = z.object({
       city: z.string().trim().max(80).optional().or(z.literal('')),
       region: z.string().trim().max(2).optional().or(z.literal('')),
       postal: z.string().trim().max(10).optional().or(z.literal('')),
+      // Suppliers are the one group who genuinely are often not Canadian, so
+      // the country is asked rather than assumed. Defaulted all the same.
+      country: z.string().trim().max(60).default('Canada'),
     })
     .optional(),
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.passwordSchema = passwordSchema;
-exports.loginSchema = loginSchema;
-exports.registerSchema = registerSchema;
-exports.forgotPasswordSchema = forgotPasswordSchema;
-exports.resetPasswordSchema = resetPasswordSchema;
-exports.supplierApplicationSchema = supplierApplicationSchema;
+export { passwordSchema, loginSchema, registerSchema, forgotPasswordSchema, resetPasswordSchema, supplierApplicationSchema };

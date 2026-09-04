@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 /**
  * A physical store (ERP rework §6.14, §0.5).
@@ -106,8 +106,5 @@ outletSchema.methods.toPublic = function toPublic() {
 
 const Outlet = mongoose.model('Outlet', outletSchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.OUTLET_COLOR_TOKENS = OUTLET_COLOR_TOKENS;
-exports.OUTLET_STATUSES = OUTLET_STATUSES;
-exports.Outlet = Outlet;
-exports.default = Outlet;
+export { OUTLET_COLOR_TOKENS, OUTLET_STATUSES, Outlet };
+export default Outlet;

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 /**
  * Provider credentials, encrypted at rest (ERP rework §6.15, phase 11c).
@@ -59,7 +59,7 @@ const PROVIDER_FIELDS = [
     provider: 'email',
     label: 'Email provider',
     description:
-      'An SMTP transport. Email already works without this — the mailer writes to a local outbox — so setting it changes delivery, not capability.',
+      'An SMTP transport. Nothing can be emailed without one — invoices, welcome mail and campaigns all record a failure instead of sending.',
     unblocks: null,
     fields: [
       { key: 'smtpUrl', label: 'SMTP URL', secret: true, hint: 'smtp://user:pass@host:587' },
@@ -127,8 +127,5 @@ providerCredentialSchema.methods.toPublic = function toPublic() {
 
 const ProviderCredential = mongoose.model('ProviderCredential', providerCredentialSchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.PROVIDER_FIELDS = PROVIDER_FIELDS;
-exports.PROVIDER_BY_KEY = PROVIDER_BY_KEY;
-exports.ProviderCredential = ProviderCredential;
-exports.default = ProviderCredential;
+export { PROVIDER_FIELDS, PROVIDER_BY_KEY, ProviderCredential };
+export default ProviderCredential;

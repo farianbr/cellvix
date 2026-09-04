@@ -1,6 +1,6 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const purchaseService = require('../services/purchaseService.js');
-const auditService = require('../services/auditService.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import * as purchaseService from '../services/purchaseService.js';
+import auditService from '../services/auditService.js';
 
 /**
  * Purchase — suppliers, purchase orders, expenses, categories and inventory
@@ -197,29 +197,4 @@ const listStockMovements = asyncHandler(async (req, res) => {
   res.json(await purchaseService.listStockMovements(req.query));
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.listSuppliers = listSuppliers;
-exports.getSupplier = getSupplier;
-exports.createSupplier = createSupplier;
-exports.updateSupplier = updateSupplier;
-exports.toggleSupplier = toggleSupplier;
-exports.listPurchaseOrders = listPurchaseOrders;
-exports.getPurchaseOrder = getPurchaseOrder;
-exports.createPurchaseOrder = createPurchaseOrder;
-exports.updatePurchaseOrder = updatePurchaseOrder;
-exports.setPurchaseOrderStatus = setPurchaseOrderStatus;
-exports.receivePurchaseOrder = receivePurchaseOrder;
-exports.recordPurchasePayment = recordPurchasePayment;
-exports.listExpenses = listExpenses;
-exports.createExpense = createExpense;
-exports.updateExpense = updateExpense;
-exports.deleteExpense = deleteExpense;
-exports.listExpenseCategories = listExpenseCategories;
-exports.createExpenseCategory = createExpenseCategory;
-exports.updateExpenseCategory = updateExpenseCategory;
-exports.deleteExpenseCategory = deleteExpenseCategory;
-exports.listInventory = listInventory;
-exports.getInventoryItem = getInventoryItem;
-exports.updateInventoryOps = updateInventoryOps;
-exports.adjustStock = adjustStock;
-exports.listStockMovements = listStockMovements;
+export { listSuppliers, getSupplier, createSupplier, updateSupplier, toggleSupplier, listPurchaseOrders, getPurchaseOrder, createPurchaseOrder, updatePurchaseOrder, setPurchaseOrderStatus, receivePurchaseOrder, recordPurchasePayment, listExpenses, createExpense, updateExpense, deleteExpense, listExpenseCategories, createExpenseCategory, updateExpenseCategory, deleteExpenseCategory, listInventory, getInventoryItem, updateInventoryOps, adjustStock, listStockMovements };

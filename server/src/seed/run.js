@@ -1,31 +1,31 @@
-const mongoose = require('mongoose');
-const { connectDb, disconnectDb } = require('../config/db.js');
-const { default: Taxonomy } = require('../models/Taxonomy.js');
-const { default: Product } = require('../models/Product.js');
-const { default: User } = require('../models/User.js');
-const { default: Order } = require('../models/Order.js');
-const { default: Invoice } = require('../models/Invoice.js');
-const { default: CreditTransaction } = require('../models/CreditTransaction.js');
-const { default: BlogPost } = require('../models/BlogPost.js');
-const { default: Faq } = require('../models/Faq.js');
-const { default: Offer } = require('../models/Offer.js');
-const { default: Supplier } = require('../models/Supplier.js');
-const { default: PurchaseOrder } = require('../models/PurchaseOrder.js');
-const { default: Expense } = require('../models/Expense.js');
-const { default: ExpenseCategory } = require('../models/ExpenseCategory.js');
-const { default: StockMovement } = require('../models/StockMovement.js');
-const { buildTaxonomyDocs, buildProducts } = require('./generate.js');
-const { BLOG_POSTS, GENERAL_FAQS, PRODUCT_FAQS, buildOffers } = require('./content.data.js');
-const { EXPENSE_CATEGORIES } = require('./expense-categories.js');
-const { SUPPLIERS, buildPurchaseOrders, buildExpenses, costFor } = require('./purchase.data.js');
-const { default: Settings } = require('../models/Settings.js');
-const { default: Quote } = require('../models/Quote.js');
-const { default: Rma } = require('../models/Rma.js');
-const { buildQuotes, buildRmas } = require('./sales.data.js');
-const { default: Role } = require('../models/Role.js');
-const { default: Outlet } = require('../models/Outlet.js');
-const { ensureBuiltInRoles, ensureDefaultOutlet } = require('../services/accessService.js');
-const { ensureReferralCode } = require('../services/referralService.js');
+import mongoose from 'mongoose';
+import { connectDb, disconnectDb } from '../config/db.js';
+import Taxonomy from '../models/Taxonomy.js';
+import Product from '../models/Product.js';
+import User from '../models/User.js';
+import Order from '../models/Order.js';
+import Invoice from '../models/Invoice.js';
+import CreditTransaction from '../models/CreditTransaction.js';
+import BlogPost from '../models/BlogPost.js';
+import Faq from '../models/Faq.js';
+import Offer from '../models/Offer.js';
+import Supplier from '../models/Supplier.js';
+import PurchaseOrder from '../models/PurchaseOrder.js';
+import Expense from '../models/Expense.js';
+import ExpenseCategory from '../models/ExpenseCategory.js';
+import StockMovement from '../models/StockMovement.js';
+import { buildTaxonomyDocs, buildProducts } from './generate.js';
+import { BLOG_POSTS, GENERAL_FAQS, PRODUCT_FAQS, buildOffers } from './content.data.js';
+import { EXPENSE_CATEGORIES } from './expense-categories.js';
+import { SUPPLIERS, buildPurchaseOrders, buildExpenses, costFor } from './purchase.data.js';
+import Settings from '../models/Settings.js';
+import Quote from '../models/Quote.js';
+import Rma from '../models/Rma.js';
+import { buildQuotes, buildRmas } from './sales.data.js';
+import Role from '../models/Role.js';
+import Outlet from '../models/Outlet.js';
+import { ensureBuiltInRoles, ensureDefaultOutlet } from '../services/accessService.js';
+import { ensureReferralCode } from '../services/referralService.js';
 
 const DEMO_PASSWORD = 'Cellvix123!';
 
@@ -448,6 +448,10 @@ async function seedDatabase({ quiet = false } = {}) {
     const paid = order.status === 'delivered';
     const overdue = !paid && dueDate < new Date();
 
+    // A few days after the invoice went out, and never later than today.
+    const settledAt = new Date(issuedAt.getTime() + (4 + (index % 9)) * 86_400_000);
+    const paidAt = settledAt > new Date() ? new Date() : settledAt;
+
     invoices.push({
       number: `INV-2026-${String(10_042 + index).padStart(5, '0')}`,
       order: order._id,
@@ -458,8 +462,28 @@ async function seedDatabase({ quiet = false } = {}) {
       dueDate,
       terms: 'net30',
       status: paid ? 'paid' : overdue ? 'overdue' : 'unpaid',
+      /**
+       * Paid **somewhere between the issue date and now** — never on the due
+       * date.
+       *
+       * Dating the payment `dueDate` was wrong twice. A Net-30 invoice raised
+       * last week has a due date next month, so the seed wrote a payment
+       * dated in the future: the account activity feed showed money arriving
+       * on a day that has not happened. And it implied every customer pays
+       * on the exact deadline, which made the collections figures meaningless.
+       *
+       * Clamped to `now` so a recently-issued invoice cannot produce a
+       * future-dated payment however the window falls.
+       */
       payments: paid
-        ? [{ amount: order.total, at: dueDate, method: 'EFT', reference: `EFT-${88_400 + index}` }]
+        ? [
+            {
+              amount: order.total,
+              at: paidAt,
+              method: 'EFT',
+              reference: `EFT-${88_400 + index}`,
+            },
+          ]
         : [],
     });
   });
@@ -773,6 +797,4 @@ if (process.argv[1] && process.argv[1].endsWith('run.js')) {
   });
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.seedDatabase = seedDatabase;
-exports.isDatabaseEmpty = isDatabaseEmpty;
+export { seedDatabase, isDatabaseEmpty };

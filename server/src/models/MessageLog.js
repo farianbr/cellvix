@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 /**
  * Every outbound and inbound message, on every channel (ERP rework §6.13, §8).
@@ -73,9 +73,5 @@ messageLogSchema.index({ user: 1, createdAt: -1 });
 
 const MessageLog = mongoose.model('MessageLog', messageLogSchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.MESSAGE_CHANNELS = MESSAGE_CHANNELS;
-exports.MESSAGE_DIRECTIONS = MESSAGE_DIRECTIONS;
-exports.MESSAGE_STATUSES = MESSAGE_STATUSES;
-exports.MessageLog = MessageLog;
-exports.default = MessageLog;
+export { MESSAGE_CHANNELS, MESSAGE_DIRECTIONS, MESSAGE_STATUSES, MessageLog };
+export default MessageLog;

@@ -1,6 +1,6 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const accessService = require('../services/accessService.js');
-const auditService = require('../services/auditService.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import accessService from '../services/accessService.js';
+import auditService from '../services/auditService.js';
 
 /**
  * Outlets, roles and staff accounts (ERP rework §6.14, §6.15/3, §7.6).
@@ -184,19 +184,4 @@ const deleteStaff = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.listOutlets = listOutlets;
-exports.getOutlet = getOutlet;
-exports.nextOutletCode = nextOutletCode;
-exports.createOutlet = createOutlet;
-exports.updateOutlet = updateOutlet;
-exports.setDefaultOutlet = setDefaultOutlet;
-exports.deleteOutlet = deleteOutlet;
-exports.listRoles = listRoles;
-exports.createRole = createRole;
-exports.updateRole = updateRole;
-exports.deleteRole = deleteRole;
-exports.listStaff = listStaff;
-exports.createStaff = createStaff;
-exports.updateStaff = updateStaff;
-exports.deleteStaff = deleteStaff;
+export { listOutlets, getOutlet, nextOutletCode, createOutlet, updateOutlet, setDefaultOutlet, deleteOutlet, listRoles, createRole, updateRole, deleteRole, listStaff, createStaff, updateStaff, deleteStaff };

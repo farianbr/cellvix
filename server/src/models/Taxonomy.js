@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 /**
  * The single category tree. One self-referencing collection feeds all three
@@ -69,6 +69,5 @@ taxonomySchema.index({ aliases: 1 });
 
 const Taxonomy = mongoose.model('Taxonomy', taxonomySchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.Taxonomy = Taxonomy;
-exports.default = Taxonomy;
+export { Taxonomy };
+export default Taxonomy;

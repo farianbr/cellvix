@@ -1,16 +1,19 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
-const {
-  default: InvoiceStatusRule,
-  InvoiceStatusRun, RULE_TRIGGERS, RULE_TOKENS, triggerDate, ensureBuiltInRules,
-} = require('../models/InvoiceStatusRule.js');
-const { default: Invoice } = require('../models/Invoice.js');
-const { default: User } = require('../models/User.js');
-const { default: MessageLog } = require('../models/MessageLog.js');
-const { default: Settings } = require('../models/Settings.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const { sendMail, mailerConfigured } = require('./mailer.js');
-const { channelStatus } = require('./marketingService.js');
+import InvoiceStatusRule, {
+  InvoiceStatusRun,
+  RULE_TRIGGERS,
+  RULE_TOKENS,
+  triggerDate,
+  ensureBuiltInRules,
+} from '../models/InvoiceStatusRule.js';
+import Invoice from '../models/Invoice.js';
+import User from '../models/User.js';
+import MessageLog from '../models/MessageLog.js';
+import Settings from '../models/Settings.js';
+import ApiError from '../utils/ApiError.js';
+import { sendMail, mailerConfigured } from './mailer.js';
+import { channelStatus } from './marketingService.js';
 
 /**
  * Cents to `$1,234.56`, for the `{{amount}}` placeholder.
@@ -255,12 +258,11 @@ async function run({ dryRun = false, now = new Date() } = {}) {
       } else if (rule.channel === 'email' && !(await mailerConfigured())) {
         // A dry run has to predict the same outcome the real run produces.
         // Without this it reported "would send 3" against a server with no SMTP
-        // transport, where the real run then wrote three to the outbox — and a
-        // preview that disagrees with the thing it is previewing is worse than
-        // no preview.
+        // transport, where the real run then failed all three — and a preview
+        // that disagrees with the thing it is previewing is worse than no
+        // preview.
         outcome = 'skipped';
-        detail =
-          'No SMTP transport is configured, so the message went to the local outbox instead.';
+        detail = 'No SMTP transport is configured, so the message cannot be sent.';
       }
 
       if (dryRun) {
@@ -277,8 +279,7 @@ async function run({ dryRun = false, now = new Date() } = {}) {
           const result = await sendMail({ to: user.email, subject, text: body, html: undefined });
           if (!result.delivered) {
             outcome = 'skipped';
-            detail =
-              'No SMTP transport is configured, so the message went to the local outbox instead.';
+            detail = `Sending failed: ${result.error ?? 'the message could not be delivered.'}`;
           }
         } catch (error) {
           // Rule 2: the run row already exists, so a thrown send is recorded as
@@ -331,11 +332,6 @@ async function run({ dryRun = false, now = new Date() } = {}) {
   return { dryRun, ranAt: now, results };
 }
 
-exports.default = { list, create, update, remove, run };
+export default { list, create, update, remove, run };
 
-// --- CommonJS exports -------------------------------------------------
-exports.list = list;
-exports.create = create;
-exports.update = update;
-exports.remove = remove;
-exports.run = run;
+export { list, create, update, remove, run };

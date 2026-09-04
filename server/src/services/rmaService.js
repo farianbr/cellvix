@@ -1,15 +1,15 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
-const { default: Rma, RMA_STATUSES, RMA_OPEN_STATUSES } = require('../models/Rma.js');
-const { default: Order } = require('../models/Order.js');
-const { default: User } = require('../models/User.js');
-const { default: Settings } = require('../models/Settings.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const { likeRegex } = require('../utils/regex.js');
-const storeCredit = require('./storeCreditService.js');
-const { applyStockMovement } = require('./purchaseService.js');
-const notificationService = require('./notificationService.js');
-const warrantyService = require('./warrantyService.js');
+import Rma, { RMA_STATUSES, RMA_OPEN_STATUSES } from '../models/Rma.js';
+import Order from '../models/Order.js';
+import User from '../models/User.js';
+import Settings from '../models/Settings.js';
+import ApiError from '../utils/ApiError.js';
+import { likeRegex } from '../utils/regex.js';
+import storeCredit from './storeCreditService.js';
+import { applyStockMovement } from './purchaseService.js';
+import notificationService from './notificationService.js';
+import * as warrantyService from './warrantyService.js';
 
 /**
  * RMA / returns (ERP rework §6.3, phase 7).
@@ -525,11 +525,4 @@ async function resolveRma(id, { resolution, amountDollars, note }, adminId) {
   return { ...result, restocked, refund };
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.listRmas = listRmas;
-exports.getRma = getRma;
-exports.createRma = createRma;
-exports.setRmaStatus = setRmaStatus;
-exports.inspectRma = inspectRma;
-exports.resolveRma = resolveRma;
-exports.RMA_STATUSES = RMA_STATUSES;
+export { listRmas, getRma, createRma, setRmaStatus, inspectRma, resolveRma, RMA_STATUSES };

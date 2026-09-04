@@ -1,6 +1,6 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const settingsService = require('../services/settingsService.js');
-const auditService = require('../services/auditService.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import settingsService from '../services/settingsService.js';
+import auditService from '../services/auditService.js';
 
 /**
  * Settings (ERP rework §6.15, phase 11).
@@ -114,11 +114,4 @@ const updateInventory = auditedWrite(
   'inventory defaults',
 );
 
-// --- CommonJS exports -------------------------------------------------
-exports.get = get;
-exports.updateBusiness = updateBusiness;
-exports.updateSale = updateSale;
-exports.updateShipping = updateShipping;
-exports.updatePaymentMethods = updatePaymentMethods;
-exports.updateCommunications = updateCommunications;
-exports.updateInventory = updateInventory;
+export { get, updateBusiness, updateSale, updateShipping, updatePaymentMethods, updateCommunications, updateInventory };

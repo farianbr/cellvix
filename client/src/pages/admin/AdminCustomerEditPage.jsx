@@ -28,12 +28,12 @@ export function AdminCustomerEditPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data, isLoading } = useAdminUser(id);
-  const { updateUser } = useAdminMutations();
+  const { updateUser, setContactConsent } = useAdminMutations();
 
   // Publishes the name to the shell's breadcrumb, so the trail reads
   // `⌂ > Sales > Customers > Northline > Edit` rather than `… > Edit` (§4b.6).
   // Before the loading return: a hook cannot be conditional.
-  useSetRecordLabel(data?.user?.businessName);
+  useSetRecordLabel(data?.user?.displayName);
 
   if (isLoading || !data) {
     return (
@@ -54,7 +54,7 @@ export function AdminCustomerEditPage() {
         className="mb-3 inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-500 transition-colors hover:text-ink-900"
       >
         <ArrowLeft className="size-3.5" strokeWidth={2} aria-hidden="true" />
-        Back to {user.businessName}
+        Back to {user.displayName}
       </Link>
 
       <PageHeader
@@ -72,12 +72,24 @@ export function AdminCustomerEditPage() {
           // Straight back to the profile on success: the operator came here to
           // correct something and wants to see it corrected, not sit on a form
           // that now says what the record already says.
-          onSubmit={(values) =>
-            updateUser.mutate(
-              { id, ...values },
-              { onSuccess: () => navigate(profile) },
-            )
-          }
+          /**
+           * Two writes, because consent has its own endpoint: it stamps who
+           * recorded the answer and when, which `updateUser` neither carries
+           * nor should. `contactConsent` is only present when the ticks
+           * actually changed, so an ordinary profile correction still sends
+           * one request and leaves the consent date alone.
+           *
+           * Sequential rather than parallel, and the profile goes first: if
+           * the consent write fails, the correction the operator came here to
+           * make is already saved rather than lost with it.
+           */
+          onSubmit={async ({ contactConsent, ...values }) => {
+            await updateUser.mutateAsync({ id, ...values });
+            if (contactConsent) {
+              await setContactConsent.mutateAsync({ id, ...contactConsent });
+            }
+            navigate(profile);
+          }}
         />
       </Panel>
     </>

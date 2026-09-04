@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 /**
  * Contact form submissions.
@@ -35,6 +35,5 @@ contactMessageSchema.index({ createdAt: -1 });
 
 const ContactMessage = mongoose.model('ContactMessage', contactMessageSchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.ContactMessage = ContactMessage;
-exports.default = ContactMessage;
+export { ContactMessage };
+export default ContactMessage;

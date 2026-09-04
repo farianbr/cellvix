@@ -1,5 +1,5 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const searchService = require('../services/searchService.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import searchService from '../services/searchService.js';
 
 /**
  * Global search (§7.1, phase 12).
@@ -13,5 +13,4 @@ const search = asyncHandler(async (req, res) => {
   res.json(await searchService.search(req.query.q, req.user));
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.search = search;
+export { search };

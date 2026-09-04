@@ -1,6 +1,6 @@
-const { connectDb, disconnectDb } = require('../config/db.js');
-const { default: Invoice } = require('../models/Invoice.js');
-const { default: User } = require('../models/User.js');
+import { connectDb, disconnectDb } from '../config/db.js';
+import Invoice from '../models/Invoice.js';
+import User from '../models/User.js';
 
 /**
  * Stamps `kind` onto invoices that predate the field.
@@ -195,6 +195,4 @@ if (process.argv[1] && process.argv[1].endsWith('backfill-invoice-kind.js')) {
   });
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.backfillInvoiceKind = backfillInvoiceKind;
-exports.reconcileBalances = reconcileBalances;
+export { backfillInvoiceKind, reconcileBalances };

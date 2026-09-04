@@ -100,10 +100,25 @@ export function FilterStrip({
             onClick={() => onPillChange?.(pill.value)}
             aria-pressed={isActive}
             className={cn(
-              'flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[8px] border px-2.5 text-[13px] font-medium transition-colors',
+              'flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[8px] px-2.5 text-[13px] font-medium transition-colors',
+              /**
+               * The active pill has **no border at all**, not a transparent one.
+               *
+               * `border-transparent` still reserves the border box, and a
+               * background-image is painted under it — so the gradient showed
+               * through those 1px edges at a different point on its own ramp
+               * than the fill beside them. That read as two solid vertical
+               * lines down the pill's sides. Dropping the border removes the
+               * box, and the inactive pill carries its own `border` instead so
+               * the two states stay the same height.
+               */
               isActive
-                ? 'border-transparent bg-brand-gradient text-white'
-                : 'border-line bg-surface text-ink-600 hover:border-line-strong hover:text-ink-900',
+                // `px-[11px]` replaces the 1px the missing border no longer
+                // contributes, so the active and inactive pills are the same
+                // width and the row does not shift as the filter changes.
+                // Height is fixed by `h-9`, so only the horizontal axis needs it.
+                ? 'bg-brand-gradient-compact px-[11px] text-white'
+                : 'border border-line bg-surface text-ink-600 hover:border-line-strong hover:text-ink-900',
             )}
           >
             {pill.label}

@@ -1,10 +1,10 @@
-const { default: Cart } = require('../models/Cart.js');
-const { default: Product } = require('../models/Product.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const { canSeePricing } = require('../middleware/auth.js');
-const { default: Offer } = require('../models/Offer.js');
-const { offerStatus } = require('./offerService.js');
-const { OfferRejection, priceCart, resolveCode } = require('./pricingService.js');
+import Cart from '../models/Cart.js';
+import Product from '../models/Product.js';
+import ApiError from '../utils/ApiError.js';
+import { canSeePricing } from '../middleware/auth.js';
+import Offer from '../models/Offer.js';
+import { offerStatus } from './offerService.js';
+import { OfferRejection, priceCart, resolveCode } from './pricingService.js';
 
 /** A user has exactly one active cart. Saved carts are separate documents. */
 async function getOrCreateCart(userId) {
@@ -452,21 +452,4 @@ async function clearPromoCode(userId) {
   return cart;
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.getOrCreateCart = getOrCreateCart;
-exports.serialize = serialize;
-exports.addItem = addItem;
-exports.setQty = setQty;
-exports.removeItem = removeItem;
-exports.clearCart = clearCart;
-exports.mergeGuestCart = mergeGuestCart;
-exports.saveForLater = saveForLater;
-exports.listSaved = listSaved;
-exports.restoreSaved = restoreSaved;
-exports.deleteSaved = deleteSaved;
-exports.bulkAdd = bulkAdd;
-exports.addBundle = addBundle;
-exports.setBundleQty = setBundleQty;
-exports.removeBundle = removeBundle;
-exports.applyPromoCode = applyPromoCode;
-exports.clearPromoCode = clearPromoCode;
+export { getOrCreateCart, serialize, addItem, setQty, removeItem, clearCart, mergeGuestCart, saveForLater, listSaved, restoreSaved, deleteSaved, bulkAdd, addBundle, setBundleQty, removeBundle, applyPromoCode, clearPromoCode };

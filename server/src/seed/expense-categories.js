@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
-const { connectDb, disconnectDb } = require('../config/db.js');
-const { default: ExpenseCategory } = require('../models/ExpenseCategory.js');
+import mongoose from 'mongoose';
+import { connectDb, disconnectDb } from '../config/db.js';
+import ExpenseCategory from '../models/ExpenseCategory.js';
 
 /**
  * The Canadian starter set of expense categories (ERP rework §6.9).
@@ -62,6 +62,4 @@ if (process.argv[1] && process.argv[1].endsWith('expense-categories.js')) {
   });
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.EXPENSE_CATEGORIES = EXPENSE_CATEGORIES;
-exports.seedExpenseCategories = seedExpenseCategories;
+export { EXPENSE_CATEGORIES, seedExpenseCategories };

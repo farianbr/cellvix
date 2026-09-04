@@ -51,11 +51,11 @@
   /* The inverted editorial slab (About's statement, Contact's promise).
      `ink-900` on its own is a flat photographic black that reads as a generic
      dark section next to a warm red mark, so this is that same black mixed
-     ~12% toward --color-brand: still unmistakably near-black, but warm enough
+     pulled toward --color-brand: still unmistakably near-black, but warm enough
      that the inverted band belongs to the palette. A SOLID fill, not a second
-     gradient block — §2.2 keeps the gradient for the CTA. White sits at ~17:1
-     on it, white/60 at ~6.3:1. */
-  --color-ink-deep: #1f1214;
+     gradient block — §2.2 keeps the gradient for the CTA. White sits at ~18:1
+     on it, white/60 at ~6.6:1, so both clear AA comfortably. */
+  --color-ink-deep: #1b0101;
 
   /* --- surfaces & lines ------------------------------------------------- */
   --color-line: #e5e5ea;
@@ -188,12 +188,27 @@
 @layer utilities {
   /* The brand gradient. ACCENT ONLY — CTAs, active indicators, progress fills,
      thin rules, at most one promo block per page. Never a page or card ground. */
+  /* Black on the left, brightening to red on the right — the direction the
+     brand sheet shows. It used to run the other way (red at the top-left,
+     falling into black), which put the darkest, heaviest end where the eye
+     lands first and made every CTA read as a black button with a red edge
+     rather than a red one. Left-to-right at 100deg gives the slight tilt of
+     the reference without the 135deg diagonal, which on a wide, short button
+     compresses the whole ramp into the first third. */
   .bg-brand-gradient {
-    background-image: linear-gradient(135deg, #cf3429 0%, #a72820 42%, #000000 100%);
+    background-image: linear-gradient(100deg, #1a0603 0%, #8f221b 38%, #cf3429 72%, #e8564a 100%);
+  }
+
+  /* The same ramp for something small — a filter pill, a badge, a count chip.
+     It starts at the deep red rather than the near-black: across 80px the full
+     gradient puts its darkest stop inside the chip, which reads as a stray
+     black stripe down one side rather than as depth. Same identity, no stripe. */
+  .bg-brand-gradient-compact {
+    background-image: linear-gradient(100deg, #8f221b 0%, #cf3429 55%, #e8564a 100%);
   }
 
   .text-brand-gradient {
-    background-image: linear-gradient(135deg, #cf3429 0%, #000000 100%);
+    background-image: linear-gradient(100deg, #1a0603 0%, #cf3429 65%, #e8564a 100%);
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
@@ -201,7 +216,21 @@
 
   /* 2px accent rule, used at the top of the header and under active tabs. */
   .rule-brand-gradient {
-    background-image: linear-gradient(90deg, #cf3429 0%, #000000 100%);
+    background-image: linear-gradient(90deg, #1a0603 0%, #cf3429 60%, #e8564a 100%);
+  }
+
+  /* A gradient RING with the surface still showing through the middle.
+     `border-image` cannot do this on a rounded element — it squares the
+     corners off — so the ramp is painted as the background and a second,
+     content-box layer of the surface colour is masked on top of it. The
+     2px `padding` is what becomes the visible ring width. */
+  .ring-brand-gradient {
+    padding: 2px;
+    background-image:
+      linear-gradient(var(--color-surface), var(--color-surface)),
+      linear-gradient(100deg, #1a0603 0%, #cf3429 60%, #e8564a 100%);
+    background-origin: border-box;
+    background-clip: content-box, border-box;
   }
 
   .font-display {

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 /**
  * Every change to `Product.stock`, with its reason.
@@ -48,7 +48,5 @@ stockMovementSchema.index({ product: 1, createdAt: -1 });
 
 const StockMovement = mongoose.model('StockMovement', stockMovementSchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.MOVEMENT_TYPES = MOVEMENT_TYPES;
-exports.StockMovement = StockMovement;
-exports.default = StockMovement;
+export { MOVEMENT_TYPES, StockMovement };
+export default StockMovement;

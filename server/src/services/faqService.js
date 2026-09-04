@@ -1,7 +1,7 @@
-const { default: Faq } = require('../models/Faq.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const { likeRegex } = require('../utils/regex.js');
-const { FAQ_CATEGORIES } = require('../../../shared/schemas/content.js');
+import Faq from '../models/Faq.js';
+import ApiError from '../utils/ApiError.js';
+import { likeRegex } from '../utils/regex.js';
+import { FAQ_CATEGORIES } from '../../../shared/schemas/content.js';
 
 const CATEGORY_ORDER = FAQ_CATEGORIES.map((category) => category.value);
 
@@ -149,10 +149,4 @@ async function deleteFaq(id) {
   return serialize(faq);
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.listGeneral = listGeneral;
-exports.listForProduct = listForProduct;
-exports.listAll = listAll;
-exports.createFaq = createFaq;
-exports.updateFaq = updateFaq;
-exports.deleteFaq = deleteFaq;
+export { listGeneral, listForProduct, listAll, createFaq, updateFaq, deleteFaq };

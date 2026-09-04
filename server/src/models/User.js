@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
+import mongoose from 'mongoose';
+import bcrypt from 'bcryptjs';
 
 const addressSchema = new mongoose.Schema(
   {
@@ -304,6 +304,5 @@ userSchema.methods.toPublic = function toPublic() {
 
 const User = mongoose.model('User', userSchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.User = User;
-exports.default = User;
+export { User };
+export default User;

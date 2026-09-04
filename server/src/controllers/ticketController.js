@@ -1,6 +1,6 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const ticketService = require('../services/ticketService.js');
-const auditService = require('../services/auditService.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import * as ticketService from '../services/ticketService.js';
+import auditService from '../services/auditService.js';
 
 /**
  * Repair tickets (Sales § Ticket).
@@ -48,10 +48,4 @@ const deleteTicket = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.listTickets = listTickets;
-exports.getTicket = getTicket;
-exports.createTicket = createTicket;
-exports.updateTicket = updateTicket;
-exports.setTicketStatus = setTicketStatus;
-exports.deleteTicket = deleteTicket;
+export { listTickets, getTicket, createTicket, updateTicket, setTicketStatus, deleteTicket };

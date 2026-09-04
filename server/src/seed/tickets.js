@@ -1,7 +1,7 @@
-const mongoose = require('mongoose');
-const { connectDb, disconnectDb } = require('../config/db.js');
-const { default: Ticket } = require('../models/Ticket.js');
-const { default: User } = require('../models/User.js');
+import mongoose from 'mongoose';
+import { connectDb, disconnectDb } from '../config/db.js';
+import Ticket from '../models/Ticket.js';
+import User from '../models/User.js';
 
 /**
  * Demo repair tickets (Sales § Ticket).
@@ -280,6 +280,4 @@ if (process.argv[1] && process.argv[1].endsWith('tickets.js')) {
   });
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.DEMO_TICKETS = DEMO_TICKETS;
-exports.seedTickets = seedTickets;
+export { DEMO_TICKETS, seedTickets };

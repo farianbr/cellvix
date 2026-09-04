@@ -1,16 +1,15 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
-const {
-  default: SupplierReturn,
+import SupplierReturn, {
   SUPPLIER_RETURN_OPEN_STATUSES,
-} = require('../models/SupplierReturn.js');
-const { default: Supplier } = require('../models/Supplier.js');
-const { default: PurchaseOrder } = require('../models/PurchaseOrder.js');
-const { default: Product } = require('../models/Product.js');
-const { default: Settings } = require('../models/Settings.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const { likeRegex } = require('../utils/regex.js');
-const { applyStockMovement } = require('./purchaseService.js');
+} from '../models/SupplierReturn.js';
+import Supplier from '../models/Supplier.js';
+import PurchaseOrder from '../models/PurchaseOrder.js';
+import Product from '../models/Product.js';
+import Settings from '../models/Settings.js';
+import ApiError from '../utils/ApiError.js';
+import { likeRegex } from '../utils/regex.js';
+import { applyStockMovement } from './purchaseService.js';
 
 /**
  * Returns to a supplier (Purchase § RMA / Returns).
@@ -399,9 +398,4 @@ async function deleteReturn(id) {
   return { ok: true };
 }
 
-exports.listReturns = listReturns;
-exports.getReturn = getReturn;
-exports.createReturn = createReturn;
-exports.setStatus = setStatus;
-exports.recordCredit = recordCredit;
-exports.deleteReturn = deleteReturn;
+export { listReturns, getReturn, createReturn, setStatus, recordCredit, deleteReturn };

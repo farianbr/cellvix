@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 /**
  * A running promotion. Two kinds:
@@ -72,6 +72,5 @@ offerSchema.index({ isActive: 1, order: 1, createdAt: -1 });
 
 const Offer = mongoose.model('Offer', offerSchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.Offer = Offer;
-exports.default = Offer;
+export { Offer };
+export default Offer;

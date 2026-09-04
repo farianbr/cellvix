@@ -1,5 +1,5 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const notificationService = require('../services/notificationService.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import notificationService from '../services/notificationService.js';
 
 /**
  * The notification bell (§7.3, phase 12c).
@@ -26,7 +26,4 @@ const clearAll = asyncHandler(async (req, res) => {
   res.json(await notificationService.clearAll(req.user));
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.list = list;
-exports.markRead = markRead;
-exports.clearAll = clearAll;
+export { list, markRead, clearAll };

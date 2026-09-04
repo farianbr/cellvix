@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useSearchParams } from 'react-router';
+import { useEffect, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router';
 import { useForm } from 'react-hook-form';
 import {
   AlertCircle,
@@ -21,14 +21,11 @@ import {
 import cn from '@/lib/cn';
 import { count as formatCount, titleize } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
-import Modal from '@/components/ui/Modal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Input from '@/components/ui/Input';
-import Textarea from '@/components/ui/Textarea';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import SelectMenu from '@/components/ui/SelectMenu';
-import SelectField from '@/components/ui/SelectField';
 import Pagination from '@/components/ui/Pagination';
 import PageHeader from '@/components/admin/PageHeader';
 import KpiRow from '@/components/admin/KpiRow';
@@ -36,7 +33,6 @@ import FilterStrip from '@/components/admin/FilterStrip';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
-import useCreateParam from '@/hooks/useCreateParam';
 import { useAdminTickets, useAdminMutations } from '@/hooks/useAdmin';
 
 /**
@@ -93,121 +89,31 @@ const STATUS_OPTIONS = TICKET_STATUSES.map((value) => ({
 const PRIORITY_OPTIONS = TICKET_PRIORITIES.map((value) => ({ value, label: titleize(value) }));
 const SOURCE_OPTIONS = TICKET_SOURCES.map((value) => ({ value, label: titleize(value) }));
 
+
 const PER_PAGE_OPTIONS = [10, 25, 50, 100].map((n) => ({ value: String(n), label: `${n} per page` }));
-
-/**
- * Intake, and the same form for an edit.
- *
- * The customer is typed rather than picked: a repair is a walk-in, and the
- * phone is required because it is how the shop calls someone to say the device
- * is ready. Status is absent on edit — it moves through the row dropdown, which
- * is the only path that writes the timeline.
- */
-function TicketForm({ ticket, technicians, onSubmit, onCancel, isPending, error }) {
-  const editing = Boolean(ticket);
-
-  const { register, handleSubmit, control } = useForm({
-    defaultValues: {
-      customerName: ticket?.customer.name ?? '',
-      customerPhone: ticket?.customer.phone ?? '',
-      customerEmail: ticket?.customer.email ?? '',
-      deviceBrand: ticket?.device.brand ?? '',
-      deviceModel: ticket?.device.model ?? '',
-      deviceSerial: ticket?.device.serial ?? '',
-      issue: ticket?.issue ?? '',
-      status: ticket?.status ?? 'diagnosis',
-      priority: ticket?.priority ?? 'normal',
-      source: ticket?.source ?? 'counter',
-      technician: ticket?.technician?.id ?? '',
-      estimateDollars: ticket ? String((ticket.estimateCents ?? 0) / 100) : '',
-      notes: ticket?.notes ?? '',
-    },
-  });
-
-  const technicianOptions = [
-    { value: '', label: 'Unassigned' },
-    ...technicians.map((person) => ({ value: person.id, label: person.name })),
-  ];
-
-  return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
-          <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
-          {error}
-        </p>
-      )}
-
-      <div>
-        <p className="eyebrow mb-2 text-ink-400">Customer</p>
-        <div className="grid gap-2 sm:grid-cols-2">
-          <Input label="Name" {...register('customerName')} />
-          <Input label="Phone" placeholder="+1 780 555 0134" {...register('customerPhone')} />
-        </div>
-        <Input
-          label="Email"
-          type="email"
-          hint="Optional — used only if the shop emails a receipt."
-          containerClassName="mt-2"
-          {...register('customerEmail')}
-        />
-      </div>
-
-      <div>
-        <p className="eyebrow mb-2 text-ink-400">Device</p>
-        <div className="grid gap-2 sm:grid-cols-3">
-          <Input label="Brand" placeholder="Apple" {...register('deviceBrand')} />
-          <Input label="Model" placeholder="iPhone 15 Pro Max" {...register('deviceModel')} />
-          <Input label="Serial / IMEI" {...register('deviceSerial')} />
-        </div>
-      </div>
-
-      <Textarea label="Reported fault" rows={2} placeholder="Battery drains" {...register('issue')} />
-
-      <div className="grid gap-2 sm:grid-cols-2">
-        {!editing && (
-          <SelectField control={control} name="status" label="Status" options={STATUS_OPTIONS} />
-        )}
-        <SelectField control={control} name="priority" label="Priority" options={PRIORITY_OPTIONS} />
-        <SelectField control={control} name="source" label="Intake" options={SOURCE_OPTIONS} />
-        <SelectField
-          control={control}
-          name="technician"
-          label="Technician"
-          options={technicianOptions}
-        />
-        <Input
-          label="Estimate (CAD)"
-          type="number"
-          min="0"
-          step="0.01"
-          hint="What the counter quoted. Not an invoice."
-          {...register('estimateDollars')}
-        />
-      </div>
-
-      <Textarea label="Internal notes" rows={2} {...register('notes')} />
-
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="ghost" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit" loading={isPending}>
-          {editing ? 'Save ticket' : 'Open ticket'}
-        </Button>
-      </div>
-    </form>
-  );
-}
 
 export function AdminTicketsPage() {
   const [query, setQuery] = useState('');
-  // `+ Create > Ticket` navigates here with `?new=1`; the hook consumes the
-  // flag so the form is already open on the first paint (§7.2).
-  const [creating, setCreating] = useCreateParam();
-  const [editing, setEditing] = useState(null);
   const [deleting, setDeleting] = useState(null);
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  /**
+   * `?new=1` still opens intake — it now redirects to the form's own route.
+   *
+   * The `+ Create > Ticket` menu and the customer profile both link here with
+   * that flag (and, from a profile, the customer's details as companions). The
+   * form moved to `/admin/tickets/new`, so rather than teach every caller a new
+   * URL this forwards the whole query string on arrival: one place changed, and
+   * an old link somebody bookmarked still lands on the right screen.
+   */
+  useEffect(() => {
+    if (searchParams.get('new') !== '1') return;
+    const params = new URLSearchParams(searchParams);
+    params.delete('new');
+    const forwarded = params.toString();
+    navigate(`/admin/tickets/new${forwarded ? `?${forwarded}` : ''}`, { replace: true });
+  }, [searchParams, navigate]);
 
   const status = searchParams.get('status') ?? 'all';
   const priority = searchParams.get('priority') ?? 'all';
@@ -377,7 +283,7 @@ export function AdminTicketsPage() {
       key: 'edit',
       label: 'Edit ticket',
       icon: Pencil,
-      onSelect: (ticket) => setEditing(ticket),
+      onSelect: (ticket) => navigate(`/admin/tickets/${ticket.id}/edit`),
     },
     {
       key: 'pdf',
@@ -404,7 +310,7 @@ export function AdminTicketsPage() {
         title={ADMIN_PAGE.title}
         description={ADMIN_PAGE.description}
         action={
-          <Button onClick={() => setCreating(true)} icon={Plus}>
+          <Button onClick={() => navigate('/admin/tickets/new')} icon={Plus}>
             New ticket
           </Button>
         }
@@ -529,7 +435,7 @@ export function AdminTicketsPage() {
           rows={tickets}
           rowKey={(ticket) => ticket.id}
           rowMenu={rowMenu}
-          onRowClick={(ticket) => setEditing(ticket)}
+          onRowClick={(ticket) => navigate(`/admin/tickets/${ticket.id}/edit`)}
           loading={isLoading}
           empty={
             <PanelEmpty
@@ -551,56 +457,6 @@ export function AdminTicketsPage() {
         )}
       </Panel>
 
-      <Modal
-        open={creating}
-        onClose={() => setCreating(false)}
-        title="Open a repair ticket"
-        size="lg"
-        align="top"
-      >
-        {creating && (
-          <TicketForm
-            technicians={technicians}
-            isPending={createTicket.isPending}
-            error={createTicket.error?.message}
-            onCancel={() => setCreating(false)}
-            onSubmit={(values) =>
-              createTicket.mutate(
-                { ...values, estimateDollars: Number(values.estimateDollars) || 0 },
-                { onSuccess: () => setCreating(false) },
-              )
-            }
-          />
-        )}
-      </Modal>
-
-      <Modal
-        open={Boolean(editing)}
-        onClose={() => setEditing(null)}
-        title={editing ? `Ticket ${editing.ticketNumber}` : 'Ticket'}
-        size="lg"
-        align="top"
-      >
-        {editing && (
-          <TicketForm
-            ticket={editing}
-            technicians={technicians}
-            isPending={updateTicket.isPending}
-            error={updateTicket.error?.message}
-            onCancel={() => setEditing(null)}
-            onSubmit={(values) =>
-              updateTicket.mutate(
-                {
-                  id: editing.id,
-                  ...values,
-                  estimateDollars: Number(values.estimateDollars) || 0,
-                },
-                { onSuccess: () => setEditing(null) },
-              )
-            }
-          />
-        )}
-      </Modal>
 
       <ConfirmDialog
         open={Boolean(deleting)}

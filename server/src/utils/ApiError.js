@@ -42,7 +42,5 @@ class ApiError extends Error {
 const asyncHandler = (fn) => (req, res, next) =>
   Promise.resolve(fn(req, res, next)).catch(next);
 
-// --- CommonJS exports -------------------------------------------------
-exports.ApiError = ApiError;
-exports.asyncHandler = asyncHandler;
-exports.default = ApiError;
+export { ApiError, asyncHandler };
+export default ApiError;

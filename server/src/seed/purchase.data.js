@@ -383,10 +383,4 @@ function buildExpenses({ categoriesBySlug, year = new Date().getFullYear(), star
   });
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.daysAgo = daysAgo;
-exports.daysAhead = daysAhead;
-exports.SUPPLIERS = SUPPLIERS;
-exports.costFor = costFor;
-exports.buildPurchaseOrders = buildPurchaseOrders;
-exports.buildExpenses = buildExpenses;
+export { daysAgo, daysAhead, SUPPLIERS, costFor, buildPurchaseOrders, buildExpenses };

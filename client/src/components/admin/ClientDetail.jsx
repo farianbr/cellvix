@@ -6,6 +6,15 @@ import Input from '@/components/ui/Input';
 import SelectField from '@/components/ui/SelectField';
 import Button from '@/components/ui/Button';
 import { useAdminMutations, useAdminStoreCredit } from '@/hooks/useAdmin';
+import { toast } from '@/store/toastStore';
+
+/** How money arrived at the counter. Matches the invoice screen's list. */
+const PAYMENT_METHODS = [
+  { value: 'cash', label: 'Cash' },
+  { value: 'card', label: 'Card' },
+  { value: 'e-transfer', label: 'E-transfer' },
+  { value: 'cheque', label: 'Cheque' },
+];
 
 /**
  * The pieces that make up one client account: the credit-and-terms form and the
@@ -196,6 +205,121 @@ export function CreditForm({ id, user }) {
             Reinstate account
           </Button>
         )}
+      </div>
+    </form>
+  );
+}
+
+/**
+ * Recording money a customer handed over against their line of credit.
+ *
+ * **A separate panel from `CreditForm`, on purpose.** That form sets what
+ * Cellvix is willing to *lend* — a policy decision an owner makes. This records
+ * what a customer *paid* — an event at the counter. Putting a "save" that
+ * changes a credit limit next to a "record" that moves money invites the wrong
+ * one being pressed.
+ *
+ * The amount defaults to the full balance, because paying the account off is
+ * the common case; it is editable because a customer paying $200 of $850 is the
+ * reason this exists at all.
+ */
+export function CreditRepaymentForm({ id, user }) {
+  const { recordCreditPayment } = useAdminMutations();
+  const owing = user?.balance ?? 0;
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    reset,
+    formState: { errors },
+  } = useForm({
+    values: {
+      amountDollars: (owing / 100).toFixed(2),
+      method: 'cash',
+      reference: '',
+    },
+  });
+
+  if (owing <= 0) {
+    return (
+      <div className="rounded-[11px] border border-line p-4">
+        <div className="mb-2 flex items-center gap-2">
+          <Wallet className="size-4 text-ok" strokeWidth={1.75} aria-hidden="true" />
+          <h3 className="font-display text-[13.5px] font-bold">Record a payment</h3>
+        </div>
+        <p className="text-[12.5px] leading-relaxed text-ink-500">
+          Nothing is drawn on this line of credit. A payment beyond what is owed is a
+          store-credit allocation, which is the panel beside this one.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      onSubmit={handleSubmit((values) =>
+        recordCreditPayment.mutate(
+          { id, ...values, reference: values.reference || undefined },
+          {
+            onSuccess: (result) => {
+              const names = (result?.applied ?? []).map((row) => row.number).join(', ');
+              toast.ok(
+                'Payment recorded',
+                names ? `Settled against ${names}.` : 'The balance has been updated.',
+              );
+              reset();
+            },
+            onError: (error) => toast.error('Nothing was recorded', error.message),
+          },
+        ),
+      )}
+      className="rounded-[11px] border border-line p-4"
+    >
+      <div className="mb-3 flex items-center gap-2">
+        <Wallet className="size-4 text-brand" strokeWidth={1.75} aria-hidden="true" />
+        <h3 className="font-display text-[13.5px] font-bold">Record a payment</h3>
+      </div>
+
+      <p className="mb-3 text-[12.5px] leading-relaxed text-ink-500">
+        Money the customer has already handed over — cash at the counter, a transfer, a cheque.
+        It settles their unpaid invoices oldest first, so the account and the invoices behind it
+        cannot disagree about what is left.
+      </p>
+
+      {recordCreditPayment.error && (
+        <p className="mb-3 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[12.5px] text-danger">
+          {recordCreditPayment.error.message}
+        </p>
+      )}
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input
+          label="Amount"
+          inputMode="decimal"
+          suffix="CAD"
+          hint={`${money(owing)} outstanding`}
+          error={errors.amountDollars?.message}
+          {...register('amountDollars', { required: 'Enter an amount.' })}
+        />
+        <SelectField control={control} name="method" label="Method" options={PAYMENT_METHODS} />
+      </div>
+
+      <Input
+        label="Reference"
+        placeholder="Receipt number, transfer id…"
+        hint="Optional. Shown on each invoice's payment history."
+        containerClassName="mt-3"
+        {...register('reference')}
+      />
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <Button type="submit" size="sm" loading={recordCreditPayment.isPending}>
+          Record payment
+        </Button>
+        <span className="text-[12px] text-ink-400">
+          Overpayment is refused — that is a store-credit allocation.
+        </span>
       </div>
     </form>
   );

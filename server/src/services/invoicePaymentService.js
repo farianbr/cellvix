@@ -1,7 +1,10 @@
-const { default: Invoice } = require('../models/Invoice.js');
-const { default: User } = require('../models/User.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const orderBuilder = require('./orderBuilder.js');
+import Invoice from '../models/Invoice.js';
+import User from '../models/User.js';
+import ApiError from '../utils/ApiError.js';
+import orderBuilder from './orderBuilder.js';
+import creditService from './creditService.js';
+import CreditTransaction from '../models/CreditTransaction.js';
+import * as referralService from './referralService.js';
 
 /**
  * Invoice payment — the only place a payment is recorded against an invoice.
@@ -103,20 +106,15 @@ async function applyPayment(invoice, { amount, method, reference, at, settle = t
   // in the first place: a prepaid invoice never incremented `balance`, so
   // decrementing it here would push the account into credit it never used.
   //
-  // The `$max` guard keeps the balance at or above zero. It can legitimately be
-  // reached from below — a seeded account, a balance an admin corrected by hand
-  // — and a negative balance renders as negative available credit on a screen
-  // that has no design for it.
-  if (settle && invoice.terms && invoice.terms !== 'prepaid') {
-    const updated = await User.findOneAndUpdate(
-      { _id: invoice.user },
-      { $inc: { balance: -amount } },
-      { new: true, projection: { balance: 1 } },
-    );
-    if (updated && updated.balance < 0) {
-      await User.updateOne({ _id: invoice.user }, { $set: { balance: 0 } });
-    }
-  }
+  // The balance is **re-derived**, not decremented — see `creditService`. A
+  // counter nudged from six call sites drifts the moment one of them is missed,
+  // and it had: an account owing $2.26 was carrying $2,950.96. Recomputing from
+  // the invoices means paying one restores exactly the headroom it took, which
+  // is what a line of credit is supposed to do.
+  //
+  // Deferred until after `invoice.save()` below, because the sum has to include
+  // the row this function just pushed.
+  const syncCreditAfterSave = settle && invoice.terms && invoice.terms !== 'prepaid';
 
   // ---- promote a settled `due` record into an invoice ---------------------
   // The renumbering happens on save, but the *old* number is returned so the
@@ -131,6 +129,9 @@ async function applyPayment(invoice, { amount, method, reference, at, settle = t
   }
 
   await invoice.save();
+
+  // After the save, so the aggregate sees the payment row just written.
+  if (syncCreditAfterSave) await creditService.syncBalance(invoice.user);
 
   return { invoice, promoted, previousNumber };
 }
@@ -149,15 +150,9 @@ async function applyPayment(invoice, { amount, method, reference, at, settle = t
  * the new one first, then this payment accrues against the new number. Every
  * accrual for an invoice ends up under one number, whatever order the
  * instalments arrived in.
- *
- * Imported lazily for the same reason `storeCreditService` does it:
- * `referralService` reaches back into the invoice side, and a static import
- * here would close the cycle.
  */
 async function recordPayment(invoice, options) {
   const result = await applyPayment(invoice, options);
-  const { CreditTransaction } = require('../models/CreditTransaction.js');
-  const referralService = require('./referralService.js');
 
   if (result.promoted && result.previousNumber !== invoice.number) {
     // Best-effort, and deliberately so: a commission row that could not be
@@ -207,7 +202,65 @@ async function payableFor(userId, number) {
   return invoice;
 }
 
-exports.default = {
+
+/**
+ * Reversing a recorded payment.
+ *
+ * **The row stays.** A payment that is deleted leaves a customer holding a
+ * receipt for something the system says never happened, and an audit with a
+ * gap where money moved. So a reversal is an entry of its own — the original
+ * payment and the fact that it was reversed are both true, and both are on
+ * the record.
+ *
+ * The reversal is stored as a **negative amount** with `method: 'reversal'`,
+ * which is what makes `recompute` fall out correctly: the paid total is the sum
+ * of the rows, so subtracting is enough and no field has to be corrected by
+ * hand. Everything the original payment did is undone in the same order it was
+ * done — the credit line is re-drawn, and the commission it earned is reversed.
+ */
+async function reversePayment(invoice, index, { reason } = {}) {
+  const original = invoice.payments?.[index];
+  if (!original) {
+    throw ApiError.notFound('That payment is not on this invoice.', 'PAYMENT_NOT_FOUND');
+  }
+  if (original.amount < 0) {
+    throw ApiError.badRequest('That entry is already a reversal.', 'ALREADY_REVERSED');
+  }
+  if (original.reversedAt) {
+    throw ApiError.badRequest('That payment has already been reversed.', 'ALREADY_REVERSED');
+  }
+
+  // Stamped on the original so the UI can show it struck through without
+  // having to pair rows up by amount and guess which reversal belongs to it.
+  original.reversedAt = new Date();
+
+  invoice.payments.push({
+    amount: -original.amount,
+    at: new Date(),
+    method: 'reversal',
+    reference: reason || `Reversal of ${(original.amount / 100).toFixed(2)}`,
+  });
+
+  recompute(invoice);
+
+  await invoice.save();
+
+  // The debt is owed again. Re-derived rather than incremented, for the reason
+  // in `creditService`: the reversal row is already on the invoice, so the sum
+  // reflects it without this function having to know which direction to nudge.
+  if (invoice.terms && invoice.terms !== 'prepaid') {
+    await creditService.syncBalance(invoice.user);
+  }
+
+  // Commission was booked on money that has now been taken back, so it is
+  // reversed too — commission on money that came back is money leaking out.
+  await referralService.reverseForInvoice(invoice.number);
+
+  return invoice;
+}
+
+export default {
+  reversePayment,
   applyPayment,
   outstandingOf,
   payableFor,
@@ -215,9 +268,4 @@ exports.default = {
   recordPayment,
 };
 
-// --- CommonJS exports -------------------------------------------------
-exports.applyPayment = applyPayment;
-exports.outstandingOf = outstandingOf;
-exports.payableFor = payableFor;
-exports.recompute = recompute;
-exports.recordPayment = recordPayment;
+export { applyPayment, outstandingOf, payableFor, recompute, recordPayment, reversePayment };

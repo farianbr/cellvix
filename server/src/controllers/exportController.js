@@ -1,7 +1,7 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const adminService = require('../services/adminService.js');
-const purchaseService = require('../services/purchaseService.js');
-const exportService = require('../services/exportService.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import * as adminService from '../services/adminService.js';
+import * as purchaseService from '../services/purchaseService.js';
+import exportService from '../services/exportService.js';
 
 /**
  * List exports (ERP rework §7.4, phase 12b).
@@ -160,9 +160,4 @@ const expenses = asyncHandler(async (req, res) => {
   });
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.clients = clients;
-exports.orders = orders;
-exports.invoices = invoices;
-exports.inventory = inventory;
-exports.expenses = expenses;
+export { clients, orders, invoices, inventory, expenses };

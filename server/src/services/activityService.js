@@ -1,6 +1,6 @@
-const { default: Order } = require('../models/Order.js');
-const { default: Invoice } = require('../models/Invoice.js');
-const { default: CreditTransaction } = require('../models/CreditTransaction.js');
+import Order from '../models/Order.js';
+import Invoice from '../models/Invoice.js';
+import CreditTransaction from '../models/CreditTransaction.js';
 
 /**
  * One account's history, newest first.
@@ -230,10 +230,6 @@ async function pagedActivityFeed(
   };
 }
 
-exports.default = { activityFeed, pagedActivityFeed, ACTIVITY_FILTERS, ACTIVITY_GROUPS };
+export default { activityFeed, pagedActivityFeed, ACTIVITY_FILTERS, ACTIVITY_GROUPS };
 
-// --- CommonJS exports -------------------------------------------------
-exports.activityFeed = activityFeed;
-exports.pagedActivityFeed = pagedActivityFeed;
-exports.ACTIVITY_FILTERS = ACTIVITY_FILTERS;
-exports.ACTIVITY_GROUPS = ACTIVITY_GROUPS;
+export { activityFeed, pagedActivityFeed, ACTIVITY_FILTERS, ACTIVITY_GROUPS };

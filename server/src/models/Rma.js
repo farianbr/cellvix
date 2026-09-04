@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 /**
  * A return authorisation (ERP rework §6.3).
@@ -111,10 +111,5 @@ rmaSchema.index({ status: 1, createdAt: -1 });
 
 const Rma = mongoose.model('Rma', rmaSchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.RMA_STATUSES = RMA_STATUSES;
-exports.RMA_OPEN_STATUSES = RMA_OPEN_STATUSES;
-exports.RMA_RESOLUTIONS = RMA_RESOLUTIONS;
-exports.ITEM_DISPOSITIONS = ITEM_DISPOSITIONS;
-exports.Rma = Rma;
-exports.default = Rma;
+export { RMA_STATUSES, RMA_OPEN_STATUSES, RMA_RESOLUTIONS, ITEM_DISPOSITIONS, Rma };
+export default Rma;

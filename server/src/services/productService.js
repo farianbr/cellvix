@@ -1,8 +1,8 @@
-const { default: Product } = require('../models/Product.js');
-const { default: Taxonomy } = require('../models/Taxonomy.js');
-const { canSeePricing } = require('../middleware/auth.js');
-const { listForProduct: listFaqsForProduct } = require('./faqService.js');
-const { likeRegex } = require('../utils/regex.js');
+import Product from '../models/Product.js';
+import Taxonomy from '../models/Taxonomy.js';
+import { canSeePricing } from '../middleware/auth.js';
+import { listForProduct as listFaqsForProduct } from './faqService.js';
+import { likeRegex } from '../utils/regex.js';
 /**
  * A product is listable only if it can show a picture: either it carries its
  * own `image`, or its brand-and-component-type pair has a stock photo.
@@ -13,7 +13,7 @@ const { likeRegex } = require('../utils/regex.js');
  * it. `taxonomyService` applies the same clause for the same reason. Admin
  * queries do not go through here and still see everything.
  */
-const { HAS_PICTURE } = require('../../../shared/partPhotos.js');
+import { HAS_PICTURE } from '../../../shared/partPhotos.js';
 
 const PAGE_SIZE = 24;
 
@@ -400,9 +400,4 @@ function staticPageMatches(q) {
   return STATIC_PAGES.filter((page) => page.title.toLowerCase().includes(needle)).slice(0, 4);
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.serialize = serialize;
-exports.serializeDetail = serializeDetail;
-exports.listProducts = listProducts;
-exports.getProductBySlug = getProductBySlug;
-exports.searchProducts = searchProducts;
+export { serialize, serializeDetail, listProducts, getProductBySlug, searchProducts };

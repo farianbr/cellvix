@@ -1,9 +1,29 @@
-import { useForm } from 'react-hook-form';
-import { AlertCircle, MapPin, Save, User, X } from 'lucide-react';
+import { useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { AlertCircle, Building2, MapPin, Save, ShieldCheck, UserRound, X } from 'lucide-react';
 import { PROVINCES } from '@shared/schemas/checkout';
+import { COUNTRY_OPTIONS, DEFAULT_COUNTRY } from '@shared/countries';
 import Input from '@/components/ui/Input';
+import PhoneField from '@/components/ui/PhoneField';
 import SelectField from '@/components/ui/SelectField';
+import ConsentChannels, { EMPTY_CONSENT } from '@/components/ui/ConsentChannels';
 import Button from '@/components/ui/Button';
+
+/**
+ * Splits a stored `contactName` back into the two fields the form asks for.
+ *
+ * The model stores one name — it is what the welcome mail, the approvals queue
+ * and every admin screen read — so the halves are a form affordance on both
+ * sides: composed on submit, split on load. Everything after the first space is
+ * the last name, which keeps `van der Berg` and `Diaz Ramirez` intact rather
+ * than dropping whatever did not fit in two slots.
+ */
+function splitName(full) {
+  const parts = String(full ?? '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return { firstName: '', lastName: '' };
+  if (parts.length === 1) return { firstName: parts[0], lastName: '' };
+  return { firstName: parts[0], lastName: parts.slice(1).join(' ') };
+}
 
 /**
  * The customer profile form, shared by the edit screen and anything else that
@@ -23,6 +43,23 @@ import Button from '@/components/ui/Button';
  */
 export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
   const existing = user.addresses?.find((address) => address.isDefaultShipping) ?? {};
+  const { firstName, lastName } = splitName(user.contactName);
+
+  /**
+   * Consent is held apart from the rest of the form because it is written by a
+   * different endpoint.
+   *
+   * `PATCH /admin/users/:id/consent` stamps who recorded the answer and when —
+   * `clientUpdateSchema` does not carry the field at all, and folding it into
+   * the profile payload would either lose that provenance or restamp it every
+   * time somebody corrected a postal code. So the section is on this form,
+   * where an operator expects to find it, and saving sends two requests: the
+   * profile, then the consent, and only when the ticks actually changed.
+   */
+  const [consent, setConsent] = useState(user.consent?.channels ?? EMPTY_CONSENT);
+  const consentDirty = Object.keys(EMPTY_CONSENT).some(
+    (key) => Boolean(consent[key]) !== Boolean(user.consent?.channels?.[key]),
+  );
 
   const {
     register,
@@ -31,8 +68,9 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
     formState: { errors },
   } = useForm({
     defaultValues: {
+      firstName,
+      lastName,
       businessName: user.businessName ?? '',
-      contactName: user.contactName ?? '',
       email: user.email ?? '',
       phone: user.phone ?? '',
       businessType: user.businessType ?? '',
@@ -44,6 +82,7 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
         city: existing.city ?? '',
         region: existing.region ?? 'ON',
         postal: existing.postal ?? '',
+        country: existing.country ?? DEFAULT_COUNTRY,
       },
     },
   });
@@ -52,18 +91,22 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
     <form
       onSubmit={handleSubmit((values) =>
         onSubmit({
+          contactName: `${values.firstName} ${values.lastName}`.trim(),
+          // Sent even when empty: an empty string is how the operator clears a
+          // company name recorded against what turned out to be a private
+          // customer, and the server reads it as a deletion.
           businessName: values.businessName,
-          contactName: values.contactName,
           email: values.email,
           phone: values.phone,
-          // Sent even when empty: an empty string is how the operator clears a
-          // descriptor, and the server reads it as a deletion.
           businessType: values.businessType,
           website: values.website,
           taxId: values.taxId,
           // A half-typed address is still not sent — the schema requires a
           // complete one, so an empty street line means "no address".
           address: values.address.line1 ? values.address : undefined,
+          // Only when it changed: an unchanged tick must not restamp the
+          // consent date, which is the record of when the customer answered.
+          contactConsent: consentDirty ? consent : undefined,
         }),
       )}
       className="space-y-5"
@@ -78,27 +121,25 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
       <div className="grid gap-6 lg:grid-cols-2">
         <section>
           <h2 className="eyebrow mb-3 flex items-center gap-1.5 border-b border-line pb-2 text-ink-400">
-            <User className="size-3.5" strokeWidth={2} aria-hidden="true" />
-            Contact details
+            <UserRound className="size-3.5 text-brand" strokeWidth={2} aria-hidden="true" />
+            Personal information
           </h2>
 
           <div className="space-y-3">
             <div className="grid gap-3 sm:grid-cols-2">
               <Input
-                label="Business name"
-                error={errors.businessName?.message}
-                {...register('businessName', {
-                  required: 'Enter a business name.',
-                  minLength: { value: 2, message: 'Enter a business name.' },
+                label="First name"
+                autoComplete="given-name"
+                error={errors.firstName?.message}
+                {...register('firstName', {
+                  required: 'Enter a first name.',
                 })}
               />
               <Input
-                label="Contact name"
-                error={errors.contactName?.message}
-                {...register('contactName', {
-                  required: 'Enter a contact name.',
-                  minLength: { value: 2, message: 'Enter a contact name.' },
-                })}
+                label="Last name"
+                autoComplete="family-name"
+                error={errors.lastName?.message}
+                {...register('lastName')}
               />
             </div>
 
@@ -110,21 +151,42 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
               {...register('email', { required: 'Enter an email address.' })}
             />
 
+            <Controller
+              name="phone"
+              control={control}
+              rules={{ required: 'Enter a phone number.' }}
+              render={({ field }) => (
+                <PhoneField
+                  label="Phone"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  error={errors.phone?.message}
+                />
+              )}
+            />
+          </div>
+
+          {/* The company name is optional and lives under its own heading: an
+              account is identified by the person (§0), and a private customer
+              has no company to name. */}
+          <h2 className="eyebrow mb-3 mt-5 flex items-center gap-1.5 border-b border-line pb-2 text-ink-400">
+            <Building2 className="size-3.5 text-brand" strokeWidth={2} aria-hidden="true" />
+            Business details <span className="font-normal normal-case text-ink-300">— optional</span>
+          </h2>
+
+          <div className="space-y-3">
             <Input
-              label="Phone"
-              type="tel"
-              error={errors.phone?.message}
-              {...register('phone', {
-                required: 'Enter a phone number.',
-                minLength: { value: 7, message: 'Enter a phone number.' },
-              })}
+              label="Business name"
+              placeholder="Northline Device Repair"
+              error={errors.businessName?.message}
+              {...register('businessName')}
             />
 
             <div className="grid gap-3 sm:grid-cols-2">
               <Input
                 label="Business type"
                 placeholder="Repair shop"
-                hint="Shown as the customer's tag."
                 {...register('businessType')}
               />
               <Input label="Tax ID" {...register('taxId')} />
@@ -136,7 +198,7 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
 
         <section>
           <h2 className="eyebrow mb-3 flex items-center gap-1.5 border-b border-line pb-2 text-ink-400">
-            <MapPin className="size-3.5" strokeWidth={2} aria-hidden="true" />
+            <MapPin className="size-3.5 text-brand" strokeWidth={2} aria-hidden="true" />
             Address <span className="font-normal normal-case text-ink-300">— optional</span>
           </h2>
 
@@ -154,13 +216,38 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
               />
             </div>
 
-            <Input label="Postal code" placeholder="A1A 1A1" {...register('address.postal')} />
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Input label="Postal code" placeholder="A1A 1A1" {...register('address.postal')} />
+              <SelectField
+                control={control}
+                name="address.country"
+                label="Country"
+                options={COUNTRY_OPTIONS}
+              />
+            </div>
 
             <p className="text-[12px] leading-snug text-ink-400">
               The default shipping and billing address. Leave the street blank to record no address —
               a partly filled one is not saved.
             </p>
           </div>
+
+          {/* CASL (§6.13). Present on the edit form as well as the profile
+              panel: an operator correcting a customer's details is exactly who
+              has just been told on the phone which channels are welcome, and
+              sending them to a different screen to record it is how the answer
+              gets lost. Both write through the same endpoint. */}
+          <h2 className="eyebrow mb-3 mt-5 flex items-center gap-1.5 border-b border-line pb-2 text-ink-400">
+            <ShieldCheck className="size-3.5 text-brand" strokeWidth={2} aria-hidden="true" />
+            Communication consent
+          </h2>
+
+          <ConsentChannels value={consent} onChange={setConsent} />
+          <p className="mt-3 text-[12px] leading-snug text-ink-400">
+            {user.consent?.recorded
+              ? 'Only change these when the customer has told you something different — the record is dated.'
+              : 'Nothing recorded yet — nobody has asked this customer. Leave them clear until somebody has.'}
+          </p>
         </section>
       </div>
 

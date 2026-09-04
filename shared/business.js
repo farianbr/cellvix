@@ -45,6 +45,5 @@ const BUSINESS_INFO = {
   },
 };
 
-// --- CommonJS exports -------------------------------------------------
-exports.BUSINESS_INFO = BUSINESS_INFO;
-exports.default = BUSINESS_INFO;
+export { BUSINESS_INFO };
+export default BUSINESS_INFO;

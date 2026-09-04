@@ -1,24 +1,32 @@
-const { default: User } = require('../models/User.js');
-const { default: Product } = require('../models/Product.js');
-const { default: Order } = require('../models/Order.js');
-const { default: Invoice } = require('../models/Invoice.js');
-const { default: CreditTransaction } = require('../models/CreditTransaction.js');
-const { default: Rma, RMA_OPEN_STATUSES } = require('../models/Rma.js');
-const { default: Ticket, TICKET_OPEN_STATUSES } = require('../models/Ticket.js');
-const { default: Taxonomy } = require('../models/Taxonomy.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const storeCredit = require('./storeCreditService.js');
-const referralService = require('./referralService.js');
-const { generatePassword, sendWelcomeEmail } = require('./welcomeMail.js');
-const { likeRegex } = require('../utils/regex.js');
-const { serializeOrder } = require('./orderService.js');
-const orderBuilder = require('./orderBuilder.js');
-const invoicePaymentService = require('./invoicePaymentService.js');
-const { activityFeed } = require('./activityService.js');
-const { displayNameOf } = require('../utils/displayName.js');
-const { renderInvoiceHtml } = require('./invoiceDocument.js');
-const { invalidateTree } = require('./taxonomyService.js');
-const { ORDER_STATUS_FLOW } = require('../../../shared/schemas/admin.js');
+import mongoose from 'mongoose';
+import User from '../models/User.js';
+import Product from '../models/Product.js';
+import Order from '../models/Order.js';
+import Invoice from '../models/Invoice.js';
+import CreditTransaction from '../models/CreditTransaction.js';
+import Rma, { RMA_OPEN_STATUSES } from '../models/Rma.js';
+import Ticket, { TICKET_OPEN_STATUSES } from '../models/Ticket.js';
+import Quote from '../models/Quote.js';
+import ContactMessage from '../models/ContactMessage.js';
+import Taxonomy from '../models/Taxonomy.js';
+import ApiError from '../utils/ApiError.js';
+import env from '../config/env.js';
+import creditService from './creditService.js';
+import storeCredit from './storeCreditService.js';
+import referralService from './referralService.js';
+import { generatePassword, sendWelcomeEmail } from './welcomeMail.js';
+import { likeRegex } from '../utils/regex.js';
+import { serializeOrder } from './orderService.js';
+import orderBuilder from './orderBuilder.js';
+import invoicePaymentService from './invoicePaymentService.js';
+import { activityFeed } from './activityService.js';
+import { displayNameOf } from '../utils/displayName.js';
+import { renderInvoiceHtml } from './invoiceDocument.js';
+import { renderStatementHtml } from './statementDocument.js';
+import { sendMail } from './mailer.js';
+import { BUSINESS_INFO } from '../../../shared/business.js';
+import { invalidateTree } from './taxonomyService.js';
+import { ORDER_STATUS_FLOW } from '../../../shared/schemas/admin.js';
 
 const LOW_STOCK_THRESHOLD = 50;
 
@@ -549,13 +557,63 @@ async function getUser(id) {
   const user = await User.findById(id).lean();
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
 
-  const [orders, invoices] = await Promise.all([
+  /**
+   * The lists are capped at ten because the profile shows a roll-up, not a
+   * ledger — but the header's tiles state *totals*, so those are counted
+   * separately rather than taken from `orders.length`. A "Total revenue" that
+   * silently stopped at the tenth invoice would be wrong on exactly the
+   * accounts that matter most.
+   *
+   * Tickets carry an optional `user`: a repair can walk in off the street with
+   * no account behind it, so this counts only the ones actually linked here.
+   */
+  const [orders, invoices, totals, orderCount, activeTickets, openQuotes, webQuotes] = await Promise.all([
     Order.find({ user: id }).sort({ createdAt: -1 }).limit(10).lean(),
     Invoice.find({ user: id }).sort({ issuedAt: -1 }).limit(10).lean(),
+
+    Invoice.aggregate([
+      { $match: { user: new mongoose.Types.ObjectId(String(id)) } },
+      {
+        $group: {
+          _id: null,
+          invoiced: { $sum: '$amount' },
+          collected: { $sum: { $ifNull: ['$amountPaid', 0] } },
+          invoiceCount: { $sum: 1 },
+        },
+      },
+    ]),
+
+    Order.countDocuments({ user: id }),
+    Ticket.countDocuments({ user: id, status: { $in: TICKET_OPEN_STATUSES } }),
+    // Open = still awaiting a decision. `accepted` and `converted` have had
+    // their answer, and `expired` / `rejected` are closed, so a tile counting
+    // them would never fall back to zero.
+    Quote.countDocuments({ user: id, status: { $in: ['draft', 'sent'] } }),
+    // Website enquiries from this account. Counted here rather than on the tab,
+    // because the tab only fetches when it is open and the badge has to be
+    // right before anybody clicks it.
+    ContactMessage.countDocuments({ user: id }),
   ]);
+
+  const billed = totals[0] ?? { invoiced: 0, collected: 0, invoiceCount: 0 };
 
   return {
     user: shapeUser(user),
+    /**
+     * Header figures, summed over every record rather than the ten below.
+     * `outstanding` is derived here so the tiles cannot disagree with each
+     * other about what is still owed.
+     */
+    totals: {
+      invoiced: billed.invoiced,
+      collected: billed.collected,
+      outstanding: billed.invoiced - billed.collected,
+      invoiceCount: billed.invoiceCount,
+      orderCount,
+      activeTickets,
+      openQuotes,
+      webQuotes,
+    },
     // Staff notes ride with the profile: they are the thing somebody reads
     // before picking up the phone, so a second request for them would just be
     // a spinner in front of the reason they opened the screen.
@@ -566,6 +624,9 @@ async function getUser(id) {
       amount: invoice.amount,
       amountPaid: invoice.amountPaid,
       balance: invoice.amount - invoice.amountPaid,
+      // The profile's "last activity" reads this, and the Invoices roll-up
+      // shows it — an invoice with no date on it cannot be placed in time.
+      issuedAt: invoice.issuedAt,
       dueDate: invoice.dueDate,
       status:
         invoice.status !== 'paid' && invoice.dueDate < new Date() ? 'overdue' : invoice.status,
@@ -613,7 +674,17 @@ async function createUser(data, adminId) {
     creditLimit: data.creditLimit ?? 0,
     terms: data.terms ?? 'prepaid',
     addresses: data.address
-      ? [{ ...data.address, country: 'Canada', isDefaultShipping: true, isDefaultBilling: true }]
+      ? [
+          {
+            ...data.address,
+            // The form asks for a country now, so the answer is kept rather
+            // than overwritten. Still defaulted, because almost every account
+            // is Canadian and an older payload carries no country at all.
+            country: data.address.country || 'Canada',
+            isDefaultShipping: true,
+            isDefaultBilling: true,
+          },
+        ]
       : [],
   });
 
@@ -659,7 +730,7 @@ async function createUser(data, adminId) {
    * Fire-and-forget, like the invoice email: the account exists and is already
    * saved, so a dead SMTP host has to end in a log line rather than turning a
    * created customer into an error the admin sees. `sendWelcomeEmail` never
-   * throws, and without SMTP configured it writes to `server/.mail/`.
+   * throws; without SMTP configured it returns `delivered: false`.
    *
    * `delivered` rides back on the response so the admin panel can say whether
    * the customer actually got their credentials, rather than implying it.
@@ -721,7 +792,7 @@ async function updateUser(id, data) {
    */
   if (data.address) {
     const index = user.addresses.findIndex((address) => address.isDefaultShipping);
-    const next = { ...data.address, country: 'Canada' };
+    const next = { ...data.address, country: data.address.country || 'Canada' };
 
     if (index >= 0) {
       Object.assign(user.addresses[index], next);
@@ -1128,7 +1199,8 @@ async function listOrders({ status, q } = {}) {
   return {
     orders: orders.map((order) => ({
       ...serializeOrder(order),
-      businessName: order.user?.businessName ?? '—',
+      businessName: order.user?.businessName ?? null,
+      displayName: displayNameOf(order.user),
       businessEmail: order.user?.email ?? null,
     })),
     counts: Object.fromEntries(counts.map((row) => [row._id, row.count])),
@@ -1156,7 +1228,8 @@ async function getOrder(orderNumber) {
   return {
     order: {
       ...serializeOrder(order),
-      businessName: order.user?.businessName ?? '—',
+      businessName: order.user?.businessName ?? null,
+      displayName: displayNameOf(order.user),
       contactName: order.user?.contactName ?? null,
       businessEmail: order.user?.email ?? null,
       userId: order.user?._id?.toString() ?? null,
@@ -1241,7 +1314,8 @@ function shapeAdminInvoice(invoice) {
     id: invoice._id.toString(),
     number: invoice.number,
     orderNumber: invoice.order?.orderNumber ?? null,
-    businessName: invoice.user?.businessName ?? '—',
+    businessName: invoice.user?.businessName ?? null,
+    displayName: displayNameOf(invoice.user),
     contactName: invoice.user?.contactName ?? null,
     userId: invoice.user?._id?.toString() ?? null,
     amount: invoice.amount,
@@ -1320,8 +1394,9 @@ async function createInvoice(body) {
     notes: body.notes,
   });
 
+  // Re-derived from the invoices rather than incremented — see `creditService`.
   if (body.terms !== 'prepaid') {
-    await User.updateOne({ _id: user._id }, { $inc: { balance: body.amount } });
+    await creditService.syncBalance(user._id);
   }
 
   return shapeAdminInvoice({ ...invoice.toObject(), user, order: null });
@@ -1472,10 +1547,7 @@ async function voidInvoice(number, { reason } = {}) {
     // this a voided invoice would hold the account at its limit for money
     // nobody will ever collect.
     if (invoice.terms && invoice.terms !== 'prepaid') {
-      await User.updateOne(
-        { _id: invoice.user, balance: { $gte: outstanding } },
-        { $inc: { balance: -outstanding } },
-      );
+      await creditService.syncBalance(invoice.user);
     }
   } else {
     recomputeInvoice(invoice);
@@ -1489,6 +1561,124 @@ async function voidInvoice(number, { reason } = {}) {
   await referralService.reverseForInvoice(invoice.number);
 
   return getInvoice(number);
+}
+
+/**
+ * Email an invoice to the account it belongs to.
+ *
+ * The **same HTML the document route renders**, not a second template: an
+ * invoice that reads differently in the inbox from the one on screen is two
+ * documents claiming to be one, and the discrepancy only ever surfaces in a
+ * dispute.
+ *
+ * Nothing is retried and nothing is queued. `sendMail` reports whether the
+ * transport actually accepted the message, and that answer is returned
+ * verbatim so the UI can say "not sent" rather than showing a confirmation
+ * for something that did not happen (§6b rule 4).
+ */
+/**
+ * Reversing one recorded payment on an invoice.
+ *
+ * Thin: every rule lives in `invoicePaymentService.reversePayment`, which is
+ * also where the original payment was applied — the undo and the do belong
+ * together or they drift apart.
+ */
+async function reverseInvoicePayment(number, index, { reason } = {}) {
+  const invoice = await Invoice.findOne({ number });
+  if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');
+
+  await invoicePaymentService.reversePayment(invoice, Number(index), { reason });
+  return getInvoice(invoice.number);
+}
+async function emailInvoice(number) {
+  const invoice = await Invoice.findOne({ number }).populate('user').lean();
+  if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');
+
+  const to = invoice.user?.email;
+  if (!to) {
+    throw ApiError.badRequest(
+      'This invoice has no account email to send to.',
+      'NO_RECIPIENT',
+    );
+  }
+
+  // Through `invoiceDocument`, not `renderInvoiceHtml` directly: it is the one
+  // place that assembles the invoice, its order and the account for the
+  // renderer, and going around it is how the emailed copy starts to differ
+  // from the printed one.
+  const html = await invoiceDocument(number);
+  const result = await sendMail({
+    to,
+    subject: `Invoice ${invoice.number} from ${BUSINESS_INFO.name}`,
+    html,
+    text: `Invoice ${invoice.number} — ${(invoice.amount / 100).toFixed(2)} CAD. Open the attached invoice for the full breakdown.`,
+  });
+
+  return { delivered: result?.delivered !== false, to };
+}
+
+/**
+ * Correcting an invoice.
+ *
+ * **Only the fields that are a clerical detail** — the due date, the PO
+ * reference and the note. The amount is deliberately not editable: it is
+ * derived from the order or the lines the invoice was raised against, and a
+ * total somebody can retype is a total that no longer agrees with anything.
+ * Changing what was billed means voiding this invoice and raising another,
+ * which leaves both documents in the record where an audit can see them.
+ */
+async function updateInvoice(number, data) {
+  const invoice = await Invoice.findOne({ number });
+  if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');
+
+  if (data.dueDate !== undefined) invoice.dueDate = new Date(`${data.dueDate}T00:00:00`);
+  if (data.poNumber !== undefined) invoice.poNumber = data.poNumber || undefined;
+  if (data.note !== undefined) invoice.note = data.note || undefined;
+
+  // The due date decides whether a row is overdue, so the status is recomputed
+  // rather than left saying what it said before the date moved.
+  recomputeInvoice(invoice);
+  await invoice.save();
+
+  return getInvoice(number);
+}
+
+/**
+ * Deleting an invoice.
+ *
+ * **Refused once money has touched it.** A paid invoice is the document the
+ * business is accountable for and a receipt the customer holds; deleting it
+ * would erase their proof and silently reduce revenue. That case is a **void**,
+ * which leaves the record in place and says what happened to it.
+ *
+ * So this is only for an invoice raised in error and never paid — and it still
+ * releases the line of credit it reserved, because the debt goes with it.
+ */
+async function deleteInvoice(number) {
+  const invoice = await Invoice.findOne({ number });
+  if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');
+
+  if ((invoice.amountPaid ?? 0) > 0) {
+    throw ApiError.badRequest(
+      'This invoice has payments against it. Void it instead — deleting would erase the customer’s receipt.',
+      'INVOICE_HAS_PAYMENTS',
+    );
+  }
+
+  const outstanding = invoice.amount - (invoice.amountPaid ?? 0);
+  // The debt goes with the invoice, so the headroom it reserved comes back.
+  // Synced *after* the delete, so the sum no longer counts this row.
+  const releasesCredit = outstanding > 0 && invoice.terms && invoice.terms !== 'prepaid';
+  const owner = invoice.user;
+
+  // Commission accrued against an invoice that no longer exists is commission
+  // on nothing, so it is reversed exactly as a void does.
+  await referralService.reverseForInvoice(invoice.number);
+  await invoice.deleteOne();
+
+  if (releasesCredit) await creditService.syncBalance(owner);
+
+  return { number };
 }
 
 /**
@@ -1584,6 +1774,113 @@ async function bulkUpdateOrderStatus({ orderNumbers, status, note }) {
  * would be free to drift from what the customer actually received, and then the
  * two would disagree in front of a customer.
  */
+/**
+ * The account statement: every invoice and payment on one account, in date
+ * order, ending in what is owed.
+ *
+ * Covers everything to date rather than a window. A statement is read to
+ * answer "what do I owe", and a rolling window has to explain an opening
+ * balance carried in from outside it — which is a second number to reconcile
+ * before the first one can be trusted.
+ */
+async function accountStatement(id, { nonce } = {}) {
+  const user = await User.findById(id).lean();
+  if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
+
+  const invoices = await Invoice.find({ user: id })
+    .sort({ issuedAt: 1 })
+    .populate('order', 'orderNumber')
+    .lean();
+
+  return renderStatementHtml({
+    user,
+    invoices: invoices.map((invoice) => ({
+      ...invoice,
+      orderNumber: invoice.order?.orderNumber ?? null,
+    })),
+    nonce,
+  });
+}
+/**
+ * A customer paying down their line of credit — cash at the counter, an
+ * e-transfer, a cheque in the post.
+ *
+ * **It settles real invoices, oldest first.** The alternative — decrementing
+ * `balance` on its own — would leave the account reading as paid up while every
+ * invoice behind it still said unpaid, and the two figures would never agree
+ * again. Money arrives against documents, so this walks the outstanding
+ * invoices in issue order and applies the payment through the same
+ * `recordPayment` the invoice screen uses. The credit release, the status
+ * recompute and the commission accrual all follow from that for free.
+ *
+ * Oldest first because that is how a customer's own statement reads and how
+ * ageing is calculated: paying $500 against the oldest debt is what "paying
+ * $500 off the account" means to both sides of the counter.
+ *
+ * **Not `accountService.payOffCredit`.** That is the customer's own path: it
+ * clears the whole line through the payment gateway, optionally spending store
+ * credit. This is the counter's: an arbitrary amount that has *already* been
+ * handed over in cash or by transfer, recorded after the fact. Neither can
+ * stand in for the other — one takes money, this one books money that arrived.
+ *
+ * Overpayment is refused rather than parked. Money beyond what is owed is a
+ * store-credit allocation — a different instrument with its own ledger — and
+ * quietly turning one into the other is how the two stop reconciling.
+ */
+async function recordCreditPayment(id, { amountDollars, method, reference } = {}) {
+  const user = await User.findById(id);
+  if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
+
+  const amount = Math.round(Number(amountDollars ?? 0) * 100);
+  if (!Number.isInteger(amount) || amount <= 0) {
+    throw ApiError.badRequest('Enter an amount to record.', 'INVALID_AMOUNT');
+  }
+
+  // Only invoices that still owe something, oldest first.
+  const invoices = await Invoice.find({ user: id }).sort({ issuedAt: 1 });
+  const owing = invoices.filter((invoice) => invoice.amount - (invoice.amountPaid ?? 0) > 0);
+
+  const outstanding = owing.reduce(
+    (sum, invoice) => sum + (invoice.amount - (invoice.amountPaid ?? 0)),
+    0,
+  );
+
+  if (outstanding === 0) {
+    throw ApiError.badRequest(
+      'This account has no unpaid invoices. Money beyond what is owed is a store-credit allocation.',
+      'NOTHING_OUTSTANDING',
+    );
+  }
+
+  if (amount > outstanding) {
+    throw ApiError.badRequest(
+      `That is more than the ${(outstanding / 100).toFixed(2)} outstanding across this account's invoices.`,
+      'PAYMENT_TOO_LARGE',
+    );
+  }
+
+  let left = amount;
+  const applied = [];
+
+  for (const invoice of owing) {
+    if (left <= 0) break;
+
+    const due = invoice.amount - (invoice.amountPaid ?? 0);
+    const part = Math.min(due, left);
+
+    await invoicePaymentService.recordPayment(invoice, {
+      amount: part,
+      method: method || 'cash',
+      reference: reference || 'Paid against the line of credit',
+    });
+
+    applied.push({ number: invoice.number, amount: part });
+    left -= part;
+  }
+
+  return { applied, amount, remaining: outstanding - amount };
+}
+
 async function invoiceDocument(number, { nonce } = {}) {
   const invoice = await Invoice.findOne({ number }).populate('order').lean();
   if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');
@@ -1591,39 +1888,25 @@ async function invoiceDocument(number, { nonce } = {}) {
   const user = await User.findById(invoice.user).lean();
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
 
-  return renderInvoiceHtml({ invoice, order: invoice.order, user, nonce });
+  return renderInvoiceHtml({
+    invoice,
+    order: invoice.order,
+    user,
+    nonce,
+    /**
+     * The **same** `origin` the buyer's own copy gets.
+     *
+     * Without it `renderInvoiceHtml` drops the "Pay now" button, so the
+     * document an admin printed or emailed was a different sheet of paper from
+     * the one the customer opens from their account — the copy that reached
+     * them had no way to pay it. One renderer was always the point; this is the
+     * argument that makes both callers produce the same page.
+     *
+     * `env.publicOrigin` rather than the request host: the API serves this, and
+     * the link has to land on the storefront.
+     */
+    origin: env.publicOrigin,
+  });
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.stats = stats;
-exports.listUsers = listUsers;
-exports.getUser = getUser;
-exports.createUser = createUser;
-exports.updateUser = updateUser;
-exports.setContactConsent = setContactConsent;
-exports.setTier = setTier;
-exports.addInternalNote = addInternalNote;
-exports.deleteInternalNote = deleteInternalNote;
-exports.approveUser = approveUser;
-exports.rejectUser = rejectUser;
-exports.setUserStatus = setUserStatus;
-exports.allocateStoreCredit = allocateStoreCredit;
-exports.storeCreditStatement = storeCreditStatement;
-exports.refundOrder = refundOrder;
-exports.setCredit = setCredit;
-exports.listProducts = listProducts;
-exports.createProduct = createProduct;
-exports.updateProduct = updateProduct;
-exports.deactivateProduct = deactivateProduct;
-exports.createOrder = createOrder;
-exports.listOrders = listOrders;
-exports.getOrder = getOrder;
-exports.updateOrderStatus = updateOrderStatus;
-exports.createInvoice = createInvoice;
-exports.listInvoices = listInvoices;
-exports.getInvoice = getInvoice;
-exports.recordPayment = recordPayment;
-exports.voidInvoice = voidInvoice;
-exports.userActivity = userActivity;
-exports.bulkUpdateOrderStatus = bulkUpdateOrderStatus;
-exports.invoiceDocument = invoiceDocument;
+export { stats, listUsers, getUser, createUser, updateUser, setContactConsent, setTier, addInternalNote, deleteInternalNote, approveUser, rejectUser, setUserStatus, allocateStoreCredit, storeCreditStatement, refundOrder, setCredit, listProducts, createProduct, updateProduct, deactivateProduct, createOrder, listOrders, getOrder, updateOrderStatus, createInvoice, listInvoices, getInvoice, recordPayment, recordCreditPayment, voidInvoice, emailInvoice, reverseInvoicePayment, updateInvoice, deleteInvoice, userActivity, bulkUpdateOrderStatus, invoiceDocument, accountStatement };

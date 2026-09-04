@@ -1,8 +1,10 @@
-const { default: CreditTransaction } = require('../models/CreditTransaction.js');
-const { default: User } = require('../models/User.js');
-const { default: Order } = require('../models/Order.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const payment = require('./payment.js');
+import CreditTransaction from '../models/CreditTransaction.js';
+import User from '../models/User.js';
+import Order from '../models/Order.js';
+import ApiError from '../utils/ApiError.js';
+import payment from './payment.js';
+import Invoice from '../models/Invoice.js';
+import { nextInvoiceNumber } from './orderBuilder.js';
 
 /**
  * Store credit — the only place a store-credit balance moves.
@@ -120,11 +122,6 @@ async function issueReceipt(entry) {
   if (!RECEIPTED_TYPES.has(entry.type)) return null;
 
   try {
-    // Lazy: `orderBuilder` pulls in the order graph, and this service is
-    // required by much of it.
-    const { nextInvoiceNumber } = require('./orderBuilder.js');
-    const { default: Invoice } = require('../models/Invoice.js');
-
     const gross = Math.abs(entry.amount);
     const reversal = entry.amount < 0;
     const label = RECEIPT_LABELS[entry.type] ?? 'Store credit movement';
@@ -387,7 +384,7 @@ async function previewForTotal(userId, total) {
   return { balance, applicable: Math.max(0, Math.min(balance, total)) };
 }
 
-exports.default = {
+export default {
   allocate,
   balanceOf,
   creditReferral,
@@ -398,13 +395,4 @@ exports.default = {
   statement,
 };
 
-// --- CommonJS exports -------------------------------------------------
-exports.serialize = serialize;
-exports.balanceOf = balanceOf;
-exports.statement = statement;
-exports.allocate = allocate;
-exports.creditReferral = creditReferral;
-exports.recharge = recharge;
-exports.refundOrder = refundOrder;
-exports.redeemForOrder = redeemForOrder;
-exports.previewForTotal = previewForTotal;
+export { serialize, balanceOf, statement, allocate, creditReferral, recharge, refundOrder, redeemForOrder, previewForTotal };

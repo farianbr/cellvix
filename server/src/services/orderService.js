@@ -1,17 +1,18 @@
-const mongoose = require('mongoose');
-const { default: Order } = require('../models/Order.js');
-const { default: Invoice } = require('../models/Invoice.js');
-const { default: Product } = require('../models/Product.js');
-const { default: Cart } = require('../models/Cart.js');
-const { default: User } = require('../models/User.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const payment = require('./payment.js');
-const { default: Offer } = require('../models/Offer.js');
-const { priceCart, assertBundlesOrderable } = require('./pricingService.js');
-const storeCredit = require('./storeCreditService.js');
-const { sendInvoiceEmail } = require('./notifications.js');
-const notificationService = require('./notificationService.js');
-const { default: Settings } = require('../models/Settings.js');
+import mongoose from 'mongoose';
+import creditService from './creditService.js';
+import Order from '../models/Order.js';
+import Invoice from '../models/Invoice.js';
+import Product from '../models/Product.js';
+import Cart from '../models/Cart.js';
+import User from '../models/User.js';
+import ApiError from '../utils/ApiError.js';
+import payment from './payment.js';
+import Offer from '../models/Offer.js';
+import { priceCart, assertBundlesOrderable } from './pricingService.js';
+import storeCredit from './storeCreditService.js';
+import { sendInvoiceEmail } from './notifications.js';
+import notificationService from './notificationService.js';
+import Settings from '../models/Settings.js';
 
 const TERMS_DAYS = { prepaid: 0, net15: 15, net30: 30, net60: 60 };
 
@@ -31,8 +32,8 @@ async function nextOrderNumber() {
 // The invoice numbering lives in `orderBuilder` — it was written three times
 // before that file existed, and a series that two files can advance
 // independently is a series that collides.
-const { nextInvoiceNumber } = require('./orderBuilder.js');
-const { displayNameOf } = require('../utils/displayName.js');
+import { nextInvoiceNumber } from './orderBuilder.js';
+import { displayNameOf } from '../utils/displayName.js';
 
 /**
  * Prices the cart.
@@ -320,8 +321,14 @@ async function createOrder(user, input) {
 
   // Buying on terms draws against the LINE OF CREDIT — and only for the part
   // store credit did not already settle.
+  //
+  // Re-derived from the account's invoices rather than incremented here: the
+  // invoice this order just raised *is* what the customer owes, so the sum is
+  // the draw. See `creditService` for why the stored counter was abandoned —
+  // six independent `$inc` sites had already drifted one account to $2,950.96
+  // against $2.26 of real debt.
   if (result.status !== 'paid' && dueNow > 0) {
-    await User.updateOne({ _id: user._id }, { $inc: { balance: dueNow } });
+    await creditService.syncBalance(user._id);
   }
 
   // Remember the free-text fields so they can be offered back next time
@@ -339,7 +346,7 @@ async function createOrder(user, input) {
   // The invoice goes out by email the moment the order is placed. Deliberately
   // not awaited: the order is already written, paid and stock-adjusted, so a
   // slow or dead mail host must not hold the checkout response open — and
-  // `sendInvoiceEmail` never rejects, it logs and falls back to the outbox.
+  // `sendInvoiceEmail` never rejects, it logs the failure and returns.
   //
   // Gated by Settings since phase 11e, so the Email Settings toggle governs a
   // real path rather than a stored boolean. The read is inside the fire-and-
@@ -424,10 +431,4 @@ async function getOrder(userId, orderNumber) {
   return serializeOrder(order);
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.quote = quote;
-exports.createOrder = createOrder;
-exports.serializeOrder = serializeOrder;
-exports.listOrders = listOrders;
-exports.getOrder = getOrder;
-exports.mongoose = mongoose;
+export { quote, createOrder, serializeOrder, listOrders, getOrder, mongoose };

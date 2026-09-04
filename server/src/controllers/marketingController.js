@@ -1,5 +1,5 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const marketingService = require('../services/marketingService.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import marketingService from '../services/marketingService.js';
 
 /**
  * Marketing — calls, SMS, WhatsApp, email campaigns and consent (§6.13, phase 9).
@@ -102,23 +102,4 @@ const summary = asyncHandler(async (_req, res) => {
   res.json(await marketingService.summary());
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.listMessages = listMessages;
-exports.sendSms = sendSms;
-exports.sendWhatsapp = sendWhatsapp;
-exports.sendEmail = sendEmail;
-exports.logCall = logCall;
-exports.listTemplates = listTemplates;
-exports.createTemplate = createTemplate;
-exports.updateTemplate = updateTemplate;
-exports.deleteTemplate = deleteTemplate;
-exports.listCampaigns = listCampaigns;
-exports.getCampaign = getCampaign;
-exports.createCampaign = createCampaign;
-exports.updateCampaign = updateCampaign;
-exports.deleteCampaign = deleteCampaign;
-exports.sendCampaign = sendCampaign;
-exports.listUnsubscribes = listUnsubscribes;
-exports.resubscribe = resubscribe;
-exports.unsubscribe = unsubscribe;
-exports.summary = summary;
+export { listMessages, sendSms, sendWhatsapp, sendEmail, logCall, listTemplates, createTemplate, updateTemplate, deleteTemplate, listCampaigns, getCampaign, createCampaign, updateCampaign, deleteCampaign, sendCampaign, listUnsubscribes, resubscribe, unsubscribe, summary };

@@ -1,13 +1,13 @@
-const crypto = require('node:crypto');
-const jwt = require('jsonwebtoken');
-const { default: User } = require('../models/User.js');
-const { default: Supplier } = require('../models/Supplier.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const { default: env } = require('../config/env.js');
-const referralService = require('./referralService.js');
-const notificationService = require('./notificationService.js');
-const { sendWelcomeEmail, sendPasswordResetEmail } = require('./welcomeMail.js');
-const { displayNameOf } = require('../utils/displayName.js');
+import crypto from 'node:crypto';
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
+import Supplier from '../models/Supplier.js';
+import ApiError from '../utils/ApiError.js';
+import env from '../config/env.js';
+import referralService from './referralService.js';
+import notificationService from './notificationService.js';
+import { sendWelcomeEmail, sendPasswordResetEmail } from './welcomeMail.js';
+import { displayNameOf } from '../utils/displayName.js';
 
 // "Remember me" drives a long-lived cookie so the buyer is auto-signed-in on
 // return visits (brief §8.1).
@@ -88,7 +88,7 @@ async function register(data, { ip } = {}) {
     // that can be changed later is a way to redirect money already earned.
     referredBy,
     addresses: data.address
-      ? [{ ...data.address, country: 'Canada', isDefaultShipping: true, isDefaultBilling: true }]
+      ? [{ ...data.address, country: data.address.country || 'Canada', isDefaultShipping: true, isDefaultBilling: true }]
       : [],
   });
 
@@ -338,12 +338,4 @@ async function resetPassword({ token, password }) {
   return user;
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.issueSession = issueSession;
-exports.clearSession = clearSession;
-exports.register = register;
-exports.applyAsSupplier = applyAsSupplier;
-exports.findForAudit = findForAudit;
-exports.login = login;
-exports.forgotPassword = forgotPassword;
-exports.resetPassword = resetPassword;
+export { issueSession, clearSession, register, applyAsSupplier, findForAudit, login, forgotPassword, resetPassword };

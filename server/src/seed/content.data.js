@@ -733,8 +733,4 @@ function buildOffers(products) {
   return offers;
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.BLOG_POSTS = BLOG_POSTS;
-exports.GENERAL_FAQS = GENERAL_FAQS;
-exports.PRODUCT_FAQS = PRODUCT_FAQS;
-exports.buildOffers = buildOffers;
+export { BLOG_POSTS, GENERAL_FAQS, PRODUCT_FAQS, buildOffers };

@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 /**
  * The audit trail (ERP rework §7.5, §6.15 category 6, phase 11b).
@@ -184,8 +184,5 @@ function diff(before = {}, after = {}, { fields } = {}) {
 
 const AuditLog = mongoose.model('AuditLog', auditLogSchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.AUDIT_ENTITIES = AUDIT_ENTITIES;
-exports.diff = diff;
-exports.AuditLog = AuditLog;
-exports.default = AuditLog;
+export { AUDIT_ENTITIES, diff, AuditLog };
+export default AuditLog;

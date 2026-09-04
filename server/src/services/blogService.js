@@ -1,6 +1,6 @@
-const { default: BlogPost } = require('../models/BlogPost.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const { likeRegex } = require('../utils/regex.js');
+import BlogPost from '../models/BlogPost.js';
+import ApiError from '../utils/ApiError.js';
+import { likeRegex } from '../utils/regex.js';
 
 const PAGE_SIZE = 9;
 const WORDS_PER_MINUTE = 220;
@@ -213,11 +213,4 @@ async function deletePost(id) {
   return serialize(post);
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.listPublished = listPublished;
-exports.getBySlug = getBySlug;
-exports.listAll = listAll;
-exports.getById = getById;
-exports.createPost = createPost;
-exports.updatePost = updatePost;
-exports.deletePost = deletePost;
+export { listPublished, getBySlug, listAll, getById, createPost, updatePost, deletePost };

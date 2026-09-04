@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const orderItemSchema = new mongoose.Schema(
   {
@@ -151,6 +151,5 @@ orderSchema.index({ user: 1, createdAt: -1 });
 
 const Order = mongoose.model('Order', orderSchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.Order = Order;
-exports.default = Order;
+export { Order };
+export default Order;

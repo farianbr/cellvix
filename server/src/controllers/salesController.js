@@ -1,7 +1,7 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const quoteService = require('../services/quoteService.js');
-const rmaService = require('../services/rmaService.js');
-const auditService = require('../services/auditService.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import * as quoteService from '../services/quoteService.js';
+import * as rmaService from '../services/rmaService.js';
+import auditService from '../services/auditService.js';
 
 /**
  * Quotes and RMAs (ERP rework §6.3, §6.6).
@@ -95,17 +95,4 @@ const resolveRma = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.listQuotes = listQuotes;
-exports.getQuote = getQuote;
-exports.createQuote = createQuote;
-exports.updateQuote = updateQuote;
-exports.setQuoteStatus = setQuoteStatus;
-exports.convertQuote = convertQuote;
-exports.deleteQuote = deleteQuote;
-exports.listRmas = listRmas;
-exports.getRma = getRma;
-exports.createRma = createRma;
-exports.setRmaStatus = setRmaStatus;
-exports.inspectRma = inspectRma;
-exports.resolveRma = resolveRma;
+export { listQuotes, getQuote, createQuote, updateQuote, setQuoteStatus, convertQuote, deleteQuote, listRmas, getRma, createRma, setRmaStatus, inspectRma, resolveRma };

@@ -1,4 +1,4 @@
-const { z } = require('zod');
+import { z } from 'zod';
 
 const objectId = z.string().regex(/^[0-9a-fA-F]{24}$/, 'Not a valid id.');
 
@@ -44,11 +44,4 @@ const saveCartSchema = z.object({
   name: z.string().trim().min(1).max(80).optional(),
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.addItemSchema = addItemSchema;
-exports.setQtySchema = setQtySchema;
-exports.mergeCartSchema = mergeCartSchema;
-exports.addBundleSchema = addBundleSchema;
-exports.setBundleQtySchema = setBundleQtySchema;
-exports.promoCodeSchema = promoCodeSchema;
-exports.saveCartSchema = saveCartSchema;
+export { addItemSchema, setQtySchema, mergeCartSchema, addBundleSchema, setBundleQtySchema, promoCodeSchema, saveCartSchema };

@@ -82,7 +82,7 @@ function PaymentForm({ invoice, onSubmit, onCancel, isPending, error }) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="rounded-[11px] bg-surface-2 p-3.5">
         <p className="font-mono text-[13px] font-medium text-ink-900">{invoice.number}</p>
-        <p className="mt-0.5 text-[12.5px] text-ink-500">{invoice.businessName}</p>
+        <p className="mt-0.5 text-[12.5px] text-ink-500">{invoice.displayName ?? invoice.businessName}</p>
         <p className="tnum mt-1.5 text-[12.5px] text-ink-500">
           {money(invoice.amount)} invoiced · {money(invoice.amountPaid)} paid ·{' '}
           <span className="font-medium text-ink-900">{money(outstanding)} outstanding</span>
@@ -218,7 +218,7 @@ function InvoiceForm({ clients, defaultUser, onSubmit, onCancel, isPending, erro
           control={control}
           name="user"
           label="Client"
-          options={clients.map((client) => ({ value: client.id, label: client.businessName }))}
+          options={clients.map((client) => ({ value: client.id, label: client.displayName ?? client.businessName }))}
         />
         <Input
           label="Amount"
@@ -560,7 +560,7 @@ export function AdminInvoicesPage() {
         title="Void this invoice?"
         body={
           voiding
-            ? `Invoice ${voiding.number} for ${voiding.businessName} will be marked void.`
+            ? `Invoice ${voiding.number} for ${voiding.displayName ?? voiding.businessName} will be marked void.`
             : ''
         }
         consequence="There is no un-void. Billing this customer again means raising a replacement invoice."

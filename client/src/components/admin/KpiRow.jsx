@@ -171,6 +171,9 @@ export function KpiRow({ tiles = [], className, children }) {
         dense ? 'md:grid-cols-4 xl:grid-cols-7' : 'md:grid-cols-3 xl:grid-cols-6',
         count <= 4 && 'xl:grid-cols-4',
         count === 5 && 'xl:grid-cols-5',
+        // Eight splits cleanly into two rows of four rather than leaving one
+        // tile stranded on a second row of a seven-column grid.
+        count === 8 && 'xl:grid-cols-4',
         className,
       )}
     >

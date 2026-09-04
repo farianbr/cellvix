@@ -1,8 +1,9 @@
-const { randomBytes } = require('node:crypto');
-const { asyncHandler } = require('../utils/ApiError.js');
-const adminService = require('../services/adminService.js');
-const auditService = require('../services/auditService.js');
-const { default: User } = require('../models/User.js');
+import { randomBytes } from 'node:crypto';
+import { asyncHandler } from '../utils/ApiError.js';
+import * as adminService from '../services/adminService.js';
+import auditService from '../services/auditService.js';
+import User from '../models/User.js';
+import Invoice from '../models/Invoice.js';
 
 /**
  * **Audit hooks live in the controller, not the service** (§7.5, phase 11b).
@@ -371,6 +372,97 @@ const voidInvoice = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
+/**
+ * Email the invoice to its account.
+ *
+ * The audit line records what the transport actually said, not what was
+ * attempted: "sent" and "tried to send" are different facts, and only one of
+ * them means the customer has the document.
+ */
+const reverseInvoicePayment = asyncHandler(async (req, res) => {
+  const result = await adminService.reverseInvoicePayment(
+    req.params.number,
+    req.params.index,
+    req.body,
+  );
+
+  await auditService.record({
+    req,
+    action: 'invoice.payment.reverse',
+    entity: { kind: 'invoice', id: req.params.number, label: req.params.number },
+    after: { index: Number(req.params.index), reason: req.body?.reason ?? '' },
+    description: `Reversed a payment on ${req.params.number}${req.body?.reason ? ` — ${req.body.reason}` : ''}.`,
+  });
+
+  res.json(result);
+});
+/**
+ * Cash (or a transfer) paid against the line of credit at the counter.
+ *
+ * The audit line names the invoices it actually landed on, because "paid
+ *  " and "settled INV-10042 and part of INV-10043" are the same event and
+ * only the second one can be reconciled later.
+ */
+const recordCreditPayment = asyncHandler(async (req, res) => {
+  const result = await adminService.recordCreditPayment(req.params.id, req.body);
+
+  await auditService.record({
+    req,
+    action: 'client.credit.payment',
+    entity: { kind: 'user', id: req.params.id, label: req.params.id },
+    after: { amount: result.amount, applied: result.applied },
+    description: `Recorded ${(result.amount / 100).toFixed(2)} against the line of credit — ${result.applied.map((row) => row.number).join(', ')}.`,
+  });
+
+  res.json(result);
+});
+const emailInvoice = asyncHandler(async (req, res) => {
+  const result = await adminService.emailInvoice(req.params.number);
+
+  await auditService.record({
+    req,
+    action: 'invoice.email',
+    entity: { kind: 'invoice', id: req.params.number, label: req.params.number },
+    after: { to: result.to, delivered: result.delivered },
+    description: result.delivered
+      ? `Emailed ${req.params.number} to ${result.to}.`
+      : `Tried to email ${req.params.number} to ${result.to} — the transport refused it.`,
+  });
+
+  res.json(result);
+});
+
+const updateInvoice = asyncHandler(async (req, res) => {
+  const before = await Invoice.findOne({ number: req.params.number })
+    .select('dueDate poNumber note')
+    .lean();
+  const result = await adminService.updateInvoice(req.params.number, req.body);
+
+  await auditService.recordChange({
+    req,
+    action: 'invoice.update',
+    entity: { kind: 'invoice', id: req.params.number, label: req.params.number },
+    before,
+    after: req.body,
+    description: `Edited ${req.params.number}.`,
+  });
+
+  res.json(result);
+});
+
+const deleteInvoice = asyncHandler(async (req, res) => {
+  const result = await adminService.deleteInvoice(req.params.number);
+
+  await auditService.record({
+    req,
+    action: 'invoice.delete',
+    entity: { kind: 'invoice', id: req.params.number, label: req.params.number },
+    description: `Deleted ${req.params.number}, which had no payments against it.`,
+  });
+
+  res.json(result);
+});
+
 // ---- client profile ---------------------------------------------------------
 
 const userActivity = asyncHandler(async (req, res) => {
@@ -411,36 +503,28 @@ const invoiceDocument = asyncHandler(async (req, res) => {
   res.type('html').send(html);
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.stats = stats;
-exports.listUsers = listUsers;
-exports.createUser = createUser;
-exports.getUser = getUser;
-exports.updateUser = updateUser;
-exports.setContactConsent = setContactConsent;
-exports.setTier = setTier;
-exports.addInternalNote = addInternalNote;
-exports.deleteInternalNote = deleteInternalNote;
-exports.approveUser = approveUser;
-exports.rejectUser = rejectUser;
-exports.setUserStatus = setUserStatus;
-exports.setCredit = setCredit;
-exports.listProducts = listProducts;
-exports.createProduct = createProduct;
-exports.updateProduct = updateProduct;
-exports.toggleProduct = toggleProduct;
-exports.listOrders = listOrders;
-exports.createOrder = createOrder;
-exports.getOrder = getOrder;
-exports.updateOrderStatus = updateOrderStatus;
-exports.allocateStoreCredit = allocateStoreCredit;
-exports.storeCreditStatement = storeCreditStatement;
-exports.refundOrder = refundOrder;
-exports.listInvoices = listInvoices;
-exports.createInvoice = createInvoice;
-exports.getInvoice = getInvoice;
-exports.recordInvoicePayment = recordInvoicePayment;
-exports.voidInvoice = voidInvoice;
-exports.userActivity = userActivity;
-exports.bulkUpdateOrderStatus = bulkUpdateOrderStatus;
-exports.invoiceDocument = invoiceDocument;
+/**
+ * The account statement, rendered for print-to-PDF.
+ *
+ * Same CSP shape as the invoice document: the page carries one inline script
+ * (its print button) and nothing else, so the nonce is the only thing allowed
+ * to run and every other source is denied.
+ */
+const accountStatement = asyncHandler(async (req, res) => {
+  const nonce = randomBytes(16).toString('base64');
+  const html = await adminService.accountStatement(req.params.id, { nonce });
+
+  res.setHeader(
+    'Content-Security-Policy',
+    [
+      "default-src 'none'",
+      "style-src 'unsafe-inline'",
+      "img-src data:",
+      `script-src 'nonce-${nonce}'`,
+      "base-uri 'none'",
+      "form-action 'none'",
+    ].join('; '),
+  );
+  res.type('html').send(html);
+});
+export { stats, listUsers, createUser, getUser, updateUser, setContactConsent, setTier, addInternalNote, deleteInternalNote, approveUser, rejectUser, setUserStatus, setCredit, listProducts, createProduct, updateProduct, toggleProduct, listOrders, createOrder, getOrder, updateOrderStatus, allocateStoreCredit, storeCreditStatement, refundOrder, listInvoices, createInvoice, getInvoice, recordInvoicePayment, recordCreditPayment, voidInvoice, emailInvoice, reverseInvoicePayment, updateInvoice, deleteInvoice, userActivity, bulkUpdateOrderStatus, invoiceDocument, accountStatement };

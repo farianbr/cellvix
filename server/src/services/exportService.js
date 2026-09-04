@@ -14,7 +14,7 @@
  * can fail because an optional package is missing.
  */
 
-const { deflateRawSync } = require('node:zlib');
+import { deflateRawSync } from 'node:zlib';
 
 /**
  * CRC-32, computed here rather than taken from `node:zlib`.
@@ -254,11 +254,6 @@ const asMoney = (cents) => (cents ?? 0) / 100;
 /** A date as `YYYY-MM-DD`, which sorts correctly as text in every locale. */
 const asDate = (value) => (value ? new Date(value).toISOString().slice(0, 10) : '');
 
-exports.default = { toCsv, toXlsx, send, asMoney, asDate };
+export default { toCsv, toXlsx, send, asMoney, asDate };
 
-// --- CommonJS exports -------------------------------------------------
-exports.toCsv = toCsv;
-exports.toXlsx = toXlsx;
-exports.send = send;
-exports.asMoney = asMoney;
-exports.asDate = asDate;
+export { toCsv, toXlsx, send, asMoney, asDate };

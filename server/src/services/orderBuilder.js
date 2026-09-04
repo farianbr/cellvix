@@ -1,10 +1,10 @@
-const { default: Order } = require('../models/Order.js');
-const { default: Invoice } = require('../models/Invoice.js');
-const { default: Product } = require('../models/Product.js');
-const { default: Settings } = require('../models/Settings.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const notificationService = require('./notificationService.js');
-const { displayNameOf } = require('../utils/displayName.js');
+import Order from '../models/Order.js';
+import Invoice from '../models/Invoice.js';
+import Product from '../models/Product.js';
+import Settings from '../models/Settings.js';
+import ApiError from '../utils/ApiError.js';
+import notificationService from './notificationService.js';
+import { displayNameOf } from '../utils/displayName.js';
 
 /**
  * Raising an order that did not come from a cart.
@@ -293,7 +293,7 @@ function formatCad(value) {
   );
 }
 
-exports.default = {
+export default {
   TERMS_DAYS,
   nextOrderNumber,
   nextInvoiceNumber,
@@ -303,11 +303,4 @@ exports.default = {
   raiseOrder,
 };
 
-// --- CommonJS exports -------------------------------------------------
-exports.TERMS_DAYS = TERMS_DAYS;
-exports.nextOrderNumber = nextOrderNumber;
-exports.nextInvoiceNumber = nextInvoiceNumber;
-exports.provinceFor = provinceFor;
-exports.buildOrderItems = buildOrderItems;
-exports.createInvoiceFor = createInvoiceFor;
-exports.raiseOrder = raiseOrder;
+export { TERMS_DAYS, nextOrderNumber, nextInvoiceNumber, provinceFor, buildOrderItems, createInvoiceFor, raiseOrder };

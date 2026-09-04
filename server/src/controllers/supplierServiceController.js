@@ -1,6 +1,6 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const service = require('../services/supplierServiceService.js');
-const auditService = require('../services/auditService.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import * as service from '../services/supplierServiceService.js';
+import auditService from '../services/auditService.js';
 
 /**
  * Bought-in services and supplier subscriptions.
@@ -94,10 +94,4 @@ const remove = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
-exports.list = list;
-exports.get = get;
-exports.create = create;
-exports.update = update;
-exports.recordCharge = recordCharge;
-exports.setCancelled = setCancelled;
-exports.remove = remove;
+export { list, get, create, update, recordCharge, setCancelled, remove };

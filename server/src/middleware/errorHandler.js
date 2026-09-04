@@ -1,7 +1,7 @@
-const { ZodError } = require('zod');
-const mongoose = require('mongoose');
-const { default: ApiError } = require('../utils/ApiError.js');
-const { default: env } = require('../config/env.js');
+import { ZodError } from 'zod';
+import mongoose from 'mongoose';
+import ApiError from '../utils/ApiError.js';
+import env from '../config/env.js';
 
 function notFoundHandler(req, res, next) {
   next(ApiError.notFound(`No route for ${req.method} ${req.originalUrl}`, 'ROUTE_NOT_FOUND'));
@@ -56,6 +56,4 @@ function errorHandler(err, req, res, _next) {
   });
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.notFoundHandler = notFoundHandler;
-exports.errorHandler = errorHandler;
+export { notFoundHandler, errorHandler };

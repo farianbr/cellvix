@@ -1,13 +1,13 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
-const { default: Supplier } = require('../models/Supplier.js');
-const { default: PurchaseOrder } = require('../models/PurchaseOrder.js');
-const { default: Expense } = require('../models/Expense.js');
-const { default: ExpenseCategory } = require('../models/ExpenseCategory.js');
-const { default: StockMovement } = require('../models/StockMovement.js');
-const { default: Product } = require('../models/Product.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const { likeRegex } = require('../utils/regex.js');
+import Supplier from '../models/Supplier.js';
+import PurchaseOrder from '../models/PurchaseOrder.js';
+import Expense from '../models/Expense.js';
+import ExpenseCategory from '../models/ExpenseCategory.js';
+import StockMovement from '../models/StockMovement.js';
+import Product from '../models/Product.js';
+import ApiError from '../utils/ApiError.js';
+import { likeRegex } from '../utils/regex.js';
 
 /**
  * Purchase — suppliers, purchase orders, expenses and the stock ledger
@@ -1264,30 +1264,4 @@ async function listStockMovements({ product, type, from, to } = {}) {
   };
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.applyStockMovement = applyStockMovement;
-exports.listSuppliers = listSuppliers;
-exports.getSupplier = getSupplier;
-exports.createSupplier = createSupplier;
-exports.updateSupplier = updateSupplier;
-exports.toggleSupplier = toggleSupplier;
-exports.listPurchaseOrders = listPurchaseOrders;
-exports.getPurchaseOrder = getPurchaseOrder;
-exports.createPurchaseOrder = createPurchaseOrder;
-exports.updatePurchaseOrder = updatePurchaseOrder;
-exports.setPurchaseOrderStatus = setPurchaseOrderStatus;
-exports.receivePurchaseOrder = receivePurchaseOrder;
-exports.recordPurchasePayment = recordPurchasePayment;
-exports.listExpenses = listExpenses;
-exports.createExpense = createExpense;
-exports.updateExpense = updateExpense;
-exports.deleteExpense = deleteExpense;
-exports.listExpenseCategories = listExpenseCategories;
-exports.createExpenseCategory = createExpenseCategory;
-exports.updateExpenseCategory = updateExpenseCategory;
-exports.deleteExpenseCategory = deleteExpenseCategory;
-exports.listInventory = listInventory;
-exports.getInventoryItem = getInventoryItem;
-exports.updateInventoryOps = updateInventoryOps;
-exports.adjustStock = adjustStock;
-exports.listStockMovements = listStockMovements;
+export { applyStockMovement, listSuppliers, getSupplier, createSupplier, updateSupplier, toggleSupplier, listPurchaseOrders, getPurchaseOrder, createPurchaseOrder, updatePurchaseOrder, setPurchaseOrderStatus, receivePurchaseOrder, recordPurchasePayment, listExpenses, createExpense, updateExpense, deleteExpense, listExpenseCategories, createExpenseCategory, updateExpenseCategory, deleteExpenseCategory, listInventory, getInventoryItem, updateInventoryOps, adjustStock, listStockMovements };

@@ -1,7 +1,7 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const blogService = require('../services/blogService.js');
-const faqService = require('../services/faqService.js');
-const offerService = require('../services/offerService.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import * as blogService from '../services/blogService.js';
+import * as faqService from '../services/faqService.js';
+import * as offerService from '../services/offerService.js';
 
 /**
  * Blog, FAQ and offers.
@@ -90,22 +90,4 @@ const adminDeleteOffer = asyncHandler(async (req, res) => {
   res.json({ offer: await offerService.deleteOffer(req.params.id) });
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.listPosts = listPosts;
-exports.getPost = getPost;
-exports.adminListPosts = adminListPosts;
-exports.adminGetPost = adminGetPost;
-exports.adminCreatePost = adminCreatePost;
-exports.adminUpdatePost = adminUpdatePost;
-exports.adminDeletePost = adminDeletePost;
-exports.listFaqs = listFaqs;
-exports.adminListFaqs = adminListFaqs;
-exports.adminCreateFaq = adminCreateFaq;
-exports.adminUpdateFaq = adminUpdateFaq;
-exports.adminDeleteFaq = adminDeleteFaq;
-exports.listOffers = listOffers;
-exports.getOffer = getOffer;
-exports.adminListOffers = adminListOffers;
-exports.adminCreateOffer = adminCreateOffer;
-exports.adminUpdateOffer = adminUpdateOffer;
-exports.adminDeleteOffer = adminDeleteOffer;
+export { listPosts, getPost, adminListPosts, adminGetPost, adminCreatePost, adminUpdatePost, adminDeletePost, listFaqs, adminListFaqs, adminCreateFaq, adminUpdateFaq, adminDeleteFaq, listOffers, getOffer, adminListOffers, adminCreateOffer, adminUpdateOffer, adminDeleteOffer };

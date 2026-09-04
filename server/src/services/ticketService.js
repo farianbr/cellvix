@@ -1,14 +1,13 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
-const {
-  default: Ticket,
+import Ticket, {
   TICKET_STATUSES,
   TICKET_OPEN_STATUSES,
-} = require('../models/Ticket.js');
-const { default: User } = require('../models/User.js');
-const { default: Settings } = require('../models/Settings.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const { likeRegex } = require('../utils/regex.js');
+} from '../models/Ticket.js';
+import User from '../models/User.js';
+import Settings from '../models/Settings.js';
+import ApiError from '../utils/ApiError.js';
+import { likeRegex } from '../utils/regex.js';
 
 /**
  * Repair tickets (Sales § Ticket).
@@ -134,6 +133,33 @@ function shapeTicket(ticket, slaDays) {
 
     technician: shapeTechnician(ticket.technician),
 
+    // The richer intake shape. Absent on tickets taken before it existed, so
+    // every consumer has to tolerate an empty list here.
+    devices: (ticket.devices ?? []).map((device) => ({
+      category: device.category ?? null,
+      brand: device.brand ?? null,
+      series: device.series ?? null,
+      model: device.model ?? null,
+      serial: device.serial ?? null,
+      passcode: device.passcode ?? null,
+      problem: device.problem ?? null,
+      solution: device.solution ?? null,
+      notes: device.notes ?? null,
+      condition: device.condition ? Object.fromEntries(device.condition) : {},
+      services: device.services ?? [],
+      parts: device.parts ?? [],
+    })),
+
+    clientNotes: ticket.clientNotes ?? null,
+    technicianNotes: ticket.technicianNotes ?? null,
+
+    discountCents: ticket.discountCents ?? 0,
+    discountCode: ticket.discountCode ?? null,
+    taxRate: ticket.taxRate ?? 0,
+    taxCents: ticket.taxCents ?? 0,
+    province: ticket.province ?? null,
+    dueDate: ticket.dueDate ?? null,
+
     estimateCents: ticket.estimateCents ?? 0,
     finalCents: ticket.finalCents ?? 0,
 
@@ -185,7 +211,7 @@ async function listTechnicians() {
  * excludes would be useless. `open` and `overdue` are readings of age, so they
  * are counted from the open rows rather than asked of Mongo.
  */
-async function listTickets({ status, q, priority, technician, from, to, limit, page } = {}) {
+async function listTickets({ status, q, priority, technician, user, from, to, limit, page } = {}) {
   const settings = await Settings.load();
   const slaDays = settings?.operations?.ticketSlaDays ?? 7;
 
@@ -196,6 +222,10 @@ async function listTickets({ status, q, priority, technician, from, to, limit, p
   else if (status && status !== 'all') query.status = String(status);
 
   if (priority && priority !== 'all') query.priority = String(priority);
+
+  // The customer profile's Tickets tab. Only tickets actually linked to an
+  // account — a walk-in repair carries no `user` and belongs to nobody's list.
+  if (user && isObjectId(user)) query.user = user;
 
   if (technician === 'unassigned') query.technician = null;
   else if (technician && technician !== 'all' && isObjectId(technician)) {
@@ -297,10 +327,90 @@ async function resolveTechnician(technicianId) {
   return staff._id;
 }
 
+/** Dollars in, integer cents out. One place, so rounding cannot differ by caller. */
+function toCents(dollars) {
+  return Math.round(Number(dollars ?? 0) * 100);
+}
+
+/** A priced line as the model stores it. */
+function shapeLineIn(line) {
+  return {
+    name: line.name,
+    description: line.description || undefined,
+    priceCents: toCents(line.priceDollars),
+    qty: line.qty ?? 1,
+    product: line.product || null,
+  };
+}
+
+/**
+ * The ticket's money, computed **from the lines** rather than trusted.
+ *
+ * The intake form shows a running total, but that is a preview like any other
+ * (§5.3): the figure that gets stored is summed here from the services and
+ * parts actually on the devices, then discounted and taxed. A client that sent
+ * its own total would be setting the price of the work.
+ */
+function priceTicket(devices, { discountCents = 0, taxRate = 0 } = {}) {
+  const gross = devices.reduce(
+    (sum, device) =>
+      sum +
+      [...(device.services ?? []), ...(device.parts ?? [])].reduce(
+        (n, line) => n + line.priceCents * (line.qty ?? 1),
+        0,
+      ),
+    0,
+  );
+
+  // A discount can never exceed the work: a negative subtotal would tax
+  // backwards and print a credit note that nobody raised.
+  const discount = Math.min(discountCents, gross);
+  const subtotal = gross - discount;
+  const taxCents = Math.round(subtotal * (taxRate / 100));
+
+  return { gross, discount, subtotal, taxCents, total: subtotal + taxCents };
+}
+
+/**
+ * The devices as the model stores them, with the legacy single-device fields
+ * mirrored from the first one.
+ *
+ * Both shapes are written on every ticket: the list screen, the search index
+ * and every row that predates this all read `deviceBrand`/`deviceModel`, and
+ * leaving those blank would empty the Device column on the tickets list.
+ */
+function shapeDevicesIn(devices = []) {
+  return devices.map((device) => ({
+    category: device.category || undefined,
+    brand: device.brand || undefined,
+    series: device.series || undefined,
+    model: device.model,
+    serial: device.serial || undefined,
+    passcode: device.passcode || undefined,
+    problem: device.problem || undefined,
+    solution: device.solution || undefined,
+    notes: device.notes || undefined,
+    condition: device.condition && Object.keys(device.condition).length ? device.condition : undefined,
+    services: (device.services ?? []).map(shapeLineIn),
+    parts: (device.parts ?? []).map(shapeLineIn),
+  }));
+}
+
 async function createTicket(body, createdBy) {
   const technician = await resolveTechnician(body.technician);
   const settings = await Settings.load();
   const status = body.status ?? 'diagnosis';
+
+  const devices = shapeDevicesIn(body.devices);
+  const priced = priceTicket(devices, {
+    discountCents: toCents(body.discountDollars),
+    taxRate: body.taxRate ?? 0,
+  });
+
+  // The first device also fills the legacy single-device columns — see the note
+  // on `devices` in the model. A ticket taken on the short form has no devices
+  // array at all, so those columns are the only record of what came in.
+  const lead = devices[0];
 
   const ticket = await Ticket.create({
     ticketNumber: await nextTicketNumber(),
@@ -308,11 +418,17 @@ async function createTicket(body, createdBy) {
     customerName: body.customerName,
     customerPhone: body.customerPhone,
     customerEmail: body.customerEmail || undefined,
+    // Set only when the ticket was raised against a known account — a walk-in
+    // has none, and `null` is the model's own default for that.
+    user: body.user || null,
 
-    deviceBrand: body.deviceBrand,
-    deviceModel: body.deviceModel,
-    deviceSerial: body.deviceSerial,
-    issue: body.issue,
+    devices,
+    deviceBrand: lead?.brand ?? body.deviceBrand,
+    deviceModel: lead?.model ?? body.deviceModel,
+    deviceSerial: lead?.serial ?? body.deviceSerial,
+    // `issue` is required on the model and is what every list and search reads,
+    // so a multi-device ticket falls back to the first device's problem.
+    issue: body.issue || lead?.problem || 'Intake',
 
     status,
     priority: body.priority ?? 'normal',
@@ -320,9 +436,28 @@ async function createTicket(body, createdBy) {
 
     technician: technician ?? null,
 
-    estimateCents: Math.round((body.estimateDollars ?? 0) * 100),
+    /**
+     * The estimate is the **priced work** when there is any, and the typed
+     * figure otherwise.
+     *
+     * A counter that has listed three services and two parts has already said
+     * what the job costs; asking them to total it themselves into a separate
+     * box is asking for a number that disagrees with the lines beside it. The
+     * short form — no devices, just an estimate — still works, which is what
+     * keeps a thirty-second walk-in intake possible.
+     */
+    estimateCents: devices.length ? priced.total : toCents(body.estimateDollars),
+
+    discountCents: priced.discount,
+    discountCode: body.discountCode || undefined,
+    taxRate: body.taxRate ?? 0,
+    taxCents: priced.taxCents,
+    province: body.province || undefined,
+    dueDate: body.dueDate ? new Date(`${body.dueDate}T00:00:00`) : null,
 
     notes: body.notes,
+    clientNotes: body.clientNotes || undefined,
+    technicianNotes: body.technicianNotes || undefined,
 
     timeline: [{ status, at: new Date(), note: 'Opened.', by: createdBy }],
     createdBy,
@@ -406,11 +541,4 @@ async function deleteTicket(id) {
   return { deleted: true, ticketNumber: ticket.ticketNumber };
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.listTickets = listTickets;
-exports.getTicket = getTicket;
-exports.createTicket = createTicket;
-exports.setTicketStatus = setTicketStatus;
-exports.updateTicket = updateTicket;
-exports.deleteTicket = deleteTicket;
-exports.shapeTicket = shapeTicket;
+export { listTickets, getTicket, createTicket, setTicketStatus, updateTicket, deleteTicket, shapeTicket };

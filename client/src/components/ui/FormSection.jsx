@@ -53,7 +53,10 @@ export function FormSection({
     <>
       {Icon && (
         <span
-          className="flex size-6 shrink-0 items-center justify-center rounded-[7px] bg-surface text-ink-400 ring-1 ring-line"
+          // Brand-tinted, like the page header's tile: a form's section icons
+          // are the only colour on a wall of grey inputs, and they mark where
+          // one group of fields ends and the next begins.
+          className="flex size-6 shrink-0 items-center justify-center rounded-[7px] bg-brand-50 text-brand ring-1 ring-brand/15"
           aria-hidden="true"
         >
           <Icon className="size-3.5" strokeWidth={1.75} />

@@ -1,10 +1,10 @@
-const { default: Offer } = require('../models/Offer.js');
-const { default: Order } = require('../models/Order.js');
-const { default: Product } = require('../models/Product.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const { likeRegex } = require('../utils/regex.js');
-const { canSeePricing } = require('../middleware/auth.js');
-const { serialize: serializeProduct } = require('./productService.js');
+import Offer from '../models/Offer.js';
+import Order from '../models/Order.js';
+import Product from '../models/Product.js';
+import ApiError from '../utils/ApiError.js';
+import { likeRegex } from '../utils/regex.js';
+import { canSeePricing } from '../middleware/auth.js';
+import { serialize as serializeProduct } from './productService.js';
 
 function slugify(value) {
   return value
@@ -334,11 +334,4 @@ async function deleteOffer(id) {
   return baseShape(offer, new Date());
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.offerStatus = offerStatus;
-exports.listLive = listLive;
-exports.getBySlug = getBySlug;
-exports.listAll = listAll;
-exports.createOffer = createOffer;
-exports.updateOffer = updateOffer;
-exports.deleteOffer = deleteOffer;
+export { offerStatus, listLive, getBySlug, listAll, createOffer, updateOffer, deleteOffer };

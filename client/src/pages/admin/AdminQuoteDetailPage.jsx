@@ -191,6 +191,8 @@ function QuoteLifecycle({ quote, className }) {
     return (
       <section aria-label="Quote life cycle" className={cn('space-y-2.5', className)}>
         <ProcessStrip
+          title="Life cycle of a quote"
+      successOnLast
           steps={QUOTE_LIFECYCLE}
           current={quote.storedStatus}
           stoppedTone={rejected ? 'danger' : 'warn'}
@@ -223,6 +225,8 @@ function QuoteLifecycle({ quote, className }) {
 
   return (
     <ProcessStrip
+      title="Life cycle of a quote"
+      successOnLast
       steps={QUOTE_LIFECYCLE}
       current={quote.status}
       caption={
@@ -396,12 +400,6 @@ export function AdminQuoteDetailPage() {
           </span>
         </p>
       )}
-
-      {/* ---- life cycle -----------------------------------------------------
-          Where this quote sits on the ladder `quoteService.ALLOWED_TRANSITIONS`
-          enforces, so the strip and the buttons above can never disagree about
-          what comes next. */}
-      <QuoteLifecycle quote={quote} className="mb-3" />
 
       <KpiRow
         tiles={[
@@ -580,6 +578,14 @@ export function AdminQuoteDetailPage() {
           </Panel>
         </div>
       </div>
+
+      {/* ---- life cycle -----------------------------------------------------
+          At the foot of the page, matching the invoice and the purchase order:
+          it summarises where the record ended up after everything above it, so
+          it reads as a conclusion rather than a heading. Where this quote sits
+          on the ladder `quoteService.ALLOWED_TRANSITIONS` enforces, so the strip
+          and the action buttons can never disagree about what comes next. */}
+      <QuoteLifecycle quote={quote} className="mt-4" />
 
       <Modal
         open={converting}

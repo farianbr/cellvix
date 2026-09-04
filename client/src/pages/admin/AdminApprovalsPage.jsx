@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { useForm } from 'react-hook-form';
 import {
+  ArrowUpRight,
   Building2,
   Check,
   Clock,
@@ -32,7 +34,15 @@ const TABS = [
   { value: 'suspended', label: 'Suspended' },
 ];
 
-function RejectForm({ user, onSubmit, onCancel, isPending }) {
+/**
+ * The reason a rejection carries.
+ *
+ * Exported because the customer profile rejects from its own pending banner
+ * and must ask the same question the same way — the reason goes into the
+ * notification email either way, and two prompts would eventually disagree
+ * about what is required.
+ */
+export function RejectForm({ user, onSubmit, onCancel, isPending }) {
   const {
     register,
     handleSubmit,
@@ -42,7 +52,7 @@ function RejectForm({ user, onSubmit, onCancel, isPending }) {
   return (
     <form onSubmit={handleSubmit((values) => onSubmit(values.reason))} className="space-y-4">
       <p className="text-[13.5px] text-ink-500">
-        Rejecting <span className="font-medium text-ink-900">{user.businessName}</span>. The reason
+        Rejecting <span className="font-medium text-ink-900">{user.displayName ?? user.email}</span>. The reason
         is stored on the account and goes into the notification email.
       </p>
 
@@ -168,9 +178,21 @@ export function AdminApprovalsPage() {
 
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-display text-[14.5px] font-bold text-ink-900">
-                        {user.businessName}
-                      </p>
+                      {/* The name is the link, not the whole card: the card
+                          already carries Approve and Reject, and a clickable
+                          container wrapping its own buttons is a nested click
+                          target that has to fight itself to work. */}
+                      <Link
+                        to={`/admin/clients/${user.id}`}
+                        className="group inline-flex items-center gap-1.5 font-display text-[14.5px] font-bold text-ink-900 transition-colors hover:text-brand"
+                      >
+                        {user.displayName ?? user.email}
+                        <ArrowUpRight
+                          className="size-3.5 shrink-0 text-ink-300 opacity-0 transition-opacity group-hover:opacity-100"
+                          strokeWidth={2}
+                          aria-hidden="true"
+                        />
+                      </Link>
                       <Badge tone={STATUS_TONES[user.status]} size="sm">
                         {user.status}
                       </Badge>
@@ -311,7 +333,7 @@ export function AdminApprovalsPage() {
             { onSuccess: () => setSuspending(null) },
           )
         }
-        title={`Suspend ${suspending?.businessName ?? 'this account'}?`}
+        title={`Suspend ${suspending?.displayName ?? 'this account'}?`}
         body="They keep their cart and their history, but they cannot place an order or see wholesale pricing until the account is reinstated."
         tone="danger"
         confirmLabel="Suspend account"

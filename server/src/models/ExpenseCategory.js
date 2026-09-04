@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 /**
  * How money out is grouped in the P&L and the expense report (ERP rework §6.9).
@@ -31,6 +31,5 @@ expenseCategorySchema.index({ order: 1, name: 1 });
 
 const ExpenseCategory = mongoose.model('ExpenseCategory', expenseCategorySchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.ExpenseCategory = ExpenseCategory;
-exports.default = ExpenseCategory;
+export { ExpenseCategory };
+export default ExpenseCategory;

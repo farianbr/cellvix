@@ -1,5 +1,5 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const cartService = require('../services/cartService.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import * as cartService from '../services/cartService.js';
 
 /** Every response is the whole serialized cart, so the client never guesses state. */
 const respond = async (res, cart, user, status = 200) =>
@@ -97,20 +97,4 @@ const clearPromo = asyncHandler(async (req, res) => {
   await respond(res, cart, req.user);
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.get = get;
-exports.addItem = addItem;
-exports.setQty = setQty;
-exports.removeItem = removeItem;
-exports.merge = merge;
-exports.save = save;
-exports.clear = clear;
-exports.listSaved = listSaved;
-exports.restoreSaved = restoreSaved;
-exports.deleteSaved = deleteSaved;
-exports.bulkAdd = bulkAdd;
-exports.addBundle = addBundle;
-exports.setBundleQty = setBundleQty;
-exports.removeBundle = removeBundle;
-exports.applyPromo = applyPromo;
-exports.clearPromo = clearPromo;
+export { get, addItem, setQty, removeItem, merge, save, clear, listSaved, restoreSaved, deleteSaved, bulkAdd, addBundle, setBundleQty, removeBundle, applyPromo, clearPromo };

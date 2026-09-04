@@ -1,5 +1,5 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const auditService = require('../services/auditService.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import auditService from '../services/auditService.js';
 
 /**
  * The two log screens (§6.15, category 6, phase 11b).
@@ -31,6 +31,4 @@ const security = asyncHandler(async (req, res) => {
   res.json(await auditService.list({ ...req.query, kind: 'security' }));
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.activity = activity;
-exports.security = security;
+export { activity, security };

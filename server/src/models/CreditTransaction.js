@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 /**
  * The store-credit ledger.
@@ -106,7 +106,5 @@ creditTransactionSchema.index(
 
 const CreditTransaction = mongoose.model('CreditTransaction', creditTransactionSchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.CREDIT_TYPES = CREDIT_TYPES;
-exports.CreditTransaction = CreditTransaction;
-exports.default = CreditTransaction;
+export { CREDIT_TYPES, CreditTransaction };
+export default CreditTransaction;

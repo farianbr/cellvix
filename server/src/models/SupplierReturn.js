@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 /**
  * Stock going **back to a supplier** — the purchase-side counterpart of `Rma`.
@@ -143,9 +143,5 @@ supplierReturnSchema.index({ status: 1, createdAt: -1 });
 
 const SupplierReturn = mongoose.model('SupplierReturn', supplierReturnSchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.SUPPLIER_RETURN_STATUSES = SUPPLIER_RETURN_STATUSES;
-exports.SUPPLIER_RETURN_OPEN_STATUSES = SUPPLIER_RETURN_OPEN_STATUSES;
-exports.SUPPLIER_RETURN_REASONS = SUPPLIER_RETURN_REASONS;
-exports.SupplierReturn = SupplierReturn;
-exports.default = SupplierReturn;
+export { SUPPLIER_RETURN_STATUSES, SUPPLIER_RETURN_OPEN_STATUSES, SUPPLIER_RETURN_REASONS, SupplierReturn };
+export default SupplierReturn;

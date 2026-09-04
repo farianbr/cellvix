@@ -95,7 +95,7 @@ function AudiencePicker({ selected, onChange, error }) {
     (account) =>
       !selected.includes(account.id) &&
       (!needle ||
-        account.businessName.toLowerCase().includes(needle) ||
+        (account.displayName ?? account.businessName ?? '').toLowerCase().includes(needle) ||
         account.email.toLowerCase().includes(needle)),
   );
 
@@ -128,7 +128,7 @@ function AudiencePicker({ selected, onChange, error }) {
             {[...chosen, ...rest].map((account) => (
               <li key={account.id}>
                 <Checkbox
-                  label={`${account.businessName} · ${account.email}`}
+                  label={`${account.displayName ?? account.businessName} · ${account.email}`}
                   checked={selected.includes(account.id)}
                   onChange={() => toggle(account.id)}
                   className="rounded-none px-3 py-2"

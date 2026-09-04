@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 /**
  * Admin notifications (ERP rework §7.3, §6.15, phase 12c).
@@ -113,8 +113,5 @@ notificationSchema.index({ createdAt: -1 });
 
 const Notification = mongoose.model('Notification', notificationSchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.NOTIFICATION_TYPES = NOTIFICATION_TYPES;
-exports.NOTIFICATION_SEVERITIES = NOTIFICATION_SEVERITIES;
-exports.Notification = Notification;
-exports.default = Notification;
+export { NOTIFICATION_TYPES, NOTIFICATION_SEVERITIES, Notification };
+export default Notification;

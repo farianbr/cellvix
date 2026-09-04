@@ -1,6 +1,6 @@
-const crypto = require('node:crypto');
+import crypto from 'node:crypto';
 
-const { default: env } = require('../config/env.js');
+import env from '../config/env.js';
 
 /**
  * Encryption at rest for provider credentials (ERP rework §6.15, phase 11c).
@@ -122,9 +122,6 @@ function maskPreview(plaintext) {
   return `${'•'.repeat(8)}${value.slice(-4)}`;
 }
 
-exports.default = { encrypt, decrypt, maskPreview };
+export default { encrypt, decrypt, maskPreview };
 
-// --- CommonJS exports -------------------------------------------------
-exports.encrypt = encrypt;
-exports.decrypt = decrypt;
-exports.maskPreview = maskPreview;
+export { encrypt, decrypt, maskPreview };

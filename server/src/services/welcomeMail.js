@@ -1,8 +1,8 @@
-const crypto = require('node:crypto');
-const { default: env } = require('../config/env.js');
-const { sendMail } = require('./mailer.js');
-const { BUSINESS_INFO } = require('../../../shared/business.js');
-const { displayNameOf } = require('../utils/displayName.js');
+import crypto from 'node:crypto';
+import env from '../config/env.js';
+import { sendMail } from './mailer.js';
+import { BUSINESS_INFO } from '../../../shared/business.js';
+import { displayNameOf } from '../utils/displayName.js';
 
 /**
  * The welcome email, for both ways an account comes into being.
@@ -259,7 +259,7 @@ function renderText({ user, password, origin, approved }) {
  * credentials variant. Never throws.
  */
 async function sendWelcomeEmail({ user, password = null }) {
-  if (!user?.email) return { delivered: false, via: 'outbox' };
+  if (!user?.email) return { delivered: false, via: null, error: 'No email address on file.' };
 
   try {
     const origin = env.publicOrigin;
@@ -274,7 +274,7 @@ async function sendWelcomeEmail({ user, password = null }) {
     });
   } catch (error) {
     console.error(`  Mail: welcome email for ${user?.email} could not be built — ${error.message}`);
-    return { delivered: false, via: 'outbox' };
+    return { delivered: false, via: null, error: error.message };
   }
 }
 
@@ -293,7 +293,9 @@ async function sendWelcomeEmail({ user, password = null }) {
  * their address.
  */
 async function sendPasswordResetEmail({ user, token, origin, expiresMinutes = 60 }) {
-  if (!user?.email || !token) return { delivered: false, via: 'outbox' };
+  if (!user?.email || !token) {
+    return { delivered: false, via: null, error: 'No email address or token.' };
+  }
 
   try {
     const base = origin || env.publicOrigin;
@@ -378,12 +380,9 @@ async function sendPasswordResetEmail({ user, token, origin, expiresMinutes = 60
     });
   } catch (error) {
     console.error(`  Mail: reset email for ${user?.email} could not be built — ${error.message}`);
-    return { delivered: false, via: 'outbox' };
+    return { delivered: false, via: null, error: error.message };
   }
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.generatePassword = generatePassword;
-exports.sendWelcomeEmail = sendWelcomeEmail;
-exports.sendPasswordResetEmail = sendPasswordResetEmail;
-exports.default = sendWelcomeEmail;
+export { generatePassword, sendWelcomeEmail, sendPasswordResetEmail };
+export default sendWelcomeEmail;

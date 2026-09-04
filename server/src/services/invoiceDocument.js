@@ -1,6 +1,7 @@
-const fs = require('node:fs');
-const path = require('node:path');
-const { BUSINESS_INFO } = require('../../../shared/business.js');
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { BUSINESS_INFO } from '../../../shared/business.js';
 
 /**
  * The invoice document.
@@ -24,7 +25,7 @@ const { BUSINESS_INFO } = require('../../../shared/business.js');
  * one thing worse than no letterhead. Read once at boot; if the file is not
  * there the masthead falls back to the wordmark set in type.
  */
-const here = __dirname;
+const here = path.dirname(fileURLToPath(import.meta.url));
 const LOGO = (() => {
   try {
     const file = path.resolve(here, '..', '..', '..', 'client', 'public', 'brand', 'logo.png');
@@ -388,7 +389,5 @@ function renderInvoiceText({ invoice, order, origin }) {
   return lines.filter((line) => line !== null).join('\n');
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.renderInvoiceHtml = renderInvoiceHtml;
-exports.renderInvoiceText = renderInvoiceText;
-exports.default = renderInvoiceHtml;
+export { renderInvoiceHtml, renderInvoiceText };
+export default renderInvoiceHtml;

@@ -1,4 +1,4 @@
-const { z } = require('zod');
+import { z } from 'zod';
 
 /**
  * Editorial content: blog posts, FAQs and offers.
@@ -196,14 +196,4 @@ const offerSchema = z
     }
   });
 
-// --- CommonJS exports -------------------------------------------------
-exports.BLOG_CATEGORIES = BLOG_CATEGORIES;
-exports.BLOG_STATUSES = BLOG_STATUSES;
-exports.blogPostSchema = blogPostSchema;
-exports.FAQ_CATEGORIES = FAQ_CATEGORIES;
-exports.FAQ_SCOPES = FAQ_SCOPES;
-exports.faqSchema = faqSchema;
-exports.OFFER_KINDS = OFFER_KINDS;
-exports.DISCOUNT_TYPES = DISCOUNT_TYPES;
-exports.OFFER_ACCENTS = OFFER_ACCENTS;
-exports.offerSchema = offerSchema;
+export { BLOG_CATEGORIES, BLOG_STATUSES, blogPostSchema, FAQ_CATEGORIES, FAQ_SCOPES, faqSchema, OFFER_KINDS, DISCOUNT_TYPES, OFFER_ACCENTS, offerSchema };

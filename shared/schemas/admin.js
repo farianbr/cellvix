@@ -1,7 +1,7 @@
-const { z } = require('zod');
+import { z } from 'zod';
 // The one password rule, shared rather than restated: an account an admin opens
 // must not be allowed a weaker password than one a business opens for itself.
-const { passwordSchema } = require('./auth.js');
+import { passwordSchema } from './auth.js';
 
 const cents = z.coerce.number().int().min(0).max(100_000_000);
 
@@ -42,7 +42,10 @@ const creditSchema = z.object({
  * self-registration never does.
  */
 const clientSchema = z.object({
-  businessName: z.string().trim().min(2, 'Enter a business name.').max(160),
+  // Optional: an account is identified by the person (§0). A private customer
+  // or a sole trader may have no registered company name, and the endpoint has
+  // to accept the account the form can now open.
+  businessName: z.string().trim().max(160).optional(),
   contactName: z.string().trim().min(2, 'Enter a contact name.').max(80),
   // A real address, not the empty-string-tolerant idiom `supplierSchema` uses:
   // this one is the account's sign-in identity, so it cannot be blank.
@@ -104,9 +107,24 @@ const clientSchema = z.object({
  * object, because React Hook Form always sends the sub-object — with empty
  * strings in it — and an `.optional()` wrapper never sees `undefined`.
  */
-const clientFormSchema = z
+/**
+ * The object half of `clientFormSchema`, exported so a form can reshape it.
+ *
+ * `clientFormSchema` itself is a `ZodEffects` once `.superRefine` is attached,
+ * and a `ZodEffects` has no `.omit()` / `.extend()`. The new-customer form asks
+ * for the contact's name as two fields and composes one `contactName` on
+ * submit — the same trick the storefront sign-up plays — so it needs the plain
+ * object to build from. Derived, never restated: a field added below is
+ * validated on both forms.
+ */
+const clientFormBase = z
   .object({
-    businessName: z.string().trim().min(2, 'Enter a business name.').max(160),
+    // Optional, and no longer the first thing asked for. An account is
+    // identified by the person (§0): a sole trader or a walk-in customer may
+    // have no registered company name at all, and requiring one turned an
+    // optional detail into a barrier on the one form an admin fills in while
+    // somebody is on the phone.
+    businessName: z.string().trim().max(160).optional(),
     contactName: z.string().trim().min(2, 'Enter a contact name.').max(80),
     email: z.string().trim().toLowerCase().email('Enter a valid email address.'),
     phone: z.string().trim().min(7, 'Enter a phone number.').max(40),
@@ -121,6 +139,9 @@ const clientFormSchema = z
       city: z.string().trim().max(80),
       region: z.string().trim().max(2),
       postal: z.string().trim(),
+      // Defaulted rather than required: almost every account is Canadian, and
+      // the field exists so the handful that are not can say so.
+      country: z.string().trim().max(60).default('Canada'),
     }),
     contactConsent: z.object({
       sms: z.boolean(),
@@ -128,26 +149,40 @@ const clientFormSchema = z
       email: z.boolean(),
       call: z.boolean(),
     }),
-  })
-  .superRefine((values, ctx) => {
-    const { line1, city, postal } = values.address;
-    // Untouched block: nothing to check, and the form will not send it.
-    if (!line1 && !city && !postal) return;
+  });
 
-    if (line1.length < 2) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['address', 'line1'],
-        message: 'Enter a street address.',
-      });
-    }
-    if (city.length < 2) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['address', 'city'],
-        message: 'Enter a city.',
-      });
-    }
+/**
+ * The address block's "started it, so finish it" rule, as a function.
+ *
+ * Named rather than inline so `clientFormSchema` and the new-customer form's
+ * reshaped variant apply the identical check — an inline copy in each is how
+ * two forms end up disagreeing about what a valid address is.
+ */
+const refineClientAddress = (values, ctx) => {
+  const { line1, city, postal } = values.address;
+  // Untouched block: nothing to check, and the form will not send it.
+  if (!line1 && !city && !postal) return;
+
+  if (line1.length < 2) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['address', 'line1'],
+      message: 'Enter a street address.',
+    });
+  }
+  if (city.length < 2) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['address', 'city'],
+      message: 'Enter a city.',
+    });
+  }
+  // `A1A 1A1` is a Canadian postal code and nothing else's. Applied to every
+  // address it would reject a valid UK or US one, so the pattern is checked
+  // only where it is the actual format; elsewhere the field just has to be
+  // filled in, because there is no single format to check it against.
+  const country = values.address.country || 'Canada';
+  if (country === 'Canada') {
     if (!/^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/.test(postal)) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -155,7 +190,33 @@ const clientFormSchema = z
         message: 'Enter a valid postal code.',
       });
     }
-  });
+  } else if (postal.length < 3) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['address', 'postal'],
+      message: 'Enter a postal or ZIP code.',
+    });
+  }
+};
+
+const clientFormSchema = clientFormBase.superRefine(refineClientAddress);
+
+/**
+ * What the new-customer **form** holds, which is not quite what the API takes.
+ *
+ * The contact's name is asked as two fields and stored as one, exactly as the
+ * storefront sign-up does it: `contactName` is what the model, the welcome mail
+ * and every admin screen read, so the halves are composed on submit rather than
+ * split in the model. The resolver runs over this shape; `onSubmit` builds the
+ * payload `clientFormSchema` describes.
+ */
+const clientCreateFormSchema = clientFormBase
+  .omit({ contactName: true })
+  .extend({
+    firstName: z.string().trim().min(1, 'Enter a first name.'),
+    lastName: z.string().trim().min(1, 'Enter a last name.'),
+  })
+  .superRefine(refineClientAddress);
 
 /**
  * Editing a customer's profile.
@@ -171,7 +232,10 @@ const clientFormSchema = z
  * minimums, because they are still what the account is known by.
  */
 const clientUpdateSchema = z.object({
-  businessName: z.string().trim().min(2, 'Enter a business name.').max(160).optional(),
+  // Accepts an empty string, like the other optional descriptors: an admin who
+  // recorded a company name against what turned out to be a private customer
+  // has to be able to clear it again.
+  businessName: z.string().trim().max(160).optional(),
   contactName: z.string().trim().min(2, 'Enter a contact name.').max(80).optional(),
   email: z.string().trim().toLowerCase().email('Enter a valid email address.').optional(),
   phone: z.string().trim().min(7, 'Enter a phone number.').max(40).optional(),
@@ -184,10 +248,20 @@ const clientUpdateSchema = z.object({
       line2: z.string().trim().max(120).optional(),
       city: z.string().trim().min(2, 'Enter a city.').max(80),
       region: z.string().trim().min(2, 'Select a province.').max(2),
-      postal: z
-        .string()
-        .trim()
-        .regex(/^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/, 'Enter a valid postal code.'),
+      postal: z.string().trim().min(3, 'Enter a postal or ZIP code.'),
+      country: z.string().trim().max(60).default('Canada'),
+    })
+    // The Canadian pattern is checked only on a Canadian address — see the note
+    // on `clientFormSchema`. A UK or US address is valid and has its own shape.
+    .superRefine((address, ctx) => {
+      if ((address.country || 'Canada') !== 'Canada') return;
+      if (!/^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/.test(address.postal)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['postal'],
+          message: 'Enter a valid postal code.',
+        });
+      }
     })
     .optional(),
 });
@@ -346,6 +420,9 @@ const ADMIN_NAV = [
         badge: 'overdueInvoices',
       },
       { key: 'quotes', label: 'Quotes', to: '/admin/quotes', icon: 'FileSignature' },
+      // Enquiries from the storefront's contact form, before anybody has priced
+      // them. Under Quotes because that is what they usually become.
+      { key: 'web-quotes', label: 'Web Quote', to: '/admin/web-quotes', icon: 'Globe' },
     ],
   },
   {
@@ -518,6 +595,31 @@ const invoicePaymentSchema = z.object({
 });
 
 /** Voiding forgives the balance and keeps the row, so the reason is required. */
+/**
+ * Correcting an invoice. Clerical fields only.
+ *
+ * The amount is absent on purpose: it is derived from what was billed, and a
+ * total somebody can retype is a total that agrees with nothing. Changing what
+ * was billed is a void plus a new invoice, which leaves both in the record.
+ */
+const invoiceUpdateSchema = z.object({
+  dueDate: z.string().trim().regex(/^d{4}-d{2}-d{2}$/, 'Pick a due date.').optional(),
+  poNumber: z.string().trim().max(60).or(z.literal('')).optional(),
+  note: z.string().trim().max(500).or(z.literal('')).optional(),
+});
+
+/** Cash paid against the line of credit. Spread across unpaid invoices server-side. */
+const creditPaymentSchema = z.object({
+  amountDollars: z.coerce.number().positive('Enter an amount to record.'),
+  method: z.string().trim().max(40).optional(),
+  reference: z.string().trim().max(80).optional(),
+});
+
+/** Moving a web enquiry through the queue. Three states, nothing else. */
+const webQuoteStatusSchema = z.object({
+  status: z.enum(['new', 'read', 'closed']),
+});
+
 const invoiceVoidSchema = z.object({
   reason: z.string().trim().min(3, 'Give a reason — it stays on the invoice.').max(240),
 });
@@ -864,15 +966,95 @@ const TICKET_STATUS_LABELS = {
  * unusable. The phone is required because it is how the shop calls someone to
  * say their device is ready; without it the ticket cannot be closed out.
  */
+/** One priced line — a service performed or a part fitted. Same shape for both. */
+const ticketLineSchema = z.object({
+  name: z.string().trim().min(1, 'Name the line.').max(160),
+  description: z.string().trim().max(300).or(z.literal('')).optional(),
+  priceDollars: z.coerce.number().min(0).max(1_000_000).default(0),
+  qty: z.coerce.number().int().min(1).max(999).default(1),
+  product: z.string().trim().length(24).optional(),
+});
+
+/**
+ * How a component tested at drop-off, and which components a counter checks.
+ *
+ * Declared here rather than only on the model so the intake form renders the
+ * same grid the server will accept — a form offering a ninth component the
+ * schema rejects is a form that fails on submit.
+ */
+const CONDITION_GRADES = [
+  { value: 'working', label: 'Working' },
+  { value: 'faulty', label: 'Faulty' },
+  { value: 'not_present', label: 'Not present' },
+  { value: 'untested', label: 'Untested' },
+];
+
+const CONDITION_PARTS = [
+  { key: 'screen', label: 'Screen' },
+  { key: 'battery', label: 'Battery' },
+  { key: 'chargingPort', label: 'Charging Port' },
+  { key: 'backGlass', label: 'BackGlass' },
+  { key: 'frontCamera', label: 'Front Camera' },
+  { key: 'backCamera', label: 'Back Camera' },
+  { key: 'loudSpeaker', label: 'Loud Speaker' },
+  { key: 'earSpeaker', label: 'Ear Speaker' },
+];
+
+const conditionGradeSchema = z.enum(CONDITION_GRADES.map((grade) => grade.value));
+
+/**
+ * One device on the intake form.
+ *
+ * Only the model is required. A counter taking in a cracked handset at speed
+ * knows what it is; making them fill a serial and a condition grid before the
+ * ticket can be saved is how intake stops being done at the counter at all.
+ */
+const ticketDeviceSchema = z.object({
+  category: z.string().trim().max(60).or(z.literal('')).optional(),
+  brand: z.string().trim().max(60).or(z.literal('')).optional(),
+  series: z.string().trim().max(120).or(z.literal('')).optional(),
+  model: z.string().trim().min(1, 'Pick a model.').max(120),
+  serial: z.string().trim().max(80).or(z.literal('')).optional(),
+  passcode: z.string().trim().max(60).or(z.literal('')).optional(),
+
+  problem: z.string().trim().max(500).or(z.literal('')).optional(),
+  solution: z.string().trim().max(500).or(z.literal('')).optional(),
+  notes: z.string().trim().max(500).or(z.literal('')).optional(),
+
+  condition: z.record(z.string(), conditionGradeSchema).optional(),
+
+  services: z.array(ticketLineSchema).max(40).default([]),
+  parts: z.array(ticketLineSchema).max(40).default([]),
+});
+
 const ticketSchema = z.object({
   customerName: z.string().trim().min(2, 'Enter the customer name.').max(120),
   customerPhone: z.string().trim().min(7, 'Enter a contact number.').max(40),
   customerEmail: z.string().trim().email('Enter a valid email.').or(z.literal('')).optional(),
 
+  /**
+   * The account this ticket belongs to, when it has one.
+   *
+   * Optional because the customer above is free text: a repair walks in off
+   * the street and the counter must be able to open a ticket without creating
+   * an account first. Set when the ticket is raised from a customer profile,
+   * which is what lets that profile count its own open jobs.
+   */
+  user: z.string().trim().length(24).optional(),
+
   deviceBrand: z.string().trim().max(60).optional(),
   deviceModel: z.string().trim().max(120).optional(),
   deviceSerial: z.string().trim().max(80).optional(),
-  issue: z.string().trim().min(3, 'Describe the fault.').max(500),
+  /**
+   * The reported fault, as one line for the list and the search index.
+   *
+   * Optional on the wire, because the intake form records the fault **per
+   * device** now — a two-device ticket has two problems and no single sentence
+   * that is honestly "the" issue. `createTicket` falls back to the first
+   * device's `problem`, so the column is still filled; requiring it here would
+   * reject the very form that supersedes it.
+   */
+  issue: z.string().trim().max(500).optional(),
 
   status: z.enum(TICKET_STATUSES).default('diagnosis'),
   priority: z.enum(TICKET_PRIORITIES).default('normal'),
@@ -883,6 +1065,17 @@ const ticketSchema = z.object({
 
   estimateDollars: z.coerce.number().min(0).max(1_000_000).optional(),
   notes: z.string().trim().max(2000).optional(),
+
+  // The richer intake shape. All optional, so the short form that existed
+  // before this — name, phone, one device, one estimate — still validates.
+  devices: z.array(ticketDeviceSchema).max(10).optional(),
+  clientNotes: z.string().trim().max(2000).or(z.literal('')).optional(),
+  technicianNotes: z.string().trim().max(2000).or(z.literal('')).optional(),
+  discountDollars: z.coerce.number().min(0).max(1_000_000).optional(),
+  discountCode: z.string().trim().max(40).or(z.literal('')).optional(),
+  taxRate: z.coerce.number().min(0).max(100).optional(),
+  province: z.string().trim().max(2).or(z.literal('')).optional(),
+  dueDate: z.string().trim().regex(/^d{4}-d{2}-d{2}$/).or(z.literal('')).optional(),
 });
 
 /** Everything on the create form is editable afterwards except the status. */
@@ -1360,85 +1553,6 @@ const communicationsSettingsSchema = z.object({
   lowStockEmail: z.string().trim().email('Enter a valid email address.').optional().or(z.literal('')),
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.approveUserSchema = approveUserSchema;
-exports.rejectUserSchema = rejectUserSchema;
-exports.creditSchema = creditSchema;
-exports.clientSchema = clientSchema;
-exports.clientFormSchema = clientFormSchema;
-exports.clientUpdateSchema = clientUpdateSchema;
-exports.CONSENT_CHANNELS = CONSENT_CHANNELS;
-exports.contactConsentSchema = contactConsentSchema;
-exports.MEMBERSHIP_TIERS = MEMBERSHIP_TIERS;
-exports.tierSchema = tierSchema;
-exports.internalNoteSchema = internalNoteSchema;
-exports.storeCreditSchema = storeCreditSchema;
-exports.refundSchema = refundSchema;
-exports.userStatusSchema = userStatusSchema;
-exports.productSchema = productSchema;
-exports.ORDER_STATUS_FLOW = ORDER_STATUS_FLOW;
-exports.orderStatusSchema = orderStatusSchema;
-exports.CARRIERS = CARRIERS;
-exports.ADMIN_NAV = ADMIN_NAV;
-exports.ADMIN_LEGACY_REDIRECTS = ADMIN_LEGACY_REDIRECTS;
-exports.invoicePaymentSchema = invoicePaymentSchema;
-exports.invoiceVoidSchema = invoiceVoidSchema;
-exports.bulkOrderStatusSchema = bulkOrderStatusSchema;
-exports.supplierSchema = supplierSchema;
-exports.purchaseOrderSchema = purchaseOrderSchema;
-exports.purchaseOrderStatusSchema = purchaseOrderStatusSchema;
-exports.purchaseReceiveSchema = purchaseReceiveSchema;
-exports.purchasePaymentSchema = purchasePaymentSchema;
-exports.expenseSchema = expenseSchema;
-exports.expenseCategorySchema = expenseCategorySchema;
-exports.stockAdjustSchema = stockAdjustSchema;
-exports.productOpsSchema = productOpsSchema;
-exports.quoteSchema = quoteSchema;
-exports.quoteStatusSchema = quoteStatusSchema;
-exports.quoteConvertSchema = quoteConvertSchema;
-exports.adminOrderSchema = adminOrderSchema;
-exports.adminInvoiceSchema = adminInvoiceSchema;
-exports.RMA_ITEM_DISPOSITIONS = RMA_ITEM_DISPOSITIONS;
-exports.rmaSchema = rmaSchema;
-exports.TICKET_STATUSES = TICKET_STATUSES;
-exports.TICKET_PRIORITIES = TICKET_PRIORITIES;
-exports.TICKET_SOURCES = TICKET_SOURCES;
-exports.TICKET_STATUS_LABELS = TICKET_STATUS_LABELS;
-exports.ticketSchema = ticketSchema;
-exports.ticketUpdateSchema = ticketUpdateSchema;
-exports.ticketStatusSchema = ticketStatusSchema;
-exports.rmaStatusSchema = rmaStatusSchema;
-exports.rmaInspectSchema = rmaInspectSchema;
-exports.rmaResolveSchema = rmaResolveSchema;
-exports.PERMISSION_AREAS = PERMISSION_AREAS;
-exports.PERMISSION_LEVELS = PERMISSION_LEVELS;
-exports.PERMISSION_LEVEL_LABELS = PERMISSION_LEVEL_LABELS;
-exports.OUTLET_STATUSES = OUTLET_STATUSES;
-exports.OUTLET_COLOR_TOKENS = OUTLET_COLOR_TOKENS;
-exports.outletSchema = outletSchema;
-exports.roleSchema = roleSchema;
-exports.staffUserSchema = staffUserSchema;
-exports.staffUserUpdateSchema = staffUserUpdateSchema;
-exports.MESSAGE_CHANNELS = MESSAGE_CHANNELS;
-exports.TEMPLATE_DOCUMENTS = TEMPLATE_DOCUMENTS;
-exports.CAMPAIGN_AUDIENCES = CAMPAIGN_AUDIENCES;
-exports.CAMPAIGN_AUDIENCE_LABELS = CAMPAIGN_AUDIENCE_LABELS;
-exports.messageSchema = messageSchema;
-exports.callLogSchema = callLogSchema;
-exports.messageTemplateSchema = messageTemplateSchema;
-exports.campaignSchema = campaignSchema;
-exports.unsubscribeSchema = unsubscribeSchema;
-exports.referralRateSchema = referralRateSchema;
-exports.businessInfoSchema = businessInfoSchema;
-exports.saleSettingsSchema = saleSettingsSchema;
-exports.shippingSettingsSchema = shippingSettingsSchema;
-exports.paymentMethodsSettingsSchema = paymentMethodsSettingsSchema;
-exports.inventorySettingsSchema = inventorySettingsSchema;
-exports.providerCredentialSchema = providerCredentialSchema;
-exports.taxonomyNodeSchema = taxonomyNodeSchema;
-exports.invoiceStatusRuleSchema = invoiceStatusRuleSchema;
-exports.communicationsSettingsSchema = communicationsSettingsSchema;
-
 /**
  * Returns to a supplier (Purchase § RMA / Returns).
  *
@@ -1488,10 +1602,6 @@ const supplierCreditSchema = z.object({
   note: z.string().trim().max(300).optional(),
 });
 
-exports.SUPPLIER_RETURN_REASON_VALUES = SUPPLIER_RETURN_REASON_VALUES;
-exports.supplierReturnSchema = supplierReturnSchema;
-exports.supplierReturnStatusSchema = supplierReturnStatusSchema;
-exports.supplierCreditSchema = supplierCreditSchema;
 
 /**
  * Bought-in services and supplier subscriptions (Purchase § Service Products,
@@ -1542,7 +1652,4 @@ const supplierChargeSchema = z.object({
   reference: z.string().trim().max(80).optional(),
 });
 
-exports.SUPPLIER_BILLING_CYCLES = SUPPLIER_BILLING_CYCLES;
-exports.supplierServiceSchema = supplierServiceSchema;
-exports.supplierServiceUpdateSchema = supplierServiceUpdateSchema;
-exports.supplierChargeSchema = supplierChargeSchema;
+export { approveUserSchema, rejectUserSchema, creditSchema, clientSchema, clientFormSchema, clientCreateFormSchema, clientUpdateSchema, CONSENT_CHANNELS, contactConsentSchema, MEMBERSHIP_TIERS, tierSchema, internalNoteSchema, storeCreditSchema, refundSchema, userStatusSchema, productSchema, ORDER_STATUS_FLOW, orderStatusSchema, CARRIERS, ADMIN_NAV, ADMIN_LEGACY_REDIRECTS, invoicePaymentSchema, invoiceVoidSchema, webQuoteStatusSchema, creditPaymentSchema, invoiceUpdateSchema, bulkOrderStatusSchema, supplierSchema, purchaseOrderSchema, purchaseOrderStatusSchema, purchaseReceiveSchema, purchasePaymentSchema, expenseSchema, expenseCategorySchema, stockAdjustSchema, productOpsSchema, quoteSchema, quoteStatusSchema, quoteConvertSchema, adminOrderSchema, adminInvoiceSchema, RMA_ITEM_DISPOSITIONS, rmaSchema, TICKET_STATUSES, TICKET_PRIORITIES, TICKET_SOURCES, TICKET_STATUS_LABELS, CONDITION_GRADES, CONDITION_PARTS, ticketSchema, ticketDeviceSchema, ticketLineSchema, ticketUpdateSchema, ticketStatusSchema, rmaStatusSchema, rmaInspectSchema, rmaResolveSchema, PERMISSION_AREAS, PERMISSION_LEVELS, PERMISSION_LEVEL_LABELS, OUTLET_STATUSES, OUTLET_COLOR_TOKENS, outletSchema, roleSchema, staffUserSchema, staffUserUpdateSchema, MESSAGE_CHANNELS, TEMPLATE_DOCUMENTS, CAMPAIGN_AUDIENCES, CAMPAIGN_AUDIENCE_LABELS, messageSchema, callLogSchema, messageTemplateSchema, campaignSchema, unsubscribeSchema, referralRateSchema, businessInfoSchema, saleSettingsSchema, shippingSettingsSchema, paymentMethodsSettingsSchema, inventorySettingsSchema, providerCredentialSchema, taxonomyNodeSchema, invoiceStatusRuleSchema, communicationsSettingsSchema, SUPPLIER_RETURN_REASON_VALUES, supplierReturnSchema, supplierReturnStatusSchema, supplierCreditSchema, SUPPLIER_BILLING_CYCLES, supplierServiceSchema, supplierServiceUpdateSchema, supplierChargeSchema };

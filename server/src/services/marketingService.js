@@ -1,17 +1,17 @@
-const crypto = require('node:crypto');
+import crypto from 'node:crypto';
 
-const { default: MessageLog, MESSAGE_CHANNELS } = require('../models/MessageLog.js');
-const { default: MessageTemplate } = require('../models/MessageTemplate.js');
-const { default: Campaign } = require('../models/Campaign.js');
-const { default: User } = require('../models/User.js');
-const { default: Order } = require('../models/Order.js');
-const { default: Settings } = require('../models/Settings.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const { likeRegex } = require('../utils/regex.js');
-const { sendMail } = require('./mailer.js');
-const credentialService = require('./credentialService.js');
-const { default: env } = require('../config/env.js');
-const { BUSINESS_INFO } = require('../../../shared/business.js');
+import MessageLog, { MESSAGE_CHANNELS } from '../models/MessageLog.js';
+import MessageTemplate from '../models/MessageTemplate.js';
+import Campaign from '../models/Campaign.js';
+import User from '../models/User.js';
+import Order from '../models/Order.js';
+import Settings from '../models/Settings.js';
+import ApiError from '../utils/ApiError.js';
+import { likeRegex } from '../utils/regex.js';
+import { sendMail, mailerConfigured } from './mailer.js';
+import credentialService from './credentialService.js';
+import env from '../config/env.js';
+import { BUSINESS_INFO } from '../../../shared/business.js';
 
 /**
  * Marketing — the four communication channels (ERP rework §6.13, phase 9).
@@ -23,7 +23,8 @@ const { BUSINESS_INFO } = require('../../../shared/business.js');
  * writes a `MessageLog` row, with `status: 'queued_unconfigured'` and the
  * reason it is unconfigured, and the response says so plainly. Nothing here
  * ever returns a success the operator could read as "delivered". Email is the
- * exception, because it genuinely works — `mailer.js` has a transport.
+ * exception whenever `SMTP_URL` is configured, and reports a failure when it
+ * is not — there is no local outbox standing in for a delivery.
  *
  * **2. Consent is applied at send, never at compose.** `resolveAudience` runs
  * when a campaign is sent, not when it is drafted, so an account that
@@ -47,10 +48,10 @@ const { BUSINESS_INFO } = require('../../../shared/business.js');
 const CHANNEL_PROVIDERS = {
   email: {
     label: 'Email',
-    // Email always delivers: with no SMTP_URL the mailer writes to the outbox,
-    // which is a real, inspectable artefact rather than a silent drop.
-    configured: async () => true,
-    reason: null,
+    // Email delivers only when there is a transport behind it. Asking the
+    // mailer keeps this answer and what a send actually does in step.
+    configured: mailerConfigured,
+    reason: 'No SMTP transport is configured, so email cannot be delivered.',
   },
   // These two now resolve through `credentialService`, which checks the env
   // vars **and** the credentials saved on the API Keys screen (§6.15). Before
@@ -310,13 +311,12 @@ async function sendMessage(
       html: decorate(text, account),
       text,
     });
-    row.status = result.delivered ? 'sent' : 'queued_unconfigured';
+    row.status = result.delivered ? 'sent' : 'failed';
     row.provider = result.via;
-    // The outbox is neither a failure nor a delivery. Saying which it was is
-    // the honest answer, and the screen prints it.
+    // An email that did not go out is a failure, not a queue: there is no
+    // outbox holding it and no retry behind it. The screen prints the reason.
     if (!result.delivered) {
-      row.unconfiguredReason =
-        'No SMTP transport is configured, so the message was written to the local outbox instead of being delivered.';
+      row.unconfiguredReason = result.error ?? 'The message could not be delivered.';
     }
   } else {
     /**
@@ -666,10 +666,9 @@ async function sendCampaign(id, staff) {
         html: decorate(body, account),
         text: body,
       });
-      status = result.delivered ? 'sent' : 'queued_unconfigured';
+      status = result.delivered ? 'sent' : 'failed';
       if (!result.delivered) {
-        reason =
-          'No SMTP transport is configured, so the message was written to the local outbox instead of being delivered.';
+        reason = result.error ?? 'The message could not be delivered.';
       }
     } catch (error) {
       // `sendMail` resolves on every path, so arriving here means something
@@ -700,8 +699,9 @@ async function sendCampaign(id, staff) {
 
   row.status = failed === eligible.length ? 'failed' : 'sent';
   row.sentAt = new Date();
-  // `sent` counts accepted messages only. Outbox writes are reported separately
-  // rather than inflating it — §6b rule 4 governs numbers as much as words.
+  // `sent` counts accepted messages only. Failures and unsendable channels are
+  // reported separately rather than inflating it — §6b rule 4 governs numbers
+  // as much as words.
   row.stats.sent = sent;
   row.stats.delivered = sent;
   row.stats.bounced = failed;
@@ -836,7 +836,7 @@ async function summary() {
   };
 }
 
-exports.default = {
+export default {
   channelStatus,
   channelStatuses,
   listMessages,
@@ -858,25 +858,4 @@ exports.default = {
   summary,
 };
 
-// --- CommonJS exports -------------------------------------------------
-exports.channelStatus = channelStatus;
-exports.channelStatuses = channelStatuses;
-exports.listMessages = listMessages;
-exports.sendMessage = sendMessage;
-exports.listTemplates = listTemplates;
-exports.createTemplate = createTemplate;
-exports.updateTemplate = updateTemplate;
-exports.deleteTemplate = deleteTemplate;
-exports.isSuppressed = isSuppressed;
-exports.unsubscribeToken = unsubscribeToken;
-exports.resolveAudience = resolveAudience;
-exports.listCampaigns = listCampaigns;
-exports.getCampaign = getCampaign;
-exports.createCampaign = createCampaign;
-exports.updateCampaign = updateCampaign;
-exports.deleteCampaign = deleteCampaign;
-exports.sendCampaign = sendCampaign;
-exports.listUnsubscribes = listUnsubscribes;
-exports.unsubscribe = unsubscribe;
-exports.resubscribe = resubscribe;
-exports.summary = summary;
+export { channelStatus, channelStatuses, listMessages, sendMessage, listTemplates, createTemplate, updateTemplate, deleteTemplate, isSuppressed, unsubscribeToken, resolveAudience, listCampaigns, getCampaign, createCampaign, updateCampaign, deleteCampaign, sendCampaign, listUnsubscribes, unsubscribe, resubscribe, summary };

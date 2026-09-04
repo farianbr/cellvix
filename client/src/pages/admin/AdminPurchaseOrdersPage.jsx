@@ -517,7 +517,7 @@ export function AdminPurchaseOrdersPage() {
         />
       </Panel>
 
-      <ProcessStrip current={cycleStage(status)} />
+      <ProcessStrip title="Life cycle of a purchase order" current={cycleStage(status)} />
 
       <Modal
         open={creating}

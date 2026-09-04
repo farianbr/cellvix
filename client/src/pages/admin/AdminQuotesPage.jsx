@@ -78,10 +78,11 @@ function todayIso(offsetDays = 0) {
  * is a preview — every figure is recomputed server-side at the client's own
  * provincial rate, which this form cannot know.
  */
-function QuoteForm({ clients, products, quote, onSubmit, onCancel, isPending, error }) {
+/** `seedClient` pre-picks the customer when the form is opened from a profile. */
+function QuoteForm({ clients, products, quote, seedClient, onSubmit, onCancel, isPending, error }) {
   const { register, handleSubmit, control, watch } = useForm({
     defaultValues: {
-      user: quote?.user?.id ?? clients[0]?.id ?? '',
+      user: quote?.user?.id ?? seedClient ?? clients[0]?.id ?? '',
       validUntil: quote?.validUntil
         ? new Date(quote.validUntil).toISOString().slice(0, 10)
         : todayIso(30),
@@ -223,7 +224,7 @@ function QuoteForm({ clients, products, quote, onSubmit, onCancel, isPending, er
 export function AdminQuotesPage() {
   const [query, setQuery] = useState('');
   // Opened directly by `+ Create` (§7.2), which arrives with `?new=1`.
-  const [creating, setCreating] = useCreateParam();
+  const [creating, setCreating, createSeed] = useCreateParam(true, false, ["client"]);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -532,6 +533,7 @@ export function AdminQuotesPage() {
       >
         {creating && (
           <QuoteForm
+            seedClient={createSeed.client}
             clients={clients}
             products={products}
             isPending={createQuote.isPending}

@@ -1,9 +1,9 @@
-const jwt = require('jsonwebtoken');
-const { default: User } = require('../models/User.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const { default: env } = require('../config/env.js');
-const { clearSession } = require('../services/authService.js');
-const { default: Role } = require('../models/Role.js');
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
+import ApiError from '../utils/ApiError.js';
+import env from '../config/env.js';
+import { clearSession } from '../services/authService.js';
+import Role from '../models/Role.js';
 
 const STATUS_ERRORS = {
   pending: [
@@ -182,13 +182,4 @@ function canSeePricing(user) {
   return Boolean(user && user.status === 'approved');
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.authenticate = authenticate;
-exports.requireAuth = requireAuth;
-exports.requireApproved = requireApproved;
-exports.denyAdmin = denyAdmin;
-exports.requireAdmin = requireAdmin;
-exports.requireStaff = requireStaff;
-exports.requirePermission = requirePermission;
-exports.isStaffAccount = isStaffAccount;
-exports.canSeePricing = canSeePricing;
+export { authenticate, requireAuth, requireApproved, denyAdmin, requireAdmin, requireStaff, requirePermission, isStaffAccount, canSeePricing };

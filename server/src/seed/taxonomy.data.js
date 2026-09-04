@@ -372,8 +372,4 @@ const GRADE_MULTIPLIER = {
   AFTERMARKET: 0.62,
 };
 
-// --- CommonJS exports -------------------------------------------------
-exports.TAXONOMY = TAXONOMY;
-exports.PART_TYPES = PART_TYPES;
-exports.COMPONENT_TYPES = COMPONENT_TYPES;
-exports.GRADE_MULTIPLIER = GRADE_MULTIPLIER;
+export { TAXONOMY, PART_TYPES, COMPONENT_TYPES, GRADE_MULTIPLIER };

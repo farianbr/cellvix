@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Bell, BellOff } from 'lucide-react';
+import { Bell, BellOff, UserCheck } from 'lucide-react';
 import cn from '@/lib/cn';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
 import { relativeTime } from '@/lib/format';
@@ -73,6 +73,84 @@ const SEVERITY_CLASS = {
  */
 const STORED_ID = /^[a-f\d]{24}$/i;
 
+/**
+ * One notification row.
+ *
+ * A container rather than one button, because a button inside a button is
+ * invalid and a nested click target that has to `stopPropagation` to work is a
+ * bug waiting to be reintroduced. Two siblings say what they each do.
+ */
+function NotificationRow({ entry, onOpen, onApprove }) {
+  const Icon = adminIcon(TYPE_ICON[entry.type]) ?? Bell;
+
+  return (
+    <div
+      className={cn(
+        'flex w-full items-start border-b border-line transition-colors last:border-b-0 hover:bg-surface-2',
+        // An unread row is tinted, not bolded alone: weight shifts reflow the
+        // text and make the list twitch as rows are read.
+        !entry.read && 'bg-surface-2/60',
+      )}
+    >
+      <button
+        type="button"
+        onClick={onOpen}
+        className="flex min-w-0 flex-1 items-start gap-3 px-4 py-3 text-left"
+      >
+        <Icon
+          className={cn('mt-px size-4 shrink-0', SEVERITY_CLASS[entry.severity] ?? 'text-ink-400')}
+          strokeWidth={1.75}
+          aria-hidden="true"
+        />
+
+        <span className="min-w-0 flex-1">
+          <span className="block text-[12.5px] font-medium leading-snug text-ink-900">
+            {entry.title}
+          </span>
+          {entry.detail && (
+            <span className="mt-0.5 block truncate text-[11.5px] text-ink-500">{entry.detail}</span>
+          )}
+        </span>
+
+        {/**
+         * A time, or the word "ongoing" — never both, and never a time this
+         * row cannot support.
+         *
+         * A standing condition (an empty shelf, an overdue PO) has no moment
+         * of onset in the records, so the server dates it to now purely to
+         * sort it. Rendering that as a time ago printed "just now" against
+         * every one of them, which was the single most misleading thing in
+         * this panel: forty alerts all claiming to have arrived this second.
+         */}
+        {entry.standing ? (
+          <span className="shrink-0 pt-px text-[10.5px] text-ink-300">ongoing</span>
+        ) : (
+          <time
+            dateTime={new Date(entry.createdAt).toISOString()}
+            className="shrink-0 pt-px text-[10.5px] text-ink-300"
+          >
+            {relativeTime(entry.createdAt)}
+          </time>
+        )}
+      </button>
+
+      {onApprove && (
+        <button
+          type="button"
+          // The panel stays open behind the modal: approving is a decision
+          // about one row, and closing the list underneath it loses the
+          // operator their place in the queue.
+          onClick={onApprove}
+          aria-label={`Approve ${entry.entity?.label ?? 'this account'}`}
+          className="my-2.5 mr-3 shrink-0 self-center rounded-[7px] border border-brand/40 bg-brand-50 px-2 py-1 text-[11.5px] font-medium text-brand transition-colors hover:border-brand"
+        >
+          {entry.action.label}
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function NotificationMenu() {
   const [open, setOpen] = useState(false);
   const [approving, setApproving] = useState(null);
@@ -92,6 +170,24 @@ export function NotificationMenu() {
     [entries],
   );
   const standing = entries.length - clearable;
+
+  /**
+   * Approvals are split out and put first.
+   *
+   * They are the only rows in this panel a person can *finish* from here, and
+   * mixed into forty standing stock alerts they were indistinguishable from
+   * things that merely wanted reading. The server already sorts actionable
+   * rows to the top; this makes the boundary visible, so an operator can see
+   * at a glance whether anything is waiting on them.
+   */
+  const [approvals, rest] = useMemo(() => {
+    const pending = [];
+    const other = [];
+    for (const entry of entries) {
+      (entry.action?.kind === 'approve_user' ? pending : other).push(entry);
+    }
+    return [pending, other];
+  }, [entries]);
 
   // Opening marks everything currently visible as read. Fired once per open
   // rather than on every render, and only when there is something to mark —
@@ -137,22 +233,38 @@ export function NotificationMenu() {
       </button>
 
       {open && (
+        <>
+          {/* A scrim behind the panel.
+
+              Sitting on the same near-white the page uses, the dropdown read
+              as part of the layout rather than over it — the edge between
+              them was one hairline. Dimming what is behind it separates the
+              two without the panel having to shout, and gives a click target
+              for dismissing it that is the whole rest of the screen. */}
+          <button
+            type="button"
+            aria-hidden="true"
+            tabIndex={-1}
+            onClick={() => setOpen(false)}
+            className="fixed inset-0 z-30 cursor-default bg-ink-900/20"
+          />
+
         <div
           role="dialog"
           aria-label="Notifications"
           // Right-anchored under the bell, and capped to the viewport so it
           // cannot push the page sideways on a 320 screen (Instructions 3.1).
           //
-          // `max-w` on a viewport-relative width is not enough on its own: the
+          // A max width on a viewport-relative width is not enough on its own: the
           // anchor is the bell, which is not flush to the right edge — the
           // avatar sits beyond it — so a panel exactly as wide as the viewport
           // hangs off the *left* by however far the bell is inset, clipping the
-          // count and the row icons. `max-md:fixed` drops it out of the anchor
-          // on small screens and pins it to the viewport itself, which is the
-          // only box that actually knows where the edges are.
-          className="fixed inset-x-3 top-14 z-40 mt-1.5 overflow-hidden rounded-[11px] border border-line bg-surface shadow-card sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:w-[min(340px,calc(100vw-1.5rem))]"
+          // count and the row icons. Fixed on small screens pins it to the
+          // viewport itself, which is the only box that knows where the edges
+          // are; from the sm breakpoint up it returns to the anchor.
+          className="fixed inset-x-3 top-14 z-40 mt-1.5 overflow-hidden rounded-[14px] border border-line bg-surface shadow-pop ring-1 ring-ink-900/5 sm:absolute sm:inset-x-auto sm:right-0 sm:top-full sm:w-[min(420px,calc(100vw-1.5rem))]"
         >
-          <div className="border-b border-line px-3 py-2">
+          <div className="border-b border-line px-4 py-3">
             <div className="flex items-center justify-between gap-2">
               <p className="text-[12.5px] font-semibold text-ink-700">
                 {entries.length} {entries.length === 1 ? 'alert' : 'alerts'}
@@ -188,7 +300,7 @@ export function NotificationMenu() {
             )}
           </div>
 
-          <div className="max-h-[min(420px,60vh)] overflow-y-auto">
+          <div className="max-h-[min(520px,68vh)] overflow-y-auto">
             {isLoading && (
               <p className="px-3 py-6 text-center text-[12.5px] text-ink-400">Loading…</p>
             )}
@@ -200,85 +312,64 @@ export function NotificationMenu() {
               </div>
             )}
 
-            {entries.map((entry) => {
-              const Icon = adminIcon(TYPE_ICON[entry.type]) ?? Bell;
-
-              return (
-                // A row is a container rather than one button now, because a
-                // button inside a button is invalid and a nested click target
-                // that has to `stopPropagation` to work is a bug waiting to be
-                // reintroduced. Two siblings say what they each do.
-                <div
-                  key={entry.id}
-                  className={cn(
-                    'flex w-full items-start border-b border-line transition-colors last:border-b-0 hover:bg-surface-2',
-                    // An unread row is tinted, not bolded alone: weight shifts
-                    // reflow the text and make the list twitch as rows are read.
-                    !entry.read && 'bg-surface-2/60',
-                  )}
-                >
-                  <button
-                    type="button"
-                    onClick={() => {
+            {/* Approvals first, under their own heading. Everything here can be
+                finished from this panel; everything below it cannot. */}
+            {approvals.length > 0 && (
+              <>
+                <p className="sticky top-0 z-10 flex items-center gap-1.5 border-b border-line bg-brand-50 px-4 py-2 text-[10.5px] font-semibold uppercase tracking-wider text-brand">
+                  <UserCheck className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
+                  Waiting on you
+                  <span className="tnum ml-auto rounded-full bg-brand px-1.5 text-[10px] leading-[15px] text-white">
+                    {approvals.length}
+                  </span>
+                </p>
+                {approvals.map((entry) => (
+                  <NotificationRow
+                    key={entry.id}
+                    entry={entry}
+                    onOpen={() => {
                       setOpen(false);
                       if (entry.href) navigate(entry.href);
                     }}
-                    className="flex min-w-0 flex-1 items-start gap-2.5 px-3 py-2.5 text-left"
-                  >
-                    <Icon
-                      className={cn(
-                        'mt-px size-4 shrink-0',
-                        SEVERITY_CLASS[entry.severity] ?? 'text-ink-400',
-                      )}
-                      strokeWidth={1.75}
-                      aria-hidden="true"
-                    />
+                    onApprove={() =>
+                      setApproving({
+                        id: entry.action.userId,
+                        businessName: entry.action.businessName ?? entry.entity?.label,
+                        contactName: entry.action.contactName,
+                        email: entry.action.email,
+                        taxId: entry.action.taxId,
+                      })
+                    }
+                  />
+                ))}
+              </>
+            )}
 
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[12.5px] font-medium leading-snug text-ink-900">
-                        {entry.title}
-                      </span>
-                      {entry.detail && (
-                        <span className="mt-0.5 block truncate text-[11.5px] text-ink-500">
-                          {entry.detail}
-                        </span>
-                      )}
-                    </span>
-
-                    <time
-                      dateTime={new Date(entry.createdAt).toISOString()}
-                      className="shrink-0 pt-px text-[10.5px] text-ink-300"
-                    >
-                      {relativeTime(entry.createdAt)}
-                    </time>
-                  </button>
-
-                  {entry.action?.kind === 'approve_user' && (
-                    <button
-                      type="button"
-                      // The panel stays open behind the modal: approving is a
-                      // decision about one row, and closing the list underneath
-                      // it loses the operator their place in the queue.
-                      onClick={() =>
-                        setApproving({
-                          id: entry.action.userId,
-                          businessName: entry.action.businessName ?? entry.entity?.label,
-                          contactName: entry.action.contactName,
-                          email: entry.action.email,
-                          taxId: entry.action.taxId,
-                        })
-                      }
-                      aria-label={`Approve ${entry.entity?.label ?? 'this account'}`}
-                      className="my-2.5 mr-3 shrink-0 self-center rounded-[7px] border border-line px-2 py-1 text-[11.5px] font-medium text-ink-700 transition-colors hover:border-brand-500 hover:text-brand-600"
-                    >
-                      {entry.action.label}
-                    </button>
-                  )}
-                </div>
-              );
-            })}
+            {rest.length > 0 && (
+              <>
+                {/* The heading only appears when there is something above it to
+                    separate from — a lone "Updates" label over the whole list
+                    labels nothing. */}
+                {approvals.length > 0 && (
+                  <p className="sticky top-0 z-10 border-b border-line bg-surface-2 px-4 py-2 text-[10.5px] font-semibold uppercase tracking-wider text-ink-400">
+                    Everything else
+                  </p>
+                )}
+                {rest.map((entry) => (
+                  <NotificationRow
+                    key={entry.id}
+                    entry={entry}
+                    onOpen={() => {
+                      setOpen(false);
+                      if (entry.href) navigate(entry.href);
+                    }}
+                  />
+                ))}
+              </>
+            )}
           </div>
         </div>
+        </>
       )}
 
       <Modal

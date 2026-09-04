@@ -1,12 +1,12 @@
-const crypto = require('node:crypto');
+import crypto from 'node:crypto';
 
-const { default: User } = require('../models/User.js');
-const { default: Invoice } = require('../models/Invoice.js');
-const { default: CreditTransaction } = require('../models/CreditTransaction.js');
-const { default: Settings } = require('../models/Settings.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const { likeRegex } = require('../utils/regex.js');
-const storeCreditService = require('./storeCreditService.js');
+import User from '../models/User.js';
+import Invoice from '../models/Invoice.js';
+import CreditTransaction from '../models/CreditTransaction.js';
+import Settings from '../models/Settings.js';
+import ApiError from '../utils/ApiError.js';
+import { likeRegex } from '../utils/regex.js';
+import storeCreditService from './storeCreditService.js';
 
 /**
  * Referral commission (ERP rework §6.13, phase 10).
@@ -591,7 +591,7 @@ async function referralsFor(user) {
   };
 }
 
-exports.default = {
+export default {
   accrueForPayment,
   currentPercent,
   ensureReferralCode,
@@ -603,13 +603,4 @@ exports.default = {
   setPercent,
 };
 
-// --- CommonJS exports -------------------------------------------------
-exports.ensureReferralCode = ensureReferralCode;
-exports.resolveReferralCode = resolveReferralCode;
-exports.currentPercent = currentPercent;
-exports.setPercent = setPercent;
-exports.accrueForPayment = accrueForPayment;
-exports.reverseForInvoice = reverseForInvoice;
-exports.reverseForOrder = reverseForOrder;
-exports.listReferrals = listReferrals;
-exports.referralsFor = referralsFor;
+export { ensureReferralCode, resolveReferralCode, currentPercent, setPercent, accrueForPayment, reverseForInvoice, reverseForOrder, listReferrals, referralsFor };

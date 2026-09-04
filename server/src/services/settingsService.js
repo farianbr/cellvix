@@ -1,9 +1,10 @@
-const {
-  default: Settings,
-  DEFAULT_PAYMENT_METHODS, DEFAULT_SHIPPING_METHODS, DEFAULT_TAX_RATES,
+import Settings, {
+  DEFAULT_PAYMENT_METHODS,
+  DEFAULT_SHIPPING_METHODS,
+  DEFAULT_TAX_RATES,
   DEFAULT_TIER_WARRANTY_BONUS,
-} = require('../models/Settings.js');
-const { default: ApiError } = require('../utils/ApiError.js');
+} from '../models/Settings.js';
+import ApiError from '../utils/ApiError.js';
 
 /**
  * The settings singleton's read and write surface (ERP rework §6.15, phase 11).
@@ -362,7 +363,7 @@ async function updateCommunications(input) {
   });
 }
 
-exports.default = {
+export default {
   get,
   updateBusiness,
   updateSale,
@@ -372,12 +373,4 @@ exports.default = {
   updateCommunications,
 };
 
-// --- CommonJS exports -------------------------------------------------
-exports.COMMUNICATIONS_WIRED = COMMUNICATIONS_WIRED;
-exports.get = get;
-exports.updateBusiness = updateBusiness;
-exports.updateSale = updateSale;
-exports.updateShipping = updateShipping;
-exports.updatePaymentMethods = updatePaymentMethods;
-exports.updateInventory = updateInventory;
-exports.updateCommunications = updateCommunications;
+export { COMMUNICATIONS_WIRED, get, updateBusiness, updateSale, updateShipping, updatePaymentMethods, updateInventory, updateCommunications };

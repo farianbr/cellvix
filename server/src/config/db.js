@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const { default: env } = require('./env.js');
+import mongoose from 'mongoose';
+import env from './env.js';
 
 let shuttingDown = false;
 
@@ -45,6 +45,4 @@ async function disconnectDb() {
   await mongoose.disconnect();
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.connectDb = connectDb;
-exports.disconnectDb = disconnectDb;
+export { connectDb, disconnectDb };

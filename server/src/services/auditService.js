@@ -1,5 +1,5 @@
-const { default: AuditLog, diff } = require('../models/AuditLog.js');
-const { likeRegex } = require('../utils/regex.js');
+import AuditLog, { diff } from '../models/AuditLog.js';
+import { likeRegex } from '../utils/regex.js';
 
 /**
  * The audit trail's read and write surface (§7.5, §6.15 category 6, phase 11b).
@@ -187,11 +187,6 @@ async function list({ kind = 'activity', q, action, entity, page = 1, limit = 50
   };
 }
 
-exports.default = { record, recordChange, recordSecurity, actorFrom, list };
+export default { record, recordChange, recordSecurity, actorFrom, list };
 
-// --- CommonJS exports -------------------------------------------------
-exports.actorFrom = actorFrom;
-exports.record = record;
-exports.recordChange = recordChange;
-exports.recordSecurity = recordSecurity;
-exports.list = list;
+export { actorFrom, record, recordChange, recordSecurity, list };

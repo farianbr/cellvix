@@ -1,10 +1,10 @@
-const mongoose = require('mongoose');
-const { connectDb, disconnectDb } = require('../config/db.js');
-const { default: Product } = require('../models/Product.js');
-const { default: BlogPost } = require('../models/BlogPost.js');
-const { default: Faq } = require('../models/Faq.js');
-const { default: Offer } = require('../models/Offer.js');
-const { BLOG_POSTS, GENERAL_FAQS, PRODUCT_FAQS, buildOffers } = require('./content.data.js');
+import mongoose from 'mongoose';
+import { connectDb, disconnectDb } from '../config/db.js';
+import Product from '../models/Product.js';
+import BlogPost from '../models/BlogPost.js';
+import Faq from '../models/Faq.js';
+import Offer from '../models/Offer.js';
+import { BLOG_POSTS, GENERAL_FAQS, PRODUCT_FAQS, buildOffers } from './content.data.js';
 
 /**
  * Seeds ONLY the editorial collections — blog posts, FAQs and offers.
@@ -63,5 +63,4 @@ if (process.argv[1] && process.argv[1].endsWith('content.js')) {
   });
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.seedContent = seedContent;
+export { seedContent };

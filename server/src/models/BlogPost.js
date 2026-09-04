@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const blogPostSchema = new mongoose.Schema(
   {
@@ -34,6 +34,5 @@ blogPostSchema.index({ status: 1, publishedAt: -1 });
 
 const BlogPost = mongoose.model('BlogPost', blogPostSchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.BlogPost = BlogPost;
-exports.default = BlogPost;
+export { BlogPost };
+export default BlogPost;

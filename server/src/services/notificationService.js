@@ -1,9 +1,9 @@
-const { default: Notification } = require('../models/Notification.js');
-const { default: Invoice } = require('../models/Invoice.js');
-const { default: Product } = require('../models/Product.js');
-const { default: PurchaseOrder } = require('../models/PurchaseOrder.js');
-const { default: Role } = require('../models/Role.js');
-const { default: User } = require('../models/User.js');
+import Notification from '../models/Notification.js';
+import Invoice from '../models/Invoice.js';
+import Product from '../models/Product.js';
+import PurchaseOrder from '../models/PurchaseOrder.js';
+import Role from '../models/Role.js';
+import User from '../models/User.js';
 
 /**
  * The notification bell (ERP rework §7.3, §6.15, phase 12c).
@@ -257,6 +257,16 @@ async function derivedFor(areas, now) {
                 // stock field's `updatedAt` would rank a shelf that emptied
                 // months ago below one restocked yesterday.
                 createdAt: now,
+                /**
+                 * ...but the row must not then *claim* it happened just now.
+                 *
+                 * `createdAt` is a sort key here, not an observation: nothing
+                 * recorded when this shelf emptied. Rendering it as a time
+                 * ago put "just now" against every standing condition, which
+                 * is the one thing it definitely is not. The client reads this
+                 * flag and shows the state instead of a clock.
+                 */
+                standing: true,
               };
             })
             .slice(0, PER_CONDITION * 2),
@@ -441,10 +451,6 @@ async function clearAll(user) {
   return { cleared: result.modifiedCount ?? 0 };
 }
 
-exports.default = { emit, list, markRead, clearAll };
+export default { emit, list, markRead, clearAll };
 
-// --- CommonJS exports -------------------------------------------------
-exports.emit = emit;
-exports.list = list;
-exports.markRead = markRead;
-exports.clearAll = clearAll;
+export { emit, list, markRead, clearAll };

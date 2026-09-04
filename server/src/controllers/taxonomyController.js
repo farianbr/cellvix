@@ -1,5 +1,5 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const taxonomyService = require('../services/taxonomyService.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import * as taxonomyService from '../services/taxonomyService.js';
 
 /**
  * The category tree, optionally pruned to the selected component types.
@@ -33,5 +33,4 @@ const tree = asyncHandler(async (req, res) => {
   res.json({ ...treePayload, ...components });
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.tree = tree;
+export { tree };

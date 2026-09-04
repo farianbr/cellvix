@@ -13,7 +13,5 @@ function likeRegex(value, flags = 'i') {
   return new RegExp(escapeRegex(String(value).trim()), flags);
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.escapeRegex = escapeRegex;
-exports.likeRegex = likeRegex;
-exports.default = escapeRegex;
+export { escapeRegex, likeRegex };
+export default escapeRegex;

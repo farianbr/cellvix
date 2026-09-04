@@ -1,9 +1,10 @@
-const path = require('node:path');
-const dotenv = require('dotenv');
-const { z } = require('zod');
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import dotenv from 'dotenv';
+import { z } from 'zod';
 
 // One .env at the repo root serves both workspaces.
-const here = __dirname;
+const here = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.resolve(here, '..', '..', '..', '.env') });
 
 const schema = z.object({
@@ -48,9 +49,9 @@ const schema = z.object({
   // Opt-in: makes the MOCK gateway decline every charge, so the payment-failure
   // page can be exercised end to end. Off by default — see services/payment.js.
   // ---- outbound mail ------------------------------------------------
-  // Optional. With no SMTP_URL the mailer writes each message to server/.mail
-  // and logs it instead of sending — the order still completes either way, so
-  // a missing mail server can never fail a checkout.
+  // Optional, but nothing can be emailed without it. With no SMTP_URL the
+  // mailer logs each message as a failure instead of sending — the order still
+  // completes either way, so a missing mail server can never fail a checkout.
   SMTP_URL: z.string().optional(),
   MAIL_FROM: z.string().default('Cellvix <billing@cellvix.ca>'),
   // Account mail — a welcome, credentials, anything about the account itself —
@@ -102,6 +103,5 @@ if (env.isProd && env.JWT_SECRET.includes('dev-only')) {
   process.exit(1);
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.env = env;
-exports.default = env;
+export { env };
+export default env;

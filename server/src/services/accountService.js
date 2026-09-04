@@ -1,16 +1,17 @@
-const { default: Order } = require('../models/Order.js');
-const { default: Invoice } = require('../models/Invoice.js');
-const { default: Product } = require('../models/Product.js');
-const { default: Cart } = require('../models/Cart.js');
-const { default: User } = require('../models/User.js');
-const { default: ApiError } = require('../utils/ApiError.js');
-const storeCredit = require('./storeCreditService.js');
-const payment = require('./payment.js');
-const invoicePaymentService = require('./invoicePaymentService.js');
-const { activityFeed, pagedActivityFeed } = require('./activityService.js');
-const { serializeOrder } = require('./orderService.js');
-const { serialize: serializeProduct } = require('./productService.js');
-const { renderInvoiceHtml } = require('./invoiceDocument.js');
+import Order from '../models/Order.js';
+import Invoice from '../models/Invoice.js';
+import Product from '../models/Product.js';
+import Cart from '../models/Cart.js';
+import User from '../models/User.js';
+import ApiError from '../utils/ApiError.js';
+import storeCredit from './storeCreditService.js';
+import payment from './payment.js';
+import invoicePaymentService from './invoicePaymentService.js';
+import { activityFeed, pagedActivityFeed } from './activityService.js';
+import { serializeOrder } from './orderService.js';
+import { serialize as serializeProduct } from './productService.js';
+import { renderInvoiceHtml } from './invoiceDocument.js';
+import * as referralService from './referralService.js';
 
 /**
  * The dashboard payload (brief §8.3).
@@ -650,27 +651,7 @@ async function activityPage(userId, params = {}) {
  * which walks every referred account in the system for the admin screen.
  */
 async function referrals(user) {
-  const referralService = require('./referralService.js');
   return referralService.referralsFor(user);
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.summary = summary;
-exports.updateProfile = updateProfile;
-exports.addAddress = addAddress;
-exports.updateAddress = updateAddress;
-exports.removeAddress = removeAddress;
-exports.addPaymentMethod = addPaymentMethod;
-exports.removePaymentMethod = removePaymentMethod;
-exports.changePassword = changePassword;
-exports.listInvoices = listInvoices;
-exports.getInvoice = getInvoice;
-exports.invoiceDocument = invoiceDocument;
-exports.lineOfCreditActivity = lineOfCreditActivity;
-exports.storeCreditStatement = storeCreditStatement;
-exports.rechargeStoreCredit = rechargeStoreCredit;
-exports.payInvoice = payInvoice;
-exports.payOffCredit = payOffCredit;
-exports.activity = activity;
-exports.activityPage = activityPage;
-exports.referrals = referrals;
+export { summary, updateProfile, addAddress, updateAddress, removeAddress, addPaymentMethod, removePaymentMethod, changePassword, listInvoices, getInvoice, invoiceDocument, lineOfCreditActivity, storeCreditStatement, rechargeStoreCredit, payInvoice, payOffCredit, activity, activityPage, referrals };

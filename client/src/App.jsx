@@ -1,4 +1,5 @@
 import { Suspense, lazy } from 'react';
+import Toaster from '@/components/ui/Toaster';
 import { Navigate, Route, Routes } from 'react-router';
 import RootLayout from '@/components/layout/RootLayout';
 import ShopPage from '@/pages/ShopPage';
@@ -69,8 +70,10 @@ const AdminInventoryDetailPage = lazy(() => import('@/pages/admin/AdminInventory
 const AdminReportsPage = lazy(() => import('@/pages/admin/AdminReportsPage'));
 const AdminBusinessReportPage = lazy(() => import('@/pages/admin/AdminBusinessReportPage'));
 const AdminQuotesPage = lazy(() => import('@/pages/admin/AdminQuotesPage'));
+const AdminWebQuotesPage = lazy(() => import('@/pages/admin/AdminWebQuotesPage'));
 const AdminQuoteDetailPage = lazy(() => import('@/pages/admin/AdminQuoteDetailPage'));
 const AdminTicketsPage = lazy(() => import('@/pages/admin/AdminTicketsPage'));
+const AdminTicketFormPage = lazy(() => import('@/pages/admin/AdminTicketFormPage'));
 const AdminRmaPage = lazy(() => import('@/pages/admin/AdminRmaPage'));
 const AdminRmaDetailPage = lazy(() => import('@/pages/admin/AdminRmaDetailPage'));
 const AdminOutletsPage = lazy(() => import('@/pages/admin/AdminOutletsPage'));
@@ -114,6 +117,12 @@ const AdminInvoiceDetailPage = lazy(() => import('@/pages/admin/AdminInvoiceDeta
 
 export function App() {
   return (
+    <>
+      {/* Mounted once, outside the routes: a toast outlives the screen that
+          raised it — an email sent from an invoice should still confirm after
+          the operator has navigated on. */}
+      <Toaster />
+
     <Routes>
       {/* The ERP panel. Outside RootLayout by design (§4) — it owns the whole
           viewport. AdminShell is also the UI half of the guard; requireAdmin
@@ -152,6 +161,8 @@ export function App() {
             screen so the literal path cannot be swallowed. */}
         {/* Quotes & RMA (phase 7). */}
         <Route path="quotes" element={<AdminQuotesPage />} />
+        {/* Enquiries from the storefront contact form, before anybody prices them. */}
+        <Route path="web-quotes" element={<AdminWebQuotesPage />} />
         <Route path="quotes/:id" element={<AdminQuoteDetailPage />} />
         <Route path="rma" element={<AdminRmaPage />} />
         <Route path="rma/:id" element={<AdminRmaDetailPage />} />
@@ -159,6 +170,9 @@ export function App() {
         {/* Repair tickets. The detail screen is not built yet, so a row opens
             the edit dialog on the list rather than a route that would 404. */}
         <Route path="tickets" element={<AdminTicketsPage />} />
+        {/* Intake is a full screen, not a modal — see the page for why. */}
+        <Route path="tickets/new" element={<AdminTicketFormPage />} />
+        <Route path="tickets/:id/edit" element={<AdminTicketFormPage />} />
 
         <Route path="reports/business" element={<AdminBusinessReportPage />} />
         <Route path="reports" element={<AdminReportsPage />} />
@@ -382,6 +396,7 @@ export function App() {
         />
       </Route>
     </Routes>
+    </>
   );
 }
 

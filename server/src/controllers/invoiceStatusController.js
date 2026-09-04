@@ -1,6 +1,6 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const invoiceStatusService = require('../services/invoiceStatusService.js');
-const auditService = require('../services/auditService.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import invoiceStatusService from '../services/invoiceStatusService.js';
+import auditService from '../services/auditService.js';
 
 /**
  * Time-lapse invoice messages (§6.15 category 2, phase 11d).
@@ -102,9 +102,4 @@ const run = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.list = list;
-exports.create = create;
-exports.update = update;
-exports.remove = remove;
-exports.run = run;
+export { list, create, update, remove, run };

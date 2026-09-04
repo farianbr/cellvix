@@ -247,12 +247,32 @@ export function useAdminInventoryItem(id) {
 
 // ---- quotes & RMA (phase 7) -------------------------------------------------
 
+/**
+ * Web quotes: enquiries the storefront contact form sent in.
+ *
+ * `undefined` params means the caller does not want the list yet — the
+ * customer profile only fetches on its own tab.
+ */
+export function useAdminWebQuotes(params) {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'web-quotes', params],
+    queryFn: () => api.get('/admin/web-quotes', params),
+    enabled: canUseAdmin && params !== undefined,
+    staleTime: 15 * 1000,
+    placeholderData: (previous) => previous,
+  });
+}
+
 export function useAdminQuotes(params) {
   const { canUseAdmin } = useAuth();
   return useQuery({
     queryKey: ['admin', 'quotes', params],
     queryFn: () => api.get('/admin/quotes', params),
-    enabled: canUseAdmin,
+    // `undefined` params means the caller does not want the list yet — the
+    // customer profile only fetches on its Quotes tab. Without this the hook
+    // would fetch every quote in the system to render nothing.
+    enabled: canUseAdmin && params !== undefined,
     staleTime: 15 * 1000,
   });
 }
@@ -295,7 +315,10 @@ export function useAdminTickets(params) {
   return useQuery({
     queryKey: ['admin', 'tickets', params],
     queryFn: () => api.get('/admin/tickets', params),
-    enabled: canUseAdmin,
+    // `undefined` params means the caller does not want the list yet — the
+    // customer profile only fetches on its Tickets tab. Without this the hook
+    // would fetch *every* ticket in the shop to render nothing.
+    enabled: canUseAdmin && params !== undefined,
     staleTime: 15 * 1000,
     // A list that reflows under the operator while they read a row is worse
     // than one a few seconds stale, but a page of tickets is a live board —
@@ -858,6 +881,32 @@ export function useAdminMutations() {
       mutationFn: ({ number, reason }) => api.post(`/admin/invoices/${number}/void`, { reason }),
       onSuccess: invalidate,
     }),
+    // Resolves to `{ delivered, to }`. The caller reads `delivered` rather than
+    // treating a 200 as proof the customer has the document — the transport can
+    // accept the request and still refuse the message.
+    // Cash at the counter against the line of credit. Resolves to the invoices
+    // it actually landed on, so the UI can name them rather than say "done".
+    recordCreditPayment: useMutation({
+      mutationFn: ({ id, ...body }) => api.post(`/admin/users/${id}/credit-payment`, body),
+      onSuccess: invalidate,
+    }),
+    reverseInvoicePayment: useMutation({
+      mutationFn: ({ number, index, ...body }) =>
+        api.post(`/admin/invoices/${number}/payments/${index}/reverse`, body),
+      onSuccess: invalidate,
+    }),
+    emailInvoice: useMutation({
+      mutationFn: ({ number }) => api.post(`/admin/invoices/${number}/email`, {}),
+      onSuccess: invalidate,
+    }),
+    updateInvoice: useMutation({
+      mutationFn: ({ number, ...body }) => api.patch(`/admin/invoices/${number}`, body),
+      onSuccess: invalidate,
+    }),
+    deleteInvoice: useMutation({
+      mutationFn: ({ number }) => api.delete(`/admin/invoices/${number}`),
+      onSuccess: invalidate,
+    }),
 
     createProduct: useMutation({
       mutationFn: (body) => api.post('/admin/products', body),
@@ -1035,6 +1084,10 @@ export function useAdminMutations() {
     }),
     updateQuote: useMutation({
       mutationFn: ({ id, ...body }) => api.patch(`/admin/quotes/${id}`, body),
+      onSuccess: invalidate,
+    }),
+    setWebQuoteStatus: useMutation({
+      mutationFn: ({ id, status }) => api.patch(`/admin/web-quotes/${id}/status`, { status }),
       onSuccess: invalidate,
     }),
     setQuoteStatus: useMutation({

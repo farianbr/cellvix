@@ -1,17 +1,18 @@
-const path = require('node:path');
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const express = require('express');
-const helmet = require('helmet');
-const cors = require('cors');
-const cookieParser = require('cookie-parser');
-const morgan = require('morgan');
+import express from 'express';
+import helmet from 'helmet';
+import cors from 'cors';
+import cookieParser from 'cookie-parser';
+import morgan from 'morgan';
 
-const { default: env } = require('./config/env.js');
-const { default: routes } = require('./routes/index.js');
-const { authenticate } = require('./middleware/auth.js');
-const { errorHandler, notFoundHandler } = require('./middleware/errorHandler.js');
+import env from './config/env.js';
+import routes from './routes/index.js';
+import { authenticate } from './middleware/auth.js';
+import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
-const here = __dirname;
+const here = path.dirname(fileURLToPath(import.meta.url));
 const CLIENT_DIST = path.resolve(here, '..', '..', 'client', 'dist');
 
 function createApp() {
@@ -73,6 +74,5 @@ function createApp() {
   return app;
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.createApp = createApp;
-exports.default = createApp;
+export { createApp };
+export default createApp;

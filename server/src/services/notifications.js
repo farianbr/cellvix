@@ -1,6 +1,6 @@
-const { default: env } = require('../config/env.js');
-const { sendMail } = require('./mailer.js');
-const { renderInvoiceHtml, renderInvoiceText } = require('./invoiceDocument.js');
+import env from '../config/env.js';
+import { sendMail } from './mailer.js';
+import { renderInvoiceHtml, renderInvoiceText } from './invoiceDocument.js';
 
 /**
  * Transactional mail the buyer gets without asking for it.
@@ -11,7 +11,7 @@ const { renderInvoiceHtml, renderInvoiceText } = require('./invoiceDocument.js')
 
 /** Emails the invoice for a freshly placed order. Never throws. */
 async function sendInvoiceEmail({ invoice, order, user }) {
-  if (!user?.email) return { delivered: false, via: 'outbox' };
+  if (!user?.email) return { delivered: false, via: null, error: 'No email address on file.' };
 
   try {
     const html = renderInvoiceHtml({ invoice, order, user, origin: env.publicOrigin });
@@ -25,10 +25,9 @@ async function sendInvoiceEmail({ invoice, order, user }) {
     });
   } catch (error) {
     console.error(`  Mail: invoice ${invoice?.number} could not be built — ${error.message}`);
-    return { delivered: false, via: 'outbox' };
+    return { delivered: false, via: null, error: error.message };
   }
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.sendInvoiceEmail = sendInvoiceEmail;
-exports.default = sendInvoiceEmail;
+export { sendInvoiceEmail };
+export default sendInvoiceEmail;

@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
-const { MESSAGE_CHANNELS } = require('./MessageLog.js');
+import { MESSAGE_CHANNELS } from './MessageLog.js';
 
 /**
  * Time-lapse invoice messages (ERP rework §6.15 category 2, §8, phase 11d).
@@ -223,12 +223,5 @@ async function ensureBuiltInRules() {
   }
 }
 
-// --- CommonJS exports -------------------------------------------------
-exports.RULE_TRIGGERS = RULE_TRIGGERS;
-exports.triggerDate = triggerDate;
-exports.RULE_TOKENS = RULE_TOKENS;
-exports.InvoiceStatusRule = InvoiceStatusRule;
-exports.InvoiceStatusRun = InvoiceStatusRun;
-exports.BUILT_IN_RULES = BUILT_IN_RULES;
-exports.ensureBuiltInRules = ensureBuiltInRules;
-exports.default = InvoiceStatusRule;
+export { RULE_TRIGGERS, triggerDate, RULE_TOKENS, InvoiceStatusRule, InvoiceStatusRun, BUILT_IN_RULES, ensureBuiltInRules };
+export default InvoiceStatusRule;

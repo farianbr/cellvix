@@ -1,5 +1,5 @@
-const { z } = require('zod');
-const { addressSchema } = require('./checkout.js');
+import { z } from 'zod';
+import { addressSchema } from './checkout.js';
 
 const profileSchema = z.object({
   businessName: z.string().trim().min(2, 'Enter your company name.').max(160).optional().or(z.literal('')),
@@ -164,14 +164,4 @@ const creditPayoffSchema = z.object({
   poNumber: z.string().trim().max(40).optional(),
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.profileSchema = profileSchema;
-exports.savedAddressSchema = savedAddressSchema;
-exports.paymentMethodSchema = paymentMethodSchema;
-exports.bulkAddSchema = bulkAddSchema;
-exports.changePasswordSchema = changePasswordSchema;
-exports.ACCOUNT_NAV = ACCOUNT_NAV;
-exports.ACCOUNT_NAV_ITEMS = ACCOUNT_NAV_ITEMS;
-exports.rechargeSchema = rechargeSchema;
-exports.invoicePaymentSchema = invoicePaymentSchema;
-exports.creditPayoffSchema = creditPayoffSchema;
+export { profileSchema, savedAddressSchema, paymentMethodSchema, bulkAddSchema, changePasswordSchema, ACCOUNT_NAV, ACCOUNT_NAV_ITEMS, rechargeSchema, invoicePaymentSchema, creditPayoffSchema };

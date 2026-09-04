@@ -21,7 +21,6 @@ function displayNameOf(user) {
   return user.contactName?.trim() || user.businessName?.trim() || user.email || '—';
 }
 
-exports.default = { displayNameOf };
+export default { displayNameOf };
 
-// --- CommonJS exports -------------------------------------------------
-exports.displayNameOf = displayNameOf;
+export { displayNameOf };

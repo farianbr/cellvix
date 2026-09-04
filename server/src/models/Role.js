@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 /**
  * A named permission set (ERP rework §7.6).
@@ -91,8 +91,5 @@ roleSchema.methods.toPublic = function toPublic() {
 
 const Role = mongoose.model('Role', roleSchema);
 
-// --- CommonJS exports -------------------------------------------------
-exports.PERMISSION_AREAS = PERMISSION_AREAS;
-exports.PERMISSION_LEVELS = PERMISSION_LEVELS;
-exports.Role = Role;
-exports.default = Role;
+export { PERMISSION_AREAS, PERMISSION_LEVELS, Role };
+export default Role;

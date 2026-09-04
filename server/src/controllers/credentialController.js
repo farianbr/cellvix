@@ -1,6 +1,6 @@
-const { asyncHandler } = require('../utils/ApiError.js');
-const credentialService = require('../services/credentialService.js');
-const auditService = require('../services/auditService.js');
+import { asyncHandler } from '../utils/ApiError.js';
+import credentialService from '../services/credentialService.js';
+import auditService from '../services/auditService.js';
 
 /**
  * API Keys (ERP rework §6.15 category 7, phase 11c).
@@ -53,7 +53,4 @@ const clear = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
-// --- CommonJS exports -------------------------------------------------
-exports.list = list;
-exports.save = save;
-exports.clear = clear;
+export { list, save, clear };

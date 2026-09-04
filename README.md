@@ -299,13 +299,16 @@ NODE_ENV=production npm start
 
 ## Project documentation
 
+Everything except this README and `CLAUDE.md` lives in [docs/](docs/).
+
 | File | What it is |
 | --- | --- |
-| [PROJECT_INSTRUCTIONS.md](PROJECT_INSTRUCTIONS.md) | The rules — design tokens, filter architecture, data model, full API contract, definition of done. Binding. |
-| [PROGRESS.md](PROGRESS.md) | Phase board, decisions log, session log, known gaps, open questions. |
-| [CLAUDE.md](CLAUDE.md) | Session primer for AI coding agents. |
-| [cellvix-project-brief.md](cellvix-project-brief.md) | The client's original brief. Read-only reference. |
-| [docs/ADMIN_ERP_REWORK.md](docs/ADMIN_ERP_REWORK.md) | Plan for rebuilding `/admin` as a full ERP console. Cellvix is the ERP — there is no external system of record. |
+| [PROJECT_INSTRUCTIONS.md](docs/PROJECT_INSTRUCTIONS.md) | The rules — design tokens, filter architecture, data model, full API contract, definition of done. Binding. |
+| [SAAS_PLATFORM.md](docs/SAAS_PLATFORM.md) | The multi-tenant end state — super admin, per-tenant databases, feature flags. Binding for tenancy work. |
+| [ADMIN_ERP_REWORK.md](docs/ADMIN_ERP_REWORK.md) | Plan for rebuilding `/admin` as a full ERP console. Cellvix is the ERP — there is no external system of record. |
+| [PROGRESS.md](docs/PROGRESS.md) | Phase board, decisions log, session log, known gaps, open questions. |
+| [cellvix-project-brief.md](docs/cellvix-project-brief.md) | The client's original brief. Read-only reference. |
+| [CLAUDE.md](CLAUDE.md) | Session primer for AI coding agents. Stays at the root so it auto-loads. |
 
 ---
 
