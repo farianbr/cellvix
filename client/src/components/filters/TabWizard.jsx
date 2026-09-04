@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Check, ChevronRight, RotateCcw, X } from 'lucide-react';
 import { useShallow } from 'zustand/react/shallow';
 import cn from '@/lib/cn';
+import { pressableSurface } from '@/lib/motion';
 import { FILTER_LEVELS } from '@/lib/constants';
 import { optionsFor } from '@/lib/taxonomy';
 import { StepIndicator } from '@/components/ui/StepIndicator';
@@ -281,16 +282,32 @@ export function TabWizard() {
                   type="button"
                   onClick={() => openStep(expandedKey, index)}
                   aria-expanded={openLevel === expandedKey}
-                  className="mt-2 flex w-full items-center gap-3 rounded-md border border-brand bg-brand-50 px-3 py-2.5 text-left"
+                  /**
+                   * "You are here" said once, not four times.
+                   *
+                   * This carried a brand border AND a brand tint AND a brand
+                   * label AND a brand chevron — four signals for one piece of
+                   * meaning, on the only coloured block on a phone screen that
+                   * already has a red announcement bar above it. The step read
+                   * as an alert rather than as the next thing to tap.
+                   *
+                   * The border alone marks it. Everything inside goes back to
+                   * ink, which is also what makes "Choose…" — the actual
+                   * instruction — the most legible thing in the row.
+                   */
+                  className={cn(
+                    pressableSurface,
+                    'mt-2 flex w-full items-center gap-3 rounded-md border border-brand bg-surface px-3 py-2.5 text-left',
+                  )}
                 >
                   <span className="min-w-0 flex-1">
-                    <span className="eyebrow block text-brand-700">{level.label}</span>
+                    <span className="eyebrow block text-ink-400">{level.label}</span>
                     <span className="mt-0.5 block font-display text-md font-semibold text-ink-900">
                       Choose…
                     </span>
                   </span>
                   <ChevronRight
-                    className="size-4 shrink-0 text-brand"
+                    className="size-4 shrink-0 text-ink-300"
                     strokeWidth={2.25}
                     aria-hidden="true"
                   />
