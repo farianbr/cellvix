@@ -306,7 +306,7 @@ function CountryCodeMenu({ dial, onSelect, disabled }) {
                       'h-9 w-full rounded-md border border-line bg-surface pl-8 pr-2.5',
                       'text-sm text-ink-900 placeholder:text-ink-300',
                       'transition-[border-color,box-shadow] duration-press',
-                      'focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25',
+                      'focus:border-ink-400 focus:outline-none focus:ring-2 focus:ring-ink-900/15',
                     )}
                   />
                 </div>

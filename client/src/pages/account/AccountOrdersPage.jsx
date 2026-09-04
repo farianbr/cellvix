@@ -82,7 +82,7 @@ function SortHeader({ column, sort, onSort }) {
         onClick={() => onSort(column.key)}
         className={cn(
           'eyebrow group inline-flex items-center gap-1 rounded transition-colors hover:text-ink-900',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/25',
+          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900/15',
           column.align === 'right' && 'flex-row-reverse',
           active ? 'text-ink-900' : 'text-ink-400',
         )}

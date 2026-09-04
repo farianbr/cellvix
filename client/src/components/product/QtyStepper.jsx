@@ -70,7 +70,7 @@ export function QtyStepper({
         }}
         className={cn(
           'tnum h-full border-x border-line bg-surface text-center font-medium text-ink-900',
-          'focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand/25',
+          'focus:outline-none focus:ring-2 focus:ring-inset focus:ring-ink-900/15',
           s.input,
         )}
       />

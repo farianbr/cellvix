@@ -288,7 +288,7 @@ export function SelectMenu({
             'flex w-full min-w-0 cursor-pointer items-center gap-1.5 border bg-surface text-ink-900',
             'transition-[border-color,box-shadow] duration-press',
             'hover:border-line-strong',
-            'focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25',
+            'focus:border-ink-400 focus:outline-none focus:ring-2 focus:ring-ink-900/15',
             'disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-ink-400',
             SIZES[size],
             error ? 'border-danger' : 'border-line',

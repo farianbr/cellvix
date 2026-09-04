@@ -219,7 +219,7 @@ export function PaymentModal({
                 onChange={(event) => setPoNumber(event.target.value)}
                 maxLength={40}
                 placeholder="Your reference"
-                className="h-10 w-full rounded-md border border-line-strong bg-surface px-3 text-md text-ink-900 outline-none placeholder:text-ink-300 focus:border-brand"
+                className="h-10 w-full rounded-md border border-line-strong bg-surface px-3 text-md text-ink-900 outline-none placeholder:text-ink-300 focus:border-ink-400"
               />
             </label>
           </fieldset>

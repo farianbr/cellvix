@@ -92,7 +92,7 @@ export function CollapsiblePanel({
             onClick={() => setOpen((value) => !value)}
             className={cn(
               'group -my-1 flex w-full items-center gap-2.5 rounded-md py-1 text-left',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/25',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900/15',
             )}
           >
             <span

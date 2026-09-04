@@ -109,7 +109,7 @@ function RuleDialog({ rule, triggers, tokens, channels, onClose }) {
             <select
               value={form.trigger}
               onChange={(event) => set({ trigger: event.target.value })}
-              className="h-11 w-full rounded-md border border-line bg-surface px-3 text-md text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
+              className="h-11 w-full rounded-md border border-line bg-surface px-3 text-md text-ink-900 focus:border-ink-400 focus:ring-2 focus:ring-ink-900/15 focus:outline-none"
             >
               {triggers.map((trigger) => (
                 <option key={trigger.value} value={trigger.value}>
@@ -128,7 +128,7 @@ function RuleDialog({ rule, triggers, tokens, channels, onClose }) {
           <select
             value={form.channel}
             onChange={(event) => set({ channel: event.target.value })}
-            className="h-11 w-full rounded-md border border-line bg-surface px-3 text-md text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
+            className="h-11 w-full rounded-md border border-line bg-surface px-3 text-md text-ink-900 focus:border-ink-400 focus:ring-2 focus:ring-ink-900/15 focus:outline-none"
           >
             <option value="email">Email</option>
             <option value="sms">SMS</option>
@@ -158,7 +158,7 @@ function RuleDialog({ rule, triggers, tokens, channels, onClose }) {
             rows={7}
             value={form.message}
             onChange={(event) => set({ message: event.target.value })}
-            className="w-full rounded-md border border-line bg-surface px-3 py-2.5 text-md leading-relaxed text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
+            className="w-full rounded-md border border-line bg-surface px-3 py-2.5 text-md leading-relaxed text-ink-900 focus:border-ink-400 focus:ring-2 focus:ring-ink-900/15 focus:outline-none"
           />
         </label>
 

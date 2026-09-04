@@ -190,7 +190,7 @@ export function AccountQuickOrderPage() {
           className={cn(
             'w-full rounded-md border border-line bg-surface px-3.5 py-3 font-mono text-sm text-ink-900',
             'placeholder:text-ink-300',
-            'focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25',
+            'focus:border-ink-400 focus:outline-none focus:ring-2 focus:ring-ink-900/15',
           )}
         />
 

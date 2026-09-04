@@ -92,7 +92,7 @@ function TemplateDialog({ template, onClose }) {
             <select
               value={form.channel}
               onChange={(e) => set({ channel: e.target.value })}
-              className="h-11 w-full rounded-md border border-line bg-surface px-3 text-md text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
+              className="h-11 w-full rounded-md border border-line bg-surface px-3 text-md text-ink-900 focus:border-ink-400 focus:ring-2 focus:ring-ink-900/15 focus:outline-none"
             >
               {CHANNELS.map((c) => (
                 <option key={c.value} value={c.value}>
@@ -107,7 +107,7 @@ function TemplateDialog({ template, onClose }) {
             <select
               value={form.document}
               onChange={(e) => set({ document: e.target.value })}
-              className="h-11 w-full rounded-md border border-line bg-surface px-3 text-md text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
+              className="h-11 w-full rounded-md border border-line bg-surface px-3 text-md text-ink-900 focus:border-ink-400 focus:ring-2 focus:ring-ink-900/15 focus:outline-none"
             >
               {DOCUMENTS.map((d) => (
                 <option key={d.value} value={d.value}>
@@ -138,7 +138,7 @@ function TemplateDialog({ template, onClose }) {
             rows={8}
             value={form.body}
             onChange={(e) => set({ body: e.target.value })}
-            className="w-full rounded-md border border-line bg-surface px-3 py-2.5 text-md leading-relaxed text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
+            className="w-full rounded-md border border-line bg-surface px-3 py-2.5 text-md leading-relaxed text-ink-900 focus:border-ink-400 focus:ring-2 focus:ring-ink-900/15 focus:outline-none"
           />
           {/* A call template is read aloud, not transmitted. Saying so at the
               point of writing it stops somebody composing it as an SMS. */}

@@ -138,7 +138,7 @@ export function LiveSearch({
               'placeholder:text-ink-300',
               'transition-[border-color,background,box-shadow] duration-press',
               'hover:border-line-strong',
-              'focus:border-brand focus:bg-surface focus:outline-none focus:ring-2 focus:ring-brand/20',
+              'focus:border-ink-400 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-ink-900/15',
               '[&::-webkit-search-cancel-button]:appearance-none',
             )}
           />

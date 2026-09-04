@@ -292,7 +292,7 @@ export function AdminSaleSettingsPage() {
                           aria-label={`${province.label} tax kind`}
                           value={row.kind}
                           onChange={(event) => editRate(province.value, { kind: event.target.value })}
-                          className="h-10 w-full min-w-[9rem] rounded-md border border-line bg-surface px-3 text-sm text-ink-900 transition-colors focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
+                          className="h-10 w-full min-w-[9rem] rounded-md border border-line bg-surface px-3 text-sm text-ink-900 transition-colors focus:border-ink-400 focus:ring-2 focus:ring-ink-900/15 focus:outline-none"
                         >
                           {TAX_KINDS.map((kind) => (
                             <option key={kind.value} value={kind.value}>

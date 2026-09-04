@@ -154,7 +154,7 @@ export function ConfirmDialog({
                   'focus:outline-none focus:ring-2',
                   typed && !phraseMatches
                     ? 'border-danger focus:border-danger focus:ring-danger/20'
-                    : 'border-line focus:border-brand focus:ring-brand/25',
+                    : 'border-line focus:border-ink-400 focus:ring-ink-900/15',
                 )}
               />
 

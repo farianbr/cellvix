@@ -78,7 +78,7 @@ export const Input = forwardRef(function Input(
             'placeholder:text-ink-300',
             'transition-[border-color,box-shadow] duration-press',
             'hover:border-line-strong',
-            'focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25',
+            'focus:border-ink-400 focus:outline-none focus:ring-2 focus:ring-ink-900/15',
             'disabled:cursor-not-allowed disabled:bg-surface-2 disabled:text-ink-400',
             Icon && 'pl-10',
             (isPassword || suffix) && 'pr-11',

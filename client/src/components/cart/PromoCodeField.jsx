@@ -132,7 +132,7 @@ export function PromoCodeField({ className }) {
               className={cn(
                 'h-10 w-full rounded-md border bg-surface pl-9 pr-3 font-mono text-sm uppercase text-ink-900',
                 'placeholder:font-sans placeholder:normal-case placeholder:text-ink-300',
-                'focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25',
+                'focus:border-ink-400 focus:outline-none focus:ring-2 focus:ring-ink-900/15',
                 error ? 'border-danger' : 'border-line',
               )}
             />

@@ -19,6 +19,7 @@ import {
   X,
 } from 'lucide-react';
 import cn from '@/lib/cn';
+import { pressable } from '@/lib/motion';
 import api from '@/lib/api';
 import { BUSINESS_INFO } from '@/lib/constants';
 import { COUNTRY_OPTIONS, DEFAULT_COUNTRY } from '@shared/countries';
@@ -67,7 +68,20 @@ function SidePanel() {
   // every tab, and the frame's leftover height shows as dialog below it rather
   // than as a taller red block.
   return (
-    <aside className="scroll-slim relative hidden max-h-full w-full overflow-y-auto rounded-lg bg-brand-gradient p-6 text-white md:flex md:flex-col md:gap-6">
+    // A SOLID inverted panel, not a second gradient.
+    //
+    // The dialog was running the gradient twice on one surface: this panel and
+    // the submit button beside it. §2.2 allows the gradient on primary CTAs and
+    // at most one hero block per page, and when both are wearing it neither
+    // reads as the more important — the eye has no way to tell the thing you
+    // click from the thing you read.
+    //
+    // The CTA keeps it, because that is the gradient's stated home and it is
+    // the one action of this dialog. This panel takes `ink-deep`, the near-black
+    // mixed toward brand that exists for exactly this: an inverted editorial
+    // block that belongs to the palette without competing with the button. White
+    // sits at ~18:1 on it and white/70 at ~7:1, so both clear AA comfortably.
+    <aside className="scroll-slim relative hidden max-h-full w-full overflow-y-auto rounded-lg bg-ink-deep p-6 text-white md:flex md:flex-col md:gap-6">
       <div>
         <p className="eyebrow mb-2 opacity-70">Cellvix wholesale portal</p>
         <h3 className="text-2xl leading-tight text-white">
@@ -295,7 +309,7 @@ function SignInTab({ onDone }) {
         <button
           type="button"
           onClick={() => setForgot(true)}
-          className="rounded text-sm font-medium text-brand transition-colors hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/25"
+          className="rounded text-sm font-medium text-brand transition-colors hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900/15"
         >
           Forgot password?
         </button>
@@ -329,7 +343,7 @@ function ChangeAccountType({ onBack, label = 'Change account type' }) {
       className={cn(
         '-ml-1.5 inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-sm font-medium',
         'text-ink-500 transition-colors hover:bg-surface-2 hover:text-ink-900',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/25',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-900/15',
       )}
     >
       <ArrowLeft className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
@@ -383,7 +397,7 @@ function AccountTypeChoice({ onPick }) {
               #000000 at one end, so a white glyph landed on near-black and read
               as an icon that disappears when you point at it. */}
           <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-surface-2 text-ink-500 transition-colors group-hover:bg-brand-50 group-hover:text-brand">
-            <Icon className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />
+            <Icon className="size-4.5" strokeWidth={1.75} aria-hidden="true" />
           </span>
           <span className="min-w-0 flex-1">
             <span className="block font-display text-md font-bold text-ink-900">{title}</span>
@@ -1024,7 +1038,7 @@ export function AccountPopup() {
               aria-label="Close dialog"
               className="flex size-9 shrink-0 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-surface-2 hover:text-ink-900 active:scale-[0.97] md:hidden"
             >
-              <X className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />
+              <X className="size-4.5" strokeWidth={1.75} aria-hidden="true" />
             </button>
           </div>
 
@@ -1049,14 +1063,24 @@ export function AccountPopup() {
           {/* The desktop close, over the red panel where it has a dark ground to
               sit on and reads as the dialog's corner. Below `md` the panel is
               hidden and this goes with it — the tab row carries the close there
-              instead. */}
+              instead.
+
+              Offsets are measured from THIS wrapper, which already carries
+              `pr-5 pt-5` of its own. `right-8 top-8` therefore put the button
+              20px further in and 20px further down than intended — squarely on
+              top of the panel's eyebrow, so the X and the words "CELLVIX
+              WHOLESALE PORTAL" overlapped. The panel's inner padding is 6, so
+              matching it here lands the button in the panel's own corner. */}
           <button
             type="button"
             onClick={close}
             aria-label="Close dialog"
-            className="absolute right-8 top-8 z-10 flex size-9 items-center justify-center rounded-lg text-white/70 transition-colors hover:bg-white/15 hover:text-white active:scale-[0.97]"
+            className={cn(
+              pressable,
+              'absolute right-6 top-6 z-10 flex size-9 items-center justify-center rounded-md text-white/70 hover:bg-white/15 hover:text-white',
+            )}
           >
-            <X className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />
+            <X className="size-4.5" strokeWidth={1.75} aria-hidden="true" />
           </button>
         </div>
       </div>

@@ -202,7 +202,7 @@ export function AuditLogScreen({ kind, page: meta, notice }) {
                 setAction(event.target.value);
                 setPage(1);
               }}
-              className="h-9 min-w-0 rounded-md border border-line bg-surface px-2.5 text-sm text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
+              className="h-9 min-w-0 rounded-md border border-line bg-surface px-2.5 text-sm text-ink-900 focus:border-ink-400 focus:ring-2 focus:ring-ink-900/15 focus:outline-none"
             >
               <option value="all">All actions</option>
               {(data?.actions ?? []).map((value) => (
