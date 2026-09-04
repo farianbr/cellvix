@@ -64,6 +64,13 @@ export function AdminThirdPartyPage() {
         description={ADMIN_PAGE.description}
       />
 
+      {/* The measure wraps the notice as well as the panels.
+
+          It sat outside the capped container, so a full-bleed banner ran the
+          shell's whole width above content that stopped at the form measure —
+          the page disagreed with itself about where its own edge was, and the
+          notice read as belonging to the shell rather than to this screen. */}
+      <div className="max-w-form">
       <p className="mb-5 flex items-start gap-2.5 rounded-lg border border-warn/25 bg-warn-50 px-3.5 py-3 text-sm leading-relaxed text-ink-700">
         <AlertCircle className="mt-0.5 size-4 shrink-0 text-warn" strokeWidth={2} aria-hidden="true" />
         <span>
@@ -73,7 +80,7 @@ export function AdminThirdPartyPage() {
         </span>
       </p>
 
-      <div className="max-w-form space-y-4">
+      <div className=" space-y-4">
         {CONNECTIONS.map((connection) => {
           const Icon = connection.icon;
 
@@ -137,6 +144,7 @@ export function AdminThirdPartyPage() {
             above.
           </p>
         </Panel>
+      </div>
       </div>
     </>
   );

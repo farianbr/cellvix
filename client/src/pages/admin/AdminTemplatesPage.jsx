@@ -241,6 +241,12 @@ export function AdminTemplatesPage() {
 
       {/* Channel tabs with a count each, as §6.15 specifies — the count is what
           makes an empty channel visible without opening it. */}
+      {/* The measure wraps the tabs and the notice as well as the list.
+
+          They sat outside the capped container, so the channel tabs and a
+          full-bleed warning ran to 1400px above a panel that stopped at 760 —
+          the page disagreed with itself about where its own edge was. */}
+      <div className="max-w-form">
       <nav aria-label="Channels" className="mb-4 -mx-3 flex gap-1 overflow-x-auto px-3 pb-1 sm:mx-0 sm:px-0">
         {CHANNELS.map((tab) => {
           const count = all.filter((template) => template.channel === tab.value).length;
@@ -280,7 +286,7 @@ export function AdminTemplatesPage() {
         </p>
       )}
 
-      <div className="max-w-form space-y-3">
+      <div className="space-y-3">
         {isLoading ? (
           <p className="text-sm text-ink-500">Loading templates…</p>
         ) : shown.length === 0 ? (
@@ -357,6 +363,7 @@ export function AdminTemplatesPage() {
         confirmLabel="Delete template"
         loading={deleteTemplate.isPending}
       />
+      </div>
     </>
   );
 }

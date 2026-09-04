@@ -186,6 +186,13 @@ export function AdminEmailSettingsPage() {
         description={ADMIN_PAGE.description}
       />
 
+      {/* The measure wraps the notice as well as the panels.
+
+          It sat outside the capped container, so a full-bleed banner ran the
+          shell's whole width above content that stopped at the form measure —
+          the page disagreed with itself about where its own edge was, and the
+          notice read as belonging to the shell rather than to this screen. */}
+      <div className="max-w-form">
       <p className="mb-5 flex items-start gap-2.5 rounded-lg border border-info/20 bg-info-50 px-3.5 py-3 text-sm leading-relaxed text-ink-700">
         <Info className="mt-0.5 size-4 shrink-0 text-info" strokeWidth={2} aria-hidden="true" />
         <span>
@@ -195,7 +202,7 @@ export function AdminEmailSettingsPage() {
         </span>
       </p>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="max-w-form space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className=" space-y-4">
         <Panel title="Automatic emails" description="What the system sends without being asked.">
           <div>
             {TOGGLES.map((toggle) => (
@@ -301,6 +308,7 @@ export function AdminEmailSettingsPage() {
           }}
         />
       </form>
+      </div>
     </>
   );
 }

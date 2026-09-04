@@ -273,6 +273,13 @@ export function AdminInvoiceStatusPage() {
 
       {/* §6b rule 2 in spirit: state plainly what does not happen on its own.
           "Automatic" is the word on the tin, and nothing here is automatic yet. */}
+      {/* The measure wraps the banner too.
+
+          It sat outside the capped container, so a full-bleed warning ran to
+          1400px above panels that stopped at 760 — the page disagreed with
+          itself about where its own edge was, and the banner read as belonging
+          to the shell rather than to this screen. */}
+      <div className="max-w-form">
       <p className="mb-5 flex items-start gap-2.5 rounded-lg border border-warn/25 bg-warn-50 px-3.5 py-3 text-sm leading-relaxed text-ink-700">
         <Clock className="mt-0.5 size-4 shrink-0 text-warn" strokeWidth={2} aria-hidden="true" />
         <span>
@@ -283,7 +290,7 @@ export function AdminInvoiceStatusPage() {
         </span>
       </p>
 
-      <div className="max-w-form space-y-4">
+      <div className="space-y-4">
         <Panel
           title="Messages"
           description={`${activeCount} of ${rules.length} switched on. Built-in messages can be edited and switched off, but not deleted.`}
@@ -445,6 +452,7 @@ export function AdminInvoiceStatusPage() {
         confirmLabel="Delete rule"
         loading={deleteInvoiceRule.isPending}
       />
+      </div>
     </>
   );
 }
