@@ -224,7 +224,7 @@ export function AdminOverviewPage() {
       <div className="space-y-4">
         <Skeleton className="h-16 w-72" />
         <Skeleton className="h-24" />
-        <div className="grid gap-3 grid-cols-2 md:grid-cols-4 xl:grid-cols-7">
+        <div className="grid gap-3 grid-cols-2 md:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 7 }).map((_, index) => (
             <Skeleton key={index} className="h-28" />
           ))}
@@ -302,8 +302,21 @@ export function AdminOverviewPage() {
       <DateRangeBar presets={DASHBOARD_PRESETS} defaultPreset="this-month" />
 
       {/* ---- things to do today ------------------------------------------- */}
+      {/* The column count follows the card count so the row is never ragged.
+          Three cards in a two-column grid strand the third at half width with a
+          gap beside it, which reads as a card that failed to load rather than
+          as a deliberate layout. */}
       {todos.length > 0 ? (
-        <section aria-label="Things to do today" className="grid gap-2.5 lg:grid-cols-2">
+        <section
+          aria-label="Things to do today"
+          className={cn(
+            'grid gap-3',
+            todos.length === 1 && 'lg:grid-cols-1',
+            todos.length === 2 && 'lg:grid-cols-2',
+            todos.length === 3 && 'lg:grid-cols-3',
+            todos.length >= 4 && 'lg:grid-cols-2',
+          )}
+        >
           {todos.map(({ key, ...card }) => (
             <TodoCard key={key} {...card} />
           ))}

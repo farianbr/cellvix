@@ -1,0 +1,313 @@
+- generic [ref=f4e1273]:
+  - complementary [ref=f4e1274]:
+    - generic [ref=f4e1275]:
+      - generic [ref=f4e1276]: C
+      - generic [ref=f4e1277]:
+        - generic [ref=f4e1278]: Cellvix
+        - generic [ref=f4e1279]: Operations
+    - button "Quick search Ctrl K" [ref=f4e1281]:
+      - generic [ref=f4e1285]: Quick search
+      - generic [ref=f4e1286]: Ctrl K
+    - navigation "Admin sections" [ref=f4e1287]:
+      - list [ref=f4e1288]:
+        - listitem [ref=f4e1289]:
+          - link "Home" [ref=f4e1290] [cursor=pointer]:
+            - /url: /admin
+        - listitem [ref=f4e1295]:
+          - button "Sales 13" [ref=f4e1296]:
+            - generic [ref=f4e1300]: Sales
+            - generic [ref=f4e1301]: "13"
+        - listitem [ref=f4e1304]:
+          - button "Purchase 52" [ref=f4e1305]:
+            - generic [ref=f4e1310]: Purchase
+            - generic [ref=f4e1311]: "52"
+        - listitem [ref=f4e1314]:
+          - button "Reports" [ref=f4e1315]
+        - listitem [ref=f4e1321]:
+          - button "Marketing" [ref=f4e1322]
+        - listitem [ref=f4e1329]:
+          - button "Outlet" [ref=f4e1330]
+        - listitem [ref=f4e1339]:
+          - button "Settings" [ref=f4e1340]
+    - generic [ref=f4e1348]:
+      - generic [ref=f4e1349]: CA
+      - generic [ref=f4e1350]:
+        - generic [ref=f4e1351]: Cellvix Admin
+        - generic [ref=f4e1352]: admin@cellvix.ca
+      - button "Sign out" [ref=f4e1353]
+  - generic [ref=f4e1357]:
+    - banner [ref=f4e1358]:
+      - generic [ref=f4e1359]: Dashboard
+      - button "Search clients, orders, products… Ctrl K" [ref=f4e1361]:
+        - generic [ref=f4e1365]: Search clients, orders, products…
+        - generic [ref=f4e1366]: Ctrl K
+      - generic [ref=f4e1367]:
+        - button "Create" [ref=f4e1369]
+        - button "Notifications, 25 unread" [ref=f4e1372]:
+          - generic [ref=f4e1376]: 9+
+        - generic "admin@cellvix.ca" [ref=f4e1377]: CA
+    - navigation "Breadcrumb" [ref=f4e1378]:
+      - list [ref=f4e1379]:
+        - listitem [ref=f4e1380]:
+          - generic [ref=f4e1381]: Home
+    - main [ref=f4e1385]:
+      - generic [ref=f4e1387]:
+        - generic [ref=f4e1394]:
+          - heading "Dashboard" [level=1] [ref=f4e1396]
+          - paragraph [ref=f4e1397]: Friday, September 4, 2026 · Welcome back, Cellvix Admin.
+        - generic [ref=f4e1398]:
+          - button "Today" [ref=f4e1399]
+          - button "This Week" [ref=f4e1400]
+          - button "This Month" [pressed] [ref=f4e1401]
+          - button "Last Month" [ref=f4e1402]
+          - button "This Year" [ref=f4e1403]
+          - button "Custom range" [ref=f4e1405]
+        - region "Things to do today" [ref=f4e1411]:
+          - link "Approve accounts 3 businesses are waiting for approval Review" [ref=f4e1412] [cursor=pointer]:
+            - /url: /admin/approvals
+            - generic [ref=f4e1418]:
+              - generic [ref=f4e1419]: Approve accounts
+              - generic [ref=f4e1420]: 3 businesses are waiting for approval
+            - generic [ref=f4e1421]: Review
+          - link "Fulfil orders 5 placed and not yet shipped Open" [ref=f4e1424] [cursor=pointer]:
+            - /url: /admin/orders?status=placed
+            - generic [ref=f4e1430]:
+              - generic [ref=f4e1431]: Fulfil orders
+              - generic [ref=f4e1432]: 5 placed and not yet shipped
+            - generic [ref=f4e1433]: Open
+          - link "Restock inventory 14 out of stock · 38 running low Review" [ref=f4e1436] [cursor=pointer]:
+            - /url: /admin/inventory?stock=low
+            - generic [ref=f4e1448]:
+              - generic [ref=f4e1449]: Restock inventory
+              - generic [ref=f4e1450]: 14 out of stock · 38 running low
+            - generic [ref=f4e1451]: Review
+        - generic [ref=f4e1454]:
+          - link [ref=f4e1455] [cursor=pointer]:
+            - /url: /admin/invoices?status=paid
+            - paragraph [ref=f4e1461]: Collected
+            - paragraph [ref=f4e1466]: $2,394.88
+            - paragraph [ref=f4e1467]: Payments received in this period
+          - link [ref=f4e1468] [cursor=pointer]:
+            - /url: /admin/invoices
+            - paragraph [ref=f4e1474]: Invoiced
+            - paragraph [ref=f4e1479]: $1,082.92
+            - paragraph [ref=f4e1480]: 5 invoices issued
+          - link [ref=f4e1481] [cursor=pointer]:
+            - /url: /admin/invoices?status=unpaid
+            - paragraph [ref=f4e1487]: Outstanding
+            - paragraph [ref=f4e1492]: $51.84
+            - paragraph [ref=f4e1493]: Nothing past due · as of today
+          - link [ref=f4e1494] [cursor=pointer]:
+            - /url: /admin/rma
+            - paragraph [ref=f4e1500]: Refunds
+            - paragraph [ref=f4e1505]: $0.00
+            - paragraph [ref=f4e1506]: 0 refunded to store credit
+          - link [ref=f4e1507] [cursor=pointer]:
+            - /url: /admin/orders?status=placed
+            - paragraph [ref=f4e1514]: Open orders
+            - paragraph [ref=f4e1519]: "6"
+            - paragraph [ref=f4e1520]: 5 awaiting fulfilment
+          - link [ref=f4e1521] [cursor=pointer]:
+            - /url: /admin/clients
+            - paragraph [ref=f4e1528]: Clients
+            - paragraph [ref=f4e1533]: "5"
+            - paragraph [ref=f4e1534]: 2 approved · 3 pending
+          - link [ref=f4e1535] [cursor=pointer]:
+            - /url: /admin/inventory
+            - paragraph [ref=f4e1548]: Inventory
+            - paragraph [ref=f4e1553]: $1,522,669
+            - paragraph [ref=f4e1554]: Value of 116 SKUs · as of today
+        - generic [ref=f4e1555]:
+          - generic [ref=f4e1556]:
+            - generic [ref=f4e1558]:
+              - heading "Order value" [level=2] [ref=f4e1559]
+              - paragraph [ref=f4e1560]: By day, cancelled orders excluded
+            - generic [ref=f4e1562]:
+              - generic [ref=f4e1563]:
+                - generic [ref=f4e1564]: Order value
+                - generic [ref=f4e1566]: Average $181
+              - generic [ref=f4e1568]:
+                - img "Order value over the selected period. 4 points from Sep 1 to Sep 4. Average $180.96, highest $723.82 on Sep 3, lowest $0.00 on Sep 1." [ref=f4e1569]
+                - generic:
+                  - generic: $0
+                  - generic: $200
+                  - generic: $400
+                  - generic: $600
+                  - generic: $800
+                  - generic: Sep 1
+                  - generic: Sep 2
+                  - generic: Sep 3
+                  - generic: Sep 4
+              - generic [ref=f4e1572]:
+                - generic [ref=f4e1573]: Peak $724 on Sep 3
+                - generic [ref=f4e1574]: Low $0 on Sep 1
+          - generic [ref=f4e1575]:
+            - generic [ref=f4e1577]:
+              - heading "Top clients" [level=2] [ref=f4e1578]
+              - paragraph [ref=f4e1579]: By invoiced value in this period
+            - list "Top clients by invoiced value" [ref=f4e1581]:
+              - listitem [ref=f4e1582]:
+                - generic [ref=f4e1583]:
+                  - generic [ref=f4e1584]: "1"
+                  - generic [ref=f4e1585]: Northline Device Repair
+                  - generic [ref=f4e1586]: 100%
+                  - generic [ref=f4e1587]: $1,082.92
+                - paragraph [ref=f4e1591]: 5 invoices
+        - generic [ref=f4e1592]:
+          - generic [ref=f4e1593]:
+            - generic [ref=f4e1594]:
+              - heading "Recent orders" [level=2] [ref=f4e1596]
+              - link "All orders" [ref=f4e1597] [cursor=pointer]:
+                - /url: /admin/orders
+            - list [ref=f4e1601]:
+              - listitem [ref=f4e1602]:
+                - button "CVX-2026-10050 Northline Device Repair Sep 4, 2026 Placed $56.84" [ref=f4e1603]:
+                  - generic [ref=f4e1604]:
+                    - paragraph [ref=f4e1605]: CVX-2026-10050
+                    - paragraph [ref=f4e1606]: Northline Device Repair
+                  - paragraph [ref=f4e1607]: Sep 4, 2026
+                  - generic [ref=f4e1608]: Placed
+                  - paragraph [ref=f4e1609]: $56.84
+              - listitem [ref=f4e1613]:
+                - button "CVX-2026-10049 Northline Device Repair Sep 4, 2026 Placed $52.26" [ref=f4e1614]:
+                  - generic [ref=f4e1615]:
+                    - paragraph [ref=f4e1616]: CVX-2026-10049
+                    - paragraph [ref=f4e1617]: Northline Device Repair
+                  - paragraph [ref=f4e1618]: Sep 4, 2026
+                  - generic [ref=f4e1619]: Placed
+                  - paragraph [ref=f4e1620]: $52.26
+              - listitem [ref=f4e1624]:
+                - button "CVX-2026-10048 Northline Device Repair Sep 2, 2026 Placed $148.37" [ref=f4e1625]:
+                  - generic [ref=f4e1626]:
+                    - paragraph [ref=f4e1627]: CVX-2026-10048
+                    - paragraph [ref=f4e1628]: Northline Device Repair
+                  - paragraph [ref=f4e1629]: Sep 2, 2026
+                  - generic [ref=f4e1630]: Placed
+                  - paragraph [ref=f4e1631]: $148.37
+              - listitem [ref=f4e1635]:
+                - button "CVX-2026-10047 Northline Device Repair Sep 2, 2026 Placed $575.45" [ref=f4e1636]:
+                  - generic [ref=f4e1637]:
+                    - paragraph [ref=f4e1638]: CVX-2026-10047
+                    - paragraph [ref=f4e1639]: Northline Device Repair
+                  - paragraph [ref=f4e1640]: Sep 2, 2026
+                  - generic [ref=f4e1641]: Placed
+                  - paragraph [ref=f4e1642]: $575.45
+              - listitem [ref=f4e1646]:
+                - button "CVX-2026-10042 Northline Device Repair Aug 30, 2026 Processing $934.96" [ref=f4e1647]:
+                  - generic [ref=f4e1648]:
+                    - paragraph [ref=f4e1649]: CVX-2026-10042
+                    - paragraph [ref=f4e1650]: Northline Device Repair
+                  - paragraph [ref=f4e1651]: Aug 30, 2026
+                  - generic [ref=f4e1652]: Processing
+                  - paragraph [ref=f4e1653]: $934.96
+              - listitem [ref=f4e1657]:
+                - button "CVX-2026-10043 Northline Device Repair Aug 22, 2026 Out for delivery $428.84" [ref=f4e1658]:
+                  - generic [ref=f4e1659]:
+                    - paragraph [ref=f4e1660]: CVX-2026-10043
+                    - paragraph [ref=f4e1661]: Northline Device Repair
+                  - paragraph [ref=f4e1662]: Aug 22, 2026
+                  - generic [ref=f4e1663]: Out for delivery
+                  - paragraph [ref=f4e1664]: $428.84
+          - generic [ref=f4e1668]:
+            - generic [ref=f4e1669]:
+              - generic [ref=f4e1670]:
+                - heading "Low stock" [level=2] [ref=f4e1671]
+                - paragraph [ref=f4e1672]: 38 low · 14 out · $1,522,669.40 on hand
+              - link "Review stock" [ref=f4e1673] [cursor=pointer]:
+                - /url: /admin/inventory?stock=low
+            - list [ref=f4e1677]:
+              - listitem [ref=f4e1678]:
+                - generic [ref=f4e1679]:
+                  - paragraph [ref=f4e1680]: Galaxy Note 20 Ultra Backglass
+                  - paragraph [ref=f4e1681]: CVX-SAM-BG-1255
+                - paragraph [ref=f4e1682]: Out of stock
+              - listitem [ref=f4e1683]:
+                - generic [ref=f4e1684]:
+                  - paragraph [ref=f4e1685]: iPhone 13 Pro Max Back Camera
+                  - paragraph [ref=f4e1686]: CVX-APP-RC-1087
+                - paragraph [ref=f4e1687]: Out of stock
+              - listitem [ref=f4e1688]:
+                - generic [ref=f4e1689]:
+                  - paragraph [ref=f4e1690]: Pixel 8 Pro Speaker
+                  - paragraph [ref=f4e1691]: CVX-GOO-LS-1348
+                - paragraph [ref=f4e1692]: Out of stock
+              - listitem [ref=f4e1693]:
+                - generic [ref=f4e1694]:
+                  - paragraph [ref=f4e1695]: Galaxy Note 10 Front Camera
+                  - paragraph [ref=f4e1696]: CVX-SAM-FC-1236
+                - paragraph [ref=f4e1697]: Out of stock
+              - listitem [ref=f4e1698]:
+                - generic [ref=f4e1699]:
+                  - paragraph [ref=f4e1700]: Galaxy A34 5G Back Camera
+                  - paragraph [ref=f4e1701]: CVX-SAM-RC-1226
+                - paragraph [ref=f4e1702]: Out of stock
+              - listitem [ref=f4e1703]:
+                - generic [ref=f4e1704]:
+                  - paragraph [ref=f4e1705]: Pixel 6 Backglass
+                  - paragraph [ref=f4e1706]: CVX-GOO-BG-1301
+                - paragraph [ref=f4e1707]: Out of stock
+        - generic [ref=f4e1708]:
+          - generic [ref=f4e1709]:
+            - generic [ref=f4e1710]:
+              - heading "Approvals queue" [level=2] [ref=f4e1711]
+              - paragraph [ref=f4e1712]: 3 businesses are waiting. They cannot see pricing or order until approved.
+            - link "Open queue" [ref=f4e1713] [cursor=pointer]:
+              - /url: /admin/approvals
+          - list [ref=f4e1717]:
+            - listitem [ref=f4e1718]:
+              - generic [ref=f4e1719]:
+                - generic [ref=f4e1720]: PP
+                - generic [ref=f4e1721]:
+                  - link "Pixel Point Mobile" [ref=f4e1722] [cursor=pointer]:
+                    - /url: /admin/clients/6a97753b2c249a07c9d83432
+                  - paragraph [ref=f4e1723]: Sam Okafor
+              - list [ref=f4e1724]:
+                - listitem [ref=f4e1725]:
+                  - generic [ref=f4e1729]: pending@cellvix.ca
+                - listitem [ref=f4e1730]:
+                  - generic [ref=f4e1733]: +1 (604) 555-0188
+                - listitem [ref=f4e1734]:
+                  - generic [ref=f4e1738]: Waiting 2 days · Retailer
+              - generic [ref=f4e1739]:
+                - button [ref=f4e1740]
+                - link [ref=f4e1744] [cursor=pointer]:
+                  - /url: /admin/clients/6a97753b2c249a07c9d83432
+                  - button "View" [ref=f4e1745]
+            - listitem [ref=f4e1747]:
+              - generic [ref=f4e1748]:
+                - generic [ref=f4e1749]: MM
+                - generic [ref=f4e1750]:
+                  - link "Maritime Mobile Works" [ref=f4e1751] [cursor=pointer]:
+                    - /url: /admin/clients/6a97753b2c249a07c9d8343c
+                  - paragraph [ref=f4e1752]: Elise Gagnon
+              - list [ref=f4e1753]:
+                - listitem [ref=f4e1754]:
+                  - generic [ref=f4e1758]: elise@maritimemobile.ca
+                - listitem [ref=f4e1759]:
+                  - generic [ref=f4e1762]: +1 (902) 555-0119
+                - listitem [ref=f4e1763]:
+                  - generic [ref=f4e1767]: Waiting 2 days · Repair shop
+              - generic [ref=f4e1768]:
+                - button [ref=f4e1769]
+                - link [ref=f4e1773] [cursor=pointer]:
+                  - /url: /admin/clients/6a97753b2c249a07c9d8343c
+                  - button "View" [ref=f4e1774]
+            - listitem [ref=f4e1776]:
+              - generic [ref=f4e1777]:
+                - generic [ref=f4e1778]: PT
+                - generic [ref=f4e1779]:
+                  - link "Prairie Tech Supply" [ref=f4e1780] [cursor=pointer]:
+                    - /url: /admin/clients/6a97753b2c249a07c9d8343e
+                  - paragraph [ref=f4e1781]: Jordan Reyes
+              - list [ref=f4e1782]:
+                - listitem [ref=f4e1783]:
+                  - generic [ref=f4e1787]: jordan@prairietech.ca
+                - listitem [ref=f4e1788]:
+                  - generic [ref=f4e1791]: +1 (306) 555-0164
+                - listitem [ref=f4e1792]:
+                  - generic [ref=f4e1796]: Waiting 2 days · Distributor
+              - generic [ref=f4e1797]:
+                - button [ref=f4e1798]
+                - link [ref=f4e1802] [cursor=pointer]:
+                  - /url: /admin/clients/6a97753b2c249a07c9d8343e
+                  - button "View" [ref=f4e1803]

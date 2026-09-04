@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { ChevronDown, Download, Search, SlidersHorizontal, X } from 'lucide-react';
 import cn from '@/lib/cn';
+import { pressable } from '@/lib/motion';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
 
 /**
@@ -100,24 +101,29 @@ export function FilterStrip({
             onClick={() => onPillChange?.(pill.value)}
             aria-pressed={isActive}
             className={cn(
-              'flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 text-sm font-medium transition-colors',
+              pressable,
+              'flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 text-sm font-medium',
               /**
-               * The active pill has **no border at all**, not a transparent one.
+               * The active pill is a FLAT brand fill, not the gradient.
                *
-               * `border-transparent` still reserves the border box, and a
-               * background-image is painted under it — so the gradient showed
-               * through those 1px edges at a different point on its own ramp
-               * than the fill beside them. That read as two solid vertical
-               * lines down the pill's sides. Dropping the border removes the
-               * box, and the inactive pill carries its own `border` instead so
-               * the two states stay the same height.
+               * PROJECT_INSTRUCTIONS §2.2 reserves the gradient for primary
+               * CTAs and at most one hero block per page; active states, nav
+               * and pagination take flat `bg-brand`. A filter row is the
+               * clearest case for that rule. The gradient appeared on whichever
+               * pill the operator had selected, so the one treatment meant to
+               * mark the single most important action on a screen was being
+               * spent on a list filter — and the actual primary button sitting
+               * a few pixels above it no longer read as more important than the
+               * filter, because they wore the same clothes.
+               *
+               * The active pill also has **no border at all**, not a
+               * transparent one. `border-transparent` still reserves the border
+               * box, so the two states would differ in width and the row would
+               * shift as the filter changed; the inactive pill carries its own
+               * `border` and the active one gets that pixel back as padding.
                */
               isActive
-                // `px-[11px]` replaces the 1px the missing border no longer
-                // contributes, so the active and inactive pills are the same
-                // width and the row does not shift as the filter changes.
-                // Height is fixed by `h-9`, so only the horizontal axis needs it.
-                ? 'bg-brand-gradient-compact px-[11px] text-white'
+                ? 'bg-brand px-2.75 text-white'
                 : 'border border-line bg-surface text-ink-600 hover:border-line-strong hover:text-ink-900',
             )}
           >

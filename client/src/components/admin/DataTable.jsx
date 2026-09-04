@@ -4,6 +4,9 @@ import cn from '@/lib/cn';
 import ActionMenu from '@/components/ui/ActionMenu';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
 import Skeleton from '@/components/ui/Skeleton';
+import useTableDensity from '@/hooks/useTableDensity';
+import DensityToggle from '@/components/admin/DensityToggle';
+import { pressableSurface } from '@/lib/motion';
 
 /**
  * The admin list table. Fourteen planned screens are this table with different
@@ -26,6 +29,38 @@ import Skeleton from '@/components/ui/Skeleton';
  */
 
 /**
+ * The two densities.
+ *
+ * "comfortable" is the default and is what makes a table read as a product
+ * surface rather than a spreadsheet: rows tall enough to have air around their
+ * content, and no full-width rule between them. The rules are the thing that
+ * makes a dense table feel like a ledger — thirty hairlines stacked down the
+ * page draw the eye across the grid instead of down the column the operator is
+ * actually reading. Spacing separates rows perfectly well on its own, and the
+ * hover state does the rest by making the row the operator is on the only one
+ * with a ground.
+ *
+ * "compact" exists because an ERP operator scanning fifty orders wants density
+ * more than they want air, and telling them otherwise would be design imposing
+ * on work. It keeps a hairline, because at that height spacing alone is no
+ * longer enough to separate one row from the next.
+ */
+const DENSITY = {
+  comfortable: {
+    cell: 'px-4 py-4',
+    head: 'px-4 pb-2.5',
+    row: 'border-0',
+    expand: 'px-4 py-4',
+  },
+  compact: {
+    cell: 'px-3 py-2',
+    head: 'px-3 pb-2',
+    row: 'border-b border-line last:border-0',
+    expand: 'px-3 py-2.5',
+  },
+};
+
+/**
  * A bare checkbox. `ui/Checkbox` is a labelled filter row and is the wrong shape
  * in a cell, but the **mark** is copied from it deliberately.
  *
@@ -45,7 +80,7 @@ function CellCheckbox({ checked, indeterminate, onChange, label }) {
   }, [isPartial]);
 
   return (
-    <span className="relative flex size-[16px] shrink-0 items-center justify-center">
+    <span className="relative flex size-4 shrink-0 items-center justify-center">
       <input
         ref={ref}
         type="checkbox"
@@ -108,6 +143,8 @@ export function DataTable({
 }) {
   const [sort, setSort] = useState(defaultSort ?? null);
   const [expanded, setExpanded] = useState(null);
+  const [density] = useTableDensity();
+  const d = DENSITY[density] ?? DENSITY.comfortable;
 
   const sorted = useMemo(() => {
     if (!sort) return rows;
@@ -186,9 +223,13 @@ export function DataTable({
           )}
         >
           <thead>
+            {/* The header keeps its rule in both densities. It is the one
+                horizontal line the table needs: it separates the labels from
+                the data, which is a real boundary, unlike the line between two
+                adjacent rows of the same kind. */}
             <tr className="border-b border-line">
               {selectable && (
-                <th scope="col" className="w-10 px-4 py-2.5">
+                <th scope="col" className={cn('w-10 pt-2.5', d.head)}>
                   {/* Select-all adds and removes **this page's** keys rather
                       than replacing the whole selection. On a paginated list
                       the old `checked ? allKeys : []` silently discarded rows
@@ -228,7 +269,8 @@ export function DataTable({
                       isSorted ? (sort.direction === 'asc' ? 'ascending' : 'descending') : undefined
                     }
                     className={cn(
-                      'eyebrow whitespace-nowrap px-4 py-2.5 text-ink-400',
+                      'eyebrow whitespace-nowrap pt-2.5 text-ink-400',
+                      d.head,
                       PRIORITY_CLASS[column.priority ?? 1],
                       ALIGN_CLASS[column.align ?? 'left'],
                     )}
@@ -268,7 +310,7 @@ export function DataTable({
                   rendering gap — the `···` looks like it belongs to the last
                   data column rather than being an actions cell of its own. */}
               {rowMenu && (
-                <th scope="col" className="eyebrow w-20 px-4 py-2.5 text-right text-ink-400">
+                <th scope="col" className={cn('eyebrow w-20 pt-2.5 text-right text-ink-400', d.head)}>
                   Actions
                 </th>
               )}
@@ -286,13 +328,20 @@ export function DataTable({
                   <tr
                     onClick={onRowClick ? () => onRowClick(row) : undefined}
                     className={cn(
-                      'border-b border-line last:border-0 transition-colors',
+                      d.row,
+                      // A selected row is tinted; an unselected one gets its
+                      // ground only on hover, which is what makes the row —
+                      // rather than the cell under the pointer — read as the
+                      // unit being acted on.
                       isSelected ? 'bg-brand-50/60' : 'hover:bg-surface-2',
-                      onRowClick && 'cursor-pointer',
+                      // Press feedback on a full-width row has to be far
+                      // gentler than on a button: 0.97 on something 1100px wide
+                      // is a visible lurch, so this is the 0.995 variant.
+                      onRowClick && cn('cursor-pointer', pressableSurface),
                     )}
                   >
                     {selectable && (
-                      <td className="px-4 py-3" onClick={(event) => event.stopPropagation()}>
+                      <td className={d.cell} onClick={(event) => event.stopPropagation()}>
                         <CellCheckbox
                           checked={isSelected}
                           onChange={(checked) => toggleRow(key, checked)}
@@ -305,7 +354,8 @@ export function DataTable({
                       <td
                         key={column.key}
                         className={cn(
-                          'px-4 py-3 align-middle text-sm text-ink-700',
+                          'align-middle text-sm text-ink-700',
+                          d.cell,
                           PRIORITY_CLASS[column.priority ?? 1],
                           ALIGN_CLASS[column.align ?? 'left'],
                           column.className,
@@ -348,7 +398,7 @@ export function DataTable({
                     ))}
 
                     {rowMenu && (
-                      <td className="px-4 py-3" onClick={(event) => event.stopPropagation()}>
+                      <td className={d.cell} onClick={(event) => event.stopPropagation()}>
                         <RowMenu items={rowMenu} row={row} />
                       </td>
                     )}
@@ -358,7 +408,7 @@ export function DataTable({
                     <tr className="border-b border-line bg-surface-2 lg:hidden">
                       <td
                         colSpan={columns.length + (selectable ? 1 : 0) + (rowMenu ? 1 : 0)}
-                        className="px-4 py-3"
+                        className={d.expand}
                       >
                         <dl className="grid gap-2 sm:grid-cols-2">
                           {foldable.map((column) => (
@@ -388,14 +438,29 @@ export function DataTable({
 /**
  * The count line every list carries above its table (§4, convention 9):
  * `35 clients` · `Showing 1–25 of 27 tickets`.
+ *
+ * It also carries the density toggle, pushed to the right. This is the one row
+ * every list screen already renders directly above its table, so putting the
+ * control here reaches all thirteen of them without each page having to opt in
+ * — and it lands beside the rows it changes rather than in a settings screen,
+ * which is where a control that is adjusted while looking at data belongs.
+ *
+ * `density={false}` opts out, for the handful of small tables (a five-row
+ * summary on a detail page) where a density switch is more chrome than the
+ * table it governs.
  */
-export function CountLine({ total, shown, noun, className }) {
+export function CountLine({ total, shown, noun, density = true, className }) {
   const label =
     shown != null && total != null && shown < total
       ? `Showing 1–${shown} of ${total} ${noun}`
       : `${total ?? shown ?? 0} ${noun}`;
 
-  return <p className={cn('tnum text-sm text-ink-400', className)}>{label}</p>;
+  return (
+    <div className={cn('flex items-center justify-between gap-3', className)}>
+      <p className="tnum text-sm text-ink-400">{label}</p>
+      {density && <DensityToggle className="hidden sm:inline-flex" />}
+    </div>
+  );
 }
 
 export default DataTable;

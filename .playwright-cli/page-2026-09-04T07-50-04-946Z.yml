@@ -1,0 +1,930 @@
+- generic [active] [ref=f2e1]:
+  - generic [ref=f2e10]:
+    - link "Skip to content" [ref=f2e11] [cursor=pointer]:
+      - /url: "#main"
+    - banner [ref=f2e12]:
+      - generic [ref=f2e13]:
+        - generic [ref=f2e14]:
+          - paragraph [ref=f2e15]: Free shipping on wholesale orders over $500 · Same-day dispatch before 2 PM ET
+          - link "See offers" [ref=f2e16] [cursor=pointer]:
+            - /url: /offers
+        - button "Dismiss announcement" [ref=f2e19]
+      - generic [ref=f2e24]:
+        - link "Cellvix home" [ref=f2e25] [cursor=pointer]:
+          - /url: /
+          - img "Cellvix — Repair with confidence" [ref=f2e26]
+        - button "Categories" [ref=f2e27]
+        - search [ref=f2e33]:
+          - generic [ref=f2e34]: Search parts, models or SKUs
+          - combobox "Search parts, models or SKUs" [ref=f2e36]
+        - generic [ref=f2e37]:
+          - link "Sales desk +1 (000) 000-0000" [ref=f2e38] [cursor=pointer]:
+            - /url: tel:+10000000000
+            - generic [ref=f2e41]:
+              - generic [ref=f2e42]: Sales desk
+              - generic [ref=f2e43]: +1 (000) 000-0000
+          - button "Sign in My account" [ref=f2e44]:
+            - generic [ref=f2e49]:
+              - generic [ref=f2e50]: Sign in
+              - generic [ref=f2e51]: My account
+          - button "Cart, 0 items" [ref=f2e52]:
+            - generic [ref=f2e58]:
+              - generic [ref=f2e59]: Cart
+              - generic [ref=f2e60]: —
+    - main [ref=f2e61]:
+      - generic [ref=f2e62]:
+        - region "Guided part finder" [ref=f2e64]:
+          - paragraph [ref=f2e66]: Find your part
+          - list [ref=f2e67]:
+            - listitem [ref=f2e68]:
+              - button "Component Type Choose…" [ref=f2e70] [cursor=pointer]:
+                - generic [ref=f2e71]: "1"
+                - generic [ref=f2e72]:
+                  - generic [ref=f2e73]: Component Type
+                  - generic [ref=f2e74]: Choose…
+            - listitem [ref=f2e77]:
+              - button "Device Type Locked" [disabled] [ref=f2e79]:
+                - generic [ref=f2e80]: "2"
+                - generic [ref=f2e81]:
+                  - generic [ref=f2e82]: Device Type
+                  - generic [ref=f2e83]: Locked
+            - listitem [ref=f2e84]:
+              - button "Brand Locked" [disabled] [ref=f2e86]:
+                - generic [ref=f2e87]: "3"
+                - generic [ref=f2e88]:
+                  - generic [ref=f2e89]: Brand
+                  - generic [ref=f2e90]: Locked
+            - listitem [ref=f2e91]:
+              - button "Series Locked" [disabled] [ref=f2e93]:
+                - generic [ref=f2e94]: "4"
+                - generic [ref=f2e95]:
+                  - generic [ref=f2e96]: Series
+                  - generic [ref=f2e97]: Locked
+            - listitem [ref=f2e98]:
+              - button "Model Locked" [disabled] [ref=f2e100]:
+                - generic [ref=f2e101]: "5"
+                - generic [ref=f2e102]:
+                  - generic [ref=f2e103]: Model
+                  - generic [ref=f2e104]: Locked
+        - generic [ref=f2e105]:
+          - complementary [ref=f2e108]:
+            - heading "Filters" [level=2] [ref=f2e111]
+            - generic [ref=f2e112]:
+              - generic [ref=f2e113]:
+                - button "Component Type" [expanded] [ref=f2e114]
+                - generic [ref=f2e118] [cursor=pointer]:
+                  - checkbox "Back Camera 24" [ref=f2e120]
+                  - generic [ref=f2e121]: Back Camera
+                  - generic [ref=f2e122]: "24"
+                - generic [ref=f2e123] [cursor=pointer]:
+                  - checkbox "Backglass 10" [ref=f2e125]
+                  - generic [ref=f2e126]: Backglass
+                  - generic [ref=f2e127]: "10"
+                - generic [ref=f2e128] [cursor=pointer]:
+                  - checkbox "Battery 8" [ref=f2e130]
+                  - generic [ref=f2e131]: Battery
+                  - generic [ref=f2e132]: "8"
+                - generic [ref=f2e133] [cursor=pointer]:
+                  - checkbox "Charging Port 12" [ref=f2e135]
+                  - generic [ref=f2e136]: Charging Port
+                  - generic [ref=f2e137]: "12"
+                - generic [ref=f2e138] [cursor=pointer]:
+                  - checkbox "Flex Cable 8" [ref=f2e140]
+                  - generic [ref=f2e141]: Flex Cable
+                  - generic [ref=f2e142]: "8"
+                - generic [ref=f2e143] [cursor=pointer]:
+                  - checkbox "Front Camera 19" [ref=f2e145]
+                  - generic [ref=f2e146]: Front Camera
+                  - generic [ref=f2e147]: "19"
+                - generic [ref=f2e148] [cursor=pointer]:
+                  - checkbox "Screen 23" [ref=f2e150]
+                  - generic [ref=f2e151]: Screen
+                  - generic [ref=f2e152]: "23"
+                - generic [ref=f2e153] [cursor=pointer]:
+                  - checkbox "Speaker 12" [ref=f2e155]
+                  - generic [ref=f2e156]: Speaker
+                  - generic [ref=f2e157]: "12"
+              - generic [ref=f2e158]:
+                - button "Category" [expanded] [ref=f2e159]
+                - list [ref=f2e164]:
+                  - listitem [ref=f2e165]:
+                    - button "Smartphone 116" [ref=f2e166]:
+                      - generic [ref=f2e167]: Smartphone
+                      - generic [ref=f2e168]: "116"
+                  - listitem [ref=f2e171]:
+                    - button "Tablet 0" [ref=f2e172]:
+                      - generic [ref=f2e173]: Tablet
+                      - generic [ref=f2e174]: "0"
+                  - listitem [ref=f2e177]:
+                    - button "Laptop 0" [ref=f2e178]:
+                      - generic [ref=f2e179]: Laptop
+                      - generic [ref=f2e180]: "0"
+                  - listitem [ref=f2e183]:
+                    - button "Smart Watch 0" [ref=f2e184]:
+                      - generic [ref=f2e185]: Smart Watch
+                      - generic [ref=f2e186]: "0"
+                  - listitem [ref=f2e189]:
+                    - button "Game Console 0" [ref=f2e190]:
+                      - generic [ref=f2e191]: Game Console
+                      - generic [ref=f2e192]: "0"
+                  - listitem [ref=f2e195]:
+                    - button "Computer 0" [ref=f2e196]:
+                      - generic [ref=f2e197]: Computer
+                      - generic [ref=f2e198]: "0"
+              - generic [ref=f2e201]:
+                - button "Condition Grade" [expanded] [ref=f2e202]
+                - generic [ref=f2e206] [cursor=pointer]:
+                  - checkbox "New 32" [ref=f2e208]
+                  - generic [ref=f2e209]: New
+                  - generic [ref=f2e210]: "32"
+                - generic [ref=f2e211] [cursor=pointer]:
+                  - checkbox "OEM 31" [ref=f2e213]
+                  - generic [ref=f2e214]: OEM
+                  - generic [ref=f2e215]: "31"
+                - generic [ref=f2e216] [cursor=pointer]:
+                  - checkbox "Pull Grade A 30" [ref=f2e218]
+                  - generic [ref=f2e219]: Pull Grade A
+                  - generic [ref=f2e220]: "30"
+                - generic [ref=f2e221] [cursor=pointer]:
+                  - checkbox "Pull Grade B 12" [ref=f2e223]
+                  - generic [ref=f2e224]: Pull Grade B
+                  - generic [ref=f2e225]: "12"
+                - generic [ref=f2e226] [cursor=pointer]:
+                  - checkbox "Aftermarket 11" [ref=f2e228]
+                  - generic [ref=f2e229]: Aftermarket
+                  - generic [ref=f2e230]: "11"
+              - generic [ref=f2e231]:
+                - button "Availability" [expanded] [ref=f2e232]
+                - generic [ref=f2e236] [cursor=pointer]:
+                  - checkbox "In stock 102" [ref=f2e238]
+                  - generic [ref=f2e239]: In stock
+                  - generic [ref=f2e240]: "102"
+          - region "Products" [ref=f2e241]:
+            - generic [ref=f2e242]:
+              - heading "Parts116 results" [level=1] [ref=f2e243]
+              - button "Sort products" [ref=f2e247] [cursor=pointer]:
+                - generic [ref=f2e248]: Relevance
+            - generic [ref=f2e252]:
+              - article [ref=f2e253]:
+                - generic [ref=f2e254]:
+                  - generic [ref=f2e255]:
+                    - generic: Pixel 8
+                    - link [ref=f2e257] [cursor=pointer]:
+                      - /url: /product/google-pixel-8-back-glass-new-1342
+                  - generic "New" [ref=f2e258]: NEW
+                - generic [ref=f2e260]:
+                  - generic [ref=f2e261]:
+                    - paragraph [ref=f2e262]: Backglass
+                    - heading [level=3] [ref=f2e263]:
+                      - link "Pixel 8" [ref=f2e264] [cursor=pointer]:
+                        - /url: /product/google-pixel-8-back-glass-new-1342
+                  - generic [ref=f2e265]: In stock
+                  - generic [ref=f2e268]:
+                    - generic: $000.00
+                    - button [ref=f2e269]
+                  - generic [ref=f2e274]:
+                    - generic [ref=f2e275]:
+                      - button "Decrease quantity" [disabled] [ref=f2e276]
+                      - textbox "Quantity" [ref=f2e278]: "1"
+                      - button "Increase quantity" [ref=f2e279]
+                    - button "Add Pixel 8 Backglass to cart" [ref=f2e281]:
+                      - generic [ref=f2e286]: Add
+              - article [ref=f2e287]:
+                - generic [ref=f2e288]:
+                  - generic [ref=f2e289]:
+                    - generic: Galaxy S21 Ultra
+                    - link [ref=f2e291] [cursor=pointer]:
+                      - /url: /product/samsung-galaxy-s21-ultra-screen-assembly-pull-b-1160
+                  - generic "Pull Grade B" [ref=f2e292]:
+                    - generic [ref=f2e293]: PULL
+                    - generic [ref=f2e294]: B
+                - generic [ref=f2e295]:
+                  - generic [ref=f2e296]:
+                    - paragraph [ref=f2e297]: Screen
+                    - heading [level=3] [ref=f2e298]:
+                      - link "Galaxy S21 Ultra" [ref=f2e299] [cursor=pointer]:
+                        - /url: /product/samsung-galaxy-s21-ultra-screen-assembly-pull-b-1160
+                  - generic [ref=f2e300]: In stock
+                  - generic [ref=f2e303]:
+                    - generic: $000.00
+                    - button [ref=f2e304]
+                  - generic [ref=f2e309]:
+                    - generic [ref=f2e310]:
+                      - button "Decrease quantity" [disabled] [ref=f2e311]
+                      - textbox "Quantity" [ref=f2e313]: "1"
+                      - button "Increase quantity" [ref=f2e314]
+                    - button "Add Galaxy S21 Ultra Screen to cart" [ref=f2e316]:
+                      - generic [ref=f2e321]: Add
+              - article [ref=f2e322]:
+                - generic [ref=f2e323]:
+                  - generic [ref=f2e324]:
+                    - generic: iPhone SE 2020
+                    - link [ref=f2e326] [cursor=pointer]:
+                      - /url: /product/apple-iphone-se-2020-battery-oem-1141
+                  - generic "OEM" [ref=f2e327]
+                - generic [ref=f2e329]:
+                  - generic [ref=f2e330]:
+                    - paragraph [ref=f2e331]: Battery
+                    - heading [level=3] [ref=f2e332]:
+                      - link "iPhone SE 2020" [ref=f2e333] [cursor=pointer]:
+                        - /url: /product/apple-iphone-se-2020-battery-oem-1141
+                  - generic [ref=f2e334]: In stock
+                  - generic [ref=f2e337]:
+                    - generic: $000.00
+                    - button [ref=f2e338]
+                  - generic [ref=f2e343]:
+                    - generic [ref=f2e344]:
+                      - button "Decrease quantity" [disabled] [ref=f2e345]
+                      - textbox "Quantity" [ref=f2e347]: "1"
+                      - button "Increase quantity" [ref=f2e348]
+                    - button "Add iPhone SE 2020 Battery to cart" [ref=f2e350]:
+                      - generic [ref=f2e355]: Add
+              - article [ref=f2e356]:
+                - generic [ref=f2e357]:
+                  - generic [ref=f2e358]:
+                    - generic: Galaxy A54 5G
+                    - link [ref=f2e360] [cursor=pointer]:
+                      - /url: /product/samsung-galaxy-a54-5g-screen-assembly-new-1230
+                  - generic "New" [ref=f2e361]: NEW
+                - generic [ref=f2e363]:
+                  - generic [ref=f2e364]:
+                    - paragraph [ref=f2e365]: Screen
+                    - heading [level=3] [ref=f2e366]:
+                      - link "Galaxy A54 5G" [ref=f2e367] [cursor=pointer]:
+                        - /url: /product/samsung-galaxy-a54-5g-screen-assembly-new-1230
+                  - generic [ref=f2e368]: In stock
+                  - generic [ref=f2e371]:
+                    - generic: $000.00
+                    - button [ref=f2e372]
+                  - generic [ref=f2e377]:
+                    - generic [ref=f2e378]:
+                      - button "Decrease quantity" [disabled] [ref=f2e379]
+                      - textbox "Quantity" [ref=f2e381]: "1"
+                      - button "Increase quantity" [ref=f2e382]
+                    - button "Add Galaxy A54 5G Screen to cart" [ref=f2e384]:
+                      - generic [ref=f2e389]: Add
+              - article [ref=f2e390]:
+                - generic [ref=f2e391]:
+                  - generic [ref=f2e392]:
+                    - generic: Galaxy S24 Ultra
+                    - link [ref=f2e394] [cursor=pointer]:
+                      - /url: /product/samsung-galaxy-s24-ultra-flex-cable-oem-1205
+                  - generic "OEM" [ref=f2e395]
+                - generic [ref=f2e397]:
+                  - generic [ref=f2e398]:
+                    - paragraph [ref=f2e399]: Flex Cable
+                    - heading [level=3] [ref=f2e400]:
+                      - link "Galaxy S24 Ultra" [ref=f2e401] [cursor=pointer]:
+                        - /url: /product/samsung-galaxy-s24-ultra-flex-cable-oem-1205
+                  - generic [ref=f2e402]: In stock
+                  - generic [ref=f2e405]:
+                    - generic: $000.00
+                    - button [ref=f2e406]
+                  - generic [ref=f2e411]:
+                    - generic [ref=f2e412]:
+                      - button "Decrease quantity" [disabled] [ref=f2e413]
+                      - textbox "Quantity" [ref=f2e415]: "1"
+                      - button "Increase quantity" [ref=f2e416]
+                    - button "Add Galaxy S24 Ultra Flex Cable to cart" [ref=f2e418]:
+                      - generic [ref=f2e423]: Add
+              - article [ref=f2e424]:
+                - generic [ref=f2e425]:
+                  - generic [ref=f2e426]:
+                    - generic: iPhone 12 Pro Max
+                    - link [ref=f2e428] [cursor=pointer]:
+                      - /url: /product/apple-iphone-12-pro-max-battery-oem-1127
+                  - generic "OEM" [ref=f2e429]
+                - generic [ref=f2e431]:
+                  - generic [ref=f2e432]:
+                    - paragraph [ref=f2e433]: Battery
+                    - heading [level=3] [ref=f2e434]:
+                      - link "iPhone 12 Pro Max" [ref=f2e435] [cursor=pointer]:
+                        - /url: /product/apple-iphone-12-pro-max-battery-oem-1127
+                  - generic [ref=f2e436]: In stock
+                  - generic [ref=f2e439]:
+                    - generic: $000.00
+                    - button [ref=f2e440]
+                  - generic [ref=f2e445]:
+                    - generic [ref=f2e446]:
+                      - button "Decrease quantity" [disabled] [ref=f2e447]
+                      - textbox "Quantity" [ref=f2e449]: "1"
+                      - button "Increase quantity" [ref=f2e450]
+                    - button "Add iPhone 12 Pro Max Battery to cart" [ref=f2e452]:
+                      - generic [ref=f2e457]: Add
+              - article [ref=f2e458]:
+                - generic [ref=f2e459]:
+                  - generic [ref=f2e460]:
+                    - generic: Pixel 8 Pro
+                    - link [ref=f2e462] [cursor=pointer]:
+                      - /url: /product/google-pixel-8-pro-rear-camera-oem-1350
+                  - generic "OEM" [ref=f2e463]
+                - generic [ref=f2e465]:
+                  - generic [ref=f2e466]:
+                    - paragraph [ref=f2e467]: Back Camera
+                    - heading [level=3] [ref=f2e468]:
+                      - link "Pixel 8 Pro" [ref=f2e469] [cursor=pointer]:
+                        - /url: /product/google-pixel-8-pro-rear-camera-oem-1350
+                  - generic [ref=f2e470]: In stock
+                  - generic [ref=f2e473]:
+                    - generic: $000.00
+                    - button [ref=f2e474]
+                  - generic [ref=f2e479]:
+                    - generic [ref=f2e480]:
+                      - button "Decrease quantity" [disabled] [ref=f2e481]
+                      - textbox "Quantity" [ref=f2e483]: "1"
+                      - button "Increase quantity" [ref=f2e484]
+                    - button "Add Pixel 8 Pro Back Camera to cart" [ref=f2e486]:
+                      - generic [ref=f2e491]: Add
+              - article [ref=f2e492]:
+                - generic [ref=f2e493]:
+                  - generic [ref=f2e494]:
+                    - generic: Pixel 7
+                    - link [ref=f2e496] [cursor=pointer]:
+                      - /url: /product/google-pixel-7-loud-speaker-pull-a-1321
+                  - generic "Pull Grade A" [ref=f2e497]:
+                    - generic [ref=f2e498]: PULL
+                    - generic [ref=f2e499]: A
+                - generic [ref=f2e500]:
+                  - generic [ref=f2e501]:
+                    - paragraph [ref=f2e502]: Speaker
+                    - heading [level=3] [ref=f2e503]:
+                      - link "Pixel 7" [ref=f2e504] [cursor=pointer]:
+                        - /url: /product/google-pixel-7-loud-speaker-pull-a-1321
+                  - generic [ref=f2e505]: In stock
+                  - generic [ref=f2e508]:
+                    - generic: $000.00
+                    - button [ref=f2e509]
+                  - generic [ref=f2e514]:
+                    - generic [ref=f2e515]:
+                      - button "Decrease quantity" [disabled] [ref=f2e516]
+                      - textbox "Quantity" [ref=f2e518]: "1"
+                      - button "Increase quantity" [ref=f2e519]
+                    - button "Add Pixel 7 Speaker to cart" [ref=f2e521]:
+                      - generic [ref=f2e526]: Add
+              - article [ref=f2e527]:
+                - generic [ref=f2e528]:
+                  - generic [ref=f2e529]:
+                    - generic: iPhone 15 Pro
+                    - link [ref=f2e531] [cursor=pointer]:
+                      - /url: /product/apple-iphone-15-pro-rear-camera-pull-a-1021
+                  - generic "Pull Grade A" [ref=f2e532]:
+                    - generic [ref=f2e533]: PULL
+                    - generic [ref=f2e534]: A
+                - generic [ref=f2e535]:
+                  - generic [ref=f2e536]:
+                    - paragraph [ref=f2e537]: Back Camera
+                    - heading [level=3] [ref=f2e538]:
+                      - link "iPhone 15 Pro" [ref=f2e539] [cursor=pointer]:
+                        - /url: /product/apple-iphone-15-pro-rear-camera-pull-a-1021
+                  - generic [ref=f2e540]: In stock
+                  - generic [ref=f2e543]:
+                    - generic: $000.00
+                    - button [ref=f2e544]
+                  - generic [ref=f2e549]:
+                    - generic [ref=f2e550]:
+                      - button "Decrease quantity" [disabled] [ref=f2e551]
+                      - textbox "Quantity" [ref=f2e553]: "1"
+                      - button "Increase quantity" [ref=f2e554]
+                    - button "Add iPhone 15 Pro Back Camera to cart" [ref=f2e556]:
+                      - generic [ref=f2e561]: Add
+              - article [ref=f2e562]:
+                - generic [ref=f2e563]:
+                  - generic [ref=f2e564]:
+                    - generic: Galaxy A34 5G
+                    - link [ref=f2e566] [cursor=pointer]:
+                      - /url: /product/samsung-galaxy-a34-5g-loud-speaker-pull-a-1228
+                  - generic "Pull Grade A" [ref=f2e567]:
+                    - generic [ref=f2e568]: PULL
+                    - generic [ref=f2e569]: A
+                - generic [ref=f2e570]:
+                  - generic [ref=f2e571]:
+                    - paragraph [ref=f2e572]: Speaker
+                    - heading [level=3] [ref=f2e573]:
+                      - link "Galaxy A34 5G" [ref=f2e574] [cursor=pointer]:
+                        - /url: /product/samsung-galaxy-a34-5g-loud-speaker-pull-a-1228
+                  - generic [ref=f2e575]: In stock
+                  - generic [ref=f2e578]:
+                    - generic: $000.00
+                    - button [ref=f2e579]
+                  - generic [ref=f2e584]:
+                    - generic [ref=f2e585]:
+                      - button "Decrease quantity" [disabled] [ref=f2e586]
+                      - textbox "Quantity" [ref=f2e588]: "1"
+                      - button "Increase quantity" [ref=f2e589]
+                    - button "Add Galaxy A34 5G Speaker to cart" [ref=f2e591]:
+                      - generic [ref=f2e596]: Add
+              - article [ref=f2e597]:
+                - generic [ref=f2e598]:
+                  - generic [ref=f2e599]:
+                    - generic: Galaxy Z Flip 5
+                    - link [ref=f2e601] [cursor=pointer]:
+                      - /url: /product/samsung-galaxy-z-flip-5-rear-camera-oem-1267
+                  - generic "OEM" [ref=f2e602]
+                - generic [ref=f2e604]:
+                  - generic [ref=f2e605]:
+                    - paragraph [ref=f2e606]: Back Camera
+                    - heading [level=3] [ref=f2e607]:
+                      - link "Galaxy Z Flip 5" [ref=f2e608] [cursor=pointer]:
+                        - /url: /product/samsung-galaxy-z-flip-5-rear-camera-oem-1267
+                  - generic [ref=f2e609]: In stock
+                  - generic [ref=f2e612]:
+                    - generic: $000.00
+                    - button [ref=f2e613]
+                  - generic [ref=f2e618]:
+                    - generic [ref=f2e619]:
+                      - button "Decrease quantity" [disabled] [ref=f2e620]
+                      - textbox "Quantity" [ref=f2e622]: "1"
+                      - button "Increase quantity" [ref=f2e623]
+                    - button "Add Galaxy Z Flip 5 Back Camera to cart" [ref=f2e625]:
+                      - generic [ref=f2e630]: Add
+              - article [ref=f2e631]:
+                - generic [ref=f2e632]:
+                  - generic [ref=f2e633]:
+                    - generic: iPhone 15 Plus
+                    - link [ref=f2e635] [cursor=pointer]:
+                      - /url: /product/apple-iphone-15-plus-charging-port-oem-1015
+                  - generic "OEM" [ref=f2e636]
+                - generic [ref=f2e638]:
+                  - generic [ref=f2e639]:
+                    - paragraph [ref=f2e640]: Charging Port
+                    - heading [level=3] [ref=f2e641]:
+                      - link "iPhone 15 Plus" [ref=f2e642] [cursor=pointer]:
+                        - /url: /product/apple-iphone-15-plus-charging-port-oem-1015
+                  - generic [ref=f2e643]: In stock
+                  - generic [ref=f2e646]:
+                    - generic: $000.00
+                    - button [ref=f2e647]
+                  - generic [ref=f2e652]:
+                    - generic [ref=f2e653]:
+                      - button "Decrease quantity" [disabled] [ref=f2e654]
+                      - textbox "Quantity" [ref=f2e656]: "1"
+                      - button "Increase quantity" [ref=f2e657]
+                    - button "Add iPhone 15 Plus Charging Port to cart" [ref=f2e659]:
+                      - generic [ref=f2e664]: Add
+              - article [ref=f2e665]:
+                - generic [ref=f2e666]:
+                  - generic [ref=f2e667]:
+                    - generic: Galaxy Z Fold 4
+                    - link [ref=f2e669] [cursor=pointer]:
+                      - /url: /product/samsung-galaxy-z-fold-4-screen-assembly-new-1272
+                  - generic "New" [ref=f2e670]: NEW
+                - generic [ref=f2e672]:
+                  - generic [ref=f2e673]:
+                    - paragraph [ref=f2e674]: Screen
+                    - heading [level=3] [ref=f2e675]:
+                      - link "Galaxy Z Fold 4" [ref=f2e676] [cursor=pointer]:
+                        - /url: /product/samsung-galaxy-z-fold-4-screen-assembly-new-1272
+                  - generic [ref=f2e677]: In stock
+                  - generic [ref=f2e680]:
+                    - generic: $000.00
+                    - button [ref=f2e681]
+                  - generic [ref=f2e686]:
+                    - generic [ref=f2e687]:
+                      - button "Decrease quantity" [disabled] [ref=f2e688]
+                      - textbox "Quantity" [ref=f2e690]: "1"
+                      - button "Increase quantity" [ref=f2e691]
+                    - button "Add Galaxy Z Fold 4 Screen to cart" [ref=f2e693]:
+                      - generic [ref=f2e698]: Add
+              - article [ref=f2e699]:
+                - generic [ref=f2e700]:
+                  - generic [ref=f2e701]:
+                    - generic: Galaxy Note 20 Ultra
+                    - link [ref=f2e703] [cursor=pointer]:
+                      - /url: /product/samsung-galaxy-note-20-ultra-front-camera-oem-1251
+                  - generic "OEM" [ref=f2e704]
+                - generic [ref=f2e706]:
+                  - generic [ref=f2e707]:
+                    - paragraph [ref=f2e708]: Front Camera
+                    - heading [level=3] [ref=f2e709]:
+                      - link "Galaxy Note 20 Ultra" [ref=f2e710] [cursor=pointer]:
+                        - /url: /product/samsung-galaxy-note-20-ultra-front-camera-oem-1251
+                  - generic [ref=f2e711]: In stock
+                  - generic [ref=f2e714]:
+                    - generic: $000.00
+                    - button [ref=f2e715]
+                  - generic [ref=f2e720]:
+                    - generic [ref=f2e721]:
+                      - button "Decrease quantity" [disabled] [ref=f2e722]
+                      - textbox "Quantity" [ref=f2e724]: "1"
+                      - button "Increase quantity" [ref=f2e725]
+                    - button "Add Galaxy Note 20 Ultra Front Camera to cart" [ref=f2e727]:
+                      - generic [ref=f2e732]: Add
+              - article [ref=f2e733]:
+                - generic [ref=f2e734]:
+                  - generic [ref=f2e735]:
+                    - generic: iPhone 14 Plus
+                    - link [ref=f2e737] [cursor=pointer]:
+                      - /url: /product/apple-iphone-14-plus-front-camera-pull-a-1050
+                  - generic "Pull Grade A" [ref=f2e738]:
+                    - generic [ref=f2e739]: PULL
+                    - generic [ref=f2e740]: A
+                - generic [ref=f2e741]:
+                  - generic [ref=f2e742]:
+                    - paragraph [ref=f2e743]: Front Camera
+                    - heading [level=3] [ref=f2e744]:
+                      - link "iPhone 14 Plus" [ref=f2e745] [cursor=pointer]:
+                        - /url: /product/apple-iphone-14-plus-front-camera-pull-a-1050
+                  - generic [ref=f2e746]: In stock
+                  - generic [ref=f2e749]:
+                    - generic: $000.00
+                    - button [ref=f2e750]
+                  - generic [ref=f2e755]:
+                    - generic [ref=f2e756]:
+                      - button "Decrease quantity" [disabled] [ref=f2e757]
+                      - textbox "Quantity" [ref=f2e759]: "1"
+                      - button "Increase quantity" [ref=f2e760]
+                    - button "Add iPhone 14 Plus Front Camera to cart" [ref=f2e762]:
+                      - generic [ref=f2e767]: Add
+              - article [ref=f2e768]:
+                - generic [ref=f2e769]:
+                  - generic [ref=f2e770]:
+                    - generic: Pixel 6 Pro
+                    - link [ref=f2e772] [cursor=pointer]:
+                      - /url: /product/google-pixel-6-pro-rear-camera-oem-1307
+                  - generic "OEM" [ref=f2e773]
+                - generic [ref=f2e775]:
+                  - generic [ref=f2e776]:
+                    - paragraph [ref=f2e777]: Back Camera
+                    - heading [level=3] [ref=f2e778]:
+                      - link "Pixel 6 Pro" [ref=f2e779] [cursor=pointer]:
+                        - /url: /product/google-pixel-6-pro-rear-camera-oem-1307
+                  - generic [ref=f2e780]: In stock
+                  - generic [ref=f2e783]:
+                    - generic: $000.00
+                    - button [ref=f2e784]
+                  - generic [ref=f2e789]:
+                    - generic [ref=f2e790]:
+                      - button "Decrease quantity" [disabled] [ref=f2e791]
+                      - textbox "Quantity" [ref=f2e793]: "1"
+                      - button "Increase quantity" [ref=f2e794]
+                    - button "Add Pixel 6 Pro Back Camera to cart" [ref=f2e796]:
+                      - generic [ref=f2e801]: Add
+              - article [ref=f2e802]:
+                - generic [ref=f2e803]:
+                  - generic [ref=f2e804]:
+                    - generic: Galaxy S22 Ultra
+                    - link [ref=f2e806] [cursor=pointer]:
+                      - /url: /product/samsung-galaxy-s22-ultra-loud-speaker-new-1174
+                  - generic "New" [ref=f2e807]: NEW
+                - generic [ref=f2e809]:
+                  - generic [ref=f2e810]:
+                    - paragraph [ref=f2e811]: Speaker
+                    - heading [level=3] [ref=f2e812]:
+                      - link "Galaxy S22 Ultra" [ref=f2e813] [cursor=pointer]:
+                        - /url: /product/samsung-galaxy-s22-ultra-loud-speaker-new-1174
+                  - generic [ref=f2e814]: In stock
+                  - generic [ref=f2e817]:
+                    - generic: $000.00
+                    - button [ref=f2e818]
+                  - generic [ref=f2e823]:
+                    - generic [ref=f2e824]:
+                      - button "Decrease quantity" [disabled] [ref=f2e825]
+                      - textbox "Quantity" [ref=f2e827]: "1"
+                      - button "Increase quantity" [ref=f2e828]
+                    - button "Add Galaxy S22 Ultra Speaker to cart" [ref=f2e830]:
+                      - generic [ref=f2e835]: Add
+              - article [ref=f2e836]:
+                - generic [ref=f2e837]:
+                  - generic [ref=f2e838]:
+                    - generic: iPhone 15
+                    - link [ref=f2e840] [cursor=pointer]:
+                      - /url: /product/apple-iphone-15-rear-camera-oem-1001
+                  - generic "OEM" [ref=f2e841]
+                - generic [ref=f2e843]:
+                  - generic [ref=f2e844]:
+                    - paragraph [ref=f2e845]: Back Camera
+                    - heading [level=3] [ref=f2e846]:
+                      - link "iPhone 15" [ref=f2e847] [cursor=pointer]:
+                        - /url: /product/apple-iphone-15-rear-camera-oem-1001
+                  - generic [ref=f2e848]: In stock
+                  - generic [ref=f2e851]:
+                    - generic: $000.00
+                    - button [ref=f2e852]
+                  - generic [ref=f2e857]:
+                    - generic [ref=f2e858]:
+                      - button "Decrease quantity" [disabled] [ref=f2e859]
+                      - textbox "Quantity" [ref=f2e861]: "1"
+                      - button "Increase quantity" [ref=f2e862]
+                    - button "Add iPhone 15 Back Camera to cart" [ref=f2e864]:
+                      - generic [ref=f2e869]: Add
+              - article [ref=f2e870]:
+                - generic [ref=f2e871]:
+                  - generic [ref=f2e872]:
+                    - generic: iPhone 13 mini
+                    - link [ref=f2e874] [cursor=pointer]:
+                      - /url: /product/apple-iphone-13-mini-battery-aftermarket-1065
+                  - generic "Aftermarket" [ref=f2e875]:
+                    - generic [ref=f2e876]: AFT
+                    - generic [ref=f2e877]: MKT
+                - generic [ref=f2e878]:
+                  - generic [ref=f2e879]:
+                    - paragraph [ref=f2e880]: Battery
+                    - heading [level=3] [ref=f2e881]:
+                      - link "iPhone 13 mini" [ref=f2e882] [cursor=pointer]:
+                        - /url: /product/apple-iphone-13-mini-battery-aftermarket-1065
+                  - generic [ref=f2e883]: In stock
+                  - generic [ref=f2e886]:
+                    - generic: $000.00
+                    - button [ref=f2e887]
+                  - generic [ref=f2e892]:
+                    - generic [ref=f2e893]:
+                      - button "Decrease quantity" [disabled] [ref=f2e894]
+                      - textbox "Quantity" [ref=f2e896]: "1"
+                      - button "Increase quantity" [ref=f2e897]
+                    - button "Add iPhone 13 mini Battery to cart" [ref=f2e899]:
+                      - generic [ref=f2e904]: Add
+              - article [ref=f2e905]:
+                - generic [ref=f2e906]:
+                  - generic [ref=f2e907]:
+                    - generic: Galaxy S21 Ultra
+                    - link [ref=f2e909] [cursor=pointer]:
+                      - /url: /product/samsung-galaxy-s21-ultra-flex-cable-pull-a-1166
+                  - generic "Pull Grade A" [ref=f2e910]:
+                    - generic [ref=f2e911]: PULL
+                    - generic [ref=f2e912]: A
+                - generic [ref=f2e913]:
+                  - generic [ref=f2e914]:
+                    - paragraph [ref=f2e915]: Flex Cable
+                    - heading [level=3] [ref=f2e916]:
+                      - link "Galaxy S21 Ultra" [ref=f2e917] [cursor=pointer]:
+                        - /url: /product/samsung-galaxy-s21-ultra-flex-cable-pull-a-1166
+                  - generic [ref=f2e918]: In stock
+                  - generic [ref=f2e921]:
+                    - generic: $000.00
+                    - button [ref=f2e922]
+                  - generic [ref=f2e927]:
+                    - generic [ref=f2e928]:
+                      - button "Decrease quantity" [disabled] [ref=f2e929]
+                      - textbox "Quantity" [ref=f2e931]: "1"
+                      - button "Increase quantity" [ref=f2e932]
+                    - button "Add Galaxy S21 Ultra Flex Cable to cart" [ref=f2e934]:
+                      - generic [ref=f2e939]: Add
+              - article [ref=f2e940]:
+                - generic [ref=f2e941]:
+                  - generic [ref=f2e942]:
+                    - generic: iPhone 15
+                    - link [ref=f2e944] [cursor=pointer]:
+                      - /url: /product/apple-iphone-15-charging-port-new-1003
+                  - generic "New" [ref=f2e945]: NEW
+                - generic [ref=f2e947]:
+                  - generic [ref=f2e948]:
+                    - paragraph [ref=f2e949]: Charging Port
+                    - heading [level=3] [ref=f2e950]:
+                      - link "iPhone 15" [ref=f2e951] [cursor=pointer]:
+                        - /url: /product/apple-iphone-15-charging-port-new-1003
+                  - generic [ref=f2e952]: In stock
+                  - generic [ref=f2e955]:
+                    - generic: $000.00
+                    - button [ref=f2e956]
+                  - generic [ref=f2e961]:
+                    - generic [ref=f2e962]:
+                      - button "Decrease quantity" [disabled] [ref=f2e963]
+                      - textbox "Quantity" [ref=f2e965]: "1"
+                      - button "Increase quantity" [ref=f2e966]
+                    - button "Add iPhone 15 Charging Port to cart" [ref=f2e968]:
+                      - generic [ref=f2e973]: Add
+              - article [ref=f2e974]:
+                - generic [ref=f2e975]:
+                  - generic [ref=f2e976]:
+                    - generic: iPhone SE 2022
+                    - link [ref=f2e978] [cursor=pointer]:
+                      - /url: /product/apple-iphone-se-2022-charging-port-pull-a-1147
+                  - generic "Pull Grade A" [ref=f2e979]:
+                    - generic [ref=f2e980]: PULL
+                    - generic [ref=f2e981]: A
+                - generic [ref=f2e982]:
+                  - generic [ref=f2e983]:
+                    - paragraph [ref=f2e984]: Charging Port
+                    - heading [level=3] [ref=f2e985]:
+                      - link "iPhone SE 2022" [ref=f2e986] [cursor=pointer]:
+                        - /url: /product/apple-iphone-se-2022-charging-port-pull-a-1147
+                  - generic [ref=f2e987]: In stock
+                  - generic [ref=f2e990]:
+                    - generic: $000.00
+                    - button [ref=f2e991]
+                  - generic [ref=f2e996]:
+                    - generic [ref=f2e997]:
+                      - button "Decrease quantity" [disabled] [ref=f2e998]
+                      - textbox "Quantity" [ref=f2e1000]: "1"
+                      - button "Increase quantity" [ref=f2e1001]
+                    - button "Add iPhone SE 2022 Charging Port to cart" [ref=f2e1003]:
+                      - generic [ref=f2e1008]: Add
+              - article [ref=f2e1009]:
+                - generic [ref=f2e1010]:
+                  - generic [ref=f2e1011]:
+                    - generic: iPhone 14
+                    - link [ref=f2e1013] [cursor=pointer]:
+                      - /url: /product/apple-iphone-14-battery-new-1042
+                  - generic "New" [ref=f2e1014]: NEW
+                - generic [ref=f2e1016]:
+                  - generic [ref=f2e1017]:
+                    - paragraph [ref=f2e1018]: Battery
+                    - heading [level=3] [ref=f2e1019]:
+                      - link "iPhone 14" [ref=f2e1020] [cursor=pointer]:
+                        - /url: /product/apple-iphone-14-battery-new-1042
+                  - generic [ref=f2e1021]: In stock
+                  - generic [ref=f2e1024]:
+                    - generic: $000.00
+                    - button [ref=f2e1025]
+                  - generic [ref=f2e1030]:
+                    - generic [ref=f2e1031]:
+                      - button "Decrease quantity" [disabled] [ref=f2e1032]
+                      - textbox "Quantity" [ref=f2e1034]: "1"
+                      - button "Increase quantity" [ref=f2e1035]
+                    - button "Add iPhone 14 Battery to cart" [ref=f2e1037]:
+                      - generic [ref=f2e1042]: Add
+              - article [ref=f2e1043]:
+                - generic [ref=f2e1044]:
+                  - generic [ref=f2e1045]:
+                    - generic: Galaxy S23
+                    - link [ref=f2e1047] [cursor=pointer]:
+                      - /url: /product/samsung-galaxy-s23-screen-assembly-aftermarket-1181
+                  - generic "Aftermarket" [ref=f2e1048]:
+                    - generic [ref=f2e1049]: AFT
+                    - generic [ref=f2e1050]: MKT
+                - generic [ref=f2e1051]:
+                  - generic [ref=f2e1052]:
+                    - paragraph [ref=f2e1053]: Screen
+                    - heading [level=3] [ref=f2e1054]:
+                      - link "Galaxy S23" [ref=f2e1055] [cursor=pointer]:
+                        - /url: /product/samsung-galaxy-s23-screen-assembly-aftermarket-1181
+                  - generic [ref=f2e1056]: In stock
+                  - generic [ref=f2e1059]:
+                    - generic: $000.00
+                    - button [ref=f2e1060]
+                  - generic [ref=f2e1065]:
+                    - generic [ref=f2e1066]:
+                      - button "Decrease quantity" [disabled] [ref=f2e1067]
+                      - textbox "Quantity" [ref=f2e1069]: "1"
+                      - button "Increase quantity" [ref=f2e1070]
+                    - button "Add Galaxy S23 Screen to cart" [ref=f2e1072]:
+                      - generic [ref=f2e1077]: Add
+            - navigation "Pagination" [ref=f2e1078]:
+              - button "Previous page" [disabled] [ref=f2e1079]
+              - button "1" [ref=f2e1082]
+              - button "2" [ref=f2e1083]
+              - button "3" [ref=f2e1084]
+              - button "4" [ref=f2e1085]
+              - button "5" [ref=f2e1086]
+              - button "Next page" [ref=f2e1087]
+    - contentinfo [ref=f2e1090]:
+      - generic [ref=f2e1094]:
+        - generic [ref=f2e1095]:
+          - heading "Cellvix keeps Canadian repair shops in graded parts, at wholesale prices, on terms." [level=2] [ref=f2e1096]
+          - list [ref=f2e1097]:
+            - listitem [ref=f2e1098]:
+              - link "+1 (000) 000-0000" [ref=f2e1101] [cursor=pointer]:
+                - /url: tel:+10000000000
+            - listitem [ref=f2e1102]:
+              - link "sales@cellvix.ca" [ref=f2e1106] [cursor=pointer]:
+                - /url: mailto:sales@cellvix.ca
+            - listitem [ref=f2e1107]:
+              - generic [ref=f2e1111]: 000 Placeholder Rd, Unit 0Toronto, ON M0M 0M0
+          - generic [ref=f2e1112]:
+            - heading "Follow us" [level=3] [ref=f2e1113]
+            - list [ref=f2e1114]:
+              - listitem [ref=f2e1115]:
+                - link "Facebook" [ref=f2e1116] [cursor=pointer]:
+                  - /url: "#"
+                  - text: "@cellvix"
+              - listitem [ref=f2e1119]:
+                - link "Instagram" [ref=f2e1120] [cursor=pointer]:
+                  - /url: "#"
+                  - text: "@cellvix"
+              - listitem [ref=f2e1124]:
+                - link "LinkedIn" [ref=f2e1125] [cursor=pointer]:
+                  - /url: "#"
+                  - text: "@cellvix"
+              - listitem [ref=f2e1130]:
+                - link "YouTube" [ref=f2e1131] [cursor=pointer]:
+                  - /url: "#"
+                  - text: "@cellvix"
+        - generic [ref=f2e1135]:
+          - navigation "Shop" [ref=f2e1136]:
+            - heading "Shop" [level=3] [ref=f2e1137]
+            - list [ref=f2e1138]:
+              - listitem [ref=f2e1139]:
+                - link "All parts" [ref=f2e1140] [cursor=pointer]:
+                  - /url: /
+              - listitem [ref=f2e1141]:
+                - link "Phone parts" [ref=f2e1142] [cursor=pointer]:
+                  - /url: /?deviceType=smartphone
+              - listitem [ref=f2e1143]:
+                - link "Tablet parts" [ref=f2e1144] [cursor=pointer]:
+                  - /url: /?deviceType=tablet
+              - listitem [ref=f2e1145]:
+                - link "Laptop parts" [ref=f2e1146] [cursor=pointer]:
+                  - /url: /?deviceType=laptop
+              - listitem [ref=f2e1147]:
+                - link "Console parts" [ref=f2e1148] [cursor=pointer]:
+                  - /url: /?deviceType=game-console
+              - listitem [ref=f2e1149]:
+                - link "Offers & combo deals" [ref=f2e1150] [cursor=pointer]:
+                  - /url: /offers
+          - navigation "Account" [ref=f2e1151]:
+            - heading "Account" [level=3] [ref=f2e1152]
+            - list [ref=f2e1153]:
+              - listitem [ref=f2e1154]:
+                - link "Dashboard" [ref=f2e1155] [cursor=pointer]:
+                  - /url: /account
+              - listitem [ref=f2e1156]:
+                - link "Order history" [ref=f2e1157] [cursor=pointer]:
+                  - /url: /account/orders
+              - listitem [ref=f2e1158]:
+                - link "Invoices & statements" [ref=f2e1159] [cursor=pointer]:
+                  - /url: /account/invoices
+              - listitem [ref=f2e1160]:
+                - link "Quick order pad" [ref=f2e1161] [cursor=pointer]:
+                  - /url: /account/quick-order
+              - listitem [ref=f2e1162]:
+                - link "Saved addresses" [ref=f2e1163] [cursor=pointer]:
+                  - /url: /account/addresses
+          - navigation "Company" [ref=f2e1164]:
+            - heading "Company" [level=3] [ref=f2e1165]
+            - list [ref=f2e1166]:
+              - listitem [ref=f2e1167]:
+                - link "About us" [ref=f2e1168] [cursor=pointer]:
+                  - /url: /about
+              - listitem [ref=f2e1169]:
+                - link "Blog" [ref=f2e1170] [cursor=pointer]:
+                  - /url: /blog
+              - listitem [ref=f2e1171]:
+                - link "FAQ" [ref=f2e1172] [cursor=pointer]:
+                  - /url: /faq
+              - listitem [ref=f2e1173]:
+                - link "Contact us" [ref=f2e1174] [cursor=pointer]:
+                  - /url: /contact
+        - generic [ref=f2e1175]:
+          - link "Call the desk Mon – Fri · 9:00 AM – 6:00 PM ET" [ref=f2e1176] [cursor=pointer]:
+            - /url: tel:+10000000000
+            - generic [ref=f2e1177]: Call the desk
+            - generic [ref=f2e1182]: Mon – Fri · 9:00 AM – 6:00 PM ET
+          - separator [ref=f2e1183]
+          - link "Open an account Wholesale pricing in one business day" [ref=f2e1184] [cursor=pointer]:
+            - /url: /contact
+            - generic [ref=f2e1185]: Open an account
+            - generic [ref=f2e1190]: Wholesale pricing in one business day
+      - generic [ref=f2e1193]:
+        - paragraph [ref=f2e1194]:
+          - generic [ref=f2e1195]: Cellvix ©2026
+          - link "Privacy" [ref=f2e1196] [cursor=pointer]:
+            - /url: /contact
+          - link "Terms" [ref=f2e1197] [cursor=pointer]:
+            - /url: /contact
+        - paragraph [ref=f2e1198]:
+          - generic [ref=f2e1199]: Toronto
+          - generic [ref=f2e1200]: All prices CAD
+  - dialog "Dialog" [ref=f2e1203]:
+    - generic [ref=f2e1206]:
+      - generic [ref=f2e1207]:
+        - tablist "Account" [ref=f2e1209]:
+          - tab "Sign In" [selected] [ref=f2e1210]
+          - tab "Sign Up" [ref=f2e1211]
+          - tab "Contact" [ref=f2e1212]
+        - generic [ref=f2e1213]:
+          - paragraph [ref=f2e1273]: Unexpected response from the server.
+          - generic [ref=f2e1214]:
+            - generic [ref=f2e1215]: Email
+            - textbox "Email" [ref=f2e1217]:
+              - /placeholder: you@yourbusiness.ca
+              - text: admin@cellvix.ca
+          - generic [ref=f2e1218]:
+            - generic [ref=f2e1219]: Password
+            - generic [ref=f2e1220]:
+              - textbox "Password" [ref=f2e1221]:
+                - /placeholder: ••••••••
+                - text: Cellvix123!
+              - button "Show password" [ref=f2e1222]
+          - generic [ref=f2e1226]:
+            - generic [ref=f2e1227] [cursor=pointer]:
+              - checkbox "Remember me" [checked] [ref=f2e1229]
+              - generic [ref=f2e1230]: Remember me
+            - button "Forgot password?" [ref=f2e1231]
+          - button "Sign in" [ref=f2e1232]
+      - generic [ref=f2e1234]:
+        - complementary [ref=f2e1235]:
+          - generic [ref=f2e1236]:
+            - paragraph [ref=f2e1237]: Cellvix wholesale portal
+            - heading "Wholesale pricing for verified repair businesses" [level=3] [ref=f2e1238]
+            - paragraph [ref=f2e1239]: Accounts are reviewed by our team before wholesale pricing unlocks. It usually takes one business day.
+          - generic [ref=f2e1240]:
+            - generic [ref=f2e1241]:
+              - term [ref=f2e1242]: SKUs in stock
+              - definition [ref=f2e1243]:
+                - generic [ref=f2e1244]: 400+
+                - generic [ref=f2e1245]: SKUs in stock
+            - generic [ref=f2e1246]:
+              - term [ref=f2e1247]: Typical approval
+              - definition [ref=f2e1248]:
+                - generic [ref=f2e1249]: 24h
+                - generic [ref=f2e1250]: Typical approval
+            - generic [ref=f2e1251]:
+              - term [ref=f2e1252]: Payment terms
+              - definition [ref=f2e1253]:
+                - generic [ref=f2e1254]: Net 60
+                - generic [ref=f2e1255]: Payment terms
+          - list [ref=f2e1256]:
+            - listitem [ref=f2e1257]: Graded pulls, tested before dispatch
+            - listitem [ref=f2e1261]: Same-day dispatch from Ontario
+            - listitem [ref=f2e1265]: A real sales desk, not a ticket queue
+        - button "Close dialog" [ref=f2e1269]

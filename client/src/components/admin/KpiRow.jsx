@@ -1,51 +1,34 @@
 import { Link } from 'react-router';
 import { ArrowUpRight } from 'lucide-react';
 import cn from '@/lib/cn';
+import { pressableSurface } from '@/lib/motion';
 
 /**
  * The KPI tile row every admin screen opens with (ERP rework §4, convention 7).
  *
- * Tiles carry a **coloured left border keyed to meaning, not decoration**
- * (§2b). The map below is the whole vocabulary — a tile does not get to invent
- * a colour:
+ * Tiles used to carry three colour signals each — a tone-keyed left border, a
+ * tinted icon chip AND a tone-keyed value colour. On a seven-tile dashboard row
+ * that produced a band of green, red and four blues across the top of the
+ * screen, and none of it meant anything: "collected" is not more urgent than
+ * "clients", it was merely assigned a different hue. Colour applied evenly to
+ * everything is colour applied to nothing, because emphasis only exists
+ * relative to what is quiet.
  *
- *   money-in / positive     ok
- *   money-out / cost        warn
- *   overdue / negative      danger
- *   neutral count           info
- *   the page's headline     brand
+ * So the tone map is gone from the tile's chrome. A tile is a plain surface;
+ * the number is the loudest thing on it, which is correct, because the number
+ * is what the operator came to read. `tone` still exists as a prop and still
+ * has exactly one job: `danger` colours the VALUE, because a figure that is
+ * actually wrong — overdue, negative, out of stock — has to be able to
+ * interrupt a scan. Every other tone renders identically to neutral.
+ *
+ * The icon lost its coloured chip for the same reason and is now a plain
+ * hairline glyph next to the label, where it aids recognition without
+ * competing with the value for attention.
  *
  * It **wraps to a grid rather than forcing one line**. CellShoppe's nine-tile
  * P&L row overflows its own container even on desktop; a tile row that clips is
  * a bug, so this one reflows instead.
  */
-
-const TONE_BORDER = {
-  ok: 'border-l-ok',
-  warn: 'border-l-warn',
-  danger: 'border-l-danger',
-  info: 'border-l-info',
-  brand: 'border-l-brand',
-  neutral: 'border-l-line-strong',
-};
-
-const TONE_VALUE = {
-  ok: 'text-ink-900',
-  warn: 'text-ink-900',
-  danger: 'text-danger',
-  info: 'text-ink-900',
-  brand: 'text-ink-900',
-  neutral: 'text-ink-900',
-};
-
-const TONE_ICON = {
-  ok: 'bg-ok-50 text-ok',
-  warn: 'bg-warn-50 text-warn',
-  danger: 'bg-danger-50 text-danger',
-  info: 'bg-info-50 text-info',
-  brand: 'bg-brand-50 text-brand',
-  neutral: 'bg-surface-2 text-ink-400',
-};
 
 /**
  * A period-over-period change. Direction is not assumed to be good: a rise in
@@ -56,7 +39,7 @@ function Delta({ delta, goodWhen = 'up' }) {
 
   const rising = delta > 0;
   const flat = delta === 0;
-  const good = flat ? null : (rising ? goodWhen === 'up' : goodWhen === 'down');
+  const good = flat ? null : rising ? goodWhen === 'up' : goodWhen === 'down';
 
   return (
     <span
@@ -94,21 +77,14 @@ export function KpiTile({
 }) {
   const body = (
     <>
-      <div className="mb-2 flex items-center gap-2">
+      <div className="mb-2.5 flex items-center gap-1.5">
         {Icon && (
-          <span
-            className={cn(
-              'flex size-6 shrink-0 items-center justify-center rounded-sm',
-              TONE_ICON[tone] ?? TONE_ICON.neutral,
-            )}
-          >
-            <Icon className="size-3.5" strokeWidth={2} aria-hidden="true" />
-          </span>
+          <Icon className="size-3.5 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
         )}
         <p className="eyebrow min-w-0 flex-1 truncate text-ink-400">{label}</p>
         {to && (
           <ArrowUpRight
-            className="size-3.5 shrink-0 text-ink-300 opacity-0 transition-opacity group-hover:opacity-100"
+            className="size-3.5 shrink-0 text-ink-300 opacity-0 transition-opacity duration-fast group-hover:opacity-100"
             strokeWidth={2}
             aria-hidden="true"
           />
@@ -119,7 +95,9 @@ export function KpiTile({
         <p
           className={cn(
             'tnum font-display text-2xl font-bold leading-none',
-            TONE_VALUE[tone] ?? TONE_VALUE.neutral,
+            // The one surviving use of tone. A figure that is wrong gets to
+            // shout; everything else is ink.
+            tone === 'danger' ? 'text-danger' : 'text-ink-900',
           )}
         >
           {value}
@@ -127,27 +105,23 @@ export function KpiTile({
         <Delta delta={delta} goodWhen={goodWhen} />
       </div>
 
-      {hint && <p className="mt-1.5 text-xs leading-snug text-ink-400">{hint}</p>}
+      {hint && <p className="mt-2 text-xs leading-snug text-ink-400">{hint}</p>}
     </>
   );
 
-  const shell = cn(
-    'rounded-lg border border-line border-l-[3px] bg-surface p-3.5',
-    TONE_BORDER[tone] ?? TONE_BORDER.neutral,
-    className,
-  );
+  // Bordered, not shadowed — PROJECT_INSTRUCTIONS §2 is explicit that a surface
+  // gets one or the other and never both.
+  const shell = cn('rounded-lg border border-line bg-surface p-4', className);
 
   if (!to) return <div className={shell}>{body}</div>;
 
   return (
     <Link
       to={to}
-      // Only the three neutral sides lift on hover: `hover:border-line-strong`
-      // would set all four and take the tone-keyed left border with it, which
-      // is the one part of the tile that carries meaning (§2b).
       className={cn(
         shell,
-        'group block transition-colors hover:border-y-line-strong hover:border-r-line-strong hover:bg-surface-2',
+        pressableSurface,
+        'group block hover:border-line-strong hover:bg-surface-2',
       )}
     >
       {body}
@@ -158,22 +132,40 @@ export function KpiTile({
 /**
  * Pass `tiles` as an array of KpiTile props. The grid tightens as the count
  * grows so a nine-tile P&L row does not become nine near-empty columns.
+ *
+ * Seven columns was the previous ceiling and it was too many: at 1440px each
+ * tile got ~150px, which is narrower than the labels, so every heading
+ * truncated to "COLLEC…", "OUTSTA…", "INVENTO…". A label the operator cannot
+ * read is not a label. The grid tops out at five across and wraps instead —
+ * two rows of readable tiles beat one row of ellipses.
+ *
+ * The column count is chosen per tile count so the rows come out BALANCED.
+ * Seven tiles in a five-column grid leaves a row of five and a row of two, and
+ * that stranded pair reads as a mistake — the eye expects a grid to be either
+ * full or deliberately ragged, and 5+2 looks like neither. Seven splits 4+3,
+ * which is even enough that the second row reads as part of the same block.
  */
+const COLUMNS = {
+  1: 'xl:grid-cols-1',
+  2: 'xl:grid-cols-2',
+  3: 'xl:grid-cols-3',
+  4: 'xl:grid-cols-4',
+  5: 'xl:grid-cols-5',
+  6: 'xl:grid-cols-3', // 3+3
+  7: 'xl:grid-cols-4', // 4+3
+  8: 'xl:grid-cols-4', // 4+4
+  9: 'xl:grid-cols-5', // 5+4
+  10: 'xl:grid-cols-5', // 5+5
+};
 export function KpiRow({ tiles = [], className, children }) {
   const count = tiles.length || 4;
-  const dense = count >= 7;
 
   return (
     <div
       className={cn(
-        'mb-4 grid gap-2.5',
-        'grid-cols-2',
-        dense ? 'md:grid-cols-4 xl:grid-cols-7' : 'md:grid-cols-3 xl:grid-cols-6',
-        count <= 4 && 'xl:grid-cols-4',
-        count === 5 && 'xl:grid-cols-5',
-        // Eight splits cleanly into two rows of four rather than leaving one
-        // tile stranded on a second row of a seven-column grid.
-        count === 8 && 'xl:grid-cols-4',
+        'mb-4 grid gap-3',
+        'grid-cols-2 md:grid-cols-3',
+        COLUMNS[count] ?? 'xl:grid-cols-4',
         className,
       )}
     >
