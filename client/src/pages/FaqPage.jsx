@@ -35,7 +35,7 @@ function CategoryNav({ groups, activeId }) {
     <>
       {/* --- phone / tablet ------------------------------------------------ */}
       <div className="lg:hidden">
-        <p className="mb-1.5 text-[13px] font-medium text-ink-700">Jump to a section</p>
+        <p className="mb-1.5 text-sm font-medium text-ink-700">Jump to a section</p>
         <SelectMenu
           size="md"
           align="left"
@@ -68,8 +68,8 @@ function CategoryNav({ groups, activeId }) {
                     }}
                     aria-current={isActive ? 'true' : undefined}
                     className={cn(
-                      'relative flex items-center gap-2 rounded-[10px] py-2 pl-3 pr-2.5',
-                      'text-[13.5px] font-medium transition-colors duration-200',
+                      'relative flex items-center gap-2 rounded-md py-2 pl-3 pr-2.5',
+                      'text-md font-medium transition-colors duration-200',
                       isActive
                         ? 'bg-brand-50 text-brand-700'
                         : 'text-ink-500 hover:bg-surface-2 hover:text-ink-900',
@@ -87,7 +87,7 @@ function CategoryNav({ groups, activeId }) {
                     <span className="min-w-0 flex-1">{group.label}</span>
                     <span
                       className={cn(
-                        'tnum text-[11.5px]',
+                        'tnum text-xs',
                         isActive ? 'text-brand-700' : 'text-ink-300',
                       )}
                     >
@@ -166,11 +166,11 @@ export function FaqPage() {
             the page rather than as a label for it. */}
         <EyebrowPill>Help centre</EyebrowPill>
 
-        <h1 className="mt-6 text-[34px] leading-[1.04] tracking-[-0.035em] sm:text-[48px] lg:text-[56px]">
+        <h1 className="mt-6 text-d-sm leading-[1.04] tracking-[-0.035em] sm:text-d-lg lg:text-d-lg">
           Common questions
         </h1>
 
-        <p className="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-ink-400">
+        <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-ink-400">
           Approval, pricing, credit terms, shipping and warranty — the answers the sales desk gives
           most often. If yours is not here, the desk is a phone call away.
         </p>
@@ -185,7 +185,7 @@ export function FaqPage() {
         />
 
         {debounced && (
-          <p className="mt-2.5 text-[12.5px] text-ink-400" role="status">
+          <p className="mt-2.5 text-sm text-ink-400" role="status">
             {matchCount === 0
               ? 'No answer matches that.'
               : `${matchCount} ${matchCount === 1 ? 'answer' : 'answers'} match “${debounced}”.`}
@@ -198,21 +198,21 @@ export function FaqPage() {
         <div className="mt-10 space-y-2 lg:mt-14">
           {Array.from({ length: 8 }).map((_, index) => (
             // eslint-disable-next-line react/no-array-index-key
-            <Skeleton key={index} className="h-[76px] rounded-[24px]" />
+            <Skeleton key={index} className="h-[76px] rounded-xl" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="mt-10 flex flex-col items-center rounded-[24px] border border-line bg-surface py-16 text-center lg:mt-14">
+        <div className="mt-10 flex flex-col items-center rounded-xl border border-line bg-surface py-16 text-center lg:mt-14">
           <span className="mb-4 flex size-12 items-center justify-center rounded-full bg-surface-2 text-ink-300">
             <MessageCircleQuestion className="size-5" strokeWidth={1.5} aria-hidden="true" />
           </span>
-          <h2 className="text-[18px]">No answer for that yet</h2>
-          <p className="mx-auto mt-2 max-w-sm text-[13.5px] text-ink-500">
+          <h2 className="text-xl">No answer for that yet</h2>
+          <p className="mx-auto mt-2 max-w-sm text-md text-ink-500">
             Ask the sales desk directly — and the answer usually ends up on this page.
           </p>
           <Link
             to="/contact"
-            className="mt-6 inline-flex h-12 items-center rounded-[12px] bg-brand-gradient px-6 font-display text-[14px] font-semibold text-white transition-[filter] hover:brightness-110"
+            className="mt-6 inline-flex h-12 items-center rounded-lg bg-brand-gradient px-6 font-display text-md font-semibold text-white transition-[filter] hover:brightness-110"
           >
             Contact us
           </Link>
@@ -228,7 +228,7 @@ export function FaqPage() {
                 id={`faq-${group.value}`}
                 className="scroll-mt-[calc(var(--header-h,72px)+20px)]"
               >
-                <h2 className="mb-4 px-1 text-[19px] sm:text-[22px]">{group.label}</h2>
+                <h2 className="mb-4 px-1 text-xl sm:text-2xl">{group.label}</h2>
                 <Accordion items={group.faqs} />
               </section>
             ))}
@@ -240,22 +240,22 @@ export function FaqPage() {
           The reference closes the list with a single quiet line rather than a
           panel; the phone number stays because the sales desk is the point. */}
       <section className="mx-auto mt-12 max-w-[860px] text-center lg:mt-16">
-        <h2 className="text-[19px] sm:text-[22px]">Have any other questions?</h2>
-        <p className="mx-auto mt-2.5 max-w-md text-[14px] leading-relaxed text-ink-400">
+        <h2 className="text-xl sm:text-2xl">Have any other questions?</h2>
+        <p className="mx-auto mt-2.5 max-w-md text-md leading-relaxed text-ink-400">
           The sales desk answers sourcing, credit and warranty questions directly — no ticket queue.
         </p>
 
         <div className="mt-6 flex flex-wrap justify-center gap-2.5">
           <Link
             to="/contact"
-            className="inline-flex h-12 items-center gap-2 rounded-full bg-brand-gradient px-6 font-display text-[14px] font-semibold text-white transition-[filter] hover:brightness-110"
+            className="inline-flex h-12 items-center gap-2 rounded-full bg-brand-gradient px-6 font-display text-md font-semibold text-white transition-[filter] hover:brightness-110"
           >
             Contact us
             <ArrowRight className="size-4" strokeWidth={2} aria-hidden="true" />
           </Link>
           <a
             href={`tel:${BUSINESS_INFO.phone.replace(/[^\d+]/g, '')}`}
-            className="inline-flex h-12 items-center gap-2 rounded-full border border-line-strong bg-surface px-6 font-display text-[14px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+            className="inline-flex h-12 items-center gap-2 rounded-full border border-line-strong bg-surface px-6 font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
           >
             <Headphones className="size-4" strokeWidth={1.75} aria-hidden="true" />
             {BUSINESS_INFO.phone}

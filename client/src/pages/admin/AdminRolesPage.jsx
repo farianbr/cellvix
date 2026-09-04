@@ -71,7 +71,7 @@ function RoleForm({ role, onSubmit, onCancel, isPending, error }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -80,7 +80,7 @@ function RoleForm({ role, onSubmit, onCancel, isPending, error }) {
       <Input label="Role name" placeholder="Shipping Clerk" error={errors.name?.message} {...register('name')} />
 
       <div>
-        <span className="mb-2 block text-[13px] font-medium text-ink-700">Access by area</span>
+        <span className="mb-2 block text-sm font-medium text-ink-700">Access by area</span>
         <div className="flex flex-col gap-1.5">
           {PERMISSION_AREAS.map((area) => (
             <Controller
@@ -88,12 +88,12 @@ function RoleForm({ role, onSubmit, onCancel, isPending, error }) {
               control={control}
               name={`areas.${area}`}
               render={({ field }) => (
-                <div className="flex items-center justify-between gap-3 rounded-[10px] border border-line px-3 py-2">
-                  <span className="text-[13px] text-ink-700">{AREA_LABELS[area]}</span>
+                <div className="flex items-center justify-between gap-3 rounded-md border border-line px-3 py-2">
+                  <span className="text-sm text-ink-700">{AREA_LABELS[area]}</span>
                   {/* Three explicit buttons rather than a select: the whole
                       point of this screen is seeing a role's shape at a glance,
                       and seven collapsed dropdowns show nothing. */}
-                  <div className="flex rounded-[8px] border border-line p-0.5">
+                  <div className="flex rounded-md border border-line p-0.5">
                     {PERMISSION_LEVELS.map((level) => (
                       <button
                         key={level}
@@ -101,7 +101,7 @@ function RoleForm({ role, onSubmit, onCancel, isPending, error }) {
                         onClick={() => field.onChange(level)}
                         aria-pressed={field.value === level}
                         className={cn(
-                          'rounded-[6px] px-2.5 py-1 text-[12.5px] transition-colors',
+                          'rounded-sm px-2.5 py-1 text-sm transition-colors',
                           field.value === level
                             ? 'bg-ink-900 text-white'
                             : 'text-ink-500 hover:bg-surface-2',
@@ -132,11 +132,11 @@ function RoleForm({ role, onSubmit, onCancel, isPending, error }) {
 
 function RoleCard({ role, onEdit, onDelete }) {
   return (
-    <article className="flex flex-col rounded-[14px] border border-line bg-surface p-4">
+    <article className="flex flex-col rounded-lg border border-line bg-surface p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-[15px] font-medium text-ink-900">{role.name}</h3>
+            <h3 className="text-lg font-medium text-ink-900">{role.name}</h3>
             {role.isSystem && (
               <Badge tone="dark" size="sm">
                 Full access
@@ -148,7 +148,7 @@ function RoleCard({ role, onEdit, onDelete }) {
               </Badge>
             )}
           </div>
-          <p className="mt-1 flex items-center gap-1.5 text-[12.5px] text-ink-400">
+          <p className="mt-1 flex items-center gap-1.5 text-sm text-ink-400">
             <Users className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
             {role.memberCount} {role.memberCount === 1 ? 'member' : 'members'}
           </p>
@@ -246,7 +246,7 @@ export function AdminRolesPage() {
 
       <Panel flush>
         {isLoading ? (
-          <div className="p-4 text-[13px] text-ink-500">Loading roles…</div>
+          <div className="p-4 text-sm text-ink-500">Loading roles…</div>
         ) : roles.length === 0 ? (
           <PanelEmpty icon={ShieldCheck} title="No roles" body="Add a role to start granting access." />
         ) : (

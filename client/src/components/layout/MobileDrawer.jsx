@@ -136,7 +136,7 @@ export function MobileDrawer() {
             ))}
           </div>
 
-          <ul className="space-y-1.5 text-[12.5px] text-ink-500">
+          <ul className="space-y-1.5 text-sm text-ink-500">
             <li className="flex items-center gap-2">
               <Phone className="size-3.5 shrink-0 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
               {BUSINESS_INFO.phone}
@@ -171,7 +171,7 @@ export function MobileDrawer() {
             onClick={() => setTab(item.key)}
             aria-pressed={tab === item.key}
             className={cn(
-              'relative py-3 font-display text-[13px] font-semibold transition-colors',
+              'relative py-3 font-display text-sm font-semibold transition-colors',
               tab === item.key
                 ? 'bg-brand/6 text-ink-900'
                 : 'text-ink-400 hover:text-ink-700',
@@ -200,7 +200,7 @@ export function MobileDrawer() {
                 onClick={close}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'relative flex items-center justify-between gap-2 rounded-[10px] px-3 py-2.5 text-[14px] transition-colors',
+                  'relative flex items-center justify-between gap-2 rounded-md px-3 py-2.5 text-md transition-colors',
                   active
                     ? 'bg-brand/8 font-semibold text-brand-700'
                     : 'font-medium text-ink-700 hover:bg-surface-2 hover:text-ink-900',
@@ -229,7 +229,7 @@ export function MobileDrawer() {
                 close();
                 signOut();
               }}
-              className="mt-1 flex w-full items-center gap-2 border-t border-line px-3 py-2.5 pt-3.5 text-[14px] font-medium text-ink-500 transition-colors hover:text-danger"
+              className="mt-1 flex w-full items-center gap-2 border-t border-line px-3 py-2.5 pt-3.5 text-md font-medium text-ink-500 transition-colors hover:text-danger"
             >
               <LogOut className="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
               Sign out
@@ -242,7 +242,7 @@ export function MobileDrawer() {
             <button
               type="button"
               onClick={() => setStack((s) => s.slice(0, -1))}
-              className="mb-1 flex w-full items-center gap-1.5 rounded-[10px] px-3 py-2 text-[13px] font-semibold text-ink-500 transition-colors hover:bg-surface-2"
+              className="mb-1 flex w-full items-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold text-ink-500 transition-colors hover:bg-surface-2"
             >
               <ChevronLeft className="size-4" strokeWidth={2} aria-hidden="true" />
               {stack.length === 1 ? 'All categories' : stack[stack.length - 2].name}
@@ -253,7 +253,7 @@ export function MobileDrawer() {
             <button
               type="button"
               onClick={() => applyAndClose(stack)}
-              className="mb-2 flex w-full items-center justify-between rounded-[10px] bg-brand-50 px-3 py-2.5 text-[13.5px] font-semibold text-brand-700 transition-colors hover:bg-brand-100"
+              className="mb-2 flex w-full items-center justify-between rounded-md bg-brand-50 px-3 py-2.5 text-md font-semibold text-brand-700 transition-colors hover:bg-brand-100"
             >
               Shop all {stack[stack.length - 1].name}
               <ChevronRight className="size-4" strokeWidth={2} aria-hidden="true" />
@@ -271,7 +271,7 @@ export function MobileDrawer() {
                   <button
                     type="button"
                     onClick={() => (hasChildren ? setStack(nextStack) : applyAndClose(nextStack))}
-                    className="flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-left transition-colors hover:bg-surface-2"
+                    className="flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-surface-2"
                   >
                     {Icon && (
                       <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-surface-3 text-ink-500" aria-hidden="true">
@@ -279,10 +279,10 @@ export function MobileDrawer() {
                       </span>
                     )}
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[14px] font-medium text-ink-900">
+                      <span className="block truncate text-md font-medium text-ink-900">
                         {node.name}
                       </span>
-                      <span className="tnum block text-[11.5px] text-ink-400">
+                      <span className="tnum block text-xs text-ink-400">
                         {formatCount(node.count)} parts
                       </span>
                     </span>

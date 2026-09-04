@@ -109,7 +109,7 @@ export function MegaMenu() {
               className="mx-auto max-w-[1400px] px-4 lg:px-6"
               onClick={(event) => event.stopPropagation()}
             >
-              <div className="overflow-hidden rounded-b-[16px] border border-t-0 border-line bg-surface shadow-flyout">
+              <div className="overflow-hidden rounded-b-lg border border-t-0 border-line bg-surface shadow-flyout">
                 {/* ---- component types ------------------------------- */}
                 {/* First, and across the full width, because it is the first
                     step of the wizard and it cuts ACROSS the tree below: a
@@ -131,7 +131,7 @@ export function MegaMenu() {
                       <button
                         type="button"
                         onClick={() => applyFilter({}, {})}
-                        className="inline-flex shrink-0 items-center gap-1 text-[12.5px] font-medium text-brand transition-colors hover:text-brand-700"
+                        className="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-brand transition-colors hover:text-brand-700"
                       >
                         Shop {formatCount(activeComponents.length)} selected
                         <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
@@ -155,7 +155,7 @@ export function MegaMenu() {
                               aria-pressed={isActive}
                               onClick={() => applyComponentType(component.value, component.label)}
                               className={cn(
-                                'inline-flex h-8 items-center gap-1.5 rounded-full border px-3 font-display text-[12.5px] font-semibold transition-colors active:scale-[0.97]',
+                                'inline-flex h-8 items-center gap-1.5 rounded-full border px-3 font-display text-sm font-semibold transition-colors active:scale-[0.97]',
                                 isActive
                                   ? 'border-brand bg-brand text-white'
                                   : 'border-line bg-surface text-ink-700 hover:border-line-strong hover:text-brand',
@@ -165,7 +165,7 @@ export function MegaMenu() {
                               {component.label}
                               <span
                                 className={cn(
-                                  'tnum text-[11px] font-medium',
+                                  'tnum text-2xs font-medium',
                                   isActive ? 'text-white/70' : 'text-ink-300',
                                 )}
                               >
@@ -198,7 +198,7 @@ export function MegaMenu() {
                                 applyFilter({ deviceType: type.slug }, { deviceType: type.name })
                               }
                               className={cn(
-                                'flex w-full items-center gap-2.5 rounded-[10px] px-2.5 py-2.5 text-left transition-colors',
+                                'flex w-full items-center gap-2.5 rounded-md px-2.5 py-2.5 text-left transition-colors',
                                 isActive
                                   ? 'bg-surface text-ink-900 shadow-card'
                                   : 'text-ink-700 hover:bg-surface-3',
@@ -215,10 +215,10 @@ export function MegaMenu() {
                               </span>
 
                               <span className="min-w-0 flex-1">
-                                <span className="block truncate font-display text-[13.5px] font-semibold">
+                                <span className="block truncate font-display text-md font-semibold">
                                   {type.name}
                                 </span>
-                                <span className="tnum block text-[11.5px] text-ink-400">
+                                <span className="tnum block text-xs text-ink-400">
                                   {formatCount(type.count)} parts
                                 </span>
                               </span>
@@ -241,7 +241,7 @@ export function MegaMenu() {
                     {activeType && (
                       <>
                         <div className="mb-4 flex items-baseline justify-between gap-3">
-                          <h3 className="text-[15px]">{activeType.name} parts</h3>
+                          <h3 className="text-lg">{activeType.name} parts</h3>
                           <button
                             type="button"
                             onClick={() =>
@@ -250,7 +250,7 @@ export function MegaMenu() {
                                 { deviceType: activeType.name },
                               )
                             }
-                            className="inline-flex items-center gap-1 text-[12.5px] font-medium text-brand transition-colors hover:text-brand-700"
+                            className="inline-flex items-center gap-1 text-sm font-medium text-brand transition-colors hover:text-brand-700"
                           >
                             Shop all
                             <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
@@ -268,10 +268,10 @@ export function MegaMenu() {
                                     { deviceType: activeType.name, brand: brand.name },
                                   )
                                 }
-                                className="mb-1.5 flex w-full items-center gap-1.5 text-left font-display text-[13px] font-bold text-ink-900 transition-colors hover:text-brand"
+                                className="mb-1.5 flex w-full items-center gap-1.5 text-left font-display text-sm font-bold text-ink-900 transition-colors hover:text-brand"
                               >
                                 {brand.name}
-                                <span className="tnum text-[11px] font-medium text-ink-300">
+                                <span className="tnum text-2xs font-medium text-ink-300">
                                   {formatCount(brand.count)}
                                 </span>
                               </button>
@@ -295,7 +295,7 @@ export function MegaMenu() {
                                           },
                                         )
                                       }
-                                      className="block w-full truncate text-left text-[12.5px] text-ink-500 transition-colors hover:text-brand"
+                                      className="block w-full truncate text-left text-sm text-ink-500 transition-colors hover:text-brand"
                                     >
                                       {series.name}
                                     </button>
@@ -311,20 +311,20 @@ export function MegaMenu() {
 
                   {/* ---- promo panel: the one gradient block on the page -- */}
                   <aside className="border-l border-line p-5">
-                    <div className="flex h-full flex-col justify-between gap-6 rounded-[12px] bg-brand-gradient p-5 text-white">
+                    <div className="flex h-full flex-col justify-between gap-6 rounded-lg bg-brand-gradient p-5 text-white">
                       <div>
                         <p className="eyebrow mb-2 opacity-70">Partner programme</p>
-                        <h4 className="text-[18px] leading-tight text-white">
+                        <h4 className="text-xl leading-tight text-white">
                           Net 30 terms for approved shops
                         </h4>
-                        <p className="mt-2 text-[13px] leading-relaxed text-white/75">
+                        <p className="mt-2 text-sm leading-relaxed text-white/75">
                           Approved Cellvix accounts unlock wholesale pricing, credit terms and
                           same-day dispatch from our Canadian warehouse.
                         </p>
                       </div>
 
                       <div>
-                        <ul className="space-y-1.5 text-[12.5px] text-white/85">
+                        <ul className="space-y-1.5 text-sm text-white/85">
                           <li>· 400+ SKUs in stock</li>
                           <li>· Graded pulls, tested before dispatch</li>
                           <li>· 90-day warranty on new and OEM</li>
@@ -335,7 +335,7 @@ export function MegaMenu() {
                         <Link
                           to="/offers"
                           onClick={closeMegaMenu}
-                          className="mt-4 inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-[10px] bg-surface font-display text-[13.5px] font-semibold text-ink-900 transition-colors hover:bg-surface-2"
+                          className="mt-4 inline-flex h-10 w-full items-center justify-center gap-1.5 rounded-md bg-surface font-display text-md font-semibold text-ink-900 transition-colors hover:bg-surface-2"
                         >
                           See running offers
                           <ArrowRight className="size-4" strokeWidth={2} aria-hidden="true" />

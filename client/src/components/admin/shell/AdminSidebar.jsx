@@ -28,12 +28,12 @@ function BrandBlock({ compact }) {
         compact && 'justify-center px-0',
       )}
     >
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-[9px] bg-brand-gradient font-display text-[15px] font-bold text-white">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-brand-gradient font-display text-lg font-bold text-white">
         C
       </span>
       {!compact && (
         <span className="min-w-0">
-          <span className="block font-display text-[15px] font-bold leading-none text-white">
+          <span className="block font-display text-lg font-bold leading-none text-white">
             Cellvix
           </span>
           <span className="eyebrow mt-1 block text-ink-200">Operations</span>
@@ -49,11 +49,11 @@ function QuickSearch({ onOpenSearch }) {
       <button
         type="button"
         onClick={onOpenSearch}
-        className="flex w-full items-center gap-2 rounded-[9px] border border-white/12 bg-white/[0.06] px-2.5 py-2 text-[12.5px] text-ink-200 transition-colors hover:border-white/25 hover:text-white"
+        className="flex w-full items-center gap-2 rounded-md border border-white/12 bg-white/[0.06] px-2.5 py-2 text-sm text-ink-200 transition-colors hover:border-white/25 hover:text-white"
       >
         <Search className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
         <span className="flex-1 text-left">Quick search</span>
-        <kbd className="rounded border border-white/15 px-1 py-px font-sans text-[10px] leading-none text-ink-200">
+        <kbd className="rounded border border-white/15 px-1 py-px font-sans text-2xs leading-none text-ink-200">
           Ctrl K
         </kbd>
       </button>
@@ -64,7 +64,7 @@ function QuickSearch({ onOpenSearch }) {
 /** A resting/hover/active nav row. The gradient fill is the active state (§2b). */
 function navRowClass(isActive, extra) {
   return cn(
-    'flex items-center gap-2.5 rounded-[9px] px-2.5 py-2 text-[13px] font-medium transition-colors',
+    'flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm font-medium transition-colors',
     isActive ? 'bg-brand-gradient text-white' : 'text-ink-200 hover:bg-white/[0.08] hover:text-white',
     extra,
   );
@@ -73,7 +73,7 @@ function navRowClass(isActive, extra) {
 function Badge({ count }) {
   if (!count) return null;
   return (
-    <span className="tnum ml-auto min-w-[20px] rounded-full bg-white/15 px-1.5 py-0.5 text-center text-[10.5px] font-semibold leading-none text-white">
+    <span className="tnum ml-auto min-w-[20px] rounded-full bg-white/15 px-1.5 py-0.5 text-center text-2xs font-semibold leading-none text-white">
       {count > 99 ? '99+' : count}
     </span>
   );
@@ -123,7 +123,7 @@ function NavTree({ badges, onNavigate }) {
                 aria-expanded={isOpen}
                 onClick={() => setOpenGroup(isOpen ? null : item.key)}
                 className={cn(
-                  'flex w-full items-center gap-2.5 rounded-[9px] px-2.5 py-2 text-[13px] font-semibold transition-colors',
+                  'flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm font-semibold transition-colors',
                   isOpen || activeGroup === item.key
                     ? 'text-white'
                     : 'text-ink-200 hover:bg-white/[0.08] hover:text-white',
@@ -150,7 +150,7 @@ function NavTree({ badges, onNavigate }) {
                         <NavLink
                           to={child.to}
                           onClick={onNavigate}
-                          className={navRowClass(isActive, 'text-[12.5px]')}
+                          className={navRowClass(isActive, 'text-sm')}
                         >
                           {ChildIcon && (
                             <ChildIcon className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
@@ -199,7 +199,7 @@ function IconRail({ badges }) {
                 end={item.to === '/admin'}
                 aria-label={item.label}
                 className={cn(
-                  'relative flex size-10 items-center justify-center rounded-[10px] transition-colors',
+                  'relative flex size-10 items-center justify-center rounded-md transition-colors',
                   isActive ? 'bg-brand-gradient text-white' : 'text-ink-200 hover:bg-white/[0.08] hover:text-white',
                 )}
               >
@@ -211,7 +211,7 @@ function IconRail({ badges }) {
 
               <span
                 role="tooltip"
-                className="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-[7px] bg-ink-900 px-2 py-1 text-[11.5px] text-white opacity-0 shadow-card transition-opacity group-hover:opacity-100"
+                className="pointer-events-none absolute left-full top-1/2 z-30 ml-2 -translate-y-1/2 whitespace-nowrap rounded-sm bg-ink-900 px-2 py-1 text-xs text-white opacity-0 shadow-card transition-opacity group-hover:opacity-100"
               >
                 {item.label}
               </span>
@@ -238,7 +238,7 @@ function UserFooter({ user, onSignOut, compact }) {
           type="button"
           onClick={onSignOut}
           aria-label="Sign out"
-          className="flex size-10 items-center justify-center rounded-[10px] text-ink-200 transition-colors hover:bg-danger/20 hover:text-white"
+          className="flex size-10 items-center justify-center rounded-md text-ink-200 transition-colors hover:bg-danger/20 hover:text-white"
         >
           <LogOut className="size-4" strokeWidth={1.75} aria-hidden="true" />
         </button>
@@ -249,20 +249,20 @@ function UserFooter({ user, onSignOut, compact }) {
   return (
     <div className="border-t border-white/10 px-3 py-3">
       <div className="flex items-center gap-2.5">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/12 text-[11.5px] font-semibold text-white">
+        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/12 text-xs font-semibold text-white">
           {initials}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[12.5px] font-medium text-white">
+          <span className="block truncate text-sm font-medium text-white">
             {user?.contactName ?? 'Admin'}
           </span>
-          <span className="block truncate text-[11.5px] text-ink-200">{user?.email}</span>
+          <span className="block truncate text-xs text-ink-200">{user?.email}</span>
         </span>
         <button
           type="button"
           onClick={onSignOut}
           aria-label="Sign out"
-          className="flex size-8 shrink-0 items-center justify-center rounded-[8px] text-ink-200 transition-colors hover:bg-danger/25 hover:text-white"
+          className="flex size-8 shrink-0 items-center justify-center rounded-md text-ink-200 transition-colors hover:bg-danger/25 hover:text-white"
         >
           <LogOut className="size-4" strokeWidth={1.75} aria-hidden="true" />
         </button>
@@ -307,7 +307,7 @@ export function AdminSidebar({ user, badges = {}, onSignOut, onOpenSearch, mobil
                 type="button"
                 onClick={onCloseMobile}
                 aria-label="Close navigation"
-                className="flex size-9 shrink-0 items-center justify-center rounded-[9px] text-ink-200 hover:bg-white/10 hover:text-white"
+                className="flex size-9 shrink-0 items-center justify-center rounded-md text-ink-200 hover:bg-white/10 hover:text-white"
               >
                 <X className="size-4.5" strokeWidth={2} aria-hidden="true" />
               </button>

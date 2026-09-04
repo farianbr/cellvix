@@ -230,7 +230,7 @@ export function CommandPalette({ open, onClose }) {
         role="dialog"
         aria-modal="true"
         aria-label="Search"
-        className="relative w-full max-w-[540px] overflow-hidden rounded-[14px] border border-line bg-surface shadow-card"
+        className="relative w-full max-w-[540px] overflow-hidden rounded-lg border border-line bg-surface shadow-card"
       >
         <div className="flex items-center gap-2.5 border-b border-line px-3.5">
           <Search className="size-4 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
@@ -240,16 +240,16 @@ export function CommandPalette({ open, onClose }) {
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={onKeyDown}
             placeholder="Search screens, clients, orders, invoices…"
-            className="h-12 flex-1 bg-transparent text-[14px] text-ink-900 placeholder:text-ink-300 focus:outline-none"
+            className="h-12 flex-1 bg-transparent text-md text-ink-900 placeholder:text-ink-300 focus:outline-none"
           />
-          <kbd className="shrink-0 rounded border border-line px-1.5 py-0.5 text-[10.5px] text-ink-300">
+          <kbd className="shrink-0 rounded border border-line px-1.5 py-0.5 text-2xs text-ink-300">
             Esc
           </kbd>
         </div>
 
         <div className="max-h-[46vh] overflow-y-auto scroll-slim py-1.5">
           {results.length === 0 ? (
-            <p className="px-4 py-6 text-center text-[13px] text-ink-400">
+            <p className="px-4 py-6 text-center text-sm text-ink-400">
               {isFetching ? 'Searching…' : `Nothing matches “${query}”.`}
             </p>
           ) : (
@@ -276,7 +276,7 @@ export function CommandPalette({ open, onClose }) {
                     onMouseEnter={() => setCursor(position)}
                     onClick={() => go(row)}
                     className={cn(
-                      'flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-[13.5px] transition-colors',
+                      'flex w-full items-center gap-2.5 px-3.5 py-2 text-left text-md transition-colors',
                       active ? 'bg-surface-2 text-ink-900' : 'text-ink-700',
                     )}
                   >
@@ -305,7 +305,7 @@ export function CommandPalette({ open, onClose }) {
           )}
         </div>
 
-        <p className="border-t border-line bg-surface-2 px-3.5 py-2 text-[11.5px] leading-snug text-ink-400">
+        <p className="border-t border-line bg-surface-2 px-3.5 py-2 text-xs leading-snug text-ink-400">
           Searches screens, clients, orders, invoices, quotes, RMAs, inventory, suppliers, purchase
           orders and outlets — limited to what your role can open.
         </p>

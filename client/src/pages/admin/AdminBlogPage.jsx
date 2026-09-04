@@ -109,7 +109,7 @@ function PostForm({ post, onSubmit, onCancel, isPending, error }) {
       className="space-y-4"
     >
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -136,8 +136,8 @@ function PostForm({ post, onSubmit, onCancel, isPending, error }) {
       {/* ---- body: write / preview ---------------------------------------- */}
       <div>
         <div className="mb-1.5 flex items-center justify-between gap-3">
-          <span className="text-[13px] font-medium text-ink-700">Body</span>
-          <div className="flex rounded-[8px] border border-line p-0.5">
+          <span className="text-sm font-medium text-ink-700">Body</span>
+          <div className="flex rounded-md border border-line p-0.5">
             {[
               { key: 'write', label: 'Write', icon: Pen },
               { key: 'preview', label: 'Preview', icon: Eye },
@@ -148,7 +148,7 @@ function PostForm({ post, onSubmit, onCancel, isPending, error }) {
                 onClick={() => setTab(key)}
                 aria-pressed={tab === key}
                 className={cn(
-                  'inline-flex h-7 items-center gap-1.5 rounded-[6px] px-2.5 text-[12.5px] font-medium transition-colors',
+                  'inline-flex h-7 items-center gap-1.5 rounded-sm px-2.5 text-sm font-medium transition-colors',
                   tab === key
                     ? 'bg-brand-50 text-brand-700'
                     : 'text-ink-400 hover:bg-surface-2 hover:text-ink-900',
@@ -167,7 +167,7 @@ function PostForm({ post, onSubmit, onCancel, isPending, error }) {
         <div className={tab === 'write' ? '' : 'hidden'}>
           <Textarea
             rows={16}
-            className="font-mono text-[13px]"
+            className="font-mono text-sm"
             value={body}
             hint={BODY_HELP}
             error={formState.errors.body?.message}
@@ -176,11 +176,11 @@ function PostForm({ post, onSubmit, onCancel, isPending, error }) {
         </div>
 
         {tab === 'preview' && (
-          <div className="max-h-[420px] overflow-y-auto rounded-[10px] border border-line bg-surface-2 px-4 py-3">
+          <div className="max-h-[420px] overflow-y-auto rounded-md border border-line bg-surface-2 px-4 py-3">
             {body?.trim() ? (
               <RichText>{body}</RichText>
             ) : (
-              <p className="py-8 text-center text-[13px] text-ink-300">Nothing to preview yet.</p>
+              <p className="py-8 text-center text-sm text-ink-300">Nothing to preview yet.</p>
             )}
           </div>
         )}
@@ -367,7 +367,7 @@ export function AdminBlogPage() {
                 <PostCover
                   post={post}
                   ratio="aspect-4/3"
-                  className="w-16 shrink-0 rounded-[10px] border border-line"
+                  className="w-16 shrink-0 rounded-md border border-line"
                 />
 
                 <div className="min-w-0 flex-1">
@@ -385,9 +385,9 @@ export function AdminBlogPage() {
                     )}
                   </div>
 
-                  <p className="truncate text-[13.5px] font-medium text-ink-900">{post.title}</p>
-                  <p className="mt-0.5 line-clamp-1 text-[12.5px] text-ink-500">{post.excerpt}</p>
-                  <p className="mt-1 text-[11.5px] text-ink-300">
+                  <p className="truncate text-md font-medium text-ink-900">{post.title}</p>
+                  <p className="mt-0.5 line-clamp-1 text-sm text-ink-500">{post.excerpt}</p>
+                  <p className="mt-1 text-xs text-ink-300">
                     {post.author.name} · {post.readMinutes} min ·{' '}
                     {post.publishedAt ? date(post.publishedAt) : 'no publish date'} · updated{' '}
                     {date(post.updatedAt)}

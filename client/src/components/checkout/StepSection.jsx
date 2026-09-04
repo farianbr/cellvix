@@ -28,7 +28,7 @@ export function StepSection({
   return (
     <section
       className={cn(
-        'overflow-hidden rounded-[14px] border bg-surface transition-[border-color,box-shadow] duration-[220ms]',
+        'overflow-hidden rounded-lg border bg-surface transition-[border-color,box-shadow] duration-[220ms]',
         isActive ? 'border-line-strong shadow-card' : 'border-line',
         !isLast && 'mb-3',
       )}
@@ -57,7 +57,7 @@ export function StepSection({
         <div className="min-w-0 flex-1">
           <h2
             className={cn(
-              'font-display text-[14.5px] font-bold',
+              'font-display text-md font-bold',
               state === 'upcoming' ? 'text-ink-300' : 'text-ink-900',
             )}
           >
@@ -67,12 +67,12 @@ export function StepSection({
           {/* The collapsed state has to carry the answer, not just the label —
               otherwise the buyer has to reopen it to check what they entered. */}
           {isCompleted && summary && (
-            <p className="mt-0.5 truncate text-[13px] text-ink-500">{summary}</p>
+            <p className="mt-0.5 truncate text-sm text-ink-500">{summary}</p>
           )}
         </div>
 
         {isCompleted && (
-          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1 text-[12.5px] font-semibold text-brand">
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-semibold text-brand">
             <Pencil className="size-3.5" strokeWidth={2} aria-hidden="true" />
             Edit
           </span>

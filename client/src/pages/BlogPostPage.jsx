@@ -61,11 +61,11 @@ export function BlogPostPage() {
   if (error) {
     return (
       <div className="mx-auto max-w-lg px-4 py-20 text-center">
-        <h1 className="text-[22px]">That article is not here</h1>
-        <p className="mt-3 text-[14px] text-ink-500">{error.message}</p>
+        <h1 className="text-2xl">That article is not here</h1>
+        <p className="mt-3 text-md text-ink-500">{error.message}</p>
         <Link
           to="/blog"
-          className="mt-6 inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-brand hover:text-brand-700"
+          className="mt-6 inline-flex items-center gap-1.5 text-md font-semibold text-brand hover:text-brand-700"
         >
           <ArrowLeft className="size-4" strokeWidth={2} aria-hidden="true" />
           Back to the journal
@@ -116,7 +116,7 @@ export function BlogPostPage() {
         <article className="min-w-0">
           <Link
             to="/blog"
-            className="mb-5 inline-flex items-center gap-1.5 text-[13px] font-semibold text-ink-400 transition-colors hover:text-brand"
+            className="mb-5 inline-flex items-center gap-1.5 text-sm font-semibold text-ink-400 transition-colors hover:text-brand"
           >
             <ArrowLeft className="size-4" strokeWidth={2} aria-hidden="true" />
             Journal
@@ -124,11 +124,11 @@ export function BlogPostPage() {
 
           <header>
             <p className="eyebrow mb-3 text-brand">{LABELS[post.category] ?? post.category}</p>
-            <h1 className="text-[28px] leading-tight sm:text-[36px]">{post.title}</h1>
-            <p className="mt-4 text-[15.5px] leading-relaxed text-ink-500">{post.excerpt}</p>
+            <h1 className="text-3xl leading-tight sm:text-d-sm">{post.title}</h1>
+            <p className="mt-4 text-lg leading-relaxed text-ink-500">{post.excerpt}</p>
 
-            <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 border-y border-line py-3.5 text-[12.5px] text-ink-400">
-              <span className="flex size-8 items-center justify-center rounded-full bg-brand-gradient font-display text-[12px] font-bold text-white">
+            <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 border-y border-line py-3.5 text-sm text-ink-400">
+              <span className="flex size-8 items-center justify-center rounded-full bg-brand-gradient font-display text-xs font-bold text-white">
                 {post.author.name
                   .split(' ')
                   .map((word) => word[0])
@@ -137,7 +137,7 @@ export function BlogPostPage() {
               </span>
               <span>
                 <span className="block font-medium text-ink-900">{post.author.name}</span>
-                {post.author.role && <span className="block text-[11.5px]">{post.author.role}</span>}
+                {post.author.role && <span className="block text-xs">{post.author.role}</span>}
               </span>
               <span className="ml-auto flex items-center gap-3">
                 <time dateTime={post.publishedAt ?? undefined}>{date(post.publishedAt)}</time>
@@ -149,7 +149,7 @@ export function BlogPostPage() {
             </div>
           </header>
 
-          <PostCover post={post} className="mt-7 rounded-[14px] border border-line" />
+          <PostCover post={post} className="mt-7 rounded-lg border border-line" />
 
           <TableOfContents
             headings={headings}
@@ -172,7 +172,7 @@ export function BlogPostPage() {
                 <li key={tag}>
                   <Link
                     to={`/blog?tag=${encodeURIComponent(tag)}`}
-                    className="inline-flex h-7 items-center rounded-full border border-line bg-surface px-3 text-[12.5px] text-ink-500 transition-colors hover:border-brand hover:text-brand"
+                    className="inline-flex h-7 items-center rounded-full border border-line bg-surface px-3 text-sm text-ink-500 transition-colors hover:border-brand hover:text-brand"
                   >
                     {tag}
                   </Link>
@@ -185,8 +185,8 @@ export function BlogPostPage() {
 
           {data.related?.length > 0 && (
             <section className="mt-10">
-              <h2 className="mb-4 text-[18px]">Read next</h2>
-              <ul className="divide-y divide-line overflow-hidden rounded-[14px] border border-line bg-surface">
+              <h2 className="mb-4 text-xl">Read next</h2>
+              <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
                 {data.related.map((item) => (
                   <li key={item.id}>
                     <Link
@@ -196,16 +196,16 @@ export function BlogPostPage() {
                       <PostCover
                         post={item}
                         ratio="aspect-4/3"
-                        className="w-20 shrink-0 rounded-[10px] border border-line"
+                        className="w-20 shrink-0 rounded-md border border-line"
                       />
                       <span className="min-w-0 flex-1">
                         <span className="eyebrow mb-1 block text-ink-300">
                           {LABELS[item.category] ?? item.category}
                         </span>
-                        <span className="block text-[14px] font-semibold leading-snug text-ink-900 group-hover:text-brand">
+                        <span className="block text-md font-semibold leading-snug text-ink-900 group-hover:text-brand">
                           {item.title}
                         </span>
-                        <span className="mt-0.5 block text-[12px] text-ink-400">
+                        <span className="mt-0.5 block text-xs text-ink-400">
                           {date(item.publishedAt)} · {item.readMinutes} min read
                         </span>
                       </span>

@@ -58,16 +58,16 @@ export function StoreCreditPanel({ id, balance }) {
   const movements = data?.transactions ?? [];
 
   return (
-    <div className="rounded-[11px] border border-line p-4">
+    <div className="rounded-md border border-line p-4">
       <div className="mb-3 flex items-center gap-2">
         <WalletCards className="size-4 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
-        <h3 className="font-display text-[13.5px] font-bold">Store credit</h3>
-        <span className="tnum ml-auto font-display text-[15px] font-bold text-ink-900">
+        <h3 className="font-display text-md font-bold">Store credit</h3>
+        <span className="tnum ml-auto font-display text-lg font-bold text-ink-900">
           {money(data?.balance ?? balance ?? 0)}
         </span>
       </div>
 
-      <p className="mb-3 text-[12px] leading-relaxed text-ink-400">
+      <p className="mb-3 text-xs leading-relaxed text-ink-400">
         Money this account holds with Cellvix. It comes off their next order automatically. A
         negative amount is a correction.
       </p>
@@ -96,7 +96,7 @@ export function StoreCreditPanel({ id, balance }) {
         </Button>
 
         {allocateStoreCredit.isError && (
-          <p className="mt-2 text-[12px] text-danger">{allocateStoreCredit.error.message}</p>
+          <p className="mt-2 text-xs text-danger">{allocateStoreCredit.error.message}</p>
         )}
       </form>
 
@@ -105,15 +105,15 @@ export function StoreCreditPanel({ id, balance }) {
           {movements.slice(0, 6).map((row) => (
             <li key={row.id} className="flex items-center gap-3 py-2">
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[12.5px] text-ink-900">{row.note}</span>
-                <span className="block text-[11.5px] text-ink-400">
+                <span className="block truncate text-sm text-ink-900">{row.note}</span>
+                <span className="block text-xs text-ink-400">
                   {row.type} · {date(row.createdAt)}
                   {row.orderNumber ? ` · ${row.orderNumber}` : ''}
                 </span>
               </span>
               <span
                 className={cn(
-                  'tnum shrink-0 text-[12.5px] font-medium',
+                  'tnum shrink-0 text-sm font-medium',
                   row.amount > 0 ? 'text-ok' : 'text-ink-700',
                 )}
               >
@@ -157,11 +157,11 @@ export function CreditForm({ id, user }) {
           terms: values.terms,
         }),
       )}
-      className="rounded-[11px] border border-line p-4"
+      className="rounded-md border border-line p-4"
     >
       <div className="mb-3 flex items-center gap-2">
         <Wallet className="size-4 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
-        <h3 className="font-display text-[13.5px] font-bold">Credit &amp; terms</h3>
+        <h3 className="font-display text-md font-bold">Credit &amp; terms</h3>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
@@ -174,7 +174,7 @@ export function CreditForm({ id, user }) {
         <SelectField control={control} name="terms" label="Terms" options={TERMS} />
       </div>
 
-      <p className="tnum mt-2.5 text-[12.5px] text-ink-500">
+      <p className="tnum mt-2.5 text-sm text-ink-500">
         Currently drawn: <span className="font-medium text-ink-900">{money(user.balance)}</span> of{' '}
         {money(user.creditLimit)}
       </p>
@@ -243,12 +243,12 @@ export function CreditRepaymentForm({ id, user }) {
 
   if (owing <= 0) {
     return (
-      <div className="rounded-[11px] border border-line p-4">
+      <div className="rounded-md border border-line p-4">
         <div className="mb-2 flex items-center gap-2">
           <Wallet className="size-4 text-ok" strokeWidth={1.75} aria-hidden="true" />
-          <h3 className="font-display text-[13.5px] font-bold">Record a payment</h3>
+          <h3 className="font-display text-md font-bold">Record a payment</h3>
         </div>
-        <p className="text-[12.5px] leading-relaxed text-ink-500">
+        <p className="text-sm leading-relaxed text-ink-500">
           Nothing is drawn on this line of credit. A payment beyond what is owed is a
           store-credit allocation, which is the panel beside this one.
         </p>
@@ -274,21 +274,21 @@ export function CreditRepaymentForm({ id, user }) {
           },
         ),
       )}
-      className="rounded-[11px] border border-line p-4"
+      className="rounded-md border border-line p-4"
     >
       <div className="mb-3 flex items-center gap-2">
         <Wallet className="size-4 text-brand" strokeWidth={1.75} aria-hidden="true" />
-        <h3 className="font-display text-[13.5px] font-bold">Record a payment</h3>
+        <h3 className="font-display text-md font-bold">Record a payment</h3>
       </div>
 
-      <p className="mb-3 text-[12.5px] leading-relaxed text-ink-500">
+      <p className="mb-3 text-sm leading-relaxed text-ink-500">
         Money the customer has already handed over — cash at the counter, a transfer, a cheque.
         It settles their unpaid invoices oldest first, so the account and the invoices behind it
         cannot disagree about what is left.
       </p>
 
       {recordCreditPayment.error && (
-        <p className="mb-3 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[12.5px] text-danger">
+        <p className="mb-3 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           {recordCreditPayment.error.message}
         </p>
       )}
@@ -317,7 +317,7 @@ export function CreditRepaymentForm({ id, user }) {
         <Button type="submit" size="sm" loading={recordCreditPayment.isPending}>
           Record payment
         </Button>
-        <span className="text-[12px] text-ink-400">
+        <span className="text-xs text-ink-400">
           Overpayment is refused — that is a store-credit allocation.
         </span>
       </div>

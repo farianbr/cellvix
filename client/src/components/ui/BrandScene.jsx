@@ -278,7 +278,7 @@ export function BrandScene({ variant = 'success', className, showMark = true }) 
         viewBox="0 0 320 220"
         role="img"
         aria-label={scene.alt}
-        className="h-auto w-full overflow-hidden rounded-[18px] border border-line bg-surface"
+        className="h-auto w-full overflow-hidden rounded-xl border border-line bg-surface"
       >
         <Render />
       </svg>
@@ -291,7 +291,7 @@ export function BrandScene({ variant = 'success', className, showMark = true }) 
           width="512"
           height="512"
           loading="lazy"
-          className="absolute -bottom-3 -right-3 size-14 rounded-[14px] border border-line bg-surface object-contain p-1.5 shadow-card"
+          className="absolute -bottom-3 -right-3 size-14 rounded-lg border border-line bg-surface object-contain p-1.5 shadow-card"
         />
       )}
     </div>

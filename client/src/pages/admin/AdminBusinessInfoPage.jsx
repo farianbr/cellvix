@@ -72,7 +72,7 @@ export function AdminBusinessInfoPage() {
     }
   }
 
-  if (isLoading) return <p className="text-[13px] text-ink-500">Loading settings…</p>;
+  if (isLoading) return <p className="text-sm text-ink-500">Loading settings…</p>;
 
   return (
     <>

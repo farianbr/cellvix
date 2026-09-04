@@ -36,7 +36,7 @@ function Address({ title, address }) {
   return (
     <div className="min-w-0">
       <p className="eyebrow mb-1 text-ink-400">{title}</p>
-      <p className="text-[13px] leading-relaxed text-ink-700">
+      <p className="text-sm leading-relaxed text-ink-700">
         {address.contactName && <span className="block font-medium text-ink-900">{address.contactName}</span>}
         {address.company && <span className="block">{address.company}</span>}
         {address.line1 && <span className="block">{address.line1}</span>}
@@ -54,13 +54,13 @@ export function AdminOrderDetailPage() {
   const { orderNumber } = useParams();
   const { data, isLoading, error } = useAdminOrder(orderNumber);
 
-  if (isLoading) return <p className="text-[13px] text-ink-500">Loading order…</p>;
+  if (isLoading) return <p className="text-sm text-ink-500">Loading order…</p>;
 
   if (error) {
     return (
       <>
         <PageHeader icon={ADMIN_PAGE.icon} title="Order not found" />
-        <p className="text-[13px] text-ink-500">
+        <p className="text-sm text-ink-500">
           {error.message}{' '}
           <Link to="/admin/orders" className="font-semibold text-brand underline">
             Back to orders
@@ -82,7 +82,7 @@ export function AdminOrderDetailPage() {
         action={
           <Link
             to="/admin/orders"
-            className="inline-flex h-9 items-center gap-1.5 rounded-[9px] border border-line bg-surface px-3 text-[13px] font-medium text-ink-600 transition-colors hover:border-ink-300 hover:bg-surface-2"
+            className="inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-surface px-3 text-sm font-medium text-ink-600 transition-colors hover:border-ink-300 hover:bg-surface-2"
           >
             <ArrowLeft className="size-3.5" strokeWidth={2} aria-hidden="true" />
             All orders
@@ -112,13 +112,13 @@ export function AdminOrderDetailPage() {
 
         <Panel title="Lines" description="What a warehouse picks. Bundle members are listed as parts.">
           <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-            <table className="w-full min-w-[520px] border-collapse text-[13px]">
+            <table className="w-full min-w-[520px] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-line text-left">
-                  <th scope="col" className="pb-2 font-display text-[12px] font-semibold text-ink-500">Part</th>
-                  <th scope="col" className="pb-2 font-display text-[12px] font-semibold text-ink-500">Qty</th>
-                  <th scope="col" className="pb-2 text-right font-display text-[12px] font-semibold text-ink-500">Unit</th>
-                  <th scope="col" className="pb-2 text-right font-display text-[12px] font-semibold text-ink-500">Line</th>
+                  <th scope="col" className="pb-2 font-display text-xs font-semibold text-ink-500">Part</th>
+                  <th scope="col" className="pb-2 font-display text-xs font-semibold text-ink-500">Qty</th>
+                  <th scope="col" className="pb-2 text-right font-display text-xs font-semibold text-ink-500">Unit</th>
+                  <th scope="col" className="pb-2 text-right font-display text-xs font-semibold text-ink-500">Line</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-line">
@@ -127,7 +127,7 @@ export function AdminOrderDetailPage() {
                     <td className="py-2 pr-3">
                       <span className="block font-medium text-ink-900">{item.name}</span>
                       <span className="flex flex-wrap items-center gap-1.5">
-                        <span className="font-mono text-[12px] text-ink-400">{item.sku}</span>
+                        <span className="font-mono text-xs text-ink-400">{item.sku}</span>
                         {/* A bundle member is priced as part of a unit, so its
                             line total does not add up on its own — saying which
                             offer it came from is what makes that legible. */}
@@ -143,7 +143,7 @@ export function AdminOrderDetailPage() {
             </table>
           </div>
 
-          <dl className="mt-4 space-y-1.5 border-t border-line pt-3 text-[13px]">
+          <dl className="mt-4 space-y-1.5 border-t border-line pt-3 text-sm">
             <div className="flex justify-between gap-3">
               <dt className="text-ink-500">Subtotal</dt>
               <dd className="tnum text-ink-900">{money(order.subtotal)}</dd>
@@ -181,7 +181,7 @@ export function AdminOrderDetailPage() {
             <Address title="Bill to" address={order.billingAddress} />
           </div>
 
-          <dl className="mt-4 grid gap-x-6 gap-y-2 border-t border-line pt-3 text-[13px] sm:grid-cols-2">
+          <dl className="mt-4 grid gap-x-6 gap-y-2 border-t border-line pt-3 text-sm sm:grid-cols-2">
             <div className="flex justify-between gap-3">
               <dt className="text-ink-500">Account</dt>
               <dd className="min-w-0 truncate">
@@ -213,13 +213,13 @@ export function AdminOrderDetailPage() {
             {order.poNumber && (
               <div className="flex justify-between gap-3">
                 <dt className="text-ink-500">PO number</dt>
-                <dd className="font-mono text-[12.5px] text-ink-900">{order.poNumber}</dd>
+                <dd className="font-mono text-sm text-ink-900">{order.poNumber}</dd>
               </div>
             )}
           </dl>
 
           {order.deliveryNotes && (
-            <p className="mt-3 rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12.5px] leading-relaxed text-ink-600">
+            <p className="mt-3 rounded-md bg-surface-2 px-3 py-2.5 text-sm leading-relaxed text-ink-600">
               <span className="font-medium text-ink-700">Delivery notes: </span>
               {order.deliveryNotes}
             </p>
@@ -234,8 +234,8 @@ export function AdminOrderDetailPage() {
             {(order.timeline ?? []).map((entry, index) => (
               <li key={index} className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
                 <Badge tone={STATUS_TONE[entry.status] ?? 'neutral'}>{entry.status}</Badge>
-                <span className="min-w-0 flex-1 text-[13px] text-ink-600">{entry.note}</span>
-                <span className="tnum shrink-0 text-[12px] text-ink-400">{dateTime(entry.at)}</span>
+                <span className="min-w-0 flex-1 text-sm text-ink-600">{entry.note}</span>
+                <span className="tnum shrink-0 text-xs text-ink-400">{dateTime(entry.at)}</span>
               </li>
             ))}
           </ol>

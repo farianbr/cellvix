@@ -91,7 +91,7 @@ export function AdminInventorySettingsPage() {
     }
   }
 
-  if (isLoading) return <p className="text-[13px] text-ink-500">Loading settings…</p>;
+  if (isLoading) return <p className="text-sm text-ink-500">Loading settings…</p>;
 
   return (
     <>
@@ -131,13 +131,13 @@ export function AdminInventorySettingsPage() {
             />
           </div>
 
-          <div className="mt-4 rounded-[12px] bg-surface-2 px-4 py-3.5">
-            <p className="font-mono text-[12.5px] text-ink-600">
+          <div className="mt-4 rounded-lg bg-surface-2 px-4 py-3.5">
+            <p className="font-mono text-sm text-ink-600">
               markup = margin ÷ (100 − margin) × 100
             </p>
 
             {impliedMarkup !== null && impliedMargin !== null && (
-              <p className="mt-2 text-[13px] leading-relaxed text-ink-600">
+              <p className="mt-2 text-sm leading-relaxed text-ink-600">
                 A {round1(margin)}% margin is a {round1(impliedMarkup)}% markup. A {round1(markup)}%
                 markup is a {round1(impliedMargin)}% margin.
                 {sellAtMarkup !== null && (
@@ -154,7 +154,7 @@ export function AdminInventorySettingsPage() {
                 form store a contradiction. */}
             {!agree && impliedMarkup !== null && (
               <div className="mt-3 flex flex-wrap items-center gap-2.5 border-t border-line pt-3">
-                <p className="min-w-0 flex-1 text-[12.5px] leading-relaxed text-ink-600">
+                <p className="min-w-0 flex-1 text-sm leading-relaxed text-ink-600">
                   These two do not describe the same markup. That is allowed — they pre-fill
                   different fields — but it is usually a slip.
                 </p>

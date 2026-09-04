@@ -49,7 +49,7 @@ export function PromoCodeField({ className }) {
       {promo ? (
         <div
           className={cn(
-            'flex items-start gap-2.5 rounded-[10px] border px-3 py-2.5',
+            'flex items-start gap-2.5 rounded-md border px-3 py-2.5',
             automatic ? 'border-ok/25 bg-ok-50' : 'border-brand-100 bg-brand-50',
           )}
         >
@@ -68,7 +68,7 @@ export function PromoCodeField({ className }) {
           </span>
 
           <div className="min-w-0 flex-1">
-            <p className={cn('text-[13px] font-semibold', automatic ? 'text-ok' : 'text-brand-700')}>
+            <p className={cn('text-sm font-semibold', automatic ? 'text-ok' : 'text-brand-700')}>
               {promo.code ? (
                 <span className="font-mono">{promo.code}</span>
               ) : (
@@ -76,7 +76,7 @@ export function PromoCodeField({ className }) {
               )}
               <span className="ml-1.5 font-sans font-medium">· {promo.label}</span>
             </p>
-            <p className="mt-0.5 text-[12px] text-ink-500">
+            <p className="mt-0.5 text-xs text-ink-500">
               {promo.title}
               {promo.amount > 0 && ` — ${money(promo.amount)} off`}
               {promo.freeShipping && ' — shipping is on us'}
@@ -100,7 +100,7 @@ export function PromoCodeField({ className }) {
           anything. Removing it silently would be the wrong answer — the buyer
           typed it for a reason. */}
       {promoNotice && (
-        <div className="mt-2 flex items-start gap-2 rounded-[10px] bg-warn-50 px-3 py-2.5 text-[12.5px] text-warn">
+        <div className="mt-2 flex items-start gap-2 rounded-md bg-warn-50 px-3 py-2.5 text-sm text-warn">
           <AlertCircle className="mt-0.5 size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
           <span className="min-w-0 flex-1">{promoNotice.message}</span>
           {promoCode && (
@@ -130,7 +130,7 @@ export function PromoCodeField({ className }) {
               aria-label="Promo code"
               aria-invalid={error ? true : undefined}
               className={cn(
-                'h-10 w-full rounded-[10px] border bg-surface pl-9 pr-3 font-mono text-[13px] uppercase text-ink-900',
+                'h-10 w-full rounded-md border bg-surface pl-9 pr-3 font-mono text-sm uppercase text-ink-900',
                 'placeholder:font-sans placeholder:normal-case placeholder:text-ink-300',
                 'focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25',
                 error ? 'border-danger' : 'border-line',
@@ -141,7 +141,7 @@ export function PromoCodeField({ className }) {
           <button
             type="submit"
             disabled={!value.trim() || isApplyingPromo}
-            className="h-10 shrink-0 rounded-[10px] border border-line-strong bg-surface px-4 font-display text-[13px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-45"
+            className="h-10 shrink-0 rounded-md border border-line-strong bg-surface px-4 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-45"
           >
             {isApplyingPromo ? 'Checking…' : 'Apply'}
           </button>
@@ -149,14 +149,14 @@ export function PromoCodeField({ className }) {
       )}
 
       {error && (
-        <p className="mt-2 flex items-start gap-1.5 text-[12.5px] text-danger" role="alert">
+        <p className="mt-2 flex items-start gap-1.5 text-sm text-danger" role="alert">
           <AlertCircle className="mt-0.5 size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
       )}
 
       {automatic && !error && (
-        <p className="mt-1.5 text-[11.5px] text-ink-400">
+        <p className="mt-1.5 text-xs text-ink-400">
           Offers do not stack — a code you enter replaces the automatic one if it is worth more to
           you.
         </p>

@@ -56,7 +56,7 @@ export function FormSection({
           // Brand-tinted, like the page header's tile: a form's section icons
           // are the only colour on a wall of grey inputs, and they mark where
           // one group of fields ends and the next begins.
-          className="flex size-6 shrink-0 items-center justify-center rounded-[7px] bg-brand-50 text-brand ring-1 ring-brand/15"
+          className="flex size-6 shrink-0 items-center justify-center rounded-sm bg-brand-50 text-brand ring-1 ring-brand/15"
           aria-hidden="true"
         >
           <Icon className="size-3.5" strokeWidth={1.75} />
@@ -64,7 +64,7 @@ export function FormSection({
       )}
       <span className="eyebrow text-ink-600">{title}</span>
       {hint && (
-        <span className="text-[11.5px] font-normal normal-case tracking-normal text-ink-400">
+        <span className="text-xs font-normal normal-case tracking-normal text-ink-400">
           {hint}
         </span>
       )}
@@ -72,7 +72,7 @@ export function FormSection({
   );
 
   return (
-    <div className={cn('overflow-hidden rounded-[12px] ring-1 ring-line', className)}>
+    <div className={cn('overflow-hidden rounded-lg ring-1 ring-line', className)}>
       {collapsible ? (
         <button
           type="button"

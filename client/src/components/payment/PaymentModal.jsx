@@ -47,7 +47,7 @@ function CardField({ label, className, ...props }) {
       <input
         {...props}
         aria-label={label}
-        className="h-11 w-full bg-transparent px-3 text-[14px] text-ink-900 outline-none placeholder:text-ink-300 focus-visible:bg-brand-50/40"
+        className="h-11 w-full bg-transparent px-3 text-md text-ink-900 outline-none placeholder:text-ink-300 focus-visible:bg-brand-50/40"
       />
     </label>
   );
@@ -115,16 +115,16 @@ export function PaymentModal({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* ---- the amount, stated once and prominently ------------------- */}
-        <div className="rounded-[12px] border border-line bg-surface-2 p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-400">
+        <div className="rounded-lg border border-line bg-surface-2 p-4">
+          <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-ink-400">
             Amount due
           </p>
-          <p className="tnum mt-1 font-display text-[28px] font-extrabold leading-none text-ink-900">
+          <p className="tnum mt-1 font-display text-3xl font-extrabold leading-none text-ink-900">
             {money(amount)}
           </p>
 
           {split.credit > 0 && (
-            <dl className="mt-3 space-y-1 border-t border-line pt-2.5 text-[12.5px]">
+            <dl className="mt-3 space-y-1 border-t border-line pt-2.5 text-sm">
               <div className="flex items-baseline justify-between gap-3">
                 <dt className="text-ink-500">Store credit</dt>
                 <dd className="tnum font-semibold text-ok">−{money(split.credit)}</dd>
@@ -139,7 +139,7 @@ export function PaymentModal({
 
         {/* ---- store credit --------------------------------------------- */}
         {storeCredit > 0 && (
-          <div className="rounded-[12px] border border-line p-2.5">
+          <div className="rounded-lg border border-line p-2.5">
             <Checkbox
               checked={useStoreCredit}
               onChange={(event) => setUseStoreCredit(event.target.checked)}
@@ -153,7 +153,7 @@ export function PaymentModal({
             {/* Outside the Checkbox: its label truncates to one line, which is
                 the right behaviour for a filter facet and the wrong one for a
                 sentence about money. */}
-            <p className="mt-0.5 pl-9.5 pr-2 text-[12px] leading-snug text-ink-400">
+            <p className="mt-0.5 pl-9.5 pr-2 text-xs leading-snug text-ink-400">
               {money(storeCredit)} available. Applied first; the card covers the rest.
             </p>
           </div>
@@ -165,14 +165,14 @@ export function PaymentModal({
             need. */}
         {cardNeeded && (
           <fieldset className="space-y-2">
-            <legend className="mb-1.5 flex items-center gap-1.5 text-[12px] font-semibold text-ink-700">
+            <legend className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-ink-700">
               <CreditCard className="size-3.5 text-ink-400" strokeWidth={2} aria-hidden="true" />
               Card details
             </legend>
 
             {/* One bordered group with hairline dividers — the Stripe Elements
                 shape, which reads as a single control rather than four. */}
-            <div className="overflow-hidden rounded-[10px] border border-line-strong bg-surface focus-within:border-brand">
+            <div className="overflow-hidden rounded-md border border-line-strong bg-surface focus-within:border-brand">
               <CardField
                 label="Card number"
                 inputMode="numeric"
@@ -211,7 +211,7 @@ export function PaymentModal({
             </div>
 
             <label className="block">
-              <span className="mb-1 block text-[12px] font-medium text-ink-500">
+              <span className="mb-1 block text-xs font-medium text-ink-500">
                 PO number <span className="font-normal text-ink-300">(optional)</span>
               </span>
               <input
@@ -219,7 +219,7 @@ export function PaymentModal({
                 onChange={(event) => setPoNumber(event.target.value)}
                 maxLength={40}
                 placeholder="Your reference"
-                className="h-10 w-full rounded-[9px] border border-line-strong bg-surface px-3 text-[13.5px] text-ink-900 outline-none placeholder:text-ink-300 focus:border-brand"
+                className="h-10 w-full rounded-md border border-line-strong bg-surface px-3 text-md text-ink-900 outline-none placeholder:text-ink-300 focus:border-brand"
               />
             </label>
           </fieldset>
@@ -228,7 +228,7 @@ export function PaymentModal({
         {/* ---- what this gateway actually is ----------------------------- */}
         {/* Said plainly rather than buried. A test form that looks real is how
             somebody ends up typing a live card number into it. */}
-        <p className="flex items-start gap-2 rounded-[10px] bg-surface-2 p-3 text-[11.5px] leading-relaxed text-ink-400">
+        <p className="flex items-start gap-2 rounded-md bg-surface-2 p-3 text-xs leading-relaxed text-ink-400">
           <ShieldCheck className="mt-px size-4 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
           <span>
             Test gateway — no card details are sent or stored. Use{' '}
@@ -239,7 +239,7 @@ export function PaymentModal({
         </p>
 
         {error && (
-          <p role="alert" className="rounded-[10px] bg-danger/10 p-3 text-[13px] text-danger">
+          <p role="alert" className="rounded-md bg-danger/10 p-3 text-sm text-danger">
             {error}
           </p>
         )}

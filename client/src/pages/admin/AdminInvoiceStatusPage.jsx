@@ -105,11 +105,11 @@ function RuleDialog({ rule, triggers, tokens, channels, onClose }) {
           />
 
           <label className="block">
-            <span className="mb-1.5 block text-[13px] font-medium text-ink-700">Counting from</span>
+            <span className="mb-1.5 block text-sm font-medium text-ink-700">Counting from</span>
             <select
               value={form.trigger}
               onChange={(event) => set({ trigger: event.target.value })}
-              className="h-11 w-full rounded-[10px] border border-line bg-surface px-3 text-[14px] text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
+              className="h-11 w-full rounded-md border border-line bg-surface px-3 text-md text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
             >
               {triggers.map((trigger) => (
                 <option key={trigger.value} value={trigger.value}>
@@ -117,18 +117,18 @@ function RuleDialog({ rule, triggers, tokens, channels, onClose }) {
                 </option>
               ))}
             </select>
-            <span className="mt-1.5 block text-[12.5px] text-ink-400">
+            <span className="mt-1.5 block text-sm text-ink-400">
               {timingText({ ...form, delayDays: Number(form.delayDays) }, triggers)}.
             </span>
           </label>
         </div>
 
         <label className="block">
-          <span className="mb-1.5 block text-[13px] font-medium text-ink-700">Channel</span>
+          <span className="mb-1.5 block text-sm font-medium text-ink-700">Channel</span>
           <select
             value={form.channel}
             onChange={(event) => set({ channel: event.target.value })}
-            className="h-11 w-full rounded-[10px] border border-line bg-surface px-3 text-[14px] text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
+            className="h-11 w-full rounded-md border border-line bg-surface px-3 text-md text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
           >
             <option value="email">Email</option>
             <option value="sms">SMS</option>
@@ -137,7 +137,7 @@ function RuleDialog({ rule, triggers, tokens, channels, onClose }) {
           {/* Named at the point of choosing, not after saving: picking a channel
               that cannot send is a decision worth interrupting. */}
           {channelStatus && !channelStatus.delivers && (
-            <span className="mt-1.5 flex items-start gap-1.5 text-[12.5px] text-warn">
+            <span className="mt-1.5 flex items-start gap-1.5 text-sm text-warn">
               <AlertCircle className="mt-px size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
               {channelStatus.reason}
             </span>
@@ -153,17 +153,17 @@ function RuleDialog({ rule, triggers, tokens, channels, onClose }) {
         )}
 
         <label className="block">
-          <span className="mb-1.5 block text-[13px] font-medium text-ink-700">Message</span>
+          <span className="mb-1.5 block text-sm font-medium text-ink-700">Message</span>
           <textarea
             rows={7}
             value={form.message}
             onChange={(event) => set({ message: event.target.value })}
-            className="w-full rounded-[10px] border border-line bg-surface px-3 py-2.5 text-[14px] leading-relaxed text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
+            className="w-full rounded-md border border-line bg-surface px-3 py-2.5 text-md leading-relaxed text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
           />
         </label>
 
-        <div className="rounded-[10px] bg-surface-2 px-3 py-2.5">
-          <p className="mb-1.5 text-[12.5px] font-medium text-ink-700">Placeholders</p>
+        <div className="rounded-md bg-surface-2 px-3 py-2.5">
+          <p className="mb-1.5 text-sm font-medium text-ink-700">Placeholders</p>
           <div className="flex flex-wrap gap-1.5">
             {tokens.map((token) => (
               <button
@@ -171,35 +171,35 @@ function RuleDialog({ rule, triggers, tokens, channels, onClose }) {
                 type="button"
                 onClick={() => set({ message: `${form.message}${token.token}` })}
                 title={token.label}
-                className="rounded-[6px] bg-surface px-1.5 py-1 font-mono text-[11.5px] text-ink-600 transition-colors hover:bg-brand-50 hover:text-brand"
+                className="rounded-sm bg-surface px-1.5 py-1 font-mono text-xs text-ink-600 transition-colors hover:bg-brand-50 hover:text-brand"
               >
                 {token.token}
               </button>
             ))}
           </div>
-          <p className="mt-2 text-[12px] text-ink-400">
+          <p className="mt-2 text-xs text-ink-400">
             An unrecognised placeholder is left as written rather than replaced with a blank, so a
             typo is visible instead of silently sending a sentence with a hole in it.
           </p>
         </div>
 
-        <label className="flex items-start gap-2.5 rounded-[10px] bg-surface-2 px-3 py-2.5">
+        <label className="flex items-start gap-2.5 rounded-md bg-surface-2 px-3 py-2.5">
           <input
             type="checkbox"
             checked={form.isActive}
             onChange={(event) => set({ isActive: event.target.checked })}
             className="mt-0.5 size-4 accent-[var(--color-brand)]"
           />
-          <span className="text-[13px] leading-relaxed text-ink-700">
+          <span className="text-sm leading-relaxed text-ink-700">
             <span className="font-medium">Active</span>
-            <span className="mt-0.5 block text-[12.5px] text-ink-500">
+            <span className="mt-0.5 block text-sm text-ink-500">
               Included the next time the messages are run. Each invoice receives this once.
             </span>
           </span>
         </label>
 
         {error && (
-          <p role="alert" className="rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+          <p role="alert" className="rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
             {error}
           </p>
         )}
@@ -211,7 +211,7 @@ function RuleDialog({ rule, triggers, tokens, channels, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-9 items-center rounded-[9px] border border-line bg-surface px-3.5 text-[13px] font-medium text-ink-600 transition-colors hover:border-line-strong hover:text-ink-900"
+            className="inline-flex h-9 items-center rounded-md border border-line bg-surface px-3.5 text-sm font-medium text-ink-600 transition-colors hover:border-line-strong hover:text-ink-900"
           >
             Cancel
           </button>
@@ -252,7 +252,7 @@ export function AdminInvoiceStatusPage() {
     }
   }
 
-  if (isLoading) return <p className="text-[13px] text-ink-500">Loading messages…</p>;
+  if (isLoading) return <p className="text-sm text-ink-500">Loading messages…</p>;
 
   const activeCount = rules.filter((rule) => rule.isActive).length;
 
@@ -272,7 +272,7 @@ export function AdminInvoiceStatusPage() {
 
       {/* §6b rule 2 in spirit: state plainly what does not happen on its own.
           "Automatic" is the word on the tin, and nothing here is automatic yet. */}
-      <p className="mb-5 flex items-start gap-2.5 rounded-[12px] border border-warn/25 bg-warn-50 px-3.5 py-3 text-[13px] leading-relaxed text-ink-700">
+      <p className="mb-5 flex items-start gap-2.5 rounded-lg border border-warn/25 bg-warn-50 px-3.5 py-3 text-sm leading-relaxed text-ink-700">
         <Clock className="mt-0.5 size-4 shrink-0 text-warn" strokeWidth={2} aria-hidden="true" />
         <span>
           <strong className="font-semibold">These do not send on a schedule yet.</strong> There is no
@@ -315,13 +315,13 @@ export function AdminInvoiceStatusPage() {
                   className="min-w-0 flex-1 text-left"
                 >
                   <span className="flex flex-wrap items-center gap-2">
-                    <span className="font-display text-[13.5px] font-semibold text-ink-900">
+                    <span className="font-display text-md font-semibold text-ink-900">
                       {rule.label}
                     </span>
                     {rule.isBuiltIn && <Badge tone="neutral">Built-in</Badge>}
                     <Badge tone={rule.channel === 'email' ? 'info' : 'warn'}>{rule.channel}</Badge>
                   </span>
-                  <span className="mt-0.5 block text-[12.5px] text-ink-500">
+                  <span className="mt-0.5 block text-sm text-ink-500">
                     {timingText(rule, triggers)}
                     {rule.lastRunAt ? ` · last run ${dateTime(rule.lastRunAt)}` : ''}
                   </span>
@@ -332,7 +332,7 @@ export function AdminInvoiceStatusPage() {
                     type="button"
                     onClick={() => setDeleting(rule)}
                     aria-label={`Delete ${rule.label}`}
-                    className="flex size-8 shrink-0 items-center justify-center rounded-[8px] border border-line text-ink-400 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger"
+                    className="flex size-8 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger"
                   >
                     <Trash2 className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
                   </button>
@@ -357,14 +357,14 @@ export function AdminInvoiceStatusPage() {
           </div>
 
           {error && (
-            <p role="alert" className="mt-3 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+            <p role="alert" className="mt-3 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
               {error}
             </p>
           )}
 
           {result && (
             <div className="mt-4 border-t border-line pt-4">
-              <p className="mb-2 flex items-center gap-1.5 text-[13px] font-medium text-ink-700">
+              <p className="mb-2 flex items-center gap-1.5 text-sm font-medium text-ink-700">
                 {result.dryRun ? (
                   <>
                     <Clock className="size-4 text-ink-400" strokeWidth={2} aria-hidden="true" />
@@ -382,7 +382,7 @@ export function AdminInvoiceStatusPage() {
                   Distinguished from "nothing matched" because it has an obvious
                   fix and a link to where the fix lives. */}
               {result.disabled ? (
-                <p className="flex items-start gap-2 rounded-[10px] border border-warn/25 bg-warn-50 px-3 py-2.5 text-[13px] leading-relaxed text-ink-700">
+                <p className="flex items-start gap-2 rounded-md border border-warn/25 bg-warn-50 px-3 py-2.5 text-sm leading-relaxed text-ink-700">
                   <AlertCircle className="mt-0.5 size-4 shrink-0 text-warn" strokeWidth={2} aria-hidden="true" />
                   <span>
                     {result.reason}{' '}
@@ -392,18 +392,18 @@ export function AdminInvoiceStatusPage() {
                   </span>
                 </p>
               ) : result.results.length === 0 ? (
-                <p className="text-[13px] text-ink-500">No messages are switched on.</p>
+                <p className="text-sm text-ink-500">No messages are switched on.</p>
               ) : (
-                <ul className="space-y-2 text-[13px]">
+                <ul className="space-y-2 text-sm">
                   {result.results.map((row) => (
-                    <li key={row.rule} className="rounded-[10px] bg-surface-2 px-3 py-2.5">
+                    <li key={row.rule} className="rounded-md bg-surface-2 px-3 py-2.5">
                       <span className="font-medium text-ink-900">{row.rule}</span>
-                      <span className="mt-0.5 block text-[12.5px] text-ink-600">
+                      <span className="mt-0.5 block text-sm text-ink-600">
                         {row.matched} {row.matched === 1 ? 'invoice' : 'invoices'} matched ·{' '}
                         {result.dryRun ? 'would send' : 'sent'} {row.sent} · skipped {row.skipped}
                       </span>
                       {row.reasons.map((reason) => (
-                        <span key={reason} className="mt-1 block text-[12px] text-warn">
+                        <span key={reason} className="mt-1 block text-xs text-warn">
                           {reason}
                         </span>
                       ))}

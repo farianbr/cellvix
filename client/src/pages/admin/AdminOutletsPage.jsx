@@ -48,11 +48,11 @@ const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/outlets'], icon: adminIcon('Store')
  * navigates is not reachable by middle-click or "open in new tab".
  */
 const LINK_BTN =
-  'inline-flex h-8 items-center rounded-[8px] border border-line bg-surface px-3 text-[13px] font-medium text-ink-600 transition-colors hover:border-line-strong hover:text-ink-900';
+  'inline-flex h-8 items-center rounded-md border border-line bg-surface px-3 text-sm font-medium text-ink-600 transition-colors hover:border-line-strong hover:text-ink-900';
 const LINK_ICON_BTN =
-  'inline-flex size-8 items-center justify-center rounded-[8px] text-ink-500 transition-colors hover:bg-surface-2 hover:text-ink-900';
+  'inline-flex size-8 items-center justify-center rounded-md text-ink-500 transition-colors hover:bg-surface-2 hover:text-ink-900';
 const PRIMARY_LINK_BTN =
-  'inline-flex h-9 items-center gap-1.5 rounded-[9px] bg-ink-900 px-3.5 text-[13px] font-medium text-white transition-colors hover:bg-ink-800';
+  'inline-flex h-9 items-center gap-1.5 rounded-md bg-ink-900 px-3.5 text-sm font-medium text-white transition-colors hover:bg-ink-800';
 
 const STATUS_TONE = { active: 'ok', inactive: 'neutral', maintenance: 'warn' };
 const STATUS_LABEL = { active: 'Active', inactive: 'Inactive', maintenance: 'Maintenance' };
@@ -88,18 +88,18 @@ function OutletCard({ outlet, editable, onDelete, onMakeDefault }) {
   return (
     <article
       className={cn(
-        'flex flex-col rounded-[14px] border border-line border-t-[3px] bg-surface p-4',
+        'flex flex-col rounded-lg border border-line border-t-[3px] bg-surface p-4',
         COLOR_BORDER[outlet.colorToken] ?? COLOR_BORDER.ink,
       )}
     >
       <div className="flex items-start gap-3">
-        <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-[11px]', wash)}>
+        <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-md', wash)}>
           <Building2 className="size-5" strokeWidth={1.75} aria-hidden="true" />
         </span>
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="truncate text-[15px] font-medium text-ink-900">{outlet.name}</h3>
+            <h3 className="truncate text-lg font-medium text-ink-900">{outlet.name}</h3>
             {/* The spec's YOU'RE HERE chip. With one outlet it always shows;
                 with several it is the one an unattributed movement lands in. */}
             {outlet.isDefault && (
@@ -108,7 +108,7 @@ function OutletCard({ outlet, editable, onDelete, onMakeDefault }) {
               </Badge>
             )}
           </div>
-          <p className="mt-0.5 font-mono text-[12px] text-ink-400">{outlet.code}</p>
+          <p className="mt-0.5 font-mono text-xs text-ink-400">{outlet.code}</p>
         </div>
 
         <Badge tone={STATUS_TONE[outlet.status] ?? 'neutral'} size="sm">
@@ -116,7 +116,7 @@ function OutletCard({ outlet, editable, onDelete, onMakeDefault }) {
         </Badge>
       </div>
 
-      <dl className="mt-4 flex flex-col gap-1.5 text-[13px] text-ink-500">
+      <dl className="mt-4 flex flex-col gap-1.5 text-sm text-ink-500">
         {addressLine(outlet.address) && (
           <div className="flex items-start gap-2">
             <MapPin className="mt-0.5 size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
@@ -240,7 +240,7 @@ export function AdminOutletsPage() {
         </div>
       ),
     },
-    { key: 'code', header: 'Code', render: (row) => <span className="font-mono text-[12px]">{row.code}</span> },
+    { key: 'code', header: 'Code', render: (row) => <span className="font-mono text-xs">{row.code}</span> },
     { key: 'city', header: 'City', render: (row) => row.address?.city ?? '—' },
     { key: 'manager', header: 'Manager', render: (row) => row.manager || '—' },
     { key: 'staffCount', header: 'Staff', align: 'right', render: (row) => row.staffCount },
@@ -304,7 +304,7 @@ export function AdminOutletsPage() {
             />
             {/* Cards read better for one or two stores; the table wins the
                 moment there are enough to scan down a column. */}
-            <div className="flex rounded-[10px] border border-line p-0.5" role="group" aria-label="View">
+            <div className="flex rounded-md border border-line p-0.5" role="group" aria-label="View">
               {[
                 { key: 'cards', label: 'Cards', icon: LayoutGrid },
                 { key: 'table', label: 'Table', icon: Rows3 },
@@ -315,7 +315,7 @@ export function AdminOutletsPage() {
                   onClick={() => setView(option.key)}
                   aria-pressed={view === option.key}
                   className={cn(
-                    'flex items-center gap-1.5 rounded-[8px] px-2.5 py-1.5 text-[13px]',
+                    'flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm',
                     view === option.key
                       ? 'bg-ink-900 text-white'
                       : 'text-ink-500 hover:bg-surface-2',
@@ -338,7 +338,7 @@ export function AdminOutletsPage() {
             empty={<PanelEmpty icon={Building2} title="No outlets" body="Add your first store." />}
           />
         ) : isLoading ? (
-          <div className="p-4 text-[13px] text-ink-500">Loading outlets…</div>
+          <div className="p-4 text-sm text-ink-500">Loading outlets…</div>
         ) : outlets.length === 0 ? (
           <PanelEmpty
             icon={Building2}

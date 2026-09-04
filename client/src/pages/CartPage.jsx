@@ -80,14 +80,14 @@ export function CartPage() {
         <span className="mb-5 flex size-16 items-center justify-center rounded-full bg-surface-3 text-ink-300">
           <ShoppingCart className="size-8" strokeWidth={1.5} />
         </span>
-        <h1 className="text-[24px]">Your cart is empty</h1>
-        <p className="mt-3 text-[14px] text-ink-500">
+        <h1 className="text-2xl">Your cart is empty</h1>
+        <p className="mt-3 text-md text-ink-500">
           Browse the catalogue and add the parts you need — quantities and pricing carry through to
           checkout.
         </p>
         <Link
           to="/"
-          className="mt-7 inline-flex h-12 items-center gap-2 rounded-[12px] bg-brand-gradient px-6 font-display text-[14.5px] font-semibold text-white transition-[filter] hover:brightness-110"
+          className="mt-7 inline-flex h-12 items-center gap-2 rounded-lg bg-brand-gradient px-6 font-display text-md font-semibold text-white transition-[filter] hover:brightness-110"
         >
           <ArrowLeft className="size-4" strokeWidth={2} aria-hidden="true" />
           Back to the shop
@@ -99,15 +99,15 @@ export function CartPage() {
   return (
     <div className="mx-auto max-w-[1400px] px-3 py-6 sm:px-4 lg:px-6 lg:py-8">
       <div className="mb-5 flex flex-wrap items-baseline justify-between gap-3">
-        <h1 className="text-[22px] sm:text-[26px]">
+        <h1 className="text-2xl sm:text-3xl">
           Your cart
-          <span className="tnum ml-2.5 text-[14px] font-medium text-ink-400">
+          <span className="tnum ml-2.5 text-md font-medium text-ink-400">
             {count} {count === 1 ? 'item' : 'items'}
           </span>
         </h1>
         <Link
           to="/"
-          className="inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-brand transition-colors hover:text-brand-700"
+          className="inline-flex items-center gap-1.5 text-md font-semibold text-brand transition-colors hover:text-brand-700"
         >
           <ArrowLeft className="size-4" strokeWidth={2} aria-hidden="true" />
           Continue shopping
@@ -115,7 +115,7 @@ export function CartPage() {
       </div>
 
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start lg:gap-6">
-        <section aria-label="Cart items" className="overflow-hidden rounded-[14px] border border-line bg-surface">
+        <section aria-label="Cart items" className="overflow-hidden rounded-lg border border-line bg-surface">
           <ul className="divide-y divide-line">
             {/* Bundles first: they are the one thing in here that is priced as a
                 unit, and burying them under loose lines hides why the total is
@@ -136,11 +136,11 @@ export function CartPage() {
 
         {/* ---- summary ---------------------------------------------------- */}
         <aside className="mt-4 lg:sticky lg:top-[132px] lg:mt-0">
-          <div className="rounded-[14px] border border-line bg-surface p-5">
-            <h2 className="mb-4 font-display text-[15px] font-bold">Order summary</h2>
+          <div className="rounded-lg border border-line bg-surface p-5">
+            <h2 className="mb-4 font-display text-lg font-bold">Order summary</h2>
 
             {priceVisible ? (
-              <dl className="space-y-2.5 text-[13.5px]">
+              <dl className="space-y-2.5 text-md">
                 <div className="flex justify-between">
                   <dt className="text-ink-500">Subtotal</dt>
                   <dd className="tnum font-medium text-ink-900">{money(subtotal)}</dd>
@@ -159,7 +159,7 @@ export function CartPage() {
                   <div className="flex justify-between">
                     <dt className="text-ok">
                       {promo?.code ? (
-                        <span className="font-mono text-[12.5px]">{promo.code}</span>
+                        <span className="font-mono text-sm">{promo.code}</span>
                       ) : (
                         'Offer'
                       )}{' '}
@@ -185,14 +185,14 @@ export function CartPage() {
                   <dd className="tnum font-medium text-ink-900">{money(tax)}</dd>
                 </div>
                 <div className="flex items-baseline justify-between border-t border-line pt-3">
-                  <dt className="font-display text-[14px] font-bold text-ink-900">Total</dt>
-                  <dd className="tnum font-display text-[22px] font-bold text-ink-900">
+                  <dt className="font-display text-md font-bold text-ink-900">Total</dt>
+                  <dd className="tnum font-display text-2xl font-bold text-ink-900">
                     {money(total)}
                   </dd>
                 </div>
               </dl>
             ) : (
-              <p className="flex items-start gap-2 rounded-[10px] bg-warn-50 px-3 py-2.5 text-[12.5px] text-warn">
+              <p className="flex items-start gap-2 rounded-md bg-warn-50 px-3 py-2.5 text-sm text-warn">
                 <Lock className="mt-0.5 size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
                 {isAuthenticated
                   ? 'Wholesale pricing unlocks once your business account is approved.'
@@ -205,14 +205,14 @@ export function CartPage() {
             {priceVisible && <PromoCodeField className="mt-4 border-t border-line pt-4" />}
 
             {priceVisible && awayFromFreeShipping > 0 && !promo?.freeShipping && (
-              <p className="mt-3 flex items-start gap-2 rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12.5px] text-ink-500">
+              <p className="mt-3 flex items-start gap-2 rounded-md bg-surface-2 px-3 py-2.5 text-sm text-ink-500">
                 <Truck className="mt-0.5 size-3.5 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
                 Add {money(awayFromFreeShipping)} more for free ground shipping.
               </p>
             )}
 
             {hasStockIssue && (
-              <p className="mt-3 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[12.5px] text-danger">
+              <p className="mt-3 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
                 A line or a bundle exceeds available stock. Adjust it to continue.
               </p>
             )}
@@ -223,7 +223,7 @@ export function CartPage() {
                   to="/checkout"
                   aria-disabled={hasStockIssue}
                   onClick={(event) => hasStockIssue && event.preventDefault()}
-                  className={`inline-flex h-13 w-full items-center justify-center rounded-[12px] font-display text-[15px] font-semibold text-white transition-[filter] ${
+                  className={`inline-flex h-13 w-full items-center justify-center rounded-lg font-display text-lg font-semibold text-white transition-[filter] ${
                     hasStockIssue
                       ? 'pointer-events-none bg-surface-3 text-ink-300'
                       : 'bg-brand-gradient hover:brightness-110'
@@ -250,7 +250,7 @@ export function CartPage() {
               </Button>
             </div>
 
-            <p className="mt-4 flex items-start gap-2 text-[12px] text-ink-400">
+            <p className="mt-4 flex items-start gap-2 text-xs text-ink-400">
               <ShieldCheck className="mt-0.5 size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
               All parts are tested before dispatch. 90-day warranty on new and OEM stock.
             </p>

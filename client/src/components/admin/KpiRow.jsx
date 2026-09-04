@@ -61,7 +61,7 @@ function Delta({ delta, goodWhen = 'up' }) {
   return (
     <span
       className={cn(
-        'tnum text-[11.5px] font-semibold',
+        'tnum text-xs font-semibold',
         good === null ? 'text-ink-400' : good ? 'text-ok' : 'text-danger',
       )}
     >
@@ -98,7 +98,7 @@ export function KpiTile({
         {Icon && (
           <span
             className={cn(
-              'flex size-6 shrink-0 items-center justify-center rounded-[7px]',
+              'flex size-6 shrink-0 items-center justify-center rounded-sm',
               TONE_ICON[tone] ?? TONE_ICON.neutral,
             )}
           >
@@ -118,7 +118,7 @@ export function KpiTile({
       <div className="flex flex-wrap items-baseline gap-2">
         <p
           className={cn(
-            'tnum font-display text-[21px] font-bold leading-none',
+            'tnum font-display text-2xl font-bold leading-none',
             TONE_VALUE[tone] ?? TONE_VALUE.neutral,
           )}
         >
@@ -127,12 +127,12 @@ export function KpiTile({
         <Delta delta={delta} goodWhen={goodWhen} />
       </div>
 
-      {hint && <p className="mt-1.5 text-[11.5px] leading-snug text-ink-400">{hint}</p>}
+      {hint && <p className="mt-1.5 text-xs leading-snug text-ink-400">{hint}</p>}
     </>
   );
 
   const shell = cn(
-    'rounded-[12px] border border-line border-l-[3px] bg-surface p-3.5',
+    'rounded-lg border border-line border-l-[3px] bg-surface p-3.5',
     TONE_BORDER[tone] ?? TONE_BORDER.neutral,
     className,
   );

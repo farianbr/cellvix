@@ -97,7 +97,7 @@ function ExpenseForm({ expense, categories, onSubmit, onCancel, isPending, error
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -212,7 +212,7 @@ export function AdminExpensesPage() {
       header: 'Date',
       priority: 1,
       render: (expense) => (
-        <span className="whitespace-nowrap text-[12.5px] text-ink-500">{date(expense.date)}</span>
+        <span className="whitespace-nowrap text-sm text-ink-500">{date(expense.date)}</span>
       ),
     },
     {
@@ -222,14 +222,14 @@ export function AdminExpensesPage() {
       className: 'max-w-[240px]',
       render: (expense) => (
         <>
-          <span className="block truncate text-[13px] text-ink-900">{expense.description}</span>
+          <span className="block truncate text-sm text-ink-900">{expense.description}</span>
           {/* A PO-generated row says so and links back — the operator can tell
               what they entered from what the system entered for them. */}
           {expense.purchaseOrder && (
             <Link
               to={`/admin/purchase-orders/${expense.purchaseOrder.id}`}
               onClick={(event) => event.stopPropagation()}
-              className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-ink-400 hover:text-brand"
+              className="mt-0.5 inline-flex items-center gap-1 text-2xs text-ink-400 hover:text-brand"
             >
               <ClipboardList className="size-3 shrink-0" strokeWidth={2} aria-hidden="true" />
               {expense.purchaseOrder.poNumber ?? 'Purchase order'}
@@ -254,14 +254,14 @@ export function AdminExpensesPage() {
       header: 'Payee',
       priority: 3,
       className: 'max-w-[160px] truncate',
-      render: (expense) => expense.payee ?? <span className="text-[12px] text-ink-300">—</span>,
+      render: (expense) => expense.payee ?? <span className="text-xs text-ink-300">—</span>,
     },
     {
       key: 'method',
       header: 'Method',
       priority: 3,
       render: (expense) => (
-        <span className="text-[12.5px] text-ink-500">
+        <span className="text-sm text-ink-500">
           {expense.method ?? <span className="text-ink-300">—</span>}
         </span>
       ),
@@ -284,9 +284,9 @@ export function AdminExpensesPage() {
       className: 'tnum',
       render: (expense) => (
         <>
-          <span className="text-[13px] font-medium text-ink-900">{money(expense.amount)}</span>
+          <span className="text-sm font-medium text-ink-900">{money(expense.amount)}</span>
           {expense.tax > 0 && (
-            <span className="block text-[11px] text-ink-400">{money(expense.tax)} tax</span>
+            <span className="block text-2xs text-ink-400">{money(expense.tax)} tax</span>
           )}
         </>
       ),
@@ -323,7 +323,7 @@ export function AdminExpensesPage() {
           <>
             <Link
               to="/admin/settings/expense-categories"
-              className="inline-flex h-11 select-none items-center justify-center gap-2 rounded-[10px] border border-line-strong bg-surface px-5 font-display text-[14px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+              className="inline-flex h-11 select-none items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
             >
               <Tags className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
               Categories
@@ -398,7 +398,7 @@ export function AdminExpensesPage() {
                 <select
                   value={category}
                   onChange={(event) => setParam('category', event.target.value)}
-                  className="h-9 w-full rounded-[8px] border border-line bg-surface px-2.5 text-[13px] text-ink-700"
+                  className="h-9 w-full rounded-md border border-line bg-surface px-2.5 text-sm text-ink-700"
                 >
                   <option value="">All categories</option>
                   {(categoryData?.categories ?? []).map((row) => (
@@ -416,7 +416,7 @@ export function AdminExpensesPage() {
                     type="date"
                     value={from}
                     onChange={(event) => setParam('from', event.target.value)}
-                    className="h-9 w-full rounded-[8px] border border-line bg-surface px-2.5 text-[13px] text-ink-700"
+                    className="h-9 w-full rounded-md border border-line bg-surface px-2.5 text-sm text-ink-700"
                   />
                 </div>
                 <div>
@@ -425,7 +425,7 @@ export function AdminExpensesPage() {
                     type="date"
                     value={to}
                     onChange={(event) => setParam('to', event.target.value)}
-                    className="h-9 w-full rounded-[8px] border border-line bg-surface px-2.5 text-[13px] text-ink-700"
+                    className="h-9 w-full rounded-md border border-line bg-surface px-2.5 text-sm text-ink-700"
                   />
                 </div>
               </div>

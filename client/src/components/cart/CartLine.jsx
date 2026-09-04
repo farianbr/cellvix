@@ -20,7 +20,7 @@ export function CartLine({ item, onQtyChange, onRemove, compact = false }) {
       <Link
         to={`/product/${item.slug}`}
         className={cn(
-          'flex shrink-0 items-center justify-center rounded-[10px] border border-line bg-surface-2',
+          'flex shrink-0 items-center justify-center rounded-md border border-line bg-surface-2',
           compact ? 'size-16 p-2' : 'size-20 p-2.5 sm:size-24 sm:p-3',
         )}
       >
@@ -38,7 +38,7 @@ export function CartLine({ item, onQtyChange, onRemove, compact = false }) {
               to={`/product/${item.slug}`}
               className={cn(
                 'line-clamp-2 font-medium text-ink-900 transition-colors hover:text-brand',
-                compact ? 'text-[13.5px]' : 'text-[14.5px]',
+                compact ? 'text-md' : 'text-md',
               )}
             >
               {/* Compact mode drops the eyebrow, so there the part type has to
@@ -46,7 +46,7 @@ export function CartLine({ item, onQtyChange, onRemove, compact = false }) {
               {compact ? item.name : productTitle(item.name, item.partTypeLabel)}
             </Link>
 
-            <p className="mt-0.5 font-mono text-[11px] text-ink-300">{item.sku}</p>
+            <p className="mt-0.5 font-mono text-2xs text-ink-300">{item.sku}</p>
 
             {!compact && item.grade && (
               <Badge tone="neutral" size="sm" className="mt-2">
@@ -68,7 +68,7 @@ export function CartLine({ item, onQtyChange, onRemove, compact = false }) {
         </div>
 
         {item.exceedsStock && (
-          <p className="mt-2 flex items-center gap-1.5 text-[12px] text-warn">
+          <p className="mt-2 flex items-center gap-1.5 text-xs text-warn">
             <AlertTriangle className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
             Not enough stock for this quantity — the stepper is capped at what
             is available.
@@ -76,7 +76,7 @@ export function CartLine({ item, onQtyChange, onRemove, compact = false }) {
         )}
 
         {item.priceChanged && !item.exceedsStock && (
-          <p className="mt-2 text-[12px] text-ink-400">
+          <p className="mt-2 text-xs text-ink-400">
             Price changed from {money(item.priceAtAdd)} since you added this.
           </p>
         )}
@@ -93,14 +93,14 @@ export function CartLine({ item, onQtyChange, onRemove, compact = false }) {
             <span
               className={cn(
                 'tnum block font-display font-bold',
-                compact ? 'text-[14px]' : 'text-[16px]',
+                compact ? 'text-md' : 'text-lg',
                 item.priceVisible ? 'text-ink-900' : 'text-ink-300',
               )}
             >
               {item.priceVisible ? money(lineTotal) : '—'}
             </span>
             {!compact && item.priceVisible && item.qty > 1 && (
-              <span className="tnum block text-[11.5px] text-ink-400">
+              <span className="tnum block text-xs text-ink-400">
                 {money(item.unitPrice)} each
               </span>
             )}

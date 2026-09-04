@@ -82,31 +82,31 @@ function PreviewCard({ values, code }) {
   return (
     <article
       className={cn(
-        'rounded-[14px] border border-line border-t-[3px] bg-surface p-4',
+        'rounded-lg border border-line border-t-[3px] bg-surface p-4',
         COLOR_BORDER[token] ?? COLOR_BORDER.ink,
       )}
     >
       <div className="flex items-start gap-3">
         <span
           className={cn(
-            'flex size-10 shrink-0 items-center justify-center rounded-[11px]',
+            'flex size-10 shrink-0 items-center justify-center rounded-md',
             COLOR_WASH[token] ?? COLOR_WASH.ink,
           )}
         >
           <Building2 className="size-5" strokeWidth={1.75} aria-hidden="true" />
         </span>
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-[15px] font-medium text-ink-900">
+          <h3 className="truncate text-lg font-medium text-ink-900">
             {values.name || 'Outlet name'}
           </h3>
-          <p className="mt-0.5 font-mono text-[12px] text-ink-400">{code || '#000000'}</p>
+          <p className="mt-0.5 font-mono text-xs text-ink-400">{code || '#000000'}</p>
         </div>
         <Badge tone={STATUS_TONE[values.status] ?? 'neutral'} size="sm">
           {STATUS_LABEL[values.status] ?? 'Active'}
         </Badge>
       </div>
 
-      <dl className="mt-4 flex flex-col gap-1.5 text-[13px] text-ink-500">
+      <dl className="mt-4 flex flex-col gap-1.5 text-sm text-ink-500">
         <div className="flex items-start gap-2">
           <MapPin className="mt-0.5 size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
           <dd className="min-w-0">{address || 'No address yet'}</dd>
@@ -204,7 +204,7 @@ export function AdminOutletFormPage() {
   const page = ADMIN_ROUTES[editing ? '/admin/outlets/:id' : '/admin/outlets/add'];
 
   if (editing && isLoading) {
-    return <p className="text-[13px] text-ink-500">Loading outlet…</p>;
+    return <p className="text-sm text-ink-500">Loading outlet…</p>;
   }
 
   return (
@@ -216,7 +216,7 @@ export function AdminOutletFormPage() {
         action={
           <Link
             to={editing ? `/admin/outlets/${id}` : '/admin/outlets'}
-            className="inline-flex h-9 items-center rounded-[9px] border border-line bg-surface px-3.5 text-[13px] font-medium text-ink-600 transition-colors hover:border-line-strong hover:text-ink-900"
+            className="inline-flex h-9 items-center rounded-md border border-line bg-surface px-3.5 text-sm font-medium text-ink-600 transition-colors hover:border-line-strong hover:text-ink-900"
           >
             Cancel
           </Link>
@@ -224,7 +224,7 @@ export function AdminOutletFormPage() {
       />
 
       {errors.root && (
-        <p className="mb-4 flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="mb-4 flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {errors.root.message}
         </p>
@@ -244,13 +244,13 @@ export function AdminOutletFormPage() {
                   {...register('name')}
                 />
                 <div>
-                  <span className="mb-1.5 block text-[13px] font-medium text-ink-700">Code</span>
-                  <p className="flex h-10 items-center rounded-[10px] border border-line bg-surface-2 px-3 font-mono text-[13px] text-ink-500">
+                  <span className="mb-1.5 block text-sm font-medium text-ink-700">Code</span>
+                  <p className="flex h-10 items-center rounded-md border border-line bg-surface-2 px-3 font-mono text-sm text-ink-500">
                     {editing ? existing?.code : (codeData?.code ?? '…')}
                   </p>
                   {/* Assigned by the server so two operators adding a store at
                       the same moment cannot land on one number. */}
-                  <p className="mt-1 text-[12px] text-ink-400">Assigned automatically.</p>
+                  <p className="mt-1 text-xs text-ink-400">Assigned automatically.</p>
                 </div>
 
                 <SelectField
@@ -269,7 +269,7 @@ export function AdminOutletFormPage() {
                   name="colorToken"
                   render={({ field }) => (
                     <div>
-                      <span className="mb-1.5 block text-[13px] font-medium text-ink-700">
+                      <span className="mb-1.5 block text-sm font-medium text-ink-700">
                         Colour identity
                       </span>
                       <div className="flex flex-wrap gap-1.5">
@@ -282,7 +282,7 @@ export function AdminOutletFormPage() {
                             aria-label={COLOR_LABEL[token]}
                             title={COLOR_LABEL[token]}
                             className={cn(
-                              'flex size-8 items-center justify-center rounded-[9px] border transition-colors',
+                              'flex size-8 items-center justify-center rounded-md border transition-colors',
                               field.value === token
                                 ? 'border-ink-900'
                                 : 'border-line hover:border-line-strong',
@@ -335,10 +335,10 @@ export function AdminOutletFormPage() {
               <div className="flex flex-col gap-2">
                 {DAYS.map((day, index) => (
                   <div key={day.key} className="grid grid-cols-[100px_1fr_1fr_auto] items-center gap-2">
-                    <span className="text-[13px] text-ink-600">{day.label}</span>
+                    <span className="text-sm text-ink-600">{day.label}</span>
                     <Input type="time" aria-label={`${day.label} open`} {...register(`hours.${index}.open`)} />
                     <Input type="time" aria-label={`${day.label} close`} {...register(`hours.${index}.close`)} />
-                    <label className="flex items-center gap-1.5 text-[12.5px] text-ink-500">
+                    <label className="flex items-center gap-1.5 text-sm text-ink-500">
                       <input type="checkbox" {...register(`hours.${index}.closed`)} />
                       Closed
                     </label>

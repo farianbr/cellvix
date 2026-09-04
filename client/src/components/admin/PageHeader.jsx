@@ -15,17 +15,17 @@ export function PageHeader({ icon: Icon, title, description, action, badge, clas
     <header className={cn('mb-5 flex flex-wrap items-start justify-between gap-3', className)}>
       <div className="flex min-w-0 items-start gap-3">
         {Icon && (
-          <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-[11px] border border-brand/15 bg-brand-50 text-brand">
+          <span className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-md border border-brand/15 bg-brand-50 text-brand">
             <Icon className="size-5" strokeWidth={1.75} aria-hidden="true" />
           </span>
         )}
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-[20px] leading-tight sm:text-[24px]">{title}</h1>
+            <h1 className="text-xl leading-tight sm:text-2xl">{title}</h1>
             {badge}
           </div>
           {description && (
-            <p className="mt-1 max-w-[62ch] text-[13px] leading-relaxed text-ink-500">
+            <p className="mt-1 max-w-[62ch] text-sm leading-relaxed text-ink-500">
               {description}
             </p>
           )}

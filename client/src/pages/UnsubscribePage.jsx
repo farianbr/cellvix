@@ -53,7 +53,7 @@ export function UnsubscribePage() {
       {state.status === 'working' && (
         <>
           <Loader2 className="size-7 animate-spin text-ink-300" strokeWidth={1.75} aria-hidden="true" />
-          <p className="mt-4 text-[14px] text-ink-500">Updating your preferences…</p>
+          <p className="mt-4 text-md text-ink-500">Updating your preferences…</p>
         </>
       )}
 
@@ -63,9 +63,9 @@ export function UnsubscribePage() {
             <CheckCircle2 className="size-7" strokeWidth={1.75} aria-hidden="true" />
           </span>
 
-          <h1 className="mt-5 font-display text-[22px] font-bold text-ink-900">You are unsubscribed</h1>
+          <h1 className="mt-5 font-display text-2xl font-bold text-ink-900">You are unsubscribed</h1>
 
-          <p className="mt-3 text-[14px] leading-relaxed text-ink-600">
+          <p className="mt-3 text-md leading-relaxed text-ink-600">
             {state.email ? <strong className="font-medium">{state.email}</strong> : 'This address'}{' '}
             will not receive marketing email from {BUSINESS_INFO.name} again.
           </p>
@@ -73,14 +73,14 @@ export function UnsubscribePage() {
           {/* The distinction matters and people ask about it: opting out of
               marketing must not stop an order confirmation or an invoice from
               arriving, and saying so here prevents a support call. */}
-          <p className="mt-4 rounded-[12px] bg-surface-2 px-4 py-3 text-[13px] leading-relaxed text-ink-500">
+          <p className="mt-4 rounded-lg bg-surface-2 px-4 py-3 text-sm leading-relaxed text-ink-500">
             You will still receive messages about your account and your orders — confirmations,
             invoices and delivery updates. Those are not marketing and are not affected by this.
           </p>
 
           <Link
             to="/"
-            className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-[10px] border border-line-strong bg-surface px-5 font-display text-[14px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+            className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
           >
             Back to the shop
           </Link>
@@ -93,14 +93,14 @@ export function UnsubscribePage() {
             <AlertCircle className="size-7" strokeWidth={1.75} aria-hidden="true" />
           </span>
 
-          <h1 className="mt-5 font-display text-[22px] font-bold text-ink-900">
+          <h1 className="mt-5 font-display text-2xl font-bold text-ink-900">
             That link did not work
           </h1>
-          <p className="mt-3 text-[14px] leading-relaxed text-ink-600">{state.message}</p>
+          <p className="mt-3 text-md leading-relaxed text-ink-600">{state.message}</p>
 
           {/* An unsubscribe that cannot complete must still lead somewhere a
               person can act — a dead end here is a compliance failure. */}
-          <p className="mt-4 text-[13px] leading-relaxed text-ink-500">
+          <p className="mt-4 text-sm leading-relaxed text-ink-500">
             Email{' '}
             <a
               href={`mailto:${BUSINESS_INFO.email}`}
@@ -113,7 +113,7 @@ export function UnsubscribePage() {
 
           <Link
             to="/"
-            className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-[10px] border border-line-strong bg-surface px-5 font-display text-[14px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+            className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
           >
             Back to the shop
           </Link>

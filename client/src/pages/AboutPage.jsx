@@ -285,19 +285,19 @@ function Hero() {
           <p className="eyebrow mb-5 text-brand">About Cellvix</p>
           <h1
             id="about-heading"
-            className="text-[38px] leading-[1.02] tracking-[-0.035em] sm:text-[52px] lg:text-[62px]"
+            className="text-d-md leading-[1.02] tracking-[-0.035em] sm:text-d-lg lg:text-d-xl"
           >
             Repair parts you can quote a customer on
           </h1>
         </div>
 
         <div>
-          <p className="text-[16px] leading-relaxed text-ink-400">
+          <p className="text-lg leading-relaxed text-ink-400">
             Cellvix is a Canadian wholesale supplier of replacement parts for phones, tablets,
             laptops, wearables and consoles. We sell to repair businesses only — which is why every
             price, grade and stock figure on this site is one you can build a quote around.
           </p>
-          <p className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-ink-500">
+          <p className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-500">
             <MapPin className="size-4 text-brand" strokeWidth={1.75} aria-hidden="true" />
             Shipped from {BUSINESS_INFO.address.city}, {BUSINESS_INFO.address.region}
             <span className="text-ink-200" aria-hidden="true">
@@ -316,10 +316,10 @@ function Hero() {
             {CATEGORIES.map(({ icon: Icon, label }) => (
               <li
                 key={label}
-                className="flex flex-col items-center gap-2 rounded-[12px] bg-surface px-2 py-3 text-center"
+                className="flex flex-col items-center gap-2 rounded-lg bg-surface px-2 py-3 text-center"
               >
                 <Icon className="size-5 text-brand" strokeWidth={1.75} aria-hidden="true" />
-                <span className="font-display text-[12.5px] font-bold text-ink-900">{label}</span>
+                <span className="font-display text-sm font-bold text-ink-900">{label}</span>
               </li>
             ))}
           </ul>
@@ -337,18 +337,18 @@ function Statement() {
           <p className="eyebrow mb-5 text-white/55">Why we exist</p>
           <h2
             id="statement-heading"
-            className="text-[28px] leading-[1.08] tracking-[-0.03em] text-white sm:text-[40px] lg:text-[48px]"
+            className="text-3xl leading-[1.08] tracking-[-0.03em] text-white sm:text-d-md lg:text-d-lg"
           >
             A repair shop should not have to gamble on a screen to quote a job.
           </h2>
-          <p className="mt-6 max-w-2xl text-[15px] leading-relaxed text-white/65">
+          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-white/65">
             So we run the catalogue the way a workshop runs a bench: one grading sheet, live stock,
             a price that does not move between the listing and the invoice, and parts that go out
             the door the same day you order them.
           </p>
         </div>
 
-        <span className="inline-flex shrink-0 items-center gap-2 self-start rounded-full border border-white/15 bg-white/10 px-4 py-2 text-[12.5px] font-medium text-white/85">
+        <span className="inline-flex shrink-0 items-center gap-2 self-start rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-medium text-white/85">
           <BadgeCheck className="size-4" strokeWidth={2} aria-hidden="true" />
           Accounts verified in one business day
         </span>
@@ -357,11 +357,11 @@ function Statement() {
       <div className="mt-12 grid gap-8 border-t border-white/10 pt-10 sm:grid-cols-2 lg:mt-16 lg:grid-cols-4 lg:gap-6">
         {MILESTONES.map((milestone, index) => (
           <Reveal key={milestone.label} delay={index * 0.08}>
-            <p className="font-display text-[44px] font-bold leading-none tracking-[-0.03em] text-white lg:text-[54px]">
+            <p className="font-display text-d-md font-bold leading-none tracking-[-0.03em] text-white lg:text-d-lg">
               <CountUp to={milestone.value} suffix={milestone.suffix ?? ''} />
             </p>
-            <p className="mt-4 font-display text-[14px] font-bold text-white">{milestone.label}</p>
-            <p className="mt-1.5 text-[13px] leading-relaxed text-white/60">{milestone.hint}</p>
+            <p className="mt-4 font-display text-md font-bold text-white">{milestone.label}</p>
+            <p className="mt-1.5 text-sm leading-relaxed text-white/60">{milestone.hint}</p>
           </Reveal>
         ))}
       </div>
@@ -389,15 +389,15 @@ function Principles() {
             delay={index * 0.07}
             className={index < 3 ? 'lg:col-span-2' : 'lg:col-span-3'}
           >
-            <div className="h-full rounded-[18px] border border-line bg-surface-2 p-6">
+            <div className="h-full rounded-xl border border-line bg-surface-2 p-6">
               <span
-                className="mb-5 flex size-11 items-center justify-center rounded-[12px] bg-brand text-white"
+                className="mb-5 flex size-11 items-center justify-center rounded-lg bg-brand text-white"
                 aria-hidden="true"
               >
                 <Icon className="size-5" strokeWidth={1.75} />
               </span>
-              <h3 className="text-[17px]">{title}</h3>
-              <p className="mt-2.5 text-[13.5px] leading-relaxed text-ink-500">{body}</p>
+              <h3 className="text-lg">{title}</h3>
+              <p className="mt-2.5 text-md leading-relaxed text-ink-500">{body}</p>
             </div>
           </Reveal>
         ))}
@@ -430,7 +430,7 @@ function Story() {
             {/* The rail: a numbered marker with a connector that stops at the
                 last entry rather than trailing into nothing. */}
             <div className="flex items-center gap-4 sm:flex-col sm:items-center sm:gap-0">
-              <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-line bg-surface-2 font-display text-[13px] font-bold text-brand">
+              <span className="flex size-11 shrink-0 items-center justify-center rounded-full border border-line bg-surface-2 font-display text-sm font-bold text-brand">
                 {String(index + 1).padStart(2, '0')}
               </span>
               {index < TIMELINE.length - 1 ? (
@@ -440,8 +440,8 @@ function Story() {
 
             <div className={cn('pb-10', index === TIMELINE.length - 1 && 'pb-0')}>
               <span className="eyebrow text-ink-300">{entry.step}</span>
-              <h3 className="mt-3 text-[20px] leading-snug sm:text-[24px]">{entry.title}</h3>
-              <p className="mt-3 max-w-2xl text-[14.5px] leading-relaxed text-ink-500">
+              <h3 className="mt-3 text-xl leading-snug sm:text-2xl">{entry.title}</h3>
+              <p className="mt-3 max-w-2xl text-md leading-relaxed text-ink-500">
                 {entry.body}
               </p>
             </div>
@@ -465,10 +465,10 @@ function Grading() {
       <div className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         {GRADE_ORDER.map((grade, index) => (
           <Reveal key={grade} delay={index * 0.06}>
-            <div className="flex h-full flex-col rounded-[18px] border border-line bg-surface-2 p-5">
+            <div className="flex h-full flex-col rounded-xl border border-line bg-surface-2 p-5">
               <GradeBadge grade={grade} className="mb-4" />
-              <h3 className="text-[15px]">{GRADES[grade].label}</h3>
-              <p className="mt-2 text-[13px] leading-relaxed text-ink-500">
+              <h3 className="text-lg">{GRADES[grade].label}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-ink-500">
                 {GRADE_MEANING[grade]}
               </p>
             </div>
@@ -493,11 +493,11 @@ function Warehouse() {
           <p className="eyebrow mb-5 text-brand">The warehouse</p>
           <h2
             id="warehouse-heading"
-            className="text-[28px] leading-[1.06] tracking-[-0.03em] sm:text-[38px] lg:text-[44px]"
+            className="text-3xl leading-[1.06] tracking-[-0.03em] sm:text-d-md lg:text-d-md"
           >
             One warehouse, one standard
           </h2>
-          <p className="mt-6 text-[15px] leading-relaxed text-ink-400">
+          <p className="mt-6 text-lg leading-relaxed text-ink-400">
             Everything ships from {BUSINESS_INFO.address.city}. Orders placed before 2 PM ET go out
             the same day, and every line is picked against the same grading sheet — so the Grade A
             pull you ordered last month is the Grade A pull that arrives this month.
@@ -505,7 +505,7 @@ function Warehouse() {
 
           <ul className="mt-8 space-y-3.5">
             {checks.map(({ icon: Icon, text }) => (
-              <li key={text} className="flex items-start gap-3 text-[14px] text-ink-700">
+              <li key={text} className="flex items-start gap-3 text-md text-ink-700">
                 <span
                   className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-ok-50 text-ok"
                   aria-hidden="true"
@@ -549,7 +549,7 @@ function LatestPosts() {
         {isLoading
           ? Array.from({ length: 3 }).map((_, index) => (
               // eslint-disable-next-line react/no-array-index-key
-              <div key={index} className="overflow-hidden rounded-[18px] border border-line">
+              <div key={index} className="overflow-hidden rounded-xl border border-line">
                 <Skeleton className="h-44 w-full rounded-none" />
                 <div className="space-y-2 p-5">
                   <Skeleton className="h-5 w-4/5" />
@@ -560,19 +560,19 @@ function LatestPosts() {
             ))
           : posts.map((post, index) => (
               <Reveal key={post.slug} delay={index * 0.08}>
-                <article className="group flex h-full flex-col overflow-hidden rounded-[18px] border border-line bg-surface-2 transition-[border-color,box-shadow] duration-200 hover:border-line-strong hover:shadow-card">
+                <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-line bg-surface-2 transition-[border-color,box-shadow] duration-200 hover:border-line-strong hover:shadow-card">
                   <PostCover post={post} className="shrink-0 border-b border-line" />
 
                   <div className="flex flex-1 flex-col p-5">
-                    <h3 className="text-[17px] leading-snug">
+                    <h3 className="text-lg leading-snug">
                       <Link to={`/blog/${post.slug}`} className="transition-colors hover:text-brand">
                         {post.title}
                       </Link>
                     </h3>
-                    <p className="mt-2.5 line-clamp-3 flex-1 text-[13.5px] leading-relaxed text-ink-500">
+                    <p className="mt-2.5 line-clamp-3 flex-1 text-md leading-relaxed text-ink-500">
                       {post.excerpt}
                     </p>
-                    <p className="mt-5 text-[12.5px] text-ink-400">
+                    <p className="mt-5 text-sm text-ink-400">
                       <time dateTime={post.publishedAt ?? undefined}>{date(post.publishedAt)}</time>
                       <span aria-hidden="true"> · </span>
                       {post.readMinutes} min read
@@ -601,11 +601,11 @@ function ClosingCta() {
         <div>
           <h2
             id="cta-heading"
-            className="max-w-2xl text-[28px] leading-[1.06] tracking-[-0.03em] text-white sm:text-[38px] lg:text-[46px]"
+            className="max-w-2xl text-3xl leading-[1.06] tracking-[-0.03em] text-white sm:text-d-md lg:text-d-md"
           >
             Open a wholesale account
           </h2>
-          <p className="mt-5 max-w-xl text-[15px] leading-relaxed text-white/75">
+          <p className="mt-5 max-w-xl text-lg leading-relaxed text-white/75">
             Wholesale pricing, credit terms and same-day dispatch. Accounts are verified by our team
             — usually within one business day.
           </p>
@@ -614,14 +614,14 @@ function ClosingCta() {
         <div className="flex flex-wrap gap-3">
           <Link
             to="/"
-            className="inline-flex h-13 items-center gap-2 rounded-[12px] bg-white px-7 font-display text-[15px] font-semibold text-ink-900 transition-colors hover:bg-white/90"
+            className="inline-flex h-13 items-center gap-2 rounded-lg bg-white px-7 font-display text-lg font-semibold text-ink-900 transition-colors hover:bg-white/90"
           >
             Browse the catalogue
             <ArrowRight className="size-4" strokeWidth={2} aria-hidden="true" />
           </Link>
           <Link
             to="/contact"
-            className="inline-flex h-13 items-center rounded-[12px] border border-white/35 px-7 font-display text-[15px] font-semibold text-white transition-colors hover:bg-white/10"
+            className="inline-flex h-13 items-center rounded-lg border border-white/35 px-7 font-display text-lg font-semibold text-white transition-colors hover:bg-white/10"
           >
             Talk to the sales desk
           </Link>

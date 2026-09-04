@@ -84,7 +84,7 @@ function CampaignForm({ campaign, onSubmit, onCancel, isPending, error }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -159,18 +159,18 @@ function UnsubscribesModal({ open, onClose }) {
   return (
     <Modal open={open} onClose={onClose} title="Unsubscribes" size="lg">
       <div className="flex flex-col gap-4">
-        <p className="rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12.5px] leading-relaxed text-ink-600">
+        <p className="rounded-md bg-surface-2 px-3 py-2.5 text-sm leading-relaxed text-ink-600">
           Canadian anti-spam law requires a working unsubscribe on every commercial email, and this
           is the register of who has used it. These accounts are excluded from every campaign
           automatically — there is no setting that overrides it.
         </p>
 
         {error && (
-          <p className="rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">{error}</p>
+          <p className="rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">{error}</p>
         )}
 
         {isLoading ? (
-          <p className="text-[13px] text-ink-500">Loading…</p>
+          <p className="text-sm text-ink-500">Loading…</p>
         ) : rows.length === 0 ? (
           <PanelEmpty
             icon={ShieldCheck}
@@ -182,11 +182,11 @@ function UnsubscribesModal({ open, onClose }) {
             {rows.map((row) => (
               <li key={row.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
                 <div className="min-w-0">
-                  <p className="truncate text-[13.5px] font-medium text-ink-900">
+                  <p className="truncate text-md font-medium text-ink-900">
                     {row.displayName ?? row.businessName}
                   </p>
-                  <p className="truncate text-[12px] text-ink-400">{row.email}</p>
-                  <p className="mt-0.5 text-[11.5px] text-ink-400">
+                  <p className="truncate text-xs text-ink-400">{row.email}</p>
+                  <p className="mt-0.5 text-xs text-ink-400">
                     Unsubscribed {dateTime(row.unsubscribedAt)}
                   </p>
                 </div>
@@ -245,7 +245,7 @@ function SendDialog({ campaign, audience, open, onClose, onSent }) {
     <Modal open={open} onClose={handleClose} title={`Send "${campaign?.name ?? ''}"`} size="md">
       {result ? (
         <div className="flex flex-col gap-4">
-          <p className="flex items-start gap-2 rounded-[10px] bg-ok-50 px-3 py-2.5 text-[13px] text-ok">
+          <p className="flex items-start gap-2 rounded-md bg-ok-50 px-3 py-2.5 text-sm text-ok">
             <CheckCircle2 className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
             The run finished. Every message is in the history, whatever happened to it.
           </p>
@@ -258,11 +258,11 @@ function SendDialog({ campaign, audience, open, onClose, onSent }) {
               { label: 'Failed', value: result.failed, tone: 'danger' },
               { label: 'Skipped', value: result.skipped, tone: 'neutral' },
             ].map((row) => (
-              <div key={row.label} className="rounded-[10px] border border-line p-3">
+              <div key={row.label} className="rounded-md border border-line p-3">
                 <dt className="eyebrow text-ink-400">{row.label}</dt>
                 <dd
                   className={cn(
-                    'tnum mt-1 font-display text-[20px] font-bold leading-none',
+                    'tnum mt-1 font-display text-xl font-bold leading-none',
                     row.tone === 'ok' && 'text-ok',
                     row.tone === 'warn' && 'text-warn',
                     row.tone === 'danger' && 'text-danger',
@@ -276,14 +276,14 @@ function SendDialog({ campaign, audience, open, onClose, onSent }) {
           </dl>
 
           {result.failed > 0 && (
-            <p className="rounded-[10px] bg-danger-50 px-3 py-2.5 text-[12.5px] leading-relaxed text-ink-700">
+            <p className="rounded-md bg-danger-50 px-3 py-2.5 text-sm leading-relaxed text-ink-700">
               {result.failed} {result.failed === 1 ? 'message' : 'messages'} could not be delivered
               and {result.failed === 1 ? 'was' : 'were'} not sent. Check that an SMTP transport is
               connected under Settings, then send again — nothing is retried automatically.
             </p>
           )}
           {result.skipped > 0 && (
-            <p className="text-[12.5px] leading-relaxed text-ink-500">
+            <p className="text-sm leading-relaxed text-ink-500">
               {result.skipped} {result.skipped === 1 ? 'account' : 'accounts'} matched the audience
               but had not consented or had unsubscribed, so {result.skipped === 1 ? 'it' : 'they'}{' '}
               received nothing.
@@ -297,13 +297,13 @@ function SendDialog({ campaign, audience, open, onClose, onSent }) {
       ) : (
         <div className="flex flex-col gap-4">
           {error && (
-            <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+            <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
               <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
               {error}
             </p>
           )}
 
-          <dl className="flex flex-col gap-2 rounded-[10px] border border-line p-3.5 text-[13px]">
+          <dl className="flex flex-col gap-2 rounded-md border border-line p-3.5 text-sm">
             <div className="flex justify-between gap-3">
               <dt className="text-ink-500">Audience</dt>
               <dd className="text-ink-900">
@@ -322,7 +322,7 @@ function SendDialog({ campaign, audience, open, onClose, onSent }) {
             )}
           </dl>
 
-          <p className="text-[12.5px] leading-relaxed text-ink-500">
+          <p className="text-sm leading-relaxed text-ink-500">
             The recipient list is resolved now, not when this campaign was written, so anybody who
             unsubscribed in between is already excluded. A sent campaign cannot be edited afterwards.
           </p>
@@ -332,7 +332,7 @@ function SendDialog({ campaign, audience, open, onClose, onSent }) {
               enabled "Send to 0" that can only fail is a button that exists to
               waste a click. */}
           {(audience?.eligible ?? 0) === 0 && (
-            <p className="flex items-start gap-2 rounded-[10px] bg-warn-50 px-3 py-2.5 text-[12.5px] leading-relaxed text-ink-700">
+            <p className="flex items-start gap-2 rounded-md bg-warn-50 px-3 py-2.5 text-sm leading-relaxed text-ink-700">
               <AlertCircle className="mt-0.5 size-4 shrink-0 text-warn" strokeWidth={2} aria-hidden="true" />
               Nobody in this audience has consented to marketing email, so there is nobody to send
               to. Widen the audience, or record consent on the accounts you mean to reach.
@@ -411,7 +411,7 @@ export function AdminEmailPage() {
       render: (row) => (
         <div className="min-w-0">
           <p className="truncate font-medium text-ink-900">{row.name}</p>
-          <p className="truncate text-[12px] text-ink-400">{row.subject}</p>
+          <p className="truncate text-xs text-ink-400">{row.subject}</p>
         </div>
       ),
     },
@@ -453,12 +453,12 @@ export function AdminEmailPage() {
         <span className="tnum">
           {row.stats.sent}
           {row.stats.bounced > 0 && (
-            <span className="ml-1.5 text-[12px] font-normal text-danger">
+            <span className="ml-1.5 text-xs font-normal text-danger">
               +{row.stats.bounced} failed
             </span>
           )}
           {row.stats.queued > 0 && (
-            <span className="ml-1.5 text-[12px] font-normal text-warn">
+            <span className="ml-1.5 text-xs font-normal text-warn">
               +{row.stats.queued} not sent
             </span>
           )}
@@ -548,7 +548,7 @@ export function AdminEmailPage() {
 
         <Panel flush>
           {isLoading ? (
-            <p className="p-4 text-[13px] text-ink-500">Loading campaigns…</p>
+            <p className="p-4 text-sm text-ink-500">Loading campaigns…</p>
           ) : campaigns.length === 0 ? (
             <PanelEmpty
               icon={Mail}

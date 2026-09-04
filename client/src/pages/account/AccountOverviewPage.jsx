@@ -30,11 +30,11 @@ function CreditMeter({ credit }) {
       <div className="mb-3 flex items-baseline justify-between gap-3">
         <div>
           <p className="eyebrow text-ink-400">Available credit</p>
-          <p className="tnum mt-1 font-display text-[26px] font-bold leading-none text-ink-900">
+          <p className="tnum mt-1 font-display text-3xl font-bold leading-none text-ink-900">
             {money(credit.available)}
           </p>
         </div>
-        <p className="tnum text-right text-[12.5px] text-ink-500">
+        <p className="tnum text-right text-sm text-ink-500">
           of {money(credit.limit)}
           <span className="block text-ink-400">{credit.terms.replace('net', 'Net ')}</span>
         </p>
@@ -57,7 +57,7 @@ function CreditMeter({ credit }) {
         />
       </div>
 
-      <p className="tnum mt-2 text-[12px] text-ink-400">
+      <p className="tnum mt-2 text-xs text-ink-400">
         {money(credit.balance)} drawn · {credit.utilisation}% of limit
       </p>
     </div>
@@ -136,7 +136,7 @@ export function AccountOverviewPage() {
           action={
             <Link
               to="/account/orders"
-              className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-brand hover:text-brand-700"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700"
             >
               View all
               <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
@@ -166,16 +166,16 @@ export function AccountOverviewPage() {
                     className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface-2 sm:px-5"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="font-mono text-[12.5px] font-medium text-ink-900">
+                      <p className="font-mono text-sm font-medium text-ink-900">
                         {order.orderNumber}
                       </p>
-                      <p className="mt-0.5 text-[12.5px] text-ink-500">
+                      <p className="mt-0.5 text-sm text-ink-500">
                         {date(order.createdAt)} · {order.items.length}{' '}
                         {order.items.length === 1 ? 'line' : 'lines'}
                       </p>
                     </div>
                     <OrderStatusBadge status={order.status} />
-                    <p className="tnum w-20 shrink-0 text-right font-display text-[13.5px] font-bold">
+                    <p className="tnum w-20 shrink-0 text-right font-display text-md font-bold">
                       {money(order.total)}
                     </p>
                   </Link>
@@ -198,8 +198,8 @@ export function AccountOverviewPage() {
                   <li key={cart.id} className="flex items-center gap-3 px-4 py-3">
                     <Bookmark className="size-4 shrink-0 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[13px] font-medium text-ink-900">{cart.name}</p>
-                      <p className="tnum text-[12px] text-ink-400">
+                      <p className="truncate text-sm font-medium text-ink-900">{cart.name}</p>
+                      <p className="tnum text-xs text-ink-400">
                         {cart.itemCount} items · {date(cart.createdAt)}
                       </p>
                     </div>
@@ -244,7 +244,7 @@ export function AccountOverviewPage() {
         action={
           <Link
             to="/account/quick-order"
-            className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-brand hover:text-brand-700"
+            className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700"
           >
             Bulk order pad
             <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
@@ -262,7 +262,7 @@ export function AccountOverviewPage() {
             {quickReorder.map((product) => (
               <li
                 key={product.id}
-                className="flex items-center gap-3 rounded-[11px] border border-line p-2.5"
+                className="flex items-center gap-3 rounded-md border border-line p-2.5"
               >
                 <Link
                   to={`/product/${product.slug}`}
@@ -274,11 +274,11 @@ export function AccountOverviewPage() {
                 <div className="min-w-0 flex-1">
                   <Link
                     to={`/product/${product.slug}`}
-                    className="line-clamp-1 text-[13px] font-medium text-ink-900 hover:text-brand"
+                    className="line-clamp-1 text-sm font-medium text-ink-900 hover:text-brand"
                   >
                     {product.name}
                   </Link>
-                  <p className="tnum text-[11.5px] text-ink-400">
+                  <p className="tnum text-xs text-ink-400">
                     {money(product.price)} · ordered {product.timesOrdered}×
                   </p>
                 </div>

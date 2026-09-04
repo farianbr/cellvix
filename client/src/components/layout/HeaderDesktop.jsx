@@ -25,7 +25,7 @@ function AccountControl() {
   // hang off this cluster and the lit button is what says which one you opened.
   const open = isAuthenticated && accountMenuOpen;
   const className = cn(
-    'flex items-center gap-2.5 rounded-[10px] px-3 py-2 transition-colors',
+    'flex items-center gap-2.5 rounded-md px-3 py-2 transition-colors',
     open ? 'bg-brand-50' : 'hover:bg-surface-2',
   );
 
@@ -48,7 +48,7 @@ function AccountControl() {
         <span className="eyebrow block text-ink-300">
           {!user ? 'Sign in' : isAdmin ? 'Staff' : isApproved ? 'Account' : 'Pending'}
         </span>
-        <span className="block truncate font-display text-[13px] font-semibold text-ink-900">
+        <span className="block truncate font-display text-sm font-semibold text-ink-900">
           {user ? user.displayName : 'My account'}
         </span>
       </span>
@@ -117,7 +117,7 @@ export function HeaderDesktop() {
           aria-expanded={megaMenuOpen}
           aria-haspopup="true"
           className={cn(
-            'inline-flex h-11 shrink-0 items-center gap-2 rounded-[10px] px-4 font-display text-[13.5px] font-semibold transition-[background,filter] duration-[120ms]',
+            'inline-flex h-11 shrink-0 items-center gap-2 rounded-md px-4 font-display text-md font-semibold transition-[background,filter] duration-[120ms]',
             'bg-brand-gradient text-white hover:brightness-110',
           )}
         >
@@ -136,12 +136,12 @@ export function HeaderDesktop() {
         <div className="flex shrink-0 items-center gap-1">
           <a
             href={`tel:${BUSINESS_INFO.phone.replace(/[^\d+]/g, '')}`}
-            className="hidden items-center gap-2.5 rounded-[10px] px-3 py-2 transition-colors hover:bg-surface-2 xl:flex"
+            className="hidden items-center gap-2.5 rounded-md px-3 py-2 transition-colors hover:bg-surface-2 xl:flex"
           >
             <Headphones className="size-5 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
             <span className="leading-tight">
               <span className="eyebrow block text-ink-300">Sales desk</span>
-              <span className="block font-display text-[13px] font-semibold text-ink-900">
+              <span className="block font-display text-sm font-semibold text-ink-900">
                 {BUSINESS_INFO.phone}
               </span>
             </span>
@@ -155,7 +155,7 @@ export function HeaderDesktop() {
             aria-expanded={cartOpen}
             aria-haspopup="dialog"
             className={cn(
-              'flex items-center gap-2.5 rounded-[10px] px-3 py-2 transition-colors',
+              'flex items-center gap-2.5 rounded-md px-3 py-2 transition-colors',
               cartOpen ? 'bg-brand-50' : 'hover:bg-surface-2',
             )}
             aria-label={`Cart, ${cartCount} items`}
@@ -167,14 +167,14 @@ export function HeaderDesktop() {
                 aria-hidden="true"
               />
               {cartCount > 0 && (
-                <span className="tnum absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 font-display text-[10px] font-bold text-white ring-2 ring-surface">
+                <span className="tnum absolute -right-1.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 font-display text-2xs font-bold text-white ring-2 ring-surface">
                   {cartCount}
                 </span>
               )}
             </span>
             <span className="text-left leading-tight">
               <span className="eyebrow block text-ink-300">Cart</span>
-              <span className="tnum block font-display text-[13px] font-semibold text-ink-900">
+              <span className="tnum block font-display text-sm font-semibold text-ink-900">
                 {subtotal === null ? '—' : money(subtotal)}
               </span>
             </span>

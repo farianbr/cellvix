@@ -49,7 +49,7 @@ export function TableOfContents({ headings = [], activeId, variant = 'rail', cla
               }}
               aria-current={isActive ? 'true' : undefined}
               className={cn(
-                'relative block rounded-[8px] py-1.5 pr-2 text-[13px] leading-snug transition-colors duration-200',
+                'relative block rounded-md py-1.5 pr-2 text-sm leading-snug transition-colors duration-200',
                 heading.level === 3 ? 'pl-6' : 'pl-3',
                 isActive
                   ? 'bg-brand-50 font-semibold text-brand-700'
@@ -90,7 +90,7 @@ export function TableOfContents({ headings = [], activeId, variant = 'rail', cla
   return (
     <nav
       aria-label="On this page"
-      className={cn('rounded-[14px] border border-line bg-surface-2 xl:hidden', className)}
+      className={cn('rounded-lg border border-line bg-surface-2 xl:hidden', className)}
     >
       <button
         type="button"
@@ -99,10 +99,10 @@ export function TableOfContents({ headings = [], activeId, variant = 'rail', cla
         className="flex w-full items-center gap-2.5 px-4 py-3 text-left"
       >
         <List className="size-4 shrink-0 text-brand" strokeWidth={2} aria-hidden="true" />
-        <span className="flex-1 font-display text-[13.5px] font-bold text-ink-900">
+        <span className="flex-1 font-display text-md font-bold text-ink-900">
           On this page
         </span>
-        <span className="tnum text-[12px] text-ink-300">{headings.length}</span>
+        <span className="tnum text-xs text-ink-300">{headings.length}</span>
         <ChevronDown
           className={cn(
             'size-4 shrink-0 text-ink-400 transition-transform duration-300 ease-entrance',

@@ -18,13 +18,13 @@ import { StepIndicator, StepConnector } from '@/components/ui/StepIndicator';
 export function OrderStepper({ order, className }) {
   if (order.status === 'cancelled') {
     return (
-      <div className={cn('flex items-center gap-3 rounded-[12px] bg-surface-2 p-4', className)}>
+      <div className={cn('flex items-center gap-3 rounded-lg bg-surface-2 p-4', className)}>
         <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface text-ink-400">
           <CircleSlash className="size-5" strokeWidth={1.75} aria-hidden="true" />
         </span>
         <div>
-          <p className="font-display text-[14px] font-bold text-ink-900">Order cancelled</p>
-          <p className="text-[12.5px] text-ink-500">
+          <p className="font-display text-md font-bold text-ink-900">Order cancelled</p>
+          <p className="text-sm text-ink-500">
             {order.timeline?.at(-1)?.note ?? 'This order was cancelled.'}
           </p>
         </div>
@@ -62,11 +62,11 @@ export function OrderStepper({ order, className }) {
               </div>
 
               <div className={cn('min-w-0 flex-1', last ? 'pb-0' : 'pb-4')}>
-                <p className={cn('font-display text-[13px] font-bold leading-none', labelTone(index))}>
+                <p className={cn('font-display text-sm font-bold leading-none', labelTone(index))}>
                   {step.label}
                 </p>
                 {entry && (
-                  <p className="tnum mt-1 text-[11.5px] text-ink-400">{dateTime(entry.at)}</p>
+                  <p className="tnum mt-1 text-xs text-ink-400">{dateTime(entry.at)}</p>
                 )}
               </div>
             </li>
@@ -93,7 +93,7 @@ export function OrderStepper({ order, className }) {
 
                 <p
                   className={cn(
-                    'mt-2 text-center font-display text-[12.5px] font-bold leading-tight',
+                    'mt-2 text-center font-display text-sm font-bold leading-tight',
                     labelTone(index),
                   )}
                 >
@@ -101,7 +101,7 @@ export function OrderStepper({ order, className }) {
                 </p>
 
                 {entry && (
-                  <p className="tnum mt-0.5 text-center text-[11px] text-ink-400">
+                  <p className="tnum mt-0.5 text-center text-2xs text-ink-400">
                     {dateTime(entry.at)}
                   </p>
                 )}
@@ -112,7 +112,7 @@ export function OrderStepper({ order, className }) {
       </ol>
 
       {/* ---- full text breakdown ---------------------------------------- */}
-      <div className="mt-6 rounded-[12px] border border-line">
+      <div className="mt-6 rounded-lg border border-line">
         <h3 className="eyebrow border-b border-line px-4 py-2.5 text-ink-400">Status history</h3>
 
         <ol className="divide-y divide-line">
@@ -131,12 +131,12 @@ export function OrderStepper({ order, className }) {
                   aria-hidden="true"
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="text-[13.5px] font-semibold text-ink-900">
+                  <p className="text-md font-semibold text-ink-900">
                     {step?.label ?? entry.status}
                   </p>
-                  {entry.note && <p className="mt-0.5 text-[12.5px] text-ink-500">{entry.note}</p>}
+                  {entry.note && <p className="mt-0.5 text-sm text-ink-500">{entry.note}</p>}
                 </div>
-                <p className="tnum w-full shrink-0 pl-5 text-[12px] text-ink-400 sm:w-auto sm:pl-0 sm:text-right">
+                <p className="tnum w-full shrink-0 pl-5 text-xs text-ink-400 sm:w-auto sm:pl-0 sm:text-right">
                   {dateTime(entry.at)}
                 </p>
               </li>

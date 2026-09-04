@@ -55,7 +55,7 @@ export function WhyCellvix({ product = null, className }) {
   return (
     <section
       aria-labelledby="why-cellvix"
-      className={cn('overflow-hidden rounded-[14px] border border-line bg-surface', className)}
+      className={cn('overflow-hidden rounded-lg border border-line bg-surface', className)}
     >
       <div className="rule-brand-gradient h-0.5" aria-hidden="true" />
 
@@ -71,31 +71,31 @@ export function WhyCellvix({ product = null, className }) {
             <div className="mb-5 flex items-start gap-3">
               {/* The grade as a stamp: the one thing a buyer checks first, and
                   the thing the four rows below are the evidence for. */}
-              <span className="flex size-14 shrink-0 rotate-[-6deg] flex-col items-center justify-center rounded-[10px] border-2 border-brand/35 bg-surface text-brand">
-                <span className="font-display text-[15px] font-extrabold leading-none tracking-tight">
+              <span className="flex size-14 shrink-0 rotate-[-6deg] flex-col items-center justify-center rounded-md border-2 border-brand/35 bg-surface text-brand">
+                <span className="font-display text-lg font-extrabold leading-none tracking-tight">
                   {(grade?.short ?? product.grade).split(' ')[0]}
                 </span>
                 {(grade?.short ?? '').split(' ')[1] && (
-                  <span className="font-display text-[15px] font-extrabold leading-none tracking-tight">
+                  <span className="font-display text-lg font-extrabold leading-none tracking-tight">
                     {grade.short.split(' ')[1]}
                   </span>
                 )}
               </span>
 
               <span className="min-w-0">
-                <span className="block font-mono text-[12.5px] text-ink-700">{product.sku}</span>
-                <span className="mt-0.5 block text-[12.5px] leading-relaxed text-ink-500">
+                <span className="block font-mono text-sm text-ink-700">{product.sku}</span>
+                <span className="mt-0.5 block text-sm leading-relaxed text-ink-500">
                   Graded {grade?.label ?? product.grade} · {product.specs?.Warranty ?? '30 days'}{' '}
                   warranty
                 </span>
-                <span className="mt-1.5 inline-flex items-center gap-1 text-[11.5px] text-ink-400">
+                <span className="mt-1.5 inline-flex items-center gap-1 text-xs text-ink-400">
                   <MapPin className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
                   {BUSINESS_INFO.address.city}, {BUSINESS_INFO.address.region}
                 </span>
               </span>
             </div>
           ) : (
-            <p className="mb-5 text-[13px] leading-relaxed text-ink-500">
+            <p className="mb-5 text-sm leading-relaxed text-ink-500">
               Every pull and aftermarket assembly is graded by hand on the same four checks before
               it is listed, and quality-checked again at pick time.
             </p>
@@ -111,10 +111,10 @@ export function WhyCellvix({ product = null, className }) {
                   <Check className="size-2.5" strokeWidth={4} aria-hidden="true" />
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-[12.5px] font-semibold text-ink-900">
+                  <span className="block text-sm font-semibold text-ink-900">
                     {check.label}
                   </span>
-                  <span className="block text-[11.5px] leading-snug text-ink-400">
+                  <span className="block text-xs leading-snug text-ink-400">
                     {check.detail}
                   </span>
                 </span>
@@ -122,7 +122,7 @@ export function WhyCellvix({ product = null, className }) {
             ))}
           </ul>
 
-          <p className="mt-3.5 text-[11.5px] leading-relaxed text-ink-400">
+          <p className="mt-3.5 text-xs leading-relaxed text-ink-400">
             The worst result of the four sets the grade. Anything that fails touch or panel is
             scrap and never reaches the catalogue.
           </p>
@@ -131,12 +131,12 @@ export function WhyCellvix({ product = null, className }) {
         {/* ---- the commercial clauses -------------------------------------- */}
         <div className="p-5 lg:p-6">
           <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <h2 id="why-cellvix" className="text-[18px] sm:text-[20px]">
+            <h2 id="why-cellvix" className="text-xl sm:text-xl">
               What buying from {BUSINESS_INFO.name} gets you
             </h2>
             <Link
               to="/about"
-              className="inline-flex items-center gap-0.5 text-[13px] font-semibold text-brand transition-colors hover:text-brand-700"
+              className="inline-flex items-center gap-0.5 text-sm font-semibold text-brand transition-colors hover:text-brand-700"
             >
               About us
               <ArrowUpRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
@@ -148,14 +148,14 @@ export function WhyCellvix({ product = null, className }) {
           <ol className="border-t border-line">
             {CLAUSES.map((clause, index) => (
               <li key={clause.title} className="flex gap-4 border-b border-line py-3.5">
-                <span className="tnum mt-0.5 shrink-0 font-mono text-[12px] font-medium text-brand">
+                <span className="tnum mt-0.5 shrink-0 font-mono text-xs font-medium text-brand">
                   {String(index + 1).padStart(2, '0')}
                 </span>
                 <span className="min-w-0">
-                  <span className="block text-[14px] font-semibold text-ink-900">
+                  <span className="block text-md font-semibold text-ink-900">
                     {clause.title}
                   </span>
-                  <span className="mt-1 block text-[12.5px] leading-relaxed text-ink-500">
+                  <span className="mt-1 block text-sm leading-relaxed text-ink-500">
                     {clause.body}
                   </span>
                 </span>

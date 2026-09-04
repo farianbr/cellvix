@@ -85,7 +85,7 @@ function RateControl({ percent }) {
         </Button>
 
         {saved && !error && (
-          <p className="mt-2.5 flex items-center gap-1.5 text-[13px] text-ok">
+          <p className="mt-2.5 flex items-center gap-1.5 text-sm text-ok">
             <CheckCircle2 className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
             Saved. Existing commission is unchanged.
           </p>
@@ -111,7 +111,7 @@ export function AdminReferralsPage() {
         <div className="min-w-0">
           <p className="truncate font-medium text-ink-900">{row.referrer.businessName}</p>
           {row.referrer.referralCode && (
-            <p className="tnum truncate text-[12px] text-ink-400">{row.referrer.referralCode}</p>
+            <p className="tnum truncate text-xs text-ink-400">{row.referrer.referralCode}</p>
           )}
         </div>
       ),
@@ -124,7 +124,7 @@ export function AdminReferralsPage() {
       render: (row) => (
         <div className="min-w-0">
           <p className="truncate text-ink-900">{row.referred.businessName}</p>
-          <p className="truncate text-[12px] text-ink-400">{row.referred.email}</p>
+          <p className="truncate text-xs text-ink-400">{row.referred.email}</p>
         </div>
       ),
     },
@@ -229,7 +229,7 @@ export function AdminReferralsPage() {
             went back out is a fact the operator should see stated, not have to
             infer from a total that moved. */}
         {(totals.creditReversed ?? 0) < 0 && (
-          <p className="flex items-start gap-2 rounded-[12px] border border-line bg-surface-2 px-3.5 py-3 text-[12.5px] leading-relaxed text-ink-600">
+          <p className="flex items-start gap-2 rounded-lg border border-line bg-surface-2 px-3.5 py-3 text-sm leading-relaxed text-ink-600">
             <AlertCircle className="mt-0.5 size-4 shrink-0 text-ink-400" strokeWidth={2} aria-hidden="true" />
             {money(Math.abs(totals.creditReversed))} of commission has been reversed, because the
             payments behind it were refunded or their invoices voided. The commission column below
@@ -239,7 +239,7 @@ export function AdminReferralsPage() {
 
         <Panel flush>
           {isLoading ? (
-            <p className="p-4 text-[13px] text-ink-500">Loading referrals…</p>
+            <p className="p-4 text-sm text-ink-500">Loading referrals…</p>
           ) : rows.length === 0 ? (
             <PanelEmpty
               icon={Gift}

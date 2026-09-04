@@ -91,7 +91,7 @@ export function HeaderMobile() {
   // saying which button put it there.
   const iconButton = (open) =>
     cn(
-      'relative flex size-10 shrink-0 items-center justify-center rounded-[10px] transition-colors',
+      'relative flex size-10 shrink-0 items-center justify-center rounded-md transition-colors',
       open ? 'bg-brand-50 text-brand' : 'text-ink-700 hover:bg-surface-2',
     );
 
@@ -156,7 +156,7 @@ export function HeaderMobile() {
         >
           <ShoppingCart className="size-[21px]" strokeWidth={1.75} />
           {cartCount > 0 && (
-            <span className="tnum absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 font-display text-[10px] font-bold text-white ring-2 ring-surface">
+            <span className="tnum absolute right-1 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 font-display text-2xs font-bold text-white ring-2 ring-surface">
               {cartCount}
             </span>
           )}

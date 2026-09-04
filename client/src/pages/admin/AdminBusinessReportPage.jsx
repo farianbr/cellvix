@@ -44,7 +44,7 @@ function TotalRow({ cells }) {
         <td
           key={index}
           className={cn(
-            'px-3 py-2 text-[12.5px] text-ink-900',
+            'px-3 py-2 text-sm text-ink-900',
             index === 0 ? 'text-left' : 'tnum text-right',
           )}
         >
@@ -63,15 +63,15 @@ function ReportTable({ headers, rows, total, empty, caption }) {
   if (!rows.length) {
     return (
       <>
-        {caption && <p className="mb-2 text-[12px] text-ink-400">{caption}</p>}
-        <p className="py-6 text-center text-[12.5px] text-ink-400">{empty}</p>
+        {caption && <p className="mb-2 text-xs text-ink-400">{caption}</p>}
+        <p className="py-6 text-center text-sm text-ink-400">{empty}</p>
       </>
     );
   }
 
   return (
     <>
-      {caption && <p className="mb-2 text-[12px] text-ink-400">{caption}</p>}
+      {caption && <p className="mb-2 text-xs text-ink-400">{caption}</p>}
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
@@ -97,7 +97,7 @@ function ReportTable({ headers, rows, total, empty, caption }) {
                   <td
                     key={index}
                     className={cn(
-                      'px-3 py-2 text-[12.5px]',
+                      'px-3 py-2 text-sm',
                       index === 0 ? 'text-left text-ink-900' : 'tnum text-right text-ink-700',
                     )}
                   >
@@ -160,7 +160,7 @@ export function AdminBusinessReportPage() {
             <>
               <Link
                 to="/admin/reports"
-                className="inline-flex h-11 select-none items-center justify-center gap-2 rounded-[10px] border border-line-strong bg-surface px-5 font-display text-[14px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+                className="inline-flex h-11 select-none items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
               >
                 All reports
               </Link>
@@ -173,13 +173,13 @@ export function AdminBusinessReportPage() {
 
         <DateRangeBar />
 
-        <div className="mb-4 flex flex-wrap items-end gap-2.5 rounded-[12px] border border-line bg-surface p-3">
+        <div className="mb-4 flex flex-wrap items-end gap-2.5 rounded-lg border border-line bg-surface p-3">
           <label className="flex flex-col gap-1">
             <span className="eyebrow text-ink-400">Brand / category</span>
             <select
               value={brand}
               onChange={(event) => setBrand(event.target.value)}
-              className="h-9 min-w-[200px] rounded-[8px] border border-line bg-surface px-2.5 text-[13px] text-ink-900"
+              className="h-9 min-w-[200px] rounded-md border border-line bg-surface px-2.5 text-sm text-ink-900"
             >
               <option value="">Every brand</option>
               {(brands ?? []).map((row) => (
@@ -189,7 +189,7 @@ export function AdminBusinessReportPage() {
               ))}
             </select>
           </label>
-          <p className="pb-1.5 text-[12px] text-ink-400">
+          <p className="pb-1.5 text-xs text-ink-400">
             Narrows every figure below to parts for one brand. Filtering happens per line, so an
             order carrying two brands still reports each correctly.
           </p>
@@ -199,8 +199,8 @@ export function AdminBusinessReportPage() {
       {/* The printed header. Hidden on screen because the page header above
           already says all this — on paper there is no shell to say it. */}
       <div className="hidden print:mb-6 print:block">
-        <h1 className="text-[22px] font-bold">Cellvix — Business Overview</h1>
-        <p className="mt-1 text-[13px]">
+        <h1 className="text-2xl font-bold">Cellvix — Business Overview</h1>
+        <p className="mt-1 text-sm">
           {data?.range ? `${date(data.range.from)} to ${date(data.range.to)}` : ''}
           {brand ? ` · ${brands?.find((row) => row.slug === brand)?.name ?? brand}` : ' · every brand'}
         </p>
@@ -212,8 +212,8 @@ export function AdminBusinessReportPage() {
         </Panel>
       ) : isLoading || !data ? (
         <div className="space-y-3">
-          <div className="h-24 animate-pulse rounded-[14px] bg-surface-2" />
-          <div className="h-64 animate-pulse rounded-[14px] bg-surface-2" />
+          <div className="h-24 animate-pulse rounded-lg bg-surface-2" />
+          <div className="h-64 animate-pulse rounded-lg bg-surface-2" />
         </div>
       ) : (
         <>
@@ -244,7 +244,7 @@ export function AdminBusinessReportPage() {
           />
 
           {data.costCoverage?.uncostedLines > 0 && (
-            <p className="mb-3 flex items-start gap-2 rounded-[10px] bg-warn-50 px-3 py-2.5 text-[12.5px] leading-relaxed text-warn print:border print:border-black print:bg-white print:text-black">
+            <p className="mb-3 flex items-start gap-2 rounded-md bg-warn-50 px-3 py-2.5 text-sm leading-relaxed text-warn print:border print:border-black print:bg-white print:text-black">
               <Info className="mt-0.5 size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
               <span>
                 Net profit excludes{' '}
@@ -266,13 +266,13 @@ export function AdminBusinessReportPage() {
                 formatValue={money}
                 caption="Collected by payment method"
               />
-              <p className="mt-3 border-t border-line pt-2 text-[12.5px] text-ink-500">
+              <p className="mt-3 border-t border-line pt-2 text-sm text-ink-500">
                 {/* Named apart from Invoiced, deliberately (§9.1). */}
                 {money(data.collected?.total ?? 0)} collected — a different figure from the
                 {' '}{money(kpis.invoiced)} invoiced above.
               </p>
               {(data.refunds?.total ?? 0) > 0 && (
-                <p className="mt-1.5 text-[12.5px] text-ink-500">
+                <p className="mt-1.5 text-sm text-ink-500">
                   Refunds in range: {money(data.refunds.total)} across{' '}
                   {formatCount(data.refunds.count)}.
                 </p>
@@ -332,12 +332,12 @@ export function AdminBusinessReportPage() {
               {/* Sub-tiles for the top two categories, as §6.11 asks. */}
               <div className="mb-3 grid grid-cols-2 gap-2">
                 {(data.topCategories ?? []).slice(0, 2).map((row) => (
-                  <div key={row.label} className="rounded-[10px] bg-surface-2 p-2.5">
+                  <div key={row.label} className="rounded-md bg-surface-2 p-2.5">
                     <p className="eyebrow truncate text-ink-400">{row.label}</p>
-                    <p className="tnum mt-1 font-display text-[16px] font-bold text-ink-900">
+                    <p className="tnum mt-1 font-display text-lg font-bold text-ink-900">
                       {formatCount(row.units)}
                     </p>
-                    <p className="mt-0.5 text-[11px] text-ink-400">{money(row.value)}</p>
+                    <p className="mt-0.5 text-2xs text-ink-400">{money(row.value)}</p>
                   </div>
                 ))}
               </div>
@@ -375,9 +375,9 @@ export function AdminBusinessReportPage() {
                   tone: (tax.net ?? 0) < 0 ? 'text-ok' : 'text-ink-900',
                 },
               ].map((tile) => (
-                <div key={tile.label} className="rounded-[10px] bg-surface-2 p-3 print:border print:border-black print:bg-white">
+                <div key={tile.label} className="rounded-md bg-surface-2 p-3 print:border print:border-black print:bg-white">
                   <p className="eyebrow text-ink-400">{tile.label}</p>
-                  <p className={cn('tnum mt-1.5 font-display text-[18px] font-bold', tile.tone ?? 'text-ink-900')}>
+                  <p className={cn('tnum mt-1.5 font-display text-xl font-bold', tile.tone ?? 'text-ink-900')}>
                     {tile.value}
                   </p>
                 </div>
@@ -386,7 +386,7 @@ export function AdminBusinessReportPage() {
 
             {/* The arithmetic printed underneath, as §6.11 asks — a tax figure
                 an accountant cannot check is a tax figure they will not use. */}
-            <p className="tnum mt-3 border-t border-line pt-2.5 text-[12.5px] text-ink-500">
+            <p className="tnum mt-3 border-t border-line pt-2.5 text-sm text-ink-500">
               {money(tax.collected ?? 0)} collected − {money(tax.paid ?? 0)} paid ={' '}
               <span className={cn('font-medium', (tax.net ?? 0) < 0 ? 'text-ok' : 'text-ink-900')}>
                 {(tax.net ?? 0) < 0 ? '−' : ''}

@@ -71,18 +71,18 @@ function Diff({ before, after }) {
   if (!keys.length) return null;
 
   return (
-    <dl className="grid gap-2 text-[12.5px] sm:grid-cols-[minmax(0,140px)_minmax(0,1fr)]">
+    <dl className="grid gap-2 text-sm sm:grid-cols-[minmax(0,140px)_minmax(0,1fr)]">
       {keys.map((key) => (
         <div key={key} className="contents">
           <dt className="font-display font-semibold text-ink-600">{key}</dt>
           <dd className="flex min-w-0 flex-wrap items-start gap-2">
             {before && key in before && (
-              <span className="min-w-0 rounded-[6px] bg-danger-50 px-1.5 py-0.5 text-danger">
+              <span className="min-w-0 rounded-sm bg-danger-50 px-1.5 py-0.5 text-danger">
                 <DiffValue value={before[key]} />
               </span>
             )}
             {after && key in after && (
-              <span className="min-w-0 rounded-[6px] bg-ok-50 px-1.5 py-0.5 text-ok">
+              <span className="min-w-0 rounded-sm bg-ok-50 px-1.5 py-0.5 text-ok">
                 <DiffValue value={after[key]} />
               </span>
             )}
@@ -128,7 +128,7 @@ export function AuditLogScreen({ kind, page: meta, notice }) {
               {row.actorName || row.actorEmail}
             </span>
             {row.actorName && (
-              <span className="block truncate text-[12px] text-ink-500">{row.actorEmail}</span>
+              <span className="block truncate text-xs text-ink-500">{row.actorEmail}</span>
             )}
           </span>
         ) : (
@@ -153,7 +153,7 @@ export function AuditLogScreen({ kind, page: meta, notice }) {
         <span className="min-w-0">
           <span className="block text-ink-700 capitalize">{row.entity?.kind}</span>
           {(row.entity?.label || row.entity?.id) && (
-            <span className="block truncate font-mono text-[12px] text-ink-500">
+            <span className="block truncate font-mono text-xs text-ink-500">
               {row.entity.label || row.entity.id}
             </span>
           )}
@@ -173,7 +173,7 @@ export function AuditLogScreen({ kind, page: meta, notice }) {
       priority: 3,
       width: '140px',
       sortable: false,
-      render: (row) => <span className="font-mono text-[12px] text-ink-500">{row.ip || '—'}</span>,
+      render: (row) => <span className="font-mono text-xs text-ink-500">{row.ip || '—'}</span>,
     },
   ];
 
@@ -194,7 +194,7 @@ export function AuditLogScreen({ kind, page: meta, notice }) {
         // own audit row and would be the only mutation on a read-only screen.
         exportFormats={[]}
         filters={
-          <label className="flex items-center gap-2 text-[13px] text-ink-600">
+          <label className="flex items-center gap-2 text-sm text-ink-600">
             <span className="shrink-0">Action</span>
             <select
               value={action}
@@ -202,7 +202,7 @@ export function AuditLogScreen({ kind, page: meta, notice }) {
                 setAction(event.target.value);
                 setPage(1);
               }}
-              className="h-9 min-w-0 rounded-[8px] border border-line bg-surface px-2.5 text-[13px] text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
+              className="h-9 min-w-0 rounded-md border border-line bg-surface px-2.5 text-sm text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
             >
               <option value="all">All actions</option>
               {(data?.actions ?? []).map((value) => (
@@ -241,7 +241,7 @@ export function AuditLogScreen({ kind, page: meta, notice }) {
         }
         footer={
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-[12.5px] text-ink-500">
+            <p className="text-sm text-ink-500">
               {data?.total ?? 0} {data?.total === 1 ? 'entry' : 'entries'}
             </p>
             <Pagination
@@ -257,7 +257,7 @@ export function AuditLogScreen({ kind, page: meta, notice }) {
           nested grid inside a cell collapses badly on a phone, and this reads
           the same at every width. */}
       {openRow && (
-        <div className="mt-4 rounded-[14px] border border-line bg-surface p-4 sm:p-5">
+        <div className="mt-4 rounded-lg border border-line bg-surface p-4 sm:p-5">
           {(() => {
             const row = entries.find((entry) => entry.id === openRow);
             if (!row) return null;
@@ -269,19 +269,19 @@ export function AuditLogScreen({ kind, page: meta, notice }) {
             return (
               <>
                 <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2 border-b border-line pb-3">
-                  <h2 className="font-display text-[14px] font-bold">
+                  <h2 className="font-display text-md font-bold">
                     {actionLabel(row.action)}
                     {row.entity?.label ? ` — ${row.entity.label}` : ''}
                   </h2>
-                  <p className="tnum text-[12.5px] text-ink-500">{dateTime(row.createdAt)}</p>
+                  <p className="tnum text-sm text-ink-500">{dateTime(row.createdAt)}</p>
                 </div>
 
-                <p className="mb-3 text-[13px] text-ink-600">{row.description}</p>
+                <p className="mb-3 text-sm text-ink-600">{row.description}</p>
 
                 {hasDiff ? (
                   <Diff before={row.before} after={row.after} />
                 ) : (
-                  <p className="text-[13px] text-ink-500">
+                  <p className="text-sm text-ink-500">
                     No field-level detail was recorded for this entry.
                   </p>
                 )}

@@ -33,10 +33,10 @@ import cn from '@/lib/cn';
 function EmptyFrame({ height, message }) {
   return (
     <div
-      className="flex items-center justify-center rounded-[10px] border border-dashed border-line"
+      className="flex items-center justify-center rounded-md border border-dashed border-line"
       style={{ height }}
     >
-      <p className="text-[12.5px] text-ink-400">{message}</p>
+      <p className="text-sm text-ink-400">{message}</p>
     </div>
   );
 }
@@ -245,7 +245,7 @@ export function TrendChart({
       {/* Legend, matching the tooltip's vocabulary. Without it the dashed line
           is an unexplained mark — the reader can see there are two things and
           not which is which. */}
-      <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-ink-400">
+      <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-2xs text-ink-400">
         <span className="flex items-center gap-1.5">
           <span className="h-0.5 w-3 rounded-full bg-brand" aria-hidden="true" />
           {seriesLabel}
@@ -351,7 +351,7 @@ export function TrendChart({
           {scale.ticks.map((tick) => (
             <span
               key={tick}
-              className="tnum absolute -translate-y-1/2 pr-2 text-right text-[10px] leading-none text-ink-300"
+              className="tnum absolute -translate-y-1/2 pr-2 text-right text-2xs leading-none text-ink-300"
               style={{ top: `${(y(tick) / height) * 100}%`, left: 0, width: padding.left }}
             >
               {tickFormatter(tick)}
@@ -362,7 +362,7 @@ export function TrendChart({
             <span
               key={points[index].label}
               className={cn(
-                'absolute -translate-x-1/2 whitespace-nowrap text-[10px] leading-none',
+                'absolute -translate-x-1/2 whitespace-nowrap text-2xs leading-none',
                 index === active ? 'font-medium text-ink-700' : 'text-ink-300',
               )}
               style={{ left: `${(x(index) / width) * 100}%`, bottom: 4 }}
@@ -377,21 +377,21 @@ export function TrendChart({
         {hovered && (
           <div
             className={cn(
-              'pointer-events-none absolute top-2 z-10 rounded-[8px] border border-line bg-surface px-2.5 py-1.5 shadow-sm',
+              'pointer-events-none absolute top-2 z-10 rounded-md border border-line bg-surface px-2.5 py-1.5 shadow-sm',
               active > points.length / 2 ? '-translate-x-full -ml-3' : 'ml-3',
             )}
             style={{ left: `${(x(active) / width) * 100}%` }}
             role="status"
           >
-            <p className="text-[11px] leading-none text-ink-400">{hovered.label}</p>
-            <p className="tnum mt-1 text-[13px] font-semibold leading-none text-ink-900">
+            <p className="text-2xs leading-none text-ink-400">{hovered.label}</p>
+            <p className="tnum mt-1 text-sm font-semibold leading-none text-ink-900">
               {formatValue(hovered.value)}
             </p>
           </div>
         )}
       </div>
 
-      <div className="mt-2 flex flex-wrap justify-between gap-x-4 gap-y-1 text-[11px] text-ink-300">
+      <div className="mt-2 flex flex-wrap justify-between gap-x-4 gap-y-1 text-2xs text-ink-300">
         <span>
           Peak <span className="tnum font-medium text-ink-600">{tickFormatter(max)}</span> on{' '}
           {peak.label}
@@ -465,10 +465,10 @@ export function DonutChart({
           real text — so the ring beside it stays `aria-hidden`. */}
       <ul className="min-w-[140px] flex-1 space-y-1.5" aria-label={caption}>
         {slices.map((slice, index) => (
-          <li key={slice.label} className="flex items-center gap-2 text-[12.5px]">
+          <li key={slice.label} className="flex items-center gap-2 text-sm">
             <span
               className={cn(
-                'size-2.5 shrink-0 rounded-[3px] bg-current',
+                'size-2.5 shrink-0 rounded-sm bg-current',
                 SLICE_CLASS[index % SLICE_CLASS.length],
               )}
               aria-hidden="true"
@@ -526,10 +526,10 @@ export function BarList({
     <div className={cn('space-y-3', className)} role="list" aria-label={caption}>
       {items.map((item, index) => (
         <div key={item.label} role="listitem">
-          <div className="mb-1.5 flex items-baseline gap-2 text-[12.5px]">
+          <div className="mb-1.5 flex items-baseline gap-2 text-sm">
             {rank && (
               <span
-                className="tnum w-4 shrink-0 text-[11px] font-medium text-ink-300"
+                className="tnum w-4 shrink-0 text-2xs font-medium text-ink-300"
                 aria-hidden="true"
               >
                 {index + 1}
@@ -537,7 +537,7 @@ export function BarList({
             )}
             <span className="min-w-0 flex-1 truncate text-ink-700">{item.label}</span>
             {showShare && total > 0 && (
-              <span className="tnum shrink-0 text-[11px] text-ink-300">
+              <span className="tnum shrink-0 text-2xs text-ink-300">
                 {Math.round((item.value / total) * 100)}%
               </span>
             )}
@@ -561,7 +561,7 @@ export function BarList({
           </div>
 
           {item.hint && (
-            <p className={cn('mt-1 text-[11px] text-ink-400', rank && 'pl-6')}>{item.hint}</p>
+            <p className={cn('mt-1 text-2xs text-ink-400', rank && 'pl-6')}>{item.hint}</p>
           )}
         </div>
       ))}

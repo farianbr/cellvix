@@ -114,7 +114,7 @@ function QuoteForm({ clients, products, quote, seedClient, onSubmit, onCancel, i
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -139,7 +139,7 @@ function QuoteForm({ clients, products, quote, seedClient, onSubmit, onCancel, i
             return (
               <div
                 key={field.id}
-                className="grid items-end gap-2 rounded-[10px] bg-surface-2 p-2.5 sm:grid-cols-[1fr_80px_130px_auto]"
+                className="grid items-end gap-2 rounded-md bg-surface-2 p-2.5 sm:grid-cols-[1fr_80px_130px_auto]"
               >
                 <SelectField
                   control={control}
@@ -170,7 +170,7 @@ function QuoteForm({ clients, products, quote, seedClient, onSubmit, onCancel, i
                   onClick={() => remove(index)}
                   disabled={fields.length === 1}
                   aria-label={`Remove line ${index + 1}`}
-                  className="flex size-9 shrink-0 items-center justify-center rounded-[8px] border border-line text-ink-400 transition-colors hover:border-danger/30 hover:bg-danger-50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40"
+                  className="flex size-9 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 transition-colors hover:border-danger/30 hover:bg-danger-50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <Trash2 className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
                 </button>
@@ -194,16 +194,16 @@ function QuoteForm({ clients, products, quote, seedClient, onSubmit, onCancel, i
       <Input label="Shipping" inputMode="decimal" suffix="CAD" {...register('shippingDollars')} />
       <Textarea label="Notes" rows={2} {...register('notes')} />
 
-      <div className="rounded-[10px] bg-surface-2 px-3 py-2.5">
-        <p className="tnum flex items-baseline justify-between text-[13px] text-ink-600">
+      <div className="rounded-md bg-surface-2 px-3 py-2.5">
+        <p className="tnum flex items-baseline justify-between text-sm text-ink-600">
           <span>Subtotal</span>
           <span>{money(subtotal)}</span>
         </p>
-        <p className="tnum mt-1 flex items-baseline justify-between text-[13px] text-ink-600">
+        <p className="tnum mt-1 flex items-baseline justify-between text-sm text-ink-600">
           <span>Shipping</span>
           <span>{money(shipping)}</span>
         </p>
-        <p className="mt-1.5 text-[11.5px] leading-relaxed text-ink-400">
+        <p className="mt-1.5 text-xs leading-relaxed text-ink-400">
           A preview before tax. GST/HST is applied server-side at this client's own provincial rate,
           which this form does not know.
         </p>
@@ -297,7 +297,7 @@ export function AdminQuotesPage() {
       header: 'Quote',
       priority: 1,
       render: (quote) => (
-        <span className="block whitespace-nowrap font-mono text-[12.5px] font-medium text-ink-900">
+        <span className="block whitespace-nowrap font-mono text-sm font-medium text-ink-900">
           {quote.quoteNumber}
         </span>
       ),
@@ -314,7 +314,7 @@ export function AdminQuotesPage() {
       key: 'createdAt',
       header: 'Created',
       priority: 3,
-      render: (quote) => <span className="text-[12.5px] text-ink-500">{date(quote.createdAt)}</span>,
+      render: (quote) => <span className="text-sm text-ink-500">{date(quote.createdAt)}</span>,
     },
     {
       key: 'validUntil',
@@ -323,12 +323,12 @@ export function AdminQuotesPage() {
       render: (quote) =>
         quote.validUntil ? (
           <span
-            className={cn('text-[12.5px]', quote.expired ? 'font-medium text-danger' : 'text-ink-500')}
+            className={cn('text-sm', quote.expired ? 'font-medium text-danger' : 'text-ink-500')}
           >
             {date(quote.validUntil)}
           </span>
         ) : (
-          <span className="text-[12px] text-ink-300">—</span>
+          <span className="text-xs text-ink-300">—</span>
         ),
     },
     {
@@ -357,9 +357,9 @@ export function AdminQuotesPage() {
       className: 'tnum',
       render: (quote) => (
         <>
-          <span className="text-[13px] font-medium text-ink-900">{money(quote.total)}</span>
+          <span className="text-sm font-medium text-ink-900">{money(quote.total)}</span>
           {quote.convertedOrder?.orderNumber && (
-            <span className="block font-mono text-[11px] text-ink-400">
+            <span className="block font-mono text-2xs text-ink-400">
               {quote.convertedOrder.orderNumber}
             </span>
           )}
@@ -407,7 +407,7 @@ export function AdminQuotesPage() {
       />
 
       {setQuoteStatus.error && (
-        <p className="mb-3 flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="mb-3 flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {setQuoteStatus.error.message}
         </p>

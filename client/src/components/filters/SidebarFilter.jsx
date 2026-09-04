@@ -65,7 +65,7 @@ function CategoryTree({ tree, path, onSelect }) {
           <button
             type="button"
             onClick={() => onSelect('deviceType', null, null)}
-            className="flex w-full items-center gap-1 rounded-lg px-2 py-1.5 text-left text-[13px] font-medium text-brand transition-colors hover:bg-brand-50"
+            className="flex w-full items-center gap-1 rounded-lg px-2 py-1.5 text-left text-sm font-medium text-brand transition-colors hover:bg-brand-50"
           >
             <ChevronLeft className="size-3.5 shrink-0" strokeWidth={2.5} aria-hidden="true" />
             All categories
@@ -80,9 +80,9 @@ function CategoryTree({ tree, path, onSelect }) {
                   {isCurrent ? (
                     // The bottom of the trail is where you are, so it is a
                     // heading, not a link back to itself.
-                    <p className="flex items-center gap-2 px-2 py-1.5 text-[13.5px] font-bold text-ink-900">
+                    <p className="flex items-center gap-2 px-2 py-1.5 text-md font-bold text-ink-900">
                       <span className="min-w-0 flex-1 truncate">{node.name}</span>
-                      <span className="tnum shrink-0 text-[11.5px] font-medium text-ink-300">
+                      <span className="tnum shrink-0 text-xs font-medium text-ink-300">
                         {formatCount(node.count)}
                       </span>
                     </p>
@@ -90,7 +90,7 @@ function CategoryTree({ tree, path, onSelect }) {
                     <button
                       type="button"
                       onClick={() => onSelect(level, node.slug, node.name)}
-                      className="flex w-full items-center gap-1 rounded-lg px-2 py-1.5 text-left text-[13px] text-ink-500 transition-colors hover:bg-surface-2 hover:text-ink-900"
+                      className="flex w-full items-center gap-1 rounded-lg px-2 py-1.5 text-left text-sm text-ink-500 transition-colors hover:bg-surface-2 hover:text-ink-900"
                     >
                       <ChevronLeft className="size-3.5 shrink-0 text-ink-300" strokeWidth={2.5} aria-hidden="true" />
                       <span className="min-w-0 flex-1 truncate">{node.name}</span>
@@ -114,10 +114,10 @@ function CategoryTree({ tree, path, onSelect }) {
                 <button
                   type="button"
                   onClick={() => onSelect(level, node.slug, node.name)}
-                  className="group flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-[13.5px] text-ink-700 transition-colors hover:bg-surface-2 hover:text-brand-700"
+                  className="group flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left text-md text-ink-700 transition-colors hover:bg-surface-2 hover:text-brand-700"
                 >
                   <span className="min-w-0 flex-1 truncate">{node.name}</span>
-                  <span className="tnum shrink-0 text-[11.5px] text-ink-300">
+                  <span className="tnum shrink-0 text-xs text-ink-300">
                     {formatCount(node.count)}
                   </span>
                   {/* A chevron only where there is another level under it, so
@@ -137,7 +137,7 @@ function CategoryTree({ tree, path, onSelect }) {
       )}
 
       {trail.length > 0 && options.length === 0 && (
-        <p className="px-2 py-1.5 text-[12.5px] text-ink-300">Narrowed to a single model.</p>
+        <p className="px-2 py-1.5 text-sm text-ink-300">Narrowed to a single model.</p>
       )}
     </div>
   );
@@ -189,7 +189,7 @@ function FacetList({ options, isChecked, onToggle, renderLabel }) {
         <button
           type="button"
           onClick={() => setExpanded((value) => !value)}
-          className="mt-0.5 flex items-center gap-1 px-2 py-1 text-[12.5px] font-medium text-brand transition-colors hover:text-brand-700"
+          className="mt-0.5 flex items-center gap-1 px-2 py-1 text-sm font-medium text-brand transition-colors hover:text-brand-700"
         >
           <ChevronDown
             className={cn('size-3.5 transition-transform duration-200', expanded && 'rotate-180')}
@@ -217,7 +217,7 @@ function Section({ title, children, defaultOpen = true }) {
         {/* Amazon's rail headings are dark and bold rather than a grey
             eyebrow: they are the labels you scan the column by, and at
             uppercase-11px-grey they sat quieter than the options under them. */}
-        <span className="font-display text-[13.5px] font-bold text-ink-900">{title}</span>
+        <span className="font-display text-md font-bold text-ink-900">{title}</span>
         <ChevronDown
           className={cn(
             'size-4 text-ink-300 transition-transform duration-200',
@@ -254,10 +254,10 @@ export function SidebarFilter({ facets, className }) {
   });
 
   return (
-    <aside className={cn('rounded-[14px] border border-line bg-surface', className)}>
+    <aside className={cn('rounded-lg border border-line bg-surface', className)}>
       <header className="flex items-center gap-2 border-b border-line px-4 py-3">
         <SlidersHorizontal className="size-4 text-ink-400" strokeWidth={2} aria-hidden="true" />
-        <h2 className="font-display text-[14px] font-bold">Filters</h2>
+        <h2 className="font-display text-md font-bold">Filters</h2>
       </header>
 
       {/* pb-4, not py-1: the last section drops its bottom rule, so without it

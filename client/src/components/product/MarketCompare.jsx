@@ -40,7 +40,7 @@ export function MarketCompare({ market, price, variant = 'card', className }) {
         <li
           key={row.name}
           className={cn(
-            'flex items-baseline justify-between gap-3 text-[12px]',
+            'flex items-baseline justify-between gap-3 text-xs',
             row.isUs ? 'font-semibold text-ink-900' : 'text-ink-500',
           )}
         >
@@ -48,7 +48,7 @@ export function MarketCompare({ market, price, variant = 'card', className }) {
           <span className="tnum shrink-0">{money(row.price)}</span>
         </li>
       ))}
-      <li className="flex items-baseline justify-between gap-3 border-t border-line pt-1 text-[11.5px] text-ink-400">
+      <li className="flex items-baseline justify-between gap-3 border-t border-line pt-1 text-xs text-ink-400">
         <span>Market average</span>
         <span className="tnum">{money(average)}</span>
       </li>
@@ -57,12 +57,12 @@ export function MarketCompare({ market, price, variant = 'card', className }) {
 
   if (variant === 'detail') {
     return (
-      <div className={cn('rounded-[12px] border border-line bg-surface-2 p-4', className)}>
-        <p className="flex items-center gap-2 font-display text-[14px] font-bold text-ok">
+      <div className={cn('rounded-lg border border-line bg-surface-2 p-4', className)}>
+        <p className="flex items-center gap-2 font-display text-md font-bold text-ok">
           <TrendingDown className="size-4 shrink-0" strokeWidth={2.25} aria-hidden="true" />
           {isLowest ? 'Lowest price of the parts we track' : `Save ${money(savings)} vs market`}
         </p>
-        <p className="mb-3 mt-1 text-[12px] leading-snug text-ink-400">
+        <p className="mb-3 mt-1 text-xs leading-snug text-ink-400">
           {savingsPercent}% under the average of {competitors.length} comparable wholesale{' '}
           {competitors.length === 1 ? 'listing' : 'listings'}. Indicative pricing, checked
           periodically.
@@ -102,7 +102,7 @@ export function MarketCompare({ market, price, variant = 'card', className }) {
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
         aria-controls={panelId}
-        className="flex w-full items-center justify-center gap-1.5 rounded-[8px] border border-line bg-surface px-2 py-1.5 text-[11px] font-semibold leading-tight text-ink-700 transition-colors hover:border-line-strong hover:bg-surface-2 @min-[200px]:text-[11.5px]"
+        className="flex w-full items-center justify-center gap-1.5 rounded-md border border-line bg-surface px-2 py-1.5 text-2xs font-semibold leading-tight text-ink-700 transition-colors hover:border-line-strong hover:bg-surface-2 @min-[200px]:text-xs"
       >
         <TrendingDown className="size-3 shrink-0 text-ok @min-[200px]:size-3.5" strokeWidth={2.25} aria-hidden="true" />
         <span className="tnum min-w-0 text-center">
@@ -121,7 +121,7 @@ export function MarketCompare({ market, price, variant = 'card', className }) {
       {open && (
         <div
           id={panelId}
-          className="absolute inset-x-0 bottom-full z-20 mb-1.5 rounded-[9px] border border-line bg-surface p-2.5 shadow-flyout"
+          className="absolute inset-x-0 bottom-full z-20 mb-1.5 rounded-md border border-line bg-surface p-2.5 shadow-flyout"
         >
           {breakdown}
         </div>

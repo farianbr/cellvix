@@ -133,7 +133,7 @@ function ProductForm({ product, tree, onSubmit, onCancel, isPending, error }) {
       className="space-y-4"
     >
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -172,7 +172,7 @@ function ProductForm({ product, tree, onSubmit, onCancel, isPending, error }) {
         />
       </div>
 
-      <fieldset className="rounded-[11px] border border-line p-3.5">
+      <fieldset className="rounded-md border border-line p-3.5">
         <legend className="eyebrow px-1 text-ink-400">Fitment</legend>
         <div className="grid gap-3 sm:grid-cols-2">
           <SelectMenu
@@ -270,13 +270,13 @@ function OpsForm({ product, suppliers, onSubmit, onCancel, isPending, error }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="rounded-[11px] bg-surface-2 p-3.5">
-        <p className="text-[13px] font-medium text-ink-900">{product.name}</p>
-        <p className="font-mono text-[11.5px] text-ink-400">{product.sku}</p>
+      <div className="rounded-md bg-surface-2 p-3.5">
+        <p className="text-sm font-medium text-ink-900">{product.name}</p>
+        <p className="font-mono text-xs text-ink-400">{product.sku}</p>
       </div>
 
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -314,7 +314,7 @@ function OpsForm({ product, suppliers, onSubmit, onCancel, isPending, error }) {
         ]}
       />
 
-      <p className="rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12px] leading-relaxed text-ink-500">
+      <p className="rounded-md bg-surface-2 px-3 py-2.5 text-xs leading-relaxed text-ink-500">
         Cost is what Cellvix pays, and is separate from the price a client pays. Receiving a purchase
         order updates it automatically from what the delivery actually cost.
       </p>
@@ -348,15 +348,15 @@ function AdjustForm({ product, onSubmit, onCancel, isPending, error }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="rounded-[11px] bg-surface-2 p-3.5">
-        <p className="text-[13px] font-medium text-ink-900">{product.name}</p>
-        <p className="tnum mt-0.5 text-[12px] text-ink-500">
+      <div className="rounded-md bg-surface-2 p-3.5">
+        <p className="text-sm font-medium text-ink-900">{product.name}</p>
+        <p className="tnum mt-0.5 text-xs text-ink-500">
           <span className="font-mono">{product.sku}</span> · {formatCount(product.stock)} on hand
         </p>
       </div>
 
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -388,7 +388,7 @@ function AdjustForm({ product, onSubmit, onCancel, isPending, error }) {
       {delta !== 0 && (
         <p
           className={cn(
-            'tnum rounded-[10px] px-3 py-2.5 text-[13px]',
+            'tnum rounded-md px-3 py-2.5 text-sm',
             projected < 0 ? 'bg-danger-50 text-danger' : 'bg-surface-2 text-ink-600',
           )}
         >
@@ -475,14 +475,14 @@ export function AdminProductsPage() {
           </span>
           <span className="min-w-0">
             <span className="flex flex-wrap items-center gap-2">
-              <span className="truncate text-[13px] font-medium text-ink-900">{product.name}</span>
+              <span className="truncate text-sm font-medium text-ink-900">{product.name}</span>
               {!product.isActive && (
                 <Badge tone="neutral" size="sm">
                   Hidden
                 </Badge>
               )}
             </span>
-            <span className="block font-mono text-[11px] text-ink-300">
+            <span className="block font-mono text-2xs text-ink-300">
               {product.sku} · {product.grade}
             </span>
           </span>
@@ -494,7 +494,7 @@ export function AdminProductsPage() {
       header: 'Model',
       priority: 3,
       render: (product) => (
-        <span className="text-[12.5px] text-ink-500">
+        <span className="text-sm text-ink-500">
           {product.brandName} {product.modelName}
         </span>
       ),
@@ -509,7 +509,7 @@ export function AdminProductsPage() {
         <>
           <span
             className={cn(
-              'text-[13px] font-medium',
+              'text-sm font-medium',
               product.stockStatus === 'out'
                 ? 'text-danger'
                 : product.stockStatus === 'low'
@@ -521,7 +521,7 @@ export function AdminProductsPage() {
           </span>
           {/* A reorder point of zero means "not set", which reads as never low
               rather than always low — so the fallback threshold is named. */}
-          <span className="block text-[11px] text-ink-400">
+          <span className="block text-2xs text-ink-400">
             min {product.minStock > 0 ? product.minStock : LOW_STOCK_THRESHOLD}
           </span>
         </>
@@ -554,13 +554,13 @@ export function AdminProductsPage() {
       render: (product) =>
         product.cost > 0 ? (
           <>
-            <span className="text-[12.5px] text-ink-500">{money(product.cost)}</span>
-            <span className="block text-[11px] text-ink-400">
+            <span className="text-sm text-ink-500">{money(product.cost)}</span>
+            <span className="block text-2xs text-ink-400">
               {Math.round(((product.price - product.cost) / product.price) * 100)}% margin
             </span>
           </>
         ) : (
-          <span className="text-[12px] text-ink-300">—</span>
+          <span className="text-xs text-ink-300">—</span>
         ),
     },
     {
@@ -570,7 +570,7 @@ export function AdminProductsPage() {
       align: 'right',
       className: 'tnum',
       render: (product) => (
-        <span className="text-[12.5px] text-ink-500">{money(product.totalValue)}</span>
+        <span className="text-sm text-ink-500">{money(product.totalValue)}</span>
       ),
     },
   ];
@@ -608,7 +608,7 @@ export function AdminProductsPage() {
           <>
             <Link
               to="/admin/purchase-orders"
-              className="inline-flex h-11 select-none items-center justify-center gap-2 rounded-[10px] border border-line-strong bg-surface px-5 font-display text-[14px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+              className="inline-flex h-11 select-none items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
             >
               <Truck className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
               Purchase orders

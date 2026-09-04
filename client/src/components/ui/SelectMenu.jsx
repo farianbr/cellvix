@@ -31,8 +31,8 @@ import useAnchoredPosition from '@/hooks/useAnchoredPosition';
  * accept.
  */
 const SIZES = {
-  sm: 'h-9 pl-3 pr-2.5 text-[13px] rounded-[10px]',
-  md: 'h-11 pl-3.5 pr-3 text-[14px] rounded-[10px]',
+  sm: 'h-9 pl-3 pr-2.5 text-sm rounded-md',
+  md: 'h-11 pl-3.5 pr-3 text-md rounded-md',
 };
 
 /** Height of one option row — px-2.5 py-2 around a 13px line. */
@@ -46,7 +46,7 @@ const OPTION_H = 33;
 function Count({ value, muted }) {
   if (value === undefined || value === null) return null;
   return (
-    <span className={cn('tnum shrink-0 text-[11.5px]', muted ? 'text-ink-300' : 'text-brand-700')}>
+    <span className={cn('tnum shrink-0 text-xs', muted ? 'text-ink-300' : 'text-brand-700')}>
       {value}
     </span>
   );
@@ -191,7 +191,7 @@ export function SelectMenu({
           className={cn(
             // w-max sizes to the longest label; the style's maxWidth clamps that
             // to the room actually left on screen, so it can never run off.
-            'scroll-slim z-60 w-max overflow-y-auto overflow-x-hidden rounded-[12px]',
+            'scroll-slim z-60 w-max overflow-y-auto overflow-x-hidden rounded-lg',
             'border border-line bg-surface p-1 shadow-flyout focus:outline-none',
           )}
         >
@@ -209,7 +209,7 @@ export function SelectMenu({
                   onClick={() => commit(index)}
                   onMouseEnter={() => setActiveIndex(index)}
                   className={cn(
-                    'flex w-full items-center gap-2 rounded-[8px] px-2.5 py-2 text-left text-[13px] transition-colors',
+                    'flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm transition-colors',
                     index === activeIndex ? 'bg-surface-2' : 'bg-transparent',
                     isSelected ? 'font-semibold text-brand-700' : 'text-ink-700',
                   )}
@@ -239,7 +239,7 @@ export function SelectMenu({
         <label
           id={`${id}-label`}
           htmlFor={id}
-          className="mb-1.5 block text-[13px] font-medium text-ink-700"
+          className="mb-1.5 block text-sm font-medium text-ink-700"
           onClick={(event) => {
             // A <label> cannot forward a click to a <button>, so do it here.
             event.preventDefault();
@@ -303,11 +303,11 @@ export function SelectMenu({
       </div>
 
       {error ? (
-        <p id={`${id}-error`} className="mt-1.5 text-[12px] text-danger">
+        <p id={`${id}-error`} className="mt-1.5 text-xs text-danger">
           {error}
         </p>
       ) : hint ? (
-        <p id={`${id}-hint`} className="mt-1.5 text-[12px] text-ink-400">
+        <p id={`${id}-hint`} className="mt-1.5 text-xs text-ink-400">
           {hint}
         </p>
       ) : null}

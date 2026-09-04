@@ -245,7 +245,7 @@ function CountryCodeMenu({ dial, onSelect, disabled }) {
         onClick={() => setOpen((value) => !value)}
         className={cn(
           'flex h-full items-center gap-1 py-0 pl-3 pr-2.5',
-          'tnum text-[16px] text-ink-900 sm:text-[14px]',
+          'tnum text-lg text-ink-900 sm:text-md',
           'transition-colors focus:outline-none',
           'hover:bg-surface-2 disabled:cursor-not-allowed disabled:text-ink-400',
         )}
@@ -271,7 +271,7 @@ function CountryCodeMenu({ dial, onSelect, disabled }) {
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.12, ease: [0.2, 0, 0, 1] }}
               style={panelStyle}
-              className="z-[70] w-[300px] max-w-[calc(100vw-24px)] overflow-hidden rounded-[12px] border border-line bg-surface shadow-pop"
+              className="z-[70] w-[300px] max-w-[calc(100vw-24px)] overflow-hidden rounded-lg border border-line bg-surface shadow-pop"
             >
               {/* The search box is pinned above the scrolling list rather than
                   scrolling with it: it is the control that makes a 200-row list
@@ -302,8 +302,8 @@ function CountryCodeMenu({ dial, onSelect, disabled }) {
                     }}
                     onKeyDown={onSearchKeyDown}
                     className={cn(
-                      'h-9 w-full rounded-[8px] border border-line bg-surface pl-8 pr-2.5',
-                      'text-[13px] text-ink-900 placeholder:text-ink-300',
+                      'h-9 w-full rounded-md border border-line bg-surface pl-8 pr-2.5',
+                      'text-sm text-ink-900 placeholder:text-ink-300',
                       'transition-[border-color,box-shadow] duration-[120ms]',
                       'focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25',
                     )}
@@ -327,7 +327,7 @@ function CountryCodeMenu({ dial, onSelect, disabled }) {
                     onMouseEnter={() => setActiveIndex(index)}
                     onClick={() => commit(index)}
                     className={cn(
-                      'flex cursor-pointer items-center gap-3 px-3 py-2 text-[13px]',
+                      'flex cursor-pointer items-center gap-3 px-3 py-2 text-sm',
                       index === activeIndex ? 'bg-surface-2' : 'bg-transparent',
                     )}
                   >
@@ -344,7 +344,7 @@ function CountryCodeMenu({ dial, onSelect, disabled }) {
                 ))}
 
                 {matches.length === 0 && (
-                  <li className="px-3 py-6 text-center text-[13px] text-ink-400">
+                  <li className="px-3 py-6 text-center text-sm text-ink-400">
                     No country matches “{search}”.
                   </li>
                 )}
@@ -356,7 +356,7 @@ function CountryCodeMenu({ dial, onSelect, disabled }) {
                   resolve. It says the short list is deliberate — without it the
                   menu looks like it simply does not have your country. */}
               {capped && (
-                <p className="border-t border-line px-3 py-2 text-[12px] text-ink-400">
+                <p className="border-t border-line px-3 py-2 text-xs text-ink-400">
                   Type to search all {COUNTRIES.length} countries.
                 </p>
               )}
@@ -424,7 +424,7 @@ export const PhoneField = forwardRef(function PhoneField(
       {label && (
         <label
           htmlFor={id}
-          className="mb-1.5 block text-[13px] font-medium text-ink-700"
+          className="mb-1.5 block text-sm font-medium text-ink-700"
         >
           {label}
           {required && (
@@ -437,7 +437,7 @@ export const PhoneField = forwardRef(function PhoneField(
 
       <div
         className={cn(
-          'flex w-full items-stretch overflow-hidden rounded-[10px] border bg-surface',
+          'flex w-full items-stretch overflow-hidden rounded-md border bg-surface',
           'transition-[border-color,box-shadow] duration-[120ms]',
           'focus-within:border-brand focus-within:ring-2 focus-within:ring-brand/25',
           error ? 'border-danger focus-within:border-danger focus-within:ring-danger/20' : 'border-line',
@@ -473,7 +473,7 @@ export const PhoneField = forwardRef(function PhoneField(
           onBlur={onBlur}
           onChange={(event) => onChange?.(composePhone(dial, formatNational(event.target.value, dial)))}
           className={cn(
-            'h-full min-w-0 flex-1 bg-transparent px-3 text-[16px] text-ink-900 sm:text-[14px]',
+            'h-full min-w-0 flex-1 bg-transparent px-3 text-lg text-ink-900 sm:text-md',
             'placeholder:text-ink-300 focus:outline-none',
             'disabled:cursor-not-allowed disabled:text-ink-400',
           )}
@@ -481,12 +481,12 @@ export const PhoneField = forwardRef(function PhoneField(
       </div>
 
       {error ? (
-        <p id={`${id}-error`} className="mt-1.5 flex items-center gap-1.5 text-[12.5px] text-danger">
+        <p id={`${id}-error`} className="mt-1.5 flex items-center gap-1.5 text-sm text-danger">
           <AlertCircle className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
       ) : hint ? (
-        <p id={`${id}-hint`} className="mt-1.5 text-[12.5px] text-ink-400">
+        <p id={`${id}-hint`} className="mt-1.5 text-sm text-ink-400">
           {hint}
         </p>
       ) : null}

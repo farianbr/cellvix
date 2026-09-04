@@ -186,7 +186,7 @@ export function TabWizard() {
 
   if (isLoading) {
     return (
-      <div className="flex gap-2 overflow-hidden rounded-[14px] border border-line bg-surface p-3">
+      <div className="flex gap-2 overflow-hidden rounded-lg border border-line bg-surface p-3">
         {FILTER_LEVELS.map((level) => (
           <Skeleton key={level.key} className="h-14 flex-1" />
         ))}
@@ -197,7 +197,7 @@ export function TabWizard() {
   return (
     <section
       aria-label="Guided part finder"
-      className="overflow-hidden rounded-[14px] border border-line bg-surface shadow-card"
+      className="overflow-hidden rounded-lg border border-line bg-surface shadow-card"
     >
       <header className="flex items-center justify-between gap-3 border-b border-line px-4 py-2.5">
         <p className="eyebrow text-ink-400">Find your part</p>
@@ -208,7 +208,7 @@ export function TabWizard() {
               resetAll();
               inSequence.current = false;
             }}
-            className="inline-flex items-center gap-1.5 text-[12px] font-medium text-ink-400 transition-colors hover:text-brand"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-ink-400 transition-colors hover:text-brand"
           >
             <RotateCcw className="size-3.5" strokeWidth={2} aria-hidden="true" />
             Start over
@@ -281,11 +281,11 @@ export function TabWizard() {
                   type="button"
                   onClick={() => openStep(expandedKey, index)}
                   aria-expanded={openLevel === expandedKey}
-                  className="mt-2 flex w-full items-center gap-3 rounded-[11px] border border-brand bg-brand-50 px-3 py-2.5 text-left"
+                  className="mt-2 flex w-full items-center gap-3 rounded-md border border-brand bg-brand-50 px-3 py-2.5 text-left"
                 >
                   <span className="min-w-0 flex-1">
                     <span className="eyebrow block text-brand-700">{level.label}</span>
-                    <span className="mt-0.5 block font-display text-[13.5px] font-semibold text-ink-900">
+                    <span className="mt-0.5 block font-display text-md font-semibold text-ink-900">
                       Choose…
                     </span>
                   </span>
@@ -299,15 +299,15 @@ export function TabWizard() {
             })()}
           </>
         ) : (
-          <div className="flex items-center gap-2.5 rounded-[10px] border border-ok/25 bg-ok-50/60 py-2 pl-3 pr-2">
+          <div className="flex items-center gap-2.5 rounded-md border border-ok/25 bg-ok-50/60 py-2 pl-3 pr-2">
             <Check className="size-4 shrink-0 text-ok" strokeWidth={2.5} aria-hidden="true" />
-            <p className="min-w-0 flex-1 text-[12.5px] font-medium leading-snug text-ink-700">
+            <p className="min-w-0 flex-1 text-sm font-medium leading-snug text-ink-700">
               All five steps answered.
             </p>
             <button
               type="button"
               onClick={() => openStep('model', LEVEL_KEYS.indexOf('model'))}
-              className="shrink-0 rounded-[7px] px-2 py-1 text-[12px] font-semibold text-brand transition-colors hover:bg-surface"
+              className="shrink-0 rounded-sm px-2 py-1 text-xs font-semibold text-brand transition-colors hover:bg-surface"
             >
               Change model
             </button>
@@ -332,7 +332,7 @@ export function TabWizard() {
                 className={cn(
                   // items-start: the value wraps to two lines, and a centred step
                   // indicator beside a two-line value floats below its own label.
-                  'group relative flex h-full items-start gap-3 rounded-[11px] border p-2.5 transition-[border-color,background] duration-[220ms]',
+                  'group relative flex h-full items-start gap-3 rounded-md border p-2.5 transition-[border-color,background] duration-[220ms]',
                   value
                     ? 'border-ok/30 bg-ok-50/60'
                     : isOpen
@@ -369,7 +369,7 @@ export function TabWizard() {
                         // are ~190px, where "iPhone 15 Pro Max" and "Front
                         // Camera" both clipped. Two lines, clamped, so a long
                         // value cannot make one card taller than its row.
-                        'mt-0.5 line-clamp-2 block font-display text-[13.5px] font-semibold leading-snug',
+                        'mt-0.5 line-clamp-2 block font-display text-md font-semibold leading-snug',
                         value ? 'text-ink-900' : 'text-ink-300',
                       )}
                     >

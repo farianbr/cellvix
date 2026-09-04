@@ -40,7 +40,7 @@ export function BulkBar({ count, noun = 'selected', onClear, children, className
           className,
         )}
       >
-        <p className="shrink-0 whitespace-nowrap px-2 text-[12.5px] text-ink-500">
+        <p className="shrink-0 whitespace-nowrap px-2 text-sm text-ink-500">
           <span className="tnum font-semibold text-ink-900">{count}</span> {noun}
         </p>
 

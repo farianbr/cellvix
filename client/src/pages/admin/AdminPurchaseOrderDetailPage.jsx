@@ -96,7 +96,7 @@ function ReceiveForm({ order, onSubmit, onCancel, isPending, error, result }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -108,7 +108,7 @@ function ReceiveForm({ order, onSubmit, onCancel, isPending, error, result }) {
       {result && (
         <div className="space-y-2">
           {result.received.length > 0 && (
-            <div className="rounded-[10px] bg-ok-50 px-3 py-2.5 text-[12.5px] text-ok">
+            <div className="rounded-md bg-ok-50 px-3 py-2.5 text-sm text-ok">
               <p className="font-semibold">Received {result.received.length} line(s)</p>
               <ul className="mt-1 space-y-0.5">
                 {result.received.map((row) => (
@@ -121,7 +121,7 @@ function ReceiveForm({ order, onSubmit, onCancel, isPending, error, result }) {
           )}
 
           {result.skipped.length > 0 && (
-            <div className="rounded-[10px] bg-warn-50 px-3 py-2.5 text-[12.5px] text-warn">
+            <div className="rounded-md bg-warn-50 px-3 py-2.5 text-sm text-warn">
               <p className="font-semibold">Skipped {result.skipped.length} line(s)</p>
               <ul className="mt-1 space-y-0.5">
                 {result.skipped.map((row) => (
@@ -141,11 +141,11 @@ function ReceiveForm({ order, onSubmit, onCancel, isPending, error, result }) {
           return (
             <div
               key={item.sku}
-              className="grid items-center gap-2 rounded-[10px] bg-surface-2 p-2.5 sm:grid-cols-[1fr_110px]"
+              className="grid items-center gap-2 rounded-md bg-surface-2 p-2.5 sm:grid-cols-[1fr_110px]"
             >
               <div className="min-w-0">
-                <p className="truncate text-[13px] text-ink-900">{item.name}</p>
-                <p className="tnum mt-0.5 text-[11.5px] text-ink-400">
+                <p className="truncate text-sm text-ink-900">{item.name}</p>
+                <p className="tnum mt-0.5 text-xs text-ink-400">
                   <span className="font-mono">{item.sku}</span> · {item.qtyReceived} of{' '}
                   {item.qtyOrdered} received · {due} outstanding
                 </p>
@@ -164,7 +164,7 @@ function ReceiveForm({ order, onSubmit, onCancel, isPending, error, result }) {
 
       <Textarea label="Note" rows={2} placeholder="Packing slip, carrier, condition…" {...register('note')} />
 
-      <p className="rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12px] leading-relaxed text-ink-500">
+      <p className="rounded-md bg-surface-2 px-3 py-2.5 text-xs leading-relaxed text-ink-500">
         Enter what arrived in this delivery, not a running total. Stock and the order status are both
         recalculated on the server, and each line is checked on its own — one line that cannot be
         received will not fail the rest.
@@ -201,17 +201,17 @@ function PaymentForm({ order, categories, onSubmit, onCancel, isPending, error }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="rounded-[11px] bg-surface-2 p-3.5">
-        <p className="font-mono text-[13px] font-medium text-ink-900">{order.poNumber}</p>
-        <p className="mt-0.5 text-[12.5px] text-ink-500">{order.supplier.name}</p>
-        <p className="tnum mt-1.5 text-[13px]">
+      <div className="rounded-md bg-surface-2 p-3.5">
+        <p className="font-mono text-sm font-medium text-ink-900">{order.poNumber}</p>
+        <p className="mt-0.5 text-sm text-ink-500">{order.supplier.name}</p>
+        <p className="tnum mt-1.5 text-sm">
           <span className="font-semibold text-ink-900">{money(order.total)}</span>
           <span className="text-ink-500"> — the amount this will record</span>
         </p>
       </div>
 
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -231,7 +231,7 @@ function PaymentForm({ order, categories, onSubmit, onCancel, isPending, error }
         options={categories.map((category) => ({ value: category.id, label: category.name }))}
       />
 
-      <p className="rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12px] leading-relaxed text-ink-500">
+      <p className="rounded-md bg-surface-2 px-3 py-2.5 text-xs leading-relaxed text-ink-500">
         Recording this creates an expense for {money(order.total)}, linked to this order. It can only
         be recorded once — the expense is owned by the purchase order, so the two can never
         double-count.
@@ -279,7 +279,7 @@ export function AdminPurchaseOrderDetailPage() {
             action={
               <Link
                 to="/admin/purchase-orders"
-                className="inline-flex h-9 select-none items-center justify-center rounded-[8px] border border-line-strong bg-surface px-3.5 font-display text-[13px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+                className="inline-flex h-9 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3.5 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
               >
                 Back to purchase orders
               </Link>
@@ -295,8 +295,8 @@ export function AdminPurchaseOrderDetailPage() {
       <>
         <PageHeader icon={ClipboardList} title="Purchase order" />
         <div className="space-y-3">
-          <div className="h-24 animate-pulse rounded-[14px] bg-surface-2" />
-          <div className="h-64 animate-pulse rounded-[14px] bg-surface-2" />
+          <div className="h-24 animate-pulse rounded-lg bg-surface-2" />
+          <div className="h-64 animate-pulse rounded-lg bg-surface-2" />
         </div>
       </>
     );
@@ -361,7 +361,7 @@ export function AdminPurchaseOrderDetailPage() {
       />
 
       {setPurchaseOrderStatus.error && (
-        <p className="mb-3 flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="mb-3 flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {setPurchaseOrderStatus.error.message}
         </p>
@@ -439,24 +439,24 @@ export function AdminPurchaseOrderDetailPage() {
                     return (
                       <tr key={item.sku} className="border-b border-line last:border-0">
                         <td className="px-4 py-3">
-                          <p className="text-[13px] text-ink-900">{item.name}</p>
-                          <p className="font-mono text-[11.5px] text-ink-400">{item.sku}</p>
+                          <p className="text-sm text-ink-900">{item.name}</p>
+                          <p className="font-mono text-xs text-ink-400">{item.sku}</p>
                         </td>
-                        <td className="tnum px-4 py-3 text-right text-[13px] text-ink-700">
+                        <td className="tnum px-4 py-3 text-right text-sm text-ink-700">
                           {formatCount(item.qtyOrdered)}
                         </td>
-                        <td className="tnum px-4 py-3 text-right text-[13px]">
+                        <td className="tnum px-4 py-3 text-right text-sm">
                           <span className={short > 0 ? 'text-warn' : 'text-ok'}>
                             {formatCount(item.qtyReceived)}
                           </span>
                           {short > 0 && order.status !== 'draft' && (
-                            <span className="block text-[11px] text-ink-400">{short} short</span>
+                            <span className="block text-2xs text-ink-400">{short} short</span>
                           )}
                         </td>
-                        <td className="tnum px-4 py-3 text-right text-[13px] text-ink-700">
+                        <td className="tnum px-4 py-3 text-right text-sm text-ink-700">
                           {money(item.unitCost)}
                         </td>
-                        <td className="tnum px-4 py-3 text-right text-[13px] font-medium text-ink-900">
+                        <td className="tnum px-4 py-3 text-right text-sm font-medium text-ink-900">
                           {money(item.lineTotal)}
                         </td>
                       </tr>
@@ -467,7 +467,7 @@ export function AdminPurchaseOrderDetailPage() {
             </div>
 
             <div className="border-t border-line px-4 py-3">
-              <dl className="ml-auto max-w-[260px] space-y-1 text-[13px]">
+              <dl className="ml-auto max-w-[260px] space-y-1 text-sm">
                 <div className="tnum flex justify-between text-ink-600">
                   <dt>Subtotal</dt>
                   <dd>{money(order.subtotal)}</dd>
@@ -480,14 +480,14 @@ export function AdminPurchaseOrderDetailPage() {
                   <dt>Shipping</dt>
                   <dd>{money(order.shipping)}</dd>
                 </div>
-                <div className="tnum flex justify-between border-t border-line pt-1 text-[14px] font-semibold text-ink-900">
+                <div className="tnum flex justify-between border-t border-line pt-1 text-md font-semibold text-ink-900">
                   <dt>Total</dt>
                   <dd>{money(order.total)}</dd>
                 </div>
                 {/* Landed cost per unit — what a received part actually cost
                     once tax and freight are spread over it. */}
                 {qtyReceived > 0 && (
-                  <div className="tnum flex justify-between pt-1 text-[12px] text-ink-400">
+                  <div className="tnum flex justify-between pt-1 text-xs text-ink-400">
                     <dt>Landed cost per unit</dt>
                     <dd>{money(Math.round(order.total / Math.max(qtyOrdered, 1)))}</dd>
                   </div>
@@ -501,20 +501,20 @@ export function AdminPurchaseOrderDetailPage() {
               <ul className="divide-y divide-line">
                 {movements.map((movement) => (
                   <li key={movement.id} className="flex items-start gap-3 px-4 py-3">
-                    <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-[8px] bg-ok-50 text-ok">
+                    <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md bg-ok-50 text-ok">
                       <Boxes className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[13px] text-ink-900">
+                      <p className="text-sm text-ink-900">
                         {movement.product?.name ?? 'Product'}{' '}
                         <span className="tnum text-ok">+{movement.qtyChange}</span>
                       </p>
-                      <p className="tnum mt-0.5 text-[11.5px] text-ink-400">
+                      <p className="tnum mt-0.5 text-xs text-ink-400">
                         {movement.product?.sku} · {movement.qtyAfter} on hand after ·{' '}
                         {dateTime(movement.at)}
                       </p>
                       {movement.note && (
-                        <p className="mt-0.5 text-[12px] text-ink-500">{movement.note}</p>
+                        <p className="mt-0.5 text-xs text-ink-500">{movement.note}</p>
                       )}
                     </div>
                   </li>
@@ -532,11 +532,11 @@ export function AdminPurchaseOrderDetailPage() {
 
         <div className="space-y-3">
           <Panel title="Supplier">
-            <p className="text-[13.5px] font-medium text-ink-900">{order.supplier.name}</p>
+            <p className="text-md font-medium text-ink-900">{order.supplier.name}</p>
             {order.supplier.email && (
               <a
                 href={`mailto:${order.supplier.email}`}
-                className="mt-0.5 block break-all text-[12.5px] text-ink-500 hover:text-brand"
+                className="mt-0.5 block break-all text-sm text-ink-500 hover:text-brand"
               >
                 {order.supplier.email}
               </a>
@@ -544,7 +544,7 @@ export function AdminPurchaseOrderDetailPage() {
             {order.supplier.id && (
               <Link
                 to={`/admin/suppliers/${order.supplier.id}`}
-                className="mt-3 inline-flex h-8 select-none items-center justify-center rounded-[8px] border border-line-strong bg-surface px-3 font-display text-[12.5px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+                className="mt-3 inline-flex h-8 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
               >
                 View profile
               </Link>
@@ -553,7 +553,7 @@ export function AdminPurchaseOrderDetailPage() {
 
           {order.notes && (
             <Panel title="Notes">
-              <p className="whitespace-pre-line text-[13px] leading-relaxed text-ink-600">
+              <p className="whitespace-pre-line text-sm leading-relaxed text-ink-600">
                 {order.notes}
               </p>
             </Panel>
@@ -567,10 +567,10 @@ export function AdminPurchaseOrderDetailPage() {
                     <CheckCircle2 className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[12.5px] font-medium text-ink-900">{entry.status}</p>
-                    <p className="text-[11.5px] text-ink-400">{dateTime(entry.at)}</p>
+                    <p className="text-sm font-medium text-ink-900">{entry.status}</p>
+                    <p className="text-xs text-ink-400">{dateTime(entry.at)}</p>
                     {entry.note && (
-                      <p className="mt-0.5 text-[12px] text-ink-500">{entry.note}</p>
+                      <p className="mt-0.5 text-xs text-ink-500">{entry.note}</p>
                     )}
                   </div>
                 </li>

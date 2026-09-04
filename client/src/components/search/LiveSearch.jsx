@@ -133,7 +133,7 @@ export function LiveSearch({
               // page in when a focused input's text is under 16px, and it does
               // not zoom back out — the sticky header ends up wider than the
               // viewport and the layout is stuck skewed until a reload.
-              'h-11 w-full rounded-[10px] border border-line bg-surface-2 pl-11 pr-10 text-[16px] text-ink-900 sm:text-[14px]',
+              'h-11 w-full rounded-md border border-line bg-surface-2 pl-11 pr-10 text-lg text-ink-900 sm:text-md',
               'placeholder:text-ink-300',
               'transition-[border-color,background,box-shadow] duration-[120ms]',
               'hover:border-line-strong',
@@ -166,7 +166,7 @@ export function LiveSearch({
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
             className={cn(
-              'absolute left-0 right-0 top-[calc(100%+8px)] z-40 overflow-hidden rounded-[14px] border border-line bg-surface shadow-flyout',
+              'absolute left-0 right-0 top-[calc(100%+8px)] z-40 overflow-hidden rounded-lg border border-line bg-surface shadow-flyout',
               // The field is only as wide as the header gap allows, and a panel
               // that width clips part names two words in. From md the panel
               // stops matching the input and takes the width the results need,
@@ -192,10 +192,10 @@ export function LiveSearch({
                           <button
                             type="button"
                             onClick={() => chooseModel(model)}
-                            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] text-ink-700 transition-colors hover:bg-surface-3 hover:text-ink-900"
+                            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-ink-700 transition-colors hover:bg-surface-3 hover:text-ink-900"
                           >
                             <span className="min-w-0 flex-1 truncate">{model.name}</span>
-                            <span className="tnum shrink-0 text-[11.5px] text-ink-300">
+                            <span className="tnum shrink-0 text-xs text-ink-300">
                               {formatCount(model.count)}
                             </span>
                           </button>
@@ -214,10 +214,10 @@ export function LiveSearch({
                           <button
                             type="button"
                             onClick={() => commitSearch(`${value} ${suggestion.label}`)}
-                            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[13px] text-ink-700 transition-colors hover:bg-surface-3 hover:text-ink-900"
+                            className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-sm text-ink-700 transition-colors hover:bg-surface-3 hover:text-ink-900"
                           >
                             <span className="min-w-0 flex-1 truncate">{suggestion.label}</span>
-                            <span className="tnum shrink-0 text-[11.5px] text-ink-300">
+                            <span className="tnum shrink-0 text-xs text-ink-300">
                               {formatCount(suggestion.count)}
                             </span>
                           </button>
@@ -236,7 +236,7 @@ export function LiveSearch({
                           <Link
                             to={page.href}
                             onClick={() => setOpen(false)}
-                            className="block truncate rounded-lg px-2 py-1.5 text-[13px] text-ink-700 transition-colors hover:bg-surface-3 hover:text-ink-900"
+                            className="block truncate rounded-lg px-2 py-1.5 text-sm text-ink-700 transition-colors hover:bg-surface-3 hover:text-ink-900"
                           >
                             {page.title}
                           </Link>
@@ -247,7 +247,7 @@ export function LiveSearch({
                 )}
 
                 {!hasFacets && (
-                  <p className="px-2 py-8 text-center text-[13.5px] text-ink-400 md:hidden">
+                  <p className="px-2 py-8 text-center text-md text-ink-400 md:hidden">
                     {isFetching && !data ? 'Searching…' : `No parts match “${debounced}”.`}
                   </p>
                 )}
@@ -268,7 +268,7 @@ export function LiveSearch({
                         <Link
                           to={`/product/${product.slug}`}
                           onClick={() => setOpen(false)}
-                          className="flex items-center gap-3 rounded-[10px] p-2 transition-colors hover:bg-surface-2"
+                          className="flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-surface-2"
                         >
                           <span className="flex size-12 shrink-0 items-center justify-center rounded-lg border border-line bg-surface-2 p-1.5">
                             <PartVisual product={product} />
@@ -277,21 +277,21 @@ export function LiveSearch({
                           <span className="min-w-0 flex-1">
                             {/* Wrap rather than truncate — "Galaxy S23 Back …"
                                 tells a buyer nothing about which part it is. */}
-                            <span className="line-clamp-2 text-[13.5px] font-medium leading-snug text-ink-900">
+                            <span className="line-clamp-2 text-md font-medium leading-snug text-ink-900">
                               {product.name}
                             </span>
-                            <span className="mt-0.5 block truncate font-mono text-[11px] text-ink-300">
+                            <span className="mt-0.5 block truncate font-mono text-2xs text-ink-300">
                               {product.sku}
                             </span>
                           </span>
 
                           <span className="w-[92px] shrink-0 text-right">
-                            <span className="tnum block font-display text-[13.5px] font-bold text-ink-900">
+                            <span className="tnum block font-display text-md font-bold text-ink-900">
                               {product.priceVisible ? money(product.price) : '—'}
                             </span>
                             <span
                               className={cn(
-                                'tnum block text-[11px]',
+                                'tnum block text-2xs',
                                 product.inStock ? 'text-ok' : 'text-ink-300',
                               )}
                             >
@@ -303,7 +303,7 @@ export function LiveSearch({
                     ))}
                   </ul>
                 ) : (
-                  <p className="px-2 py-8 text-center text-[13.5px] text-ink-400">
+                  <p className="px-2 py-8 text-center text-md text-ink-400">
                     No parts match “{debounced}”.
                   </p>
                 )}
@@ -314,7 +314,7 @@ export function LiveSearch({
               <button
                 type="button"
                 onClick={() => commitSearch()}
-                className="flex w-full items-center justify-center gap-2 border-t border-line bg-surface-2 py-3 font-display text-[13px] font-semibold text-ink-900 transition-colors hover:bg-surface-3"
+                className="flex w-full items-center justify-center gap-2 border-t border-line bg-surface-2 py-3 font-display text-sm font-semibold text-ink-900 transition-colors hover:bg-surface-3"
               >
                 View all {formatCount(data.total)} items
                 <ArrowRight className="size-4" strokeWidth={2} aria-hidden="true" />

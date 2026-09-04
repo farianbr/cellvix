@@ -109,7 +109,7 @@ export function AdminPaymentMethodsPage() {
     }
   }
 
-  if (isLoading) return <p className="text-[13px] text-ink-500">Loading settings…</p>;
+  if (isLoading) return <p className="text-sm text-ink-500">Loading settings…</p>;
 
   return (
     <>
@@ -133,14 +133,14 @@ export function AdminPaymentMethodsPage() {
                   onChange={(event) => rename(method.code, event.target.value)}
                   containerClassName="flex-1"
                 />
-                <code className="hidden shrink-0 rounded-[6px] bg-surface-2 px-2 py-1 font-mono text-[12px] text-ink-500 sm:block">
+                <code className="hidden shrink-0 rounded-sm bg-surface-2 px-2 py-1 font-mono text-xs text-ink-500 sm:block">
                   {method.code}
                 </code>
                 <button
                   type="button"
                   onClick={() => remove(method.code)}
                   aria-label={`Remove ${method.label}`}
-                  className="flex size-9 shrink-0 items-center justify-center rounded-[9px] border border-line text-ink-400 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger"
+                  className="flex size-9 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger"
                 >
                   <Trash2 className="size-4" strokeWidth={1.75} aria-hidden="true" />
                 </button>
@@ -149,7 +149,7 @@ export function AdminPaymentMethodsPage() {
           </ul>
 
           {methods.length === 0 && (
-            <p className="py-4 text-center text-[13px] text-ink-500">
+            <p className="py-4 text-center text-sm text-ink-500">
               No methods. Every expense and payment has to name one, so add at least one before
               saving.
             </p>
@@ -177,7 +177,7 @@ export function AdminPaymentMethodsPage() {
             </Button>
           </div>
 
-          <p className="mt-3 text-[12.5px] leading-relaxed text-ink-500">
+          <p className="mt-3 text-sm leading-relaxed text-ink-500">
             Renaming a method keeps its code, so the expenses and payments already recorded against
             it stay attached. Removing one leaves those rows naming a method that no longer exists —
             rename it instead if it is still in the books.

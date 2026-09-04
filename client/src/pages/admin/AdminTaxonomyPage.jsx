@@ -72,19 +72,19 @@ function AliasField({ value, onChange }) {
 
   return (
     <div>
-      <span className="mb-1.5 block text-[13px] font-medium text-ink-700">Aliases</span>
+      <span className="mb-1.5 block text-sm font-medium text-ink-700">Aliases</span>
 
       {value.length > 0 && (
         <ul className="mb-2 flex flex-wrap gap-1.5">
           {value.map((alias) => (
             <li key={alias}>
-              <span className="inline-flex items-center gap-1 rounded-[7px] bg-surface-3 py-1 pr-1 pl-2 font-mono text-[12px] text-ink-700">
+              <span className="inline-flex items-center gap-1 rounded-sm bg-surface-3 py-1 pr-1 pl-2 font-mono text-xs text-ink-700">
                 {alias}
                 <button
                   type="button"
                   onClick={() => onChange(value.filter((item) => item !== alias))}
                   aria-label={`Remove alias ${alias}`}
-                  className="flex size-4 items-center justify-center rounded-[4px] text-ink-400 transition-colors hover:bg-danger-50 hover:text-danger"
+                  className="flex size-4 items-center justify-center rounded-sm text-ink-400 transition-colors hover:bg-danger-50 hover:text-danger"
                 >
                   <X className="size-3" strokeWidth={2.5} aria-hidden="true" />
                 </button>
@@ -115,7 +115,7 @@ function AliasField({ value, onChange }) {
         </Button>
       </div>
 
-      <p className="mt-1.5 text-[12.5px] text-ink-400">
+      <p className="mt-1.5 text-sm text-ink-400">
         Stored lowercase. Somebody searching this term gets every part for this model.
       </p>
     </div>
@@ -161,9 +161,9 @@ function EditDialog({ node, onClose }) {
     <>
       <Modal open onClose={onClose} title={`Edit ${node.name}`}>
       <form onSubmit={save} className="space-y-4">
-        <div className="flex flex-wrap items-center gap-2 text-[13px] text-ink-500">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-ink-500">
           <Badge tone="neutral">{KIND_LABEL[node.kind] ?? node.kind}</Badge>
-          <code className="font-mono text-[12px]">{node.slug}</code>
+          <code className="font-mono text-xs">{node.slug}</code>
           <span>
             {node.productCount} {node.productCount === 1 ? 'product' : 'products'}
           </span>
@@ -173,16 +173,16 @@ function EditDialog({ node, onClose }) {
 
         <AliasField value={aliases} onChange={setAliases} />
 
-        <label className="flex items-start gap-2.5 rounded-[10px] bg-surface-2 px-3 py-2.5">
+        <label className="flex items-start gap-2.5 rounded-md bg-surface-2 px-3 py-2.5">
           <input
             type="checkbox"
             checked={isActive}
             onChange={(event) => setIsActive(event.target.checked)}
             className="mt-0.5 size-4 accent-[var(--color-brand)]"
           />
-          <span className="text-[13px] leading-relaxed text-ink-700">
+          <span className="text-sm leading-relaxed text-ink-700">
             <span className="font-medium">Active</span>
-            <span className="mt-0.5 block text-[12.5px] text-ink-500">
+            <span className="mt-0.5 block text-sm text-ink-500">
               An inactive entry disappears from the storefront’s filters and pickers. Its products
               stay orderable — this hides the category, not the parts.
             </span>
@@ -190,7 +190,7 @@ function EditDialog({ node, onClose }) {
         </label>
 
         {error && (
-          <p role="alert" className="rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+          <p role="alert" className="rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
             {error}
           </p>
         )}
@@ -202,7 +202,7 @@ function EditDialog({ node, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-9 items-center rounded-[9px] border border-line bg-surface px-3.5 text-[13px] font-medium text-ink-600 transition-colors hover:border-line-strong hover:text-ink-900"
+            className="inline-flex h-9 items-center rounded-md border border-line bg-surface px-3.5 text-sm font-medium text-ink-600 transition-colors hover:border-line-strong hover:text-ink-900"
           >
             Cancel
           </button>
@@ -211,7 +211,7 @@ function EditDialog({ node, onClose }) {
             type="button"
             onClick={() => setConfirmingDelete(true)}
             disabled={deleteTaxonomyNode.isPending}
-            className="ml-auto inline-flex h-9 items-center gap-1.5 rounded-[9px] border border-line px-3 text-[13px] font-medium text-ink-500 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger disabled:opacity-50"
+            className="ml-auto inline-flex h-9 items-center gap-1.5 rounded-md border border-line px-3 text-sm font-medium text-ink-500 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger disabled:opacity-50"
           >
             <Trash2 className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
             Delete
@@ -283,7 +283,7 @@ export function AdminTaxonomyPage() {
       render: (row) => (
         <span className="min-w-0">
           <span className="block truncate font-medium text-ink-900">{row.name}</span>
-          <span className="block truncate font-mono text-[12px] text-ink-400">{row.slug}</span>
+          <span className="block truncate font-mono text-xs text-ink-400">{row.slug}</span>
         </span>
       ),
     },
@@ -298,17 +298,17 @@ export function AdminTaxonomyPage() {
             {row.aliases.slice(0, 4).map((alias) => (
               <span
                 key={alias}
-                className="rounded-[6px] bg-surface-3 px-1.5 py-0.5 font-mono text-[11.5px] text-ink-600"
+                className="rounded-sm bg-surface-3 px-1.5 py-0.5 font-mono text-xs text-ink-600"
               >
                 {alias}
               </span>
             ))}
             {row.aliases.length > 4 && (
-              <span className="text-[12px] text-ink-400">+{row.aliases.length - 4}</span>
+              <span className="text-xs text-ink-400">+{row.aliases.length - 4}</span>
             )}
           </span>
         ) : (
-          <span className="text-[12.5px] text-ink-400">—</span>
+          <span className="text-sm text-ink-400">—</span>
         ),
     },
     {
@@ -363,7 +363,7 @@ export function AdminTaxonomyPage() {
         exportFormats={[]}
         filters={
           <div className="flex flex-wrap items-center gap-3">
-            <label className="flex items-center gap-2 text-[13px] text-ink-600">
+            <label className="flex items-center gap-2 text-sm text-ink-600">
               <span className="shrink-0">Type</span>
               <select
                 value={kind}
@@ -371,7 +371,7 @@ export function AdminTaxonomyPage() {
                   setKind(event.target.value);
                   setPage(1);
                 }}
-                className="h-9 rounded-[8px] border border-line bg-surface px-2.5 text-[13px] text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
+                className="h-9 rounded-md border border-line bg-surface px-2.5 text-sm text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
               >
                 {KINDS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -381,7 +381,7 @@ export function AdminTaxonomyPage() {
               </select>
             </label>
 
-            <label className="flex items-center gap-2 text-[13px] text-ink-600">
+            <label className="flex items-center gap-2 text-sm text-ink-600">
               <input
                 type="checkbox"
                 checked={includeInactive}
@@ -422,7 +422,7 @@ export function AdminTaxonomyPage() {
         }
         footer={
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-[12.5px] text-ink-500">
+            <p className="text-sm text-ink-500">
               {data?.total ?? 0} {data?.total === 1 ? 'entry' : 'entries'}
             </p>
             <Pagination page={data?.page ?? 1} pages={data?.pages ?? 1} onChange={setPage} />
@@ -430,7 +430,7 @@ export function AdminTaxonomyPage() {
         }
       />
 
-      <p className="mt-4 text-[12.5px] leading-relaxed text-ink-500">
+      <p className="mt-4 text-sm leading-relaxed text-ink-500">
         Device types, brands, series and models come from the catalogue seed and their structure is
         fixed here — a slug or a parent cannot be changed from this screen, because every product
         stores the path it was filed under. Names, aliases and visibility are editable.

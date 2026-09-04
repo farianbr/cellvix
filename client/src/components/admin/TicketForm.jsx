@@ -82,11 +82,11 @@ const emptyLine = () => ({ name: '', description: '', priceDollars: '', qty: 1 }
 /** A titled slab. The form is long, and unbroken it reads as one wall of inputs. */
 function Section({ icon: Icon, title, hint, children, className }) {
   return (
-    <section className={cn('rounded-[12px] border border-line bg-surface p-4', className)}>
-      <h3 className="mb-3 flex items-center gap-2 border-b border-line pb-2.5 font-display text-[13.5px] font-bold text-ink-900">
+    <section className={cn('rounded-lg border border-line bg-surface p-4', className)}>
+      <h3 className="mb-3 flex items-center gap-2 border-b border-line pb-2.5 font-display text-md font-bold text-ink-900">
         <Icon className="size-4 shrink-0 text-brand" strokeWidth={2} aria-hidden="true" />
         {title}
-        {hint && <span className="font-normal text-[12px] text-ink-400">{hint}</span>}
+        {hint && <span className="font-normal text-xs text-ink-400">{hint}</span>}
       </h3>
       {children}
     </section>
@@ -108,7 +108,7 @@ function LineEditor({ control, register, name, label, addLabel }) {
       <p className="eyebrow mb-2 text-ink-400">{label}</p>
 
       {fields.length === 0 && (
-        <p className="mb-2 text-[12px] text-ink-400">Nothing added yet.</p>
+        <p className="mb-2 text-xs text-ink-400">Nothing added yet.</p>
       )}
 
       <div className="space-y-2">
@@ -140,7 +140,7 @@ function LineEditor({ control, register, name, label, addLabel }) {
               type="button"
               onClick={() => remove(index)}
               aria-label={`Remove this ${label.toLowerCase()} line`}
-              className="flex size-9 shrink-0 items-center justify-center self-end rounded-[8px] border border-line text-ink-400 transition-colors hover:border-danger/40 hover:text-danger active:scale-[0.97]"
+              className="flex size-9 shrink-0 items-center justify-center self-end rounded-md border border-line text-ink-400 transition-colors hover:border-danger/40 hover:text-danger active:scale-[0.97]"
             >
               <Trash2 className="size-3.5" strokeWidth={2} aria-hidden="true" />
             </button>
@@ -165,9 +165,9 @@ function LineEditor({ control, register, name, label, addLabel }) {
 /** One device block: what it is, what is wrong, how it tested, what it costs. */
 function DeviceBlock({ control, register, index, canRemove, onRemove }) {
   return (
-    <div className="rounded-[10px] border border-line bg-surface-2/50 p-3.5">
+    <div className="rounded-md border border-line bg-surface-2/50 p-3.5">
       <div className="mb-3 flex items-center justify-between gap-2">
-        <p className="flex items-center gap-1.5 font-display text-[13px] font-bold text-ink-900">
+        <p className="flex items-center gap-1.5 font-display text-sm font-bold text-ink-900">
           <Smartphone className="size-3.5 text-brand" strokeWidth={2} aria-hidden="true" />
           Device #{index + 1}
         </p>
@@ -354,7 +354,7 @@ export function TicketForm({ ticket, seed, technicians = [], onSubmit, onCancel,
       className="space-y-4"
     >
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -434,13 +434,13 @@ export function TicketForm({ ticket, seed, technicians = [], onSubmit, onCancel,
 
         {/* The one field that must never reach a customer document, marked as
             such rather than left to be remembered. */}
-        <div className="mt-2 rounded-[10px] border border-warn/30 bg-warn-50/50 p-3">
+        <div className="mt-2 rounded-md border border-warn/30 bg-warn-50/50 p-3">
           <Textarea
             label={
               <span className="flex items-center gap-1.5">
                 <Lock className="size-3.5 text-warn" strokeWidth={2} aria-hidden="true" />
                 Internal notes
-                <span className="text-[11px] font-normal text-warn">
+                <span className="text-2xs font-normal text-warn">
                   confidential — never printed
                 </span>
               </span>
@@ -480,7 +480,7 @@ export function TicketForm({ ticket, seed, technicians = [], onSubmit, onCancel,
 
         {/* A preview. The server recomputes all of this from the lines — see
             the note at the top of this file. */}
-        <dl className="mt-4 space-y-1.5 border-t border-line pt-3 text-[13px]">
+        <dl className="mt-4 space-y-1.5 border-t border-line pt-3 text-sm">
           <div className="flex justify-between gap-3">
             <dt className="text-ink-500">Services &amp; parts</dt>
             <dd className="tnum text-ink-900">{money(totals.gross)}</dd>
@@ -497,13 +497,13 @@ export function TicketForm({ ticket, seed, technicians = [], onSubmit, onCancel,
           </div>
           <div className="flex justify-between gap-3 border-t border-line pt-2">
             <dt className="font-display font-bold text-ink-900">Total</dt>
-            <dd className="tnum font-display text-[17px] font-bold text-ink-900">
+            <dd className="tnum font-display text-lg font-bold text-ink-900">
               {money(totals.total)}
             </dd>
           </div>
         </dl>
 
-        <p className="mt-2 text-[11.5px] leading-relaxed text-ink-400">
+        <p className="mt-2 text-xs leading-relaxed text-ink-400">
           An estimate, not an invoice. Nothing here moves a balance — billing a finished repair is
           a separate step.
         </p>

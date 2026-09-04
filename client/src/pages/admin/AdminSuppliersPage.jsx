@@ -99,7 +99,7 @@ function SupplierForm({ supplier, onSubmit, onCancel, isPending, error }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -155,20 +155,20 @@ function SupplierForm({ supplier, onSubmit, onCancel, isPending, error }) {
 function SupplierCard({ supplier, onEdit, onToggle }) {
   return (
     <article
-      className={`flex flex-col rounded-[14px] border border-line bg-surface p-4 transition-colors hover:border-line-strong ${
+      className={`flex flex-col rounded-lg border border-line bg-surface p-4 transition-colors hover:border-line-strong ${
         supplier.isActive ? '' : 'opacity-70'
       }`}
     >
       <div className="mb-3 flex items-start gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-[11px] bg-surface-2 font-display text-[13px] font-bold text-ink-600">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-surface-2 font-display text-sm font-bold text-ink-600">
           {initials(supplier.name)}
         </span>
 
         <div className="min-w-0 flex-1">
-          <h2 className="truncate font-display text-[14px] font-bold leading-snug text-ink-900">
+          <h2 className="truncate font-display text-md font-bold leading-snug text-ink-900">
             {supplier.name}
           </h2>
-          <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[11.5px] text-ink-400">
+          <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-ink-400">
             {supplier.code && <span className="font-mono">{supplier.code}</span>}
             <Badge tone={supplier.isActive ? 'ok' : 'neutral'} size="sm">
               {supplier.isActive ? 'active' : 'inactive'}
@@ -180,13 +180,13 @@ function SupplierCard({ supplier, onEdit, onToggle }) {
           type="button"
           onClick={() => onEdit(supplier)}
           aria-label={`Edit ${supplier.name}`}
-          className="flex size-7 shrink-0 items-center justify-center rounded-[7px] text-ink-300 transition-colors hover:bg-surface-2 hover:text-ink-700"
+          className="flex size-7 shrink-0 items-center justify-center rounded-sm text-ink-300 transition-colors hover:bg-surface-2 hover:text-ink-700"
         >
           <Pencil className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
         </button>
       </div>
 
-      <dl className="mb-3 space-y-1 text-[12px] text-ink-500">
+      <dl className="mb-3 space-y-1 text-xs text-ink-500">
         {supplier.email && (
           <div className="flex items-center gap-1.5">
             <Mail className="size-3 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
@@ -201,22 +201,22 @@ function SupplierCard({ supplier, onEdit, onToggle }) {
         )}
       </dl>
 
-      <div className="mb-3 grid grid-cols-2 gap-2 rounded-[10px] bg-surface-2 p-2.5">
+      <div className="mb-3 grid grid-cols-2 gap-2 rounded-md bg-surface-2 p-2.5">
         <div>
           <p className="eyebrow text-ink-400">Orders</p>
-          <p className="tnum font-display text-[15px] font-bold text-ink-900">
+          <p className="tnum font-display text-lg font-bold text-ink-900">
             {formatCount(supplier.ordersCount)}
           </p>
         </div>
         <div>
           <p className="eyebrow text-ink-400">Total spent</p>
-          <p className="tnum font-display text-[15px] font-bold text-ink-900">
+          <p className="tnum font-display text-lg font-bold text-ink-900">
             {money(supplier.totalSpent)}
           </p>
         </div>
       </div>
 
-      <p className="mb-3 text-[11.5px] text-ink-400">Terms · {termsLabel(supplier.paymentTerms)}</p>
+      <p className="mb-3 text-xs text-ink-400">Terms · {termsLabel(supplier.paymentTerms)}</p>
 
       <div className="mt-auto flex items-center gap-2">
         {/* `Button` renders a real <button>; a navigation needs an anchor, so
@@ -224,7 +224,7 @@ function SupplierCard({ supplier, onEdit, onToggle }) {
             in one. */}
         <Link
           to={`/admin/suppliers/${supplier.id}`}
-          className="inline-flex h-9 flex-1 select-none items-center justify-center rounded-[8px] border border-line-strong bg-surface px-3.5 font-display text-[13px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+          className="inline-flex h-9 flex-1 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3.5 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
         >
           View profile
         </Link>
@@ -235,7 +235,7 @@ function SupplierCard({ supplier, onEdit, onToggle }) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`Open ${supplier.name} website`}
-            className="flex size-8 shrink-0 items-center justify-center rounded-[8px] border border-line text-ink-400 transition-colors hover:border-line-strong hover:text-ink-700"
+            className="flex size-8 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 transition-colors hover:border-line-strong hover:text-ink-700"
           >
             <ExternalLink className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
           </a>
@@ -245,7 +245,7 @@ function SupplierCard({ supplier, onEdit, onToggle }) {
           type="button"
           onClick={() => onToggle(supplier)}
           aria-label={`${supplier.isActive ? 'Deactivate' : 'Reactivate'} ${supplier.name}`}
-          className="flex size-8 shrink-0 items-center justify-center rounded-[8px] border border-line text-ink-400 transition-colors hover:border-danger/30 hover:bg-danger-50 hover:text-danger"
+          className="flex size-8 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 transition-colors hover:border-danger/30 hover:bg-danger-50 hover:text-danger"
         >
           <Power className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
         </button>
@@ -287,7 +287,7 @@ export function AdminSuppliersPage() {
           <>
             <Link
               to="/admin/purchase-orders"
-              className="inline-flex h-11 select-none items-center justify-center gap-2 rounded-[10px] border border-line-strong bg-surface px-5 font-display text-[14px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+              className="inline-flex h-11 select-none items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
             >
               <ClipboardList className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
               Purchase orders
@@ -310,7 +310,7 @@ export function AdminSuppliersPage() {
         />
 
         <div className="p-3 sm:p-4">
-          <p className="mb-3 text-[12.5px] text-ink-500">
+          <p className="mb-3 text-sm text-ink-500">
             {formatCount(counts.all ?? 0)} supplier{(counts.all ?? 0) === 1 ? '' : 's'} total
             {status !== 'all' && ` · ${formatCount(suppliers.length)} shown`}
           </p>
@@ -318,7 +318,7 @@ export function AdminSuppliersPage() {
           {isLoading ? (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
               {Array.from({ length: 5 }).map((_, index) => (
-                <div key={index} className="h-[248px] animate-pulse rounded-[14px] bg-surface-2" />
+                <div key={index} className="h-[248px] animate-pulse rounded-lg bg-surface-2" />
               ))}
             </div>
           ) : suppliers.length === 0 ? (

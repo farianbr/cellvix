@@ -40,13 +40,13 @@ export function AdminStubPage() {
     <>
       <PageHeader icon={Icon} title={meta?.title ?? 'Not built yet'} description={meta?.description} />
 
-      <div className="flex flex-col items-center rounded-[14px] border border-dashed border-line-strong bg-surface px-6 py-16 text-center">
+      <div className="flex flex-col items-center rounded-lg border border-dashed border-line-strong bg-surface px-6 py-16 text-center">
         <span className="mb-4 flex size-12 items-center justify-center rounded-full bg-surface-2 text-ink-300">
           <Hammer className="size-5" strokeWidth={1.5} aria-hidden="true" />
         </span>
 
-        <h2 className="text-[17px]">Not built yet</h2>
-        <p className="mt-2 max-w-[46ch] text-[13.5px] leading-relaxed text-ink-500">
+        <h2 className="text-lg">Not built yet</h2>
+        <p className="mt-2 max-w-[46ch] text-md leading-relaxed text-ink-500">
           {phase ? (
             <>
               This screen ships in <strong className="font-semibold text-ink-700">phase {phase}</strong>
@@ -60,7 +60,7 @@ export function AdminStubPage() {
 
         <Link
           to="/admin"
-          className="mt-6 inline-flex h-9 select-none items-center justify-center rounded-[8px] border border-line-strong bg-surface px-3.5 font-display text-[13px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+          className="mt-6 inline-flex h-9 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3.5 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
         >
           Back to dashboard
         </Link>

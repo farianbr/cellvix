@@ -52,7 +52,7 @@ export function AdminProfilePage() {
   const { data, isLoading } = useAdminProfile();
   const { signOut } = useAuth();
 
-  if (isLoading) return <p className="text-[13px] text-ink-500">Loading profile…</p>;
+  if (isLoading) return <p className="text-sm text-ink-500">Loading profile…</p>;
 
   const profile = data?.profile;
   if (!profile) return null;
@@ -73,16 +73,16 @@ export function AdminProfilePage() {
             <div className="flex items-start gap-3.5">
               <span
                 aria-hidden="true"
-                className="flex size-14 shrink-0 items-center justify-center rounded-full bg-brand-50 font-display text-[17px] font-bold text-brand"
+                className="flex size-14 shrink-0 items-center justify-center rounded-full bg-brand-50 font-display text-lg font-bold text-brand"
               >
                 {initials(profile.name)}
               </span>
 
               <div className="min-w-0 flex-1">
-                <h2 className="truncate font-display text-[16px] font-bold text-ink-900">
+                <h2 className="truncate font-display text-lg font-bold text-ink-900">
                   {profile.name}
                 </h2>
-                <p className="mt-0.5 truncate text-[13px] text-ink-500">{profile.email}</p>
+                <p className="mt-0.5 truncate text-sm text-ink-500">{profile.email}</p>
 
                 <div className="mt-2 flex flex-wrap items-center gap-1.5">
                   <Badge tone={isAdmin ? 'brand' : 'info'}>
@@ -93,7 +93,7 @@ export function AdminProfilePage() {
               </div>
             </div>
 
-            <dl className="mt-4 space-y-2 border-t border-line pt-4 text-[13px]">
+            <dl className="mt-4 space-y-2 border-t border-line pt-4 text-sm">
               {profile.phone && (
                 <div className="flex justify-between gap-3">
                   <dt className="text-ink-500">Phone</dt>
@@ -127,7 +127,7 @@ export function AdminProfilePage() {
               {isAdmin && (
                 <Link
                   to="/admin/settings/users"
-                  className="inline-flex h-9 items-center gap-1.5 rounded-[9px] border border-line bg-surface px-3 text-[13px] font-medium text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+                  className="inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-surface px-3 text-sm font-medium text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
                 >
                   <UsersRound className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
                   Manage users
@@ -137,14 +137,14 @@ export function AdminProfilePage() {
               <button
                 type="button"
                 onClick={() => signOut()}
-                className="inline-flex h-9 items-center gap-1.5 rounded-[9px] border border-line bg-surface px-3 text-[13px] font-medium text-ink-600 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger"
+                className="inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-surface px-3 text-sm font-medium text-ink-600 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger"
               >
                 <LogOut className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
                 Sign out
               </button>
             </div>
 
-            <p className="mt-3 text-[12.5px] leading-relaxed text-ink-400">
+            <p className="mt-3 text-sm leading-relaxed text-ink-400">
               Your name, email and role are changed on Settings → Users by an administrator — the one
               place the self-demotion and last-admin rules are enforced.
             </p>
@@ -163,7 +163,7 @@ export function AdminProfilePage() {
                   <li key={area} className="flex items-center justify-between gap-3 py-2.5 first:pt-0">
                     <span
                       className={cn(
-                        'text-[13.5px]',
+                        'text-md',
                         level === 'none' ? 'text-ink-400' : 'text-ink-900',
                       )}
                     >
@@ -176,7 +176,7 @@ export function AdminProfilePage() {
             </ul>
 
             {isAdmin && (
-              <p className="mt-3 flex items-start gap-2 border-t border-line pt-3 text-[12.5px] leading-relaxed text-ink-500">
+              <p className="mt-3 flex items-start gap-2 border-t border-line pt-3 text-sm leading-relaxed text-ink-500">
                 <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-brand" strokeWidth={2} aria-hidden="true" />
                 An administrator bypasses the role system entirely — this grid is what that means in
                 practice, not a role that could be edited.
@@ -189,7 +189,7 @@ export function AdminProfilePage() {
             description="The last ten things you changed, from the activity log."
           >
             {(data?.activity ?? []).length === 0 ? (
-              <p className="flex items-center gap-2 text-[13px] text-ink-500">
+              <p className="flex items-center gap-2 text-sm text-ink-500">
                 <CircleUser className="size-4 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
                 Nothing recorded yet.
               </p>
@@ -197,10 +197,10 @@ export function AdminProfilePage() {
               <ul className="divide-y divide-line">
                 {data.activity.map((row) => (
                   <li key={row.id} className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 py-2.5 first:pt-0">
-                    <span className="min-w-0 flex-1 text-[13px] text-ink-700">
+                    <span className="min-w-0 flex-1 text-sm text-ink-700">
                       {row.description || row.action}
                     </span>
-                    <span className="tnum shrink-0 text-[12px] text-ink-400">
+                    <span className="tnum shrink-0 text-xs text-ink-400">
                       {dateTime(row.createdAt)}
                     </span>
                   </li>

@@ -88,11 +88,11 @@ function TemplateDialog({ template, onClose }) {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="block">
-            <span className="mb-1.5 block text-[13px] font-medium text-ink-700">Channel</span>
+            <span className="mb-1.5 block text-sm font-medium text-ink-700">Channel</span>
             <select
               value={form.channel}
               onChange={(e) => set({ channel: e.target.value })}
-              className="h-11 w-full rounded-[10px] border border-line bg-surface px-3 text-[14px] text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
+              className="h-11 w-full rounded-md border border-line bg-surface px-3 text-md text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
             >
               {CHANNELS.map((c) => (
                 <option key={c.value} value={c.value}>
@@ -103,11 +103,11 @@ function TemplateDialog({ template, onClose }) {
           </label>
 
           <label className="block">
-            <span className="mb-1.5 block text-[13px] font-medium text-ink-700">Document</span>
+            <span className="mb-1.5 block text-sm font-medium text-ink-700">Document</span>
             <select
               value={form.document}
               onChange={(e) => set({ document: e.target.value })}
-              className="h-11 w-full rounded-[10px] border border-line bg-surface px-3 text-[14px] text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
+              className="h-11 w-full rounded-md border border-line bg-surface px-3 text-md text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
             >
               {DOCUMENTS.map((d) => (
                 <option key={d.value} value={d.value}>
@@ -115,7 +115,7 @@ function TemplateDialog({ template, onClose }) {
                 </option>
               ))}
             </select>
-            <span className="mt-1.5 block text-[12.5px] text-ink-400">
+            <span className="mt-1.5 block text-sm text-ink-400">
               Tying a template to a record type is what lets a screen offer the ones that make sense
               there instead of the whole list.
             </span>
@@ -131,27 +131,27 @@ function TemplateDialog({ template, onClose }) {
         )}
 
         <label className="block">
-          <span className="mb-1.5 block text-[13px] font-medium text-ink-700">
+          <span className="mb-1.5 block text-sm font-medium text-ink-700">
             {isCall ? 'Script' : 'Message'}
           </span>
           <textarea
             rows={8}
             value={form.body}
             onChange={(e) => set({ body: e.target.value })}
-            className="w-full rounded-[10px] border border-line bg-surface px-3 py-2.5 text-[14px] leading-relaxed text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
+            className="w-full rounded-md border border-line bg-surface px-3 py-2.5 text-md leading-relaxed text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
           />
           {/* A call template is read aloud, not transmitted. Saying so at the
               point of writing it stops somebody composing it as an SMS. */}
           {isCall && (
-            <span className="mt-1.5 flex items-start gap-1.5 text-[12.5px] text-ink-500">
+            <span className="mt-1.5 flex items-start gap-1.5 text-sm text-ink-500">
               <Phone className="mt-px size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
               A call template is a script for staff to read on the phone. Nothing is sent.
             </span>
           )}
         </label>
 
-        <div className="rounded-[10px] bg-surface-2 px-3 py-2.5">
-          <p className="mb-1.5 text-[12.5px] font-medium text-ink-700">Placeholders</p>
+        <div className="rounded-md bg-surface-2 px-3 py-2.5">
+          <p className="mb-1.5 text-sm font-medium text-ink-700">Placeholders</p>
           <div className="flex flex-wrap gap-1.5">
             {TOKENS.map((token) => (
               <button
@@ -159,35 +159,35 @@ function TemplateDialog({ template, onClose }) {
                 type="button"
                 title={token.label}
                 onClick={() => set({ body: `${form.body}${token.token}` })}
-                className="rounded-[6px] bg-surface px-1.5 py-1 font-mono text-[11.5px] text-ink-600 transition-colors hover:bg-brand-50 hover:text-brand"
+                className="rounded-sm bg-surface px-1.5 py-1 font-mono text-xs text-ink-600 transition-colors hover:bg-brand-50 hover:text-brand"
               >
                 {token.token}
               </button>
             ))}
           </div>
-          <p className="mt-2 text-[12px] text-ink-400">
+          <p className="mt-2 text-xs text-ink-400">
             Filled against the account the message is for. An unrecognised placeholder is left as
             written rather than blanked, so a typo is visible.
           </p>
         </div>
 
-        <label className="flex items-start gap-2.5 rounded-[10px] bg-surface-2 px-3 py-2.5">
+        <label className="flex items-start gap-2.5 rounded-md bg-surface-2 px-3 py-2.5">
           <input
             type="checkbox"
             checked={form.isActive}
             onChange={(e) => set({ isActive: e.target.checked })}
             className="mt-0.5 size-4 accent-[var(--color-brand)]"
           />
-          <span className="text-[13px] leading-relaxed text-ink-700">
+          <span className="text-sm leading-relaxed text-ink-700">
             <span className="font-medium">Active</span>
-            <span className="mt-0.5 block text-[12.5px] text-ink-500">
+            <span className="mt-0.5 block text-sm text-ink-500">
               Offered in the template picker on the compose screens.
             </span>
           </span>
         </label>
 
         {error && (
-          <p role="alert" className="rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+          <p role="alert" className="rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
             {error}
           </p>
         )}
@@ -199,7 +199,7 @@ function TemplateDialog({ template, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-9 items-center rounded-[9px] border border-line bg-surface px-3.5 text-[13px] font-medium text-ink-600 transition-colors hover:border-line-strong hover:text-ink-900"
+            className="inline-flex h-9 items-center rounded-md border border-line bg-surface px-3.5 text-sm font-medium text-ink-600 transition-colors hover:border-line-strong hover:text-ink-900"
           >
             Cancel
           </button>
@@ -250,7 +250,7 @@ export function AdminTemplatesPage() {
               onClick={() => setChannel(tab.value)}
               aria-current={tab.value === channel ? 'page' : undefined}
               className={cn(
-                'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-[9px] px-3 font-display text-[13px] font-semibold transition-colors',
+                'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md px-3 font-display text-sm font-semibold transition-colors',
                 tab.value === channel
                   ? 'bg-ink-900 text-white'
                   : 'text-ink-500 hover:bg-surface-2 hover:text-ink-700',
@@ -259,7 +259,7 @@ export function AdminTemplatesPage() {
               {tab.label}
               <span
                 className={cn(
-                  'tnum rounded-full px-1.5 text-[11px]',
+                  'tnum rounded-full px-1.5 text-2xs',
                   tab.value === channel ? 'bg-white/20' : 'bg-surface-3 text-ink-500',
                 )}
               >
@@ -274,14 +274,14 @@ export function AdminTemplatesPage() {
           Said here so an operator writing an SMS template is not left wondering
           whether the text is going anywhere. */}
       {status && !status.delivers && channel !== 'call' && (
-        <p className="mb-4 rounded-[12px] border border-warn/25 bg-warn-50 px-3.5 py-3 text-[13px] leading-relaxed text-ink-700">
+        <p className="mb-4 rounded-lg border border-warn/25 bg-warn-50 px-3.5 py-3 text-sm leading-relaxed text-ink-700">
           Templates on this channel are saved and can be picked when composing — {status.reason}
         </p>
       )}
 
       <div className="max-w-[860px] space-y-3">
         {isLoading ? (
-          <p className="text-[13px] text-ink-500">Loading templates…</p>
+          <p className="text-sm text-ink-500">Loading templates…</p>
         ) : shown.length === 0 ? (
           <Panel>
             <PanelEmpty
@@ -300,7 +300,7 @@ export function AdminTemplatesPage() {
                   className="min-w-0 flex-1 text-left"
                 >
                   <span className="flex flex-wrap items-center gap-2">
-                    <span className="font-display text-[13.5px] font-semibold text-ink-900">
+                    <span className="font-display text-md font-semibold text-ink-900">
                       {template.name}
                     </span>
                     {template.document !== 'none' && (
@@ -311,11 +311,11 @@ export function AdminTemplatesPage() {
                     {!template.isActive && <Badge tone="warn">Inactive</Badge>}
                   </span>
                   {template.subject && (
-                    <span className="mt-1 block truncate text-[12.5px] font-medium text-ink-600">
+                    <span className="mt-1 block truncate text-sm font-medium text-ink-600">
                       {template.subject}
                     </span>
                   )}
-                  <span className="mt-1 block line-clamp-2 text-[12.5px] leading-relaxed whitespace-pre-wrap text-ink-500">
+                  <span className="mt-1 block line-clamp-2 text-sm leading-relaxed whitespace-pre-wrap text-ink-500">
                     {template.body}
                   </span>
                 </button>
@@ -324,7 +324,7 @@ export function AdminTemplatesPage() {
                   type="button"
                   onClick={() => setDeleting(template)}
                   aria-label={`Delete ${template.name}`}
-                  className="flex size-8 shrink-0 items-center justify-center rounded-[8px] border border-line text-ink-400 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger"
+                  className="flex size-8 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger"
                 >
                   <Trash2 className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
                 </button>
@@ -334,7 +334,7 @@ export function AdminTemplatesPage() {
         )}
 
         {error && (
-          <p role="alert" className="rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+          <p role="alert" className="rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
             {error}
           </p>
         )}

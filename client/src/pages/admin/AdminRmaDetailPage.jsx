@@ -94,7 +94,7 @@ function InspectForm({ rma, onSubmit, onCancel, isPending, error }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -102,9 +102,9 @@ function InspectForm({ rma, onSubmit, onCancel, isPending, error }) {
 
       <div className="space-y-2">
         {rma.items.map((item) => (
-          <div key={item.sku} className="rounded-[10px] bg-surface-2 p-3">
-            <p className="text-[13px] text-ink-900">{item.name}</p>
-            <p className="tnum mb-2.5 font-mono text-[11.5px] text-ink-400">
+          <div key={item.sku} className="rounded-md bg-surface-2 p-3">
+            <p className="text-sm text-ink-900">{item.name}</p>
+            <p className="tnum mb-2.5 font-mono text-xs text-ink-400">
               {item.sku} · {item.qty} unit{item.qty === 1 ? '' : 's'}
               {item.reason ? ` · "${item.reason}"` : ''}
               {item.restocked ? ' · already restocked' : ''}
@@ -129,7 +129,7 @@ function InspectForm({ rma, onSubmit, onCancel, isPending, error }) {
 
       <Textarea label="Inspection notes" rows={3} {...register('inspectionNotes')} />
 
-      <p className="rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12px] leading-relaxed text-ink-500">
+      <p className="rounded-md bg-surface-2 px-3 py-2.5 text-xs leading-relaxed text-ink-500">
         Only <strong className="font-semibold">Restock</strong> puts units back on the shelf, and it
         happens when the RMA is resolved — not now. Everything else records what became of the part
         without touching stock.
@@ -172,7 +172,7 @@ function ResolveForm({ rma, refund, onSubmit, onCancel, isPending, error }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -191,8 +191,8 @@ function ResolveForm({ rma, refund, onSubmit, onCancel, isPending, error }) {
 
       {resolution === 'refund' && (
         <>
-          <div className="rounded-[11px] bg-surface-2 p-3.5">
-            <p className="tnum text-[12.5px] text-ink-500">
+          <div className="rounded-md bg-surface-2 p-3.5">
+            <p className="tnum text-sm text-ink-500">
               {money(refund.proposed)} was charged for these lines ·{' '}
               {money(refund.alreadyRefunded)} already refunded on{' '}
               <span className="font-mono">{rma.orderNumber}</span> ·{' '}
@@ -213,7 +213,7 @@ function ResolveForm({ rma, refund, onSubmit, onCancel, isPending, error }) {
       <Input label="Note" placeholder="Shown on the client's statement" {...register('note')} />
 
       {restocking.length > 0 && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-info-50 px-3 py-2.5 text-[12.5px] leading-relaxed text-info">
+        <p className="flex items-start gap-2 rounded-md bg-info-50 px-3 py-2.5 text-sm leading-relaxed text-info">
           <Boxes className="mt-0.5 size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
           <span>
             Resolving will put{' '}
@@ -266,7 +266,7 @@ export function AdminRmaDetailPage() {
             action={
               <Link
                 to="/admin/rma"
-                className="inline-flex h-9 select-none items-center justify-center rounded-[8px] border border-line-strong bg-surface px-3.5 font-display text-[13px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+                className="inline-flex h-9 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3.5 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
               >
                 Back to returns
               </Link>
@@ -282,8 +282,8 @@ export function AdminRmaDetailPage() {
       <>
         <PageHeader icon={RotateCcw} title="RMA" />
         <div className="space-y-3">
-          <div className="h-24 animate-pulse rounded-[14px] bg-surface-2" />
-          <div className="h-64 animate-pulse rounded-[14px] bg-surface-2" />
+          <div className="h-24 animate-pulse rounded-lg bg-surface-2" />
+          <div className="h-64 animate-pulse rounded-lg bg-surface-2" />
         </div>
       </>
     );
@@ -346,7 +346,7 @@ export function AdminRmaDetailPage() {
       />
 
       {setRmaStatus.error && (
-        <p className="mb-3 flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="mb-3 flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {setRmaStatus.error.message}
         </p>
@@ -357,14 +357,14 @@ export function AdminRmaDetailPage() {
       {outcome && (
         <div className="mb-3 space-y-2">
           {outcome.refund && (
-            <p className="rounded-[10px] bg-ok-50 px-3 py-2.5 text-[12.5px] text-ok">
+            <p className="rounded-md bg-ok-50 px-3 py-2.5 text-sm text-ok">
               Refunded <strong className="font-semibold">{money(outcome.refund.amount)}</strong> to
               store credit — new balance {money(outcome.refund.balance)}.
             </p>
           )}
           <p
             className={cn(
-              'rounded-[10px] px-3 py-2.5 text-[12.5px]',
+              'rounded-md px-3 py-2.5 text-sm',
               outcome.restocked?.length ? 'bg-ok-50 text-ok' : 'bg-surface-2 text-ink-500',
             )}
           >
@@ -443,18 +443,18 @@ export function AdminRmaDetailPage() {
                   {rma.items.map((item) => (
                     <tr key={item.sku} className="border-b border-line last:border-0">
                       <td className="px-4 py-3">
-                        <p className="text-[13px] text-ink-900">{item.name}</p>
-                        <p className="font-mono text-[11.5px] text-ink-400">{item.sku}</p>
+                        <p className="text-sm text-ink-900">{item.name}</p>
+                        <p className="font-mono text-xs text-ink-400">{item.sku}</p>
                         {item.reason && (
-                          <p className="mt-0.5 text-[12px] italic text-ink-500">
+                          <p className="mt-0.5 text-xs italic text-ink-500">
                             &ldquo;{item.reason}&rdquo;
                           </p>
                         )}
                       </td>
-                      <td className="tnum px-4 py-3 text-right text-[13px] text-ink-700">
+                      <td className="tnum px-4 py-3 text-right text-sm text-ink-700">
                         {formatCount(item.qty)}
                       </td>
-                      <td className="px-4 py-3 text-[12.5px] text-ink-600">
+                      <td className="px-4 py-3 text-sm text-ink-600">
                         {item.condition ?? <span className="text-ink-300">not inspected</span>}
                       </td>
                       <td className="px-4 py-3">
@@ -471,10 +471,10 @@ export function AdminRmaDetailPage() {
                           {statusLabel(item.disposition)}
                         </Badge>
                         {item.restocked && (
-                          <span className="mt-0.5 block text-[11px] text-ok">back on the shelf</span>
+                          <span className="mt-0.5 block text-2xs text-ok">back on the shelf</span>
                         )}
                       </td>
-                      <td className="tnum px-4 py-3 text-right text-[13px] text-ink-900">
+                      <td className="tnum px-4 py-3 text-right text-sm text-ink-900">
                         {money(item.unitPrice * item.qty)}
                       </td>
                     </tr>
@@ -486,7 +486,7 @@ export function AdminRmaDetailPage() {
 
           {rma.inspectionNotes && (
             <Panel title="Inspection notes">
-              <p className="whitespace-pre-line text-[13px] leading-relaxed text-ink-600">
+              <p className="whitespace-pre-line text-sm leading-relaxed text-ink-600">
                 {rma.inspectionNotes}
               </p>
             </Panel>
@@ -495,18 +495,18 @@ export function AdminRmaDetailPage() {
 
         <div className="space-y-3">
           <Panel title="Client">
-            <p className="text-[13.5px] font-medium text-ink-900">{rma.user.businessName}</p>
+            <p className="text-md font-medium text-ink-900">{rma.user.businessName}</p>
             {rma.user.contactName && (
-              <p className="mt-0.5 text-[12.5px] text-ink-500">{rma.user.contactName}</p>
+              <p className="mt-0.5 text-sm text-ink-500">{rma.user.contactName}</p>
             )}
-            <p className="tnum mt-2 text-[12.5px] text-ink-500">
+            <p className="tnum mt-2 text-sm text-ink-500">
               Store credit held:{' '}
               <span className="font-medium text-ink-900">{money(data?.storeCredit ?? 0)}</span>
             </p>
             {rma.user.id && (
               <Link
                 to={`/admin/clients/${rma.user.id}`}
-                className="mt-3 inline-flex h-8 select-none items-center justify-center rounded-[8px] border border-line-strong bg-surface px-3 font-display text-[12.5px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+                className="mt-3 inline-flex h-8 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
               >
                 View profile
               </Link>
@@ -515,7 +515,7 @@ export function AdminRmaDetailPage() {
 
           {rma.reason && (
             <Panel title="Stated reason">
-              <p className="whitespace-pre-line text-[13px] leading-relaxed text-ink-600">
+              <p className="whitespace-pre-line text-sm leading-relaxed text-ink-600">
                 {rma.reason}
               </p>
             </Panel>
@@ -529,11 +529,11 @@ export function AdminRmaDetailPage() {
                     <CheckCircle2 className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[12.5px] font-medium text-ink-900">
+                    <p className="text-sm font-medium text-ink-900">
                       {statusLabel(entry.status)}
                     </p>
-                    <p className="text-[11.5px] text-ink-400">{dateTime(entry.at)}</p>
-                    {entry.note && <p className="mt-0.5 text-[12px] text-ink-500">{entry.note}</p>}
+                    <p className="text-xs text-ink-400">{dateTime(entry.at)}</p>
+                    {entry.note && <p className="mt-0.5 text-xs text-ink-500">{entry.note}</p>}
                   </div>
                 </li>
               ))}

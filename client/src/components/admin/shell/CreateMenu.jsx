@@ -116,7 +116,7 @@ export function CreateMenu() {
         aria-expanded={open}
         aria-haspopup="menu"
         title="Create (C)"
-        className="hidden h-9 items-center gap-1.5 rounded-[9px] bg-brand-gradient px-3 text-[13px] font-semibold text-white transition-[filter] hover:brightness-110 sm:inline-flex"
+        className="hidden h-9 items-center gap-1.5 rounded-md bg-brand-gradient px-3 text-sm font-semibold text-white transition-[filter] hover:brightness-110 sm:inline-flex"
       >
         <Plus className="size-4" strokeWidth={2.25} aria-hidden="true" />
         Create
@@ -125,7 +125,7 @@ export function CreateMenu() {
       {open && (
         <div
           role="menu"
-          className="absolute right-0 top-full z-40 mt-1.5 w-[230px] overflow-hidden rounded-[11px] border border-line bg-surface py-1.5 shadow-card"
+          className="absolute right-0 top-full z-40 mt-1.5 w-[230px] overflow-hidden rounded-md border border-line bg-surface py-1.5 shadow-card"
         >
           {visibleGroups.map((group, index) => (
             <div key={group.key} className={cn(index > 0 && 'mt-1 border-t border-line pt-1')}>
@@ -143,7 +143,7 @@ export function CreateMenu() {
                       setOpen(false);
                       navigate(`${item.to}?new=1`);
                     }}
-                    className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-[13px] text-ink-700 transition-colors hover:bg-surface-2 hover:text-ink-900"
+                    className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-sm text-ink-700 transition-colors hover:bg-surface-2 hover:text-ink-900"
                   >
                     {Icon && (
                       <Icon className="size-3.5 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />

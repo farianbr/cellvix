@@ -38,7 +38,7 @@ export const Input = forwardRef(function Input(
       {label && (
         <label
           htmlFor={id}
-          className="mb-1.5 block text-[13px] font-medium text-ink-700"
+          className="mb-1.5 block text-sm font-medium text-ink-700"
         >
           {label}
           {required && (
@@ -74,7 +74,7 @@ export const Input = forwardRef(function Input(
             // when a focused input's text is under 16px and never zooms back
             // out, which leaves the sticky header wider than the viewport for
             // the rest of the visit. Same rule in Textarea, Select and LiveSearch.
-            'h-11 w-full rounded-[10px] border bg-surface px-3.5 text-[16px] text-ink-900 sm:text-[14px]',
+            'h-11 w-full rounded-md border bg-surface px-3.5 text-lg text-ink-900 sm:text-md',
             'placeholder:text-ink-300',
             'transition-[border-color,box-shadow] duration-[120ms]',
             'hover:border-line-strong',
@@ -104,7 +104,7 @@ export const Input = forwardRef(function Input(
         )}
 
         {!isPassword && suffix && (
-          <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[13px] text-ink-400">
+          <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-sm text-ink-400">
             {suffix}
           </span>
         )}
@@ -113,13 +113,13 @@ export const Input = forwardRef(function Input(
       {error ? (
         <p
           id={`${id}-error`}
-          className="mt-1.5 flex items-center gap-1.5 text-[12.5px] text-danger"
+          className="mt-1.5 flex items-center gap-1.5 text-sm text-danger"
         >
           <AlertCircle className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
       ) : hint ? (
-        <p id={`${id}-hint`} className="mt-1.5 text-[12.5px] text-ink-400">
+        <p id={`${id}-hint`} className="mt-1.5 text-sm text-ink-400">
           {hint}
         </p>
       ) : null}

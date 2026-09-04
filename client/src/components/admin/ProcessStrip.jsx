@@ -77,9 +77,9 @@ export function ProcessStrip({
   return (
     <section
       aria-label={title}
-      className={cn('rounded-[12px] border border-line bg-surface-2 px-4 py-5', className)}
+      className={cn('rounded-lg border border-line bg-surface-2 px-4 py-5', className)}
     >
-      <h2 className="mb-4 text-center font-display text-[15px] font-bold text-ink-900">{title}</h2>
+      <h2 className="mb-4 text-center font-display text-lg font-bold text-ink-900">{title}</h2>
 
       <ol
         className={cn(
@@ -102,7 +102,7 @@ export function ProcessStrip({
               <div
                 aria-current={active ? 'step' : undefined}
                 className={cn(
-                  'flex flex-1 items-center gap-2.5 rounded-[10px] border bg-surface px-3.5 py-2.5',
+                  'flex flex-1 items-center gap-2.5 rounded-md border bg-surface px-3.5 py-2.5',
                   'transition-[border-color,box-shadow] duration-[200ms]',
                   // The live stage is the only solid, shadowed card on the row.
                   // Everything else is quiet, which is what makes it findable.
@@ -138,7 +138,7 @@ export function ProcessStrip({
 
                 <span
                   className={cn(
-                    'whitespace-nowrap text-[11.5px] font-semibold uppercase tracking-wider',
+                    'whitespace-nowrap text-xs font-semibold uppercase tracking-wider',
                     active
                       ? stopped
                         ? stopped.label
@@ -160,8 +160,8 @@ export function ProcessStrip({
                   aria-hidden="true"
                   className="flex shrink-0 items-center justify-center px-2 text-ink-300"
                 >
-                  <span className="hidden text-[13px] tracking-[.2em] sm:inline">--&gt;</span>
-                  <span className="text-[13px] sm:hidden">↓</span>
+                  <span className="hidden text-sm tracking-[.2em] sm:inline">--&gt;</span>
+                  <span className="text-sm sm:hidden">↓</span>
                 </span>
               )}
             </li>
@@ -170,7 +170,7 @@ export function ProcessStrip({
       </ol>
 
       {caption && (
-        <p className="mt-4 border-t border-line pt-3 text-center text-[11.5px] text-ink-400">
+        <p className="mt-4 border-t border-line pt-3 text-center text-xs text-ink-400">
           {caption}
         </p>
       )}

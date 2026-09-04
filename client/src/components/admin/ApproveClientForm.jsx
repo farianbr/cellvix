@@ -55,23 +55,23 @@ export function ApproveClientForm({ user, onSubmit, onCancel, isPending, error }
       )}
       className="space-y-4"
     >
-      <div className="rounded-[11px] bg-surface-2 p-3.5">
-        <p className="font-display text-[14px] font-bold text-ink-900">{user.businessName}</p>
+      <div className="rounded-md bg-surface-2 p-3.5">
+        <p className="font-display text-md font-bold text-ink-900">{user.businessName}</p>
         {/* The bell opens this knowing only the account's name, so the contact
             line is joined from what is actually there — a bare "·" between two
             blanks reads as data that failed to load. */}
         {[user.contactName, user.email].filter(Boolean).length > 0 && (
-          <p className="mt-0.5 text-[12.5px] text-ink-500">
+          <p className="mt-0.5 text-sm text-ink-500">
             {[user.contactName, user.email].filter(Boolean).join(' · ')}
           </p>
         )}
         {user.taxId && (
-          <p className="mt-1 font-mono text-[11.5px] text-ink-400">Tax ID {user.taxId}</p>
+          <p className="mt-1 font-mono text-xs text-ink-400">Tax ID {user.taxId}</p>
         )}
       </div>
 
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -89,7 +89,7 @@ export function ApproveClientForm({ user, onSubmit, onCancel, isPending, error }
         <SelectField control={control} name="terms" label="Payment terms" options={TERMS} />
       </div>
 
-      <fieldset className="rounded-[11px] border border-line p-3.5">
+      <fieldset className="rounded-md border border-line p-3.5">
         <legend className="eyebrow px-1 text-ink-400">Account representative</legend>
         <div className="space-y-3">
           <Input label="Name" {...register('repName')} />
@@ -100,7 +100,7 @@ export function ApproveClientForm({ user, onSubmit, onCancel, isPending, error }
         </div>
       </fieldset>
 
-      <p className="rounded-[10px] bg-brand-50 px-3 py-2.5 text-[12.5px] text-brand-700">
+      <p className="rounded-md bg-brand-50 px-3 py-2.5 text-sm text-brand-700">
         Approving unlocks wholesale pricing, ordering and the account dashboard for this business.
       </p>
 

@@ -95,7 +95,7 @@ export function AdminShippingSettingsPage() {
     }
   }
 
-  if (isLoading) return <p className="text-[13px] text-ink-500">Loading settings…</p>;
+  if (isLoading) return <p className="text-sm text-ink-500">Loading settings…</p>;
 
   return (
     <>
@@ -169,7 +169,7 @@ export function AdminShippingSettingsPage() {
           );
         })}
 
-        <p className="text-[12.5px] leading-relaxed text-ink-500">
+        <p className="text-sm leading-relaxed text-ink-500">
           Bands cannot be added or removed here. Checkout validates the delivery method against a
           fixed set, so a new band would be unselectable and removing one would break the orders that
           already name it.

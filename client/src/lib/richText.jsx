@@ -43,7 +43,7 @@ export function renderInline(text, keyPrefix = 'i') {
         return (
           <code
             key={key}
-            className="rounded-[5px] border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-[0.9em] text-ink-700"
+            className="rounded-sm border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-[0.9em] text-ink-700"
           >
             {part.slice(1, -1)}
           </code>
@@ -210,7 +210,7 @@ export function RichText({ children, tone = 'prose', headingIds = false, classNa
                 key={key}
                 id={block.id}
                 className={cn(
-                  compact ? 'mt-4 text-[15px]' : 'mt-9 text-[19px] sm:text-[22px]',
+                  compact ? 'mt-4 text-lg' : 'mt-9 text-xl sm:text-2xl',
                   block.id && anchor,
                 )}
               >
@@ -224,7 +224,7 @@ export function RichText({ children, tone = 'prose', headingIds = false, classNa
                 key={key}
                 id={block.id}
                 className={cn(
-                  compact ? 'mt-3.5 text-[14px]' : 'mt-7 text-[16px] sm:text-[17px]',
+                  compact ? 'mt-3.5 text-md' : 'mt-7 text-lg sm:text-lg',
                   block.id && anchor,
                 )}
               >
@@ -238,7 +238,7 @@ export function RichText({ children, tone = 'prose', headingIds = false, classNa
                 {block.items.map((item, itemIndex) => (
                   <li
                     key={`${key}-${itemIndex}`}
-                    className="relative pl-5 text-[14.5px] leading-relaxed text-ink-500"
+                    className="relative pl-5 text-md leading-relaxed text-ink-500"
                   >
                     <span
                       className="absolute left-0 top-[0.62em] size-1.5 rounded-full bg-brand"
@@ -256,10 +256,10 @@ export function RichText({ children, tone = 'prose', headingIds = false, classNa
                 {block.items.map((item, itemIndex) => (
                   <li
                     key={`${key}-${itemIndex}`}
-                    className="relative pl-8 text-[14.5px] leading-relaxed text-ink-500"
+                    className="relative pl-8 text-md leading-relaxed text-ink-500"
                   >
                     <span
-                      className="tnum absolute left-0 top-0 flex size-5.5 items-center justify-center rounded-full bg-brand-50 font-display text-[11px] font-bold text-brand-700"
+                      className="tnum absolute left-0 top-0 flex size-5.5 items-center justify-center rounded-full bg-brand-50 font-display text-2xs font-bold text-brand-700"
                       aria-hidden="true"
                     >
                       {itemIndex + 1}
@@ -276,8 +276,8 @@ export function RichText({ children, tone = 'prose', headingIds = false, classNa
                 key={key}
                 className={
                   compact
-                    ? 'mt-3 border-l-2 border-brand pl-3 text-[13.5px] italic text-ink-500'
-                    : 'mt-6 rounded-r-[10px] border-l-[3px] border-brand bg-brand-50/60 py-3 pl-4 pr-4 text-[15px] leading-relaxed text-ink-700'
+                    ? 'mt-3 border-l-2 border-brand pl-3 text-md italic text-ink-500'
+                    : 'mt-6 rounded-r-md border-l-[3px] border-brand bg-brand-50/60 py-3 pl-4 pr-4 text-lg leading-relaxed text-ink-700'
                 }
               >
                 {block.lines.map((line, lineIndex) => (
@@ -295,8 +295,8 @@ export function RichText({ children, tone = 'prose', headingIds = false, classNa
                 key={key}
                 className={
                   compact
-                    ? 'mt-2 text-[14px] leading-relaxed text-ink-500 first:mt-0'
-                    : 'mt-4 text-[15px] leading-[1.75] text-ink-500 first:mt-0'
+                    ? 'mt-2 text-md leading-relaxed text-ink-500 first:mt-0'
+                    : 'mt-4 text-lg leading-[1.75] text-ink-500 first:mt-0'
                 }
               >
                 {renderInline(block.lines.join(' '), key)}

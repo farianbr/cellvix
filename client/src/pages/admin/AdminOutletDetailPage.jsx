@@ -35,7 +35,7 @@ export function AdminOutletDetailPage() {
   // is published rather than passed down.
   useSetRecordLabel(outlet?.name);
 
-  if (isLoading) return <p className="text-[13px] text-ink-500">Loading outlet…</p>;
+  if (isLoading) return <p className="text-sm text-ink-500">Loading outlet…</p>;
   if (!outlet) return <PanelEmpty icon={Building2} title="Outlet not found" body="It may have been deleted." />;
 
   const address = [outlet.address?.street, outlet.address?.line2, outlet.address?.city, outlet.address?.region, outlet.address?.postal, outlet.address?.country]
@@ -71,7 +71,7 @@ export function AdminOutletDetailPage() {
               )}
               <Link
                 to={`/admin/outlets/${outlet.id}/edit`}
-                className="inline-flex h-9 items-center gap-1.5 rounded-[9px] bg-ink-900 px-3.5 text-[13px] font-medium text-white transition-colors hover:bg-ink-800"
+                className="inline-flex h-9 items-center gap-1.5 rounded-md bg-ink-900 px-3.5 text-sm font-medium text-white transition-colors hover:bg-ink-800"
               >
                 <Pencil className="size-4" strokeWidth={1.75} aria-hidden="true" />
                 Edit
@@ -84,32 +84,32 @@ export function AdminOutletDetailPage() {
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
         <div className="flex flex-col gap-4">
           <Panel title="Contact & location">
-            <dl className="flex flex-col gap-3 text-[13.5px]">
+            <dl className="flex flex-col gap-3 text-md">
               <div className="flex items-start gap-2.5">
                 <MapPin className="mt-0.5 size-4 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
                 <div>
-                  <dt className="text-[12px] text-ink-400">Address</dt>
+                  <dt className="text-xs text-ink-400">Address</dt>
                   <dd className="text-ink-900">{address || 'Not set'}</dd>
                 </div>
               </div>
               <div className="flex items-start gap-2.5">
                 <Phone className="mt-0.5 size-4 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
                 <div>
-                  <dt className="text-[12px] text-ink-400">Phone</dt>
+                  <dt className="text-xs text-ink-400">Phone</dt>
                   <dd className="text-ink-900">{outlet.phone || 'Not set'}</dd>
                 </div>
               </div>
               <div className="flex items-start gap-2.5">
                 <Mail className="mt-0.5 size-4 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
                 <div>
-                  <dt className="text-[12px] text-ink-400">Email</dt>
+                  <dt className="text-xs text-ink-400">Email</dt>
                   <dd className="text-ink-900">{outlet.email || 'Not set'}</dd>
                 </div>
               </div>
               <div className="flex items-start gap-2.5">
                 <UserRound className="mt-0.5 size-4 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
                 <div>
-                  <dt className="text-[12px] text-ink-400">Manager</dt>
+                  <dt className="text-xs text-ink-400">Manager</dt>
                   <dd className="text-ink-900">{outlet.manager || 'Not set'}</dd>
                 </div>
               </div>
@@ -118,7 +118,7 @@ export function AdminOutletDetailPage() {
 
           {outlet.hours?.length > 0 && (
             <Panel title="Hours">
-              <dl className="flex flex-col gap-1.5 text-[13px]">
+              <dl className="flex flex-col gap-1.5 text-sm">
                 {outlet.hours.map((row) => (
                   <div key={row.day} className="flex justify-between border-b border-line py-1.5 last:border-0">
                     <dt className="text-ink-600">{DAY_LABEL[row.day] ?? row.day}</dt>
@@ -133,7 +133,7 @@ export function AdminOutletDetailPage() {
 
           {outlet.notes && (
             <Panel title="Notes">
-              <p className="text-[13.5px] leading-relaxed text-ink-600">{outlet.notes}</p>
+              <p className="text-md leading-relaxed text-ink-600">{outlet.notes}</p>
             </Panel>
           )}
         </div>
@@ -147,11 +147,11 @@ export function AdminOutletDetailPage() {
               {outlet.staff.map((member) => (
                 <li
                   key={member._id ?? member.id}
-                  className="flex items-center justify-between gap-2 rounded-[10px] border border-line px-3 py-2"
+                  className="flex items-center justify-between gap-2 rounded-md border border-line px-3 py-2"
                 >
                   <div className="min-w-0">
-                    <p className="truncate text-[13.5px] text-ink-900">{member.contactName}</p>
-                    <p className="truncate text-[12px] text-ink-400">{member.email}</p>
+                    <p className="truncate text-md text-ink-900">{member.contactName}</p>
+                    <p className="truncate text-xs text-ink-400">{member.email}</p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1.5">
                     {member.lockedAt && (
@@ -167,7 +167,7 @@ export function AdminOutletDetailPage() {
               ))}
             </ul>
           ) : (
-            <p className="text-[13px] text-ink-500">Nobody is assigned to this outlet yet.</p>
+            <p className="text-sm text-ink-500">Nobody is assigned to this outlet yet.</p>
           )}
         </Panel>
       </div>

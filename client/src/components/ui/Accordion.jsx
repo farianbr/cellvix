@@ -62,13 +62,13 @@ export function Accordion({
             viewport={reveal ? { once: true, amount: 0.2 } : undefined}
             transition={{ duration: 0.5, delay: index * 0.06, ease: [0.22, 1, 0.36, 1] }}
             className={cn(
-              'rounded-[24px] p-[2px] transition-[background-color,background-image] duration-300',
+              'rounded-xl p-[2px] transition-[background-color,background-image] duration-300',
               isOpen ? 'bg-brand-gradient' : 'bg-line hover:bg-line-strong',
             )}
           >
             <div
               className={cn(
-                'rounded-[22px] bg-surface transition-shadow duration-300',
+                'rounded-xl bg-surface transition-shadow duration-300',
                 isOpen && 'shadow-card',
               )}
             >
@@ -86,7 +86,7 @@ export function Accordion({
                     // the same call the reference layout makes.
                     <span
                       className={cn(
-                        'tnum hidden size-8 shrink-0 items-center justify-center rounded-[10px] border font-mono text-[12px] font-medium transition-colors sm:flex',
+                        'tnum hidden size-8 shrink-0 items-center justify-center rounded-md border font-mono text-xs font-medium transition-colors sm:flex',
                         'shadow-[inset_0_-2px_2px_rgb(10_10_11/0.04)]',
                         isOpen
                           ? 'border-brand-100 bg-brand-50 text-brand-700'
@@ -100,7 +100,7 @@ export function Accordion({
 
                   <span
                     className={cn(
-                      'min-w-0 flex-1 font-display text-[15px] font-bold leading-snug transition-colors sm:text-[17px]',
+                      'min-w-0 flex-1 font-display text-lg font-bold leading-snug transition-colors sm:text-lg',
                       isOpen ? 'text-ink-900' : 'text-ink-900 group-hover:text-brand',
                     )}
                   >

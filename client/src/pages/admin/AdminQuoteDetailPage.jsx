@@ -59,7 +59,7 @@ function DriftTable({ drift, compact = false }) {
 
   if (!lines.length) {
     return (
-      <p className="text-[12.5px] text-ink-500">
+      <p className="text-sm text-ink-500">
         Every quoted price still matches the catalogue.
       </p>
     );
@@ -88,8 +88,8 @@ function DriftTable({ drift, compact = false }) {
           {lines.map((line) => (
             <tr key={line.sku} className="border-b border-line last:border-0">
               <td className="px-3 py-2">
-                <span className="block truncate text-[12.5px] text-ink-900">{line.name}</span>
-                <span className="block font-mono text-[11px] text-ink-300">{line.sku}</span>
+                <span className="block truncate text-sm text-ink-900">{line.name}</span>
+                <span className="block font-mono text-2xs text-ink-300">{line.sku}</span>
 
                 {/* The two states that actually stop a conversion are named
                     rather than left for the operator to infer from a dash. */}
@@ -109,14 +109,14 @@ function DriftTable({ drift, compact = false }) {
                   </Badge>
                 )}
               </td>
-              <td className="tnum px-3 py-2 text-right text-[12.5px] text-ink-700">{line.qty}</td>
-              <td className="tnum px-3 py-2 text-right text-[12.5px] font-medium text-ink-900">
+              <td className="tnum px-3 py-2 text-right text-sm text-ink-700">{line.qty}</td>
+              <td className="tnum px-3 py-2 text-right text-sm font-medium text-ink-900">
                 {money(line.quotedPrice)}
               </td>
-              <td className="tnum px-3 py-2 text-right text-[12.5px] text-ink-700">
+              <td className="tnum px-3 py-2 text-right text-sm text-ink-700">
                 {line.livePrice === null ? '—' : money(line.livePrice)}
               </td>
-              <td className="tnum px-3 py-2 text-right text-[12.5px]">
+              <td className="tnum px-3 py-2 text-right text-sm">
                 {line.difference === null ? (
                   <span className="text-ink-300">—</span>
                 ) : (
@@ -134,7 +134,7 @@ function DriftTable({ drift, compact = false }) {
       </table>
 
       {!compact && (
-        <p className="tnum mt-2 px-3 text-[12px] text-ink-500">
+        <p className="tnum mt-2 px-3 text-xs text-ink-500">
           Quoted total {money(drift.quotedTotal)} · at today&rsquo;s prices {money(drift.liveTotal)}
         </p>
       )}
@@ -201,7 +201,7 @@ function QuoteLifecycle({ quote, className }) {
 
         <p
           className={cn(
-            'flex flex-wrap items-center gap-x-2 gap-y-1 rounded-[10px] px-3 py-2 text-[12.5px]',
+            'flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md px-3 py-2 text-sm',
             rejected ? 'bg-danger-50 text-danger' : 'bg-warn-50 text-warn',
           )}
         >
@@ -265,7 +265,7 @@ export function AdminQuoteDetailPage() {
             action={
               <Link
                 to="/admin/quotes"
-                className="inline-flex h-9 select-none items-center justify-center rounded-[8px] border border-line-strong bg-surface px-3.5 font-display text-[13px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+                className="inline-flex h-9 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3.5 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
               >
                 Back to quotes
               </Link>
@@ -281,8 +281,8 @@ export function AdminQuoteDetailPage() {
       <>
         <PageHeader icon={FileSignature} title="Quote" />
         <div className="space-y-3">
-          <div className="h-24 animate-pulse rounded-[14px] bg-surface-2" />
-          <div className="h-64 animate-pulse rounded-[14px] bg-surface-2" />
+          <div className="h-24 animate-pulse rounded-lg bg-surface-2" />
+          <div className="h-64 animate-pulse rounded-lg bg-surface-2" />
         </div>
       </>
     );
@@ -385,14 +385,14 @@ export function AdminQuoteDetailPage() {
       />
 
       {(setQuoteStatus.error || (convertQuote.error && convertQuote.error.code !== 'QUOTE_PRICE_DRIFT')) && (
-        <p className="mb-3 flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="mb-3 flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {(setQuoteStatus.error ?? convertQuote.error).message}
         </p>
       )}
 
       {quote.expired && (
-        <p className="mb-3 flex items-start gap-2 rounded-[10px] bg-warn-50 px-3 py-2.5 text-[13px] leading-relaxed text-warn">
+        <p className="mb-3 flex items-start gap-2 rounded-md bg-warn-50 px-3 py-2.5 text-sm leading-relaxed text-warn">
           <Clock className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           <span>
             This quote expired on {date(quote.validUntil)}. Extend its expiry before accepting or
@@ -466,16 +466,16 @@ export function AdminQuoteDetailPage() {
                   {quote.items.map((item) => (
                     <tr key={item.sku} className="border-b border-line last:border-0">
                       <td className="px-4 py-3">
-                        <p className="text-[13px] text-ink-900">{item.name}</p>
-                        <p className="font-mono text-[11.5px] text-ink-400">{item.sku}</p>
+                        <p className="text-sm text-ink-900">{item.name}</p>
+                        <p className="font-mono text-xs text-ink-400">{item.sku}</p>
                       </td>
-                      <td className="tnum px-4 py-3 text-right text-[13px] text-ink-700">
+                      <td className="tnum px-4 py-3 text-right text-sm text-ink-700">
                         {formatCount(item.qty)}
                       </td>
-                      <td className="tnum px-4 py-3 text-right text-[13px] text-ink-700">
+                      <td className="tnum px-4 py-3 text-right text-sm text-ink-700">
                         {money(item.unitPrice)}
                       </td>
-                      <td className="tnum px-4 py-3 text-right text-[13px] font-medium text-ink-900">
+                      <td className="tnum px-4 py-3 text-right text-sm font-medium text-ink-900">
                         {money(item.lineTotal)}
                       </td>
                     </tr>
@@ -485,7 +485,7 @@ export function AdminQuoteDetailPage() {
             </div>
 
             <div className="border-t border-line px-4 py-3">
-              <dl className="ml-auto max-w-[260px] space-y-1 text-[13px]">
+              <dl className="ml-auto max-w-[260px] space-y-1 text-sm">
                 <div className="tnum flex justify-between text-ink-600">
                   <dt>Subtotal</dt>
                   <dd>{money(quote.subtotal)}</dd>
@@ -498,7 +498,7 @@ export function AdminQuoteDetailPage() {
                   <dt>GST/HST</dt>
                   <dd>{money(quote.tax)}</dd>
                 </div>
-                <div className="tnum flex justify-between border-t border-line pt-1 text-[14px] font-semibold text-ink-900">
+                <div className="tnum flex justify-between border-t border-line pt-1 text-md font-semibold text-ink-900">
                   <dt>Total</dt>
                   <dd>{money(quote.total)}</dd>
                 </div>
@@ -518,14 +518,14 @@ export function AdminQuoteDetailPage() {
 
         <div className="space-y-3">
           <Panel title="Client">
-            <p className="text-[13.5px] font-medium text-ink-900">{quote.user.businessName}</p>
+            <p className="text-md font-medium text-ink-900">{quote.user.businessName}</p>
             {quote.user.contactName && (
-              <p className="mt-0.5 text-[12.5px] text-ink-500">{quote.user.contactName}</p>
+              <p className="mt-0.5 text-sm text-ink-500">{quote.user.contactName}</p>
             )}
             {quote.user.email && (
               <a
                 href={`mailto:${quote.user.email}`}
-                className="mt-0.5 block break-all text-[12.5px] text-ink-500 hover:text-brand"
+                className="mt-0.5 block break-all text-sm text-ink-500 hover:text-brand"
               >
                 {quote.user.email}
               </a>
@@ -533,7 +533,7 @@ export function AdminQuoteDetailPage() {
             {quote.user.id && (
               <Link
                 to={`/admin/clients/${quote.user.id}`}
-                className="mt-3 inline-flex h-8 select-none items-center justify-center rounded-[8px] border border-line-strong bg-surface px-3 font-display text-[12.5px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+                className="mt-3 inline-flex h-8 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
               >
                 View profile
               </Link>
@@ -542,7 +542,7 @@ export function AdminQuoteDetailPage() {
 
           {quote.convertedOrder?.orderNumber && (
             <Panel title="Converted">
-              <p className="text-[13px] text-ink-600">
+              <p className="text-sm text-ink-600">
                 This quote became order{' '}
                 <span className="font-mono font-medium text-ink-900">
                   {quote.convertedOrder.orderNumber}
@@ -554,7 +554,7 @@ export function AdminQuoteDetailPage() {
 
           {quote.notes && (
             <Panel title="Notes">
-              <p className="whitespace-pre-line text-[13px] leading-relaxed text-ink-600">
+              <p className="whitespace-pre-line text-sm leading-relaxed text-ink-600">
                 {quote.notes}
               </p>
             </Panel>
@@ -568,9 +568,9 @@ export function AdminQuoteDetailPage() {
                     <CheckCircle2 className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[12.5px] font-medium text-ink-900">{entry.status}</p>
-                    <p className="text-[11.5px] text-ink-400">{dateTime(entry.at)}</p>
-                    {entry.note && <p className="mt-0.5 text-[12px] text-ink-500">{entry.note}</p>}
+                    <p className="text-sm font-medium text-ink-900">{entry.status}</p>
+                    <p className="text-xs text-ink-400">{dateTime(entry.at)}</p>
+                    {entry.note && <p className="mt-0.5 text-xs text-ink-500">{entry.note}</p>}
                   </div>
                 </li>
               ))}
@@ -598,7 +598,7 @@ export function AdminQuoteDetailPage() {
         align="top"
       >
         <div className="space-y-4">
-          <p className="flex items-start gap-2 rounded-[10px] bg-warn-50 px-3 py-2.5 text-[13px] leading-relaxed text-warn">
+          <p className="flex items-start gap-2 rounded-md bg-warn-50 px-3 py-2.5 text-sm leading-relaxed text-warn">
             <AlertTriangle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
             <span>
               These parts cost something different today than when{' '}
@@ -611,7 +611,7 @@ export function AdminQuoteDetailPage() {
           <DriftTable drift={driftFromServer ?? drift} compact />
 
           {(driftFromServer ?? drift) && (
-            <p className="tnum rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12.5px] text-ink-600">
+            <p className="tnum rounded-md bg-surface-2 px-3 py-2.5 text-sm text-ink-600">
               Converting at the quoted total of{' '}
               <span className="font-medium text-ink-900">
                 {money((driftFromServer ?? drift).quotedTotal)}
@@ -621,7 +621,7 @@ export function AdminQuoteDetailPage() {
           )}
 
           {convertQuote.error && convertQuote.error.code !== 'QUOTE_PRICE_DRIFT' && (
-            <p className="flex items-start gap-2 text-[12.5px] text-danger">
+            <p className="flex items-start gap-2 text-sm text-danger">
               <AlertCircle className="mt-0.5 size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
               {convertQuote.error.message}
             </p>

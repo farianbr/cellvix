@@ -74,7 +74,7 @@ export function ProductPicker({ value, onChange, label, autoFocus = false, class
     return (
       <div
         className={cn(
-          'flex min-h-11 items-center gap-2.5 rounded-[10px] border border-line bg-surface-2 px-2.5 py-1.5',
+          'flex min-h-11 items-center gap-2.5 rounded-md border border-line bg-surface-2 px-2.5 py-1.5',
           className,
         )}
       >
@@ -83,8 +83,8 @@ export function ProductPicker({ value, onChange, label, autoFocus = false, class
         </span>
 
         <span className="min-w-0 flex-1">
-          <span className="line-clamp-1 text-[13px] font-medium text-ink-900">{value.name}</span>
-          <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-[11.5px] text-ink-400">
+          <span className="line-clamp-1 text-sm font-medium text-ink-900">{value.name}</span>
+          <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-ink-400">
             <span className="font-mono">{value.sku}</span>
             {value.priceVisible && <span className="tnum">{money(value.price)}</span>}
             <span className={value.inStock ? 'text-ok' : 'text-danger'}>
@@ -152,7 +152,7 @@ export function ProductPicker({ value, onChange, label, autoFocus = false, class
           className={cn(
             // 16px on a phone: mobile Safari zooms into anything smaller and
             // never zooms back out. Same rule as every other field.
-            'h-11 w-full rounded-[10px] border border-line bg-surface pl-9 pr-3 text-[16px] text-ink-900 sm:text-[13.5px]',
+            'h-11 w-full rounded-md border border-line bg-surface pl-9 pr-3 text-lg text-ink-900 sm:text-md',
             'placeholder:text-ink-300',
             'transition-[border-color,box-shadow] duration-[120ms]',
             'hover:border-line-strong',
@@ -169,7 +169,7 @@ export function ProductPicker({ value, onChange, label, autoFocus = false, class
             id={listId}
             role="listbox"
             style={panelStyle}
-            className="scroll-slim z-60 overflow-y-auto rounded-[12px] border border-line bg-surface p-1.5 shadow-flyout"
+            className="scroll-slim z-60 overflow-y-auto rounded-lg border border-line bg-surface p-1.5 shadow-flyout"
           >
             {isFetching && !data ? (
               <li className="space-y-1.5 p-1">
@@ -178,7 +178,7 @@ export function ProductPicker({ value, onChange, label, autoFocus = false, class
                 ))}
               </li>
             ) : products.length === 0 ? (
-              <li className="px-3 py-6 text-center text-[13px] text-ink-400">
+              <li className="px-3 py-6 text-center text-sm text-ink-400">
                 No parts match “{debounced}”.
               </li>
             ) : (
@@ -191,7 +191,7 @@ export function ProductPicker({ value, onChange, label, autoFocus = false, class
                     onMouseEnter={() => setHighlight(index)}
                     onClick={() => choose(product)}
                     className={cn(
-                      'flex w-full items-center gap-2.5 rounded-[9px] px-2 py-1.5 text-left transition-colors',
+                      'flex w-full items-center gap-2.5 rounded-md px-2 py-1.5 text-left transition-colors',
                       index === highlight ? 'bg-surface-2' : 'hover:bg-surface-2',
                     )}
                   >
@@ -200,23 +200,23 @@ export function ProductPicker({ value, onChange, label, autoFocus = false, class
                     </span>
 
                     <span className="min-w-0 flex-1">
-                      <span className="line-clamp-1 text-[13px] font-medium text-ink-900">
+                      <span className="line-clamp-1 text-sm font-medium text-ink-900">
                         {product.name}
                       </span>
-                      <span className="mt-0.5 block truncate font-mono text-[11px] text-ink-400">
+                      <span className="mt-0.5 block truncate font-mono text-2xs text-ink-400">
                         {product.sku}
                       </span>
                     </span>
 
                     <span className="shrink-0 text-right">
                       {product.priceVisible && (
-                        <span className="tnum block font-display text-[12.5px] font-bold text-ink-900">
+                        <span className="tnum block font-display text-sm font-bold text-ink-900">
                           {money(product.price)}
                         </span>
                       )}
                       <span
                         className={cn(
-                          'block text-[11px]',
+                          'block text-2xs',
                           product.inStock ? 'text-ok' : 'text-ink-300',
                         )}
                       >

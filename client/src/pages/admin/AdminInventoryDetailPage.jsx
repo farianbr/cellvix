@@ -71,7 +71,7 @@ export function AdminInventoryDetailPage() {
             action={
               <Link
                 to="/admin/inventory"
-                className="inline-flex h-9 select-none items-center justify-center rounded-[8px] border border-line-strong bg-surface px-3.5 font-display text-[13px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+                className="inline-flex h-9 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3.5 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
               >
                 Back to inventory
               </Link>
@@ -87,8 +87,8 @@ export function AdminInventoryDetailPage() {
       <>
         <PageHeader icon={Boxes} title="Product" />
         <div className="space-y-3">
-          <div className="h-24 animate-pulse rounded-[14px] bg-surface-2" />
-          <div className="h-64 animate-pulse rounded-[14px] bg-surface-2" />
+          <div className="h-24 animate-pulse rounded-lg bg-surface-2" />
+          <div className="h-64 animate-pulse rounded-lg bg-surface-2" />
         </div>
       </>
     );
@@ -105,7 +105,7 @@ export function AdminInventoryDetailPage() {
       render: (row) => (
         <Link
           to={`/admin/purchase-orders/${row.id}`}
-          className="whitespace-nowrap font-mono text-[12.5px] font-medium text-ink-900 hover:text-brand"
+          className="whitespace-nowrap font-mono text-sm font-medium text-ink-900 hover:text-brand"
         >
           {row.poNumber}
         </Link>
@@ -116,7 +116,7 @@ export function AdminInventoryDetailPage() {
       key: 'orderDate',
       header: 'Ordered',
       priority: 3,
-      render: (row) => <span className="text-[12.5px] text-ink-500">{date(row.orderDate)}</span>,
+      render: (row) => <span className="text-sm text-ink-500">{date(row.orderDate)}</span>,
     },
     {
       key: 'qtyReceived',
@@ -167,7 +167,7 @@ export function AdminInventoryDetailPage() {
         action={
           <Link
             to="/admin/inventory"
-            className="inline-flex h-11 select-none items-center justify-center rounded-[10px] border border-line-strong bg-surface px-5 font-display text-[14px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+            className="inline-flex h-11 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
           >
             All inventory
           </Link>
@@ -218,16 +218,16 @@ export function AdminInventoryDetailPage() {
         <div className="space-y-3">
           <Panel title="Product">
             <div className="mb-3 flex items-center gap-3">
-              <span className="flex size-14 shrink-0 items-center justify-center rounded-[11px] border border-line bg-surface-2 p-1.5">
+              <span className="flex size-14 shrink-0 items-center justify-center rounded-md border border-line bg-surface-2 p-1.5">
                 <PartVisual product={product} />
               </span>
               <div className="min-w-0">
-                <p className="font-mono text-[12px] text-ink-500">{product.sku}</p>
-                <p className="mt-0.5 text-[12px] text-ink-400">{product.grade}</p>
+                <p className="font-mono text-xs text-ink-500">{product.sku}</p>
+                <p className="mt-0.5 text-xs text-ink-400">{product.grade}</p>
               </div>
             </div>
 
-            <dl className="space-y-1.5 text-[12.5px]">
+            <dl className="space-y-1.5 text-sm">
               <div className="flex justify-between gap-2">
                 <dt className="text-ink-400">Device</dt>
                 <dd className="text-right text-ink-700">{product.deviceTypeName ?? '—'}</dd>
@@ -254,7 +254,7 @@ export function AdminInventoryDetailPage() {
           </Panel>
 
           <Panel title="Warehouse">
-            <dl className="space-y-2 text-[12.5px]">
+            <dl className="space-y-2 text-sm">
               <div className="flex items-start gap-2">
                 <MapPin className="mt-0.5 size-3.5 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
                 <div className="min-w-0">
@@ -293,7 +293,7 @@ export function AdminInventoryDetailPage() {
                 {product.competitors.map((competitor) => (
                   <li
                     key={competitor.name}
-                    className="tnum flex items-baseline justify-between gap-2 text-[12.5px]"
+                    className="tnum flex items-baseline justify-between gap-2 text-sm"
                   >
                     <span className="min-w-0 truncate text-ink-600">{competitor.name}</span>
                     <span
@@ -346,7 +346,7 @@ export function AdminInventoryDetailPage() {
                     <li key={movement.id} className="flex items-start gap-3 px-4 py-3">
                       <span
                         className={cn(
-                          'mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-[8px]',
+                          'mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md',
                           positive ? 'bg-ok-50 text-ok' : 'bg-warn-50 text-warn',
                         )}
                       >
@@ -354,7 +354,7 @@ export function AdminInventoryDetailPage() {
                       </span>
 
                       <div className="min-w-0 flex-1">
-                        <p className="flex flex-wrap items-baseline gap-2 text-[13px]">
+                        <p className="flex flex-wrap items-baseline gap-2 text-sm">
                           <span className="text-ink-900">
                             {MOVEMENT_LABELS[movement.type] ?? movement.type}
                           </span>
@@ -364,19 +364,19 @@ export function AdminInventoryDetailPage() {
                             {positive ? '+' : ''}
                             {movement.qtyChange}
                           </span>
-                          <span className="tnum text-[11.5px] text-ink-400">
+                          <span className="tnum text-xs text-ink-400">
                             {movement.qtyAfter} on hand after
                           </span>
                         </p>
 
-                        <p className="mt-0.5 text-[11.5px] text-ink-400">
+                        <p className="mt-0.5 text-xs text-ink-400">
                           {dateTime(movement.at)}
                           {movement.reference?.label ? ` · ${movement.reference.label}` : ''}
                           {movement.unitCost ? ` · ${money(movement.unitCost)} each` : ''}
                         </p>
 
                         {movement.note && (
-                          <p className="mt-0.5 text-[12px] text-ink-500">{movement.note}</p>
+                          <p className="mt-0.5 text-xs text-ink-500">{movement.note}</p>
                         )}
                       </div>
                     </li>

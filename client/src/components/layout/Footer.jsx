@@ -64,7 +64,7 @@ export function Footer() {
           surface. The wordmark is cropped BY that panel's rounded bottom edge —
           it is a texture the footer ends on, not a logo to be read, and letting
           it run out of the box is what stops it reading as a fifth column. */}
-      <div className="mx-auto max-w-[1400px] overflow-hidden rounded-[28px] bg-surface-2 ring-1 ring-line">
+      <div className="mx-auto max-w-[1400px] overflow-hidden rounded-xl bg-surface-2 ring-1 ring-line">
         {/* The gradient as a hairline rule — accent, not fill. */}
         <div className="rule-brand-gradient h-1" aria-hidden="true" />
 
@@ -75,12 +75,12 @@ export function Footer() {
           <div className="grid gap-x-8 gap-y-10 lg:grid-cols-12">
             {/* ---- statement + reach ------------------------------------- */}
             <div className="lg:col-span-4">
-              <h2 className="max-w-sm font-display text-[19px] font-bold leading-snug text-ink-900 sm:text-[21px]">
+              <h2 className="max-w-sm font-display text-xl font-bold leading-snug text-ink-900 sm:text-2xl">
                 Cellvix keeps Canadian repair shops in graded parts, at wholesale
                 prices, on terms.
               </h2>
 
-              <ul className="mt-6 space-y-2.5 text-[13px] text-ink-500">
+              <ul className="mt-6 space-y-2.5 text-sm text-ink-500">
                 <li className="flex items-center gap-2.5">
                   <Phone className="size-4 shrink-0 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
                   <a
@@ -120,7 +120,7 @@ export function Footer() {
                       <a
                         href={BUSINESS_INFO.social[key]}
                         aria-label={label}
-                        className="flex items-center gap-1.5 rounded-full border border-line bg-surface py-1.5 pl-2 pr-2.5 text-[12px] font-medium text-ink-500 transition-colors hover:border-brand hover:text-brand"
+                        className="flex items-center gap-1.5 rounded-full border border-line bg-surface py-1.5 pl-2 pr-2.5 text-xs font-medium text-ink-500 transition-colors hover:border-brand hover:text-brand"
                       >
                         <Icon className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
                         {BUSINESS_INFO.handles[key]}
@@ -161,7 +161,7 @@ export function Footer() {
                       <li key={link.label}>
                         <Link
                           to={link.to}
-                          className="text-[13.5px] text-ink-500 transition-colors hover:text-brand"
+                          className="text-md text-ink-500 transition-colors hover:text-brand"
                         >
                           {link.label}
                         </Link>
@@ -182,13 +182,13 @@ export function Footer() {
                 href={`tel:${BUSINESS_INFO.phone.replace(/[^\d+]/g, '')}`}
                 className="group block"
               >
-                <span className="flex items-center gap-2 font-display text-[17px] font-bold text-brand transition-colors group-hover:text-brand-700">
+                <span className="flex items-center gap-2 font-display text-lg font-bold text-brand transition-colors group-hover:text-brand-700">
                   Call the desk
                   <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-brand text-white transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5">
                     <ArrowUpRight className="size-3.5" strokeWidth={2.5} aria-hidden="true" />
                   </span>
                 </span>
-                <span className="mt-1 block text-[12.5px] text-ink-400">
+                <span className="mt-1 block text-sm text-ink-400">
                   {BUSINESS_INFO.hours[0].days} · {BUSINESS_INFO.hours[0].time}
                 </span>
               </a>
@@ -197,13 +197,13 @@ export function Footer() {
               <hr className="my-4 hidden border-line sm:block" />
 
               <Link to="/contact" className="group block">
-                <span className="flex items-center gap-2 font-display text-[17px] font-bold text-ink-900 transition-colors group-hover:text-brand">
+                <span className="flex items-center gap-2 font-display text-lg font-bold text-ink-900 transition-colors group-hover:text-brand">
                   Open an account
                   <span className="flex size-5 shrink-0 items-center justify-center rounded-full border border-line-strong text-ink-500 transition-[transform,border-color,color] duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:border-brand group-hover:text-brand">
                     <ArrowUpRight className="size-3.5" strokeWidth={2.5} aria-hidden="true" />
                   </span>
                 </span>
-                <span className="mt-1 block text-[12.5px] text-ink-400">
+                <span className="mt-1 block text-sm text-ink-400">
                   Wholesale pricing in one business day
                 </span>
               </Link>
@@ -251,7 +251,7 @@ export function Footer() {
       {/* ---- the fine print ------------------------------------------------
           Outside the panel, on the page's own surface — the panel ends on the
           cropped wordmark, and a rule under it would undo the crop. */}
-      <div className="mx-auto flex max-w-[1400px] flex-col gap-2 px-2 pt-4 text-[12.5px] text-ink-400 sm:flex-row sm:items-center sm:justify-between sm:px-4 lg:px-6">
+      <div className="mx-auto flex max-w-[1400px] flex-col gap-2 px-2 pt-4 text-sm text-ink-400 sm:flex-row sm:items-center sm:justify-between sm:px-4 lg:px-6">
         <p className="flex flex-wrap items-center gap-x-4 gap-y-1">
           <span>
             {BUSINESS_INFO.name} ©{new Date().getFullYear()}

@@ -47,7 +47,7 @@ export function Toaster() {
               transition={{ duration: 0.18, ease: [0.2, 0, 0, 1] }}
               role={toast.tone === 'danger' ? 'alert' : undefined}
               className={cn(
-                'pointer-events-auto flex items-start gap-2.5 rounded-[12px] border bg-surface p-3 shadow-pop',
+                'pointer-events-auto flex items-start gap-2.5 rounded-lg border bg-surface p-3 shadow-pop',
                 tone.ring,
               )}
             >
@@ -58,9 +58,9 @@ export function Toaster() {
               />
 
               <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-semibold leading-snug text-ink-900">{toast.title}</p>
+                <p className="text-sm font-semibold leading-snug text-ink-900">{toast.title}</p>
                 {toast.body && (
-                  <p className="mt-0.5 text-[12px] leading-snug text-ink-500">{toast.body}</p>
+                  <p className="mt-0.5 text-xs leading-snug text-ink-500">{toast.body}</p>
                 )}
               </div>
 
@@ -68,7 +68,7 @@ export function Toaster() {
                 type="button"
                 onClick={() => dismiss(toast.id)}
                 aria-label="Dismiss"
-                className="-m-1 shrink-0 rounded-[6px] p-1 text-ink-300 transition-colors hover:text-ink-900 active:scale-[0.97]"
+                className="-m-1 shrink-0 rounded-sm p-1 text-ink-300 transition-colors hover:text-ink-900 active:scale-[0.97]"
               >
                 <X className="size-3.5" strokeWidth={2} aria-hidden="true" />
               </button>

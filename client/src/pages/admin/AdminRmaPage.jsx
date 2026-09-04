@@ -86,7 +86,7 @@ function RmaForm({ onSubmit, onCancel, isPending, error }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -106,7 +106,7 @@ function RmaForm({ onSubmit, onCancel, isPending, error }) {
           {fields.map((field, index) => (
             <div
               key={field.id}
-              className="grid items-end gap-2 rounded-[10px] bg-surface-2 p-2.5 sm:grid-cols-[160px_80px_1fr_auto]"
+              className="grid items-end gap-2 rounded-md bg-surface-2 p-2.5 sm:grid-cols-[160px_80px_1fr_auto]"
             >
               <Input
                 label={index === 0 ? 'SKU' : undefined}
@@ -128,7 +128,7 @@ function RmaForm({ onSubmit, onCancel, isPending, error }) {
                 onClick={() => remove(index)}
                 disabled={fields.length === 1}
                 aria-label={`Remove line ${index + 1}`}
-                className="flex size-9 shrink-0 items-center justify-center rounded-[8px] border border-line text-ink-400 transition-colors hover:border-danger/30 hover:bg-danger-50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex size-9 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 transition-colors hover:border-danger/30 hover:bg-danger-50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Trash2 className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
               </button>
@@ -150,7 +150,7 @@ function RmaForm({ onSubmit, onCancel, isPending, error }) {
 
       <Textarea label="Why is this coming back?" rows={3} {...register('reason')} />
 
-      <p className="rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12px] leading-relaxed text-ink-500">
+      <p className="rounded-md bg-surface-2 px-3 py-2.5 text-xs leading-relaxed text-ink-500">
         Each line is checked against the order it came from — a part that was not sold on it, or more
         units than were, is refused. Nothing is refunded or restocked until the return has been
         inspected.
@@ -198,7 +198,7 @@ export function AdminRmaPage() {
       header: 'RMA',
       priority: 1,
       render: (rma) => (
-        <span className="block whitespace-nowrap font-mono text-[12.5px] font-medium text-ink-900">
+        <span className="block whitespace-nowrap font-mono text-sm font-medium text-ink-900">
           {rma.rmaNumber}
         </span>
       ),
@@ -216,7 +216,7 @@ export function AdminRmaPage() {
       header: 'Order',
       priority: 3,
       render: (rma) => (
-        <span className="whitespace-nowrap font-mono text-[11.5px] text-ink-500">
+        <span className="whitespace-nowrap font-mono text-xs text-ink-500">
           {rma.orderNumber ?? '—'}
         </span>
       ),
@@ -229,8 +229,8 @@ export function AdminRmaPage() {
       className: 'tnum',
       render: (rma) => (
         <>
-          <span className="text-[13px] text-ink-900">{formatCount(rma.qty)}</span>
-          <span className="block text-[11px] text-ink-400">
+          <span className="text-sm text-ink-900">{formatCount(rma.qty)}</span>
+          <span className="block text-2xs text-ink-400">
             {formatCount(rma.itemCount)} line{rma.itemCount === 1 ? '' : 's'}
           </span>
         </>
@@ -252,7 +252,7 @@ export function AdminRmaPage() {
       priority: 3,
       className: 'max-w-[200px] truncate',
       render: (rma) => (
-        <span className="text-[12.5px] text-ink-500">{rma.reason ?? '—'}</span>
+        <span className="text-sm text-ink-500">{rma.reason ?? '—'}</span>
       ),
     },
     {
@@ -265,7 +265,7 @@ export function AdminRmaPage() {
             {rma.resolution}
           </Badge>
           {rma.refundAmount > 0 && (
-            <span className="tnum mt-0.5 block text-[11px] text-ink-400">
+            <span className="tnum mt-0.5 block text-2xs text-ink-400">
               {money(rma.refundAmount)}
             </span>
           )}
@@ -283,7 +283,7 @@ export function AdminRmaPage() {
       render: (rma) => (
         <span
           className={cn(
-            'inline-flex items-center gap-1 text-[12.5px]',
+            'inline-flex items-center gap-1 text-sm',
             rma.overSla ? 'font-medium text-danger' : rma.closed ? 'text-ink-300' : 'text-ink-600',
           )}
         >

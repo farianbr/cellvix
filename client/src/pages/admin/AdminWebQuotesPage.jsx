@@ -171,14 +171,14 @@ export function AdminWebQuotesPage() {
       render: (row) => (
         <>
           <span className="flex flex-wrap items-center gap-2">
-            <span className="truncate text-[13.5px] font-semibold text-ink-900">{row.name}</span>
+            <span className="truncate text-md font-semibold text-ink-900">{row.name}</span>
             {row.status === 'new' && (
               <Badge tone="brand" size="sm">
                 new
               </Badge>
             )}
           </span>
-          <span className="block truncate text-[12px] text-ink-500">{row.email}</span>
+          <span className="block truncate text-xs text-ink-500">{row.email}</span>
         </>
       ),
     },
@@ -199,7 +199,7 @@ export function AdminWebQuotesPage() {
       priority: 2,
       width: '34%',
       render: (row) => (
-        <span className="block truncate text-[12.5px] text-ink-700">{row.message}</span>
+        <span className="block truncate text-sm text-ink-700">{row.message}</span>
       ),
     },
     {
@@ -209,7 +209,7 @@ export function AdminWebQuotesPage() {
       width: '14%',
       sortValue: (row) => new Date(row.createdAt).getTime(),
       render: (row) => (
-        <span className="tnum whitespace-nowrap text-[12.5px] text-ink-500">
+        <span className="tnum whitespace-nowrap text-sm text-ink-500">
           {date(row.createdAt)}
         </span>
       ),
@@ -321,7 +321,7 @@ export function AdminWebQuotesPage() {
       >
         {reading && (
           <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px] text-ink-500">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-sm text-ink-500">
               <a
                 href={`mailto:${reading.email}`}
                 className="inline-flex items-center gap-1.5 transition-colors hover:text-ink-900"
@@ -348,7 +348,7 @@ export function AdminWebQuotesPage() {
               {reading.orderNumber && (
                 <Link
                   to={`/admin/orders/${reading.orderNumber}`}
-                  className="text-[12.5px] font-semibold text-brand hover:underline"
+                  className="text-sm font-semibold text-brand hover:underline"
                 >
                   {reading.orderNumber}
                 </Link>
@@ -359,14 +359,14 @@ export function AdminWebQuotesPage() {
               {reading.user && (
                 <Link
                   to={`/admin/clients/${reading.user.id}`}
-                  className="text-[12.5px] font-semibold text-brand hover:underline"
+                  className="text-sm font-semibold text-brand hover:underline"
                 >
                   {reading.user.displayName}
                 </Link>
               )}
             </div>
 
-            <p className="whitespace-pre-wrap rounded-[10px] bg-surface-2 px-3.5 py-3 text-[13px] leading-relaxed text-ink-900">
+            <p className="whitespace-pre-wrap rounded-md bg-surface-2 px-3.5 py-3 text-sm leading-relaxed text-ink-900">
               {reading.message}
             </p>
 

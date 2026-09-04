@@ -27,7 +27,7 @@ export function CartBundleLine({ bundle, onQtyChange, onRemove, compact = false 
       )}
     >
       <div className="flex items-start gap-3">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-[10px] bg-brand-gradient text-white">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-md bg-brand-gradient text-white">
           <Package className="size-5" strokeWidth={1.75} aria-hidden="true" />
         </span>
 
@@ -35,9 +35,9 @@ export function CartBundleLine({ bundle, onQtyChange, onRemove, compact = false 
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
               <span className="eyebrow mb-1 block text-brand">Combo bundle</span>
-              <p className="text-[14px] font-semibold leading-snug text-ink-900">{bundle.title}</p>
+              <p className="text-md font-semibold leading-snug text-ink-900">{bundle.title}</p>
               {bundle.subtitle && (
-                <p className="mt-0.5 text-[12px] text-ink-400">{bundle.subtitle}</p>
+                <p className="mt-0.5 text-xs text-ink-400">{bundle.subtitle}</p>
               )}
             </div>
 
@@ -63,11 +63,11 @@ export function CartBundleLine({ bundle, onQtyChange, onRemove, compact = false 
                 <span className="min-w-0">
                   <Link
                     to={`/product/${line.slug}`}
-                    className="block max-w-[190px] truncate text-[12px] text-ink-700 transition-colors hover:text-brand"
+                    className="block max-w-[190px] truncate text-xs text-ink-700 transition-colors hover:text-brand"
                   >
                     {line.name}
                   </Link>
-                  <span className="tnum block font-mono text-[10.5px] text-ink-300">
+                  <span className="tnum block font-mono text-2xs text-ink-300">
                     {line.sku} · ×{line.qty}
                   </span>
                 </span>
@@ -76,7 +76,7 @@ export function CartBundleLine({ bundle, onQtyChange, onRemove, compact = false 
           </ul>
 
           {!bundle.available && bundle.reason && (
-            <p className="mt-2.5 flex items-center gap-1.5 text-[12px] text-warn">
+            <p className="mt-2.5 flex items-center gap-1.5 text-xs text-warn">
               <AlertTriangle className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
               {bundle.reason}
             </p>
@@ -91,15 +91,15 @@ export function CartBundleLine({ bundle, onQtyChange, onRemove, compact = false 
                 max={99}
               />
             ) : (
-              <span className="tnum text-[12.5px] text-ink-400">×{bundle.qty}</span>
+              <span className="tnum text-sm text-ink-400">×{bundle.qty}</span>
             )}
 
             <div className="text-right">
-              <span className="tnum block font-display text-[16px] font-bold text-ink-900">
+              <span className="tnum block font-display text-lg font-bold text-ink-900">
                 {money(bundle.lineTotal)}
               </span>
               {bundle.savings > 0 && (
-                <span className="tnum block text-[11.5px] text-ok">
+                <span className="tnum block text-xs text-ok">
                   <span className="text-ink-300 line-through">{money(bundle.listTotal)}</span> · save{' '}
                   {money(bundle.savings)}
                 </span>

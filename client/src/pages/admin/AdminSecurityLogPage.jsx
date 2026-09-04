@@ -26,7 +26,7 @@ export function AdminSecurityLogPage() {
       kind="security"
       page={ADMIN_PAGE}
       notice={
-        <p className="mb-4 flex items-start gap-2.5 rounded-[12px] border border-danger/20 bg-danger-50 px-3.5 py-3 text-[13px] leading-relaxed text-ink-700">
+        <p className="mb-4 flex items-start gap-2.5 rounded-lg border border-danger/20 bg-danger-50 px-3.5 py-3 text-sm leading-relaxed text-ink-700">
           <ShieldAlert
             className="mt-0.5 size-4 shrink-0 text-danger"
             strokeWidth={2}

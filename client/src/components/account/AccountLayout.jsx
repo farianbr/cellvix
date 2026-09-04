@@ -51,7 +51,7 @@ function NavBadge({ count, label }) {
   return (
     <>
       <span
-        className="tnum ml-auto mr-0.5 min-w-[20px] rounded-full bg-surface-3 px-1.5 py-0.5 text-center text-[10.5px] font-semibold leading-none text-ink-600"
+        className="tnum ml-auto mr-0.5 min-w-[20px] rounded-full bg-surface-3 px-1.5 py-0.5 text-center text-2xs font-semibold leading-none text-ink-600"
         aria-hidden="true"
       >
         {count > 99 ? '99+' : count}
@@ -88,7 +88,7 @@ function NavTree({ badges, activeGroup, activeChildKey }) {
                 end
                 className={({ isActive }) =>
                   cn(
-                    'flex items-center gap-2.5 whitespace-nowrap rounded-[10px] px-3 py-2.5 text-[13.5px] font-medium transition-colors',
+                    'flex items-center gap-2.5 whitespace-nowrap rounded-md px-3 py-2.5 text-md font-medium transition-colors',
                     isActive
                       ? 'bg-brand-50 text-brand-700'
                       : 'text-ink-600 hover:bg-surface-2 hover:text-ink-900',
@@ -115,7 +115,7 @@ function NavTree({ badges, activeGroup, activeChildKey }) {
               aria-expanded={isOpen}
               onClick={() => setOpenGroup(isOpen ? null : item.key)}
               className={cn(
-                'flex w-full items-center gap-2.5 rounded-[10px] px-3 py-2.5 text-[13.5px] font-semibold transition-colors',
+                'flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-md font-semibold transition-colors',
                 isOpen || activeGroup === item.key
                   ? 'text-ink-900'
                   : 'text-ink-600 hover:bg-surface-2 hover:text-ink-900',
@@ -147,7 +147,7 @@ function NavTree({ badges, activeGroup, activeChildKey }) {
                       <NavLink
                         to={child.to}
                         className={cn(
-                          'flex items-center gap-2.5 rounded-[10px] px-2.5 py-2 text-[12.5px] font-medium transition-colors',
+                          'flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm font-medium transition-colors',
                           isActive
                             ? 'bg-brand-50 text-brand-700'
                             : 'text-ink-600 hover:bg-surface-2 hover:text-ink-900',
@@ -222,8 +222,8 @@ export function AccountLayout() {
   if (!isAuthenticated) {
     return (
       <div className="mx-auto flex max-w-lg flex-col items-center px-4 py-20 text-center">
-        <h1 className="text-[24px]">Sign in to your account</h1>
-        <p className="mt-3 text-[14px] leading-relaxed text-ink-500">
+        <h1 className="text-2xl">Sign in to your account</h1>
+        <p className="mt-3 text-md leading-relaxed text-ink-500">
           Order history, invoices, credit and the quick order pad live behind your Cellvix wholesale
           account.
         </p>
@@ -244,13 +244,13 @@ export function AccountLayout() {
         <span className="mb-5 flex size-14 items-center justify-center rounded-full bg-warn-50 text-warn">
           <Clock className="size-7" strokeWidth={1.75} />
         </span>
-        <h1 className="text-[24px]">Your account is under review</h1>
-        <p className="mt-3 text-[14px] leading-relaxed text-ink-500">
+        <h1 className="text-2xl">Your account is under review</h1>
+        <p className="mt-3 text-md leading-relaxed text-ink-500">
           We are verifying <span className="font-medium text-ink-900">{user.displayName}</span>.
           Once that is done, wholesale pricing, ordering and this dashboard all unlock — usually within
           one business day.
         </p>
-        <p className="mt-6 rounded-[10px] bg-surface-2 px-4 py-3 text-[13px] text-ink-500">
+        <p className="mt-6 rounded-md bg-surface-2 px-4 py-3 text-sm text-ink-500">
           Questions? Email{' '}
           <a href="mailto:sales@cellvix.ca" className="font-medium text-brand hover:underline">
             sales@cellvix.ca
@@ -266,12 +266,12 @@ export function AccountLayout() {
       <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
           <p className="eyebrow mb-1 text-ink-400">Wholesale account</p>
-          <h1 className="truncate text-[22px] sm:text-[26px]">{user.displayName}</h1>
+          <h1 className="truncate text-2xl sm:text-3xl">{user.displayName}</h1>
         </div>
         {/* The company beside the person, not the person twice: the heading is
             now the account holder's name, so repeating `contactName` here said
             nothing. An account with no company name shows just the email. */}
-        <p className="text-[13px] text-ink-500">
+        <p className="text-sm text-ink-500">
           {user.businessName && (
             <>
               {user.businessName} <span className="text-ink-300">·</span>{' '}
@@ -285,7 +285,7 @@ export function AccountLayout() {
         {/* ---- navigation ------------------------------------------------- */}
         <nav
           aria-label="Account sections"
-          className="mb-4 lg:sticky lg:top-[132px] lg:mb-0 lg:rounded-[14px] lg:border lg:border-line lg:bg-surface lg:p-2"
+          className="mb-4 lg:sticky lg:top-[132px] lg:mb-0 lg:rounded-lg lg:border lg:border-line lg:bg-surface lg:p-2"
         >
           {/* ---- dropdown below lg ---------------------------------------- */}
           <div className="flex items-center gap-2 lg:hidden">
@@ -311,7 +311,7 @@ export function AccountLayout() {
               <button
                 type="button"
                 onClick={signOut}
-                className="flex w-full items-center gap-2.5 whitespace-nowrap rounded-[10px] px-3 py-2.5 text-[13.5px] font-medium text-ink-500 transition-colors hover:bg-danger-50 hover:text-danger"
+                className="flex w-full items-center gap-2.5 whitespace-nowrap rounded-md px-3 py-2.5 text-md font-medium text-ink-500 transition-colors hover:bg-danger-50 hover:text-danger"
               >
                 <LogOut className="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
                 Sign out

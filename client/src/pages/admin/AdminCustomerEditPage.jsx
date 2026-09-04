@@ -51,7 +51,7 @@ export function AdminCustomerEditPage() {
     <>
       <Link
         to={profile}
-        className="mb-3 inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-500 transition-colors hover:text-ink-900"
+        className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-ink-500 transition-colors hover:text-ink-900"
       >
         <ArrowLeft className="size-3.5" strokeWidth={2} aria-hidden="true" />
         Back to {user.displayName}

@@ -107,8 +107,8 @@ export function ConfirmDialog({
         </span>
 
         <div className="min-w-0 flex-1">
-          <h2 className="text-[17px]">{title}</h2>
-          {body && <p className="mt-2 text-[13.5px] leading-relaxed text-ink-500">{body}</p>}
+          <h2 className="text-lg">{title}</h2>
+          {body && <p className="mt-2 text-md leading-relaxed text-ink-500">{body}</p>}
 
           {/* The consequence is separated from the body copy and carries the
               danger tint, because it is the one line an admin skimming the
@@ -116,7 +116,7 @@ export function ConfirmDialog({
           {consequence && (
             <p
               className={cn(
-                'mt-3 rounded-[10px] px-3 py-2 text-[13px] leading-relaxed',
+                'mt-3 rounded-md px-3 py-2 text-sm leading-relaxed',
                 resolvedTone === 'info'
                   ? 'bg-surface-2 text-ink-700'
                   : 'bg-danger-50 text-danger',
@@ -128,11 +128,11 @@ export function ConfirmDialog({
 
           {confirmPhrase && (
             <form onSubmit={handleSubmit} className="mt-4">
-              <label htmlFor={inputId} className="block text-[13px] font-medium text-ink-700">
+              <label htmlFor={inputId} className="block text-sm font-medium text-ink-700">
                 Type {confirmPhraseLabel} to confirm
               </label>
 
-              <p className="mt-1 text-[12.5px] text-ink-400">
+              <p className="mt-1 text-sm text-ink-400">
                 <span className="tnum font-semibold text-ink-700">{confirmPhrase}</span>
               </p>
 
@@ -148,7 +148,7 @@ export function ConfirmDialog({
                 className={cn(
                   // 16px on a phone so mobile Safari does not zoom the page in,
                   // same rule as Input.
-                  'mt-2 h-11 w-full rounded-[10px] border bg-surface px-3.5 text-[16px] text-ink-900 sm:text-[14px]',
+                  'mt-2 h-11 w-full rounded-md border bg-surface px-3.5 text-lg text-ink-900 sm:text-md',
                   'placeholder:text-ink-300',
                   'transition-[border-color,box-shadow] duration-[120ms]',
                   'focus:outline-none focus:ring-2',
@@ -169,7 +169,7 @@ export function ConfirmDialog({
           )}
 
           {error && (
-            <p className="mt-3 rounded-[10px] bg-danger-50 px-3 py-2 text-[13px] text-danger">
+            <p className="mt-3 rounded-md bg-danger-50 px-3 py-2 text-sm text-danger">
               {error}
             </p>
           )}

@@ -130,11 +130,11 @@ export function ThankYouPage() {
   if (error) {
     return (
       <div className="mx-auto max-w-lg px-4 py-20 text-center">
-        <h1 className="text-[22px]">We could not find that order</h1>
-        <p className="mt-3 text-[14px] text-ink-500">{error.message}</p>
+        <h1 className="text-2xl">We could not find that order</h1>
+        <p className="mt-3 text-md text-ink-500">{error.message}</p>
         <Link
           to="/account/orders"
-          className="mt-6 inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-brand hover:text-brand-700"
+          className="mt-6 inline-flex items-center gap-1.5 text-md font-semibold text-brand hover:text-brand-700"
         >
           View your order history
           <ArrowRight className="size-4" strokeWidth={2} aria-hidden="true" />
@@ -157,15 +157,15 @@ export function ThankYouPage() {
       >
         <SuccessMark />
 
-        <h1 className="mt-6 text-[28px] sm:text-[32px]">Order confirmed</h1>
-        <p className="mt-3 max-w-md text-[14.5px] leading-relaxed text-ink-500">
+        <h1 className="mt-6 text-3xl sm:text-d-sm">Order confirmed</h1>
+        <p className="mt-3 max-w-md text-md leading-relaxed text-ink-500">
           Thanks — we have your order and the warehouse is on it. A confirmation is on its way to
           your inbox.
         </p>
 
         <p className="mt-5 inline-flex items-center gap-2 rounded-full border border-line bg-surface px-4 py-2">
           <span className="eyebrow text-ink-400">Order</span>
-          <span className="font-mono text-[13.5px] font-medium text-ink-900">
+          <span className="font-mono text-md font-medium text-ink-900">
             {data.orderNumber}
           </span>
         </p>
@@ -184,10 +184,10 @@ export function ThankYouPage() {
       </motion.div>
 
       {/* ---- order summary ------------------------------------------------ */}
-      <div className="mt-10 overflow-hidden rounded-[14px] border border-line bg-surface">
+      <div className="mt-10 overflow-hidden rounded-lg border border-line bg-surface">
         <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-line px-5 py-4">
-          <h2 className="font-display text-[15px] font-bold">Summary</h2>
-          <p className="text-[13px] text-ink-500">
+          <h2 className="font-display text-lg font-bold">Summary</h2>
+          <p className="text-sm text-ink-500">
             Estimated delivery <span className="font-medium text-ink-900">{date(eta)}</span>
           </p>
         </header>
@@ -199,21 +199,21 @@ export function ThankYouPage() {
                 <PartVisual product={item} />
               </span>
               <span className="min-w-0 flex-1">
-                <span className="line-clamp-1 text-[13.5px] font-medium text-ink-900">
+                <span className="line-clamp-1 text-md font-medium text-ink-900">
                   {item.name}
                 </span>
-                <span className="tnum block font-mono text-[11px] text-ink-300">
+                <span className="tnum block font-mono text-2xs text-ink-300">
                   {item.sku} · ×{item.qty}
                 </span>
               </span>
-              <span className="tnum shrink-0 font-display text-[13.5px] font-bold">
+              <span className="tnum shrink-0 font-display text-md font-bold">
                 {money(item.lineTotal)}
               </span>
             </li>
           ))}
         </ul>
 
-        <dl className="space-y-2 border-t border-line bg-surface-2 px-5 py-4 text-[13.5px]">
+        <dl className="space-y-2 border-t border-line bg-surface-2 px-5 py-4 text-md">
           <div className="flex justify-between">
             <dt className="text-ink-500">Subtotal</dt>
             <dd className="tnum font-medium text-ink-900">{money(data.subtotal)}</dd>
@@ -229,7 +229,7 @@ export function ThankYouPage() {
             <div className="flex justify-between">
               <dt className="text-ok">
                 {data.promo?.code ? (
-                  <span className="font-mono text-[12.5px]">{data.promo.code}</span>
+                  <span className="font-mono text-sm">{data.promo.code}</span>
                 ) : (
                   'Offer applied'
                 )}
@@ -248,8 +248,8 @@ export function ThankYouPage() {
             <dd className="tnum font-medium text-ink-900">{money(data.tax)}</dd>
           </div>
           <div className="flex items-baseline justify-between border-t border-line pt-2.5">
-            <dt className="font-display text-[14px] font-bold text-ink-900">Total</dt>
-            <dd className="tnum font-display text-[20px] font-bold text-ink-900">
+            <dt className="font-display text-md font-bold text-ink-900">Total</dt>
+            <dd className="tnum font-display text-xl font-bold text-ink-900">
               {money(data.total)}
             </dd>
           </div>
@@ -264,13 +264,13 @@ export function ThankYouPage() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.15 + index * 0.08, ease: [0.22, 1, 0.36, 1] }}
-            className="rounded-[12px] border border-line bg-surface p-4"
+            className="rounded-lg border border-line bg-surface p-4"
           >
             <span className="mb-3 flex size-9 items-center justify-center rounded-lg bg-surface-2 text-ink-500">
               <Icon className="size-4.5" strokeWidth={1.75} aria-hidden="true" />
             </span>
-            <h3 className="text-[13.5px]">{title}</h3>
-            <p className="mt-1 text-[12.5px] leading-relaxed text-ink-500">{body}</p>
+            <h3 className="text-md">{title}</h3>
+            <p className="mt-1 text-sm leading-relaxed text-ink-500">{body}</p>
           </motion.div>
         ))}
       </div>
@@ -278,14 +278,14 @@ export function ThankYouPage() {
       <div className="mt-8 flex flex-wrap justify-center gap-3">
         <Link
           to="/"
-          className="inline-flex h-12 items-center gap-2 rounded-[12px] bg-brand-gradient px-6 font-display text-[14.5px] font-semibold text-white transition-[filter] hover:brightness-110"
+          className="inline-flex h-12 items-center gap-2 rounded-lg bg-brand-gradient px-6 font-display text-md font-semibold text-white transition-[filter] hover:brightness-110"
         >
           Keep shopping
           <ArrowRight className="size-4" strokeWidth={2} aria-hidden="true" />
         </Link>
         <Link
           to={`/account/orders/${data.orderNumber}`}
-          className="inline-flex h-12 items-center rounded-[12px] border border-line-strong bg-surface px-6 font-display text-[14.5px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+          className="inline-flex h-12 items-center rounded-lg border border-line-strong bg-surface px-6 font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
         >
           Track this order
         </Link>
@@ -299,15 +299,15 @@ export function ThankYouPage() {
             <li key={to}>
               <Link
                 to={to}
-                className="group flex h-full flex-col rounded-[12px] border border-line bg-surface p-4 transition-[border-color,box-shadow] duration-200 hover:border-line-strong hover:shadow-card"
+                className="group flex h-full flex-col rounded-lg border border-line bg-surface p-4 transition-[border-color,box-shadow] duration-200 hover:border-line-strong hover:shadow-card"
               >
                 <span className="mb-2.5 flex size-8 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
                   <Icon className="size-4" strokeWidth={1.75} aria-hidden="true" />
                 </span>
-                <span className="font-display text-[13.5px] font-bold text-ink-900 group-hover:text-brand">
+                <span className="font-display text-md font-bold text-ink-900 group-hover:text-brand">
                   {title}
                 </span>
-                <span className="mt-1 text-[12px] leading-relaxed text-ink-500">{body}</span>
+                <span className="mt-1 text-xs leading-relaxed text-ink-500">{body}</span>
               </Link>
             </li>
           ))}

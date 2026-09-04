@@ -6,9 +6,9 @@ import cn from '@/lib/cn';
  */
 export function Skeleton({ className, rounded = 'md' }) {
   const radius = {
-    sm: 'rounded-[6px]',
-    md: 'rounded-[10px]',
-    lg: 'rounded-[14px]',
+    sm: 'rounded-sm',
+    md: 'rounded-md',
+    lg: 'rounded-lg',
     full: 'rounded-full',
   }[rounded];
 

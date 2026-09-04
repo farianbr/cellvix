@@ -65,7 +65,7 @@ export function CartDropdown() {
               <div
                 role="dialog"
                 aria-labelledby={titleId}
-                className="pointer-events-auto flex max-h-[min(72vh,620px)] w-full max-w-[420px] flex-col overflow-hidden rounded-[16px] border border-line bg-surface shadow-flyout"
+                className="pointer-events-auto flex max-h-[min(72vh,620px)] w-full max-w-[420px] flex-col overflow-hidden rounded-lg border border-line bg-surface shadow-flyout"
               >
                 <header className="flex shrink-0 items-center gap-3 border-b border-line px-4 py-3.5">
                   <div id={titleId} className="min-w-0 flex-1">

@@ -54,8 +54,8 @@ function ActivityRow({ event }) {
       </span>
 
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[13px] font-medium text-ink-900">{event.title}</span>
-        <span className="mt-0.5 block truncate text-[12px] text-ink-400">
+        <span className="block truncate text-sm font-medium text-ink-900">{event.title}</span>
+        <span className="mt-0.5 block truncate text-xs text-ink-400">
           {date(event.at)}
           {event.detail && ` · ${event.detail}`}
         </span>
@@ -64,7 +64,7 @@ function ActivityRow({ event }) {
       {event.amount != null && (
         <span
           className={cn(
-            'tnum shrink-0 text-[13px] font-semibold',
+            'tnum shrink-0 text-sm font-semibold',
             negative ? 'text-ink-400' : signed ? 'text-ok' : 'text-ink-900',
           )}
         >

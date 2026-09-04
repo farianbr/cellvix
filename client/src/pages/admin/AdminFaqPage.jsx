@@ -63,7 +63,7 @@ function FaqForm({ faq, deviceTypes, partTypes, onSubmit, onCancel, isPending, e
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -98,9 +98,9 @@ function FaqForm({ faq, deviceTypes, partTypes, onSubmit, onCancel, isPending, e
       </div>
 
       {scope === 'product' && (
-        <fieldset className="rounded-[11px] border border-line p-3.5">
+        <fieldset className="rounded-md border border-line p-3.5">
           <legend className="eyebrow px-1 text-ink-400">Which products</legend>
-          <p className="mb-3 px-1 text-[12.5px] text-ink-400">
+          <p className="mb-3 px-1 text-sm text-ink-400">
             Leave both blank and this shows on every product page. Filling either narrows it, and
             the narrower entries sort above the general ones.
           </p>
@@ -118,7 +118,7 @@ function FaqForm({ faq, deviceTypes, partTypes, onSubmit, onCancel, isPending, e
               options={[{ value: '', label: 'Every component type' }, ...partTypes]}
             />
           </div>
-          <p className="mt-3 px-1 text-[12px] text-ink-300">
+          <p className="mt-3 px-1 text-xs text-ink-300">
             Placeholders you can use in the question and answer: {'{product}'}, {'{model}'},{' '}
             {'{brand}'}, {'{partType}'}, {'{grade}'}.
           </p>
@@ -264,9 +264,9 @@ export function AdminFaqPage() {
                     )}
                   </div>
 
-                  <p className="text-[13.5px] font-medium text-ink-900">{faq.question}</p>
-                  <p className="mt-0.5 line-clamp-2 text-[12.5px] text-ink-500">{faq.answer}</p>
-                  <p className="mt-1 text-[11.5px] text-ink-300">
+                  <p className="text-md font-medium text-ink-900">{faq.question}</p>
+                  <p className="mt-0.5 line-clamp-2 text-sm text-ink-500">{faq.answer}</p>
+                  <p className="mt-1 text-xs text-ink-300">
                     order {faq.order} · updated {date(faq.updatedAt)}
                   </p>
                 </div>

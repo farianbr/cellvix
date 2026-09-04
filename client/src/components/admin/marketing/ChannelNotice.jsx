@@ -31,12 +31,12 @@ export function ChannelNotice({ status, className }) {
     <div
       role="status"
       className={cn(
-        'flex items-start gap-2.5 rounded-[12px] border border-warn/25 bg-warn-50 px-3.5 py-3',
+        'flex items-start gap-2.5 rounded-lg border border-warn/25 bg-warn-50 px-3.5 py-3',
         className,
       )}
     >
       <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warn" strokeWidth={2} aria-hidden="true" />
-      <div className="min-w-0 text-[12.5px] leading-relaxed text-ink-700">
+      <div className="min-w-0 text-sm leading-relaxed text-ink-700">
         <p className="font-medium text-ink-900">{status.label} sending is not connected yet.</p>
         <p className="mt-0.5">{status.reason}</p>
       </div>
@@ -53,12 +53,12 @@ export function ChannelHint({ children, className }) {
   return (
     <div
       className={cn(
-        'flex items-start gap-2.5 rounded-[12px] border border-line bg-surface-2 px-3.5 py-3',
+        'flex items-start gap-2.5 rounded-lg border border-line bg-surface-2 px-3.5 py-3',
         className,
       )}
     >
       <Info className="mt-0.5 size-4 shrink-0 text-ink-400" strokeWidth={2} aria-hidden="true" />
-      <p className="min-w-0 text-[12.5px] leading-relaxed text-ink-600">{children}</p>
+      <p className="min-w-0 text-sm leading-relaxed text-ink-600">{children}</p>
     </div>
   );
 }

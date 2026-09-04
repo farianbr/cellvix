@@ -210,7 +210,7 @@ export function DateRangeBar({ presets = RANGE_PRESETS, defaultPreset = 'this-mo
             onClick={() => commit(preset.resolve())}
             aria-pressed={isActive}
             className={cn(
-              'shrink-0 whitespace-nowrap rounded-[9px] px-2.5 py-1.5 text-[13.5px] font-medium transition-colors',
+              'shrink-0 whitespace-nowrap rounded-md px-2.5 py-1.5 text-md font-medium transition-colors',
               isActive
                 ? 'font-semibold text-brand'
                 : 'text-ink-500 hover:bg-surface-2 hover:text-ink-900',
@@ -232,7 +232,7 @@ export function DateRangeBar({ presets = RANGE_PRESETS, defaultPreset = 'this-mo
           aria-expanded={open}
           aria-haspopup="dialog"
           className={cn(
-            'flex h-9 max-w-full items-center gap-1.5 rounded-[9px] border px-3 text-[13.5px] font-medium transition-colors',
+            'flex h-9 max-w-full items-center gap-1.5 rounded-md border px-3 text-md font-medium transition-colors',
             isCustom
               ? 'border-brand/30 bg-brand-50 text-brand-700'
               : 'border-line bg-surface text-ink-700 hover:border-line-strong hover:text-ink-900',
@@ -253,7 +253,7 @@ export function DateRangeBar({ presets = RANGE_PRESETS, defaultPreset = 'this-mo
             aria-label="Custom date range"
             // `max-w-[calc(100vw-2rem)]` so the popover never hangs off a phone
             // screen; it is right-anchored, so it grows inward.
-            className="absolute right-0 top-full z-40 mt-1.5 w-[268px] max-w-[calc(100vw-2rem)] rounded-[11px] border border-line bg-surface p-3 shadow-card"
+            className="absolute right-0 top-full z-40 mt-1.5 w-[268px] max-w-[calc(100vw-2rem)] rounded-md border border-line bg-surface p-3 shadow-card"
           >
             <div className="flex gap-2">
               <label className="flex min-w-0 flex-1 flex-col gap-1">
@@ -265,7 +265,7 @@ export function DateRangeBar({ presets = RANGE_PRESETS, defaultPreset = 'this-mo
                   onChange={(event) =>
                     setDraft((current) => ({ ...current, from: event.target.value }))
                   }
-                  className="h-9 w-full rounded-[8px] border border-line bg-surface px-2 text-[13px] text-ink-900"
+                  className="h-9 w-full rounded-md border border-line bg-surface px-2 text-sm text-ink-900"
                 />
               </label>
 
@@ -278,7 +278,7 @@ export function DateRangeBar({ presets = RANGE_PRESETS, defaultPreset = 'this-mo
                   onChange={(event) =>
                     setDraft((current) => ({ ...current, to: event.target.value }))
                   }
-                  className="h-9 w-full rounded-[8px] border border-line bg-surface px-2 text-[13px] text-ink-900"
+                  className="h-9 w-full rounded-md border border-line bg-surface px-2 text-sm text-ink-900"
                 />
               </label>
             </div>

@@ -44,7 +44,7 @@ export function Breadcrumbs({ recordLabel, className }) {
         </Link>
       )}
 
-      <ol className="flex min-w-0 items-center gap-1 text-[12px]">
+      <ol className="flex min-w-0 items-center gap-1 text-xs">
         <li className={cn('flex items-center gap-1', !isHome && 'hidden sm:flex')}>
           {isHome ? (
             <span

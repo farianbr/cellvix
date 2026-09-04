@@ -135,11 +135,11 @@ function CodeStub({ code, className }) {
       onClick={copy}
       aria-label={`Copy promo code ${code}`}
       className={cn(
-        'group inline-flex items-center gap-2 rounded-[8px] border border-dashed border-line-strong bg-surface px-3 py-2 transition-colors hover:border-brand',
+        'group inline-flex items-center gap-2 rounded-md border border-dashed border-line-strong bg-surface px-3 py-2 transition-colors hover:border-brand',
         className,
       )}
     >
-      <span className="font-mono text-[13px] font-semibold tracking-wide text-ink-900">{code}</span>
+      <span className="font-mono text-sm font-semibold tracking-wide text-ink-900">{code}</span>
       {copied ? (
         <Check className="size-3.5 shrink-0 text-ok" strokeWidth={3} aria-hidden="true" />
       ) : (
@@ -159,7 +159,7 @@ function CodeStub({ code, className }) {
 function EndsIn({ endsAt, className }) {
   if (!endsAt) return null;
   return (
-    <span className={cn('inline-flex items-center gap-1.5 text-[12px] text-ink-400', className)}>
+    <span className={cn('inline-flex items-center gap-1.5 text-xs text-ink-400', className)}>
       <Timer className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
       Ends {relativeDays(endsAt)} · {date(endsAt)}
     </span>
@@ -170,14 +170,14 @@ function EndsIn({ endsAt, className }) {
 function HowItApplies({ offer, className }) {
   if (offer.requiresCode) {
     return (
-      <span className={cn('inline-flex items-center gap-1.5 text-[12px] text-ink-500', className)}>
+      <span className={cn('inline-flex items-center gap-1.5 text-xs text-ink-500', className)}>
         <Tag className="size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
         Enter the code in your cart
       </span>
     );
   }
   return (
-    <span className={cn('inline-flex items-center gap-1.5 text-[12px] text-ok', className)}>
+    <span className={cn('inline-flex items-center gap-1.5 text-xs text-ok', className)}>
       <Zap className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
       Applied automatically at checkout
     </span>
@@ -191,7 +191,7 @@ function DealCoupon({ offer, onShop }) {
   const applies = targetLabel(offer.target);
 
   return (
-    <article className="relative flex overflow-hidden rounded-[14px] border border-line bg-surface transition-[border-color,box-shadow] duration-200 hover:border-line-strong hover:shadow-card">
+    <article className="relative flex overflow-hidden rounded-lg border border-line bg-surface transition-[border-color,box-shadow] duration-200 hover:border-line-strong hover:shadow-card">
       {/* ---- body -------------------------------------------------------- */}
       <div className="min-w-0 flex-1 p-4 sm:p-5">
         <div className="mb-2 flex flex-wrap items-center gap-1.5">
@@ -208,13 +208,13 @@ function DealCoupon({ offer, onShop }) {
           )}
         </div>
 
-        <p className="font-display text-[28px] font-extrabold leading-none tracking-tight text-ink-900">
+        <p className="font-display text-3xl font-extrabold leading-none tracking-tight text-ink-900">
           {headline(offer)}
         </p>
-        <h3 className="mt-2 text-[15px] leading-snug">{offer.title}</h3>
-        {offer.subtitle && <p className="mt-1 text-[12.5px] text-ink-400">{offer.subtitle}</p>}
+        <h3 className="mt-2 text-lg leading-snug">{offer.title}</h3>
+        {offer.subtitle && <p className="mt-1 text-sm text-ink-400">{offer.subtitle}</p>}
 
-        <dl className="mt-3.5 space-y-1 border-t border-line pt-3 text-[12.5px]">
+        <dl className="mt-3.5 space-y-1 border-t border-line pt-3 text-sm">
           <div className="flex gap-2">
             <dt className="shrink-0 text-ink-400">On</dt>
             <dd className={cn('min-w-0 flex-1 text-ink-700', applies.fromSlugs && 'capitalize')}>
@@ -234,7 +234,7 @@ function DealCoupon({ offer, onShop }) {
           <button
             type="button"
             onClick={() => onShop(offer)}
-            className="inline-flex items-center gap-1 text-[13px] font-semibold text-brand transition-colors hover:text-brand-700"
+            className="inline-flex items-center gap-1 text-sm font-semibold text-brand transition-colors hover:text-brand-700"
           >
             Shop these parts
             <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
@@ -259,7 +259,7 @@ function DealCoupon({ offer, onShop }) {
             <span className="flex size-9 items-center justify-center rounded-full bg-ok-50 text-ok">
               <Zap className="size-4.5" strokeWidth={2} aria-hidden="true" />
             </span>
-            <span className="text-[11.5px] font-medium leading-tight text-ink-500">
+            <span className="text-xs font-medium leading-tight text-ink-500">
               No code
               <br />
               needed
@@ -267,7 +267,7 @@ function DealCoupon({ offer, onShop }) {
           </>
         )}
 
-        <EndsIn endsAt={offer.endsAt} className="mt-1 flex-col gap-0 text-[11px] leading-tight" />
+        <EndsIn endsAt={offer.endsAt} className="mt-1 flex-col gap-0 text-2xs leading-tight" />
       </div>
     </article>
   );
@@ -283,18 +283,18 @@ function ComboPart({ line, gated }) {
     <div className="flex w-[92px] shrink-0 flex-col items-center text-center">
       <Link
         to={`/product/${line.slug}`}
-        className="flex size-[68px] items-center justify-center rounded-[12px] border border-line bg-surface p-2 transition-colors hover:border-brand"
+        className="flex size-[68px] items-center justify-center rounded-lg border border-line bg-surface p-2 transition-colors hover:border-brand"
       >
         <PartVisual product={line} />
       </Link>
-      <span className="mt-1.5 line-clamp-2 text-[11.5px] font-medium leading-tight text-ink-700">
+      <span className="mt-1.5 line-clamp-2 text-xs font-medium leading-tight text-ink-700">
         {line.partTypeLabel}
       </span>
-      <span className="tnum mt-0.5 text-[11px] text-ink-400">
+      <span className="tnum mt-0.5 text-2xs text-ink-400">
         ×{line.qty}
         {!gated && ` · ${money(line.price)}`}
       </span>
-      {!line.inStock && <span className="mt-0.5 text-[10.5px] text-warn">Out of stock</span>}
+      {!line.inStock && <span className="mt-0.5 text-2xs text-warn">Out of stock</span>}
     </div>
   );
 }
@@ -305,7 +305,7 @@ function ComboCard({ offer, onAdd, addState }) {
   const { isAuthenticated, isApproved } = useAuth();
 
   return (
-    <article className="relative flex flex-col overflow-hidden rounded-[14px] border border-line bg-surface">
+    <article className="relative flex flex-col overflow-hidden rounded-lg border border-line bg-surface">
       <header className="flex flex-wrap items-start justify-between gap-3 p-4 sm:p-5">
         <div className="min-w-0">
           <div className="mb-2 flex flex-wrap items-center gap-1.5">
@@ -319,8 +319,8 @@ function ComboCard({ offer, onAdd, addState }) {
               </span>
             )}
           </div>
-          <h3 className="text-[17px] leading-snug">{offer.title}</h3>
-          {offer.subtitle && <p className="mt-1 text-[13px] text-ink-400">{offer.subtitle}</p>}
+          <h3 className="text-lg leading-snug">{offer.title}</h3>
+          {offer.subtitle && <p className="mt-1 text-sm text-ink-400">{offer.subtitle}</p>}
         </div>
 
         {/* Deliberately NOT the gradient: the gradient on this card belongs to
@@ -329,7 +329,7 @@ function ComboCard({ offer, onAdd, addState }) {
             outline pill states the same number and stays a label. */}
         {!gated && offer.savingsPercent > 0 && (
           <span className="inline-flex shrink-0 items-baseline gap-1 rounded-full border border-brand-100 bg-brand-50 py-1.5 pl-2.5 pr-3 text-brand-700">
-            <span className="tnum font-display text-[15px] font-extrabold leading-none tracking-tight">
+            <span className="tnum font-display text-lg font-extrabold leading-none tracking-tight">
               −{offer.savingsPercent}%
             </span>
             {/* Full-strength brand-700, not a faded one: at 11px an opacity of
@@ -372,7 +372,7 @@ function ComboCard({ offer, onAdd, addState }) {
           </ul>
 
           <span
-            className="mt-7 hidden shrink-0 font-display text-[18px] font-bold text-ink-300 sm:block"
+            className="mt-7 hidden shrink-0 font-display text-xl font-bold text-ink-300 sm:block"
             aria-hidden="true"
           >
             =
@@ -383,10 +383,10 @@ function ComboCard({ offer, onAdd, addState }) {
               <button
                 type="button"
                 onClick={() => openAccount('signin')}
-                className="inline-flex items-center gap-2 rounded-[10px] border border-line bg-surface px-3 py-2.5 text-left transition-colors hover:border-brand"
+                className="inline-flex items-center gap-2 rounded-md border border-line bg-surface px-3 py-2.5 text-left transition-colors hover:border-brand"
               >
                 <Lock className="size-4 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
-                <span className="text-[12.5px] font-semibold leading-tight text-ink-700">
+                <span className="text-sm font-semibold leading-tight text-ink-700">
                   {isAuthenticated ? 'Pending approval' : 'Sign in for'}
                   <br />
                   bundle pricing
@@ -394,13 +394,13 @@ function ComboCard({ offer, onAdd, addState }) {
               </button>
             ) : (
               <>
-                <span className="tnum block font-display text-[26px] font-extrabold leading-none tracking-tight text-ink-900">
+                <span className="tnum block font-display text-3xl font-extrabold leading-none tracking-tight text-ink-900">
                   {money(offer.bundlePrice)}
                 </span>
-                <span className="tnum mt-1 block text-[12px] text-ink-300 line-through">
+                <span className="tnum mt-1 block text-xs text-ink-300 line-through">
                   {money(offer.regularTotal)}
                 </span>
-                <span className="tnum mt-0.5 block text-[12px] font-semibold text-ok">
+                <span className="tnum mt-0.5 block text-xs font-semibold text-ok">
                   Save {money(offer.savings)}
                 </span>
               </>
@@ -413,7 +413,7 @@ function ComboCard({ offer, onAdd, addState }) {
       <footer className="mt-auto flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5">
         <div className="min-w-0 space-y-1">
           <EndsIn endsAt={offer.endsAt} />
-          {offer.terms && <p className="text-[11.5px] text-ink-300">{offer.terms}</p>}
+          {offer.terms && <p className="text-xs text-ink-300">{offer.terms}</p>}
         </div>
 
         {!gated && (
@@ -434,14 +434,14 @@ function ComboCard({ offer, onAdd, addState }) {
                     : 'Unavailable'}
               </Button>
             ) : (
-              <p className="text-[12.5px] text-ink-500">Ordering unlocks once approved.</p>
+              <p className="text-sm text-ink-500">Ordering unlocks once approved.</p>
             )}
           </div>
         )}
       </footer>
 
       {!gated && !offer.available && (
-        <p className="border-t border-line bg-warn-50 px-4 py-2.5 text-[12px] text-warn sm:px-5">
+        <p className="border-t border-line bg-warn-50 px-4 py-2.5 text-xs text-warn sm:px-5">
           A part in this bundle is out of stock. Your rep can substitute it.
         </p>
       )}
@@ -460,7 +460,7 @@ function FeaturedTicket({ offer, onAdd, onShop, addState }) {
   return (
     <section
       aria-label="Featured offer"
-      className="relative mb-10 overflow-hidden rounded-[16px] bg-brand-gradient md:flex"
+      className="relative mb-10 overflow-hidden rounded-lg bg-brand-gradient md:flex"
     >
       {/* A diagonal hatch over the gradient — it stops the block reading as a
           flat coloured rectangle without adding a second colour. */}
@@ -478,16 +478,16 @@ function FeaturedTicket({ offer, onAdd, onShop, addState }) {
           {offer.badge || 'Featured'}
         </span>
 
-        <h2 className="mt-3 text-[26px] leading-tight text-white sm:text-[33px]">{offer.title}</h2>
-        {offer.subtitle && <p className="mt-2 text-[15px] text-white/80">{offer.subtitle}</p>}
+        <h2 className="mt-3 text-3xl leading-tight text-white sm:text-d-sm">{offer.title}</h2>
+        {offer.subtitle && <p className="mt-2 text-lg text-white/80">{offer.subtitle}</p>}
         {offer.description && (
-          <p className="mt-3 max-w-xl text-[14px] leading-relaxed text-white/75">
+          <p className="mt-3 max-w-xl text-md leading-relaxed text-white/75">
             {offer.description}
           </p>
         )}
 
         {offer.kind === 'combo' && offer.products?.length > 0 && (
-          <ul className="mt-5 flex flex-wrap gap-x-4 gap-y-1.5 text-[13px] text-white/85">
+          <ul className="mt-5 flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-white/85">
             {offer.products.map((line) => (
               <li key={line.id} className="inline-flex items-center gap-1.5">
                 <span className="tnum text-white/55">×{line.qty}</span>
@@ -497,7 +497,7 @@ function FeaturedTicket({ offer, onAdd, onShop, addState }) {
           </ul>
         )}
 
-        <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-[12.5px] text-white/70">
+        <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/70">
           {offer.endsAt && (
             <span className="inline-flex items-center gap-1.5">
               <Timer className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
@@ -517,9 +517,9 @@ function FeaturedTicket({ offer, onAdd, onShop, addState }) {
             <button
               type="button"
               onClick={() => openAccount('signin')}
-              className="flex items-center justify-between gap-3 rounded-[12px] bg-surface px-4 py-3 text-left"
+              className="flex items-center justify-between gap-3 rounded-lg bg-surface px-4 py-3 text-left"
             >
-              <span className="font-display text-[13.5px] font-bold text-ink-900">
+              <span className="font-display text-md font-bold text-ink-900">
                 {isAuthenticated ? 'Pending approval' : 'Sign in for bundle pricing'}
               </span>
               <Lock className="size-4 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
@@ -528,10 +528,10 @@ function FeaturedTicket({ offer, onAdd, onShop, addState }) {
             <>
               <span>
                 <span className="eyebrow block text-white/60">Bundle price</span>
-                <span className="tnum mt-1 block font-display text-[34px] font-extrabold leading-none text-white">
+                <span className="tnum mt-1 block font-display text-d-sm font-extrabold leading-none text-white">
                   {money(offer.bundlePrice)}
                 </span>
-                <span className="tnum mt-1.5 block text-[13px] text-white/60">
+                <span className="tnum mt-1.5 block text-sm text-white/60">
                   <span className="line-through">{money(offer.regularTotal)}</span> · save{' '}
                   {money(offer.savings)}
                 </span>
@@ -543,7 +543,7 @@ function FeaturedTicket({ offer, onAdd, onShop, addState }) {
                   disabled={!offer.available || addState === 'adding'}
                   onClick={() => onAdd(offer)}
                   className={cn(
-                    'inline-flex h-12 items-center justify-center gap-2 rounded-[12px] font-display text-[14.5px] font-semibold transition-colors',
+                    'inline-flex h-12 items-center justify-center gap-2 rounded-lg font-display text-md font-semibold transition-colors',
                     addState === 'added'
                       ? 'bg-ok text-white'
                       : 'bg-surface text-ink-900 hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-60',
@@ -561,7 +561,7 @@ function FeaturedTicket({ offer, onAdd, onShop, addState }) {
                       : 'Unavailable'}
                 </button>
               ) : (
-                <p className="text-[13px] text-white/75">Ordering unlocks once approved.</p>
+                <p className="text-sm text-white/75">Ordering unlocks once approved.</p>
               )}
             </>
           )
@@ -569,12 +569,12 @@ function FeaturedTicket({ offer, onAdd, onShop, addState }) {
           <>
             <span>
               <span className="eyebrow block text-white/60">This offer</span>
-              <span className="mt-1 block font-display text-[34px] font-extrabold leading-none text-white">
+              <span className="mt-1 block font-display text-d-sm font-extrabold leading-none text-white">
                 {headline(offer)}
               </span>
               <span
                 className={cn(
-                  'mt-1.5 block text-[13px] text-white/60',
+                  'mt-1.5 block text-sm text-white/60',
                   applies.fromSlugs && 'capitalize',
                 )}
               >
@@ -585,7 +585,7 @@ function FeaturedTicket({ offer, onAdd, onShop, addState }) {
             {offer.code ? (
               <CodeStub code={offer.code} className="justify-center border-white/40 bg-white/95" />
             ) : (
-              <span className="inline-flex items-center justify-center gap-1.5 rounded-[8px] bg-white/15 px-3 py-2 text-[12.5px] font-medium text-white">
+              <span className="inline-flex items-center justify-center gap-1.5 rounded-md bg-white/15 px-3 py-2 text-sm font-medium text-white">
                 <Zap className="size-3.5" strokeWidth={2} aria-hidden="true" />
                 No code needed
               </span>
@@ -594,7 +594,7 @@ function FeaturedTicket({ offer, onAdd, onShop, addState }) {
             <button
               type="button"
               onClick={() => onShop(offer)}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-[12px] bg-surface font-display text-[14.5px] font-semibold text-ink-900 transition-colors hover:bg-surface-2"
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-surface font-display text-md font-semibold text-ink-900 transition-colors hover:bg-surface-2"
             >
               Shop these parts
               <ArrowRight className="size-4" strokeWidth={2} aria-hidden="true" />
@@ -677,8 +677,8 @@ export function OffersPage() {
       <header className="mb-7 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div className="max-w-xl">
           <p className="eyebrow mb-2 text-brand">Running now</p>
-          <h1 className="text-[28px] sm:text-[34px]">Offers &amp; combo deals</h1>
-          <p className="mt-3 text-[14.5px] leading-relaxed text-ink-500">
+          <h1 className="text-3xl sm:text-d-sm">Offers &amp; combo deals</h1>
+          <p className="mt-3 text-md leading-relaxed text-ink-500">
             Bundle pricing on the parts that come through the door together, and discounts across
             the catalogue. Prices are visible to approved businesses.
           </p>
@@ -686,7 +686,7 @@ export function OffersPage() {
 
         {/* The rules, said once, where they cannot be missed — rather than in
             small print under nine cards. */}
-        <ul className="flex flex-wrap gap-x-4 gap-y-1.5 text-[12px] text-ink-400">
+        <ul className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-ink-400">
           <li className="inline-flex items-center gap-1.5">
             <Check className="size-3.5 text-ok" strokeWidth={3} aria-hidden="true" />
             One offer per order
@@ -710,18 +710,18 @@ export function OffersPage() {
           ))}
         </div>
       ) : nothingRunning ? (
-        <div className="flex flex-col items-center rounded-[14px] border border-line bg-surface py-16 text-center">
+        <div className="flex flex-col items-center rounded-lg border border-line bg-surface py-16 text-center">
           <span className="mb-4 flex size-12 items-center justify-center rounded-full bg-surface-2 text-ink-300">
             <Tag className="size-5" strokeWidth={1.5} aria-hidden="true" />
           </span>
-          <h2 className="text-[17px]">No offers running right now</h2>
-          <p className="mx-auto mt-2 max-w-sm text-[13.5px] text-ink-500">
+          <h2 className="text-lg">No offers running right now</h2>
+          <p className="mx-auto mt-2 max-w-sm text-md text-ink-500">
             Promotions are posted here as they start. Your account rep can quote volume pricing on
             any model family in the meantime.
           </p>
           <Link
             to="/contact"
-            className="mt-5 inline-flex h-11 items-center rounded-[10px] bg-brand-gradient px-5 font-display text-[14px] font-semibold text-white transition-[filter] hover:brightness-110"
+            className="mt-5 inline-flex h-11 items-center rounded-md bg-brand-gradient px-5 font-display text-md font-semibold text-white transition-[filter] hover:brightness-110"
           >
             Talk to the sales desk
           </Link>
@@ -740,8 +740,8 @@ export function OffersPage() {
           {combos.length > 0 && (
             <section className="mb-10">
               <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-                <h2 className="text-[20px]">Combo deals</h2>
-                <p className="text-[13px] text-ink-400">
+                <h2 className="text-xl">Combo deals</h2>
+                <p className="text-sm text-ink-400">
                   Priced as a unit. One line on the invoice, one shipping charge.
                 </p>
               </div>
@@ -758,7 +758,7 @@ export function OffersPage() {
               </div>
 
               {addBundle.isError && (
-                <p className="mt-3 text-[13px] text-danger">{addBundle.error.message}</p>
+                <p className="mt-3 text-sm text-danger">{addBundle.error.message}</p>
               )}
             </section>
           )}
@@ -766,8 +766,8 @@ export function OffersPage() {
           {deals.length > 0 && (
             <section>
               <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-                <h2 className="text-[20px]">Catalogue discounts</h2>
-                <p className="text-[13px] text-ink-400">
+                <h2 className="text-xl">Catalogue discounts</h2>
+                <p className="text-sm text-ink-400">
                   Applied to your order total at checkout.
                 </p>
               </div>

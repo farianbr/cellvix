@@ -105,8 +105,8 @@ function AudiencePicker({ selected, onChange, error }) {
   return (
     <div>
       <div className="mb-2 flex items-baseline justify-between gap-3">
-        <span className="text-[13px] font-medium text-ink-700">Accounts</span>
-        <span className="tnum text-[12px] text-ink-400">{selected.length} picked</span>
+        <span className="text-sm font-medium text-ink-700">Accounts</span>
+        <span className="tnum text-xs text-ink-400">{selected.length} picked</span>
       </div>
 
       <Input
@@ -116,11 +116,11 @@ function AudiencePicker({ selected, onChange, error }) {
         icon={Search}
       />
 
-      <div className="scroll-slim mt-2 max-h-56 overflow-y-auto rounded-[10px] border border-line">
+      <div className="scroll-slim mt-2 max-h-56 overflow-y-auto rounded-md border border-line">
         {isLoading ? (
-          <p className="px-3 py-6 text-center text-[13px] text-ink-400">Loading accounts…</p>
+          <p className="px-3 py-6 text-center text-sm text-ink-400">Loading accounts…</p>
         ) : accounts.length === 0 ? (
-          <p className="px-3 py-6 text-center text-[13px] text-ink-400">
+          <p className="px-3 py-6 text-center text-sm text-ink-400">
             No approved accounts yet.
           </p>
         ) : (
@@ -139,7 +139,7 @@ function AudiencePicker({ selected, onChange, error }) {
         )}
       </div>
 
-      {error && <p className="mt-1.5 text-[12.5px] text-danger">{error}</p>}
+      {error && <p className="mt-1.5 text-sm text-danger">{error}</p>}
     </div>
   );
 }
@@ -228,7 +228,7 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
       className="space-y-4"
     >
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -254,7 +254,7 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
 
       {/* ---- kind-specific ------------------------------------------------- */}
       {kind === 'deal' ? (
-        <fieldset className="space-y-3 rounded-[11px] border border-line p-3.5">
+        <fieldset className="space-y-3 rounded-md border border-line p-3.5">
           <legend className="eyebrow px-1 text-ink-400">The discount</legend>
 
           <div className="grid gap-3 sm:grid-cols-2">
@@ -274,7 +274,7 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
                 {...register('discountAmountDollars')}
               />
             ) : (
-              <p className="self-end pb-3 text-[12.5px] text-ink-400">
+              <p className="self-end pb-3 text-sm text-ink-400">
                 Ground shipping is waived on qualifying orders.
               </p>
             )}
@@ -333,12 +333,12 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
               options={[{ value: '', label: 'Any grade' }, ...GRADE_OPTIONS]}
             />
           </div>
-          <p className="px-1 text-[12px] text-ink-300">
+          <p className="px-1 text-xs text-ink-300">
             Leave everything blank to apply the deal across the whole catalogue.
           </p>
         </fieldset>
       ) : (
-        <fieldset className="space-y-3 rounded-[11px] border border-line p-3.5">
+        <fieldset className="space-y-3 rounded-md border border-line p-3.5">
           <legend className="eyebrow px-1 text-ink-400">The bundle</legend>
 
           <ul className="space-y-2">
@@ -362,7 +362,7 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
                   onClick={() => remove(index)}
                   disabled={fields.length <= 2}
                   aria-label={`Remove line ${index + 1}`}
-                  className="mb-0.5 flex size-11 shrink-0 items-center justify-center rounded-[10px] text-ink-400 transition-colors hover:bg-danger-50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink-400"
+                  className="mb-0.5 flex size-11 shrink-0 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-danger-50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink-400"
                 >
                   <X className="size-4" strokeWidth={2} />
                 </button>
@@ -387,7 +387,7 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
             hint="What the whole bundle costs. The saving against list price is calculated for you."
             {...register('bundlePriceDollars')}
           />
-          <p className="px-1 text-[12px] text-ink-300">
+          <p className="px-1 text-xs text-ink-300">
             SKUs are checked against the catalogue when you save — an unknown one is refused rather
             than published as a broken bundle.
           </p>
@@ -396,7 +396,7 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
 
       {/* ---- who may redeem it ---------------------------------------------- */}
       {kind === 'deal' && (
-        <fieldset className="space-y-3 rounded-[11px] border border-line p-3.5">
+        <fieldset className="space-y-3 rounded-md border border-line p-3.5">
           <legend className="eyebrow px-1 text-ink-400">Who can use it</legend>
 
           <div className="grid gap-3 sm:grid-cols-2">
@@ -429,7 +429,7 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
             />
           )}
 
-          <p className="px-1 text-[12px] text-ink-300">
+          <p className="px-1 text-xs text-ink-300">
             A restricted offer is invisible to everyone else — it is not listed for them, and its
             code answers “not recognised” rather than “not for you”.
           </p>
@@ -598,14 +598,14 @@ export function AdminOffersPage() {
                     )}
                   </div>
 
-                  <p className="truncate text-[13.5px] font-medium text-ink-900">{offer.title}</p>
+                  <p className="truncate text-md font-medium text-ink-900">{offer.title}</p>
                   {offer.subtitle && (
-                    <p className="mt-0.5 line-clamp-1 text-[12.5px] text-ink-500">
+                    <p className="mt-0.5 line-clamp-1 text-sm text-ink-500">
                       {offer.subtitle}
                     </p>
                   )}
 
-                  <p className="mt-1 flex flex-wrap gap-x-2 text-[11.5px] text-ink-300">
+                  <p className="mt-1 flex flex-wrap gap-x-2 text-xs text-ink-300">
                     {offer.kind === 'combo' ? (
                       <>
                         <span>{offer.items.length} SKUs</span>

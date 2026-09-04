@@ -46,14 +46,14 @@ export function ProductCard({ product }) {
     // same card sits in a 2-, 3- and 4-column grid.
     <article
       aria-busy={isAdding || undefined}
-      className="group relative @container flex flex-col overflow-hidden rounded-[14px] border border-line bg-surface transition-[border-color,box-shadow] duration-200 hover:border-line-strong hover:shadow-card"
+      className="group relative @container flex flex-col overflow-hidden rounded-lg border border-line bg-surface transition-[border-color,box-shadow] duration-200 hover:border-line-strong hover:shadow-card"
     >
       {/* The whole card goes busy, not just the button: the stepper, the price
           and the in-cart pill are all about to change, and a spinner on one
           control implies the rest are still live. */}
       {isAdding && (
         <div
-          className="absolute inset-0 z-10 flex items-center justify-center rounded-[14px] bg-surface/65 backdrop-blur-[1px]"
+          className="absolute inset-0 z-10 flex items-center justify-center rounded-lg bg-surface/65 backdrop-blur-[1px]"
           aria-hidden="true"
         >
           <Loader2 className="size-6 animate-spin text-brand" strokeWidth={2} />
@@ -108,7 +108,7 @@ export function ProductCard({ product }) {
             initial={{ scale: 0.85, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full border border-brand/25 bg-surface/95 py-1 pl-1.5 pr-2 text-[11px] font-semibold text-brand-700 shadow-card backdrop-blur-[2px] @min-[200px]:bottom-3 @min-[200px]:right-3"
+            className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full border border-brand/25 bg-surface/95 py-1 pl-1.5 pr-2 text-2xs font-semibold text-brand-700 shadow-card backdrop-blur-[2px] @min-[200px]:bottom-3 @min-[200px]:right-3"
           >
             <ShoppingCart className="size-3 shrink-0" strokeWidth={2.25} aria-hidden="true" />
             <span className="tnum">{inCartQty} in cart</span>
@@ -131,7 +131,7 @@ export function ProductCard({ product }) {
             to two lines so prices stay level across a grid row. */}
         <div>
           <p className="eyebrow text-ink-300">{product.partTypeLabel}</p>
-          <h3 className="mt-0.5 line-clamp-2 font-display text-[13px] font-bold leading-tight tracking-tight text-ink-900 @min-[200px]:text-[14px]">
+          <h3 className="mt-0.5 line-clamp-2 font-display text-sm font-bold leading-tight tracking-tight text-ink-900 @min-[200px]:text-md">
             <Link to={`/product/${product.slug}`} className="transition-colors hover:text-brand">
               {productTitle(product.name, product.partTypeLabel)}
             </Link>
@@ -149,12 +149,12 @@ export function ProductCard({ product }) {
             sit here, and a buyer planning a build around "37 in stock" was
             planning against a number that moves hourly. */}
         {outOfStock ? (
-          <div className="rounded-[9px] border border-line bg-surface-2 px-2.5 py-2">
-            <p className="flex items-center gap-1.5 font-display text-[12.5px] font-semibold text-ink-500 @min-[200px]:text-[13px]">
+          <div className="rounded-md border border-line bg-surface-2 px-2.5 py-2">
+            <p className="flex items-center gap-1.5 font-display text-sm font-semibold text-ink-500 @min-[200px]:text-sm">
               <PackageX className="size-3.5 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
               Out of stock
             </p>
-            <p className="mt-0.5 text-[11px] leading-snug text-ink-300 @min-[200px]:text-[11.5px]">
+            <p className="mt-0.5 text-2xs leading-snug text-ink-300 @min-[200px]:text-xs">
               {/* A gated buyer never saw a price to lose, so promising one back
                   would be an odd thing to tell them. */}
               {gated ? 'Check back for availability' : 'Pricing returns when this part does'}
@@ -162,7 +162,7 @@ export function ProductCard({ product }) {
           </div>
         ) : (
           <>
-            <div className="flex items-center gap-1.5 text-[12px] @min-[200px]:text-[12.5px]">
+            <div className="flex items-center gap-1.5 text-xs @min-[200px]:text-sm">
               <span className="size-1.5 shrink-0 rounded-full bg-ok" aria-hidden="true" />
               <span className="text-ok">In stock</span>
             </div>
@@ -190,7 +190,7 @@ export function ProductCard({ product }) {
                 {!gated && (
                   <div className="h-3.75 @min-[200px]:h-4">
                     {!product.compareAtPrice && product.market && (
-                      <span className="tnum text-[11.5px] text-ink-300 line-through @min-[200px]:text-[12px]">
+                      <span className="tnum text-xs text-ink-300 line-through @min-[200px]:text-xs">
                         {money(product.market.average)}
                       </span>
                     )}
@@ -198,12 +198,12 @@ export function ProductCard({ product }) {
                 )}
 
                 <div className="flex items-baseline gap-2">
-                  <span className="font-display text-[17px] font-bold tracking-tight text-ink-900 tnum @min-[200px]:text-[19px] @min-[260px]:text-[21px]">
+                  <span className="font-display text-lg font-bold tracking-tight text-ink-900 tnum @min-[200px]:text-xl @min-[260px]:text-2xl">
                     {gated ? '$000.00' : money(product.price)}
                   </span>
 
                   {!gated && product.compareAtPrice ? (
-                    <span className="tnum text-[12.5px] text-ink-300 line-through">
+                    <span className="tnum text-sm text-ink-300 line-through">
                       {money(product.compareAtPrice)}
                     </span>
                   ) : (
@@ -214,7 +214,7 @@ export function ProductCard({ product }) {
                       // every width — a bare "21%" beside a price is ambiguous
                       // enough to read as a rate rather than a discount, and
                       // the phone grid is where most buyers meet it.
-                      <span className="tnum shrink-0 rounded-full bg-ok-50 px-1.5 py-0.5 text-[10.5px] font-bold text-ok @min-[200px]:text-[11px]">
+                      <span className="tnum shrink-0 rounded-full bg-ok-50 px-1.5 py-0.5 text-2xs font-bold text-ok @min-[200px]:text-2xs">
                         Save {product.market.savingsPercent}%
                       </span>
                     )
@@ -228,7 +228,7 @@ export function ProductCard({ product }) {
                   onClick={() => openAccount('signin')}
                   className="absolute inset-0 -m-1 flex items-center justify-center rounded-lg bg-surface/45 backdrop-blur-[1px] transition-colors hover:bg-surface/25"
                 >
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-2.5 py-1 text-[11.5px] font-semibold text-ink-700 shadow-card">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface px-2.5 py-1 text-xs font-semibold text-ink-700 shadow-card">
                     <Lock className="size-3" strokeWidth={2.25} aria-hidden="true" />
                     {isAuthenticated ? 'Pending approval' : 'Login to view price'}
                   </span>
@@ -265,7 +265,7 @@ export function ProductCard({ product }) {
               disabled={isAdding}
               aria-label={`Add ${product.name} to cart`}
               className={cn(
-                'flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-[8px] font-display text-[13px] font-semibold transition-[background,color,filter] duration-[120ms]',
+                'flex h-9 min-w-0 flex-1 items-center justify-center gap-1.5 rounded-md font-display text-sm font-semibold transition-[background,color,filter] duration-[120ms]',
                 justAdded
                   ? 'bg-ok text-white'
                   : 'bg-brand-gradient text-white hover:brightness-110 active:brightness-95',

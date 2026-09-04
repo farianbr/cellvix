@@ -26,7 +26,7 @@ export function Slab({ tone = 'light', className, innerClassName, children, ...p
   return (
     <section
       className={cn(
-        'overflow-hidden rounded-[24px] px-5 py-12 sm:px-8 sm:py-16 lg:rounded-[32px] lg:px-14 lg:py-24',
+        'overflow-hidden rounded-xl px-5 py-12 sm:px-8 sm:py-16 lg:rounded-xl lg:px-14 lg:py-24',
         TONES[tone],
         className,
       )}
@@ -76,7 +76,7 @@ export function SectionHeader({
         <h2
           id={id}
           className={cn(
-            'text-[28px] leading-[1.06] tracking-[-0.03em] sm:text-[38px] lg:text-[46px]',
+            'text-3xl leading-[1.06] tracking-[-0.03em] sm:text-d-md lg:text-d-md',
             dark && 'text-white',
           )}
         >
@@ -86,7 +86,7 @@ export function SectionHeader({
       {lede ? (
         <p
           className={cn(
-            'text-[15.5px] leading-relaxed',
+            'text-lg leading-relaxed',
             centered && 'mx-auto mt-4 max-w-xl',
             dark ? 'text-white/65' : 'text-ink-400',
           )}
@@ -123,7 +123,7 @@ export function IconTile({ icon: Icon, className, solid = true }) {
   return (
     <span
       className={cn(
-        'flex size-11 items-center justify-center rounded-[12px]',
+        'flex size-11 items-center justify-center rounded-lg',
         solid ? 'bg-brand text-white' : 'bg-brand-50 text-brand',
         className,
       )}

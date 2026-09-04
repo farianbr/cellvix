@@ -64,7 +64,7 @@ export function AdminThirdPartyPage() {
         description={ADMIN_PAGE.description}
       />
 
-      <p className="mb-5 flex items-start gap-2.5 rounded-[12px] border border-warn/25 bg-warn-50 px-3.5 py-3 text-[13px] leading-relaxed text-ink-700">
+      <p className="mb-5 flex items-start gap-2.5 rounded-lg border border-warn/25 bg-warn-50 px-3.5 py-3 text-sm leading-relaxed text-ink-700">
         <AlertCircle className="mt-0.5 size-4 shrink-0 text-warn" strokeWidth={2} aria-hidden="true" />
         <span>
           <strong className="font-semibold">Not connected yet.</strong> These connections need Google
@@ -90,7 +90,7 @@ export function AdminThirdPartyPage() {
               description={connection.description}
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
-                <p className="min-w-0 flex-1 text-[13px] leading-relaxed text-ink-600">
+                <p className="min-w-0 flex-1 text-sm leading-relaxed text-ink-600">
                   <span className="font-semibold text-ink-700">Needs: </span>
                   {connection.needs}
                 </p>
@@ -101,7 +101,7 @@ export function AdminThirdPartyPage() {
                 <button
                   type="button"
                   disabled
-                  className="inline-flex h-9 shrink-0 cursor-not-allowed items-center gap-1.5 rounded-[9px] border border-line bg-surface-2 px-3.5 text-[13px] font-medium text-ink-400"
+                  className="inline-flex h-9 shrink-0 cursor-not-allowed items-center gap-1.5 rounded-md border border-line bg-surface-2 px-3.5 text-sm font-medium text-ink-400"
                 >
                   Connect
                   <ExternalLink className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
@@ -115,7 +115,7 @@ export function AdminThirdPartyPage() {
           title="Setting these up"
           description="What somebody with access to the Google Cloud console needs to do."
         >
-          <ol className="ml-4 list-decimal space-y-1.5 text-[13px] leading-relaxed text-ink-600">
+          <ol className="ml-4 list-decimal space-y-1.5 text-sm leading-relaxed text-ink-600">
             <li>Create a project in the Google Cloud console, or pick an existing one.</li>
             <li>Enable the People API for Contacts, and the Calendar API for Calendar.</li>
             <li>
@@ -129,7 +129,7 @@ export function AdminThirdPartyPage() {
             <li>Give the client id and secret to whoever deploys the server.</li>
           </ol>
 
-          <p className="mt-4 border-t border-line pt-3 text-[12.5px] leading-relaxed text-ink-500">
+          <p className="mt-4 border-t border-line pt-3 text-sm leading-relaxed text-ink-500">
             The <strong className="font-semibold text-ink-700">Google Maps &amp; Places</strong> key
             on the API Keys screen is a different credential — a server-side key for address
             autocomplete, not an OAuth grant. It is currently{' '}

@@ -13,9 +13,9 @@ import cn from '@/lib/cn';
  */
 
 const SIZES = {
-  sm: { box: 'size-6 text-[11px]', glyph: 'size-3.5' },
-  md: { box: 'size-8 text-[13px]', glyph: 'size-4' },
-  lg: { box: 'size-10 text-[15px]', glyph: 'size-5' },
+  sm: { box: 'size-6 text-2xs', glyph: 'size-3.5' },
+  md: { box: 'size-8 text-sm', glyph: 'size-4' },
+  lg: { box: 'size-10 text-lg', glyph: 'size-5' },
 };
 
 const STATES = {

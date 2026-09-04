@@ -28,7 +28,7 @@ function Popover({ label, icon: Icon, children, align = 'left', badge }) {
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
         className={cn(
-          'flex h-9 items-center gap-1.5 rounded-[8px] border px-2.5 text-[13px] font-medium transition-colors',
+          'flex h-9 items-center gap-1.5 rounded-md border px-2.5 text-sm font-medium transition-colors',
           badge
             ? 'border-brand-100 bg-brand-50 text-brand-700'
             : 'border-line bg-surface text-ink-600 hover:border-line-strong hover:text-ink-900',
@@ -37,7 +37,7 @@ function Popover({ label, icon: Icon, children, align = 'left', badge }) {
         {Icon && <Icon className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />}
         {label}
         {badge > 0 && (
-          <span className="tnum rounded-full bg-brand px-1.5 text-[10.5px] font-semibold leading-[16px] text-white">
+          <span className="tnum rounded-full bg-brand px-1.5 text-2xs font-semibold leading-[16px] text-white">
             {badge}
           </span>
         )}
@@ -47,7 +47,7 @@ function Popover({ label, icon: Icon, children, align = 'left', badge }) {
       {open && (
         <div
           className={cn(
-            'absolute top-full z-20 mt-1 min-w-[220px] rounded-[10px] border border-line bg-surface p-3 shadow-card',
+            'absolute top-full z-20 mt-1 min-w-[220px] rounded-md border border-line bg-surface p-3 shadow-card',
             align === 'right' ? 'right-0' : 'left-0',
           )}
           onClick={(event) => {
@@ -100,7 +100,7 @@ export function FilterStrip({
             onClick={() => onPillChange?.(pill.value)}
             aria-pressed={isActive}
             className={cn(
-              'flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[8px] px-2.5 text-[13px] font-medium transition-colors',
+              'flex h-9 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 text-sm font-medium transition-colors',
               /**
                * The active pill has **no border at all**, not a transparent one.
                *
@@ -132,7 +132,7 @@ export function FilterStrip({
             {pill.count != null && (
               <span
                 className={cn(
-                  'tnum inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-[11px] font-semibold leading-none',
+                  'tnum inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full px-1 text-2xs font-semibold leading-none',
                   isActive ? 'bg-white/20 text-white' : 'bg-surface-3 text-ink-500',
                 )}
               >
@@ -184,7 +184,7 @@ export function FilterStrip({
             value={search ?? ''}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder={searchPlaceholder}
-            className="h-9 w-full rounded-[8px] border border-line bg-surface pl-8 pr-8 text-[13px] text-ink-900 placeholder:text-ink-300"
+            className="h-9 w-full rounded-md border border-line bg-surface pl-8 pr-8 text-sm text-ink-900 placeholder:text-ink-300"
           />
           {search && (
             <button
@@ -213,7 +213,7 @@ export function FilterStrip({
                   type="button"
                   data-close-on-select
                   onClick={onClearFilters}
-                  className="w-full rounded-[7px] border border-line px-2 py-1.5 text-[12.5px] text-ink-500 transition-colors hover:border-line-strong hover:text-ink-900"
+                  className="w-full rounded-sm border border-line px-2 py-1.5 text-sm text-ink-500 transition-colors hover:border-line-strong hover:text-ink-900"
                 >
                   Clear {activeFilterCount} filter{activeFilterCount === 1 ? '' : 's'}
                 </button>
@@ -231,12 +231,12 @@ export function FilterStrip({
                   type="button"
                   data-close-on-select
                   onClick={() => onExport(format)}
-                  className="rounded-[7px] px-2.5 py-2 text-left text-[13px] text-ink-700 transition-colors hover:bg-surface-2 hover:text-ink-900"
+                  className="rounded-sm px-2.5 py-2 text-left text-sm text-ink-700 transition-colors hover:bg-surface-2 hover:text-ink-900"
                 >
                   Export {format}
                 </button>
               ))}
-              <p className="mt-1 border-t border-line px-2.5 pt-2 text-[11.5px] leading-snug text-ink-400">
+              <p className="mt-1 border-t border-line px-2.5 pt-2 text-xs leading-snug text-ink-400">
                 Exports the current filters and date range, not the whole table.
               </p>
             </div>

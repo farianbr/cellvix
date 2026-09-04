@@ -12,7 +12,7 @@ export function AnnouncementBar() {
   return (
     <div className="relative bg-brand-gradient text-white">
       <div className="mx-auto flex max-w-[1400px] items-center justify-center gap-2 px-10 py-2 text-center">
-        <p className="text-[12.5px] font-medium leading-tight">
+        <p className="text-sm font-medium leading-tight">
           Free shipping on wholesale orders over $500 · Same-day dispatch before 2 PM ET
         </p>
 
@@ -20,7 +20,7 @@ export function AnnouncementBar() {
             advertised, and a promo line nobody can act on is wasted space. */}
         <Link
           to="/offers"
-          className="hidden shrink-0 items-center gap-1 rounded-full bg-white/15 px-2.5 py-0.5 text-[12px] font-semibold transition-colors hover:bg-white/25 sm:inline-flex"
+          className="hidden shrink-0 items-center gap-1 rounded-full bg-white/15 px-2.5 py-0.5 text-xs font-semibold transition-colors hover:bg-white/25 sm:inline-flex"
         >
           See offers
           <ArrowRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />

@@ -73,33 +73,33 @@ function MessageRow({ message }) {
             strokeWidth={2}
             aria-label={message.direction === 'inbound' ? 'Inbound' : 'Outbound'}
           />
-          <p className="truncate text-[13.5px] font-medium text-ink-900">{message.businessName}</p>
+          <p className="truncate text-md font-medium text-ink-900">{message.businessName}</p>
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
           <Badge tone={meta.tone} size="sm" icon={Icon}>
             {meta.label}
           </Badge>
-          <time className="tnum text-[11.5px] text-ink-400" dateTime={message.createdAt}>
+          <time className="tnum text-xs text-ink-400" dateTime={message.createdAt}>
             {dateTime(message.createdAt)}
           </time>
         </div>
       </div>
 
       {message.subject && (
-        <p className="mt-1 truncate text-[12.5px] font-medium text-ink-700">{message.subject}</p>
+        <p className="mt-1 truncate text-sm font-medium text-ink-700">{message.subject}</p>
       )}
-      <p className="mt-1 whitespace-pre-wrap break-words text-[12.5px] leading-relaxed text-ink-600">
+      <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-relaxed text-ink-600">
         {message.body}
       </p>
 
       {/* The row says why it was not sent, so the history is readable months
           later without anyone having to remember which providers were off. */}
       {message.unconfiguredReason && (
-        <p className="mt-1.5 text-[11.5px] italic text-ink-400">{message.unconfiguredReason}</p>
+        <p className="mt-1.5 text-xs italic text-ink-400">{message.unconfiguredReason}</p>
       )}
 
-      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11.5px] text-ink-400">
+      <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-ink-400">
         {message.to && <span className="truncate">{message.to}</span>}
         {message.staffName && <span className="truncate">by {message.staffName}</span>}
         {message.recordingUrl && (
@@ -215,7 +215,7 @@ export function ChannelScreen({
           <Panel title={submitLabel}>
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3.5">
               {error && (
-                <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+                <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
                   <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
                   {error}
                 </p>
@@ -226,7 +226,7 @@ export function ChannelScreen({
               {result && (
                 <p
                   className={cn(
-                    'flex items-start gap-2 rounded-[10px] px-3 py-2.5 text-[13px]',
+                    'flex items-start gap-2 rounded-md px-3 py-2.5 text-sm',
                     result.notice ? 'bg-warn-50 text-ink-700' : 'bg-ok-50 text-ok',
                   )}
                 >
@@ -316,7 +316,7 @@ export function ChannelScreen({
             className="min-w-0"
           >
             {isLoading ? (
-              <p className="p-4 text-[13px] text-ink-500">Loading history…</p>
+              <p className="p-4 text-sm text-ink-500">Loading history…</p>
             ) : (history?.messages?.length ?? 0) === 0 ? (
               <PanelEmpty
                 icon={Inbox}

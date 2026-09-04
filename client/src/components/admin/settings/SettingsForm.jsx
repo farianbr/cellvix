@@ -30,7 +30,7 @@ export function SettingsFormActions({ dirty, saving, saved, error, onReset, save
         <button
           type="button"
           onClick={onReset}
-          className="inline-flex h-9 items-center gap-1.5 rounded-[9px] border border-line bg-surface px-3.5 text-[13px] font-medium text-ink-600 transition-colors hover:border-line-strong hover:text-ink-900"
+          className="inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-surface px-3.5 text-sm font-medium text-ink-600 transition-colors hover:border-line-strong hover:text-ink-900"
         >
           <RotateCcw className="size-3.5" strokeWidth={2} aria-hidden="true" />
           Discard changes
@@ -42,7 +42,7 @@ export function SettingsFormActions({ dirty, saving, saved, error, onReset, save
           form's own alert. */}
       <p aria-live="polite" className="min-w-0">
         {saved && !dirty && !error && (
-          <span className="flex items-center gap-1.5 text-[13px] text-ok">
+          <span className="flex items-center gap-1.5 text-sm text-ok">
             <CheckCircle2 className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
             Saved.
           </span>
@@ -52,7 +52,7 @@ export function SettingsFormActions({ dirty, saving, saved, error, onReset, save
       {error && (
         <span
           role="alert"
-          className="flex items-start gap-2 text-[13px] text-danger"
+          className="flex items-start gap-2 text-sm text-danger"
         >
           <AlertCircle className="mt-px size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
@@ -73,7 +73,7 @@ export function SettingsFormActions({ dirty, saving, saved, error, onReset, save
  */
 export function PlaceholderNotice({ children }) {
   return (
-    <p className="mb-4 flex items-start gap-2.5 rounded-[12px] border border-warn/25 bg-warn-50 px-3.5 py-3 text-[13px] leading-relaxed text-ink-700">
+    <p className="mb-4 flex items-start gap-2.5 rounded-lg border border-warn/25 bg-warn-50 px-3.5 py-3 text-sm leading-relaxed text-ink-700">
       <AlertCircle className="mt-0.5 size-4 shrink-0 text-warn" strokeWidth={2} aria-hidden="true" />
       <span>{children}</span>
     </p>

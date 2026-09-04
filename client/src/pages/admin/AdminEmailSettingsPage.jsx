@@ -109,7 +109,7 @@ function Toggle({ toggle, checked, wired, onChange }) {
 
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-center gap-2">
-          <span className="font-display text-[13.5px] font-semibold text-ink-900">
+          <span className="font-display text-md font-semibold text-ink-900">
             {toggle.label}
           </span>
           {/* §6b rule 4, applied to a settings screen: a switch in front of code
@@ -117,7 +117,7 @@ function Toggle({ toggle, checked, wired, onChange }) {
               the three that work. */}
           {!wired && <Badge tone="warn">Not wired yet</Badge>}
         </span>
-        <span className="mt-1 block text-[12.5px] leading-relaxed text-ink-500">
+        <span className="mt-1 block text-sm leading-relaxed text-ink-500">
           {toggle.detail}
           {!wired && (
             <span className="mt-1 block text-warn">
@@ -176,7 +176,7 @@ export function AdminEmailSettingsPage() {
     }
   }
 
-  if (isLoading) return <p className="text-[13px] text-ink-500">Loading settings…</p>;
+  if (isLoading) return <p className="text-sm text-ink-500">Loading settings…</p>;
 
   return (
     <>
@@ -186,7 +186,7 @@ export function AdminEmailSettingsPage() {
         description={ADMIN_PAGE.description}
       />
 
-      <p className="mb-5 flex items-start gap-2.5 rounded-[12px] border border-info/20 bg-info-50 px-3.5 py-3 text-[13px] leading-relaxed text-ink-700">
+      <p className="mb-5 flex items-start gap-2.5 rounded-lg border border-info/20 bg-info-50 px-3.5 py-3 text-sm leading-relaxed text-ink-700">
         <Info className="mt-0.5 size-4 shrink-0 text-info" strokeWidth={2} aria-hidden="true" />
         <span>
           Everything that emails a customer ships <strong className="font-semibold">off</strong>,
@@ -277,7 +277,7 @@ export function AdminEmailSettingsPage() {
             />
           </div>
 
-          <p className="mt-4 border-t border-line pt-3 text-[12.5px] leading-relaxed text-ink-500">
+          <p className="mt-4 border-t border-line pt-3 text-sm leading-relaxed text-ink-500">
             These two day counts are read by the built-in reminder and overdue messages. Editing a
             message’s own timing on the Invoice Statuses screen overrides them for that message.
           </p>

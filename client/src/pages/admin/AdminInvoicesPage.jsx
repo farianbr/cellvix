@@ -80,17 +80,17 @@ function PaymentForm({ invoice, onSubmit, onCancel, isPending, error }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="rounded-[11px] bg-surface-2 p-3.5">
-        <p className="font-mono text-[13px] font-medium text-ink-900">{invoice.number}</p>
-        <p className="mt-0.5 text-[12.5px] text-ink-500">{invoice.displayName ?? invoice.businessName}</p>
-        <p className="tnum mt-1.5 text-[12.5px] text-ink-500">
+      <div className="rounded-md bg-surface-2 p-3.5">
+        <p className="font-mono text-sm font-medium text-ink-900">{invoice.number}</p>
+        <p className="mt-0.5 text-sm text-ink-500">{invoice.displayName ?? invoice.businessName}</p>
+        <p className="tnum mt-1.5 text-sm text-ink-500">
           {money(invoice.amount)} invoiced · {money(invoice.amountPaid)} paid ·{' '}
           <span className="font-medium text-ink-900">{money(outstanding)} outstanding</span>
         </p>
       </div>
 
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -106,7 +106,7 @@ function PaymentForm({ invoice, onSubmit, onCancel, isPending, error }) {
         <Input label="Reference" placeholder="Cheque no. or transfer id" {...register('reference')} />
       </div>
 
-      <p className="rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12px] leading-relaxed text-ink-500">
+      <p className="rounded-md bg-surface-2 px-3 py-2.5 text-xs leading-relaxed text-ink-500">
         The invoice status is recalculated from its payments — record the amount received, not the
         new balance.
       </p>
@@ -129,13 +129,13 @@ function VoidForm({ invoice, onSubmit, onCancel, isPending, error }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <p className="rounded-[10px] bg-warn-50 px-3 py-2.5 text-[12.5px] leading-relaxed text-warn">
+      <p className="rounded-md bg-warn-50 px-3 py-2.5 text-sm leading-relaxed text-warn">
         Voiding writes off the {money(invoice.balance)} still outstanding on {invoice.number}. The
         invoice stays on the account with the reason attached — it is not deleted.
       </p>
 
       {error && (
-        <p className="flex items-start gap-2 text-[12.5px] text-danger">
+        <p className="flex items-start gap-2 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -207,7 +207,7 @@ function InvoiceForm({ clients, defaultUser, onSubmit, onCancel, isPending, erro
       className="space-y-4"
     >
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -249,7 +249,7 @@ function InvoiceForm({ clients, defaultUser, onSubmit, onCancel, isPending, erro
       <Textarea label="Notes" rows={2} {...register('notes')} />
 
       {terms !== 'prepaid' && (
-        <p className="rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12.5px] text-ink-500">
+        <p className="rounded-md bg-surface-2 px-3 py-2.5 text-sm text-ink-500">
           On terms, this draws on the client's line of credit until it is paid — the same as an
           invoice raised by an order.
         </p>
@@ -309,11 +309,11 @@ export function AdminInvoicesPage() {
       priority: 1,
       render: (invoice) => (
         <>
-          <span className="block whitespace-nowrap font-mono text-[12.5px] font-medium text-ink-900">
+          <span className="block whitespace-nowrap font-mono text-sm font-medium text-ink-900">
             {invoice.number}
           </span>
           {invoice.orderNumber && (
-            <span className="block whitespace-nowrap text-[11px] text-ink-400">
+            <span className="block whitespace-nowrap text-2xs text-ink-400">
               {invoice.orderNumber}
             </span>
           )}
@@ -331,7 +331,7 @@ export function AdminInvoicesPage() {
       header: 'Issued',
       priority: 3,
       render: (invoice) => (
-        <span className="text-[12.5px] text-ink-500">{date(invoice.issuedAt)}</span>
+        <span className="text-sm text-ink-500">{date(invoice.issuedAt)}</span>
       ),
     },
     {
@@ -341,12 +341,12 @@ export function AdminInvoicesPage() {
       render: (invoice) =>
         invoice.dueDate ? (
           <span
-            className={`text-[12.5px] ${invoice.status === 'overdue' ? 'font-medium text-danger' : 'text-ink-500'}`}
+            className={`text-sm ${invoice.status === 'overdue' ? 'font-medium text-danger' : 'text-ink-500'}`}
           >
             {date(invoice.dueDate)}
           </span>
         ) : (
-          <span className="text-[12px] text-ink-300">—</span>
+          <span className="text-xs text-ink-300">—</span>
         ),
     },
     {
@@ -354,7 +354,7 @@ export function AdminInvoicesPage() {
       header: 'Terms',
       priority: 3,
       render: (invoice) => (
-        <span className="text-[12.5px] text-ink-500">{invoice.terms.replace('net', 'Net ')}</span>
+        <span className="text-sm text-ink-500">{invoice.terms.replace('net', 'Net ')}</span>
       ),
     },
     {
@@ -376,11 +376,11 @@ export function AdminInvoicesPage() {
       render: (invoice) => (
         <>
           <span
-            className={`text-[13px] font-medium ${invoice.balance > 0 ? 'text-ink-900' : 'text-ok'}`}
+            className={`text-sm font-medium ${invoice.balance > 0 ? 'text-ink-900' : 'text-ok'}`}
           >
             {money(invoice.balance)}
           </span>
-          <span className="block text-[11px] text-ink-400">of {money(invoice.amount)}</span>
+          <span className="block text-2xs text-ink-400">of {money(invoice.amount)}</span>
         </>
       ),
     },

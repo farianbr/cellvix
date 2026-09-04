@@ -18,9 +18,9 @@ import { useSavedCarts, useAccountMutations } from '@/hooks/useAccount';
 export function CartPanelTitle({ count }) {
   return (
     <div className="flex items-center gap-2">
-      <h2 className="font-display text-[16px] font-bold">Your cart</h2>
+      <h2 className="font-display text-lg font-bold">Your cart</h2>
       {count > 0 && (
-        <span className="tnum rounded-full bg-surface-3 px-2 py-0.5 text-[11.5px] font-semibold text-ink-500">
+        <span className="tnum rounded-full bg-surface-3 px-2 py-0.5 text-xs font-semibold text-ink-500">
           {count}
         </span>
       )}
@@ -53,7 +53,7 @@ function SavedCartsPicker({ onClose }) {
         <Link
           to="/account/quick-order"
           onClick={onClose}
-          className="text-[12.5px] font-medium text-brand-700 underline-offset-2 hover:underline"
+          className="text-sm font-medium text-brand-700 underline-offset-2 hover:underline"
         >
           Manage
         </Link>
@@ -63,11 +63,11 @@ function SavedCartsPicker({ onClose }) {
         {savedCarts.slice(0, 3).map((cart) => (
           <li
             key={cart.id}
-            className="flex items-center gap-3 rounded-[10px] px-2 py-2 transition-colors hover:bg-surface"
+            className="flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-surface"
           >
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[13px] font-medium text-ink-900">{cart.name}</p>
-              <p className="tnum text-[11.5px] text-ink-400">
+              <p className="truncate text-sm font-medium text-ink-900">{cart.name}</p>
+              <p className="tnum text-xs text-ink-400">
                 {cart.lineCount} {cart.lineCount === 1 ? 'line' : 'lines'} · {cart.itemCount} items ·{' '}
                 {date(cart.createdAt)}
               </p>
@@ -115,8 +115,8 @@ export function CartPanelBody({ items, bundles = [], onQtyChange, onRemove, onRe
             <ShoppingCart className="size-6" strokeWidth={1.5} />
           </span>
           <div>
-            <h3 className="text-[15.5px]">Your cart is empty</h3>
-            <p className="mt-1 text-[13px] text-ink-500">
+            <h3 className="text-lg">Your cart is empty</h3>
+            <p className="mt-1 text-sm text-ink-500">
               Add parts from the grid and they will appear here.
             </p>
           </div>
@@ -128,7 +128,7 @@ export function CartPanelBody({ items, bundles = [], onQtyChange, onRemove, onRe
               <Link
                 to="/account/quick-order"
                 onClick={onClose}
-                className="inline-flex h-9 select-none items-center justify-center gap-1.5 whitespace-nowrap rounded-[8px] px-3.5 font-display text-[13px] font-semibold text-ink-500 transition-colors hover:bg-surface-3 hover:text-ink-900"
+                className="inline-flex h-9 select-none items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3.5 font-display text-sm font-semibold text-ink-500 transition-colors hover:bg-surface-3 hover:text-ink-900"
               >
                 <Bookmark className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
                 Saved carts
@@ -176,13 +176,13 @@ export function CartPanelFooter({
   return (
     <div className="space-y-3 p-4">
       <div className="flex items-baseline justify-between">
-        <span className="text-[13.5px] text-ink-500">Subtotal</span>
+        <span className="text-md text-ink-500">Subtotal</span>
         <span className="text-right">
-          <span className="tnum block font-display text-[20px] font-bold text-ink-900">
+          <span className="tnum block font-display text-xl font-bold text-ink-900">
             {subtotal === null ? 'Sign in to view' : money(saved ? payable : subtotal)}
           </span>
           {saved && (
-            <span className="tnum block text-[12px] text-ok">
+            <span className="tnum block text-xs text-ok">
               <span className="text-ink-300 line-through">{money(subtotal)}</span> · saved{' '}
               {money(discount)}
             </span>
@@ -191,14 +191,14 @@ export function CartPanelFooter({
       </div>
 
       {promo && (
-        <p className="truncate text-[12px] text-ok">
+        <p className="truncate text-xs text-ok">
           {promo.code ? <span className="font-mono">{promo.code}</span> : 'Offer'} applied ·{' '}
           {promo.label}
         </p>
       )}
 
       {!isApproved && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-warn-50 px-3 py-2.5 text-[12.5px] text-warn">
+        <p className="flex items-start gap-2 rounded-md bg-warn-50 px-3 py-2.5 text-sm text-warn">
           <Lock className="mt-0.5 size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
           Wholesale pricing and checkout unlock once your business account is approved.
         </p>
@@ -208,7 +208,7 @@ export function CartPanelFooter({
         <Link
           to="/checkout"
           onClick={onClose}
-          className="inline-flex h-13 w-full items-center justify-center rounded-[12px] bg-brand-gradient font-display text-[15px] font-semibold text-white transition-[filter] duration-[120ms] hover:brightness-110"
+          className="inline-flex h-13 w-full items-center justify-center rounded-lg bg-brand-gradient font-display text-lg font-semibold text-white transition-[filter] duration-[120ms] hover:brightness-110"
         >
           Proceed to checkout
         </Link>
@@ -222,7 +222,7 @@ export function CartPanelFooter({
         <Link
           to="/cart"
           onClick={onClose}
-          className="inline-flex h-9 items-center justify-center gap-1.5 rounded-[8px] border border-line-strong bg-surface font-display text-[13px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+          className="inline-flex h-9 items-center justify-center gap-1.5 rounded-md border border-line-strong bg-surface font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
         >
           <ShoppingCart className="size-4" strokeWidth={2} aria-hidden="true" />
           View cart
@@ -243,7 +243,7 @@ export function CartPanelFooter({
         <Link
           to="/account/quick-order"
           onClick={onClose}
-          className="block text-center text-[12.5px] text-ink-400 underline-offset-2 hover:text-ink-700 hover:underline"
+          className="block text-center text-sm text-ink-400 underline-offset-2 hover:text-ink-700 hover:underline"
         >
           View saved carts
         </Link>

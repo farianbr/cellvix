@@ -57,9 +57,9 @@ export function ShopPage() {
         {/* ---- results ---------------------------------------------------- */}
         <section aria-label="Products" className="min-w-0">
           <div className="mb-3 flex min-w-0 flex-wrap items-center gap-2.5">
-            <h1 className="font-display text-[17px] font-bold sm:text-[19px]">
+            <h1 className="font-display text-lg font-bold sm:text-xl">
               Parts
-              <span className="tnum ml-2 text-[13.5px] font-medium text-ink-400">
+              <span className="tnum ml-2 text-md font-medium text-ink-400">
                 {isLoading ? '—' : `${formatCount(total)} results`}
               </span>
             </h1>

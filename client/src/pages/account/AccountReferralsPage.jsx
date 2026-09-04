@@ -49,10 +49,10 @@ function CopyRow({ label, value, mono = true }) {
       <div className="flex items-center gap-2">
         <code
           className={cn(
-            'min-w-0 flex-1 truncate rounded-[9px] border border-line bg-surface-2 px-3 py-2.5 text-ink-900',
+            'min-w-0 flex-1 truncate rounded-md border border-line bg-surface-2 px-3 py-2.5 text-ink-900',
             mono
-              ? 'font-mono text-[15px] font-bold tracking-wide'
-              : 'font-mono text-[12.5px]',
+              ? 'font-mono text-lg font-bold tracking-wide'
+              : 'font-mono text-sm',
           )}
         >
           {value}
@@ -128,11 +128,11 @@ export function AccountReferralsPage() {
                     <step.icon className="size-4" strokeWidth={2} aria-hidden="true" />
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[13px] font-semibold text-ink-900">
+                    <p className="text-sm font-semibold text-ink-900">
                       <span className="sr-only">Step {index + 1}: </span>
                       {step.title}
                     </p>
-                    <p className="mt-0.5 text-[12px] leading-snug text-ink-500">{step.body}</p>
+                    <p className="mt-0.5 text-xs leading-snug text-ink-500">{step.body}</p>
                   </div>
                 </li>
               ))}
@@ -186,10 +186,10 @@ export function AccountReferralsPage() {
                 className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-4 py-3.5 sm:px-5"
               >
                 <div className="min-w-36 flex-1">
-                  <p className="truncate text-[13.5px] font-semibold text-ink-900">
+                  <p className="truncate text-md font-semibold text-ink-900">
                     {account.businessName}
                   </p>
-                  <p className="mt-0.5 text-[12px] text-ink-500">
+                  <p className="mt-0.5 text-xs text-ink-500">
                     Joined {date(account.joinedAt)}
                     {account.lastEarnedAt && ` · last earned ${date(account.lastEarnedAt)}`}
                   </p>
@@ -203,7 +203,7 @@ export function AccountReferralsPage() {
                   {account.active ? 'Trading' : 'Not yet trading'}
                 </Badge>
 
-                <p className="tnum w-20 text-right text-[13.5px] font-semibold text-ink-900">
+                <p className="tnum w-20 text-right text-md font-semibold text-ink-900">
                   {account.commissionEarned > 0 ? money(account.commissionEarned) : '—'}
                 </p>
               </li>
@@ -231,14 +231,14 @@ export function AccountReferralsPage() {
             {history.map((row) => (
               <li
                 key={row.id}
-                className="flex items-center gap-3 px-4 py-3 text-[13px] sm:px-5"
+                className="flex items-center gap-3 px-4 py-3 text-sm sm:px-5"
               >
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-ink-900">
                     {row.reversal ? 'Reversed' : 'Earned'}
                     {row.fromName ? ` · ${row.fromName}` : ''}
                   </p>
-                  <p className="mt-0.5 text-[12px] text-ink-400">
+                  <p className="mt-0.5 text-xs text-ink-400">
                     {date(row.at)}
                     {/* The rate as it stood when this was earned, not today's —
                         which is why it is stored on the row rather than

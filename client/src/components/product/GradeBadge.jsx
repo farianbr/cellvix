@@ -36,11 +36,11 @@ export function GradeBadge({ grade, className }) {
   const letterLast = stacked && parts[parts.length - 1].length === 1;
 
   function lineClass(index) {
-    if (!stacked) return 'text-[11px] leading-none @min-[260px]:text-[12px]';
-    if (!letterLast) return 'text-[9.5px] leading-[1.15] @min-[260px]:text-[10.5px]';
+    if (!stacked) return 'text-2xs leading-none @min-[260px]:text-xs';
+    if (!letterLast) return 'text-2xs leading-[1.15] @min-[260px]:text-2xs';
     return index === 0
-      ? 'text-[8px] leading-[1.25] @min-[260px]:text-[9px]'
-      : 'text-[13px] leading-[1] @min-[260px]:text-[14px]';
+      ? 'text-2xs leading-[1.25] @min-[260px]:text-2xs'
+      : 'text-sm leading-[1] @min-[260px]:text-md';
   }
 
   return (

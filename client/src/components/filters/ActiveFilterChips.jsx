@@ -80,7 +80,7 @@ export function ActiveFilterChips({ facetMeta }) {
         <button
           type="button"
           onClick={resetAll}
-          className="ml-1 text-[12.5px] font-medium text-ink-400 underline-offset-2 transition-colors hover:text-brand hover:underline"
+          className="ml-1 text-sm font-medium text-ink-400 underline-offset-2 transition-colors hover:text-brand hover:underline"
         >
           Clear all
         </button>

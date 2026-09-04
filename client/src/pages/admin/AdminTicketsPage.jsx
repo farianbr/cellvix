@@ -160,7 +160,7 @@ export function AdminTicketsPage() {
       priority: 1,
       render: (ticket) => (
         <span className="flex items-center gap-1.5 whitespace-nowrap">
-          <span className="font-mono text-[12.5px] font-medium text-ink-900">
+          <span className="font-mono text-sm font-medium text-ink-900">
             {ticket.ticketNumber}
           </span>
           {ticket.source === 'kiosk' && (
@@ -179,10 +179,10 @@ export function AdminTicketsPage() {
       sortValue: (ticket) => ticket.customer.name,
       render: (ticket) => (
         <>
-          <span className="block truncate text-[13px] font-medium text-ink-900">
+          <span className="block truncate text-sm font-medium text-ink-900">
             {ticket.customer.name}
           </span>
-          <span className="tnum block text-[11.5px] text-ink-400">{ticket.customer.phone}</span>
+          <span className="tnum block text-xs text-ink-400">{ticket.customer.phone}</span>
         </>
       ),
     },
@@ -194,7 +194,7 @@ export function AdminTicketsPage() {
       sortValue: (ticket) => `${ticket.device.brand ?? ''} ${ticket.device.model ?? ''}`,
       render: (ticket) => (
         <>
-          <span className="block truncate text-[12.5px]">
+          <span className="block truncate text-sm">
             {ticket.device.brand && (
               <span className="font-medium text-ink-900">{ticket.device.brand}</span>
             )}
@@ -203,7 +203,7 @@ export function AdminTicketsPage() {
             )}
             <span className="text-ink-500">{ticket.device.model ?? '—'}</span>
           </span>
-          <span className="block truncate text-[12px] text-ink-500">{ticket.issue}</span>
+          <span className="block truncate text-xs text-ink-500">{ticket.issue}</span>
         </>
       ),
     },
@@ -246,9 +246,9 @@ export function AdminTicketsPage() {
       sortValue: (ticket) => ticket.technician?.name ?? '',
       render: (ticket) =>
         ticket.technician?.name ? (
-          <span className="text-[12.5px] text-ink-700">{ticket.technician.name}</span>
+          <span className="text-sm text-ink-700">{ticket.technician.name}</span>
         ) : (
-          <span className="text-[12.5px] italic text-ink-300">Unassigned</span>
+          <span className="text-sm italic text-ink-300">Unassigned</span>
         ),
     },
     {
@@ -261,7 +261,7 @@ export function AdminTicketsPage() {
       render: (ticket) => (
         <span
           className={cn(
-            'inline-flex items-center gap-1 text-[12.5px]',
+            'inline-flex items-center gap-1 text-sm',
             ticket.overSla
               ? 'font-medium text-danger'
               : ticket.closed

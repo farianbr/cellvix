@@ -59,7 +59,7 @@ export function ActionMenu({ items = [], context, label = 'More actions', trigge
       ref={panelRef}
       role="menu"
       style={panelStyle}
-      className="z-[70] w-[200px] max-w-[calc(100vw-24px)] overflow-hidden rounded-[10px] border border-line bg-surface py-1 shadow-pop"
+      className="z-[70] w-[200px] max-w-[calc(100vw-24px)] overflow-hidden rounded-md border border-line bg-surface py-1 shadow-pop"
     >
       {usable.map((item) => {
         const Icon = item.icon;
@@ -74,7 +74,7 @@ export function ActionMenu({ items = [], context, label = 'More actions', trigge
               item.onSelect?.(context);
             }}
             className={cn(
-              'flex w-full items-center gap-2 px-3 py-2 text-left text-[13px] transition-colors',
+              'flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors',
               'disabled:cursor-not-allowed disabled:opacity-40',
               item.tone === 'danger'
                 ? 'text-danger hover:bg-danger-50'
@@ -104,7 +104,7 @@ export function ActionMenu({ items = [], context, label = 'More actions', trigge
         className={
           trigger
             ? 'active:scale-[0.97]'
-            : 'flex size-8 items-center justify-center rounded-[8px] text-ink-400 transition-colors hover:bg-surface-2 hover:text-ink-900 active:scale-[0.97]'
+            : 'flex size-8 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-surface-2 hover:text-ink-900 active:scale-[0.97]'
         }
       >
         {trigger ?? <MoreHorizontal className="size-4" strokeWidth={2} aria-hidden="true" />}

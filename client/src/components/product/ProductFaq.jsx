@@ -37,14 +37,14 @@ export function ProductFaq({ faqs = [], product = null, className }) {
             <span className="size-1 rounded-full bg-brand" aria-hidden="true" />
             Before you order
           </p>
-          <h2 id="product-faq" className="text-[22px] tracking-[-0.03em] sm:text-[28px]">
+          <h2 id="product-faq" className="text-2xl tracking-[-0.03em] sm:text-3xl">
             Questions about this part
           </h2>
         </div>
 
         <Link
           to="/faq"
-          className="inline-flex items-center gap-0.5 text-[13px] font-semibold text-brand transition-colors hover:text-brand-700"
+          className="inline-flex items-center gap-0.5 text-sm font-semibold text-brand transition-colors hover:text-brand-700"
         >
           The full FAQ
           <ArrowUpRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
@@ -56,13 +56,13 @@ export function ProductFaq({ faqs = [], product = null, className }) {
 
         {/* ---- ask a person ------------------------------------------------ */}
         <aside className="lg:sticky lg:top-[132px] lg:self-start">
-          <div className="overflow-hidden rounded-[24px] border border-line bg-surface-2 p-5">
+          <div className="overflow-hidden rounded-xl border border-line bg-surface-2 p-5">
             <span className="mb-3 flex size-9 items-center justify-center rounded-md bg-surface text-brand shadow-card">
               <Headphones className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />
             </span>
 
-            <p className="font-display text-[14px] font-bold text-ink-900">Not answered here?</p>
-            <p className="mt-1.5 text-[12.5px] leading-relaxed text-ink-500">
+            <p className="font-display text-md font-bold text-ink-900">Not answered here?</p>
+            <p className="mt-1.5 text-sm leading-relaxed text-ink-500">
               Fitment, cross-references and lead times on unlisted parts go straight to the sales
               desk.
               {product && ' Your message starts with this SKU already in it.'}
@@ -70,14 +70,14 @@ export function ProductFaq({ faqs = [], product = null, className }) {
 
             <Link
               to={askHref}
-              className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-full bg-brand-gradient font-display text-[13.5px] font-semibold text-white transition-[filter] hover:brightness-110"
+              className="mt-4 inline-flex h-11 w-full items-center justify-center rounded-full bg-brand-gradient font-display text-md font-semibold text-white transition-[filter] hover:brightness-110"
             >
               Ask about this part
             </Link>
 
             <a
               href={`tel:${BUSINESS_INFO.phone.replace(/[^\d+]/g, '')}`}
-              className="mt-2 flex h-11 w-full items-center justify-center rounded-full border border-line-strong bg-surface font-display text-[13px] font-semibold text-ink-700 transition-colors hover:border-ink-300"
+              className="mt-2 flex h-11 w-full items-center justify-center rounded-full border border-line-strong bg-surface font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300"
             >
               {BUSINESS_INFO.phone}
             </a>

@@ -54,7 +54,7 @@ export function AdminAppointmentsPage() {
           <button
             type="button"
             disabled
-            className="inline-flex h-9 cursor-not-allowed items-center gap-1.5 rounded-[9px] border border-line bg-surface-2 px-3.5 text-[13px] font-medium text-ink-400"
+            className="inline-flex h-9 cursor-not-allowed items-center gap-1.5 rounded-md border border-line bg-surface-2 px-3.5 text-sm font-medium text-ink-400"
           >
             <CalendarClock className="size-4" strokeWidth={1.75} aria-hidden="true" />
             Book appointment
@@ -62,7 +62,7 @@ export function AdminAppointmentsPage() {
         }
       />
 
-      <p className="mb-5 flex items-start gap-2.5 rounded-[12px] border border-warn/25 bg-warn-50 px-3.5 py-3 text-[13px] leading-relaxed text-ink-700">
+      <p className="mb-5 flex items-start gap-2.5 rounded-lg border border-warn/25 bg-warn-50 px-3.5 py-3 text-sm leading-relaxed text-ink-700">
         <AlertCircle className="mt-0.5 size-4 shrink-0 text-warn" strokeWidth={2} aria-hidden="true" />
         <span>
           <strong className="font-semibold">Booking is not wired up yet.</strong> The grid reads real
@@ -73,13 +73,13 @@ export function AdminAppointmentsPage() {
       </p>
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
-        <label className="flex items-center gap-2 text-[13px] text-ink-600">
+        <label className="flex items-center gap-2 text-sm text-ink-600">
           <span className="shrink-0">Day</span>
           <input
             type="date"
             value={day}
             onChange={(event) => setDay(event.target.value)}
-            className="h-9 rounded-[8px] border border-line bg-surface px-2.5 text-[13px] text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
+            className="h-9 rounded-md border border-line bg-surface px-2.5 text-sm text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
           />
         </label>
 
@@ -98,7 +98,7 @@ export function AdminAppointmentsPage() {
 
             return (
               <li key={hour} className="flex gap-3 px-4 py-3 sm:px-5">
-                <span className="tnum w-20 shrink-0 pt-0.5 text-[12.5px] text-ink-500">
+                <span className="tnum w-20 shrink-0 pt-0.5 text-sm text-ink-500">
                   {formatHour(hour)}
                 </span>
 
@@ -106,7 +106,7 @@ export function AdminAppointmentsPage() {
                   {inSlot.length === 0 ? (
                     <span
                       className={cn(
-                        'block rounded-[8px] border border-dashed border-line px-3 py-2 text-[12.5px] text-ink-300',
+                        'block rounded-md border border-dashed border-line px-3 py-2 text-sm text-ink-300',
                       )}
                     >
                       Free
@@ -116,7 +116,7 @@ export function AdminAppointmentsPage() {
                       {inSlot.map((row) => (
                         <li
                           key={row.id}
-                          className="rounded-[8px] bg-surface-2 px-3 py-2 text-[13px] text-ink-700"
+                          className="rounded-md bg-surface-2 px-3 py-2 text-sm text-ink-700"
                         >
                           {row.title}
                         </li>

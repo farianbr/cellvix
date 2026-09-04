@@ -62,18 +62,18 @@ export function PaymentFailedPage() {
       <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-12">
         <div className="min-w-0">
           <p className="eyebrow mb-2 text-danger">Payment not completed</p>
-          <h1 className="text-[28px] leading-tight sm:text-[34px]">{reason.title}</h1>
-          <p className="mt-4 max-w-xl text-[15px] leading-relaxed text-ink-500">{reason.body}</p>
+          <h1 className="text-3xl leading-tight sm:text-d-sm">{reason.title}</h1>
+          <p className="mt-4 max-w-xl text-lg leading-relaxed text-ink-500">{reason.body}</p>
 
           {detail && (
-            <p className="mt-4 rounded-[10px] border border-danger/20 bg-danger-50 px-3.5 py-3 text-[13.5px] leading-relaxed text-danger">
+            <p className="mt-4 rounded-md border border-danger/20 bg-danger-50 px-3.5 py-3 text-md leading-relaxed text-danger">
               {detail}
             </p>
           )}
 
           <ul className="mt-7 space-y-3">
             {REASSURANCES.map(({ icon: Icon, text }) => (
-              <li key={text} className="flex items-start gap-3 text-[13.5px] text-ink-500">
+              <li key={text} className="flex items-start gap-3 text-md text-ink-500">
                 <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-ok-50 text-ok">
                   <Icon className="size-4" strokeWidth={1.75} aria-hidden="true" />
                 </span>
@@ -92,7 +92,7 @@ export function PaymentFailedPage() {
             </Button>
             <Link
               to="/cart"
-              className="inline-flex h-13 items-center gap-2 rounded-[12px] border border-line-strong bg-surface px-6 font-display text-[15px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+              className="inline-flex h-13 items-center gap-2 rounded-lg border border-line-strong bg-surface px-6 font-display text-lg font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
             >
               <ArrowLeft className="size-4" strokeWidth={2} aria-hidden="true" />
               Back to cart
@@ -100,7 +100,7 @@ export function PaymentFailedPage() {
           </div>
 
           {count > 0 && (
-            <p className="mt-4 text-[13px] text-ink-400">
+            <p className="mt-4 text-sm text-ink-400">
               {count} {count === 1 ? 'item' : 'items'} still in your cart
               {priceVisible && subtotal !== null ? ` · ${money(subtotal)}` : ''}
             </p>
@@ -111,12 +111,12 @@ export function PaymentFailedPage() {
         <aside className="lg:sticky lg:top-[132px]">
           <BrandScene variant="payment-failed" className="mb-6" />
 
-          <div className="overflow-hidden rounded-[14px] border border-line bg-surface">
+          <div className="overflow-hidden rounded-lg border border-line bg-surface">
             <div className="rule-brand-gradient h-0.5" aria-hidden="true" />
             <div className="p-4 sm:p-5">
-              <h2 className="text-[15px]">Other ways to place this order</h2>
+              <h2 className="text-lg">Other ways to place this order</h2>
 
-              <ul className="mt-3 space-y-3 text-[13px] leading-relaxed text-ink-500">
+              <ul className="mt-3 space-y-3 text-sm leading-relaxed text-ink-500">
                 <li>
                   <span className="font-medium text-ink-900">Buy on your account terms.</span> Go
                   back to checkout and choose “On account” at the payment step — no card involved.
@@ -138,14 +138,14 @@ export function PaymentFailedPage() {
               <div className="mt-5 flex flex-col gap-2">
                 <a
                   href={`tel:${BUSINESS_INFO.phone.replace(/[^\d+]/g, '')}`}
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-[10px] border border-line-strong bg-surface font-display text-[13.5px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-line-strong bg-surface font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
                 >
                   <Headphones className="size-4" strokeWidth={1.75} aria-hidden="true" />
                   {BUSINESS_INFO.phone}
                 </a>
                 <Link
                   to="/contact"
-                  className="inline-flex h-11 items-center justify-center gap-2 rounded-[10px] border border-line bg-surface-2 font-display text-[13.5px] font-semibold text-ink-700 transition-colors hover:bg-surface-3"
+                  className="inline-flex h-11 items-center justify-center gap-2 rounded-md border border-line bg-surface-2 font-display text-md font-semibold text-ink-700 transition-colors hover:bg-surface-3"
                 >
                   <Mail className="size-4" strokeWidth={1.75} aria-hidden="true" />
                   Message the sales desk

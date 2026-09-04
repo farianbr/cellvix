@@ -227,12 +227,12 @@ export function ContactPage() {
 
           <h1
             id="contact-heading"
-            className="mt-6 text-[34px] leading-[1.04] tracking-[-0.035em] sm:text-[48px] lg:text-[56px]"
+            className="mt-6 text-d-sm leading-[1.04] tracking-[-0.035em] sm:text-d-lg lg:text-d-lg"
           >
             Talk to the sales desk
           </h1>
 
-          <p className="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-ink-400">
+          <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-ink-400">
             Account questions, stock checks, warranty claims or a problem with an order — answered
             by a person who can see your account, within one business day.
           </p>
@@ -251,11 +251,11 @@ export function ContactPage() {
                   not move. */}
               <a
                 href={href}
-                className="group block h-full rounded-[18px] bg-line p-[2px] transition-[background-color,background-image] duration-200 hover:bg-brand-gradient sm:rounded-[24px]"
+                className="group block h-full rounded-xl bg-line p-[2px] transition-[background-color,background-image] duration-200 hover:bg-brand-gradient sm:rounded-xl"
               >
-                <span className="flex h-full items-center gap-3.5 rounded-[16px] bg-surface p-3.5 transition-shadow duration-200 group-hover:shadow-card sm:flex-col sm:items-stretch sm:gap-0 sm:rounded-[22px] sm:p-5">
+                <span className="flex h-full items-center gap-3.5 rounded-lg bg-surface p-3.5 transition-shadow duration-200 group-hover:shadow-card sm:flex-col sm:items-stretch sm:gap-0 sm:rounded-xl sm:p-5">
                   <span
-                    className="flex size-10 shrink-0 items-center justify-center rounded-[12px] bg-surface-2 text-ink-500 transition-colors group-hover:bg-brand group-hover:text-white sm:mb-4 sm:size-11"
+                    className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-ink-500 transition-colors group-hover:bg-brand group-hover:text-white sm:mb-4 sm:size-11"
                     aria-hidden="true"
                   >
                     <Icon className="size-5" strokeWidth={1.75} />
@@ -263,10 +263,10 @@ export function ContactPage() {
 
                   <span className="min-w-0 flex-1">
                     <span className="eyebrow block text-ink-400">{label}</span>
-                    <span className="mt-1 block truncate font-display text-[15px] font-bold text-ink-900 sm:mt-2 sm:text-[16px]">
+                    <span className="mt-1 block truncate font-display text-lg font-bold text-ink-900 sm:mt-2 sm:text-lg">
                       {value}
                     </span>
-                    <span className="mt-0.5 block text-[12.5px] leading-relaxed text-ink-400 sm:mt-1.5 sm:text-[13px]">
+                    <span className="mt-0.5 block text-sm leading-relaxed text-ink-400 sm:mt-1.5 sm:text-sm">
                       {hint}
                     </span>
                   </span>
@@ -285,11 +285,11 @@ export function ContactPage() {
               <EyebrowPill>Send a message</EyebrowPill>
               <h2
                 id="message-heading"
-                className="mt-5 text-[26px] leading-[1.06] tracking-[-0.03em] sm:text-[34px]"
+                className="mt-5 text-3xl leading-[1.06] tracking-[-0.03em] sm:text-d-sm"
               >
                 Tell us which part and which model
               </h2>
-              <p className="mt-4 max-w-xl text-[14.5px] leading-relaxed text-ink-400">
+              <p className="mt-4 max-w-xl text-md leading-relaxed text-ink-400">
                 The more of the device you name, the fewer round trips it takes. A SKU, a model or a
                 photograph of the board is usually enough.
               </p>
@@ -298,17 +298,17 @@ export function ContactPage() {
             <Reveal delay={0.08}>
               <form
                 onSubmit={handleSubmit((values) => submit.mutate(values))}
-                className="mt-8 rounded-[24px] border border-line bg-surface-2 p-5 sm:p-7"
+                className="mt-8 rounded-xl border border-line bg-surface-2 p-5 sm:p-7"
               >
                 {sent && (
-                  <p className="mb-5 flex items-start gap-2.5 rounded-[14px] bg-ok-50 px-4 py-3 text-[13.5px] text-ok">
+                  <p className="mb-5 flex items-start gap-2.5 rounded-lg bg-ok-50 px-4 py-3 text-md text-ok">
                     <Check className="mt-0.5 size-4 shrink-0" strokeWidth={2.5} aria-hidden="true" />
                     {sent}
                   </p>
                 )}
 
                 {submit.isError && (
-                  <p className="mb-5 flex items-start gap-2.5 rounded-[14px] bg-danger-50 px-4 py-3 text-[13.5px] text-danger">
+                  <p className="mb-5 flex items-start gap-2.5 rounded-lg bg-danger-50 px-4 py-3 text-md text-danger">
                     <AlertCircle
                       className="mt-0.5 size-4 shrink-0"
                       strokeWidth={2}
@@ -374,7 +374,7 @@ export function ContactPage() {
           {/* ---- hours and pickup ------------------------------------------ */}
           <div className="space-y-3 lg:pt-2">
             <Reveal delay={0.12}>
-              <div className="rounded-[24px] border border-line bg-surface-2 p-5 sm:p-6">
+              <div className="rounded-xl border border-line bg-surface-2 p-5 sm:p-6">
                 <p className="eyebrow mb-4 flex items-center gap-1.5 text-ink-400">
                   <Clock className="size-3.5" strokeWidth={2} aria-hidden="true" />
                   Hours
@@ -383,7 +383,7 @@ export function ContactPage() {
                   {BUSINESS_INFO.hours.map((row) => (
                     <li
                       key={row.days}
-                      className="flex justify-between gap-4 border-b border-line pb-2.5 text-[13.5px] last:border-0 last:pb-0"
+                      className="flex justify-between gap-4 border-b border-line pb-2.5 text-md last:border-0 last:pb-0"
                     >
                       <span className="text-ink-500">{row.days}</span>
                       <span className="font-medium text-ink-900">{row.time}</span>
@@ -394,15 +394,15 @@ export function ContactPage() {
             </Reveal>
 
             <Reveal delay={0.2}>
-              <div className="rounded-[24px] border border-line bg-surface-2 p-5 sm:p-6">
+              <div className="rounded-xl border border-line bg-surface-2 p-5 sm:p-6">
                 <span
-                  className="mb-4 flex size-11 items-center justify-center rounded-[12px] bg-brand text-white"
+                  className="mb-4 flex size-11 items-center justify-center rounded-lg bg-brand text-white"
                   aria-hidden="true"
                 >
                   <Package className="size-5" strokeWidth={1.75} />
                 </span>
-                <h3 className="text-[16px]">Warehouse pickup</h3>
-                <p className="mt-2 text-[13.5px] leading-relaxed text-ink-500">
+                <h3 className="text-lg">Warehouse pickup</h3>
+                <p className="mt-2 text-md leading-relaxed text-ink-500">
                   Available to approved accounts during business hours. Select “Warehouse pickup” at
                   checkout and we will have your order ready in two hours.
                 </p>
@@ -410,21 +410,21 @@ export function ContactPage() {
             </Reveal>
 
             <Reveal delay={0.28}>
-              <div className="rounded-[24px] border border-line bg-surface-2 p-5 sm:p-6">
+              <div className="rounded-xl border border-line bg-surface-2 p-5 sm:p-6">
                 <span
-                  className="mb-4 flex size-11 items-center justify-center rounded-[12px] bg-brand-50 text-brand"
+                  className="mb-4 flex size-11 items-center justify-center rounded-lg bg-brand-50 text-brand"
                   aria-hidden="true"
                 >
                   <Truck className="size-5" strokeWidth={1.75} />
                 </span>
-                <h3 className="text-[16px]">Ordering, not asking?</h3>
-                <p className="mt-2 text-[13.5px] leading-relaxed text-ink-500">
+                <h3 className="text-lg">Ordering, not asking?</h3>
+                <p className="mt-2 text-md leading-relaxed text-ink-500">
                   Stock, grades and lead times are on every product page — no need to write in for a
                   number the catalogue already shows.
                 </p>
                 <Link
                   to="/"
-                  className="mt-4 inline-flex items-center gap-1.5 text-[13px] font-semibold text-brand transition-colors hover:text-brand-700"
+                  className="mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-brand transition-colors hover:text-brand-700"
                 >
                   Browse the catalogue
                   <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
@@ -441,11 +441,11 @@ export function ContactPage() {
           <p className="eyebrow mb-5 text-white/55">What happens next</p>
           <h2
             id="promise-heading"
-            className="text-[26px] leading-[1.08] tracking-[-0.03em] text-white sm:text-[38px] lg:text-[44px]"
+            className="text-3xl leading-[1.08] tracking-[-0.03em] text-white sm:text-d-md lg:text-d-md"
           >
             Your message reaches the desk, not a queue.
           </h2>
-          <p className="mt-6 max-w-2xl text-[15px] leading-relaxed text-white/65">
+          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-white/65">
             Every approved account has a named rep. Sourcing an unlisted part, raising a credit
             limit or chasing a warranty claim is one message to the same person each time.
           </p>
@@ -454,12 +454,12 @@ export function ContactPage() {
         <div className="mt-12 grid gap-8 border-t border-white/10 pt-10 sm:grid-cols-2 lg:mt-16 lg:grid-cols-3 lg:gap-6">
           {PROMISES.map(({ value, unit, label, hint }, index) => (
             <Reveal key={label} delay={index * 0.08}>
-              <p className="tnum font-display text-[44px] font-bold leading-none tracking-[-0.03em] text-white lg:text-[54px]">
+              <p className="tnum font-display text-d-md font-bold leading-none tracking-[-0.03em] text-white lg:text-d-lg">
                 {value}
-                <span className="ml-1.5 text-[20px] font-semibold lg:text-[24px]">{unit}</span>
+                <span className="ml-1.5 text-xl font-semibold lg:text-2xl">{unit}</span>
               </p>
-              <p className="mt-4 font-display text-[14px] font-bold text-white">{label}</p>
-              <p className="mt-1.5 text-[13px] leading-relaxed text-white/60">{hint}</p>
+              <p className="mt-4 font-display text-md font-bold text-white">{label}</p>
+              <p className="mt-1.5 text-sm leading-relaxed text-white/60">{hint}</p>
             </Reveal>
           ))}
         </div>
@@ -472,13 +472,13 @@ export function ContactPage() {
             <EyebrowPill>Find us</EyebrowPill>
             <h2
               id="warehouse-heading"
-              className="mt-5 text-[26px] leading-[1.06] tracking-[-0.03em] sm:text-[36px] lg:text-[42px]"
+              className="mt-5 text-3xl leading-[1.06] tracking-[-0.03em] sm:text-d-sm lg:text-d-md"
             >
               One warehouse, in {BUSINESS_INFO.address.city}
             </h2>
 
             <address className="mt-6 not-italic">
-              <p className="flex items-start gap-3 text-[15px] leading-relaxed text-ink-700">
+              <p className="flex items-start gap-3 text-lg leading-relaxed text-ink-700">
                 <MapPin className="mt-1 size-4 shrink-0 text-brand" strokeWidth={2} aria-hidden="true" />
                 <span>
                   {BUSINESS_INFO.address.line1}
@@ -491,7 +491,7 @@ export function ContactPage() {
               </p>
             </address>
 
-            <p className="mt-6 max-w-lg text-[14px] leading-relaxed text-ink-400">
+            <p className="mt-6 max-w-lg text-md leading-relaxed text-ink-400">
               Everything in the catalogue ships from this building — Canadian stock, no customs step
               between the order and the bench.
             </p>
@@ -515,14 +515,14 @@ export function ContactPage() {
         <Reveal className="mt-8 flex flex-wrap justify-center gap-2.5">
           <Link
             to="/faq"
-            className="inline-flex h-12 items-center gap-2 rounded-full bg-brand-gradient px-6 font-display text-[14px] font-semibold text-white transition-[filter] hover:brightness-110"
+            className="inline-flex h-12 items-center gap-2 rounded-full bg-brand-gradient px-6 font-display text-md font-semibold text-white transition-[filter] hover:brightness-110"
           >
             <MessageCircleQuestion className="size-4" strokeWidth={2} aria-hidden="true" />
             Read the FAQ
           </Link>
           <Link
             to="/about"
-            className="inline-flex h-12 items-center rounded-full border border-line-strong bg-surface px-6 font-display text-[14px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+            className="inline-flex h-12 items-center rounded-full border border-line-strong bg-surface px-6 font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
           >
             About Cellvix
           </Link>

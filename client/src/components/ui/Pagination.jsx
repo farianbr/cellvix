@@ -34,14 +34,14 @@ export function Pagination({ page, pages, onChange, className, hideWhenSingle = 
         onClick={() => onChange(page - 1)}
         disabled={page <= 1}
         aria-label="Previous page"
-        className="flex size-9 items-center justify-center rounded-[8px] border border-line bg-surface text-ink-500 transition-colors hover:border-line-strong hover:text-ink-900 disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex size-9 items-center justify-center rounded-md border border-line bg-surface text-ink-500 transition-colors hover:border-line-strong hover:text-ink-900 disabled:cursor-not-allowed disabled:opacity-40"
       >
         <ChevronLeft className="size-4" strokeWidth={2} />
       </button>
 
       {pageList(page, pages).map((item, index) =>
         item === '…' ? (
-          <span key={`gap-${index}`} className="px-1 text-[13px] text-ink-300" aria-hidden="true">
+          <span key={`gap-${index}`} className="px-1 text-sm text-ink-300" aria-hidden="true">
             …
           </span>
         ) : (
@@ -51,7 +51,7 @@ export function Pagination({ page, pages, onChange, className, hideWhenSingle = 
             onClick={() => onChange(item)}
             aria-current={item === page ? 'page' : undefined}
             className={cn(
-              'tnum flex size-9 items-center justify-center rounded-[8px] font-display text-[13px] font-semibold transition-[background,color,border-color]',
+              'tnum flex size-9 items-center justify-center rounded-md font-display text-sm font-semibold transition-[background,color,border-color]',
               // Outlined, not filled: the ring carries the brand ramp while the
               // face stays white, so the current page is marked without a solid
               // chip competing with the primary CTA on the same screen. A page
@@ -71,7 +71,7 @@ export function Pagination({ page, pages, onChange, className, hideWhenSingle = 
         onClick={() => onChange(page + 1)}
         disabled={page >= pages}
         aria-label="Next page"
-        className="flex size-9 items-center justify-center rounded-[8px] border border-line bg-surface text-ink-500 transition-colors hover:border-line-strong hover:text-ink-900 disabled:cursor-not-allowed disabled:opacity-40"
+        className="flex size-9 items-center justify-center rounded-md border border-line bg-surface text-ink-500 transition-colors hover:border-line-strong hover:text-ink-900 disabled:cursor-not-allowed disabled:opacity-40"
       >
         <ChevronRight className="size-4" strokeWidth={2} />
       </button>

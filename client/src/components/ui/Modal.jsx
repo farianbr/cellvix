@@ -46,7 +46,7 @@ export function Modal({
       panelMotion={PANEL_MOTION}
       panelClassName={cn('w-full', SIZES[size], className)}
     >
-      <div className="flex max-h-[88vh] flex-col overflow-hidden rounded-[16px] border border-line bg-surface shadow-flyout">
+      <div className="flex max-h-[88vh] flex-col overflow-hidden rounded-lg border border-line bg-surface shadow-flyout">
         {/* Without a title there is nothing to put in a header bar, so the close
             button floats over the content instead of reserving a whole row. */}
         {!title && showClose && (
@@ -64,11 +64,11 @@ export function Modal({
           <header className="flex shrink-0 items-start gap-4 border-b border-line px-5 py-4 md:px-6">
             <div className="min-w-0 flex-1">
               {title && (
-                <h2 id={titleId} className="text-[17px] md:text-[19px]">
+                <h2 id={titleId} className="text-lg md:text-xl">
                   {title}
                 </h2>
               )}
-              {description && <p className="mt-1 text-[13.5px] text-ink-500">{description}</p>}
+              {description && <p className="mt-1 text-md text-ink-500">{description}</p>}
             </div>
             {showClose && (
               <button

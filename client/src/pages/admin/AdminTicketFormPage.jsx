@@ -83,7 +83,7 @@ export function AdminTicketFormPage() {
     return (
       <>
         <PageHeader icon={page.icon} title="Ticket not found" />
-        <p className="text-[13px] text-ink-500">
+        <p className="text-sm text-ink-500">
           It may have been deleted.{' '}
           <Link to="/admin/tickets" className="font-semibold text-brand underline">
             Back to tickets
@@ -97,7 +97,7 @@ export function AdminTicketFormPage() {
     <>
       <Link
         to="/admin/tickets"
-        className="mb-3 inline-flex items-center gap-1.5 text-[13px] font-medium text-ink-500 transition-colors hover:text-ink-900"
+        className="mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-ink-500 transition-colors hover:text-ink-900"
       >
         <ArrowLeft className="size-3.5" strokeWidth={2} aria-hidden="true" />
         Back to tickets

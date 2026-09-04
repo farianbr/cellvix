@@ -157,7 +157,7 @@ const TICKET_COLUMNS = [
     priority: 1,
     width: '18%',
     render: (ticket) => (
-      <span className="whitespace-nowrap font-mono text-[12.5px] font-semibold text-ink-900">
+      <span className="whitespace-nowrap font-mono text-sm font-semibold text-ink-900">
         {ticket.ticketNumber}
       </span>
     ),
@@ -170,10 +170,10 @@ const TICKET_COLUMNS = [
     sortValue: (ticket) => `${ticket.device.brand ?? ''} ${ticket.device.model ?? ''}`,
     render: (ticket) => (
       <>
-        <span className="block truncate text-[13px] text-ink-900">
+        <span className="block truncate text-sm text-ink-900">
           {[ticket.device.brand, ticket.device.model].filter(Boolean).join(' ') || '—'}
         </span>
-        <span className="block truncate text-[11.5px] text-ink-400">{ticket.issue}</span>
+        <span className="block truncate text-xs text-ink-400">{ticket.issue}</span>
       </>
     ),
   },
@@ -184,7 +184,7 @@ const TICKET_COLUMNS = [
     width: '16%',
     sortValue: (ticket) => new Date(ticket.createdAt).getTime(),
     render: (ticket) => (
-      <span className="tnum whitespace-nowrap text-[12.5px] text-ink-500">
+      <span className="tnum whitespace-nowrap text-sm text-ink-500">
         {date(ticket.createdAt)}
       </span>
     ),
@@ -210,9 +210,9 @@ const TICKET_COLUMNS = [
     sortValue: (ticket) => ticket.estimateCents ?? 0,
     render: (ticket) =>
       ticket.estimateCents > 0 ? (
-        <span className="text-[13px] font-semibold text-ink-900">{money(ticket.estimateCents)}</span>
+        <span className="text-sm font-semibold text-ink-900">{money(ticket.estimateCents)}</span>
       ) : (
-        <span className="text-[12px] text-ink-300">—</span>
+        <span className="text-xs text-ink-300">—</span>
       ),
   },
 ];
@@ -225,7 +225,7 @@ const ORDER_COLUMNS = [
     priority: 1,
     width: '20%',
     render: (order) => (
-      <span className="whitespace-nowrap font-mono text-[12.5px] font-semibold text-brand">
+      <span className="whitespace-nowrap font-mono text-sm font-semibold text-brand">
         {order.orderNumber}
       </span>
     ),
@@ -237,7 +237,7 @@ const ORDER_COLUMNS = [
     width: '20%',
     sortValue: (order) => new Date(order.createdAt).getTime(),
     render: (order) => (
-      <span className="tnum whitespace-nowrap text-[12.5px] text-ink-500">
+      <span className="tnum whitespace-nowrap text-sm text-ink-500">
         {date(order.createdAt)}
       </span>
     ),
@@ -255,7 +255,7 @@ const ORDER_COLUMNS = [
     className: 'tnum',
     sortValue: (order) => order.items.length,
     render: (order) => (
-      <span className="text-[13px] text-ink-700">{formatCount(order.items.length)}</span>
+      <span className="text-sm text-ink-700">{formatCount(order.items.length)}</span>
     ),
   },
   {
@@ -274,7 +274,7 @@ const ORDER_COLUMNS = [
     className: 'tnum',
     sortValue: (order) => order.total,
     render: (order) => (
-      <span className="text-[13px] font-semibold text-ink-900">{money(order.total)}</span>
+      <span className="text-sm font-semibold text-ink-900">{money(order.total)}</span>
     ),
   },
 ];
@@ -296,7 +296,7 @@ const INVOICE_COLUMNS = [
     priority: 1,
     width: '18%',
     render: (invoice) => (
-      <span className="whitespace-nowrap font-mono text-[12.5px] font-semibold text-brand">
+      <span className="whitespace-nowrap font-mono text-sm font-semibold text-brand">
         {invoice.number}
       </span>
     ),
@@ -308,7 +308,7 @@ const INVOICE_COLUMNS = [
     width: '16%',
     sortValue: (invoice) => (invoice.issuedAt ? new Date(invoice.issuedAt).getTime() : 0),
     render: (invoice) => (
-      <span className="tnum whitespace-nowrap text-[12.5px] text-ink-500">
+      <span className="tnum whitespace-nowrap text-sm text-ink-500">
         {invoice.issuedAt ? date(invoice.issuedAt) : '—'}
       </span>
     ),
@@ -320,7 +320,7 @@ const INVOICE_COLUMNS = [
     width: '16%',
     sortValue: (invoice) => (invoice.dueDate ? new Date(invoice.dueDate).getTime() : 0),
     render: (invoice) => (
-      <span className="tnum whitespace-nowrap text-[12.5px] text-ink-500">
+      <span className="tnum whitespace-nowrap text-sm text-ink-500">
         {invoice.dueDate ? date(invoice.dueDate) : '—'}
       </span>
     ),
@@ -344,15 +344,15 @@ const INVOICE_COLUMNS = [
     render: (invoice) =>
       invoice.balance > 0 ? (
         <>
-          <span className="text-[13px] font-semibold text-ink-900">
+          <span className="text-sm font-semibold text-ink-900">
             {money(invoice.amountPaid)}
           </span>
-          <span className="block whitespace-nowrap text-[11px] text-danger">
+          <span className="block whitespace-nowrap text-2xs text-danger">
             {money(invoice.balance)} owed
           </span>
         </>
       ) : (
-        <span className="text-[13px] text-ink-700">{money(invoice.amountPaid)}</span>
+        <span className="text-sm text-ink-700">{money(invoice.amountPaid)}</span>
       ),
   },
   {
@@ -364,7 +364,7 @@ const INVOICE_COLUMNS = [
     className: 'tnum',
     sortValue: (invoice) => invoice.amount,
     render: (invoice) => (
-      <span className="text-[13px] font-semibold text-ink-900">{money(invoice.amount)}</span>
+      <span className="text-sm font-semibold text-ink-900">{money(invoice.amount)}</span>
     ),
   },
   {
@@ -394,7 +394,7 @@ const QUOTE_COLUMNS = [
     priority: 1,
     width: '20%',
     render: (quote) => (
-      <span className="whitespace-nowrap font-mono text-[12.5px] font-semibold text-brand">
+      <span className="whitespace-nowrap font-mono text-sm font-semibold text-brand">
         {quote.quoteNumber}
       </span>
     ),
@@ -406,7 +406,7 @@ const QUOTE_COLUMNS = [
     width: '20%',
     sortValue: (quote) => new Date(quote.createdAt).getTime(),
     render: (quote) => (
-      <span className="tnum whitespace-nowrap text-[12.5px] text-ink-500">
+      <span className="tnum whitespace-nowrap text-sm text-ink-500">
         {date(quote.createdAt)}
       </span>
     ),
@@ -420,7 +420,7 @@ const QUOTE_COLUMNS = [
     className: 'tnum',
     sortValue: (quote) => quote.itemCount ?? 0,
     render: (quote) => (
-      <span className="text-[13px] text-ink-700">{formatCount(quote.itemCount ?? 0)}</span>
+      <span className="text-sm text-ink-700">{formatCount(quote.itemCount ?? 0)}</span>
     ),
   },
   {
@@ -432,7 +432,7 @@ const QUOTE_COLUMNS = [
     render: (quote) => (
       <span
         className={cn(
-          'tnum whitespace-nowrap text-[12.5px]',
+          'tnum whitespace-nowrap text-sm',
           quote.expired ? 'font-medium text-warn' : 'text-ink-500',
         )}
       >
@@ -450,7 +450,7 @@ const QUOTE_COLUMNS = [
     sortValue: (quote) => quote.total,
     render: (quote) => (
       <>
-        <span className="block text-[13px] font-semibold text-ink-900">{money(quote.total)}</span>
+        <span className="block text-sm font-semibold text-ink-900">{money(quote.total)}</span>
         <Badge tone={QUOTE_TONES[quote.status] ?? 'neutral'} size="sm">
           {quote.status}
         </Badge>
@@ -470,7 +470,7 @@ const WEB_QUOTE_COLUMNS = [
     width: '20%',
     sortValue: (row) => new Date(row.createdAt).getTime(),
     render: (row) => (
-      <span className="tnum whitespace-nowrap text-[12.5px] text-ink-500">
+      <span className="tnum whitespace-nowrap text-sm text-ink-500">
         {date(row.createdAt)}
       </span>
     ),
@@ -492,7 +492,7 @@ const WEB_QUOTE_COLUMNS = [
     priority: 2,
     width: '40%',
     render: (row) => (
-      <span className="block truncate text-[12.5px] text-ink-700">{row.message}</span>
+      <span className="block truncate text-sm text-ink-700">{row.message}</span>
     ),
   },
   {
@@ -526,7 +526,7 @@ function SummaryPanel({ title, cta, onOpen, children }) {
         <button
           type="button"
           onClick={onOpen}
-          className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-brand hover:text-brand-700"
+          className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700"
         >
           {cta}
           <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
@@ -888,9 +888,9 @@ export function AdminClientProfilePage() {
        * cannot see a price, order, or be invoiced.
        */}
       {user.status === 'pending' && (
-        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-[12px] border border-warn/35 bg-warn-50 px-4 py-3">
+        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-warn/35 bg-warn-50 px-4 py-3">
           <Clock className="size-4 shrink-0 text-warn" strokeWidth={2} aria-hidden="true" />
-          <p className="min-w-0 flex-1 text-[13px] leading-snug text-ink-900">
+          <p className="min-w-0 flex-1 text-sm leading-snug text-ink-900">
             <span className="font-semibold">This account is waiting for approval.</span>{' '}
             <span className="text-ink-600">
               It can sign in and browse, but sees no wholesale pricing and cannot order until it is
@@ -912,7 +912,7 @@ export function AdminClientProfilePage() {
           separate slabs made the top of this screen read as three unrelated
           widgets. The brand rule along the top is the only ornament — it says
           "this is a record" the way the reference does. */}
-      <div className="mb-5 overflow-hidden rounded-[14px] border border-line bg-surface">
+      <div className="mb-5 overflow-hidden rounded-lg border border-line bg-surface">
         <span className="block h-1 bg-brand-gradient" aria-hidden="true" />
 
         <header className="p-4 sm:p-5">
@@ -922,7 +922,7 @@ export function AdminClientProfilePage() {
                 (§0's `displayName`). A monogram tells two accounts apart in a
                 way a shared icon cannot. */}
             <span
-              className="flex size-14 shrink-0 items-center justify-center rounded-full bg-brand-gradient font-display text-[19px] font-bold text-white"
+              className="flex size-14 shrink-0 items-center justify-center rounded-full bg-brand-gradient font-display text-xl font-bold text-white"
               aria-hidden="true"
             >
               {initials}
@@ -930,7 +930,7 @@ export function AdminClientProfilePage() {
 
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-[20px] leading-tight sm:text-[24px]">{user.displayName}</h1>
+                <h1 className="text-xl leading-tight sm:text-2xl">{user.displayName}</h1>
                 <Badge tone={STATUS_TONES[user.status]} size="sm">
                   {user.status}
                 </Badge>
@@ -946,7 +946,7 @@ export function AdminClientProfilePage() {
                   it inside a sentence of separators. Email and phone are
                   actionable — this is a screen somebody uses while picking up
                   the handset. */}
-              <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[13px] text-ink-500">
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-500">
                 {user.businessName && user.businessName !== user.displayName && (
                   <span className="inline-flex items-center gap-1.5">
                     <Building2 className="size-3.5 shrink-0 text-brand" strokeWidth={2} aria-hidden="true" />
@@ -1041,15 +1041,15 @@ export function AdminClientProfilePage() {
             <div
               key={stat.key}
               className={cn(
-                'rounded-[12px] border border-line bg-surface px-3.5 py-3',
+                'rounded-lg border border-line bg-surface px-3.5 py-3',
                 'transition-shadow duration-[160ms] hover:shadow-card',
               )}
             >
               <dt className="flex items-center gap-2">
-                <span className="flex size-6 shrink-0 items-center justify-center rounded-[7px] bg-surface-2 text-ink-400">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-sm bg-surface-2 text-ink-400">
                   <stat.icon className="size-3.5" strokeWidth={2} aria-hidden="true" />
                 </span>
-                <span className="truncate text-[10.5px] font-semibold uppercase tracking-wider text-ink-500">
+                <span className="truncate text-2xs font-semibold uppercase tracking-wider text-ink-500">
                   {stat.label}
                 </span>
               </dt>
@@ -1057,7 +1057,7 @@ export function AdminClientProfilePage() {
               <dd>
                 <span
                   className={cn(
-                    'tnum mt-2.5 block font-display text-[20px] font-bold leading-none',
+                    'tnum mt-2.5 block font-display text-xl font-bold leading-none',
                     // The one exception to the uniform treatment: a figure that
                     // is genuinely a problem. Everything else is ink.
                     stat.alert ? TILE_ALERT : 'text-ink-900',
@@ -1065,7 +1065,7 @@ export function AdminClientProfilePage() {
                 >
                   {stat.value}
                 </span>
-                <span className="mt-1.5 block text-[11px] leading-tight text-ink-400">
+                <span className="mt-1.5 block text-2xs leading-tight text-ink-400">
                   {stat.hint}
                 </span>
               </dd>
@@ -1082,7 +1082,7 @@ export function AdminClientProfilePage() {
        * switches what is shown *below* it. Sitting on its own, directly above
        * the panel it controls, the relationship is the one it actually has.
        */}
-      <div className="scroll-slim mb-4 flex gap-1 overflow-x-auto rounded-[12px] border border-line bg-surface px-2">
+      <div className="scroll-slim mb-4 flex gap-1 overflow-x-auto rounded-lg border border-line bg-surface px-2">
         {TABS.map((item) => {
           const active = tab === item.key;
           return (
@@ -1092,7 +1092,7 @@ export function AdminClientProfilePage() {
               onClick={() => setTab(item.key)}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'relative flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-3 text-[13px] font-medium',
+                'relative flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-3 text-sm font-medium',
                 'transition-colors active:scale-[0.97]',
                 active ? 'text-brand' : 'text-ink-400 hover:text-ink-700',
               )}
@@ -1104,7 +1104,7 @@ export function AdminClientProfilePage() {
               {TAB_COUNTS[item.key] > 0 && (
                 <span
                   className={cn(
-                    'tnum rounded-full px-1.5 text-[10.5px] font-semibold leading-[16px]',
+                    'tnum rounded-full px-1.5 text-2xs font-semibold leading-[16px]',
                     active ? 'bg-brand text-white' : 'bg-surface-2 text-ink-500',
                   )}
                 >
@@ -1135,14 +1135,14 @@ export function AdminClientProfilePage() {
             action={
               <Link
                 to={`/admin/clients/${id}/edit`}
-                className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-brand hover:text-brand-700"
+                className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700"
               >
                 <Pencil className="size-3.5" strokeWidth={2} aria-hidden="true" />
                 Edit
               </Link>
             }
           >
-            <dl className="space-y-2.5 text-[13px]">
+            <dl className="space-y-2.5 text-sm">
               {[
                 ['Name', user.displayName],
                 ['Business', user.businessName || '—'],
@@ -1176,7 +1176,7 @@ export function AdminClientProfilePage() {
                 <button
                   type="button"
                   onClick={() => setTab('invoices')}
-                  className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-brand hover:text-brand-700"
+                  className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700"
                 >
                   View all
                   <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
@@ -1197,10 +1197,10 @@ export function AdminClientProfilePage() {
                   <li key={invoice.number} className="first:pt-0 last:pb-0">
                     <Link
                       to={`/admin/invoices/${invoice.number}`}
-                      className="group -mx-2 flex items-center gap-3 rounded-[8px] px-2 py-2.5 transition-colors hover:bg-surface-2 active:scale-[0.99]"
+                      className="group -mx-2 flex items-center gap-3 rounded-md px-2 py-2.5 transition-colors hover:bg-surface-2 active:scale-[0.99]"
                     >
                     <div className="min-w-0 flex-1">
-                      <span className="flex items-center gap-1.5 text-[13px] font-semibold text-ink-900 group-hover:text-brand">
+                      <span className="flex items-center gap-1.5 text-sm font-semibold text-ink-900 group-hover:text-brand">
                         <span className="truncate">{invoice.number}</span>
                         <Eye
                           className="size-3.5 shrink-0 text-ink-300 opacity-0 transition-opacity group-hover:opacity-100"
@@ -1208,13 +1208,13 @@ export function AdminClientProfilePage() {
                           aria-hidden="true"
                         />
                       </span>
-                      <span className="block text-[11.5px] text-ink-400">
+                      <span className="block text-xs text-ink-400">
                         {invoice.issuedAt ? date(invoice.issuedAt) : '—'}
                         {invoice.balance > 0 && ` · ${money(invoice.balance)} owed`}
                       </span>
                     </div>
                     <InvoiceStatusBadge status={invoice.status} />
-                    <span className="tnum shrink-0 text-[13px] font-semibold text-ink-900">
+                    <span className="tnum shrink-0 text-sm font-semibold text-ink-900">
                       {money(invoice.amount)}
                     </span>
                     </Link>
@@ -1231,7 +1231,7 @@ export function AdminClientProfilePage() {
               <button
                 type="button"
                 onClick={() => setTab('activity')}
-                className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-brand hover:text-brand-700"
+                className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700"
               >
                 Full history
                 <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
@@ -1249,7 +1249,7 @@ export function AdminClientProfilePage() {
                   <li key={order.orderNumber}>
                     <Link
                       to={`/admin/orders/${order.orderNumber}`}
-                      className="group flex items-center gap-2.5 rounded-[8px] px-2 py-1.5 text-[12.5px] transition-colors hover:bg-surface-2 active:scale-[0.99]"
+                      className="group flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-surface-2 active:scale-[0.99]"
                     >
                       <Package className="size-3.5 shrink-0 text-info" strokeWidth={2} aria-hidden="true" />
                       <span className="flex min-w-0 flex-1 items-center gap-1.5 text-ink-700 group-hover:text-brand">
@@ -1268,7 +1268,7 @@ export function AdminClientProfilePage() {
                   <li key={invoice.number}>
                     <Link
                       to={`/admin/invoices/${invoice.number}`}
-                      className="group flex items-center gap-2.5 rounded-[8px] px-2 py-1.5 text-[12.5px] transition-colors hover:bg-surface-2 active:scale-[0.99]"
+                      className="group flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-surface-2 active:scale-[0.99]"
                     >
                       <Receipt className="size-3.5 shrink-0 text-brand" strokeWidth={2} aria-hidden="true" />
                       <span className="flex min-w-0 flex-1 items-center gap-1.5 text-ink-700 group-hover:text-brand">
@@ -1298,7 +1298,7 @@ export function AdminClientProfilePage() {
             onOpen={() => setTab('membership')}
             cta="Referral & Portal"
           >
-            <dl className="space-y-2 text-[12.5px]">
+            <dl className="space-y-2 text-sm">
               <SummaryRow label="Tier">
                 <Badge tone={TIER_TONE[user.tier] ?? 'neutral'} size="sm">
                   {MEMBERSHIP_TIERS.find((item) => item.value === user.tier)?.label ?? user.tier}
@@ -1309,7 +1309,7 @@ export function AdminClientProfilePage() {
               </SummaryRow>
               <SummaryRow label="Referral code">
                 {user.referralCode ? (
-                  <code className="font-mono text-[12px] font-semibold">{user.referralCode}</code>
+                  <code className="font-mono text-xs font-semibold">{user.referralCode}</code>
                 ) : (
                   <span className="text-ink-400">Not issued</span>
                 )}
@@ -1334,11 +1334,11 @@ export function AdminClientProfilePage() {
             cta="All conversations"
           >
             {messages.length === 0 ? (
-              <p className="py-3 text-[12.5px] text-ink-400">Nothing logged yet.</p>
+              <p className="py-3 text-sm text-ink-400">Nothing logged yet.</p>
             ) : (
               <ul className="space-y-2">
                 {messages.slice(0, 3).map((message) => (
-                  <li key={message.id} className="flex items-start gap-2.5 text-[12.5px]">
+                  <li key={message.id} className="flex items-start gap-2.5 text-sm">
                     <MessageCircle
                       className="mt-0.5 size-3.5 shrink-0 text-ink-300"
                       strokeWidth={2}
@@ -1346,7 +1346,7 @@ export function AdminClientProfilePage() {
                     />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-ink-700">{message.body}</span>
-                      <span className="text-[11.5px] text-ink-400">
+                      <span className="text-xs text-ink-400">
                         {message.channel} · {relativeTime(message.createdAt)}
                       </span>
                     </span>
@@ -1358,13 +1358,13 @@ export function AdminClientProfilePage() {
 
           <SummaryPanel title="Internal notes" onOpen={() => setTab('notes')} cta="All notes">
             {notes.length === 0 ? (
-              <p className="py-3 text-[12.5px] text-ink-400">No notes yet.</p>
+              <p className="py-3 text-sm text-ink-400">No notes yet.</p>
             ) : (
               <ul className="space-y-2">
                 {notes.slice(0, 3).map((note) => (
-                  <li key={note.id} className="text-[12.5px]">
+                  <li key={note.id} className="text-sm">
                     <p className="line-clamp-2 text-ink-700">{note.body}</p>
-                    <p className="text-[11.5px] text-ink-400">
+                    <p className="text-xs text-ink-400">
                       {note.staffName} · {date(note.createdAt)}
                     </p>
                   </li>
@@ -1567,7 +1567,7 @@ export function AdminClientProfilePage() {
           action={
             <Link
               to="/admin/web-quotes"
-              className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-brand hover:text-brand-700"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700"
             >
               All enquiries
               <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
@@ -1625,17 +1625,17 @@ export function AdminClientProfilePage() {
                       aria-hidden="true"
                     />
                     <span className="min-w-0 flex-1">
-                      <span className="block text-[13px] text-ink-900">{event.title}</span>
+                      <span className="block text-sm text-ink-900">{event.title}</span>
                       {event.detail && (
-                        <span className="block text-[11.5px] text-ink-400">{event.detail}</span>
+                        <span className="block text-xs text-ink-400">{event.detail}</span>
                       )}
                     </span>
                     {event.amount != null && (
-                      <span className="tnum shrink-0 text-[12.5px] font-medium text-ink-700">
+                      <span className="tnum shrink-0 text-sm font-medium text-ink-700">
                         {money(Math.abs(event.amount))}
                       </span>
                     )}
-                    <span className="tnum hidden shrink-0 text-[11.5px] text-ink-400 sm:block">
+                    <span className="tnum hidden shrink-0 text-xs text-ink-400 sm:block">
                       {dateTime(event.at)}
                     </span>
                   </li>

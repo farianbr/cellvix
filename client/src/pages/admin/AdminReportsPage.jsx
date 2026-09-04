@@ -95,7 +95,7 @@ function CostCoverageNote({ coverage }) {
   if (!coverage || coverage.uncostedLines === 0) return null;
 
   return (
-    <p className="mb-3 flex items-start gap-2 rounded-[10px] bg-warn-50 px-3 py-2.5 text-[12.5px] leading-relaxed text-warn">
+    <p className="mb-3 flex items-start gap-2 rounded-md bg-warn-50 px-3 py-2.5 text-sm leading-relaxed text-warn">
       <Info className="mt-0.5 size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
       <span>
         Margin excludes <strong className="font-semibold">{formatCount(coverage.uncostedLines)}</strong>{' '}
@@ -162,12 +162,12 @@ function SummaryTab({ data }) {
           title="Profit & loss"
           description="Revenue through to net profit for this range."
           action={
-            <Link to="/admin/reports?tab=pl" className="text-[12.5px] font-semibold text-brand hover:underline">
+            <Link to="/admin/reports?tab=pl" className="text-sm font-semibold text-brand hover:underline">
               Details →
             </Link>
           }
         >
-          <dl className="space-y-2 text-[13px]">
+          <dl className="space-y-2 text-sm">
             <div className="flex justify-between gap-2">
               <dt className="text-ink-500">Revenue</dt>
               <dd className="tnum text-ink-900">{money(pl.revenue ?? 0)}</dd>
@@ -184,7 +184,7 @@ function SummaryTab({ data }) {
               <dt className="text-ink-500">Operating expenses</dt>
               <dd className="tnum text-ink-900">{money(pl.expenses ?? 0)}</dd>
             </div>
-            <div className="flex justify-between gap-2 border-t border-line pt-2 text-[14px] font-semibold">
+            <div className="flex justify-between gap-2 border-t border-line pt-2 text-md font-semibold">
               <dt className="text-ink-700">Net profit</dt>
               <dd>
                 <Signed cents={pl.netProfit ?? 0} className="font-semibold" />
@@ -193,7 +193,7 @@ function SummaryTab({ data }) {
           </dl>
 
           {(data.refunds?.total ?? 0) > 0 && (
-            <p className="mt-3 border-t border-line pt-2 text-[12.5px] text-ink-500">
+            <p className="mt-3 border-t border-line pt-2 text-sm text-ink-500">
               {/* Refunds get their own line and never push revenue negative. */}
               Refunds in range:{' '}
               <span className="tnum font-medium text-ink-700">{money(data.refunds.total)}</span>{' '}
@@ -206,7 +206,7 @@ function SummaryTab({ data }) {
           title="Outstanding"
           description="Owed to Cellvix, as of today — a position, not a flow."
           action={
-            <Link to="/admin/invoices?status=overdue" className="text-[12.5px] font-semibold text-brand hover:underline">
+            <Link to="/admin/invoices?status=overdue" className="text-sm font-semibold text-brand hover:underline">
               View all →
             </Link>
           }
@@ -218,9 +218,9 @@ function SummaryTab({ data }) {
               { label: 'Total invoices', value: formatCount(ar.totalInvoices ?? 0) },
               { label: 'Overdue count', value: formatCount(ar.overdueCount ?? 0), danger: (ar.overdueCount ?? 0) > 0 },
             ].map((tile) => (
-              <div key={tile.label} className="rounded-[10px] bg-surface-2 p-2.5">
+              <div key={tile.label} className="rounded-md bg-surface-2 p-2.5">
                 <p className="eyebrow text-ink-400">{tile.label}</p>
-                <p className={cn('tnum mt-1 font-display text-[16px] font-bold', tile.danger ? 'text-danger' : 'text-ink-900')}>
+                <p className={cn('tnum mt-1 font-display text-lg font-bold', tile.danger ? 'text-danger' : 'text-ink-900')}>
                   {tile.value}
                 </p>
               </div>
@@ -230,7 +230,7 @@ function SummaryTab({ data }) {
           {ar.top?.length ? (
             <ul className="space-y-1.5">
               {ar.top.map((invoice) => (
-                <li key={invoice.number} className="flex items-baseline justify-between gap-2 text-[12.5px]">
+                <li key={invoice.number} className="flex items-baseline justify-between gap-2 text-sm">
                   <span className="min-w-0 truncate text-ink-600">
                     <span className="font-mono">{invoice.number}</span> · {invoice.businessName}
                   </span>
@@ -241,7 +241,7 @@ function SummaryTab({ data }) {
               ))}
             </ul>
           ) : (
-            <p className="text-[12.5px] text-ink-400">Nothing outstanding.</p>
+            <p className="text-sm text-ink-400">Nothing outstanding.</p>
           )}
         </Panel>
 
@@ -253,9 +253,9 @@ function SummaryTab({ data }) {
               { label: 'Out of stock', value: formatCount(inventory.outOfStock ?? 0), danger: (inventory.outOfStock ?? 0) > 0 },
               { label: 'Low stock', value: formatCount(inventory.lowStock ?? 0) },
             ].map((tile) => (
-              <div key={tile.label} className="rounded-[10px] bg-surface-2 p-2.5">
+              <div key={tile.label} className="rounded-md bg-surface-2 p-2.5">
                 <p className="eyebrow text-ink-400">{tile.label}</p>
-                <p className={cn('tnum mt-1 font-display text-[16px] font-bold', tile.danger ? 'text-danger' : 'text-ink-900')}>
+                <p className={cn('tnum mt-1 font-display text-lg font-bold', tile.danger ? 'text-danger' : 'text-ink-900')}>
                   {tile.value}
                 </p>
               </div>
@@ -267,7 +267,7 @@ function SummaryTab({ data }) {
               <p className="eyebrow mb-1.5 text-ink-400">Stock alerts</p>
               <ul className="space-y-1">
                 {inventory.alerts.map((item) => (
-                  <li key={item.id} className="flex items-baseline justify-between gap-2 text-[12.5px]">
+                  <li key={item.id} className="flex items-baseline justify-between gap-2 text-sm">
                     <span className="min-w-0 truncate text-ink-600">{item.name}</span>
                     <span className="tnum shrink-0 text-warn">Low stock · {item.stock} left</span>
                   </li>
@@ -275,7 +275,7 @@ function SummaryTab({ data }) {
               </ul>
             </>
           ) : (
-            <p className="text-[12.5px] text-ink-400">Nothing below its reorder point.</p>
+            <p className="text-sm text-ink-400">Nothing below its reorder point.</p>
           )}
         </Panel>
 
@@ -330,7 +330,7 @@ function ProfitAndLossTab({ data }) {
 
       <div className="grid gap-3 lg:grid-cols-[1fr_1fr]">
         <Panel title="Profit & loss statement" description="In accounting order.">
-          <dl className="space-y-1.5 text-[13px]">
+          <dl className="space-y-1.5 text-sm">
             {[
               ['Product revenue', statement.productRevenue],
               ['Shipping revenue', statement.shippingRevenue],
@@ -365,7 +365,7 @@ function ProfitAndLossTab({ data }) {
               </div>
             ))}
             {!(statement.operatingExpenses ?? []).length && (
-              <p className="text-[12.5px] text-ink-400">No expenses in this period.</p>
+              <p className="text-sm text-ink-400">No expenses in this period.</p>
             )}
 
             <div className="flex justify-between gap-2 border-t border-line pt-1.5">
@@ -373,12 +373,12 @@ function ProfitAndLossTab({ data }) {
               <dd className="tnum text-ink-900">({money(statement.totalExpenses ?? 0)})</dd>
             </div>
 
-            <div className="flex justify-between gap-2 border-t-2 border-line-strong pt-2 text-[14px] font-semibold">
+            <div className="flex justify-between gap-2 border-t-2 border-line-strong pt-2 text-md font-semibold">
               <dt className="text-ink-900">Net profit</dt>
               <dd><Signed cents={statement.netProfit ?? 0} className="font-semibold" /></dd>
             </div>
 
-            <div className="flex justify-between gap-2 pt-2 text-[12.5px]">
+            <div className="flex justify-between gap-2 pt-2 text-sm">
               <dt className="text-ink-400">GST/HST collected (not revenue)</dt>
               <dd className="tnum text-ink-500">{money(statement.taxCollected ?? 0)}</dd>
             </div>
@@ -404,14 +404,14 @@ function ProfitAndLossTab({ data }) {
               className: 'tnum',
               render: (row) =>
                 row.margin === null ? (
-                  <span className="text-[12px] text-ink-300">—</span>
+                  <span className="text-xs text-ink-300">—</span>
                 ) : (
                   <>
                     <span className={cn('font-medium', row.margin < 0 ? 'text-danger' : 'text-ink-900')}>
                       {row.margin}%
                     </span>
                     {row.uncostedLines > 0 && (
-                      <span className="block text-[11px] text-warn">{row.uncostedLines} uncosted</span>
+                      <span className="block text-2xs text-warn">{row.uncostedLines} uncosted</span>
                     )}
                   </>
                 ),
@@ -447,10 +447,10 @@ function SalesTab({ data }) {
           // is money actually collected in the range.
           description="By payment date. The tiles above are invoiced totals by invoice date — these are different numbers."
         >
-          <p className="tnum font-display text-[26px] font-bold leading-none text-ok">
+          <p className="tnum font-display text-3xl font-bold leading-none text-ok">
             {money(data.collected?.total ?? 0)}
           </p>
-          <p className="mt-1.5 text-[12.5px] text-ink-500">
+          <p className="mt-1.5 text-sm text-ink-500">
             {formatCount(data.collected?.count ?? 0)} payment
             {(data.collected?.count ?? 0) === 1 ? '' : 's'} recorded in this range.
           </p>
@@ -475,10 +475,10 @@ function SalesTab({ data }) {
           rows={data.invoices ?? []}
           empty="No invoices issued in this period."
           columns={[
-            { key: 'number', header: 'Invoice', priority: 1, render: (row) => <span className="whitespace-nowrap font-mono text-[12.5px] text-ink-900">{row.number}</span> },
+            { key: 'number', header: 'Invoice', priority: 1, render: (row) => <span className="whitespace-nowrap font-mono text-sm text-ink-900">{row.number}</span> },
             { key: 'businessName', header: 'Customer', priority: 1, className: 'max-w-[180px] truncate' },
-            { key: 'issuedAt', header: 'Date', priority: 2, render: (row) => <span className="text-[12.5px] text-ink-500">{date(row.issuedAt)}</span> },
-            { key: 'terms', header: 'Terms', priority: 3, render: (row) => <span className="text-[12.5px] text-ink-500">{String(row.terms).replace('net', 'Net ')}</span> },
+            { key: 'issuedAt', header: 'Date', priority: 2, render: (row) => <span className="text-sm text-ink-500">{date(row.issuedAt)}</span> },
+            { key: 'terms', header: 'Terms', priority: 3, render: (row) => <span className="text-sm text-ink-500">{String(row.terms).replace('net', 'Net ')}</span> },
             {
               key: 'status',
               header: 'Status',
@@ -501,9 +501,9 @@ function SalesTab({ data }) {
               { label: 'Total invoices', value: formatCount(ar.totalInvoices ?? 0) },
               { label: 'Overdue count', value: formatCount(ar.overdueCount ?? 0), danger: (ar.overdueCount ?? 0) > 0 },
             ].map((tile) => (
-              <div key={tile.label} className="rounded-[10px] bg-surface-2 p-2.5">
+              <div key={tile.label} className="rounded-md bg-surface-2 p-2.5">
                 <p className="eyebrow text-ink-400">{tile.label}</p>
-                <p className={cn('tnum mt-1 font-display text-[16px] font-bold', tile.danger ? 'text-danger' : 'text-ink-900')}>
+                <p className={cn('tnum mt-1 font-display text-lg font-bold', tile.danger ? 'text-danger' : 'text-ink-900')}>
                   {tile.value}
                 </p>
               </div>
@@ -513,7 +513,7 @@ function SalesTab({ data }) {
           {ar.top?.length ? (
             <ul className="divide-y divide-line">
               {ar.top.map((invoice) => (
-                <li key={invoice.number} className="flex items-baseline justify-between gap-2 py-2 text-[12.5px]">
+                <li key={invoice.number} className="flex items-baseline justify-between gap-2 py-2 text-sm">
                   <span className="min-w-0 truncate text-ink-600">
                     <span className="font-mono">{invoice.number}</span> · {invoice.businessName}
                     {invoice.dueDate && <span className="text-ink-400"> · due {date(invoice.dueDate)}</span>}
@@ -525,7 +525,7 @@ function SalesTab({ data }) {
               ))}
             </ul>
           ) : (
-            <p className="text-[12.5px] text-ink-400">Nothing outstanding.</p>
+            <p className="text-sm text-ink-400">Nothing outstanding.</p>
           )}
         </Panel>
       </div>
@@ -576,7 +576,7 @@ function ExpenseTab({ data }) {
         empty="No expenses in this period."
         emptyIcon={Receipt}
         columns={[
-          { key: 'date', header: 'Date', priority: 1, render: (row) => <span className="whitespace-nowrap text-[12.5px] text-ink-500">{date(row.date)}</span> },
+          { key: 'date', header: 'Date', priority: 1, render: (row) => <span className="whitespace-nowrap text-sm text-ink-500">{date(row.date)}</span> },
           {
             key: 'description',
             header: 'Description',
@@ -584,11 +584,11 @@ function ExpenseTab({ data }) {
             className: 'max-w-[240px]',
             render: (row) => (
               <>
-                <span className="block truncate text-[13px] text-ink-900">{row.description}</span>
+                <span className="block truncate text-sm text-ink-900">{row.description}</span>
                 {row.purchaseOrder && (
                   <Link
                     to={`/admin/purchase-orders/${row.purchaseOrder.id}`}
-                    className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-ink-400 hover:text-brand"
+                    className="mt-0.5 inline-flex items-center gap-1 text-2xs text-ink-400 hover:text-brand"
                   >
                     <ClipboardList className="size-3 shrink-0" strokeWidth={2} aria-hidden="true" />
                     {row.purchaseOrder.poNumber ?? 'Purchase order'}
@@ -599,7 +599,7 @@ function ExpenseTab({ data }) {
           },
           { key: 'category', header: 'Category', priority: 2, render: (row) => <Badge tone="neutral" size="sm">{row.category}</Badge> },
           { key: 'payee', header: 'Payee', priority: 3, className: 'max-w-[140px] truncate' },
-          { key: 'method', header: 'Method', priority: 3, render: (row) => <span className="text-[12.5px] text-ink-500">{row.method ?? '—'}</span> },
+          { key: 'method', header: 'Method', priority: 3, render: (row) => <span className="text-sm text-ink-500">{row.method ?? '—'}</span> },
           {
             key: 'amount',
             header: 'Amount',
@@ -608,8 +608,8 @@ function ExpenseTab({ data }) {
             className: 'tnum',
             render: (row) => (
               <>
-                <span className="text-[13px] font-medium text-ink-900">{money(row.amount)}</span>
-                {row.tax > 0 && <span className="block text-[11px] text-ink-400">{money(row.tax)} tax</span>}
+                <span className="text-sm font-medium text-ink-900">{money(row.amount)}</span>
+                {row.tax > 0 && <span className="block text-2xs text-ink-400">{money(row.tax)} tax</span>}
               </>
             ),
           },
@@ -649,15 +649,15 @@ function InventoryTab({ data }) {
               className: 'max-w-[220px]',
               render: (row) => (
                 <>
-                  <span className="block truncate text-[13px] text-ink-900">{row.name}</span>
-                  <span className="block font-mono text-[11px] text-ink-300">{row.sku}</span>
+                  <span className="block truncate text-sm text-ink-900">{row.name}</span>
+                  <span className="block font-mono text-2xs text-ink-300">{row.sku}</span>
                 </>
               ),
             },
             { key: 'category', header: 'Category', priority: 3, className: 'max-w-[140px] truncate' },
             { key: 'stock', header: 'Qty', priority: 1, align: 'right', className: 'tnum', render: (row) => formatCount(row.stock) },
             { key: 'minStock', header: 'Min', priority: 3, align: 'right', className: 'tnum', render: (row) => (row.minStock > 0 ? row.minStock : '—') },
-            { key: 'cost', header: 'Unit cost', priority: 2, align: 'right', className: 'tnum', render: (row) => (row.cost > 0 ? money(row.cost) : <span className="text-[12px] text-ink-300">—</span>) },
+            { key: 'cost', header: 'Unit cost', priority: 2, align: 'right', className: 'tnum', render: (row) => (row.cost > 0 ? money(row.cost) : <span className="text-xs text-ink-300">—</span>) },
             { key: 'value', header: 'Value', priority: 1, align: 'right', className: 'tnum', render: (row) => money(row.value) },
             {
               key: 'status',
@@ -679,7 +679,7 @@ function InventoryTab({ data }) {
           empty="No transactions this period."
           emptyIcon={Boxes}
           columns={[
-            { key: 'at', header: 'When', priority: 1, render: (row) => <span className="whitespace-nowrap text-[12.5px] text-ink-500">{date(row.at)}</span> },
+            { key: 'at', header: 'When', priority: 1, render: (row) => <span className="whitespace-nowrap text-sm text-ink-500">{date(row.at)}</span> },
             {
               key: 'product',
               header: 'Product',
@@ -687,13 +687,13 @@ function InventoryTab({ data }) {
               className: 'max-w-[220px]',
               render: (row) => (
                 <>
-                  <span className="block truncate text-[13px] text-ink-900">{row.product}</span>
-                  {row.sku && <span className="block font-mono text-[11px] text-ink-300">{row.sku}</span>}
+                  <span className="block truncate text-sm text-ink-900">{row.product}</span>
+                  {row.sku && <span className="block font-mono text-2xs text-ink-300">{row.sku}</span>}
                 </>
               ),
             },
             { key: 'type', header: 'Type', priority: 2, render: (row) => <Badge tone="neutral" size="sm">{row.type}</Badge> },
-            { key: 'reference', header: 'Reference', priority: 3, render: (row) => <span className="font-mono text-[11.5px] text-ink-400">{row.reference ?? '—'}</span> },
+            { key: 'reference', header: 'Reference', priority: 3, render: (row) => <span className="font-mono text-xs text-ink-400">{row.reference ?? '—'}</span> },
             {
               key: 'qtyChange',
               header: 'Change',
@@ -706,7 +706,7 @@ function InventoryTab({ data }) {
                     {row.qtyChange > 0 ? '+' : ''}
                     {row.qtyChange}
                   </span>
-                  <span className="block text-[11px] text-ink-400">{row.qtyAfter} after</span>
+                  <span className="block text-2xs text-ink-400">{row.qtyAfter} after</span>
                 </>
               ),
             },
@@ -737,12 +737,12 @@ function TaxTab({ data }) {
             tone: net < 0 ? 'text-ok' : 'text-ink-900',
           },
         ].map((tile) => (
-          <div key={tile.label} className="rounded-[12px] border border-line bg-surface p-4">
+          <div key={tile.label} className="rounded-lg border border-line bg-surface p-4">
             <p className="eyebrow text-ink-400">{tile.label}</p>
-            <p className={cn('tnum mt-2 font-display text-[24px] font-bold leading-none', tile.tone)}>
+            <p className={cn('tnum mt-2 font-display text-2xl font-bold leading-none', tile.tone)}>
               {tile.value}
             </p>
-            <p className="mt-1.5 text-[11.5px] text-ink-400">{tile.hint}</p>
+            <p className="mt-1.5 text-xs text-ink-400">{tile.hint}</p>
           </div>
         ))}
       </div>
@@ -766,10 +766,10 @@ function TaxTab({ data }) {
           empty="No orders in this period."
           emptyIcon={Percent}
           columns={[
-            { key: 'orderNumber', header: 'Order', priority: 1, render: (row) => <span className="whitespace-nowrap font-mono text-[12.5px] text-ink-900">{row.orderNumber}</span> },
-            { key: 'date', header: 'Date', priority: 2, render: (row) => <span className="text-[12.5px] text-ink-500">{date(row.date)}</span> },
+            { key: 'orderNumber', header: 'Order', priority: 1, render: (row) => <span className="whitespace-nowrap font-mono text-sm text-ink-900">{row.orderNumber}</span> },
+            { key: 'date', header: 'Date', priority: 2, render: (row) => <span className="text-sm text-ink-500">{date(row.date)}</span> },
             { key: 'businessName', header: 'Customer', priority: 2, className: 'max-w-[160px] truncate' },
-            { key: 'province', header: 'Prov.', priority: 3, render: (row) => <span className="font-mono text-[12px] text-ink-500">{row.province}</span> },
+            { key: 'province', header: 'Prov.', priority: 3, render: (row) => <span className="font-mono text-xs text-ink-500">{row.province}</span> },
             { key: 'subtotal', header: 'Subtotal', priority: 3, align: 'right', className: 'tnum', render: (row) => money(row.subtotal) },
             { key: 'shipping', header: 'Shipping', priority: 3, align: 'right', className: 'tnum', render: (row) => money(row.shipping) },
             { key: 'discount', header: 'Discount', priority: 3, align: 'right', className: 'tnum', render: (row) => money(row.discount) },
@@ -786,7 +786,7 @@ function TaxTab({ data }) {
           empty="No orders in this period."
           emptyIcon={Percent}
           columns={[
-            { key: 'province', header: 'Province', priority: 1, render: (row) => <span className="font-mono text-[12.5px] text-ink-900">{row.province}</span> },
+            { key: 'province', header: 'Province', priority: 1, render: (row) => <span className="font-mono text-sm text-ink-900">{row.province}</span> },
             { key: 'count', header: 'Orders', priority: 1, align: 'right', className: 'tnum', render: (row) => formatCount(row.count) },
             { key: 'tax', header: 'Tax collected', priority: 1, align: 'right', className: 'tnum font-medium text-ink-900', render: (row) => money(row.tax) },
             { key: 'avgRate', header: 'Avg charged', priority: 2, align: 'right', className: 'tnum', render: (row) => percent(row.avgRate) },
@@ -818,7 +818,7 @@ function StaffTab({ data }) {
     <>
       {/* Invariant 17: a UI-only surface says what is inactive. It does not
           render an empty table that reads as "nobody sold anything". */}
-      <p className="mb-4 flex items-start gap-2 rounded-[10px] bg-info-50 px-3 py-2.5 text-[13px] leading-relaxed text-info">
+      <p className="mb-4 flex items-start gap-2 rounded-md bg-info-50 px-3 py-2.5 text-sm leading-relaxed text-info">
         <Info className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
         <span>
           <strong className="font-semibold">Staff attribution arrives in phase 8.</strong>{' '}
@@ -851,7 +851,7 @@ function SupplierPricesTab({ data }) {
 
   return (
     <>
-      <p className="mb-3 text-[13px] leading-relaxed text-ink-500">
+      <p className="mb-3 text-sm leading-relaxed text-ink-500">
         What each supplier charged per item, taken from purchase orders. The cheapest supplier for
         each item is highlighted — use it to decide who to buy from. Drafts are excluded: a price
         nobody has committed to is a quote, not evidence.
@@ -871,8 +871,8 @@ function SupplierPricesTab({ data }) {
             className: 'max-w-[200px]',
             render: (row) => (
               <>
-                <span className="block truncate text-[13px] text-ink-900">{row.name}</span>
-                <span className="block font-mono text-[11px] text-ink-300">{row.sku}</span>
+                <span className="block truncate text-sm text-ink-900">{row.name}</span>
+                <span className="block font-mono text-2xs text-ink-300">{row.sku}</span>
               </>
             ),
           },
@@ -883,7 +883,7 @@ function SupplierPricesTab({ data }) {
             className: 'max-w-[180px]',
             render: (row) => (
               <span className="flex min-w-0 flex-wrap items-center gap-1.5">
-                <span className="truncate text-[12.5px] text-ink-700">{row.supplier}</span>
+                <span className="truncate text-sm text-ink-700">{row.supplier}</span>
                 {row.cheapest && (
                   <Badge tone="ok" size="sm">
                     cheapest
@@ -896,7 +896,7 @@ function SupplierPricesTab({ data }) {
           { key: 'average', header: 'Avg', priority: 2, align: 'right', className: 'tnum', render: (row) => money(row.average) },
           { key: 'highest', header: 'Highest', priority: 3, align: 'right', className: 'tnum', render: (row) => money(row.highest) },
           { key: 'times', header: 'Times', priority: 3, align: 'right', className: 'tnum', render: (row) => formatCount(row.times) },
-          { key: 'lastPurchased', header: 'Last bought', priority: 2, render: (row) => <span className="whitespace-nowrap text-[12.5px] text-ink-500">{date(row.lastPurchased)}</span> },
+          { key: 'lastPurchased', header: 'Last bought', priority: 2, render: (row) => <span className="whitespace-nowrap text-sm text-ink-500">{date(row.lastPurchased)}</span> },
         ]}
       />
     </>
@@ -941,7 +941,7 @@ export function AdminReportsPage() {
           <>
             <Link
               to="/admin/reports/business"
-              className="inline-flex h-11 select-none items-center justify-center gap-2 rounded-[10px] border border-line-strong bg-surface px-5 font-display text-[14px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+              className="inline-flex h-11 select-none items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
             >
               <LineChart className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
               Business overview
@@ -979,7 +979,7 @@ export function AdminReportsPage() {
               aria-selected={isActive}
               onClick={() => setTab(item.key)}
               className={cn(
-                'inline-flex h-9 shrink-0 select-none items-center gap-1.5 rounded-[8px] px-3 font-display text-[13px] font-semibold transition-colors',
+                'inline-flex h-9 shrink-0 select-none items-center gap-1.5 rounded-md px-3 font-display text-sm font-semibold transition-colors',
                 isActive
                   ? 'bg-brand-gradient text-white'
                   : 'border border-line bg-surface text-ink-600 hover:border-line-strong hover:text-ink-900',
@@ -998,8 +998,8 @@ export function AdminReportsPage() {
         </Panel>
       ) : isLoading || !data ? (
         <div className="space-y-3">
-          <div className="h-24 animate-pulse rounded-[14px] bg-surface-2" />
-          <div className="h-64 animate-pulse rounded-[14px] bg-surface-2" />
+          <div className="h-24 animate-pulse rounded-lg bg-surface-2" />
+          <div className="h-64 animate-pulse rounded-lg bg-surface-2" />
         </div>
       ) : (
         <TabComponent data={data} />

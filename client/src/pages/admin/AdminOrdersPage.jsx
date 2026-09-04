@@ -102,18 +102,18 @@ function StatusForm({ order, onSubmit, onCancel, isPending, error }) {
       )}
       className="space-y-4"
     >
-      <div className="rounded-[11px] bg-surface-2 p-3.5">
-        <p className="font-mono text-[13.5px] font-medium text-ink-900">{order.orderNumber}</p>
-        <p className="mt-0.5 text-[12.5px] text-ink-500">
+      <div className="rounded-md bg-surface-2 p-3.5">
+        <p className="font-mono text-md font-medium text-ink-900">{order.orderNumber}</p>
+        <p className="mt-0.5 text-sm text-ink-500">
           {order.businessName} · {money(order.total)}
         </p>
-        <p className="mt-1 text-[11.5px] text-ink-400">
+        <p className="mt-1 text-xs text-ink-400">
           Currently {ORDER_STATUSES.find((s) => s.value === order.status)?.label ?? order.status}
         </p>
       </div>
 
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -123,7 +123,7 @@ function StatusForm({ order, onSubmit, onCancel, isPending, error }) {
 
       <fieldset
         className={cn(
-          'rounded-[11px] border p-3.5 transition-colors',
+          'rounded-md border p-3.5 transition-colors',
           needsTracking ? 'border-warn/40 bg-warn-50/40' : 'border-line',
         )}
       >
@@ -183,9 +183,9 @@ function RefundForm({ order, onSubmit, onCancel, isPending, error }) {
       )}
       className="space-y-4"
     >
-      <div className="rounded-[11px] bg-surface-2 p-3.5">
-        <p className="font-mono text-[12.5px] font-medium text-ink-900">{order.orderNumber}</p>
-        <p className="tnum mt-1 text-[12.5px] text-ink-500">
+      <div className="rounded-md bg-surface-2 p-3.5">
+        <p className="font-mono text-sm font-medium text-ink-900">{order.orderNumber}</p>
+        <p className="tnum mt-1 text-sm text-ink-500">
           Order total {money(order.total)}
           {order.refundedTotal > 0 && ` · ${money(order.refundedTotal)} already refunded`} ·{' '}
           <span className="font-medium text-ink-900">{money(refundable)} refundable</span>
@@ -197,13 +197,13 @@ function RefundForm({ order, onSubmit, onCancel, isPending, error }) {
         <Input label="Reason" placeholder="Screen arrived cracked" {...register('note')} />
       </div>
 
-      <p className="rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12px] leading-relaxed text-ink-500">
+      <p className="rounded-md bg-surface-2 px-3 py-2.5 text-xs leading-relaxed text-ink-500">
         The amount is credited to this customer's store credit and shows on their statement
         immediately. It comes off their next order automatically.
       </p>
 
       {error && (
-        <p className="flex items-start gap-2 text-[12.5px] text-danger">
+        <p className="flex items-start gap-2 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -287,7 +287,7 @@ function OrderForm({ clients, products, onSubmit, onCancel, isPending, error }) 
       className="space-y-4"
     >
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -313,7 +313,7 @@ function OrderForm({ clients, products, onSubmit, onCancel, isPending, error }) 
             return (
               <div
                 key={field.id}
-                className="grid items-end gap-2 rounded-[10px] bg-surface-2 p-2.5 sm:grid-cols-[1fr_80px_130px_auto]"
+                className="grid items-end gap-2 rounded-md bg-surface-2 p-2.5 sm:grid-cols-[1fr_80px_130px_auto]"
               >
                 <SelectField
                   control={control}
@@ -347,7 +347,7 @@ function OrderForm({ clients, products, onSubmit, onCancel, isPending, error }) 
                   onClick={() => remove(index)}
                   disabled={fields.length === 1}
                   aria-label={`Remove line ${index + 1}`}
-                  className="flex size-9 shrink-0 items-center justify-center rounded-[8px] border border-line text-ink-400 transition-colors hover:border-danger/30 hover:bg-danger-50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40"
+                  className="flex size-9 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 transition-colors hover:border-danger/30 hover:bg-danger-50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <Trash2 className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
                 </button>
@@ -380,16 +380,16 @@ function OrderForm({ clients, products, onSubmit, onCancel, isPending, error }) 
 
       <Textarea label="Notes" rows={2} {...register('notes')} />
 
-      <div className="rounded-[10px] bg-surface-2 px-3 py-2.5">
-        <p className="tnum flex items-baseline justify-between text-[13px] text-ink-600">
+      <div className="rounded-md bg-surface-2 px-3 py-2.5">
+        <p className="tnum flex items-baseline justify-between text-sm text-ink-600">
           <span>Subtotal</span>
           <span>{money(subtotal)}</span>
         </p>
-        <p className="tnum mt-1 flex items-baseline justify-between text-[13px] text-ink-600">
+        <p className="tnum mt-1 flex items-baseline justify-between text-sm text-ink-600">
           <span>Shipping</span>
           <span>{money(shipping)}</span>
         </p>
-        <p className="mt-1.5 text-[11.5px] leading-relaxed text-ink-400">
+        <p className="mt-1.5 text-xs leading-relaxed text-ink-400">
           A preview before tax. Placing this takes the stock and raises an invoice on the account's
           own terms, exactly as a checkout does.
         </p>
@@ -484,11 +484,11 @@ export function AdminOrdersPage() {
       priority: 1,
       render: (order) => (
         <>
-          <span className="block whitespace-nowrap font-mono text-[12.5px] font-medium text-ink-900">
+          <span className="block whitespace-nowrap font-mono text-sm font-medium text-ink-900">
             {order.orderNumber}
           </span>
           {order.poNumber && (
-            <span className="block text-[11px] text-ink-400">PO {order.poNumber}</span>
+            <span className="block text-2xs text-ink-400">PO {order.poNumber}</span>
           )}
         </>
       ),
@@ -505,7 +505,7 @@ export function AdminOrdersPage() {
       key: 'createdAt',
       header: 'Placed',
       priority: 2,
-      render: (order) => <span className="text-[12.5px] text-ink-500">{date(order.createdAt)}</span>,
+      render: (order) => <span className="text-sm text-ink-500">{date(order.createdAt)}</span>,
     },
     {
       key: 'items',
@@ -537,12 +537,12 @@ export function AdminOrdersPage() {
       sortable: false,
       render: (order) =>
         order.tracking?.number ? (
-          <span className="tnum block font-mono text-[11.5px] text-ink-500">
+          <span className="tnum block font-mono text-xs text-ink-500">
             {order.tracking.number}
             <span className="block text-ink-300">{order.tracking.carrier}</span>
           </span>
         ) : (
-          <span className="text-[12px] text-ink-300">—</span>
+          <span className="text-xs text-ink-300">—</span>
         ),
     },
   ];
@@ -636,7 +636,7 @@ export function AdminOrdersPage() {
 
           {selected.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-[12.5px] text-ink-500">
+              <p className="text-sm text-ink-500">
                 <span className="font-semibold text-ink-900">{selected.length}</span> selected
               </p>
 
@@ -671,7 +671,7 @@ export function AdminOrdersPage() {
             operator comes to trust a button that is lying to them. */}
         {bulkResult && (
           <div className="border-b border-line bg-surface-2 px-3 py-2.5 sm:px-4">
-            <p className="text-[12.5px] text-ink-700">
+            <p className="text-sm text-ink-700">
               <span className="font-semibold text-ok">{bulkResult.updated.length} moved</span>
               {bulkResult.skipped.length > 0 && (
                 <>
@@ -684,7 +684,7 @@ export function AdminOrdersPage() {
               <button
                 type="button"
                 onClick={() => setBulkResult(null)}
-                className="ml-2 text-[12px] text-ink-400 underline hover:text-ink-900"
+                className="ml-2 text-xs text-ink-400 underline hover:text-ink-900"
               >
                 Dismiss
               </button>
@@ -693,7 +693,7 @@ export function AdminOrdersPage() {
             {bulkResult.skipped.length > 0 && (
               <ul className="mt-1.5 space-y-0.5">
                 {bulkResult.skipped.map((skip) => (
-                  <li key={skip.orderNumber} className="text-[12px] text-ink-500">
+                  <li key={skip.orderNumber} className="text-xs text-ink-500">
                     <span className="font-mono text-ink-700">{skip.orderNumber}</span> — {skip.reason}
                   </li>
                 ))}

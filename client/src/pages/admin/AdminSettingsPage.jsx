@@ -52,14 +52,14 @@ function PageCard({ page, built }) {
     <Link
       to={page.path}
       className={cn(
-        'group flex gap-3 rounded-[12px] border border-line bg-surface p-4 transition-[border-color,background]',
+        'group flex gap-3 rounded-lg border border-line bg-surface p-4 transition-[border-color,background]',
         'hover:border-ink-300 hover:bg-surface-2',
         'focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand',
       )}
     >
       <span
         className={cn(
-          'flex size-9 shrink-0 items-center justify-center rounded-[9px] transition-colors',
+          'flex size-9 shrink-0 items-center justify-center rounded-md transition-colors',
           built ? 'bg-brand-50 text-brand' : 'bg-surface-3 text-ink-400',
         )}
       >
@@ -68,14 +68,14 @@ function PageCard({ page, built }) {
 
       <span className="min-w-0 flex-1">
         <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="font-display text-[13.5px] font-semibold text-ink-900">{page.label}</span>
+          <span className="font-display text-md font-semibold text-ink-900">{page.label}</span>
           {!built && (
-            <span className="rounded-full bg-surface-3 px-1.5 py-px font-display text-[10.5px] font-bold tracking-wide text-ink-400 uppercase">
+            <span className="rounded-full bg-surface-3 px-1.5 py-px font-display text-2xs font-bold tracking-wide text-ink-400 uppercase">
               Soon
             </span>
           )}
         </span>
-        <span className="mt-1 block text-[12.5px] leading-relaxed text-ink-500">
+        <span className="mt-1 block text-sm leading-relaxed text-ink-500">
           {page.description}
         </span>
       </span>
@@ -88,7 +88,7 @@ function CategoryPanel({ category, pages, heading }) {
     <section aria-labelledby={`settings-${category.key}`}>
       <div className="mb-3">
         {heading === 'h2' ? (
-          <h2 id={`settings-${category.key}`} className="font-display text-[15px] font-bold">
+          <h2 id={`settings-${category.key}`} className="font-display text-lg font-bold">
             {category.label}
           </h2>
         ) : (
@@ -97,7 +97,7 @@ function CategoryPanel({ category, pages, heading }) {
           </h2>
         )}
         {heading === 'h2' && (
-          <p className="mt-0.5 text-[12.5px] text-ink-500">{category.description}</p>
+          <p className="mt-0.5 text-sm text-ink-500">{category.description}</p>
         )}
       </div>
 
@@ -140,7 +140,7 @@ export function AdminSettingsPage() {
         >
           <Link
             to="/admin/settings"
-            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-[8px] border border-line-strong bg-surface px-3 font-display text-[12.5px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+            className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-line-strong bg-surface px-3 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
           >
             <ArrowLeft className="size-3.5" strokeWidth={2} aria-hidden="true" />
             Summary
@@ -152,7 +152,7 @@ export function AdminSettingsPage() {
               to={`/admin/settings?cat=${tab.key}`}
               aria-current={tab.key === category.key ? 'page' : undefined}
               className={cn(
-                'inline-flex h-8 shrink-0 items-center rounded-[8px] px-3 font-display text-[12.5px] font-semibold transition-colors',
+                'inline-flex h-8 shrink-0 items-center rounded-md px-3 font-display text-sm font-semibold transition-colors',
                 tab.key === category.key
                   ? 'bg-ink-900 text-white'
                   : 'text-ink-500 hover:bg-surface-2 hover:text-ink-700',

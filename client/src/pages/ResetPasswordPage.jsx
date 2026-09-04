@@ -63,8 +63,8 @@ export function ResetPasswordPage() {
         <span className="flex size-14 items-center justify-center rounded-full bg-warn-50 text-warn">
           <AlertCircle className="size-7" strokeWidth={1.75} />
         </span>
-        <h1 className="mt-4 text-[22px]">That link is incomplete</h1>
-        <p className="mt-2 text-[13.5px] leading-relaxed text-ink-500">
+        <h1 className="mt-4 text-2xl">That link is incomplete</h1>
+        <p className="mt-2 text-md leading-relaxed text-ink-500">
           Reset links expire after an hour and can only be used once. Ask for a new one from the
           sign-in panel.
         </p>
@@ -81,18 +81,18 @@ export function ResetPasswordPage() {
         <span className="flex size-12 items-center justify-center rounded-full bg-brand-50 text-brand">
           <KeyRound className="size-6" strokeWidth={1.75} />
         </span>
-        <h1 className="mt-4 text-[22px]">Choose a new password</h1>
-        <p className="mt-2 text-[13.5px] leading-relaxed text-ink-500">
+        <h1 className="mt-4 text-2xl">Choose a new password</h1>
+        <p className="mt-2 text-md leading-relaxed text-ink-500">
           Once it is saved you will be signed in on this device.
         </p>
       </div>
 
       <form
         onSubmit={handleSubmit(onSubmit)}
-        className="space-y-4 rounded-[14px] border border-line bg-surface p-5 sm:p-6"
+        className="space-y-4 rounded-lg border border-line bg-surface p-5 sm:p-6"
       >
         {formError && (
-          <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+          <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
             <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
             {formError}
           </p>
@@ -126,7 +126,7 @@ export function ResetPasswordPage() {
           Save and sign in
         </Button>
 
-        <p className="flex items-start gap-2 text-[12px] leading-relaxed text-ink-400">
+        <p className="flex items-start gap-2 text-xs leading-relaxed text-ink-400">
           <ShieldCheck className="mt-0.5 size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
           This link stops working once it is used, and expires an hour after it was sent.
         </p>

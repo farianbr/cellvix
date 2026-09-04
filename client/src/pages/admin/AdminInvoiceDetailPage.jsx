@@ -114,13 +114,13 @@ export function AdminInvoiceDetailPage() {
   // Which payment row is being reversed, by index. `null` when none is.
   const [reversing, setReversing] = useState(null);
 
-  if (isLoading) return <p className="text-[13px] text-ink-500">Loading invoice…</p>;
+  if (isLoading) return <p className="text-sm text-ink-500">Loading invoice…</p>;
 
   if (error) {
     return (
       <>
         <PageHeader icon={ADMIN_PAGE.icon} title="Invoice not found" />
-        <p className="text-[13px] text-ink-500">
+        <p className="text-sm text-ink-500">
           {error.message}{' '}
           <Link to="/admin/invoices" className="font-semibold text-brand underline">
             Back to invoices
@@ -154,7 +154,7 @@ export function AdminInvoiceDetailPage() {
           <div className="flex flex-wrap items-center gap-2">
             <Link
               to="/admin/invoices"
-              className="inline-flex h-9 items-center gap-1.5 rounded-[9px] border border-line bg-surface px-3 text-[13px] font-medium text-ink-600 transition-colors hover:border-ink-300 hover:bg-surface-2"
+              className="inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-surface px-3 text-sm font-medium text-ink-600 transition-colors hover:border-ink-300 hover:bg-surface-2"
             >
               <ArrowLeft className="size-3.5" strokeWidth={2} aria-hidden="true" />
               All invoices
@@ -180,7 +180,7 @@ export function AdminInvoiceDetailPage() {
             <ActionMenu
               label="More invoice actions"
               trigger={
-                <span className="inline-flex size-9 items-center justify-center rounded-[9px] border border-line bg-surface text-ink-600 transition-colors hover:border-ink-300 hover:bg-surface-2">
+                <span className="inline-flex size-9 items-center justify-center rounded-md border border-line bg-surface text-ink-600 transition-colors hover:border-ink-300 hover:bg-surface-2">
                   <MoreHorizontal className="size-4" strokeWidth={2} aria-hidden="true" />
                 </span>
               }
@@ -257,28 +257,28 @@ export function AdminInvoiceDetailPage() {
           }
         >
           <div className="grid gap-2.5 sm:grid-cols-3">
-            <div className="rounded-[12px] border border-line bg-surface px-4 py-3">
+            <div className="rounded-lg border border-line bg-surface px-4 py-3">
               <p className="eyebrow text-ink-400">Invoice total</p>
-              <p className="tnum mt-1.5 font-display text-[24px] font-bold leading-none text-ink-900">
+              <p className="tnum mt-1.5 font-display text-2xl font-bold leading-none text-ink-900">
                 {money(invoice.amount)}
               </p>
             </div>
-            <div className="rounded-[12px] border border-ok/25 bg-ok-50 px-4 py-3">
+            <div className="rounded-lg border border-ok/25 bg-ok-50 px-4 py-3">
               <p className="eyebrow text-ok">Total paid</p>
-              <p className="tnum mt-1.5 font-display text-[24px] font-bold leading-none text-ok">
+              <p className="tnum mt-1.5 font-display text-2xl font-bold leading-none text-ok">
                 {money(invoice.amountPaid)}
               </p>
             </div>
             <div
               className={cn(
-                'rounded-[12px] border px-4 py-3',
+                'rounded-lg border px-4 py-3',
                 settled ? 'border-line bg-surface' : 'border-danger/25 bg-danger-50',
               )}
             >
               <p className={cn('eyebrow', settled ? 'text-ink-400' : 'text-danger')}>Balance</p>
               <p
                 className={cn(
-                  'tnum mt-1.5 font-display text-[24px] font-bold leading-none',
+                  'tnum mt-1.5 font-display text-2xl font-bold leading-none',
                   settled ? 'text-ink-900' : 'text-danger',
                 )}
               >
@@ -294,30 +294,30 @@ export function AdminInvoiceDetailPage() {
             </p>
 
             {invoice.payments.length === 0 ? (
-              <p className="rounded-[10px] bg-surface-2 px-3 py-2.5 text-[13px] text-ink-500">
+              <p className="rounded-md bg-surface-2 px-3 py-2.5 text-sm text-ink-500">
                 Nothing recorded against this invoice yet.
               </p>
             ) : (
               /* A table, not a list of lines. Payments are a ledger — the same
                  four facts on every row — and a ledger is read down its columns.
                  The list forced the eye to re-find the amount on each line. */
-              <div className="overflow-x-auto rounded-[10px] border border-line">
+              <div className="overflow-x-auto rounded-md border border-line">
                 <table className="w-full table-fixed text-left">
                   <thead>
                     <tr className="border-b border-line bg-surface-2">
-                      <th scope="col" className="w-[26%] px-3 py-2 text-[10.5px] font-semibold uppercase tracking-wider text-ink-400">
+                      <th scope="col" className="w-[26%] px-3 py-2 text-2xs font-semibold uppercase tracking-wider text-ink-400">
                         Date
                       </th>
-                      <th scope="col" className="w-[18%] px-3 py-2 text-right text-[10.5px] font-semibold uppercase tracking-wider text-ink-400">
+                      <th scope="col" className="w-[18%] px-3 py-2 text-right text-2xs font-semibold uppercase tracking-wider text-ink-400">
                         Amount
                       </th>
-                      <th scope="col" className="w-[18%] px-3 py-2 text-[10.5px] font-semibold uppercase tracking-wider text-ink-400">
+                      <th scope="col" className="w-[18%] px-3 py-2 text-2xs font-semibold uppercase tracking-wider text-ink-400">
                         Method
                       </th>
-                      <th scope="col" className="w-[28%] px-3 py-2 text-[10.5px] font-semibold uppercase tracking-wider text-ink-400">
+                      <th scope="col" className="w-[28%] px-3 py-2 text-2xs font-semibold uppercase tracking-wider text-ink-400">
                         Reference
                       </th>
-                      <th scope="col" className="w-[10%] px-3 py-2 text-right text-[10.5px] font-semibold uppercase tracking-wider text-ink-400">
+                      <th scope="col" className="w-[10%] px-3 py-2 text-right text-2xs font-semibold uppercase tracking-wider text-ink-400">
                         <span className="sr-only">Reverse</span>
                       </th>
                     </tr>
@@ -331,13 +331,13 @@ export function AdminInvoiceDetailPage() {
 
                       return (
                         <tr key={`${payment.at}-${index}`} className={cn(reversed && 'bg-surface-2/60')}>
-                          <td className="tnum px-3 py-2.5 text-[12.5px] text-ink-500">
+                          <td className="tnum px-3 py-2.5 text-sm text-ink-500">
                             {dateTime(payment.at)}
                           </td>
 
                           <td
                             className={cn(
-                              'tnum px-3 py-2.5 text-right font-display text-[13.5px] font-bold',
+                              'tnum px-3 py-2.5 text-right font-display text-md font-bold',
                               // Three different facts, three different weights:
                               // money in is plain, a reversal is red because it
                               // takes money back, and a void is grey because it
@@ -360,7 +360,7 @@ export function AdminInvoiceDetailPage() {
                             )}
                           </td>
 
-                          <td className="truncate px-3 py-2.5 font-mono text-[12px] text-ink-400">
+                          <td className="truncate px-3 py-2.5 font-mono text-xs text-ink-400">
                             {payment.reference || '—'}
                           </td>
 
@@ -374,13 +374,13 @@ export function AdminInvoiceDetailPage() {
                                 type="button"
                                 onClick={() => setReversing(index)}
                                 aria-label={`Reverse the ${money(payment.amount)} payment`}
-                                className="-m-1 rounded-[6px] p-1 text-ink-300 transition-colors hover:text-danger active:scale-[0.97]"
+                                className="-m-1 rounded-sm p-1 text-ink-300 transition-colors hover:text-danger active:scale-[0.97]"
                               >
                                 <Trash2 className="size-3.5" strokeWidth={2} aria-hidden="true" />
                               </button>
                             )}
                             {reversed && (
-                              <span className="text-[11px] font-medium text-ink-400">Reversed</span>
+                              <span className="text-2xs font-medium text-ink-400">Reversed</span>
                             )}
                           </td>
                         </tr>
@@ -394,7 +394,7 @@ export function AdminInvoiceDetailPage() {
         </Panel>
 
         <Panel title="Details">
-          <dl className="grid gap-x-6 gap-y-2.5 text-[13px] sm:grid-cols-2">
+          <dl className="grid gap-x-6 gap-y-2.5 text-sm sm:grid-cols-2">
             <div className="flex justify-between gap-3">
               <dt className="text-ink-500">Account</dt>
               <dd className="min-w-0 truncate">
@@ -460,7 +460,7 @@ export function AdminInvoiceDetailPage() {
           description="Every recorded action on this invoice, newest first."
         >
           {entries.length === 0 ? (
-            <p className="text-[13px] text-ink-500">
+            <p className="text-sm text-ink-500">
               Nothing recorded since this invoice was raised.
             </p>
           ) : (
@@ -472,10 +472,10 @@ export function AdminInvoiceDetailPage() {
                     aria-hidden="true"
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13px] text-ink-900">
+                    <p className="text-sm text-ink-900">
                       {entry.description ?? entry.action}
                     </p>
-                    <p className="mt-0.5 text-[11.5px] text-ink-400">
+                    <p className="mt-0.5 text-xs text-ink-400">
                       {[entry.actor?.name ?? entry.actorName, dateTime(entry.at ?? entry.createdAt)]
                         .filter(Boolean)
                         .join(' · ')}
@@ -675,7 +675,7 @@ function RecordPaymentModal({ open, invoice, onClose, onSubmit, isPending, error
         className="space-y-4"
       >
         {error && (
-          <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+          <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
             <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
             {error}
           </p>
@@ -738,13 +738,13 @@ function EditInvoiceModal({ open, invoice, onClose, onSubmit, isPending, error }
     <Modal open={open} onClose={onClose} title={`Edit ${invoice.number}`}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {error && (
-          <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+          <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
             <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
             {error}
           </p>
         )}
 
-        <p className="rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12.5px] leading-relaxed text-ink-500">
+        <p className="rounded-md bg-surface-2 px-3 py-2.5 text-sm leading-relaxed text-ink-500">
           The amount is not editable here — it is what was billed. To change what
           this invoice charges for, void it and raise a new one, so both
           documents stay in the record.

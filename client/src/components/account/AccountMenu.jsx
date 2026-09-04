@@ -164,7 +164,7 @@ export function AccountMenu() {
               <span
                 style={{ right: anchor?.caret ?? 24 }}
                 className={cn(
-                  'absolute z-10 size-3 rotate-45 rounded-[2px] border-line bg-surface',
+                  'absolute z-10 size-3 rotate-45 rounded-sm border-line bg-surface',
                   anchor?.bottom
                     ? '-bottom-[6px] border-b border-r'
                     : '-top-[6px] border-l border-t',
@@ -176,17 +176,17 @@ export function AccountMenu() {
                 role="dialog"
                 aria-labelledby={titleId}
                 style={{ width: `min(${PANEL_W}px, calc(100vw - 24px))` }}
-                className="flex max-h-[min(72vh,620px)] flex-col overflow-hidden rounded-[16px] border border-line bg-surface shadow-flyout"
+                className="flex max-h-[min(72vh,620px)] flex-col overflow-hidden rounded-lg border border-line bg-surface shadow-flyout"
               >
                 <header id={titleId} className={cn('shrink-0 border-b border-line py-3', INSET)}>
-                  <p className="truncate font-display text-[14.5px] font-bold text-ink-900">
+                  <p className="truncate font-display text-md font-bold text-ink-900">
                     {user.displayName}
                   </p>
-                  <p className="mt-0.5 truncate text-[12px] text-ink-400">{user.email}</p>
+                  <p className="mt-0.5 truncate text-xs text-ink-400">{user.email}</p>
 
                   <span
                     className={cn(
-                      'mt-2 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11.5px] font-semibold',
+                      'mt-2 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-semibold',
                       isAdmin
                         ? 'bg-surface-3 text-ink-700'
                         : isApproved
@@ -212,7 +212,7 @@ export function AccountMenu() {
                     <Link
                       to="/admin"
                       onClick={close}
-                      className="flex items-center gap-3 rounded-[10px] px-1.5 py-2 text-[13px] font-medium text-ink-700 transition-colors hover:bg-surface-2 hover:text-ink-900"
+                      className="flex items-center gap-3 rounded-md px-1.5 py-2 text-sm font-medium text-ink-700 transition-colors hover:bg-surface-2 hover:text-ink-900"
                     >
                       Admin console
                     </Link>
@@ -228,7 +228,7 @@ export function AccountMenu() {
                               onClick={close}
                               className={({ isActive }) =>
                                 cn(
-                                  'flex items-center gap-3 rounded-[10px] px-1.5 py-2 text-[13px] font-medium transition-colors',
+                                  'flex items-center gap-3 rounded-md px-1.5 py-2 text-sm font-medium transition-colors',
                                   isActive
                                     ? 'bg-brand-50 text-brand-700'
                                     : 'text-ink-700 hover:bg-surface-2 hover:text-ink-900',
@@ -254,7 +254,7 @@ export function AccountMenu() {
                       close();
                       signOut();
                     }}
-                    className="flex w-full items-center gap-3 rounded-[10px] px-1.5 py-2 text-left text-[13px] font-medium text-ink-500 transition-colors hover:bg-danger-50 hover:text-danger"
+                    className="flex w-full items-center gap-3 rounded-md px-1.5 py-2 text-left text-sm font-medium text-ink-500 transition-colors hover:bg-danger-50 hover:text-danger"
                   >
                     <LogOut className="size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
                     Sign out

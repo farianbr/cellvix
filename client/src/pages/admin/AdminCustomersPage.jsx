@@ -167,7 +167,7 @@ function ClientForm({ onSubmit, onCancel, isPending, error }) {
       className="space-y-4"
     >
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -311,7 +311,7 @@ function ClientForm({ onSubmit, onCancel, isPending, error }) {
           value={consent}
           onChange={(next) => setValue('contactConsent', next, { shouldDirty: true })}
         />
-        <p className="mt-3 text-[12px] leading-snug text-ink-400">
+        <p className="mt-3 text-xs leading-snug text-ink-400">
           Only tick a channel the customer actually agreed to. Leave them all clear if nobody has
           asked yet — the profile shows that as unrecorded rather than as a refusal.
         </p>
@@ -333,7 +333,7 @@ function ClientForm({ onSubmit, onCancel, isPending, error }) {
         </div>
       </FormSection>
 
-      <p className="rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12.5px] leading-relaxed text-ink-500">
+      <p className="rounded-md bg-surface-2 px-3 py-2.5 text-sm leading-relaxed text-ink-500">
         {status === 'approved'
           ? 'This account can sign in, see wholesale pricing and order straight away.'
           : 'This account can sign in and browse, but sees no prices and cannot order until it is approved.'}{' '}
@@ -476,7 +476,7 @@ export function AdminCustomersPage() {
       render: (user) => (
         <>
           <span className="flex flex-wrap items-center gap-2">
-            <span className="truncate text-[13.5px] font-semibold text-ink-900">
+            <span className="truncate text-md font-semibold text-ink-900">
               {user.displayName}
             </span>
             <Badge tone={STATUS_TONES[user.status]} size="sm">
@@ -495,7 +495,7 @@ export function AdminCustomersPage() {
           {/* The contact's name only when it is not already the line above:
               for a private customer `displayName` IS the contact name, and
               printing it twice reads as a rendering fault. */}
-          <span className="block truncate text-[12px] text-ink-500">
+          <span className="block truncate text-xs text-ink-500">
             {user.displayName === user.contactName
               ? user.email
               : `${user.contactName} · ${user.email}`}
@@ -510,11 +510,11 @@ export function AdminCustomersPage() {
       sortValue: (user) => user.terms ?? '',
       render: (user) => (
         <>
-          <span className="whitespace-nowrap text-[12.5px] font-medium text-ink-900">
+          <span className="whitespace-nowrap text-sm font-medium text-ink-900">
             {user.terms === 'prepaid' ? 'Prepaid' : user.terms.replace('net', 'Net ')}
           </span>
           {user.creditLimit > 0 && (
-            <span className="tnum block whitespace-nowrap text-[11px] text-ink-400">
+            <span className="tnum block whitespace-nowrap text-2xs text-ink-400">
               {money(user.creditLimit)} limit
             </span>
           )}
@@ -541,19 +541,19 @@ export function AdminCustomersPage() {
       render: (user) =>
         user.overdue > 0 ? (
           <>
-            <span className="text-[13px] font-semibold text-danger">{money(user.overdue)}</span>
-            <span className="block whitespace-nowrap text-[11px] text-ink-400">
+            <span className="text-sm font-semibold text-danger">{money(user.overdue)}</span>
+            <span className="block whitespace-nowrap text-2xs text-ink-400">
               {formatCount(user.overdueCount)}{' '}
               {user.overdueCount === 1 ? 'invoice' : 'invoices'} late
             </span>
           </>
         ) : user.balance > 0 ? (
           <>
-            <span className="text-[13px] font-medium text-ink-900">{money(user.balance)}</span>
-            <span className="block whitespace-nowrap text-[11px] text-ink-400">owed, on time</span>
+            <span className="text-sm font-medium text-ink-900">{money(user.balance)}</span>
+            <span className="block whitespace-nowrap text-2xs text-ink-400">owed, on time</span>
           </>
         ) : (
-          <span className="text-[12px] text-ink-300">—</span>
+          <span className="text-xs text-ink-300">—</span>
         ),
     },
     {
@@ -565,9 +565,9 @@ export function AdminCustomersPage() {
       sortValue: (user) => user.invoiceCount ?? 0,
       render: (user) =>
         user.invoiceCount > 0 ? (
-          <span className="text-[13px] text-ink-900">{formatCount(user.invoiceCount)}</span>
+          <span className="text-sm text-ink-900">{formatCount(user.invoiceCount)}</span>
         ) : (
-          <span className="text-[12px] text-ink-300">—</span>
+          <span className="text-xs text-ink-300">—</span>
         ),
     },
     {
@@ -581,11 +581,11 @@ export function AdminCustomersPage() {
       sortValue: (user) => user.lifetimeValue ?? 0,
       render: (user) =>
         user.lifetimeValue > 0 ? (
-          <span className="text-[13px] font-semibold text-ink-900">
+          <span className="text-sm font-semibold text-ink-900">
             {money(user.lifetimeValue)}
           </span>
         ) : (
-          <span className="text-[12px] text-ink-300">—</span>
+          <span className="text-xs text-ink-300">—</span>
         ),
     },
     {
@@ -598,11 +598,11 @@ export function AdminCustomersPage() {
       sortValue: (user) => (user.lastOrderedAt ? new Date(user.lastOrderedAt).getTime() : 0),
       render: (user) =>
         user.lastOrderedAt ? (
-          <span className="tnum whitespace-nowrap text-[12.5px] text-ink-700">
+          <span className="tnum whitespace-nowrap text-sm text-ink-700">
             {date(user.lastOrderedAt)}
           </span>
         ) : (
-          <span className="text-[12px] text-ink-300">Never</span>
+          <span className="text-xs text-ink-300">Never</span>
         ),
     },
   ];
@@ -649,7 +649,7 @@ export function AdminCustomersPage() {
             {(counts.pending ?? 0) > 0 && (
               <Link
                 to="/admin/approvals"
-                className="flex h-10 items-center gap-1.5 rounded-[10px] border border-warn/30 bg-warn-50 px-3.5 text-[13.5px] font-medium text-warn transition-colors active:scale-[0.97] hover:border-warn/50"
+                className="flex h-10 items-center gap-1.5 rounded-md border border-warn/30 bg-warn-50 px-3.5 text-md font-medium text-warn transition-colors active:scale-[0.97] hover:border-warn/50"
               >
                 <UserCheck className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
                 Review {counts.pending}

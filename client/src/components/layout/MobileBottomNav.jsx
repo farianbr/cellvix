@@ -124,7 +124,7 @@ function BarItem({ as: As = 'button', icon: Icon, label, active = false, badge =
         <span className="relative">
           <Icon className="size-[21px]" strokeWidth={active ? 2.25 : 1.75} aria-hidden="true" />
           {badge > 0 && (
-            <span className="tnum absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 font-display text-[10px] font-bold text-white ring-2 ring-surface">
+            <span className="tnum absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 font-display text-2xs font-bold text-white ring-2 ring-surface">
               {badge > 99 ? '99+' : badge}
             </span>
           )}
@@ -135,7 +135,7 @@ function BarItem({ as: As = 'button', icon: Icon, label, active = false, badge =
             />
           )}
         </span>
-        <span className="font-display text-[10.5px] font-semibold leading-none">{label}</span>
+        <span className="font-display text-2xs font-semibold leading-none">{label}</span>
         {active && (
           <span className="rule-brand-gradient absolute inset-x-4 top-0 h-0.5 rounded-full" aria-hidden="true" />
         )}

@@ -69,8 +69,8 @@ export function AdminShell() {
         <span className="mb-5 flex size-14 items-center justify-center rounded-full bg-danger-50 text-danger">
           <ShieldAlert className="size-7" strokeWidth={1.75} />
         </span>
-        <h1 className="text-[24px]">{unassigned ? 'No access yet' : 'Admin access only'}</h1>
-        <p className="mt-3 text-[14px] leading-relaxed text-ink-500">
+        <h1 className="text-2xl">{unassigned ? 'No access yet' : 'Admin access only'}</h1>
+        <p className="mt-3 text-md leading-relaxed text-ink-500">
           {unassigned
             ? 'Your staff account does not have a role assigned yet. An administrator needs to grant you access before this panel opens.'
             : 'This area is restricted to Cellvix staff accounts.'}

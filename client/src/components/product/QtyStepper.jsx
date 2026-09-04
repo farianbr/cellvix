@@ -2,8 +2,8 @@ import { Minus, Plus } from 'lucide-react';
 import cn from '@/lib/cn';
 
 const SIZES = {
-  sm: { wrap: 'h-9', btn: 'size-9', input: 'w-9 text-[13px]', icon: 'size-3.5' },
-  md: { wrap: 'h-11', btn: 'size-11', input: 'w-12 text-[14px]', icon: 'size-4' },
+  sm: { wrap: 'h-9', btn: 'size-9', input: 'w-9 text-sm', icon: 'size-3.5' },
+  md: { wrap: 'h-11', btn: 'size-11', input: 'w-12 text-md', icon: 'size-4' },
 
   // For the product card only. Its cells narrow with the CARD, not the viewport:
   // in a two-up mobile grid the card is ~169px wide, and 28px cells are what let
@@ -13,7 +13,7 @@ const SIZES = {
   card: {
     wrap: 'h-9',
     btn: 'h-9 w-7 @min-[200px]:w-9',
-    input: 'w-7 text-[12.5px] @min-[200px]:w-9 @min-[200px]:text-[13px]',
+    input: 'w-7 text-sm @min-[200px]:w-9 @min-[200px]:text-sm',
     icon: 'size-3 @min-[200px]:size-3.5',
   },
 };
@@ -38,7 +38,7 @@ export function QtyStepper({
   return (
     <div
       className={cn(
-        'inline-flex items-center overflow-hidden rounded-[10px] border border-line bg-surface',
+        'inline-flex items-center overflow-hidden rounded-md border border-line bg-surface',
         disabled && 'opacity-50',
         s.wrap,
         className,

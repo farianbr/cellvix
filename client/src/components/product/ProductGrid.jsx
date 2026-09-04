@@ -18,9 +18,9 @@ export function ProductGrid({ products = [], isLoading, isFetching, error }) {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center gap-3 rounded-[14px] border border-danger/20 bg-danger-50 px-6 py-14 text-center">
-        <h3 className="text-[16px]">Could not load products</h3>
-        <p className="max-w-sm text-[13.5px] text-ink-500">{error.message}</p>
+      <div className="flex flex-col items-center gap-3 rounded-lg border border-danger/20 bg-danger-50 px-6 py-14 text-center">
+        <h3 className="text-lg">Could not load products</h3>
+        <p className="max-w-sm text-md text-ink-500">{error.message}</p>
       </div>
     );
   }
@@ -31,7 +31,7 @@ export function ProductGrid({ products = [], isLoading, isFetching, error }) {
         {Array.from({ length: 12 }).map((_, index) => (
           <div
             key={index}
-            className="overflow-hidden rounded-[14px] border border-line bg-surface"
+            className="overflow-hidden rounded-lg border border-line bg-surface"
           >
             <Skeleton className="aspect-4/3 rounded-none" />
             <div className="space-y-2.5 p-4">
@@ -50,13 +50,13 @@ export function ProductGrid({ products = [], isLoading, isFetching, error }) {
 
   if (products.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-[14px] border border-dashed border-line bg-surface px-6 py-16 text-center">
+      <div className="flex flex-col items-center gap-4 rounded-lg border border-dashed border-line bg-surface px-6 py-16 text-center">
         <span className="flex size-14 items-center justify-center rounded-full bg-surface-2 text-ink-300">
           <PackageSearch className="size-7" strokeWidth={1.5} />
         </span>
         <div>
-          <h3 className="text-[17px]">No parts match those filters</h3>
-          <p className="mx-auto mt-1.5 max-w-sm text-[13.5px] text-ink-500">
+          <h3 className="text-lg">No parts match those filters</h3>
+          <p className="mx-auto mt-1.5 max-w-sm text-md text-ink-500">
             Try widening the model or clearing a grade. Our catalogue covers over 400 SKUs across
             six device categories.
           </p>

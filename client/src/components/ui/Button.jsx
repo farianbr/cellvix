@@ -16,10 +16,10 @@ const VARIANTS = {
 };
 
 const SIZES = {
-  xs: 'h-7 px-2.5 text-[12px] gap-1 rounded-[6px]',
-  sm: 'h-9 px-3.5 text-[13px] gap-1.5 rounded-[8px]',
-  md: 'h-11 px-5 text-[14px] gap-2 rounded-[10px]',
-  lg: 'h-13 px-7 text-[15px] gap-2 rounded-[12px]',
+  xs: 'h-7 px-2.5 text-xs gap-1 rounded-sm',
+  sm: 'h-9 px-3.5 text-sm gap-1.5 rounded-md',
+  md: 'h-11 px-5 text-md gap-2 rounded-md',
+  lg: 'h-13 px-7 text-lg gap-2 rounded-lg',
 };
 
 /**

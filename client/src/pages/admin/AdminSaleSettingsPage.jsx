@@ -174,7 +174,7 @@ export function AdminSaleSettingsPage() {
     setSaved(false);
   }
 
-  if (isLoading) return <p className="text-[13px] text-ink-500">Loading settings…</p>;
+  if (isLoading) return <p className="text-sm text-ink-500">Loading settings…</p>;
 
   return (
     <>
@@ -246,16 +246,16 @@ export function AdminSaleSettingsPage() {
           {/* Scrolls inside itself rather than pushing the page sideways — the
               table is 13 rows of three controls and a phone cannot fit them. */}
           <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-            <table className="w-full min-w-[520px] border-collapse text-[13px]">
+            <table className="w-full min-w-[520px] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-line text-left">
-                  <th scope="col" className="pb-2 font-display text-[12px] font-semibold text-ink-500">
+                  <th scope="col" className="pb-2 font-display text-xs font-semibold text-ink-500">
                     Province
                   </th>
-                  <th scope="col" className="pb-2 font-display text-[12px] font-semibold text-ink-500">
+                  <th scope="col" className="pb-2 font-display text-xs font-semibold text-ink-500">
                     Rate
                   </th>
-                  <th scope="col" className="pb-2 font-display text-[12px] font-semibold text-ink-500">
+                  <th scope="col" className="pb-2 font-display text-xs font-semibold text-ink-500">
                     Kind
                   </th>
                 </tr>
@@ -292,7 +292,7 @@ export function AdminSaleSettingsPage() {
                           aria-label={`${province.label} tax kind`}
                           value={row.kind}
                           onChange={(event) => editRate(province.value, { kind: event.target.value })}
-                          className="h-10 w-full min-w-[9rem] rounded-[9px] border border-line bg-surface px-3 text-[13px] text-ink-900 transition-colors focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
+                          className="h-10 w-full min-w-[9rem] rounded-md border border-line bg-surface px-3 text-sm text-ink-900 transition-colors focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
                         >
                           {TAX_KINDS.map((kind) => (
                             <option key={kind.value} value={kind.value}>
@@ -308,7 +308,7 @@ export function AdminSaleSettingsPage() {
             </table>
           </div>
 
-          <p className="mt-3 text-[12.5px] leading-relaxed text-ink-500">
+          <p className="mt-3 text-sm leading-relaxed text-ink-500">
             <strong className="font-semibold text-ink-700">Kind is not cosmetic.</strong> HST is one
             combined tax; GST+PST are two taxes collected together. The tax report has to be able to
             say which, rather than printing one blended number.
@@ -355,7 +355,7 @@ export function AdminSaleSettingsPage() {
             ))}
           </div>
 
-          <p className="mt-3 text-[12.5px] leading-relaxed text-ink-500">
+          <p className="mt-3 text-sm leading-relaxed text-ink-500">
             <strong className="font-semibold text-ink-700">A bonus, not a replacement.</strong> Cover
             is the grade&rsquo;s days plus the tier&rsquo;s, so a tier can only ever lengthen a
             warranty — a Gold customer&rsquo;s NEW part gets 365 + 90 days, not 90. A grade with no

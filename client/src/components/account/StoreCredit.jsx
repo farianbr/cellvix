@@ -34,15 +34,15 @@ const TOP_UPS = [250, 500, 1000];
 /** The balance, as the one card on the dashboard that carries the gradient. */
 export function StoreCreditCard({ balance, added, spent, className }) {
   return (
-    <div className={cn('rounded-[14px] bg-brand-gradient p-5 text-white', className)}>
-      <span className="flex size-10 items-center justify-center rounded-[11px] bg-white/15">
+    <div className={cn('rounded-lg bg-brand-gradient p-5 text-white', className)}>
+      <span className="flex size-10 items-center justify-center rounded-md bg-white/15">
         <WalletCards className="size-5" strokeWidth={1.75} aria-hidden="true" />
       </span>
-      <p className="tnum mt-4 font-display text-[34px] font-bold leading-none">{money(balance)}</p>
-      <p className="mt-2 text-[12.5px] text-white/75">Store credit available to spend</p>
+      <p className="tnum mt-4 font-display text-d-sm font-bold leading-none">{money(balance)}</p>
+      <p className="mt-2 text-sm text-white/75">Store credit available to spend</p>
 
       {(added > 0 || spent > 0) && (
-        <dl className="mt-4 grid grid-cols-2 gap-2 border-t border-white/20 pt-3 text-[12px]">
+        <dl className="mt-4 grid grid-cols-2 gap-2 border-t border-white/20 pt-3 text-xs">
           <div>
             <dt className="text-white/65">Added</dt>
             <dd className="tnum mt-0.5 font-medium">{money(added)}</dd>
@@ -76,10 +76,10 @@ export function RechargeForm({ onDone, className }) {
         if (invalid) return;
         setConfirming(true);
       }}
-      className={cn('rounded-[14px] border border-line bg-surface-2 p-4', className)}
+      className={cn('rounded-lg border border-line bg-surface-2 p-4', className)}
     >
-      <p className="font-display text-[13.5px] font-bold text-ink-900">Add funds</p>
-      <p className="mt-1 text-[12.5px] leading-relaxed text-ink-500">
+      <p className="font-display text-md font-bold text-ink-900">Add funds</p>
+      <p className="mt-1 text-sm leading-relaxed text-ink-500">
         Prepay now and the balance comes off your next order automatically. Minimum $25.
       </p>
 
@@ -90,7 +90,7 @@ export function RechargeForm({ onDone, className }) {
             type="button"
             onClick={() => setAmount(String(value))}
             className={cn(
-              'tnum h-9 rounded-full border px-3.5 text-[13px] font-medium transition-colors',
+              'tnum h-9 rounded-full border px-3.5 text-sm font-medium transition-colors',
               Number(amount) === value
                 ? 'border-brand bg-brand-50 text-brand-700'
                 : 'border-line bg-surface text-ink-500 hover:border-line-strong',
@@ -116,10 +116,10 @@ export function RechargeForm({ onDone, className }) {
       </div>
 
       {rechargeStoreCredit.isError && (
-        <p className="mt-2.5 text-[12.5px] text-danger">{rechargeStoreCredit.error.message}</p>
+        <p className="mt-2.5 text-sm text-danger">{rechargeStoreCredit.error.message}</p>
       )}
       {rechargeStoreCredit.isSuccess && (
-        <p className="mt-2.5 flex items-center gap-1.5 text-[12.5px] text-ok">
+        <p className="mt-2.5 flex items-center gap-1.5 text-sm text-ok">
           <Check className="size-3.5" strokeWidth={2.5} aria-hidden="true" />
           {rechargeStoreCredit.data.message}
         </p>
@@ -169,7 +169,7 @@ export function StoreCreditActivity({ movements = [], isLoading }) {
 
   if (movements.length === 0) {
     return (
-      <p className="rounded-[12px] bg-surface-2 px-4 py-6 text-center text-[13px] text-ink-400">
+      <p className="rounded-lg bg-surface-2 px-4 py-6 text-center text-sm text-ink-400">
         No store credit on this account yet. Refunds, top-ups and anything your rep allocates will
         show here.
       </p>
@@ -177,7 +177,7 @@ export function StoreCreditActivity({ movements = [], isLoading }) {
   }
 
   return (
-    <ul className="divide-y divide-line overflow-hidden rounded-[12px] border border-line">
+    <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line">
       {movements.map((row) => {
         const meta = MOVEMENTS[row.type] ?? MOVEMENTS.adjustment;
         const Icon = meta.icon;
@@ -196,8 +196,8 @@ export function StoreCreditActivity({ movements = [], isLoading }) {
             </span>
 
             <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-medium text-ink-900">{meta.label}</p>
-              <p className="mt-0.5 truncate text-[12px] text-ink-500">
+              <p className="text-sm font-medium text-ink-900">{meta.label}</p>
+              <p className="mt-0.5 truncate text-xs text-ink-500">
                 {row.note}
                 {row.orderNumber ? ` · ${row.orderNumber}` : ''}
               </p>
@@ -206,14 +206,14 @@ export function StoreCreditActivity({ movements = [], isLoading }) {
             <div className="shrink-0 text-right">
               <p
                 className={cn(
-                  'tnum font-display text-[13.5px] font-bold',
+                  'tnum font-display text-md font-bold',
                   added ? 'text-ok' : 'text-ink-900',
                 )}
               >
                 {added ? '+' : '−'}
                 {money(Math.abs(row.amount))}
               </p>
-              <p className="mt-0.5 text-[11.5px] text-ink-400">{date(row.createdAt)}</p>
+              <p className="mt-0.5 text-xs text-ink-400">{date(row.createdAt)}</p>
             </div>
           </li>
         );

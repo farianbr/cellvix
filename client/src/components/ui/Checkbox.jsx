@@ -17,7 +17,7 @@ export const Checkbox = forwardRef(function Checkbox(
     <label
       htmlFor={id}
       className={cn(
-        'group flex cursor-pointer select-none items-center gap-2.5 rounded-lg px-2 py-1.5 text-[13.5px]',
+        'group flex cursor-pointer select-none items-center gap-2.5 rounded-lg px-2 py-1.5 text-md',
         'transition-colors duration-[120ms]',
         disabled ? 'cursor-not-allowed opacity-45' : 'hover:bg-surface-2',
         className,
@@ -29,7 +29,7 @@ export const Checkbox = forwardRef(function Checkbox(
           id={id}
           type="checkbox"
           disabled={disabled}
-          className="peer absolute size-full cursor-pointer appearance-none rounded-[5px] border border-line-strong bg-surface transition-colors checked:border-brand checked:bg-brand disabled:cursor-not-allowed focus-visible:outline-none"
+          className="peer absolute size-full cursor-pointer appearance-none rounded-sm border border-line-strong bg-surface transition-colors checked:border-brand checked:bg-brand disabled:cursor-not-allowed focus-visible:outline-none"
           {...props}
         />
         <Check
@@ -42,7 +42,7 @@ export const Checkbox = forwardRef(function Checkbox(
       <span className="min-w-0 flex-1 truncate text-ink-700 group-hover:text-ink-900">{label}</span>
 
       {count !== undefined && count !== null && (
-        <span className="tnum shrink-0 text-[12px] text-ink-300">{count}</span>
+        <span className="tnum shrink-0 text-xs text-ink-300">{count}</span>
       )}
     </label>
   );

@@ -284,13 +284,13 @@ export function CheckoutPage() {
         <span className="mb-5 flex size-14 items-center justify-center rounded-full bg-warn-50 text-warn">
           <Lock className="size-7" strokeWidth={1.75} />
         </span>
-        <h1 className="text-[22px]">Checkout is not open yet</h1>
-        <p className="mt-3 text-[14px] leading-relaxed text-ink-500">
+        <h1 className="text-2xl">Checkout is not open yet</h1>
+        <p className="mt-3 text-md leading-relaxed text-ink-500">
           Ordering unlocks once our team has verified your business. Your cart is saved.
         </p>
         <Link
           to="/cart"
-          className="mt-7 inline-flex items-center gap-2 text-[13.5px] font-semibold text-brand hover:text-brand-700"
+          className="mt-7 inline-flex items-center gap-2 text-md font-semibold text-brand hover:text-brand-700"
         >
           <ArrowLeft className="size-4" strokeWidth={2} aria-hidden="true" />
           Back to cart
@@ -302,10 +302,10 @@ export function CheckoutPage() {
   return (
     <div className="mx-auto max-w-[1100px] px-3 py-6 sm:px-4 lg:px-6 lg:py-8">
       <div className="mb-5 flex flex-wrap items-baseline justify-between gap-3">
-        <h1 className="text-[22px] sm:text-[26px]">Checkout</h1>
+        <h1 className="text-2xl sm:text-3xl">Checkout</h1>
         <Link
           to="/cart"
-          className="inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-brand transition-colors hover:text-brand-700"
+          className="inline-flex items-center gap-1.5 text-md font-semibold text-brand transition-colors hover:text-brand-700"
         >
           <ArrowLeft className="size-4" strokeWidth={2} aria-hidden="true" />
           Back to cart
@@ -431,7 +431,7 @@ export function CheckoutPage() {
                     <label
                       key={option.code}
                       className={cn(
-                        'flex cursor-pointer items-center gap-3 rounded-[11px] border p-3.5 transition-[border-color,background]',
+                        'flex cursor-pointer items-center gap-3 rounded-md border p-3.5 transition-[border-color,background]',
                         isSelected
                           ? 'border-brand bg-brand-50'
                           : 'border-line hover:border-line-strong hover:bg-surface-2',
@@ -449,12 +449,12 @@ export function CheckoutPage() {
                         aria-hidden="true"
                       />
                       <span className="min-w-0 flex-1">
-                        <span className="block font-display text-[13.5px] font-semibold text-ink-900">
+                        <span className="block font-display text-md font-semibold text-ink-900">
                           {option.label}
                         </span>
-                        <span className="block text-[12.5px] text-ink-500">{option.detail}</span>
+                        <span className="block text-sm text-ink-500">{option.detail}</span>
                       </span>
-                      <span className="tnum shrink-0 font-display text-[13.5px] font-bold text-ink-900">
+                      <span className="tnum shrink-0 font-display text-md font-bold text-ink-900">
                         {cost === 0 ? 'Free' : money(cost)}
                       </span>
                     </label>
@@ -492,7 +492,7 @@ export function CheckoutPage() {
               {storeCreditBalance > 0 && (
                 <label
                   className={cn(
-                    'mb-4 flex items-start gap-3 rounded-[11px] border p-3.5 transition-[border-color,background]',
+                    'mb-4 flex items-start gap-3 rounded-md border p-3.5 transition-[border-color,background]',
                     creditLocked || values.useStoreCredit
                       ? 'border-brand bg-brand-50'
                       : 'cursor-pointer border-line hover:border-line-strong hover:bg-surface-2',
@@ -507,15 +507,15 @@ export function CheckoutPage() {
                   />
                   <WalletCards className="mt-0.5 size-5 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
                   <span className="min-w-0 flex-1">
-                    <span className="block font-display text-[13.5px] font-semibold text-ink-900">
+                    <span className="block font-display text-md font-semibold text-ink-900">
                       Store credit{creditLocked ? ' — applied first' : ''}
                     </span>
-                    <span className="tnum block text-[12.5px] text-ink-500">
+                    <span className="tnum block text-sm text-ink-500">
                       {money(storeCreditBalance)} available
                       {storeCreditApplied > 0 ? ` · ${money(storeCreditApplied)} on this order` : ''}
                     </span>
                     {creditLocked && (
-                      <span className="mt-1 block text-[12px] leading-relaxed text-ink-400">
+                      <span className="mt-1 block text-xs leading-relaxed text-ink-400">
                         Credit you already hold with us is used before your account terms are drawn
                         on. Only {money(dueNow)} goes on account.
                       </span>
@@ -531,7 +531,7 @@ export function CheckoutPage() {
 
                 <label
                   className={cn(
-                    'flex cursor-pointer items-center gap-3 rounded-[11px] border p-3.5 transition-[border-color,background]',
+                    'flex cursor-pointer items-center gap-3 rounded-md border p-3.5 transition-[border-color,background]',
                     values.paymentMethod === 'card'
                       ? 'border-brand bg-brand-50'
                       : 'border-line hover:border-line-strong hover:bg-surface-2',
@@ -545,14 +545,14 @@ export function CheckoutPage() {
                   />
                   <CreditCard className="size-5 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
                   <span className="min-w-0 flex-1">
-                    <span className="block font-display text-[13.5px] font-semibold text-ink-900">
+                    <span className="block font-display text-md font-semibold text-ink-900">
                       Pay by card
                     </span>
                     {/* Was "Visa ending 4242" — a specific card this account
                         does not have. The test card belongs in the notice at
                         the foot of the step, not on a row claiming to describe
                         the buyer's own saved payment method. */}
-                    <span className="block text-[12.5px] text-ink-500">
+                    <span className="block text-sm text-ink-500">
                       Charged when you place the order
                     </span>
                   </span>
@@ -565,7 +565,7 @@ export function CheckoutPage() {
                     sheet everywhere else — nothing typed here is sent, and the
                     notice below says so. */}
                 {values.paymentMethod === 'card' && dueNow > 0 && (
-                  <div className="overflow-hidden rounded-[10px] border border-line-strong bg-surface focus-within:border-brand">
+                  <div className="overflow-hidden rounded-md border border-line-strong bg-surface focus-within:border-brand">
                     <input
                       aria-label="Card number"
                       inputMode="numeric"
@@ -581,7 +581,7 @@ export function CheckoutPage() {
                             .trim(),
                         )
                       }
-                      className="h-11 w-full bg-transparent px-3 text-[14px] text-ink-900 outline-none placeholder:text-ink-300"
+                      className="h-11 w-full bg-transparent px-3 text-md text-ink-900 outline-none placeholder:text-ink-300"
                     />
                     <div className="grid grid-cols-3 border-t border-line">
                       <input
@@ -596,7 +596,7 @@ export function CheckoutPage() {
                             digits.length <= 2 ? digits : `${digits.slice(0, 2)}/${digits.slice(2)}`,
                           );
                         }}
-                        className="h-11 w-full bg-transparent px-3 text-[14px] text-ink-900 outline-none placeholder:text-ink-300"
+                        className="h-11 w-full bg-transparent px-3 text-md text-ink-900 outline-none placeholder:text-ink-300"
                       />
                       <input
                         aria-label="Security code"
@@ -607,7 +607,7 @@ export function CheckoutPage() {
                         onChange={(event) =>
                           setCardCvc(event.target.value.replace(/\D/g, '').slice(0, 4))
                         }
-                        className="h-11 w-full border-l border-line bg-transparent px-3 text-[14px] text-ink-900 outline-none placeholder:text-ink-300"
+                        className="h-11 w-full border-l border-line bg-transparent px-3 text-md text-ink-900 outline-none placeholder:text-ink-300"
                       />
                       <input
                         aria-label="Postal code"
@@ -617,7 +617,7 @@ export function CheckoutPage() {
                         onChange={(event) =>
                           setCardPostal(event.target.value.toUpperCase().slice(0, 7))
                         }
-                        className="h-11 w-full border-l border-line bg-transparent px-3 text-[14px] text-ink-900 outline-none placeholder:text-ink-300"
+                        className="h-11 w-full border-l border-line bg-transparent px-3 text-md text-ink-900 outline-none placeholder:text-ink-300"
                       />
                     </div>
                   </div>
@@ -626,7 +626,7 @@ export function CheckoutPage() {
                 {user?.terms && user.terms !== 'prepaid' && (
                   <label
                     className={cn(
-                      'flex cursor-pointer items-center gap-3 rounded-[11px] border p-3.5 transition-[border-color,background]',
+                      'flex cursor-pointer items-center gap-3 rounded-md border p-3.5 transition-[border-color,background]',
                       values.paymentMethod === 'terms'
                         ? 'border-brand bg-brand-50'
                         : 'border-line hover:border-line-strong hover:bg-surface-2',
@@ -640,10 +640,10 @@ export function CheckoutPage() {
                     />
                     <Banknote className="size-5 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
                     <span className="min-w-0 flex-1">
-                      <span className="block font-display text-[13.5px] font-semibold text-ink-900">
+                      <span className="block font-display text-md font-semibold text-ink-900">
                         On account — {user.terms.replace('net', 'Net ')}
                       </span>
-                      <span className="tnum block text-[12.5px] text-ink-500">
+                      <span className="tnum block text-sm text-ink-500">
                         {money(Math.max(0, (user.creditLimit ?? 0) - (user.balance ?? 0)))} credit
                         available
                       </span>
@@ -657,7 +657,7 @@ export function CheckoutPage() {
                   purchasing side, where AdminPurchaseOrders already owns it, and
                   asking a customer for one put a supplier's paperwork on a
                   retail checkout. */}
-              <p className="mt-4 rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12.5px] leading-relaxed text-ink-500">
+              <p className="mt-4 rounded-md bg-surface-2 px-3 py-2.5 text-sm leading-relaxed text-ink-500">
                 Payments run against a test gateway in this build — no card details are sent or
                 stored, and no card is charged. Delivery notes starting{' '}
                 <span className="font-semibold text-ink-700">DECLINE</span> show the failed-payment
@@ -677,7 +677,7 @@ export function CheckoutPage() {
               onEdit={() => setActiveStep('review')}
               isLast
             >
-              <ul className="divide-y divide-line rounded-[11px] border border-line">
+              <ul className="divide-y divide-line rounded-md border border-line">
                 {/* Bundles are one line here too — reviewing an order should show
                     the same shape as the cart it came from. */}
                 {bundles.map((bundle) => (
@@ -686,19 +686,19 @@ export function CheckoutPage() {
                       <Package className="size-5" strokeWidth={1.75} aria-hidden="true" />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="line-clamp-1 text-[13.5px] font-medium text-ink-900">
+                      <span className="line-clamp-1 text-md font-medium text-ink-900">
                         {bundle.title}
                       </span>
-                      <span className="block text-[11px] text-ink-300">
+                      <span className="block text-2xs text-ink-300">
                         {bundle.products.length} parts · ×{bundle.qty}
                       </span>
                     </span>
                     <span className="tnum shrink-0 text-right">
-                      <span className="block font-display text-[13.5px] font-bold">
+                      <span className="block font-display text-md font-bold">
                         {money(bundle.lineTotal)}
                       </span>
                       {bundle.savings > 0 && (
-                        <span className="block text-[11px] text-ok">−{money(bundle.savings)}</span>
+                        <span className="block text-2xs text-ok">−{money(bundle.savings)}</span>
                       )}
                     </span>
                   </li>
@@ -709,14 +709,14 @@ export function CheckoutPage() {
                       <PartVisual product={item} />
                     </span>
                     <span className="min-w-0 flex-1">
-                      <span className="line-clamp-1 text-[13.5px] font-medium text-ink-900">
+                      <span className="line-clamp-1 text-md font-medium text-ink-900">
                         {item.name}
                       </span>
-                      <span className="tnum block font-mono text-[11px] text-ink-300">
+                      <span className="tnum block font-mono text-2xs text-ink-300">
                         {item.sku} · ×{item.qty}
                       </span>
                     </span>
-                    <span className="tnum shrink-0 font-display text-[13.5px] font-bold">
+                    <span className="tnum shrink-0 font-display text-md font-bold">
                       {money(item.lineTotal ?? item.unitPrice * item.qty)}
                     </span>
                   </li>
@@ -724,14 +724,14 @@ export function CheckoutPage() {
               </ul>
 
               {submitError && (
-                <p className="mt-4 flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+                <p className="mt-4 flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
                   <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
                   {submitError}
                 </p>
               )}
 
               {hasStockIssue && (
-                <p className="mt-4 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+                <p className="mt-4 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
                   One or more lines exceed available stock.{' '}
                   <Link to="/cart" className="font-semibold underline">
                     Adjust your cart
@@ -751,7 +751,7 @@ export function CheckoutPage() {
                 Place order · {money(dueNow)}
               </Button>
 
-              <p className="mt-3 flex items-start justify-center gap-2 text-[12px] text-ink-400">
+              <p className="mt-3 flex items-start justify-center gap-2 text-xs text-ink-400">
                 <ShieldCheck className="mt-0.5 size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
                 Every section above stays editable until you place the order.
               </p>
@@ -760,16 +760,16 @@ export function CheckoutPage() {
 
           {/* ---- running total -------------------------------------------- */}
           <aside className="mt-4 lg:sticky lg:top-[132px] lg:mt-0">
-            <div className="rounded-[14px] border border-line bg-surface p-5">
-              <h2 className="mb-4 font-display text-[15px] font-bold">
+            <div className="rounded-lg border border-line bg-surface p-5">
+              <h2 className="mb-4 font-display text-lg font-bold">
                 Order summary
-                <span className="tnum ml-2 text-[13px] font-medium text-ink-400">
+                <span className="tnum ml-2 text-sm font-medium text-ink-400">
                   {count} {count === 1 ? 'item' : 'items'}
                 </span>
               </h2>
 
               {priceVisible && (
-                <dl className="space-y-2.5 text-[13.5px]">
+                <dl className="space-y-2.5 text-md">
                   <div className="flex justify-between">
                     <dt className="text-ink-500">Subtotal</dt>
                     <dd className="tnum font-medium text-ink-900">{money(subtotal)}</dd>
@@ -785,7 +785,7 @@ export function CheckoutPage() {
                     <div className="flex justify-between">
                       <dt className="text-ok">
                         {promo?.code ? (
-                          <span className="font-mono text-[12.5px]">{promo.code}</span>
+                          <span className="font-mono text-sm">{promo.code}</span>
                         ) : (
                           'Offer'
                         )}
@@ -805,8 +805,8 @@ export function CheckoutPage() {
                     <dd className="tnum font-medium text-ink-900">{money(tax)}</dd>
                   </div>
                   <div className="flex items-baseline justify-between border-t border-line pt-3">
-                    <dt className="font-display text-[14px] font-bold text-ink-900">Total</dt>
-                    <dd className="tnum font-display text-[22px] font-bold text-ink-900">
+                    <dt className="font-display text-md font-bold text-ink-900">Total</dt>
+                    <dd className="tnum font-display text-2xl font-bold text-ink-900">
                       {money(total)}
                     </dd>
                   </div>
@@ -818,8 +818,8 @@ export function CheckoutPage() {
                         <dd className="tnum font-medium text-ok">−{money(storeCreditApplied)}</dd>
                       </div>
                       <div className="flex items-baseline justify-between">
-                        <dt className="font-display text-[13px] font-bold text-ink-900">Due now</dt>
-                        <dd className="tnum font-display text-[15px] font-bold text-ink-900">
+                        <dt className="font-display text-sm font-bold text-ink-900">Due now</dt>
+                        <dd className="tnum font-display text-lg font-bold text-ink-900">
                           {money(dueNow)}
                         </dd>
                       </div>

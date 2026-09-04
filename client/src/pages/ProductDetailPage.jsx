@@ -45,7 +45,7 @@ function Breadcrumbs({ product }) {
   ].filter((crumb) => crumb.label);
 
   return (
-    <nav aria-label="Breadcrumb" className="mb-4 flex flex-wrap items-center gap-1 text-[12.5px]">
+    <nav aria-label="Breadcrumb" className="mb-4 flex flex-wrap items-center gap-1 text-sm">
       <Link to="/" className="text-ink-400 transition-colors hover:text-brand">
         Shop
       </Link>
@@ -100,11 +100,11 @@ export function ProductDetailPage() {
   if (error) {
     return (
       <div className="mx-auto max-w-lg px-4 py-20 text-center">
-        <h1 className="text-[22px]">Part not found</h1>
-        <p className="mt-3 text-[14px] text-ink-500">{error.message}</p>
+        <h1 className="text-2xl">Part not found</h1>
+        <p className="mt-3 text-md text-ink-500">{error.message}</p>
         <Link
           to="/"
-          className="mt-6 inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-brand hover:text-brand-700"
+          className="mt-6 inline-flex items-center gap-1.5 text-md font-semibold text-brand hover:text-brand-700"
         >
           Back to the catalogue
         </Link>
@@ -140,7 +140,7 @@ export function ProductDetailPage() {
             connector or a stamped number against the part in their hand, which
             a 600px photo does not settle. It renders its children untouched on
             touch devices and where there is no photograph. */}
-        <div className="group relative overflow-hidden rounded-[14px] border border-line bg-surface-2">
+        <div className="group relative overflow-hidden rounded-lg border border-line bg-surface-2">
           <ImageZoom product={product}>
             <PartFrame product={product} aspect="aspect-square" />
           </ImageZoom>
@@ -150,7 +150,7 @@ export function ProductDetailPage() {
           {/* Says the magnifier is there. Hidden from touch, where it is not,
               and it fades once the pointer is over the image — by then the lens
               is on screen and saying so twice is clutter over the picture. */}
-          <p className="pointer-events-none absolute bottom-4 right-4 z-3 hidden items-center gap-1.5 rounded-full border border-line bg-surface/90 px-2.5 py-1 text-[11.5px] font-medium text-ink-500 shadow-card backdrop-blur-[2px] transition-opacity duration-200 group-hover:opacity-0 [@media(hover:hover)]:inline-flex">
+          <p className="pointer-events-none absolute bottom-4 right-4 z-3 hidden items-center gap-1.5 rounded-full border border-line bg-surface/90 px-2.5 py-1 text-xs font-medium text-ink-500 shadow-card backdrop-blur-[2px] transition-opacity duration-200 group-hover:opacity-0 [@media(hover:hover)]:inline-flex">
             <Search className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
             Hover to magnify
           </p>
@@ -159,7 +159,7 @@ export function ProductDetailPage() {
         {/* ---- detail ------------------------------------------------------ */}
         <div className="min-w-0">
           <p className="eyebrow mb-2 text-ink-300">{product.partTypeLabel}</p>
-          <h1 className="text-[24px] leading-tight sm:text-[30px]">
+          <h1 className="text-2xl leading-tight sm:text-3xl">
             {productTitle(product.name, product.partTypeLabel)}
           </h1>
 
@@ -187,24 +187,24 @@ export function ProductDetailPage() {
                 price is the more direct claim. */}
             <div className={cn(gated && 'price-gated')} aria-hidden={gated || undefined}>
               {!gated && !product.compareAtPrice && product.market && (
-                <span className="tnum text-[15px] text-ink-300 line-through">
+                <span className="tnum text-lg text-ink-300 line-through">
                   {money(product.market.average)}
                 </span>
               )}
 
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5">
-                <span className="tnum font-display text-[32px] font-bold tracking-tight text-ink-900">
+                <span className="tnum font-display text-d-sm font-bold tracking-tight text-ink-900">
                   {gated ? '$000.00' : money(product.price)}
                 </span>
 
                 {!gated && product.compareAtPrice ? (
-                  <span className="tnum text-[15px] text-ink-300 line-through">
+                  <span className="tnum text-lg text-ink-300 line-through">
                     {money(product.compareAtPrice)}
                   </span>
                 ) : (
                   !gated &&
                   product.market && (
-                    <span className="tnum shrink-0 rounded-full bg-ok-50 px-2 py-0.5 text-[12.5px] font-bold text-ok">
+                    <span className="tnum shrink-0 rounded-full bg-ok-50 px-2 py-0.5 text-sm font-bold text-ok">
                       Save {product.market.savingsPercent}%
                     </span>
                   )
@@ -218,7 +218,7 @@ export function ProductDetailPage() {
                 onClick={() => openAccount('signin')}
                 className="absolute inset-0 -m-2 flex items-center justify-start rounded-lg bg-surface/40 backdrop-blur-[1px] transition-colors hover:bg-surface/20"
               >
-                <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3.5 py-1.5 text-[13px] font-semibold text-ink-700 shadow-card">
+                <span className="inline-flex items-center gap-2 rounded-full border border-line bg-surface px-3.5 py-1.5 text-sm font-semibold text-ink-700 shadow-card">
                   <Lock className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                   {isAuthenticated ? 'Pending approval' : 'Sign in to view wholesale pricing'}
                 </span>
@@ -247,14 +247,14 @@ export function ProductDetailPage() {
             </Button>
           </div>
 
-          <p className="mt-4 flex items-start gap-2 text-[12.5px] text-ink-400">
+          <p className="mt-4 flex items-start gap-2 text-sm text-ink-400">
             <ShieldCheck className="mt-0.5 size-4 shrink-0" strokeWidth={1.75} aria-hidden="true" />
             Tested before dispatch · {product.specs?.Warranty ?? '30 days'} warranty · Ships from
             Ontario
           </p>
 
           {product.description && (
-            <p className="mt-6 text-[14px] leading-relaxed text-ink-500">{product.description}</p>
+            <p className="mt-6 text-md leading-relaxed text-ink-500">{product.description}</p>
           )}
 
           {/* The SKU used to sit under the title, where it was the second thing
@@ -262,12 +262,12 @@ export function ProductDetailPage() {
               reordering reference, so it lives with the rest of the reference
               data — first row, because it is the one a buyer comes back for. */}
           {product.specs && Object.keys(product.specs).length > 0 && (
-            <dl className="mt-6 overflow-hidden rounded-[12px] border border-line">
+            <dl className="mt-6 overflow-hidden rounded-lg border border-line">
               {Object.entries({ SKU: product.sku, ...product.specs }).map(([key, value], index) => (
                 <div
                   key={key}
                   className={cn(
-                    'flex justify-between gap-4 px-4 py-2.5 text-[13px]',
+                    'flex justify-between gap-4 px-4 py-2.5 text-sm',
                     index % 2 === 1 && 'bg-surface-2',
                   )}
                 >
@@ -291,7 +291,7 @@ export function ProductDetailPage() {
       {/* ---- related -------------------------------------------------------- */}
       {related?.length > 0 && (
         <section className="mt-10 lg:mt-14">
-          <h2 className="mb-4 text-[18px]">More parts for the {product.modelName}</h2>
+          <h2 className="mb-4 text-xl">More parts for the {product.modelName}</h2>
           <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4 lg:grid-cols-4">
             {related.slice(0, 4).map((item) => (
               <ProductCard key={item.id} product={item} />

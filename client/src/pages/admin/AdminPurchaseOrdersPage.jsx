@@ -122,7 +122,7 @@ function PurchaseOrderForm({ suppliers, products, onSubmit, onCancel, isPending,
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -146,7 +146,7 @@ function PurchaseOrderForm({ suppliers, products, onSubmit, onCancel, isPending,
           {fields.map((field, index) => (
             <div
               key={field.id}
-              className="grid items-end gap-2 rounded-[10px] bg-surface-2 p-2.5 sm:grid-cols-[1fr_90px_120px_auto]"
+              className="grid items-end gap-2 rounded-md bg-surface-2 p-2.5 sm:grid-cols-[1fr_90px_120px_auto]"
             >
               <SelectField
                 control={control}
@@ -173,7 +173,7 @@ function PurchaseOrderForm({ suppliers, products, onSubmit, onCancel, isPending,
                 onClick={() => remove(index)}
                 disabled={fields.length === 1}
                 aria-label={`Remove line ${index + 1}`}
-                className="flex size-9 shrink-0 items-center justify-center rounded-[8px] border border-line text-ink-400 transition-colors hover:border-danger/30 hover:bg-danger-50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex size-9 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 transition-colors hover:border-danger/30 hover:bg-danger-50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Trash2 className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
               </button>
@@ -200,20 +200,20 @@ function PurchaseOrderForm({ suppliers, products, onSubmit, onCancel, isPending,
 
       <Textarea label="Notes" rows={2} {...register('notes')} />
 
-      <div className="rounded-[10px] bg-surface-2 px-3 py-2.5">
-        <p className="tnum flex items-baseline justify-between text-[13px] text-ink-600">
+      <div className="rounded-md bg-surface-2 px-3 py-2.5">
+        <p className="tnum flex items-baseline justify-between text-sm text-ink-600">
           <span>Subtotal</span>
           <span>{money(subtotal)}</span>
         </p>
-        <p className="tnum mt-1 flex items-baseline justify-between text-[13px] text-ink-600">
+        <p className="tnum mt-1 flex items-baseline justify-between text-sm text-ink-600">
           <span>Tax and shipping</span>
           <span>{money(tax + shipping)}</span>
         </p>
-        <p className="tnum mt-1.5 flex items-baseline justify-between border-t border-line pt-1.5 text-[14px] font-semibold text-ink-900">
+        <p className="tnum mt-1.5 flex items-baseline justify-between border-t border-line pt-1.5 text-md font-semibold text-ink-900">
           <span>Total</span>
           <span>{money(subtotal + tax + shipping)}</span>
         </p>
-        <p className="mt-1.5 text-[11.5px] leading-relaxed text-ink-400">
+        <p className="mt-1.5 text-xs leading-relaxed text-ink-400">
           A preview. Every total is recomputed on the server from the lines.
         </p>
       </div>
@@ -275,7 +275,7 @@ export function AdminPurchaseOrdersPage() {
       header: 'PO Number',
       priority: 1,
       render: (order) => (
-        <span className="block whitespace-nowrap font-mono text-[12.5px] font-medium text-ink-900">
+        <span className="block whitespace-nowrap font-mono text-sm font-medium text-ink-900">
           {order.poNumber}
         </span>
       ),
@@ -292,7 +292,7 @@ export function AdminPurchaseOrdersPage() {
       key: 'orderDate',
       header: 'Order date',
       priority: 3,
-      render: (order) => <span className="text-[12.5px] text-ink-500">{date(order.orderDate)}</span>,
+      render: (order) => <span className="text-sm text-ink-500">{date(order.orderDate)}</span>,
     },
     {
       key: 'expectedDate',
@@ -301,7 +301,7 @@ export function AdminPurchaseOrdersPage() {
       render: (order) =>
         order.expectedDate ? (
           <span
-            className={`inline-flex items-center gap-1 text-[12.5px] ${
+            className={`inline-flex items-center gap-1 text-sm ${
               order.overdue ? 'font-medium text-danger' : 'text-ink-500'
             }`}
           >
@@ -311,7 +311,7 @@ export function AdminPurchaseOrdersPage() {
             {date(order.expectedDate)}
           </span>
         ) : (
-          <span className="text-[12px] text-ink-300">—</span>
+          <span className="text-xs text-ink-300">—</span>
         ),
     },
     {
@@ -322,9 +322,9 @@ export function AdminPurchaseOrdersPage() {
       className: 'tnum',
       render: (order) => (
         <>
-          <span className="text-[13px] text-ink-900">{formatCount(order.itemCount)}</span>
+          <span className="text-sm text-ink-900">{formatCount(order.itemCount)}</span>
           {order.qtyOutstanding > 0 && order.status !== 'draft' && (
-            <span className="block text-[11px] text-ink-400">
+            <span className="block text-2xs text-ink-400">
               {formatCount(order.qtyOutstanding)} due
             </span>
           )}
@@ -339,9 +339,9 @@ export function AdminPurchaseOrdersPage() {
       className: 'tnum',
       render: (order) => (
         <>
-          <span className="text-[13px] font-medium text-ink-900">{money(order.total)}</span>
+          <span className="text-sm font-medium text-ink-900">{money(order.total)}</span>
           <span
-            className={`block text-[11px] ${
+            className={`block text-2xs ${
               order.payment.status === 'paid' ? 'text-ok' : 'text-ink-400'
             }`}
           >
@@ -391,7 +391,7 @@ export function AdminPurchaseOrdersPage() {
           <>
             <Link
               to="/admin/suppliers"
-              className="inline-flex h-11 select-none items-center justify-center gap-2 rounded-[10px] border border-line-strong bg-surface px-5 font-display text-[14px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+              className="inline-flex h-11 select-none items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
             >
               <Truck className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
               Suppliers
@@ -469,7 +469,7 @@ export function AdminPurchaseOrdersPage() {
               <select
                 value={supplierId}
                 onChange={(event) => setParam('supplier', event.target.value)}
-                className="h-9 w-full rounded-[8px] border border-line bg-surface px-2.5 text-[13px] text-ink-700"
+                className="h-9 w-full rounded-md border border-line bg-surface px-2.5 text-sm text-ink-700"
               >
                 <option value="">All suppliers</option>
                 {suppliers.map((supplier) => (

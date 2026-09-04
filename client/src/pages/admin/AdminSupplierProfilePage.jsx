@@ -54,7 +54,7 @@ function monthLabel(key) {
 function ContactRow({ icon: Icon, children }) {
   if (!children) return null;
   return (
-    <div className="flex items-start gap-2 text-[13px] text-ink-600">
+    <div className="flex items-start gap-2 text-sm text-ink-600">
       <Icon className="mt-0.5 size-3.5 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
       <span className="min-w-0 break-words">{children}</span>
     </div>
@@ -86,7 +86,7 @@ export function AdminSupplierProfilePage() {
             action={
               <Link
                 to="/admin/suppliers"
-                className="inline-flex h-9 select-none items-center justify-center rounded-[8px] border border-line-strong bg-surface px-3.5 font-display text-[13px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+                className="inline-flex h-9 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3.5 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
               >
                 Back to suppliers
               </Link>
@@ -102,8 +102,8 @@ export function AdminSupplierProfilePage() {
       <>
         <PageHeader icon={Truck} title="Supplier" />
         <div className="space-y-3">
-          <div className="h-24 animate-pulse rounded-[14px] bg-surface-2" />
-          <div className="h-64 animate-pulse rounded-[14px] bg-surface-2" />
+          <div className="h-24 animate-pulse rounded-lg bg-surface-2" />
+          <div className="h-64 animate-pulse rounded-lg bg-surface-2" />
         </div>
       </>
     );
@@ -132,7 +132,7 @@ export function AdminSupplierProfilePage() {
       render: (order) => (
         <Link
           to={`/admin/purchase-orders/${order.id}`}
-          className="whitespace-nowrap font-mono text-[12.5px] font-medium text-ink-900 hover:text-brand"
+          className="whitespace-nowrap font-mono text-sm font-medium text-ink-900 hover:text-brand"
         >
           {order.poNumber}
         </Link>
@@ -142,7 +142,7 @@ export function AdminSupplierProfilePage() {
       key: 'orderDate',
       header: 'Ordered',
       priority: 2,
-      render: (order) => <span className="text-[12.5px] text-ink-500">{date(order.orderDate)}</span>,
+      render: (order) => <span className="text-sm text-ink-500">{date(order.orderDate)}</span>,
     },
     {
       key: 'expectedDate',
@@ -151,12 +151,12 @@ export function AdminSupplierProfilePage() {
       render: (order) =>
         order.expectedDate ? (
           <span
-            className={`text-[12.5px] ${order.overdue ? 'font-medium text-danger' : 'text-ink-500'}`}
+            className={`text-sm ${order.overdue ? 'font-medium text-danger' : 'text-ink-500'}`}
           >
             {date(order.expectedDate)}
           </span>
         ) : (
-          <span className="text-[12px] text-ink-300">—</span>
+          <span className="text-xs text-ink-300">—</span>
         ),
     },
     {
@@ -185,8 +185,8 @@ export function AdminSupplierProfilePage() {
       className: 'tnum',
       render: (order) => (
         <>
-          <span className="text-[13px] font-medium text-ink-900">{money(order.total)}</span>
-          <span className="block text-[11px] text-ink-400">
+          <span className="text-sm font-medium text-ink-900">{money(order.total)}</span>
+          <span className="block text-2xs text-ink-400">
             {order.payment.status === 'paid' ? 'paid' : 'unpaid'}
           </span>
         </>
@@ -201,7 +201,7 @@ export function AdminSupplierProfilePage() {
       header: 'SKU',
       priority: 2,
       render: (product) => (
-        <span className="font-mono text-[11.5px] text-ink-500">{product.sku}</span>
+        <span className="font-mono text-xs text-ink-500">{product.sku}</span>
       ),
     },
     {
@@ -212,9 +212,9 @@ export function AdminSupplierProfilePage() {
       className: 'tnum',
       render: (product) => (
         <>
-          <span className="text-[13px] text-ink-900">{formatCount(product.stock)}</span>
+          <span className="text-sm text-ink-900">{formatCount(product.stock)}</span>
           {product.minStock > 0 && (
-            <span className="block text-[11px] text-ink-400">min {product.minStock}</span>
+            <span className="block text-2xs text-ink-400">min {product.minStock}</span>
           )}
         </>
       ),
@@ -229,7 +229,7 @@ export function AdminSupplierProfilePage() {
         product.cost > 0 ? (
           money(product.cost)
         ) : (
-          <span className="text-[12px] text-ink-300">—</span>
+          <span className="text-xs text-ink-300">—</span>
         ),
     },
     {
@@ -260,7 +260,7 @@ export function AdminSupplierProfilePage() {
         action={
           <Link
             to="/admin/suppliers"
-            className="inline-flex h-11 select-none items-center justify-center rounded-[10px] border border-line-strong bg-surface px-5 font-display text-[14px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+            className="inline-flex h-11 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
           >
             All suppliers
           </Link>
@@ -339,7 +339,7 @@ export function AdminSupplierProfilePage() {
               </ContactRow>
 
               {supplier.code && (
-                <p className="pt-1 text-[12px] text-ink-400">
+                <p className="pt-1 text-xs text-ink-400">
                   Code <span className="font-mono text-ink-600">{supplier.code}</span>
                 </p>
               )}
@@ -348,7 +348,7 @@ export function AdminSupplierProfilePage() {
 
           {supplier.notes && (
             <Panel title="Notes">
-              <p className="whitespace-pre-line text-[13px] leading-relaxed text-ink-600">
+              <p className="whitespace-pre-line text-sm leading-relaxed text-ink-600">
                 {supplier.notes}
               </p>
             </Panel>

@@ -67,7 +67,7 @@ function CategoryForm({ category, onSubmit, onCancel, isPending, error }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -131,7 +131,7 @@ export function AdminExpenseCategoriesPage() {
             className={`size-2.5 shrink-0 rounded-full ${SWATCH[category.colorToken] ?? SWATCH.ink}`}
             aria-hidden="true"
           />
-          <span className="truncate text-[13px] text-ink-900">{category.name}</span>
+          <span className="truncate text-sm text-ink-900">{category.name}</span>
         </span>
       ),
     },
@@ -140,7 +140,7 @@ export function AdminExpenseCategoriesPage() {
       header: 'Slug',
       priority: 3,
       render: (category) => (
-        <span className="font-mono text-[11.5px] text-ink-400">{category.slug}</span>
+        <span className="font-mono text-xs text-ink-400">{category.slug}</span>
       ),
     },
     {
@@ -161,9 +161,9 @@ export function AdminExpenseCategoriesPage() {
       className: 'tnum',
       render: (category) => (
         <>
-          <span className="text-[13px] text-ink-900">{formatCount(category.usage)}</span>
+          <span className="text-sm text-ink-900">{formatCount(category.usage)}</span>
           {category.usage > 0 && (
-            <span className="block text-[11px] text-ink-400">cannot delete</span>
+            <span className="block text-2xs text-ink-400">cannot delete</span>
           )}
         </>
       ),
@@ -217,7 +217,7 @@ export function AdminExpenseCategoriesPage() {
           <>
             <Link
               to="/admin/expenses"
-              className="inline-flex h-11 select-none items-center justify-center gap-2 rounded-[10px] border border-line-strong bg-surface px-5 font-display text-[14px] font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
+              className="inline-flex h-11 select-none items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 transition-colors hover:border-ink-300 hover:bg-surface-2"
             >
               <Receipt className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
               Expenses
@@ -230,7 +230,7 @@ export function AdminExpenseCategoriesPage() {
       />
 
       {notice && (
-        <p className="mb-3 rounded-[10px] bg-warn-50 px-3 py-2.5 text-[13px] text-warn">{notice}</p>
+        <p className="mb-3 rounded-md bg-warn-50 px-3 py-2.5 text-sm text-warn">{notice}</p>
       )}
 
       <Panel flush>

@@ -14,7 +14,7 @@ export function Chip({ label, value, onRemove, tone = 'brand', className }) {
   return (
     <span
       className={cn(
-        'inline-flex h-7 items-center gap-1.5 rounded-full border pl-2.5 text-[12.5px]',
+        'inline-flex h-7 items-center gap-1.5 rounded-full border pl-2.5 text-sm',
         onRemove ? 'pr-1' : 'pr-2.5',
         tones[tone],
         className,

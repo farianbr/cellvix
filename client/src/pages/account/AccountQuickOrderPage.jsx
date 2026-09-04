@@ -78,7 +78,7 @@ export function AccountQuickOrderPage() {
       {result && (
         <div className="space-y-2">
           {result.added.length > 0 && (
-            <p className="flex items-start gap-2 rounded-[11px] bg-ok-50 px-4 py-3 text-[13px] text-ok">
+            <p className="flex items-start gap-2 rounded-md bg-ok-50 px-4 py-3 text-sm text-ok">
               <Check className="mt-0.5 size-4 shrink-0" strokeWidth={2.5} aria-hidden="true" />
               Added {result.added.length}{' '}
               {result.added.length === 1 ? 'line' : 'lines'} to your cart.
@@ -86,7 +86,7 @@ export function AccountQuickOrderPage() {
           )}
 
           {result.notFound.length > 0 && (
-            <p className="flex items-start gap-2 rounded-[11px] bg-danger-50 px-4 py-3 text-[13px] text-danger">
+            <p className="flex items-start gap-2 rounded-md bg-danger-50 px-4 py-3 text-sm text-danger">
               <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
               <span>
                 <span className="font-semibold">
@@ -98,7 +98,7 @@ export function AccountQuickOrderPage() {
           )}
 
           {result.outOfStock.length > 0 && (
-            <p className="flex items-start gap-2 rounded-[11px] bg-warn-50 px-4 py-3 text-[13px] text-warn">
+            <p className="flex items-start gap-2 rounded-md bg-warn-50 px-4 py-3 text-sm text-warn">
               <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
               <span>
                 <span className="font-semibold">Out of stock, skipped:</span>{' '}
@@ -119,7 +119,7 @@ export function AccountQuickOrderPage() {
         <ul className="space-y-2">
           {rows.map((row, index) => (
             <li key={row.id} className="flex items-start gap-2">
-              <span className="tnum mt-3.5 w-5 shrink-0 text-right text-[12px] text-ink-300">
+              <span className="tnum mt-3.5 w-5 shrink-0 text-right text-xs text-ink-300">
                 {index + 1}
               </span>
 
@@ -188,7 +188,7 @@ export function AccountQuickOrderPage() {
           rows={6}
           placeholder={'CVX-SAM-SA-1224, 10\nCVX-APP-B-1051\tsomething\nCVX-ONE-E-1543 4'}
           className={cn(
-            'w-full rounded-[10px] border border-line bg-surface px-3.5 py-3 font-mono text-[13px] text-ink-900',
+            'w-full rounded-md border border-line bg-surface px-3.5 py-3 font-mono text-sm text-ink-900',
             'placeholder:text-ink-300',
             'focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/25',
           )}
@@ -221,8 +221,8 @@ export function AccountQuickOrderPage() {
                 <Bookmark className="size-4 shrink-0 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
 
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[13.5px] font-medium text-ink-900">{cart.name}</p>
-                  <p className="tnum text-[12px] text-ink-400">
+                  <p className="truncate text-md font-medium text-ink-900">{cart.name}</p>
+                  <p className="tnum text-xs text-ink-400">
                     {cart.lineCount} {cart.lineCount === 1 ? 'line' : 'lines'} · {cart.itemCount}{' '}
                     items · saved {date(cart.createdAt)}
                   </p>

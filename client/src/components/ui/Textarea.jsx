@@ -19,12 +19,12 @@ export const Textarea = forwardRef(function Textarea(
       {(label || counter) && (
         <div className="mb-1.5 flex items-baseline justify-between gap-3">
           {label && (
-            <label htmlFor={id} className="block text-[13px] font-medium text-ink-700">
+            <label htmlFor={id} className="block text-sm font-medium text-ink-700">
               {label}
             </label>
           )}
           {counter ? (
-            <span className="tnum text-[11.5px] text-ink-300">
+            <span className="tnum text-xs text-ink-300">
               {String(value ?? '').length} / {counter}
             </span>
           ) : null}
@@ -39,7 +39,7 @@ export const Textarea = forwardRef(function Textarea(
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy}
         className={cn(
-          'w-full rounded-[10px] border bg-surface px-3.5 py-2.5 text-[16px] leading-relaxed text-ink-900 sm:text-[14px]',
+          'w-full rounded-md border bg-surface px-3.5 py-2.5 text-lg leading-relaxed text-ink-900 sm:text-md',
           'placeholder:text-ink-300',
           'transition-[border-color,box-shadow] duration-[120ms]',
           'hover:border-line-strong',
@@ -52,12 +52,12 @@ export const Textarea = forwardRef(function Textarea(
       />
 
       {error ? (
-        <p id={`${id}-error`} className="mt-1.5 flex items-center gap-1.5 text-[12.5px] text-danger">
+        <p id={`${id}-error`} className="mt-1.5 flex items-center gap-1.5 text-sm text-danger">
           <AlertCircle className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
       ) : hint ? (
-        <p id={`${id}-hint`} className="mt-1.5 text-[12.5px] text-ink-400">
+        <p id={`${id}-hint`} className="mt-1.5 text-sm text-ink-400">
           {hint}
         </p>
       ) : null}

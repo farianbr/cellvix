@@ -87,13 +87,13 @@ export function NotFoundPage() {
       {/* Styled as the heading it visually is, but marked up as a paragraph:
           the h1 above already owns the outline slot, and two h1s would be
           worse than one. Matches the base heading rule's tracking. */}
-      <p className="mt-6 font-display text-[26px] font-bold leading-tight tracking-[-0.02em] text-ink-900 sm:mt-8 sm:text-[32px]">
+      <p className="mt-6 font-display text-3xl font-bold leading-tight tracking-[-0.02em] text-ink-900 sm:mt-8 sm:text-d-sm">
         This page came apart
       </p>
 
-      <p className="mt-3 max-w-md text-[15px] leading-relaxed text-ink-500">
+      <p className="mt-3 max-w-md text-lg leading-relaxed text-ink-500">
         Nothing here answers to{' '}
-        <span className="break-all font-mono text-[13.5px] text-ink-700">{pathname}</span>. Search
+        <span className="break-all font-mono text-md text-ink-700">{pathname}</span>. Search
         the catalogue instead.
       </p>
 
@@ -122,7 +122,7 @@ export function NotFoundPage() {
           `Button` renders a real <button> and this has to be an anchor. */}
       <Link
         to="/"
-        className="mt-4 inline-flex h-11 w-full max-w-md items-center justify-center gap-2 rounded-[10px] bg-brand-gradient px-6 font-display text-[14px] font-semibold text-white transition-[filter] duration-[120ms] hover:brightness-110 active:brightness-95 sm:mt-6 sm:w-auto"
+        className="mt-4 inline-flex h-11 w-full max-w-md items-center justify-center gap-2 rounded-md bg-brand-gradient px-6 font-display text-md font-semibold text-white transition-[filter] duration-[120ms] hover:brightness-110 active:brightness-95 sm:mt-6 sm:w-auto"
       >
         <Home className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
         Go to home

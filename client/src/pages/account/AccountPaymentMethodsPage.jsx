@@ -57,7 +57,7 @@ export function AccountPaymentMethodsPage() {
 
   return (
     <div className="space-y-4">
-      <p className="flex items-start gap-2 rounded-[11px] bg-surface-2 px-4 py-3 text-[12.5px] text-ink-500">
+      <p className="flex items-start gap-2 rounded-md bg-surface-2 px-4 py-3 text-sm text-ink-500">
         <Info className="mt-0.5 size-4 shrink-0 text-ink-400" strokeWidth={1.75} aria-hidden="true" />
         This build runs against a mock payment gateway. Cards stored here are records only — no card
         number is collected, transmitted or charged.
@@ -99,7 +99,7 @@ export function AccountPaymentMethodsPage() {
 
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-display text-[13.5px] font-bold text-ink-900">
+                    <p className="font-display text-md font-bold text-ink-900">
                       {method.brand ?? 'Card'} ···· {method.last4}
                     </p>
                     {method.isDefault && (
@@ -109,7 +109,7 @@ export function AccountPaymentMethodsPage() {
                     )}
                   </div>
                   {method.expMonth && method.expYear && (
-                    <p className="tnum mt-0.5 text-[12.5px] text-ink-500">
+                    <p className="tnum mt-0.5 text-sm text-ink-500">
                       Expires {String(method.expMonth).padStart(2, '0')}/{method.expYear}
                     </p>
                   )}
@@ -170,15 +170,15 @@ export function AccountPaymentMethodsPage() {
             </span>
 
             <div className="min-w-0 flex-1">
-              <p className="font-display text-[13.5px] font-bold text-ink-900">
+              <p className="font-display text-md font-bold text-ink-900">
                 On account — {user.terms.replace('net', 'Net ')}
               </p>
-              <p className="mt-1 text-[12.5px] leading-relaxed text-ink-500">
+              <p className="mt-1 text-sm leading-relaxed text-ink-500">
                 Approved on this account. Orders placed on terms draw against your credit limit and
                 are invoiced with a {user.terms.replace('net', '')}-day due date.
               </p>
               {summary?.credit && (
-                <p className="tnum mt-2 text-[12.5px] text-ink-700">
+                <p className="tnum mt-2 text-sm text-ink-700">
                   <span className="font-semibold">{money(summary.credit.available)}</span> available
                   of {money(summary.credit.limit)}
                 </p>

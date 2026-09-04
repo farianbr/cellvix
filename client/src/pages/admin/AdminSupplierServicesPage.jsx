@@ -141,7 +141,7 @@ function ServiceForm({ mode, suppliers, categories, row, onSubmit, onCancel, isP
       className="space-y-4"
     >
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -197,7 +197,7 @@ function ServiceForm({ mode, suppliers, categories, row, onSubmit, onCancel, isP
       <Input label="Reference" placeholder="Account or contract number" {...register('reference')} />
       <Textarea label="Notes" rows={2} {...register('notes')} />
 
-      <p className="rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12px] leading-relaxed text-ink-500">
+      <p className="rounded-md bg-surface-2 px-3 py-2.5 text-xs leading-relaxed text-ink-500">
         This is a cost, not something Cellvix sells — it has no stock and never reaches the
         storefront. Recording a charge against it writes a real expense, so it shows up in the P&amp;L
         like any other.
@@ -228,15 +228,15 @@ function ChargeForm({ row, onSubmit, onCancel, isPending, error }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="rounded-[11px] bg-surface-2 p-3.5">
-        <p className="font-display text-[14px] font-bold text-ink-900">{row.name}</p>
-        <p className="mt-0.5 text-[12.5px] text-ink-500">
+      <div className="rounded-md bg-surface-2 p-3.5">
+        <p className="font-display text-md font-bold text-ink-900">{row.name}</p>
+        <p className="mt-0.5 text-sm text-ink-500">
           {row.supplierName} · {BILLING_LABEL[row.billing]} · {money(row.amount)}
         </p>
       </div>
 
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -250,7 +250,7 @@ function ChargeForm({ row, onSubmit, onCancel, isPending, error }) {
       <Input label="Description" placeholder="Leave blank to use the name" {...register('description')} />
       <Input label="Reference" placeholder="Invoice number" {...register('reference')} />
 
-      <p className="rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12px] leading-relaxed text-ink-500">
+      <p className="rounded-md bg-surface-2 px-3 py-2.5 text-xs leading-relaxed text-ink-500">
         This writes an expense against <strong className="font-semibold">{row.category.name}</strong>
         {row.recurring && ', and moves the renewal on by one cycle'}.
       </p>
@@ -311,14 +311,14 @@ export function AdminSupplierServicesPage({ mode = 'service' }) {
       render: (row) => (
         <>
           <span className="flex flex-wrap items-center gap-2">
-            <span className="truncate text-[13.5px] font-semibold text-ink-900">{row.name}</span>
+            <span className="truncate text-md font-semibold text-ink-900">{row.name}</span>
             {row.cancelled && (
               <Badge tone="neutral" size="sm">
                 Cancelled
               </Badge>
             )}
           </span>
-          <span className="block truncate text-[12px] text-ink-500">
+          <span className="block truncate text-xs text-ink-500">
             {row.supplierName}
             {row.code ? ` · ${row.code}` : ''}
           </span>
@@ -341,7 +341,7 @@ export function AdminSupplierServicesPage({ mode = 'service' }) {
       header: 'Billing',
       priority: 2,
       render: (row) => (
-        <span className="whitespace-nowrap text-[12.5px] text-ink-500">
+        <span className="whitespace-nowrap text-sm text-ink-500">
           {BILLING_LABEL[row.billing] ?? row.billing}
         </span>
       ),
@@ -361,7 +361,7 @@ export function AdminSupplierServicesPage({ mode = 'service' }) {
                 <>
                   <span
                     className={cn(
-                      'tnum whitespace-nowrap text-[12.5px]',
+                      'tnum whitespace-nowrap text-sm',
                       row.overdue ? 'font-medium text-danger' : 'text-ink-700',
                     )}
                   >
@@ -369,7 +369,7 @@ export function AdminSupplierServicesPage({ mode = 'service' }) {
                   </span>
                   <span
                     className={cn(
-                      'block text-[11px]',
+                      'block text-2xs',
                       row.overdue ? 'text-danger' : row.dueInDays <= 14 ? 'text-warn' : 'text-ink-400',
                     )}
                   >
@@ -381,7 +381,7 @@ export function AdminSupplierServicesPage({ mode = 'service' }) {
                   </span>
                 </>
               ) : (
-                <span className="text-[12px] text-ink-300">—</span>
+                <span className="text-xs text-ink-300">—</span>
               ),
           },
         ]
@@ -394,7 +394,7 @@ export function AdminSupplierServicesPage({ mode = 'service' }) {
       className: 'tnum',
       sortValue: (row) => row.amount,
       render: (row) => (
-        <span className="text-[13px] font-medium text-ink-900">{money(row.amount)}</span>
+        <span className="text-sm font-medium text-ink-900">{money(row.amount)}</span>
       ),
     },
   ];

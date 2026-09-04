@@ -46,23 +46,23 @@ function CreditActivityRow({ entry }) {
       </span>
 
       <div className="min-w-0 flex-1">
-        <p className="text-[13px] font-medium text-ink-900">
+        <p className="text-sm font-medium text-ink-900">
           {drawn ? 'Drawn on terms' : 'Payment received'}
         </p>
-        <p className="mt-0.5 truncate text-[12px] text-ink-500">{entry.note}</p>
+        <p className="mt-0.5 truncate text-xs text-ink-500">{entry.note}</p>
       </div>
 
       <div className="shrink-0 text-right">
         <p
           className={cn(
-            'tnum font-display text-[13.5px] font-bold',
+            'tnum font-display text-md font-bold',
             drawn ? 'text-ink-900' : 'text-ok',
           )}
         >
           {drawn ? '−' : '+'}
           {money(Math.abs(entry.amount))}
         </p>
-        <p className="mt-0.5 text-[11.5px] text-ink-400">{date(entry.at)}</p>
+        <p className="mt-0.5 text-xs text-ink-400">{date(entry.at)}</p>
       </div>
     </li>
   );
@@ -182,18 +182,18 @@ export function AccountCreditPage() {
           />
         </div>
 
-        <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2 text-[12.5px]">
+        <div className="mt-3 flex flex-wrap items-baseline justify-between gap-2 text-sm">
           <span className="tnum text-ink-500">
             {money(credit.balance)} used of {money(credit.limit)}
           </span>
           <span className="tnum font-medium text-ink-900">{money(credit.available)} available</span>
         </div>
 
-        <div className="mt-5 rounded-[11px] bg-surface-2 px-4 py-3">
+        <div className="mt-5 rounded-md bg-surface-2 px-4 py-3">
           <p className="eyebrow mb-1 text-ink-400">
             Payment terms · {credit.terms.replace('net', 'Net ')}
           </p>
-          <p className="text-[13px] leading-relaxed text-ink-500">
+          <p className="text-sm leading-relaxed text-ink-500">
             {TERMS_COPY[credit.terms] ?? TERMS_COPY.prepaid} To request a different limit or terms,
             contact your account representative.
           </p>
@@ -219,20 +219,20 @@ export function AccountCreditPage() {
             ))}
           </div>
         ) : entries.length === 0 ? (
-          <p className="rounded-[12px] bg-surface-2 px-4 py-6 text-center text-[13px] text-ink-400">
+          <p className="rounded-lg bg-surface-2 px-4 py-6 text-center text-sm text-ink-400">
             {credit.limit > 0
               ? 'Nothing drawn against your limit yet. Orders placed on terms will appear here.'
               : 'No line of credit on this account. Ask your rep about credit terms.'}
           </p>
         ) : (
           <>
-            <ul className="divide-y divide-line overflow-hidden rounded-[12px] border border-line">
+            <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line">
               {entries.map((entry) => (
                 <CreditActivityRow key={entry.id} entry={entry} />
               ))}
             </ul>
 
-            <div className="tnum mt-3 flex flex-wrap justify-between gap-2 text-[12.5px] text-ink-500">
+            <div className="tnum mt-3 flex flex-wrap justify-between gap-2 text-sm text-ink-500">
               <span>{money(activity.drawn)} drawn</span>
               <span>{money(activity.repaid)} repaid</span>
             </div>

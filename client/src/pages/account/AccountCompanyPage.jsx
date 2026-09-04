@@ -76,7 +76,7 @@ function ProfileForm() {
         </Button>
 
         {saved && (
-          <span className="flex items-center gap-1.5 text-[13px] font-medium text-ok">
+          <span className="flex items-center gap-1.5 text-sm font-medium text-ok">
             <Check className="size-4" strokeWidth={2.5} aria-hidden="true" />
             Saved
           </span>
@@ -113,7 +113,7 @@ function PasswordForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {serverError && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {serverError}
         </p>
@@ -151,7 +151,7 @@ function PasswordForm() {
         </Button>
 
         {done && (
-          <span className="flex items-center gap-1.5 text-[13px] font-medium text-ok">
+          <span className="flex items-center gap-1.5 text-sm font-medium text-ok">
             <Check className="size-4" strokeWidth={2.5} aria-hidden="true" />
             Password updated
           </span>
@@ -174,7 +174,7 @@ export function AccountCompanyPage() {
               Approved
             </Badge>
             {user?.approvedAt && (
-              <span className="text-[12px] text-ink-400">{date(user.approvedAt)}</span>
+              <span className="text-xs text-ink-400">{date(user.approvedAt)}</span>
             )}
           </div>
         }

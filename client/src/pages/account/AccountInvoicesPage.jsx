@@ -35,7 +35,7 @@ function InvoiceDocumentLink({ number, className }) {
       target="_blank"
       rel="noreferrer"
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-[12.5px] font-semibold text-brand transition-colors hover:bg-brand-50',
+        'inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-sm font-semibold text-brand transition-colors hover:bg-brand-50',
         className,
       )}
     >
@@ -184,10 +184,10 @@ export function AccountInvoicesPage() {
                 className="flex flex-wrap items-center gap-x-4 gap-y-2.5 px-4 py-3.5 sm:px-5"
               >
                 <div className="min-w-36 flex-1">
-                  <span className="font-mono text-[12.5px] font-medium text-ink-900">
+                  <span className="font-mono text-sm font-medium text-ink-900">
                     {invoice.number}
                   </span>
-                  <p className="mt-0.5 text-[12px] text-ink-500">
+                  <p className="mt-0.5 text-xs text-ink-500">
                     Due {date(invoice.dueDate)}
                     <span
                       className={cn(
@@ -201,7 +201,7 @@ export function AccountInvoicesPage() {
                   {invoice.orderNumber && (
                     <Link
                       to={`/account/orders/${invoice.orderNumber}`}
-                      className="mt-0.5 inline-block font-mono text-[12px] text-brand hover:underline"
+                      className="mt-0.5 inline-block font-mono text-xs text-brand hover:underline"
                     >
                       {invoice.orderNumber}
                     </Link>
@@ -209,11 +209,11 @@ export function AccountInvoicesPage() {
                 </div>
 
                 <div className="text-right">
-                  <p className="tnum font-display text-[15px] font-bold text-ink-900">
+                  <p className="tnum font-display text-lg font-bold text-ink-900">
                     {money(invoice.balance)}
                   </p>
                   {invoice.balance !== invoice.amount && (
-                    <p className="tnum text-[11.5px] text-ink-400">of {money(invoice.amount)}</p>
+                    <p className="tnum text-xs text-ink-400">of {money(invoice.amount)}</p>
                   )}
                 </div>
 
@@ -288,12 +288,12 @@ export function AccountInvoicesPage() {
                               aria-label="Receipt"
                             />
                           )}
-                          <span className="font-mono text-[12.5px] font-medium text-ink-900">
+                          <span className="font-mono text-sm font-medium text-ink-900">
                             {invoice.number}
                           </span>
                         </span>
                         {invoice.reference && (
-                          <span className="mt-0.5 block text-[11.5px] text-ink-400">
+                          <span className="mt-0.5 block text-xs text-ink-400">
                             {invoice.reference}
                           </span>
                         )}
@@ -303,24 +303,24 @@ export function AccountInvoicesPage() {
                         {invoice.orderNumber ? (
                           <Link
                             to={`/account/orders/${invoice.orderNumber}`}
-                            className="font-mono text-[12.5px] text-brand hover:underline"
+                            className="font-mono text-sm text-brand hover:underline"
                           >
                             {invoice.orderNumber}
                           </Link>
                         ) : (
-                          <span className="text-[12.5px] text-ink-300">—</span>
+                          <span className="text-sm text-ink-300">—</span>
                         )}
                       </td>
 
-                      <td className="px-4 py-3 text-[12.5px] text-ink-500">
+                      <td className="px-4 py-3 text-sm text-ink-500">
                         {date(invoice.issuedAt)}
                       </td>
 
-                      <td className="px-4 py-3 text-[12.5px] text-ink-500">
+                      <td className="px-4 py-3 text-sm text-ink-500">
                         {invoice.settledAt ? date(invoice.settledAt) : '—'}
                       </td>
 
-                      <td className="tnum px-4 py-3 text-[13px] font-medium text-ink-900">
+                      <td className="tnum px-4 py-3 text-sm font-medium text-ink-900">
                         {money(invoice.amount)}
                       </td>
 
@@ -348,12 +348,12 @@ export function AccountInvoicesPage() {
                           aria-label="Receipt"
                         />
                       )}
-                      <span className="font-mono text-[12.5px] font-medium text-ink-900">
+                      <span className="font-mono text-sm font-medium text-ink-900">
                         {invoice.number}
                       </span>
                     </span>
 
-                    <p className="mt-1 text-[12px] text-ink-500">
+                    <p className="mt-1 text-xs text-ink-500">
                       {invoice.reference ? `${invoice.reference} · ` : ''}
                       {date(invoice.settledAt ?? invoice.issuedAt)}
                     </p>
@@ -361,7 +361,7 @@ export function AccountInvoicesPage() {
                     {invoice.orderNumber && (
                       <Link
                         to={`/account/orders/${invoice.orderNumber}`}
-                        className="mt-1 inline-block font-mono text-[12px] text-brand hover:underline"
+                        className="mt-1 inline-block font-mono text-xs text-brand hover:underline"
                       >
                         {invoice.orderNumber}
                       </Link>
@@ -369,7 +369,7 @@ export function AccountInvoicesPage() {
                   </div>
 
                   <div className="shrink-0 text-right">
-                    <p className="tnum text-[13.5px] font-semibold text-ink-900">
+                    <p className="tnum text-md font-semibold text-ink-900">
                       {money(invoice.amount)}
                     </p>
                     <InvoiceDocumentLink number={invoice.number} className="-mr-2 mt-0.5" />

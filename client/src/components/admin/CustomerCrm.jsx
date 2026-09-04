@@ -68,13 +68,13 @@ export function ConsentPanel({ consent, onSave, isPending }) {
       }
     >
       {unsubscribed && (
-        <p className="mb-3 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[12.5px] text-danger">
+        <p className="mb-3 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           This customer unsubscribed. That is their own act and an admin does not undo it here —
           it is lifted from the Marketing screen, which records who lifted it.
         </p>
       )}
       <ConsentChannels value={draft} onChange={setDraft} />
-      <p className="mt-3 text-[12px] leading-snug text-ink-400">
+      <p className="mt-3 text-xs leading-snug text-ink-400">
         A campaign or a one-to-one message on a channel requires consent for that channel. Granting
         any channel turns marketing consent on; clearing all four turns it off.
       </p>
@@ -129,7 +129,7 @@ export function TierPanel({ tier, onChange, isPending, warrantyBonus = 0 }) {
         className="w-full sm:w-[260px]"
       />
 
-      <dl className="mt-3 space-y-1.5 text-[12.5px]">
+      <dl className="mt-3 space-y-1.5 text-sm">
         <div className="flex items-baseline justify-between gap-3">
           <dt className="text-ink-500">Warranty bonus</dt>
           <dd className="text-right font-medium text-ink-900">
@@ -149,7 +149,7 @@ export function TierPanel({ tier, onChange, isPending, warrantyBonus = 0 }) {
         </div>
       </dl>
 
-      <p className="mt-2.5 text-[12px] leading-snug text-ink-400">
+      <p className="mt-2.5 text-xs leading-snug text-ink-400">
         The bonus is set per tier in Sale Settings and lengthens cover — it never shortens it.
         Discounts are decided in one place, an offer, so a tier never quietly applies one; when a
         tier should affect price, it is set up as an offer restricted to that tier.
@@ -248,7 +248,7 @@ export function ConversationsPanel({
           }
         />
         {error && (
-          <p className="rounded-[10px] bg-danger-50 px-3 py-2.5 text-[12.5px] text-danger">
+          <p className="rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
             {error}
           </p>
         )}
@@ -256,7 +256,7 @@ export function ConversationsPanel({
             rendered verbatim rather than being turned into a confirmation —
             nothing here reports "sent" for something that was not sent. */}
         {notice && (
-          <p className="flex items-start justify-between gap-2 rounded-[10px] bg-warn-50 px-3 py-2.5 text-[12.5px] text-warn">
+          <p className="flex items-start justify-between gap-2 rounded-md bg-warn-50 px-3 py-2.5 text-sm text-warn">
             <span>{notice}</span>
             <button
               type="button"
@@ -281,7 +281,7 @@ export function ConversationsPanel({
       </form>
       <div className="mt-4 border-t border-line pt-3">
         {isLoading ? (
-          <p className="py-6 text-center text-[12.5px] text-ink-400">Loading history…</p>
+          <p className="py-6 text-center text-sm text-ink-400">Loading history…</p>
         ) : messages.length === 0 ? (
           <PanelEmpty
             icon={MessageCircle}
@@ -297,7 +297,7 @@ export function ConversationsPanel({
                 <li key={message.id} className="flex gap-2.5">
                   <span
                     className={cn(
-                      'mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-[8px] bg-surface-2',
+                      'mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-md bg-surface-2',
                       meta.tone,
                     )}
                   >
@@ -305,27 +305,27 @@ export function ConversationsPanel({
                   </span>
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-[12.5px] font-semibold text-ink-900">
+                      <span className="text-sm font-semibold text-ink-900">
                         {meta.label}
                       </span>
-                      <span className="text-[11.5px] text-ink-400">
+                      <span className="text-xs text-ink-400">
                         {message.direction === 'inbound' ? 'in' : 'out'}
                       </span>
                       <Badge tone={STATUS_TONE[message.status] ?? 'neutral'} size="sm">
                         {STATUS_LABEL[message.status] ?? message.status}
                       </Badge>
-                      <span className="text-[11.5px] text-ink-300">
+                      <span className="text-xs text-ink-300">
                         {relativeTime(message.createdAt)}
                       </span>
                     </div>
                     {message.subject && (
-                      <p className="text-[12.5px] font-medium text-ink-700">{message.subject}</p>
+                      <p className="text-sm font-medium text-ink-700">{message.subject}</p>
                     )}
-                    <p className="whitespace-pre-wrap break-words text-[12.5px] text-ink-500">
+                    <p className="whitespace-pre-wrap break-words text-sm text-ink-500">
                       {message.body}
                     </p>
                     {message.staffName && (
-                      <p className="text-[11.5px] text-ink-300">by {message.staffName}</p>
+                      <p className="text-xs text-ink-300">by {message.staffName}</p>
                     )}
                   </div>
                 </li>
@@ -388,16 +388,16 @@ export function NotesPanel({ notes = [], onAdd, onDelete, isPending }) {
       </form>
       <div className="mt-4 border-t border-line pt-3">
         {notes.length === 0 ? (
-          <p className="py-4 text-center text-[12.5px] text-ink-400">No notes yet.</p>
+          <p className="py-4 text-center text-sm text-ink-400">No notes yet.</p>
         ) : (
           <ul className="space-y-2.5">
             {notes.map((note) => (
-              <li key={note.id} className="group rounded-[10px] bg-surface-2 p-3">
-                <p className="whitespace-pre-wrap break-words text-[12.5px] text-ink-700">
+              <li key={note.id} className="group rounded-md bg-surface-2 p-3">
+                <p className="whitespace-pre-wrap break-words text-sm text-ink-700">
                   {note.body}
                 </p>
                 <div className="mt-1.5 flex items-center justify-between gap-2">
-                  <p className="text-[11.5px] text-ink-400">
+                  <p className="text-xs text-ink-400">
                     {note.staffName} · {dateTime(note.createdAt)}
                   </p>
                   <button
@@ -474,13 +474,13 @@ export function ReferralPanel({ user, percent }) {
       title="Referral & portal"
       description="What this account can share, and how it signs in."
     >
-      <dl className="space-y-3 text-[13px]">
+      <dl className="space-y-3 text-sm">
         <div>
           <dt className="eyebrow mb-1 text-ink-400">Referral code</dt>
           <dd>
             {user.referralCode ? (
               <div className="flex items-center gap-2">
-                <code className="tnum rounded-[8px] bg-surface-2 px-2.5 py-1.5 font-mono text-[13px] font-semibold text-ink-900">
+                <code className="tnum rounded-md bg-surface-2 px-2.5 py-1.5 font-mono text-sm font-semibold text-ink-900">
                   {user.referralCode}
                 </code>
                 <Button size="xs" variant="ghost" onClick={() => copy(user.referralCode, 'code')}>
@@ -488,7 +488,7 @@ export function ReferralPanel({ user, percent }) {
                 </Button>
               </div>
             ) : (
-              <p className="text-[12.5px] text-ink-400">
+              <p className="text-sm text-ink-400">
                 Minted when the account is approved — an account that cannot yet order cannot refer.
               </p>
             )}
@@ -499,7 +499,7 @@ export function ReferralPanel({ user, percent }) {
           <div>
             <dt className="eyebrow mb-1 text-ink-400">Referral link</dt>
             <dd className="flex items-center gap-2">
-              <span className="min-w-0 flex-1 truncate rounded-[8px] bg-surface-2 px-2.5 py-1.5 font-mono text-[12px] text-ink-700">
+              <span className="min-w-0 flex-1 truncate rounded-md bg-surface-2 px-2.5 py-1.5 font-mono text-xs text-ink-700">
                 {link}
               </span>
               <Button size="xs" variant="ghost" onClick={() => copy(link, 'link')}>
@@ -536,7 +536,7 @@ export function ReferralPanel({ user, percent }) {
         </div>
       </dl>
 
-      <p className="mt-3 border-t border-line pt-3 text-[12px] leading-snug text-ink-400">
+      <p className="mt-3 border-t border-line pt-3 text-xs leading-snug text-ink-400">
         Commission is paid as store credit when a referred customer&rsquo;s invoice is{' '}
         <strong className="font-semibold text-ink-500">paid</strong>, not when it is raised, and each
         payout keeps the rate in force when it was earned — changing the rate is never retroactive.

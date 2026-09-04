@@ -112,7 +112,7 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
       className="space-y-5"
     >
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -226,7 +226,7 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
               />
             </div>
 
-            <p className="text-[12px] leading-snug text-ink-400">
+            <p className="text-xs leading-snug text-ink-400">
               The default shipping and billing address. Leave the street blank to record no address —
               a partly filled one is not saved.
             </p>
@@ -243,7 +243,7 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
           </h2>
 
           <ConsentChannels value={consent} onChange={setConsent} />
-          <p className="mt-3 text-[12px] leading-snug text-ink-400">
+          <p className="mt-3 text-xs leading-snug text-ink-400">
             {user.consent?.recorded
               ? 'Only change these when the customer has told you something different — the record is dated.'
               : 'Nothing recorded yet — nobody has asked this customer. Leave them clear until somebody has.'}
@@ -251,7 +251,7 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
         </section>
       </div>
 
-      <p className="rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12.5px] text-ink-500">
+      <p className="rounded-md bg-surface-2 px-3 py-2.5 text-sm text-ink-500">
         Account status, credit limit and payment terms are not edited here — they are set from the
         customer&rsquo;s profile, where approving an account and deciding what credit to extend it
         stay one decision.

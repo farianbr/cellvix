@@ -71,7 +71,7 @@ function AddressForm({ address, onSubmit, onCancel, isPending }) {
 
       <Input label="Phone" type="tel" error={errors.phone?.message} {...register('phone')} />
 
-      <div className="space-y-1 rounded-[10px] bg-surface-2 p-2">
+      <div className="space-y-1 rounded-md bg-surface-2 p-2">
         <Checkbox label="Default shipping address" {...register('isDefaultShipping')} />
         <Checkbox label="Default billing address" {...register('isDefaultBilling')} />
       </div>
@@ -144,7 +144,7 @@ export function AccountAddressesPage() {
 
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-display text-[13.5px] font-bold text-ink-900">
+                    <p className="font-display text-md font-bold text-ink-900">
                       {address.label}
                     </p>
                     {address.isDefaultShipping && (
@@ -159,7 +159,7 @@ export function AccountAddressesPage() {
                     )}
                   </div>
 
-                  <address className="mt-1 text-[12.5px] not-italic leading-relaxed text-ink-500">
+                  <address className="mt-1 text-sm not-italic leading-relaxed text-ink-500">
                     {address.contactName && <span className="block">{address.contactName}</span>}
                     <span className="block">
                       {address.line1}

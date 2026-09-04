@@ -40,7 +40,7 @@ export function ConsentChannels({ value = EMPTY_CONSENT, onChange, disabled = fa
             disabled={disabled}
             onClick={() => onChange?.({ ...value, [key]: !on })}
             className={cn(
-              'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] font-medium transition-colors',
+              'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors',
               'disabled:cursor-not-allowed disabled:opacity-50',
               on
                 ? 'border-ok/30 bg-ok-50 text-ok'

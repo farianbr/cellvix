@@ -243,33 +243,33 @@ export function AccountOrdersPage() {
                     <td className="min-w-0 py-3 pl-5 pr-4">
                       <Link
                         to={`/account/orders/${order.orderNumber}`}
-                        className="font-mono text-[12.5px] font-medium text-ink-900 hover:text-brand"
+                        className="font-mono text-sm font-medium text-ink-900 hover:text-brand"
                       >
                         {order.orderNumber}
                       </Link>
-                      <span className="mt-0.5 line-clamp-1 text-[11.5px] text-ink-400">
+                      <span className="mt-0.5 line-clamp-1 text-xs text-ink-400">
                         {order.items.map((item) => item.name).join(', ')}
                       </span>
                     </td>
 
-                    <td className="whitespace-nowrap px-4 py-3 text-[12.5px] text-ink-500">
+                    <td className="whitespace-nowrap px-4 py-3 text-sm text-ink-500">
                       {date(order.createdAt)}
                     </td>
 
-                    <td className="px-4 py-3 text-[12.5px] text-ink-500">
+                    <td className="px-4 py-3 text-sm text-ink-500">
                       {order.poNumber ? (
                         <span className="font-mono">{order.poNumber}</span>
                       ) : (
                         <span className="text-ink-300">—</span>
                       )}
                       {order.tracking?.number && (
-                        <span className="tnum mt-0.5 block truncate font-mono text-[11px] text-ink-400">
+                        <span className="tnum mt-0.5 block truncate font-mono text-2xs text-ink-400">
                           {order.tracking.carrier} · {order.tracking.number}
                         </span>
                       )}
                     </td>
 
-                    <td className="tnum px-4 py-3 text-right text-[12.5px] text-ink-500">
+                    <td className="tnum px-4 py-3 text-right text-sm text-ink-500">
                       {order.items.length}
                     </td>
 
@@ -278,10 +278,10 @@ export function AccountOrdersPage() {
                     </td>
 
                     <td className="px-4 py-3 text-right">
-                      <span className="tnum font-display text-[13.5px] font-bold text-ink-900">
+                      <span className="tnum font-display text-md font-bold text-ink-900">
                         {money(order.total)}
                       </span>
-                      <span className="block text-[11px] text-ink-400">
+                      <span className="block text-2xs text-ink-400">
                         {order.payment?.method === 'terms' ? 'On account' : 'Card'}
                       </span>
                     </td>
@@ -311,34 +311,34 @@ export function AccountOrdersPage() {
                 >
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-mono text-[13px] font-medium text-ink-900">
+                      <span className="font-mono text-sm font-medium text-ink-900">
                         {order.orderNumber}
                       </span>
                       <OrderStatusBadge status={order.status} size="sm" />
                     </div>
 
-                    <p className="mt-1 text-[12.5px] text-ink-500">
+                    <p className="mt-1 text-sm text-ink-500">
                       {date(order.createdAt)} · {order.items.length}{' '}
                       {order.items.length === 1 ? 'line' : 'lines'}
                       {order.poNumber && ` · PO ${order.poNumber}`}
                     </p>
 
-                    <p className="mt-1 line-clamp-1 text-[12.5px] text-ink-400">
+                    <p className="mt-1 line-clamp-1 text-sm text-ink-400">
                       {order.items.map((item) => item.name).join(', ')}
                     </p>
 
                     {order.tracking?.number && (
-                      <p className="tnum mt-1 font-mono text-[11.5px] text-ink-400">
+                      <p className="tnum mt-1 font-mono text-xs text-ink-400">
                         {order.tracking.carrier} · {order.tracking.number}
                       </p>
                     )}
                   </div>
 
                   <div className="shrink-0 text-right">
-                    <p className="tnum font-display text-[15px] font-bold text-ink-900">
+                    <p className="tnum font-display text-lg font-bold text-ink-900">
                       {money(order.total)}
                     </p>
-                    <p className="text-[11.5px] text-ink-400">
+                    <p className="text-xs text-ink-400">
                       {order.payment?.method === 'terms' ? 'On account' : 'Card'}
                     </p>
                   </div>

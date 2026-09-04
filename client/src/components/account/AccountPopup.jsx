@@ -67,13 +67,13 @@ function SidePanel() {
   // every tab, and the frame's leftover height shows as dialog below it rather
   // than as a taller red block.
   return (
-    <aside className="scroll-slim relative hidden max-h-full w-full overflow-y-auto rounded-[12px] bg-brand-gradient p-6 text-white md:flex md:flex-col md:gap-6">
+    <aside className="scroll-slim relative hidden max-h-full w-full overflow-y-auto rounded-lg bg-brand-gradient p-6 text-white md:flex md:flex-col md:gap-6">
       <div>
         <p className="eyebrow mb-2 opacity-70">Cellvix wholesale portal</p>
-        <h3 className="text-[22px] leading-tight text-white">
+        <h3 className="text-2xl leading-tight text-white">
           Wholesale pricing for verified repair businesses
         </h3>
-        <p className="mt-3 text-[13.5px] leading-relaxed text-white/75">
+        <p className="mt-3 text-md leading-relaxed text-white/75">
           Accounts are reviewed by our team before wholesale pricing unlocks. It usually takes one
           business day.
         </p>
@@ -88,10 +88,10 @@ function SidePanel() {
           <div key={stat.label}>
             <dt className="sr-only">{stat.label}</dt>
             <dd>
-              <span className="tnum block font-display text-[19px] font-bold leading-none text-white">
+              <span className="tnum block font-display text-xl font-bold leading-none text-white">
                 {stat.value}
               </span>
-              <span className="mt-1.5 block text-[11px] leading-tight text-white/70">
+              <span className="mt-1.5 block text-2xs leading-tight text-white/70">
                 {stat.label}
               </span>
             </dd>
@@ -104,7 +104,7 @@ function SidePanel() {
           own content is what sets the dialog's height — a fourth wrapped bullet
           bought two more rows of red beside a five-field sign-in form and
           nothing else. */}
-      <ul className="space-y-2.5 text-[13px] text-white/85">
+      <ul className="space-y-2.5 text-sm text-white/85">
         {[
           'Graded pulls, tested before dispatch',
           'Same-day dispatch from Ontario',
@@ -158,8 +158,8 @@ function ForgotPasswordView({ onBack }) {
           <Mail className="size-7" strokeWidth={1.75} />
         </span>
         <div>
-          <h3 className="text-[18px]">Check your inbox</h3>
-          <p className="mx-auto mt-2 max-w-sm text-[13.5px] leading-relaxed text-ink-500">
+          <h3 className="text-xl">Check your inbox</h3>
+          <p className="mx-auto mt-2 max-w-sm text-md leading-relaxed text-ink-500">
             If <span className="font-medium text-ink-900">{getValues('email')}</span> has a Cellvix
             account, a reset link is on its way. It expires in an hour and can only be used once.
           </p>
@@ -176,15 +176,15 @@ function ForgotPasswordView({ onBack }) {
       <ChangeAccountType onBack={onBack} label="Back to sign in" />
 
       {formError && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {formError}
         </p>
       )}
 
       <div>
-        <h3 className="text-[17px]">Reset your password</h3>
-        <p className="mt-1.5 text-[13px] leading-relaxed text-ink-500">
+        <h3 className="text-lg">Reset your password</h3>
+        <p className="mt-1.5 text-sm leading-relaxed text-ink-500">
           Enter the address you sign in with and we will email you a link.
         </p>
       </div>
@@ -248,8 +248,8 @@ function SignInTab({ onDone }) {
           <Clock className="size-7" strokeWidth={1.75} />
         </span>
         <div>
-          <h3 className="text-[18px]">Your account is still under review</h3>
-          <p className="mx-auto mt-2 max-w-sm text-[13.5px] leading-relaxed text-ink-500">
+          <h3 className="text-xl">Your account is still under review</h3>
+          <p className="mx-auto mt-2 max-w-sm text-md leading-relaxed text-ink-500">
             You are signed in, but wholesale pricing and ordering stay locked until our team verifies
             your business. We will email you the moment it is approved — usually within one business
             day.
@@ -265,7 +265,7 @@ function SignInTab({ onDone }) {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {formError && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {formError}
         </p>
@@ -295,7 +295,7 @@ function SignInTab({ onDone }) {
         <button
           type="button"
           onClick={() => setForgot(true)}
-          className="rounded text-[12.5px] font-medium text-brand transition-colors hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/25"
+          className="rounded text-sm font-medium text-brand transition-colors hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/25"
         >
           Forgot password?
         </button>
@@ -327,7 +327,7 @@ function ChangeAccountType({ onBack, label = 'Change account type' }) {
       type="button"
       onClick={onBack}
       className={cn(
-        '-ml-1.5 inline-flex items-center gap-1.5 rounded-[8px] px-1.5 py-1 text-[12.5px] font-medium',
+        '-ml-1.5 inline-flex items-center gap-1.5 rounded-md px-1.5 py-1 text-sm font-medium',
         'text-ink-500 transition-colors hover:bg-surface-2 hover:text-ink-900',
         'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/25',
       )}
@@ -368,7 +368,7 @@ function AccountTypeChoice({ onPick }) {
 
   return (
     <div className="space-y-3">
-      <p className="text-[13.5px] leading-relaxed text-ink-500">
+      <p className="text-md leading-relaxed text-ink-500">
         Which of these is you?
       </p>
 
@@ -377,18 +377,18 @@ function AccountTypeChoice({ onPick }) {
           key={key}
           type="button"
           onClick={() => onPick(key)}
-          className="group flex w-full items-start gap-3.5 rounded-[12px] border border-line bg-surface p-4 text-left transition-colors hover:border-brand hover:bg-brand-50/40"
+          className="group flex w-full items-start gap-3.5 rounded-lg border border-line bg-surface p-4 text-left transition-colors hover:border-brand hover:bg-brand-50/40"
         >
           {/* Brand tint on hover, not the gradient. The gradient runs to
               #000000 at one end, so a white glyph landed on near-black and read
               as an icon that disappears when you point at it. */}
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-[10px] bg-surface-2 text-ink-500 transition-colors group-hover:bg-brand-50 group-hover:text-brand">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-surface-2 text-ink-500 transition-colors group-hover:bg-brand-50 group-hover:text-brand">
             <Icon className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block font-display text-[14.5px] font-bold text-ink-900">{title}</span>
-            <span className="mt-1 block text-[12.5px] leading-relaxed text-ink-500">{body}</span>
-            <span className="mt-2 inline-flex items-center gap-1 text-[12.5px] font-semibold text-brand">
+            <span className="block font-display text-md font-bold text-ink-900">{title}</span>
+            <span className="mt-1 block text-sm leading-relaxed text-ink-500">{body}</span>
+            <span className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand">
               {cta}
               <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
             </span>
@@ -446,8 +446,8 @@ function SupplierApplyForm({ onBack }) {
           <ShieldCheck className="size-7" strokeWidth={1.75} />
         </span>
         <div>
-          <h3 className="text-[18px]">Application received</h3>
-          <p className="mx-auto mt-2 max-w-sm text-[13.5px] leading-relaxed text-ink-500">
+          <h3 className="text-xl">Application received</h3>
+          <p className="mx-auto mt-2 max-w-sm text-md leading-relaxed text-ink-500">
             Our purchasing team reviews every application and will be in touch to agree terms. No
             account has been created, so there is nothing to sign in to yet.
           </p>
@@ -464,7 +464,7 @@ function SupplierApplyForm({ onBack }) {
       <ChangeAccountType onBack={onBack} />
 
       {formError && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {formError}
         </p>
@@ -555,7 +555,7 @@ function SupplierApplyForm({ onBack }) {
         </div>
       </FormSection>
 
-      <p className="rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12.5px] leading-relaxed text-ink-500">
+      <p className="rounded-md bg-surface-2 px-3 py-2.5 text-sm leading-relaxed text-ink-500">
         This is an application, not an account. Nothing is created to sign in with, and our
         purchasing team gets in touch to agree terms.
       </p>
@@ -654,8 +654,8 @@ function SignUpTab({ onSwitch }) {
           <ShieldCheck className="size-7" strokeWidth={1.75} />
         </span>
         <div>
-          <h3 className="text-[18px]">Thanks for signing up</h3>
-          <p className="mx-auto mt-2 max-w-sm text-[13.5px] leading-relaxed text-ink-500">
+          <h3 className="text-xl">Thanks for signing up</h3>
+          <p className="mx-auto mt-2 max-w-sm text-md leading-relaxed text-ink-500">
             Your account is pending admin approval. We will email you once your business is
             verified — usually within one business day.
           </p>
@@ -679,7 +679,7 @@ function SignUpTab({ onSwitch }) {
       <ChangeAccountType onBack={() => setAccountType(null)} />
 
       {formError && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {formError}
         </p>
@@ -844,7 +844,7 @@ function SignUpTab({ onSwitch }) {
             {/* One line, not two. The longer version wrapped on this column and
                 cost a row of height to restate "optional", which the word
                 already says. */}
-            <p className="text-[12.5px] font-medium text-ink-700">
+            <p className="text-sm font-medium text-ink-700">
               How may we contact you?{' '}
               <span className="font-normal text-ink-400">Optional.</span>
             </p>
@@ -860,7 +860,7 @@ function SignUpTab({ onSwitch }) {
         {/* Under the button rather than in a filled slab above it: it is the
             small print on the action, and as a box it cost a whole block of
             height to say what one line says. */}
-        <p className="text-center text-[12px] leading-relaxed text-ink-400">
+        <p className="text-center text-xs leading-relaxed text-ink-400">
           Wholesale only. Accounts are reviewed before pricing and ordering unlock.
         </p>
       </div>
@@ -871,7 +871,7 @@ function SignUpTab({ onSwitch }) {
 function ContactTab() {
   return (
     <div className="space-y-5">
-      <p className="text-[13.5px] leading-relaxed text-ink-500">
+      <p className="text-md leading-relaxed text-ink-500">
         Our sales desk answers account, pricing and stock questions during business hours.
       </p>
 
@@ -885,23 +885,23 @@ function ContactTab() {
             value: `${BUSINESS_INFO.address.line1}, ${BUSINESS_INFO.address.city}, ${BUSINESS_INFO.address.region} ${BUSINESS_INFO.address.postal}`,
           },
         ].map(({ icon: Icon, label, value }) => (
-          <li key={label} className="flex items-start gap-3 rounded-[10px] border border-line p-3">
+          <li key={label} className="flex items-start gap-3 rounded-md border border-line p-3">
             <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-ink-500" aria-hidden="true">
               <Icon className="size-4" strokeWidth={1.75} />
             </span>
             <span>
               <span className="eyebrow block text-ink-300">{label}</span>
-              <span className="mt-0.5 block text-[13.5px] font-medium text-ink-900">{value}</span>
+              <span className="mt-0.5 block text-md font-medium text-ink-900">{value}</span>
             </span>
           </li>
         ))}
       </ul>
 
-      <div className="rounded-[10px] border border-line p-3">
+      <div className="rounded-md border border-line p-3">
         <span className="eyebrow mb-2 block text-ink-300">Hours</span>
         <ul className="space-y-1">
           {BUSINESS_INFO.hours.map((row) => (
-            <li key={row.days} className="flex justify-between gap-4 text-[13px]">
+            <li key={row.days} className="flex justify-between gap-4 text-sm">
               <span className="text-ink-500">{row.days}</span>
               <span className="font-medium text-ink-900">{row.time}</span>
             </li>
@@ -994,7 +994,7 @@ export function AccountPopup() {
             <div
               role="tablist"
               aria-label="Account"
-              className="flex min-w-0 flex-1 gap-1 rounded-[10px] bg-surface-2 p-1"
+              className="flex min-w-0 flex-1 gap-1 rounded-md bg-surface-2 p-1"
             >
               {TABS.map((item) => (
                 <button
@@ -1004,7 +1004,7 @@ export function AccountPopup() {
                   aria-selected={tab === item.key}
                   onClick={() => setTab(item.key)}
                   className={cn(
-                    'flex-1 rounded-[8px] py-2 font-display text-[13px] font-semibold transition-[background,color,box-shadow] duration-[120ms]',
+                    'flex-1 rounded-md py-2 font-display text-sm font-semibold transition-[background,color,box-shadow] duration-[120ms]',
                     tab === item.key
                       ? 'bg-surface text-ink-900 shadow-card'
                       : 'text-ink-400 hover:text-ink-700',
@@ -1022,7 +1022,7 @@ export function AccountPopup() {
               type="button"
               onClick={close}
               aria-label="Close dialog"
-              className="flex size-9 shrink-0 items-center justify-center rounded-[8px] text-ink-400 transition-colors hover:bg-surface-2 hover:text-ink-900 active:scale-[0.97] md:hidden"
+              className="flex size-9 shrink-0 items-center justify-center rounded-md text-ink-400 transition-colors hover:bg-surface-2 hover:text-ink-900 active:scale-[0.97] md:hidden"
             >
               <X className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />
             </button>

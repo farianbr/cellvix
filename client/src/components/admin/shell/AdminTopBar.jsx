@@ -32,7 +32,7 @@ export function AdminTopBar({ user, onOpenSearch, onOpenMobileNav }) {
         type="button"
         onClick={onOpenMobileNav}
         aria-label="Open navigation"
-        className="flex size-9 shrink-0 items-center justify-center rounded-[9px] text-ink-500 hover:bg-surface-2 hover:text-ink-900 md:hidden"
+        className="flex size-9 shrink-0 items-center justify-center rounded-md text-ink-500 hover:bg-surface-2 hover:text-ink-900 md:hidden"
       >
         <Menu className="size-[18px]" strokeWidth={2} aria-hidden="true" />
       </button>
@@ -43,12 +43,12 @@ export function AdminTopBar({ user, onOpenSearch, onOpenMobileNav }) {
             type="button"
             onClick={() => navigate(-1)}
             aria-label="Go back"
-            className="flex size-8 shrink-0 items-center justify-center rounded-[8px] text-ink-400 hover:bg-surface-2 hover:text-ink-900"
+            className="flex size-8 shrink-0 items-center justify-center rounded-md text-ink-400 hover:bg-surface-2 hover:text-ink-900"
           >
             <ArrowLeft className="size-4" strokeWidth={2} aria-hidden="true" />
           </button>
         )}
-        <span className="min-w-0 truncate rounded-full bg-surface-2 px-3 py-1 font-display text-[13px] font-semibold text-ink-700">
+        <span className="min-w-0 truncate rounded-full bg-surface-2 px-3 py-1 font-display text-sm font-semibold text-ink-700">
           {meta?.title ?? 'Admin'}
         </span>
       </div>
@@ -56,11 +56,11 @@ export function AdminTopBar({ user, onOpenSearch, onOpenMobileNav }) {
       <button
         type="button"
         onClick={onOpenSearch}
-        className="ml-auto hidden max-w-[380px] flex-1 items-center gap-2 rounded-[9px] border border-line bg-surface-2 px-3 py-1.5 text-[12.5px] text-ink-300 transition-colors hover:border-line-strong hover:text-ink-500 lg:flex"
+        className="ml-auto hidden max-w-[380px] flex-1 items-center gap-2 rounded-md border border-line bg-surface-2 px-3 py-1.5 text-sm text-ink-300 transition-colors hover:border-line-strong hover:text-ink-500 lg:flex"
       >
         <Search className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
         <span className="flex-1 text-left">Search clients, orders, products…</span>
-        <kbd className="rounded border border-line px-1 py-px text-[10px] leading-none text-ink-300">
+        <kbd className="rounded border border-line px-1 py-px text-2xs leading-none text-ink-300">
           Ctrl K
         </kbd>
       </button>
@@ -70,7 +70,7 @@ export function AdminTopBar({ user, onOpenSearch, onOpenMobileNav }) {
           type="button"
           onClick={onOpenSearch}
           aria-label="Search"
-          className="flex size-9 items-center justify-center rounded-[9px] text-ink-500 hover:bg-surface-2 hover:text-ink-900 lg:hidden"
+          className="flex size-9 items-center justify-center rounded-md text-ink-500 hover:bg-surface-2 hover:text-ink-900 lg:hidden"
         >
           <Search className="size-[18px]" strokeWidth={2} aria-hidden="true" />
         </button>
@@ -80,7 +80,7 @@ export function AdminTopBar({ user, onOpenSearch, onOpenMobileNav }) {
         <NotificationMenu />
 
         <span
-          className="flex size-8 items-center justify-center rounded-full bg-surface-3 text-[11.5px] font-semibold text-ink-700"
+          className="flex size-8 items-center justify-center rounded-full bg-surface-3 text-xs font-semibold text-ink-700"
           title={user?.email}
         >
           {initials}

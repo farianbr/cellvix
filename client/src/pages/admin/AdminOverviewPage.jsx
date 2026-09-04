@@ -58,20 +58,20 @@ function TodoCard({ icon: Icon, tone, title, body, to, cta }) {
   return (
     <Link
       to={to}
-      className="group flex items-center gap-3 rounded-[12px] border border-line bg-surface p-3.5 transition-colors hover:border-line-strong"
+      className="group flex items-center gap-3 rounded-lg border border-line bg-surface p-3.5 transition-colors hover:border-line-strong"
     >
       <span
-        className={`flex size-9 shrink-0 items-center justify-center rounded-[10px] border ${tones[tone]}`}
+        className={`flex size-9 shrink-0 items-center justify-center rounded-md border ${tones[tone]}`}
       >
         <Icon className="size-4" strokeWidth={2} aria-hidden="true" />
       </span>
 
       <span className="min-w-0 flex-1">
-        <span className="block text-[13.5px] font-semibold text-ink-900">{title}</span>
-        <span className="block text-[12.5px] text-ink-500">{body}</span>
+        <span className="block text-md font-semibold text-ink-900">{title}</span>
+        <span className="block text-sm text-ink-500">{body}</span>
       </span>
 
-      <span className="flex shrink-0 items-center gap-1 text-[12.5px] font-semibold text-brand">
+      <span className="flex shrink-0 items-center gap-1 text-sm font-semibold text-brand">
         {cta}
         <ArrowRight
           className="size-3.5 transition-transform group-hover:translate-x-0.5"
@@ -115,26 +115,26 @@ function OrderPreview({ order, onClose }) {
             </Badge>
           )}
           {order.poNumber && (
-            <span className="text-[12px] text-ink-400">PO {order.poNumber}</span>
+            <span className="text-xs text-ink-400">PO {order.poNumber}</span>
           )}
         </div>
 
         {lines.length > 0 && (
-          <ul className="divide-y divide-line rounded-[11px] border border-line">
+          <ul className="divide-y divide-line rounded-md border border-line">
             {lines.map((item, index) => (
               <li
                 key={item.sku ?? item.product ?? index}
                 className="flex items-center gap-3 px-3 py-2"
               >
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-[12.5px] font-medium text-ink-900">{item.name}</p>
-                  {item.sku && <p className="font-mono text-[11px] text-ink-300">{item.sku}</p>}
+                  <p className="truncate text-sm font-medium text-ink-900">{item.name}</p>
+                  {item.sku && <p className="font-mono text-2xs text-ink-300">{item.sku}</p>}
                 </div>
 
-                <p className="tnum shrink-0 text-[12px] text-ink-500">×{formatCount(item.qty)}</p>
+                <p className="tnum shrink-0 text-xs text-ink-500">×{formatCount(item.qty)}</p>
                 {/* `lineTotal` is the server's own figure, not qty × unitPrice
                     recomputed here — the client never does money arithmetic. */}
-                <p className="tnum w-20 shrink-0 text-right text-[12.5px] font-semibold text-ink-900">
+                <p className="tnum w-20 shrink-0 text-right text-sm font-semibold text-ink-900">
                   {money(item.lineTotal)}
                 </p>
               </li>
@@ -144,7 +144,7 @@ function OrderPreview({ order, onClose }) {
 
         {/* Totals repeat the server's stored figures — nothing is recomputed
             here, so the preview can never disagree with the order. */}
-        <dl className="space-y-1.5 text-[12.5px]">
+        <dl className="space-y-1.5 text-sm">
           <Row label="Subtotal" value={money(order.subtotal)} />
           {order.discount > 0 && (
             <Row label="Discount" value={`−${money(order.discount)}`} tone="ok" />
@@ -155,8 +155,8 @@ function OrderPreview({ order, onClose }) {
           <Row label="Shipping" value={money(order.shipping)} />
           <Row label="Tax" value={money(order.tax)} />
           <div className="flex items-baseline justify-between border-t border-line pt-1.5">
-            <dt className="font-display text-[13.5px] font-bold text-ink-900">Total</dt>
-            <dd className="tnum font-display text-[15px] font-bold text-ink-900">
+            <dt className="font-display text-md font-bold text-ink-900">Total</dt>
+            <dd className="tnum font-display text-lg font-bold text-ink-900">
               {money(order.total)}
             </dd>
           </div>
@@ -309,7 +309,7 @@ export function AdminOverviewPage() {
           ))}
         </section>
       ) : (
-        <p className="rounded-[12px] border border-ok/25 bg-ok-50 px-4 py-3 text-[13px] text-ok">
+        <p className="rounded-lg border border-ok/25 bg-ok-50 px-4 py-3 text-sm text-ok">
           Nothing needs attention: every account is reviewed, every order is moving, stock is
           healthy and no invoice is overdue.
         </p>
@@ -453,7 +453,7 @@ export function AdminOverviewPage() {
           action={
             <Link
               to="/admin/orders"
-              className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-brand hover:text-brand-700"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700"
             >
               All orders
               <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
@@ -477,18 +477,18 @@ export function AdminOverviewPage() {
                     className="group flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-surface-2 sm:px-5"
                   >
                     <div className="min-w-0 flex-1">
-                      <p className="whitespace-nowrap font-mono text-[12.5px] font-medium text-ink-900">
+                      <p className="whitespace-nowrap font-mono text-sm font-medium text-ink-900">
                         {order.orderNumber}
                       </p>
-                      <p className="truncate text-[12px] text-ink-500">{order.businessName}</p>
+                      <p className="truncate text-xs text-ink-500">{order.businessName}</p>
                     </div>
 
-                    <p className="hidden text-[12px] text-ink-400 sm:block">
+                    <p className="hidden text-xs text-ink-400 sm:block">
                       {date(order.createdAt)}
                     </p>
                     <OrderStatusBadge status={order.status} size="sm" />
 
-                    <p className="tnum w-20 shrink-0 text-right font-display text-[13px] font-bold">
+                    <p className="tnum w-20 shrink-0 text-right font-display text-sm font-bold">
                       {money(order.total)}
                     </p>
 
@@ -510,7 +510,7 @@ export function AdminOverviewPage() {
           action={
             <Link
               to="/admin/inventory?stock=low"
-              className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-brand hover:text-brand-700"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700"
             >
               Review stock
               <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
@@ -529,14 +529,14 @@ export function AdminOverviewPage() {
               {lowStockItems.map((product) => (
                 <li key={product.id} className="flex items-center gap-3 px-4 py-2.5 sm:px-5">
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[12.5px] font-medium text-ink-900">
+                    <p className="truncate text-sm font-medium text-ink-900">
                       {product.name}
                     </p>
-                    <p className="font-mono text-[11px] text-ink-300">{product.sku}</p>
+                    <p className="font-mono text-2xs text-ink-300">{product.sku}</p>
                   </div>
 
                   <p
-                    className={`tnum w-20 shrink-0 text-right text-[12.5px] font-semibold ${
+                    className={`tnum w-20 shrink-0 text-right text-sm font-semibold ${
                       product.stock === 0 ? 'text-danger' : 'text-warn'
                     }`}
                   >
@@ -574,7 +574,7 @@ export function AdminOverviewPage() {
           action={
             <Link
               to="/admin/approvals"
-              className="inline-flex items-center gap-1 text-[12.5px] font-semibold text-brand hover:text-brand-700"
+              className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700"
             >
               Open queue
               <ArrowRight className="size-3.5" strokeWidth={2} aria-hidden="true" />
@@ -593,11 +593,11 @@ export function AdminOverviewPage() {
               return (
                 <li
                   key={account.id}
-                  className="flex flex-col rounded-[12px] border border-line bg-surface p-3.5 transition-colors hover:border-line-strong"
+                  className="flex flex-col rounded-lg border border-line bg-surface p-3.5 transition-colors hover:border-line-strong"
                 >
                   <div className="flex items-start gap-2.5">
                     <span
-                      className="flex size-9 shrink-0 items-center justify-center rounded-[10px] bg-brand-50 font-display text-[13px] font-bold text-brand-700"
+                      className="flex size-9 shrink-0 items-center justify-center rounded-md bg-brand-50 font-display text-sm font-bold text-brand-700"
                       aria-hidden="true"
                     >
                       {initials(account.businessName)}
@@ -606,11 +606,11 @@ export function AdminOverviewPage() {
                     <div className="min-w-0 flex-1">
                       <Link
                         to={`/admin/clients/${account.id}`}
-                        className="block truncate font-display text-[14px] font-bold text-ink-900 hover:text-brand"
+                        className="block truncate font-display text-md font-bold text-ink-900 hover:text-brand"
                       >
                         {account.businessName}
                       </Link>
-                      <p className="truncate text-[12px] text-ink-500">{account.contactName}</p>
+                      <p className="truncate text-xs text-ink-500">{account.contactName}</p>
                     </div>
 
                     {stale && (
@@ -620,7 +620,7 @@ export function AdminOverviewPage() {
                     )}
                   </div>
 
-                  <ul className="mt-2.5 space-y-1 text-[12px] text-ink-500">
+                  <ul className="mt-2.5 space-y-1 text-xs text-ink-500">
                     <li className="flex items-center gap-1.5">
                       <Mail className="size-3.5 shrink-0 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
                       <span className="truncate">{account.email}</span>

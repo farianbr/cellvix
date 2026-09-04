@@ -138,13 +138,13 @@ export function WizardOverlay({ open, onClose, onNext, level, label, title, opti
 
       {filtered.length === 0 ? (
         <div className="py-12 text-center">
-          <p className="font-display text-[14px] font-semibold text-ink-900">
+          <p className="font-display text-md font-semibold text-ink-900">
             No {(label ?? level).toLowerCase()} matches “{query}”
           </p>
           <button
             type="button"
             onClick={() => setQuery('')}
-            className="mt-2 text-[13px] font-semibold text-brand transition-colors hover:text-brand-700"
+            className="mt-2 text-sm font-semibold text-brand transition-colors hover:text-brand-700"
           >
             Clear the search
           </button>
@@ -176,7 +176,7 @@ export function WizardOverlay({ open, onClose, onNext, level, label, title, opti
                   // The icon sits BESIDE the name rather than above it. Stacked,
                   // a one-line name left a dead band under it in every tile and
                   // only twelve of twenty-five options reached the screen.
-                  'group flex h-full items-start gap-2.5 rounded-[12px] border p-2.5 text-left transition-[border-color,background,box-shadow] duration-[140ms]',
+                  'group flex h-full items-start gap-2.5 rounded-lg border p-2.5 text-left transition-[border-color,background,box-shadow] duration-[140ms]',
                   isSelected
                     ? 'border-brand bg-brand-50 shadow-card'
                     : 'border-line bg-surface hover:border-brand/40 hover:bg-surface-2',
@@ -184,7 +184,7 @@ export function WizardOverlay({ open, onClose, onNext, level, label, title, opti
               >
                 <span
                   className={cn(
-                    'flex size-8 shrink-0 items-center justify-center rounded-[8px] transition-colors',
+                    'flex size-8 shrink-0 items-center justify-center rounded-md transition-colors',
                     isSelected
                       ? 'bg-brand text-white'
                       : 'bg-surface-3 text-ink-500 group-hover:bg-brand-50 group-hover:text-brand',
@@ -194,7 +194,7 @@ export function WizardOverlay({ open, onClose, onNext, level, label, title, opti
                   {Icon ? (
                     <Icon className="size-4" strokeWidth={1.75} />
                   ) : (
-                    <span className="font-display text-[11.5px] font-bold">
+                    <span className="font-display text-xs font-bold">
                       {monograms.get(option.slug)}
                     </span>
                   )}
@@ -203,13 +203,13 @@ export function WizardOverlay({ open, onClose, onNext, level, label, title, opti
                 <span className="min-w-0 flex-1">
                   <span
                     className={cn(
-                      'line-clamp-2 block font-display text-[13px] font-semibold leading-snug',
+                      'line-clamp-2 block font-display text-sm font-semibold leading-snug',
                       isSelected ? 'text-brand-700' : 'text-ink-900',
                     )}
                   >
                     {option.name}
                   </span>
-                  <span className="tnum mt-0.5 block text-[11px] text-ink-400">
+                  <span className="tnum mt-0.5 block text-2xs text-ink-400">
                     {formatCount(option.count)} parts
                   </span>
                 </span>
@@ -224,7 +224,7 @@ export function WizardOverlay({ open, onClose, onNext, level, label, title, opti
            the tile. These are a list instead: the NAME leads, the count sits
            right-aligned where it can be compared down the column, and twice as
            many fit on a screen. */
-        <div className="overflow-hidden rounded-[12px] border border-line">
+        <div className="overflow-hidden rounded-lg border border-line">
           {/* The count column is bare numbers so they compare cleanly down the
               column; this names the unit once instead of repeating "parts" on
               every row. */}
@@ -250,14 +250,14 @@ export function WizardOverlay({ open, onClose, onNext, level, label, title, opti
                 >
                   <span
                     className={cn(
-                      'min-w-0 flex-1 font-display text-[13.5px] font-semibold leading-snug',
+                      'min-w-0 flex-1 font-display text-md font-semibold leading-snug',
                       isSelected ? 'text-brand-700' : 'text-ink-900',
                     )}
                   >
                     {option.name}
                   </span>
 
-                  <span className="tnum shrink-0 text-[11.5px] text-ink-400">
+                  <span className="tnum shrink-0 text-xs text-ink-400">
                     {formatCount(option.count)}
                   </span>
 
@@ -290,7 +290,7 @@ export function WizardOverlay({ open, onClose, onNext, level, label, title, opti
           step 2 to open without a component to prune the tree by. */}
       {multi && (
         <div className="sticky bottom-0 -mx-5 mt-4 flex items-center justify-between gap-3 border-t border-line bg-surface px-5 pb-1 pt-3">
-          <p className="text-[12.5px] text-ink-500">
+          <p className="text-sm text-ink-500">
             {selectedSet.size === 0
               ? 'Pick one or more'
               : `${formatCount(selectedSet.size)} selected`}
@@ -300,7 +300,7 @@ export function WizardOverlay({ open, onClose, onNext, level, label, title, opti
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-9 items-center rounded-[8px] border border-line px-3 font-display text-[13px] font-semibold text-ink-700 transition-colors hover:border-line-strong hover:bg-surface-2 active:scale-[0.97]"
+              className="inline-flex h-9 items-center rounded-md border border-line px-3 font-display text-sm font-semibold text-ink-700 transition-colors hover:border-line-strong hover:bg-surface-2 active:scale-[0.97]"
             >
               Done
             </button>
@@ -309,7 +309,7 @@ export function WizardOverlay({ open, onClose, onNext, level, label, title, opti
               type="button"
               onClick={onNext}
               disabled={selectedSet.size === 0}
-              className="inline-flex h-9 items-center gap-1.5 rounded-[8px] bg-brand-gradient px-4 font-display text-[13px] font-semibold text-white transition-[filter,opacity] duration-[120ms] hover:brightness-110 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40"
+              className="inline-flex h-9 items-center gap-1.5 rounded-md bg-brand-gradient px-4 font-display text-sm font-semibold text-white transition-[filter,opacity] duration-[120ms] hover:brightness-110 active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40"
             >
               Next
               <ArrowRight className="size-4 shrink-0" strokeWidth={2.25} aria-hidden="true" />

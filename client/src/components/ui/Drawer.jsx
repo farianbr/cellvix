@@ -56,7 +56,7 @@ export function Drawer({
           <header className="flex shrink-0 items-center gap-3 border-b border-line px-4 py-3.5">
             <div className="min-w-0 flex-1">
               {header ?? (
-                <h2 id={titleId} className="text-[16px]">
+                <h2 id={titleId} className="text-lg">
                   {title}
                 </h2>
               )}

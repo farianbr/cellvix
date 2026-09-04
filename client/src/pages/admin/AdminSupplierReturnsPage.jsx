@@ -108,7 +108,7 @@ function ReturnForm({ suppliers, purchaseOrders, products, onSubmit, onCancel, i
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -140,7 +140,7 @@ function ReturnForm({ suppliers, purchaseOrders, products, onSubmit, onCancel, i
           {fields.map((field, index) => (
             <div
               key={field.id}
-              className="grid items-end gap-2 rounded-[10px] bg-surface-2 p-2.5 sm:grid-cols-[1fr_70px_140px_auto]"
+              className="grid items-end gap-2 rounded-md bg-surface-2 p-2.5 sm:grid-cols-[1fr_70px_140px_auto]"
             >
               <SelectField
                 control={control}
@@ -170,7 +170,7 @@ function ReturnForm({ suppliers, purchaseOrders, products, onSubmit, onCancel, i
                 onClick={() => remove(index)}
                 disabled={fields.length === 1}
                 aria-label={`Remove line ${index + 1}`}
-                className="flex size-9 shrink-0 items-center justify-center rounded-[8px] border border-line text-ink-400 transition-colors hover:border-danger/30 hover:bg-danger-50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex size-9 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 transition-colors hover:border-danger/30 hover:bg-danger-50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Trash2 className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
               </button>
@@ -201,7 +201,7 @@ function ReturnForm({ suppliers, purchaseOrders, products, onSubmit, onCancel, i
 
       <Textarea label="Notes" rows={2} {...register('notes')} />
 
-      <p className="rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12px] leading-relaxed text-ink-500">
+      <p className="rounded-md bg-surface-2 px-3 py-2.5 text-xs leading-relaxed text-ink-500">
         The expected credit is worked out from what these parts cost on the purchase order. Stock
         does not move until the return is marked <strong className="font-semibold">shipped</strong>.
       </p>
@@ -233,19 +233,19 @@ function CreditForm({ supplierReturn, onSubmit, onCancel, isPending, error }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="rounded-[11px] bg-surface-2 p-3.5">
-        <p className="font-mono text-[13px] font-medium text-ink-900">
+      <div className="rounded-md bg-surface-2 p-3.5">
+        <p className="font-mono text-sm font-medium text-ink-900">
           {supplierReturn.returnNumber}
         </p>
-        <p className="mt-0.5 text-[12.5px] text-ink-500">{supplierReturn.supplierName}</p>
-        <p className="tnum mt-1.5 text-[12.5px] text-ink-500">
+        <p className="mt-0.5 text-sm text-ink-500">{supplierReturn.supplierName}</p>
+        <p className="tnum mt-1.5 text-sm text-ink-500">
           {money(supplierReturn.expectedCredit)} claimed across{' '}
           {formatCount(supplierReturn.qty)} {supplierReturn.qty === 1 ? 'part' : 'parts'}
         </p>
       </div>
 
       {error && (
-        <p className="flex items-start gap-2 rounded-[10px] bg-danger-50 px-3 py-2.5 text-[13px] text-danger">
+        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           {error}
         </p>
@@ -259,7 +259,7 @@ function CreditForm({ supplierReturn, onSubmit, onCancel, isPending, error }) {
       {/* A short-paid claim is the case worth seeing, so the form says so
           before it is saved rather than leaving it to be noticed later. */}
       {shortfall > 0 && (
-        <p className="rounded-[10px] bg-warn-50 px-3 py-2.5 text-[12.5px] text-warn">
+        <p className="rounded-md bg-warn-50 px-3 py-2.5 text-sm text-warn">
           {money(shortfall)} less than claimed. That difference is kept on the return.
         </p>
       )}
@@ -320,11 +320,11 @@ export function AdminSupplierReturnsPage() {
       priority: 1,
       render: (row) => (
         <>
-          <span className="block whitespace-nowrap font-mono text-[12.5px] font-medium text-ink-900">
+          <span className="block whitespace-nowrap font-mono text-sm font-medium text-ink-900">
             {row.returnNumber}
           </span>
           {row.purchaseOrderNumber && (
-            <span className="block font-mono text-[11px] text-ink-400">
+            <span className="block font-mono text-2xs text-ink-400">
               {row.purchaseOrderNumber}
             </span>
           )}
@@ -338,9 +338,9 @@ export function AdminSupplierReturnsPage() {
       sortValue: (row) => row.supplierName,
       render: (row) => (
         <>
-          <span className="block truncate text-[13px] text-ink-900">{row.supplierName}</span>
+          <span className="block truncate text-sm text-ink-900">{row.supplierName}</span>
           {row.supplierRmaNumber && (
-            <span className="block truncate text-[11.5px] text-ink-400">
+            <span className="block truncate text-xs text-ink-400">
               Their ref {row.supplierRmaNumber}
             </span>
           )}
@@ -373,7 +373,7 @@ export function AdminSupplierReturnsPage() {
       className: 'tnum',
       sortValue: (row) => row.age,
       render: (row) => (
-        <span className={cn('text-[12.5px]', row.overSla ? 'font-medium text-danger' : 'text-ink-500')}>
+        <span className={cn('text-sm', row.overSla ? 'font-medium text-danger' : 'text-ink-500')}>
           {row.age}d
         </span>
       ),
@@ -389,15 +389,15 @@ export function AdminSupplierReturnsPage() {
       sortValue: (row) => row.expectedCredit,
       render: (row) => (
         <>
-          <span className="text-[13px] font-medium text-ink-900">
+          <span className="text-sm font-medium text-ink-900">
             {row.status === 'credited' ? money(row.creditAmount) : money(row.expectedCredit)}
           </span>
           {row.status === 'credited' && row.creditShortfall > 0 ? (
-            <span className="block text-[11px] text-warn">
+            <span className="block text-2xs text-warn">
               {money(row.creditShortfall)} short
             </span>
           ) : (
-            <span className="block text-[11px] text-ink-400">
+            <span className="block text-2xs text-ink-400">
               {row.status === 'credited' ? 'in full' : 'claimed'}
             </span>
           )}

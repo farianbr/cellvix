@@ -86,7 +86,7 @@ function ProviderCard({ provider }) {
           <button
             type="button"
             onClick={clearAll}
-            className="inline-flex h-8 items-center gap-1.5 rounded-[8px] border border-line px-2.5 text-[12.5px] font-medium text-ink-500 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger"
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-2.5 text-sm font-medium text-ink-500 transition-colors hover:border-danger hover:bg-danger-50 hover:text-danger"
           >
             <Trash2 className="size-3.5" strokeWidth={1.75} aria-hidden="true" />
             Remove keys
@@ -97,7 +97,7 @@ function ProviderCard({ provider }) {
       {/* An incomplete provider looks like progress and behaves like nothing,
           so it is called out rather than left to be inferred from the chip. */}
       {provider.partial && (
-        <p className="mb-4 rounded-[10px] border border-warn/25 bg-warn-50 px-3 py-2.5 text-[13px] leading-relaxed text-ink-700">
+        <p className="mb-4 rounded-md border border-warn/25 bg-warn-50 px-3 py-2.5 text-sm leading-relaxed text-ink-700">
           Some fields are set and some are not. This provider stays off until every field below has
           a value.
         </p>
@@ -158,7 +158,7 @@ function ProviderCard({ provider }) {
               Save keys
             </Button>
 
-            <p aria-live="polite" className="min-w-0 text-[13px]">
+            <p aria-live="polite" className="min-w-0 text-sm">
               {saved && !error && <span className="text-ok">Saved. Keys are stored encrypted.</span>}
               {error && (
                 <span role="alert" className="text-danger">
@@ -176,7 +176,7 @@ function ProviderCard({ provider }) {
 export function AdminApiKeysPage() {
   const { data, isLoading } = useAdminCredentials();
 
-  if (isLoading) return <p className="text-[13px] text-ink-500">Loading providers…</p>;
+  if (isLoading) return <p className="text-sm text-ink-500">Loading providers…</p>;
 
   return (
     <>
@@ -189,7 +189,7 @@ export function AdminApiKeysPage() {
       {/* The security posture, stated on the screen rather than only in a doc.
           An operator who does not know a key cannot be read back will keep
           looking for the button that reads it. */}
-      <div className="mb-5 flex items-start gap-2.5 rounded-[12px] border border-info/20 bg-info-50 px-3.5 py-3 text-[13px] leading-relaxed text-ink-700">
+      <div className="mb-5 flex items-start gap-2.5 rounded-lg border border-info/20 bg-info-50 px-3.5 py-3 text-sm leading-relaxed text-ink-700">
         <ShieldCheck className="mt-0.5 size-4 shrink-0 text-info" strokeWidth={2} aria-hidden="true" />
         <span>
           <strong className="font-semibold">Keys are write-only.</strong> They are encrypted before
@@ -206,7 +206,7 @@ export function AdminApiKeysPage() {
         ))}
       </div>
 
-      <p className="mt-5 flex items-start gap-2 text-[12.5px] leading-relaxed text-ink-500">
+      <p className="mt-5 flex items-start gap-2 text-sm leading-relaxed text-ink-500">
         <Lock className="mt-0.5 size-3.5 shrink-0" strokeWidth={1.75} aria-hidden="true" />
         <span>
           Only an administrator can view or set these — a role with full Settings access cannot.

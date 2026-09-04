@@ -85,7 +85,7 @@ export function AdminCalendarPage() {
 
       {/* §6b rule 2: a persistent notice naming what is inactive and what
           unblocks it — not a tooltip, not a disabled button's title. */}
-      <p className="mb-5 flex items-start gap-2.5 rounded-[12px] border border-warn/25 bg-warn-50 px-3.5 py-3 text-[13px] leading-relaxed text-ink-700">
+      <p className="mb-5 flex items-start gap-2.5 rounded-lg border border-warn/25 bg-warn-50 px-3.5 py-3 text-sm leading-relaxed text-ink-700">
         <AlertCircle className="mt-0.5 size-4 shrink-0 text-warn" strokeWidth={2} aria-hidden="true" />
         <span>
           <strong className="font-semibold">This board is not wired up yet.</strong> It reads real
@@ -105,12 +105,12 @@ export function AdminCalendarPage() {
               setWeekStart(previous);
             }}
             aria-label="Previous week"
-            className="flex size-9 items-center justify-center rounded-[9px] border border-line bg-surface text-ink-600 transition-colors hover:border-ink-300 hover:bg-surface-2"
+            className="flex size-9 items-center justify-center rounded-md border border-line bg-surface text-ink-600 transition-colors hover:border-ink-300 hover:bg-surface-2"
           >
             <ChevronLeft className="size-4" strokeWidth={2} aria-hidden="true" />
           </button>
 
-          <span className="font-display text-[14px] font-semibold text-ink-900">
+          <span className="font-display text-md font-semibold text-ink-900">
             {weekStart.toLocaleDateString('en-CA', { month: 'long', day: 'numeric' })} —{' '}
             {days[6].date.toLocaleDateString('en-CA', {
               month: 'long',
@@ -127,7 +127,7 @@ export function AdminCalendarPage() {
               setWeekStart(next);
             }}
             aria-label="Next week"
-            className="flex size-9 items-center justify-center rounded-[9px] border border-line bg-surface text-ink-600 transition-colors hover:border-ink-300 hover:bg-surface-2"
+            className="flex size-9 items-center justify-center rounded-md border border-line bg-surface text-ink-600 transition-colors hover:border-ink-300 hover:bg-surface-2"
           >
             <ChevronRight className="size-4" strokeWidth={2} aria-hidden="true" />
           </button>
@@ -135,18 +135,18 @@ export function AdminCalendarPage() {
           <button
             type="button"
             onClick={() => setWeekStart(startOfWeek(new Date()))}
-            className="ml-1 inline-flex h-9 items-center rounded-[9px] border border-line bg-surface px-3 text-[13px] font-medium text-ink-600 transition-colors hover:border-ink-300 hover:bg-surface-2"
+            className="ml-1 inline-flex h-9 items-center rounded-md border border-line bg-surface px-3 text-sm font-medium text-ink-600 transition-colors hover:border-ink-300 hover:bg-surface-2"
           >
             This week
           </button>
         </div>
 
-        <label className="flex items-center gap-2 text-[13px] text-ink-600">
+        <label className="flex items-center gap-2 text-sm text-ink-600">
           <span className="shrink-0">Staff</span>
           <select
             value={staffFilter}
             onChange={(event) => setStaffFilter(event.target.value)}
-            className="h-9 rounded-[8px] border border-line bg-surface px-2.5 text-[13px] text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
+            className="h-9 rounded-md border border-line bg-surface px-2.5 text-sm text-ink-900 focus:border-brand focus:ring-2 focus:ring-brand/20 focus:outline-none"
           >
             <option value="all">Everyone</option>
             {(data?.staff ?? []).map((person) => (
@@ -173,13 +173,13 @@ export function AdminCalendarPage() {
                 <div
                   key={label}
                   className={cn(
-                    'min-h-[280px] rounded-[12px] border bg-surface p-2.5',
+                    'min-h-[280px] rounded-lg border bg-surface p-2.5',
                     isToday ? 'border-brand' : 'border-line',
                   )}
                 >
                   <p
                     className={cn(
-                      'mb-2 font-display text-[12px] font-bold tracking-wide uppercase',
+                      'mb-2 font-display text-xs font-bold tracking-wide uppercase',
                       isToday ? 'text-brand' : 'text-ink-500',
                     )}
                   >
@@ -188,13 +188,13 @@ export function AdminCalendarPage() {
                   </p>
 
                   {forDay.length === 0 ? (
-                    <p className="text-[12px] text-ink-300">—</p>
+                    <p className="text-xs text-ink-300">—</p>
                   ) : (
                     <ul className="space-y-1.5">
                       {forDay.map((row) => (
                         <li
                           key={row.id}
-                          className="rounded-[8px] bg-surface-2 px-2 py-1.5 text-[12px] text-ink-700"
+                          className="rounded-md bg-surface-2 px-2 py-1.5 text-xs text-ink-700"
                         >
                           {row.title}
                         </li>
@@ -210,14 +210,14 @@ export function AdminCalendarPage() {
         <div className="space-y-4">
           <Panel title="Unscheduled" description="Waiting for a slot.">
             {(data?.unscheduled ?? []).length === 0 ? (
-              <p className="flex items-center gap-2 text-[13px] text-ink-500">
+              <p className="flex items-center gap-2 text-sm text-ink-500">
                 <Inbox className="size-4 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
                 Nothing waiting.
               </p>
             ) : (
               <ul className="space-y-2">
                 {data.unscheduled.map((row) => (
-                  <li key={row.id} className="rounded-[10px] bg-surface-2 px-3 py-2 text-[13px]">
+                  <li key={row.id} className="rounded-md bg-surface-2 px-3 py-2 text-sm">
                     {row.title}
                   </li>
                 ))}
@@ -236,7 +236,7 @@ export function AdminCalendarPage() {
           </Panel>
 
           <Panel title="What this board will hold">
-            <ul className="space-y-1.5 text-[13px] text-ink-600">
+            <ul className="space-y-1.5 text-sm text-ink-600">
               {(data?.kinds ?? []).map((kind) => (
                 <li key={kind.value} className="flex items-center gap-2">
                   <CalendarDays className="size-3.5 text-ink-300" strokeWidth={1.75} aria-hidden="true" />

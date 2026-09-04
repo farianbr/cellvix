@@ -17,7 +17,7 @@ const LABELS = Object.fromEntries(BLOG_CATEGORIES.map((c) => [c.value, c.label])
 
 function PostMeta({ post, className }) {
   return (
-    <p className={cn('flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-ink-400', className)}>
+    <p className={cn('flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-ink-400', className)}>
       <span className="font-medium text-ink-500">{post.author.name}</span>
       <span aria-hidden="true">·</span>
       <time dateTime={post.publishedAt ?? undefined}>{date(post.publishedAt)}</time>
@@ -45,13 +45,13 @@ function CategoryTag({ value, className }) {
 
 function PostCard({ post }) {
   return (
-    <article className="group flex flex-col overflow-hidden rounded-[14px] border border-line bg-surface transition-[border-color,box-shadow] duration-200 hover:border-line-strong hover:shadow-card">
+    <article className="group flex flex-col overflow-hidden rounded-lg border border-line bg-surface transition-[border-color,box-shadow] duration-200 hover:border-line-strong hover:shadow-card">
       <PostCover post={post} className="shrink-0 border-b border-line" />
 
       <div className="flex flex-1 flex-col p-4">
         <CategoryTag value={post.category} className="mb-3 self-start" />
 
-        <h2 className="text-[16px] leading-snug">
+        <h2 className="text-lg leading-snug">
           {/* The whole card is not a link: the title is, so the accessible name
               is the title rather than the entire card's text. */}
           <Link to={`/blog/${post.slug}`} className="transition-colors hover:text-brand">
@@ -59,7 +59,7 @@ function PostCard({ post }) {
           </Link>
         </h2>
 
-        <p className="mt-2 line-clamp-3 flex-1 text-[13.5px] leading-relaxed text-ink-500">
+        <p className="mt-2 line-clamp-3 flex-1 text-md leading-relaxed text-ink-500">
           {post.excerpt}
         </p>
 
@@ -71,7 +71,7 @@ function PostCard({ post }) {
 
 function FeaturedPost({ post }) {
   return (
-    <article className="group mb-8 overflow-hidden rounded-[16px] border border-line bg-surface transition-[border-color,box-shadow] duration-200 hover:border-line-strong hover:shadow-card md:grid md:grid-cols-2 md:items-stretch">
+    <article className="group mb-8 overflow-hidden rounded-lg border border-line bg-surface transition-[border-color,box-shadow] duration-200 hover:border-line-strong hover:shadow-card md:grid md:grid-cols-2 md:items-stretch">
       <PostCover post={post} ratio="aspect-16/10 md:aspect-auto md:h-full" className="md:min-h-[280px]" />
 
       <div className="flex flex-col justify-center p-5 lg:p-8">
@@ -82,19 +82,19 @@ function FeaturedPost({ post }) {
           <CategoryTag value={post.category} />
         </div>
 
-        <h2 className="text-[22px] leading-tight lg:text-[27px]">
+        <h2 className="text-2xl leading-tight lg:text-3xl">
           <Link to={`/blog/${post.slug}`} className="transition-colors hover:text-brand">
             {post.title}
           </Link>
         </h2>
 
-        <p className="mt-3 text-[14.5px] leading-relaxed text-ink-500">{post.excerpt}</p>
+        <p className="mt-3 text-md leading-relaxed text-ink-500">{post.excerpt}</p>
 
         <PostMeta post={post} className="mt-5" />
 
         <Link
           to={`/blog/${post.slug}`}
-          className="mt-5 inline-flex items-center gap-1.5 self-start text-[13.5px] font-semibold text-brand transition-colors hover:text-brand-700"
+          className="mt-5 inline-flex items-center gap-1.5 self-start text-md font-semibold text-brand transition-colors hover:text-brand-700"
         >
           Read the article
           <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" strokeWidth={2} aria-hidden="true" />
@@ -184,8 +184,8 @@ export function BlogPage() {
     <div className="mx-auto max-w-[1400px] px-3 py-6 sm:px-4 lg:px-6 lg:py-10">
       <header className="mb-7 max-w-2xl">
         <p className="eyebrow mb-2 text-brand">Cellvix journal</p>
-        <h1 className="text-[28px] sm:text-[34px]">Bench notes for repair businesses</h1>
-        <p className="mt-3 text-[14.5px] leading-relaxed text-ink-500">
+        <h1 className="text-3xl sm:text-d-sm">Bench notes for repair businesses</h1>
+        <p className="mt-3 text-md leading-relaxed text-ink-500">
           Grading standards, diagnostics, credit terms and what is moving in the catalogue —
           written by the people who pick, test and ship the parts.
         </p>
@@ -232,14 +232,14 @@ export function BlogPage() {
                 onClick={() => setCategory(option.value)}
                 aria-pressed={isActive}
                 className={cn(
-                  'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-[13px] font-medium transition-colors',
+                  'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3.5 text-sm font-medium transition-colors',
                   isActive
                     ? 'border-brand bg-brand-50 text-brand-700'
                     : 'border-line bg-surface text-ink-500 hover:border-line-strong hover:text-ink-900',
                 )}
               >
                 {option.label}
-                {count !== undefined && <span className="tnum text-[11.5px] text-ink-300">{count}</span>}
+                {count !== undefined && <span className="tnum text-xs text-ink-300">{count}</span>}
               </button>
             );
           })}
@@ -264,7 +264,7 @@ export function BlogPage() {
       {isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="overflow-hidden rounded-[14px] border border-line">
+            <div key={index} className="overflow-hidden rounded-lg border border-line">
               <Skeleton className="aspect-16/10 rounded-none" />
               <div className="space-y-2.5 p-4">
                 <Skeleton className="h-4 w-24" />
@@ -275,12 +275,12 @@ export function BlogPage() {
           ))}
         </div>
       ) : posts.length === 0 ? (
-        <div className="flex flex-col items-center rounded-[14px] border border-line bg-surface py-16 text-center">
+        <div className="flex flex-col items-center rounded-lg border border-line bg-surface py-16 text-center">
           <span className="mb-4 flex size-12 items-center justify-center rounded-full bg-surface-2 text-ink-300">
             <Newspaper className="size-5" strokeWidth={1.5} aria-hidden="true" />
           </span>
-          <h2 className="text-[17px]">Nothing published here yet</h2>
-          <p className="mx-auto mt-2 max-w-sm text-[13.5px] text-ink-500">
+          <h2 className="text-lg">Nothing published here yet</h2>
+          <p className="mx-auto mt-2 max-w-sm text-md text-ink-500">
             {debounced || category || tag
               ? 'No article matches that. Clear the filters to see everything.'
               : 'The first articles are being written. Check back shortly.'}
@@ -293,7 +293,7 @@ export function BlogPage() {
                 clearTag();
                 setCategory('');
               }}
-              className="mt-5 text-[13.5px] font-semibold text-brand hover:text-brand-700"
+              className="mt-5 text-md font-semibold text-brand hover:text-brand-700"
             >
               Clear filters
             </button>

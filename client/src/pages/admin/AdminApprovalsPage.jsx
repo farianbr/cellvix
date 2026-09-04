@@ -51,7 +51,7 @@ export function RejectForm({ user, onSubmit, onCancel, isPending }) {
 
   return (
     <form onSubmit={handleSubmit((values) => onSubmit(values.reason))} className="space-y-4">
-      <p className="text-[13.5px] text-ink-500">
+      <p className="text-md text-ink-500">
         Rejecting <span className="font-medium text-ink-900">{user.displayName ?? user.email}</span>. The reason
         is stored on the account and goes into the notification email.
       </p>
@@ -132,7 +132,7 @@ export function AdminApprovalsPage() {
               aria-selected={status === tab.value}
               onClick={() => setStatus(tab.value)}
               className={cn(
-                'flex shrink-0 items-center gap-1.5 rounded-[9px] px-3 py-1.5 font-display text-[13px] font-semibold transition-colors',
+                'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 font-display text-sm font-semibold transition-colors',
                 status === tab.value
                   ? 'bg-brand-50 text-brand-700'
                   : 'text-ink-500 hover:bg-surface-2 hover:text-ink-900',
@@ -140,7 +140,7 @@ export function AdminApprovalsPage() {
             >
               {tab.label}
               {counts[tab.value] > 0 && (
-                <span className="tnum text-[11.5px] font-medium opacity-70">
+                <span className="tnum text-xs font-medium opacity-70">
                   {formatCount(counts[tab.value])}
                 </span>
               )}
@@ -184,7 +184,7 @@ export function AdminApprovalsPage() {
                           target that has to fight itself to work. */}
                       <Link
                         to={`/admin/clients/${user.id}`}
-                        className="group inline-flex items-center gap-1.5 font-display text-[14.5px] font-bold text-ink-900 transition-colors hover:text-brand"
+                        className="group inline-flex items-center gap-1.5 font-display text-md font-bold text-ink-900 transition-colors hover:text-brand"
                       >
                         {user.displayName ?? user.email}
                         <ArrowUpRight
@@ -197,11 +197,11 @@ export function AdminApprovalsPage() {
                         {user.status}
                       </Badge>
                       {user.businessType && (
-                        <span className="text-[12px] text-ink-400">{user.businessType}</span>
+                        <span className="text-xs text-ink-400">{user.businessType}</span>
                       )}
                     </div>
 
-                    <ul className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-[12.5px] text-ink-500">
+                    <ul className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-sm text-ink-500">
                       <li className="flex items-center gap-1.5">
                         <UserCheck className="size-3.5 text-ink-300" strokeWidth={1.75} aria-hidden="true" />
                         {user.contactName}
@@ -224,7 +224,7 @@ export function AdminApprovalsPage() {
                       )}
                     </ul>
 
-                    <p className="mt-1.5 flex items-center gap-1.5 text-[11.5px] text-ink-400">
+                    <p className="mt-1.5 flex items-center gap-1.5 text-xs text-ink-400">
                       <Clock className="size-3" strokeWidth={1.75} aria-hidden="true" />
                       Registered {date(user.createdAt)}
                       {user.taxId && ` · Tax ID ${user.taxId}`}
@@ -233,7 +233,7 @@ export function AdminApprovalsPage() {
                     </p>
 
                     {user.rejectionReason && (
-                      <p className="mt-2 rounded-[9px] bg-danger-50 px-3 py-2 text-[12.5px] text-danger">
+                      <p className="mt-2 rounded-md bg-danger-50 px-3 py-2 text-sm text-danger">
                         Rejected: {user.rejectionReason}
                       </p>
                     )}

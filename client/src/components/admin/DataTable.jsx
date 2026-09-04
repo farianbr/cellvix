@@ -51,7 +51,7 @@ function CellCheckbox({ checked, indeterminate, onChange, label }) {
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
         aria-label={label}
-        className="peer absolute size-full cursor-pointer appearance-none rounded-[4px] border border-line-strong bg-surface transition-colors checked:border-brand checked:bg-brand indeterminate:border-brand indeterminate:bg-brand focus-visible:outline-none"
+        className="peer absolute size-full cursor-pointer appearance-none rounded-sm border border-line-strong bg-surface transition-colors checked:border-brand checked:bg-brand indeterminate:border-brand indeterminate:bg-brand focus-visible:outline-none"
       />
 
       {isPartial ? (
@@ -150,7 +150,7 @@ export function DataTable({
     return (
       <div className={cn('space-y-2 p-4 sm:p-5', className)}>
         {Array.from({ length: 6 }).map((_, index) => (
-          <div key={index} className="h-14 animate-pulse rounded-[10px] bg-surface-2" />
+          <div key={index} className="h-14 animate-pulse rounded-md bg-surface-2" />
         ))}
       </div>
     );
@@ -304,7 +304,7 @@ export function DataTable({
                       <td
                         key={column.key}
                         className={cn(
-                          'px-4 py-3 align-middle text-[13px] text-ink-700',
+                          'px-4 py-3 align-middle text-sm text-ink-700',
                           PRIORITY_CLASS[column.priority ?? 1],
                           ALIGN_CLASS[column.align ?? 'left'],
                           column.className,
@@ -363,7 +363,7 @@ export function DataTable({
                           {foldable.map((column) => (
                             <div key={column.key} className="flex items-baseline gap-2">
                               <dt className="eyebrow shrink-0 text-ink-400">{column.header}</dt>
-                              <dd className="min-w-0 text-[13px] text-ink-700">
+                              <dd className="min-w-0 text-sm text-ink-700">
                                 {column.render ? column.render(row) : row[column.key]}
                               </dd>
                             </div>
@@ -394,7 +394,7 @@ export function CountLine({ total, shown, noun, className }) {
       ? `Showing 1–${shown} of ${total} ${noun}`
       : `${total ?? shown ?? 0} ${noun}`;
 
-  return <p className={cn('tnum text-[12.5px] text-ink-400', className)}>{label}</p>;
+  return <p className={cn('tnum text-sm text-ink-400', className)}>{label}</p>;
 }
 
 export default DataTable;

@@ -9,12 +9,12 @@ import cn from '@/lib/cn';
  */
 export function Panel({ title, description, action, children, className, bodyClassName, flush }) {
   return (
-    <section className={cn('overflow-hidden rounded-[14px] border border-line bg-surface', className)}>
+    <section className={cn('overflow-hidden rounded-lg border border-line bg-surface', className)}>
       {(title || action) && (
         <header className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3 sm:px-5">
           <div className="min-w-0">
-            {title && <h2 className="font-display text-[14.5px] font-bold">{title}</h2>}
-            {description && <p className="mt-0.5 text-[12.5px] text-ink-500">{description}</p>}
+            {title && <h2 className="font-display text-md font-bold">{title}</h2>}
+            {description && <p className="mt-0.5 text-sm text-ink-500">{description}</p>}
           </div>
           {action}
         </header>
@@ -72,7 +72,7 @@ export function CollapsiblePanel({
 
   return (
     <section
-      className={cn('overflow-hidden rounded-[14px] border border-line bg-surface', className)}
+      className={cn('overflow-hidden rounded-lg border border-line bg-surface', className)}
     >
       <div
         className={cn(
@@ -82,7 +82,7 @@ export function CollapsiblePanel({
           open ? 'border-b border-line py-3' : 'py-3',
         )}
       >
-        <h2 className="min-w-0 flex-1 font-display text-[14.5px] font-bold">
+        <h2 className="min-w-0 flex-1 font-display text-md font-bold">
           <button
             type="button"
             id={buttonId}
@@ -90,7 +90,7 @@ export function CollapsiblePanel({
             aria-controls={panelId}
             onClick={() => setOpen((value) => !value)}
             className={cn(
-              'group -my-1 flex w-full items-center gap-2.5 rounded-[8px] py-1 text-left',
+              'group -my-1 flex w-full items-center gap-2.5 rounded-md py-1 text-left',
               'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/25',
             )}
           >
@@ -110,7 +110,7 @@ export function CollapsiblePanel({
                 {title}
               </span>
               {description && (
-                <span className="mt-0.5 block text-[12.5px] font-normal text-ink-500">
+                <span className="mt-0.5 block text-sm font-normal text-ink-500">
                   {description}
                 </span>
               )}
@@ -122,7 +122,7 @@ export function CollapsiblePanel({
             real figures are — two copies of the same number, one of them
             abbreviated, is where they start to disagree. */}
         {summary && !open && (
-          <div className="shrink-0 text-[12.5px] text-ink-500">{summary}</div>
+          <div className="shrink-0 text-sm text-ink-500">{summary}</div>
         )}
 
         {action}
@@ -169,7 +169,7 @@ export function StatTile({ label, value, hint, tone = 'neutral', icon: Icon, cla
   };
 
   return (
-    <div className={cn('rounded-[14px] border border-line bg-surface p-4', className)}>
+    <div className={cn('rounded-lg border border-line bg-surface p-4', className)}>
       <div className="mb-2 flex items-center gap-2">
         {Icon && (
           <span className="flex size-7 items-center justify-center rounded-lg bg-surface-2 text-ink-400">
@@ -179,10 +179,10 @@ export function StatTile({ label, value, hint, tone = 'neutral', icon: Icon, cla
         <p className="eyebrow text-ink-400">{label}</p>
       </div>
 
-      <p className={cn('tnum font-display text-[22px] font-bold leading-none', tones[tone])}>
+      <p className={cn('tnum font-display text-2xl font-bold leading-none', tones[tone])}>
         {value}
       </p>
-      {hint && <p className="mt-1.5 text-[12px] text-ink-400">{hint}</p>}
+      {hint && <p className="mt-1.5 text-xs text-ink-400">{hint}</p>}
     </div>
   );
 }
@@ -197,8 +197,8 @@ export function PanelEmpty({ icon: Icon, title, body, action }) {
         </span>
       )}
       <div>
-        <p className="font-display text-[14px] font-bold text-ink-900">{title}</p>
-        {body && <p className="mx-auto mt-1 max-w-xs text-[12.5px] text-ink-500">{body}</p>}
+        <p className="font-display text-md font-bold text-ink-900">{title}</p>
+        {body && <p className="mx-auto mt-1 max-w-xs text-sm text-ink-500">{body}</p>}
       </div>
       {action}
     </div>

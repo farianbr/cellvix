@@ -17,7 +17,7 @@ function AddressBlock({ title, address }) {
   return (
     <div>
       <p className="eyebrow mb-1.5 text-ink-400">{title}</p>
-      <address className="text-[13px] not-italic leading-relaxed text-ink-700">
+      <address className="text-sm not-italic leading-relaxed text-ink-700">
         {address.contactName && <span className="block font-medium text-ink-900">{address.contactName}</span>}
         {address.company && <span className="block">{address.company}</span>}
         <span className="block">{address.line1}</span>
@@ -51,10 +51,10 @@ export function AccountOrderDetailPage() {
   if (error) {
     return (
       <Panel>
-        <p className="text-[14px] text-ink-500">{error.message}</p>
+        <p className="text-md text-ink-500">{error.message}</p>
         <Link
           to="/account/orders"
-          className="mt-4 inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-brand hover:text-brand-700"
+          className="mt-4 inline-flex items-center gap-1.5 text-md font-semibold text-brand hover:text-brand-700"
         >
           <ArrowLeft className="size-4" strokeWidth={2} aria-hidden="true" />
           Back to orders
@@ -77,16 +77,16 @@ export function AccountOrderDetailPage() {
         <div className="min-w-0">
           <Link
             to="/account/orders"
-            className="mb-1.5 inline-flex items-center gap-1.5 text-[12.5px] font-semibold text-brand hover:text-brand-700"
+            className="mb-1.5 inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:text-brand-700"
           >
             <ArrowLeft className="size-3.5" strokeWidth={2} aria-hidden="true" />
             All orders
           </Link>
           <div className="flex flex-wrap items-center gap-2.5">
-            <h2 className="font-mono text-[18px] font-semibold text-ink-900">{order.orderNumber}</h2>
+            <h2 className="font-mono text-xl font-semibold text-ink-900">{order.orderNumber}</h2>
             <OrderStatusBadge status={order.status} />
           </div>
-          <p className="mt-1 text-[13px] text-ink-500">
+          <p className="mt-1 text-sm text-ink-500">
             Placed {dateTime(order.createdAt)}
             {order.poNumber && ` · PO ${order.poNumber}`}
           </p>
@@ -102,10 +102,10 @@ export function AccountOrderDetailPage() {
         <OrderStepper order={order} />
 
         {order.tracking?.number && (
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-[11px] bg-surface-2 px-4 py-3">
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-md bg-surface-2 px-4 py-3">
             <div>
               <p className="eyebrow text-ink-400">{order.tracking.carrier}</p>
-              <p className="tnum mt-0.5 font-mono text-[13.5px] font-medium text-ink-900">
+              <p className="tnum mt-0.5 font-mono text-md font-medium text-ink-900">
                 {order.tracking.number}
               </p>
             </div>
@@ -114,7 +114,7 @@ export function AccountOrderDetailPage() {
                 href={order.tracking.url}
                 target="_blank"
                 rel="noreferrer noopener"
-                className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-brand hover:text-brand-700"
+                className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:text-brand-700"
               >
                 Track with {order.tracking.carrier}
                 <ExternalLink className="size-3.5" strokeWidth={2} aria-hidden="true" />
@@ -139,21 +139,21 @@ export function AccountOrderDetailPage() {
               <div className="min-w-0 flex-1">
                 <Link
                   to={item.slug ? `/product/${item.slug}` : '/'}
-                  className="line-clamp-2 text-[13.5px] font-medium text-ink-900 hover:text-brand"
+                  className="line-clamp-2 text-md font-medium text-ink-900 hover:text-brand"
                 >
                   {item.name}
                 </Link>
-                <p className="mt-0.5 font-mono text-[11.5px] text-ink-300">{item.sku}</p>
+                <p className="mt-0.5 font-mono text-xs text-ink-300">{item.sku}</p>
                 {item.grade && (
                   <p className="eyebrow mt-1 text-ink-400">{item.grade.replace('-', ' ')}</p>
                 )}
               </div>
 
               <div className="shrink-0 text-right">
-                <p className="tnum font-display text-[14px] font-bold text-ink-900">
+                <p className="tnum font-display text-md font-bold text-ink-900">
                   {money(item.lineTotal)}
                 </p>
-                <p className="tnum text-[12px] text-ink-400">
+                <p className="tnum text-xs text-ink-400">
                   {item.qty} × {money(item.unitPrice)}
                 </p>
               </div>
@@ -161,7 +161,7 @@ export function AccountOrderDetailPage() {
           ))}
         </ul>
 
-        <dl className="space-y-2 border-t border-line bg-surface-2 px-4 py-4 text-[13.5px] sm:px-5">
+        <dl className="space-y-2 border-t border-line bg-surface-2 px-4 py-4 text-md sm:px-5">
           <div className="flex justify-between">
             <dt className="text-ink-500">Subtotal</dt>
             <dd className="tnum font-medium text-ink-900">{money(order.subtotal)}</dd>
@@ -179,7 +179,7 @@ export function AccountOrderDetailPage() {
             <div className="flex justify-between">
               <dt className="text-ok">
                 {order.promo?.code ? (
-                  <span className="font-mono text-[12.5px]">{order.promo.code}</span>
+                  <span className="font-mono text-sm">{order.promo.code}</span>
                 ) : (
                   'Offer'
                 )}{' '}
@@ -199,8 +199,8 @@ export function AccountOrderDetailPage() {
             <dd className="tnum font-medium text-ink-900">{money(order.tax)}</dd>
           </div>
           <div className="flex items-baseline justify-between border-t border-line pt-2.5">
-            <dt className="font-display text-[14px] font-bold text-ink-900">Total</dt>
-            <dd className="tnum font-display text-[20px] font-bold text-ink-900">
+            <dt className="font-display text-md font-bold text-ink-900">Total</dt>
+            <dd className="tnum font-display text-xl font-bold text-ink-900">
               {money(order.total)}
             </dd>
           </div>
@@ -212,7 +212,7 @@ export function AccountOrderDetailPage() {
         <Panel title="Delivery">
           <AddressBlock title="Shipping to" address={order.shippingAddress} />
           {order.deliveryNotes && (
-            <p className="mt-4 rounded-[10px] bg-surface-2 px-3 py-2.5 text-[12.5px] text-ink-500">
+            <p className="mt-4 rounded-md bg-surface-2 px-3 py-2.5 text-sm text-ink-500">
               <span className="eyebrow mb-1 block text-ink-400">Delivery notes</span>
               {order.deliveryNotes}
             </p>
@@ -221,7 +221,7 @@ export function AccountOrderDetailPage() {
 
         <Panel title="Billing & payment">
           <AddressBlock title="Billing to" address={order.billingAddress} />
-          <dl className="mt-4 space-y-1.5 border-t border-line pt-3 text-[13px]">
+          <dl className="mt-4 space-y-1.5 border-t border-line pt-3 text-sm">
             <div className="flex justify-between">
               <dt className="text-ink-500">Method</dt>
               <dd className="font-medium text-ink-900">
