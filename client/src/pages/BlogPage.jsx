@@ -77,7 +77,7 @@ function FeaturedPost({ post }) {
 
       <div className="flex flex-col justify-center p-5 lg:p-8">
         <div className="mb-3 flex flex-wrap items-center gap-2">
-          <span className="eyebrow inline-flex h-6 items-center rounded-full bg-brand-gradient px-2.5 text-white">
+          <span className="eyebrow inline-flex h-6 items-center rounded-full bg-brand-gradient-compact px-2.5 text-white">
             Latest
           </span>
           <CategoryTag value={post.category} />

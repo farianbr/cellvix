@@ -28,7 +28,7 @@ export function CartBundleLine({ bundle, onQtyChange, onRemove, compact = false 
       )}
     >
       <div className="flex items-start gap-3">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-md bg-brand-gradient text-white">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-md bg-brand-gradient-compact text-white">
           <Package className="size-5" strokeWidth={1.5} aria-hidden="true" />
         </span>
 

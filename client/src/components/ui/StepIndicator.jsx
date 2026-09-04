@@ -18,9 +18,22 @@ const SIZES = {
   lg: { box: 'size-10 text-lg', glyph: 'size-5' },
 };
 
+/**
+ * The COMPACT ramp on the active step, not the full one.
+ *
+ * A step indicator is 32-40px. The full ramp spends its first 38% between
+ * near-black and deep red, so inside a disc that small the dark opening lands
+ * as a hard vertical edge down the left and the bright end as another down the
+ * right — the circle reads as having solid stripes on either side rather than
+ * as a graded fill. The compact ramp starts at the deep red instead, so the
+ * whole disc is red and the ramp reads as depth.
+ *
+ * Same rule as the filter pills, the pagination ring and the email hairline:
+ * anything under ~120px takes the compact ramp.
+ */
 const STATES = {
   upcoming: 'border border-line bg-surface text-ink-300',
-  active: 'bg-brand-gradient text-white shadow-card border border-transparent',
+  active: 'bg-brand-gradient-compact text-white shadow-card border border-transparent',
   completed: 'border border-ok/30 bg-ok-50 text-ok',
   error: 'border border-danger/30 bg-danger-50 text-danger',
 };
@@ -80,7 +93,9 @@ export function StepConnector({ complete = false, vertical = false, className })
     >
       <span
         className={cn(
-          'block bg-brand-gradient transition-[width,height] duration-panel ease-[var(--ease-entrance)]',
+          // Compact ramp: this fill is 2px tall, so the full ramp's near-black
+          // opening would put a dark stub at the start of every completed run.
+          'block bg-brand-gradient-compact transition-[width,height] duration-panel ease-[var(--ease-entrance)]',
           vertical ? 'w-full' : 'h-full',
           complete ? (vertical ? 'h-full' : 'w-full') : vertical ? 'h-0' : 'w-0',
         )}

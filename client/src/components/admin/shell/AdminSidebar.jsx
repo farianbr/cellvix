@@ -29,7 +29,7 @@ function BrandBlock({ compact }) {
         compact && 'justify-center px-0',
       )}
     >
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-brand-gradient font-display text-lg font-bold text-white">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-brand-gradient-compact font-display text-lg font-bold text-white">
         C
       </span>
       {!compact && (

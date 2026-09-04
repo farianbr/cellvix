@@ -130,7 +130,7 @@ export function BlogPostPage() {
             <p className="mt-4 text-lg leading-relaxed text-ink-500">{post.excerpt}</p>
 
             <div className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-2 border-y border-line py-3.5 text-sm text-ink-400">
-              <span className="flex size-8 items-center justify-center rounded-full bg-brand-gradient font-display text-xs font-bold text-white">
+              <span className="flex size-8 items-center justify-center rounded-full bg-brand-gradient-compact font-display text-xs font-bold text-white">
                 {post.author.name
                   .split(' ')
                   .map((word) => word[0])

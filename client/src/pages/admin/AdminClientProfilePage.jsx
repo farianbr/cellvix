@@ -1114,7 +1114,7 @@ export function AdminClientProfilePage() {
               )}
               {active && (
                 <span
-                  className="absolute inset-x-2 bottom-0 h-0.5 rounded-t-full bg-brand-gradient"
+                  className="absolute inset-x-2 bottom-0 h-0.5 rounded-t-full bg-brand-gradient-compact"
                   aria-hidden="true"
                 />
               )}
