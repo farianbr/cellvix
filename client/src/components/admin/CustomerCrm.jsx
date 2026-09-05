@@ -471,7 +471,7 @@ export function ReferralPanel({ user, percent }) {
 
   return (
     <Panel
-      title="Referral & portal"
+      title="Referral & membership"
       description="What this account can share, and how it signs in."
     >
       <dl className="space-y-3 text-sm">

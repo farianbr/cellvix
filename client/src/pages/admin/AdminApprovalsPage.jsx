@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { ArrowUpRight, Check, UserCheck, X } from 'lucide-react';
 import cn from '@/lib/cn';
 import { pressable } from '@/lib/motion';
-import { money, date, count as formatCount } from '@/lib/format';
+import { money, date } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
@@ -13,6 +13,7 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Skeleton from '@/components/ui/Skeleton';
 import PageHeader from '@/components/admin/PageHeader';
+import TabRow from '@/components/ui/TabRow';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
 import Pagination from '@/components/ui/Pagination';
 import useTablePage from '@/hooks/useTablePage';
@@ -258,40 +259,21 @@ export function AdminApprovalsPage() {
         description="Approve a business to unlock wholesale pricing and ordering."
         flush
       >
-        <div
-          role="tablist"
-          aria-label="Account status"
-          className="flex gap-1 overflow-x-auto border-b border-line p-3 sm:px-5"
-        >
-          {TABS.map((tab) => (
-            <button
-              key={tab.value}
-              role="tab"
-              type="button"
-              aria-selected={status === tab.value}
-              onClick={() => setStatus(tab.value)}
-              className={cn(
-                pressable,
-                'flex shrink-0 items-center gap-1.5 rounded-md px-3 py-1.5 font-display text-sm font-semibold',
-                // Solid brand, matching the filter pills every other list screen
-                // uses. This tab row did the same job with a pale tint, so the
-                // selected view looked selected on one screen and merely
-                // highlighted on another — the same control has to look the same
-                // everywhere or the operator has to re-learn it per page.
-                status === tab.value
-                  ? 'bg-brand-gradient-compact text-white'
-                  : 'text-ink-500 hover:bg-surface-2 hover:text-ink-900',
-              )}
-            >
-              {tab.label}
-              {counts[tab.value] > 0 && (
-                <span className="tnum text-xs font-medium opacity-70">
-                  {formatCount(counts[tab.value])}
-                </span>
-              )}
-            </button>
-          ))}
-        </div>
+        {/* A real filter over one list, so the PILL variant: it is doing the
+            same job as `FilterStrip` on every other list screen and has to
+            look like it. Record-section tabs use the underline default. */}
+        <TabRow
+          tabs={TABS.map((item) => ({
+            key: item.value,
+            label: item.label,
+            count: counts[item.value] > 0 ? counts[item.value] : undefined,
+          }))}
+          value={status}
+          onChange={setStatus}
+          label="Account status"
+          variant="pills"
+          className="border-b border-line p-3 sm:px-5"
+        />
 
         {isLoading ? (
           <div className="space-y-2 p-4 sm:p-5">

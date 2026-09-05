@@ -523,10 +523,20 @@ const ADMIN_NAV = [
       {
         // The purchase-side counterpart of Sales § RMA: stock going back OUT to
         // a supplier, and a credit claimed rather than given.
+        //
+        // **Switched off for Cellvix, not deleted** (SAAS_PLATFORM §5.5). The
+        // business does not return stock to suppliers, and the row was also the
+        // second "RMA / Returns" in the sidebar — the same words under Sales
+        // and under Purchase meaning opposite directions of travel, which is a
+        // question the nav should never have been asking.
+        //
+        // The screen, its routes, its model and its schema all stay. Removing
+        // `hidden` is the whole of switching it back on.
         key: 'supplier-returns',
         label: 'RMA / Returns',
         to: '/admin/supplier-returns',
         icon: 'RotateCcw',
+        hidden: true,
       },
       {
         key: 'supplier-subscriptions',

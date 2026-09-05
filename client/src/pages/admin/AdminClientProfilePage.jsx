@@ -57,6 +57,7 @@ import {
 } from '@/components/admin/CustomerCrm';
 import { MEMBERSHIP_TIERS } from '@shared/schemas/admin';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
+import TabRow from '@/components/ui/TabRow';
 import { pressable } from '@/lib/motion';
 import {
   useAdminUser,
@@ -102,7 +103,7 @@ const TABS = [
   { key: 'notes', label: 'Notes', icon: FileText },
   // Consent, tier and the referral scheme: the terms of the relationship
   // rather than a record of it.
-  { key: 'membership', label: 'Referral & Portal', icon: Gift },
+  { key: 'membership', label: 'Referral & Membership', icon: Gift },
   { key: 'activity', label: 'Activity', icon: History },
 ];
 
@@ -1103,45 +1104,19 @@ export function AdminClientProfilePage() {
        * switches what is shown *below* it. Sitting on its own, directly above
        * the panel it controls, the relationship is the one it actually has.
        */}
-      <div className="scroll-slim mb-4 flex gap-1 overflow-x-auto rounded-lg border border-line bg-surface px-2">
-        {TABS.map((item) => {
-          const active = tab === item.key;
-          return (
-            <button
-              key={item.key}
-              type="button"
-              onClick={() => setTab(item.key)}
-              aria-current={active ? 'page' : undefined}
-              className={cn(
-                'relative flex shrink-0 items-center gap-1.5 whitespace-nowrap px-3 py-3 text-sm font-medium',
-                pressable,
-                active ? 'text-brand' : 'text-ink-400 hover:text-ink-700',
-              )}
-            >
-              <item.icon className="size-3.5 shrink-0" strokeWidth={2} aria-hidden="true" />
-              {item.label}
-              {/* A count only when there is something to count: a row of grey
-                  zeroes teaches an operator to stop reading them. */}
-              {TAB_COUNTS[item.key] > 0 && (
-                <span
-                  className={cn(
-                    'tnum rounded-full px-1.5 text-2xs font-semibold leading-[16px]',
-                    active ? 'bg-brand text-white' : 'bg-surface-2 text-ink-500',
-                  )}
-                >
-                  {TAB_COUNTS[item.key]}
-                </span>
-              )}
-              {active && (
-                <span
-                  className="absolute inset-x-2 bottom-0 h-0.5 rounded-t-full bg-brand-gradient-compact"
-                  aria-hidden="true"
-                />
-              )}
-            </button>
-          );
-        })}
-      </div>
+      <TabRow
+        tabs={TABS.map((item) => ({
+          ...item,
+          // A count only when there is something to count: a row of grey
+          // zeroes teaches an operator to stop reading them.
+          count: TAB_COUNTS[item.key] > 0 ? TAB_COUNTS[item.key] : undefined,
+        }))}
+        value={tab}
+        onChange={setTab}
+        label="Customer sections"
+        panel
+        className="mb-4"
+      />
 
 
       {tab === 'overview' && (
@@ -1317,7 +1292,7 @@ export function AdminClientProfilePage() {
           <SummaryPanel
             title="Membership & consent"
             onOpen={() => setTab('membership')}
-            cta="Referral & Portal"
+            cta="Referral & Membership"
           >
             <dl className="space-y-2 text-sm">
               <SummaryRow label="Tier">
