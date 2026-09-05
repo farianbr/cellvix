@@ -28,6 +28,8 @@ import PageHeader from '@/components/admin/PageHeader';
 import KpiRow from '@/components/admin/KpiRow';
 import FilterStrip from '@/components/admin/FilterStrip';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
+import Pagination from '@/components/ui/Pagination';
+import useTablePage from '@/hooks/useTablePage';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import downloadExport from '@/lib/exportDownload';
@@ -180,6 +182,10 @@ export function AdminExpensesPage() {
   const { createExpense, updateExpense, deleteExpense } = useAdminMutations();
 
   const expenses = data?.expenses ?? [];
+
+  // The KPI tiles are summed from the whole filtered set; the table gets a
+  // page of it. See `useTablePage` for why paging is client-side.
+  const { pageRows: pageExpenses, page, totalPages, from: rowFrom, setPage } = useTablePage(expenses);
   const counts = data?.counts ?? {};
   const totals = data?.totals ?? {};
   const categories = (categoryData?.categories ?? []).filter((row) => row.isActive);
@@ -451,13 +457,15 @@ export function AdminExpensesPage() {
         <div className="border-b border-line px-3 py-2 sm:px-4">
           <CountLine
             total={expenses.length}
+            shown={pageExpenses.length}
+            from={rowFrom}
             noun={expenses.length === 1 ? 'expense' : 'expenses'}
           />
         </div>
 
         <DataTable
           columns={columns}
-          rows={expenses}
+          rows={pageExpenses}
           rowKey={(expense) => expense.id}
           rowMenu={rowMenu}
           loading={isLoading}
@@ -474,6 +482,15 @@ export function AdminExpensesPage() {
             />
           }
         />
+
+        <Pagination
+          page={page}
+          pages={totalPages}
+          onChange={setPage}
+          hideWhenSingle
+          className="border-t border-line px-3 py-3 sm:px-4"
+        />
+
       </Panel>
 
       <Modal

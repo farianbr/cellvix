@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { MapPin, Pencil, Plus, Star, Trash2 } from 'lucide-react';
 import cn from '@/lib/cn';
@@ -9,6 +9,7 @@ import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Input from '@/components/ui/Input';
+import PhoneField from '@/components/ui/PhoneField';
 import SelectField from '@/components/ui/SelectField';
 import Checkbox from '@/components/ui/Checkbox';
 import Button from '@/components/ui/Button';
@@ -70,7 +71,19 @@ function AddressForm({ address, onSubmit, onCancel, isPending }) {
         />
       </div>
 
-      <Input label="Phone" type="tel" error={errors.phone?.message} {...register('phone')} />
+      <Controller
+        name="phone"
+        control={control}
+        render={({ field }) => (
+          <PhoneField
+            label="Phone"
+            value={field.value}
+            onChange={field.onChange}
+            onBlur={field.onBlur}
+            error={errors.phone?.message}
+          />
+        )}
+      />
 
       <div className="space-y-1 rounded-md bg-surface-2 p-2">
         <Checkbox label="Default shipping address" {...register('isDefaultShipping')} />

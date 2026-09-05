@@ -28,6 +28,8 @@ import Checkbox from '@/components/ui/Checkbox';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
+import Pagination from '@/components/ui/Pagination';
+import useTablePage from '@/hooks/useTablePage';
 import Skeleton from '@/components/ui/Skeleton';
 import PageHeader from '@/components/admin/PageHeader';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
@@ -499,6 +501,9 @@ export function AdminOffersPage() {
 
   const offers = data?.offers ?? [];
 
+  // A page of rows for the table; counts and tiles still read the full set.
+  const { pageRows: pageOffers, page, totalPages, from, setPage } = useTablePage(offers);
+
   /**
    * The columns.
    *
@@ -753,14 +758,22 @@ export function AdminOffersPage() {
         ) : (
           <>
             <div className="border-b border-line px-3 py-2 sm:px-4">
-              <CountLine total={offers.length} noun={offers.length === 1 ? 'offer' : 'offers'} />
+              <CountLine total={offers.length} shown={pageOffers.length} from={from} noun={offers.length === 1 ? 'offer' : 'offers'} />
             </div>
 
             <DataTable
               columns={columns}
-              rows={offers}
+              rows={pageOffers}
               rowKey={(offer) => offer.id}
               onRowClick={(offer) => setEditing(offer)}
+            />
+
+            <Pagination
+              page={page}
+              pages={totalPages}
+              onChange={setPage}
+              hideWhenSingle
+              className="border-t border-line px-3 py-3 sm:px-4"
             />
           </>
         )}

@@ -18,6 +18,8 @@ import PageHeader from '@/components/admin/PageHeader';
 import KpiRow from '@/components/admin/KpiRow';
 import FilterStrip from '@/components/admin/FilterStrip';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
+import Pagination from '@/components/ui/Pagination';
+import useTablePage from '@/hooks/useTablePage';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import useCreateParam from '@/hooks/useCreateParam';
@@ -303,6 +305,9 @@ export function AdminSupplierReturnsPage() {
   } = useAdminMutations();
 
   const returns = data?.returns ?? [];
+
+  // A page of rows for the table; counts and tiles still read the full set.
+  const { pageRows: pageReturns, page, totalPages, from, setPage } = useTablePage(returns);
   const counts = data?.counts ?? {};
   // `orders` is the key the purchase service answers with, not `purchaseOrders`.
   const purchaseOrders = poData?.orders ?? [];
@@ -508,13 +513,15 @@ export function AdminSupplierReturnsPage() {
         <div className="border-b border-line px-3 py-2 sm:px-4">
           <CountLine
             total={returns.length}
+            shown={pageReturns.length}
+            from={from}
             noun={returns.length === 1 ? 'return' : 'returns'}
           />
         </div>
 
         <DataTable
           columns={columns}
-          rows={returns}
+          rows={pageReturns}
           rowKey={(row) => row.id}
           rowMenu={rowMenu}
           loading={isLoading}
@@ -529,6 +536,14 @@ export function AdminSupplierReturnsPage() {
               }
             />
           }
+        />
+
+        <Pagination
+          page={page}
+          pages={totalPages}
+          onChange={setPage}
+          hideWhenSingle
+          className="border-t border-line px-3 py-3 sm:px-4"
         />
       </Panel>
 

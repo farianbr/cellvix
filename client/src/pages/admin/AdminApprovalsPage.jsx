@@ -14,6 +14,8 @@ import Badge from '@/components/ui/Badge';
 import Skeleton from '@/components/ui/Skeleton';
 import PageHeader from '@/components/admin/PageHeader';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
+import Pagination from '@/components/ui/Pagination';
+import useTablePage from '@/hooks/useTablePage';
 import ApproveClientForm from '@/components/admin/ApproveClientForm';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
@@ -96,6 +98,9 @@ export function AdminApprovalsPage() {
   const { approveUser, rejectUser, setUserStatus } = useAdminMutations();
 
   const users = data?.users ?? [];
+
+  // A page of rows for the table; counts and tiles still read the full set.
+  const { pageRows: pageUsers, page, totalPages, from, setPage } = useTablePage(users);
   const counts = data?.counts ?? {};
 
   /**
@@ -309,15 +314,25 @@ export function AdminApprovalsPage() {
             <div className="border-b border-line px-3 py-2 sm:px-4">
               <CountLine
                 total={users.length}
+                shown={pageUsers.length}
+                from={from}
                 noun={users.length === 1 ? 'business' : 'businesses'}
               />
             </div>
 
             <DataTable
               columns={columns}
-              rows={users}
+              rows={pageUsers}
               rowKey={(user) => user.id}
               defaultSort={{ key: 'createdAt', direction: 'desc' }}
+            />
+
+            <Pagination
+              page={page}
+              pages={totalPages}
+              onChange={setPage}
+              hideWhenSingle
+              className="border-t border-line px-3 py-3 sm:px-4"
             />
           </>
         )}

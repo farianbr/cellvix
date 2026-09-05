@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { businessInfoSchema } from '@shared/schemas/admin';
 import { PROVINCES } from '@shared/schemas/checkout';
 import Panel from '@/components/ui/Panel';
 import Input from '@/components/ui/Input';
+import PhoneField from '@/components/ui/PhoneField';
 import SelectField from '@/components/ui/SelectField';
 import PageHeader from '@/components/admin/PageHeader';
 import { SettingsFormActions, PlaceholderNotice } from '@/components/admin/settings/SettingsForm';
@@ -103,7 +104,19 @@ export function AdminBusinessInfoPage() {
 
         <Panel title="Contact" description="How a customer reaches Cellvix from a document or the footer.">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Input label="Phone" error={errors.phone?.message} {...register('phone')} />
+            <Controller
+              name="phone"
+              control={control}
+              render={({ field }) => (
+                <PhoneField
+                  label="Phone"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  error={errors.phone?.message}
+                />
+              )}
+            />
             <Input label="Email" type="email" error={errors.email?.message} {...register('email')} />
             <Input
               label="Website"

@@ -39,8 +39,9 @@ import ApproveClientForm from '@/components/admin/ApproveClientForm';
 import { RejectForm } from '@/pages/admin/AdminApprovalsPage';
 import Skeleton from '@/components/ui/Skeleton';
 import { OrderStatusBadge, InvoiceStatusBadge } from '@/components/account/OrderStatusBadge';
-import DataTable from '@/components/admin/DataTable';
+import DataTable, { CountLine } from '@/components/admin/DataTable';
 import Pagination from '@/components/ui/Pagination';
+import useTablePage from '@/hooks/useTablePage';
 import {
   CreditForm,
   CreditRepaymentForm,
@@ -751,6 +752,11 @@ export function AdminClientProfilePage() {
     currentInvoicesPage * ROWS_PER_PAGE,
   );
 
+  // The three tabs the hand-rolled paging above never covered.
+  const ticketPage = useTablePage(ticketData?.tickets ?? []);
+  const quotePage = useTablePage(quoteData?.quotes ?? []);
+  const webQuotePage = useTablePage(webQuoteData?.webQuotes ?? []);
+
   function setRowPage(key, next) {
     const params = new URLSearchParams(searchParams);
     if (next <= 1) params.delete(key);
@@ -1393,9 +1399,18 @@ export function AdminClientProfilePage() {
               </Link>
             }
           >
+            <div className="border-b border-line px-3 py-2 sm:px-4">
+              <CountLine
+                total={(ticketData?.tickets ?? []).length}
+                shown={ticketPage.pageRows.length}
+                from={ticketPage.from}
+                noun={(ticketData?.tickets ?? []).length === 1 ? 'ticket' : 'tickets'}
+              />
+            </div>
+
             <DataTable
               columns={TICKET_COLUMNS}
-              rows={ticketData?.tickets ?? []}
+              rows={ticketPage.pageRows}
               rowKey={(ticket) => ticket.id}
               loading={ticketsLoading}
               onRowClick={(ticket) => navigate(`/admin/tickets?q=${ticket.ticketNumber}`)}
@@ -1408,6 +1423,14 @@ export function AdminClientProfilePage() {
                 />
               }
             />
+
+              <Pagination
+                page={ticketPage.page}
+                pages={ticketPage.totalPages}
+                onChange={ticketPage.setPage}
+                hideWhenSingle
+                className="border-t border-line px-3 py-3 sm:px-4"
+              />
           </Panel>
 
           <ConversationsPanel
@@ -1457,6 +1480,15 @@ export function AdminClientProfilePage() {
           title="Orders"
           description="Click a row to open the order."
         >
+          <div className="border-b border-line px-3 py-2 sm:px-4">
+            <CountLine
+              total={orders.length}
+              shown={pagedOrders.length}
+              from={(currentOrdersPage - 1) * ROWS_PER_PAGE + 1}
+              noun={orders.length === 1 ? 'order' : 'orders'}
+            />
+          </div>
+
           <DataTable
             columns={ORDER_COLUMNS}
             rows={pagedOrders}
@@ -1494,6 +1526,15 @@ export function AdminClientProfilePage() {
             </Link>
           }
         >
+          <div className="border-b border-line px-3 py-2 sm:px-4">
+            <CountLine
+              total={invoices.length}
+              shown={pagedInvoices.length}
+              from={(currentInvoicesPage - 1) * ROWS_PER_PAGE + 1}
+              noun={invoices.length === 1 ? 'invoice' : 'invoices'}
+            />
+          </div>
+
           <DataTable
             columns={INVOICE_COLUMNS}
             rows={pagedInvoices}
@@ -1543,9 +1584,18 @@ export function AdminClientProfilePage() {
             </Link>
           }
         >
+          <div className="border-b border-line px-3 py-2 sm:px-4">
+            <CountLine
+              total={(quoteData?.quotes ?? []).length}
+              shown={quotePage.pageRows.length}
+              from={quotePage.from}
+              noun={(quoteData?.quotes ?? []).length === 1 ? 'quote' : 'quotes'}
+            />
+          </div>
+
           <DataTable
             columns={QUOTE_COLUMNS}
-            rows={quoteData?.quotes ?? []}
+            rows={quotePage.pageRows}
             rowKey={(quote) => quote.id}
             loading={quotesLoading}
             defaultSort={{ key: 'createdAt', direction: 'desc' }}
@@ -1558,6 +1608,14 @@ export function AdminClientProfilePage() {
               />
             }
           />
+
+            <Pagination
+              page={quotePage.page}
+              pages={quotePage.totalPages}
+              onChange={quotePage.setPage}
+              hideWhenSingle
+              className="border-t border-line px-3 py-3 sm:px-4"
+            />
         </Panel>
       )}
       {tab === 'web-quotes' && (
@@ -1575,9 +1633,18 @@ export function AdminClientProfilePage() {
             </Link>
           }
         >
+          <div className="border-b border-line px-3 py-2 sm:px-4">
+            <CountLine
+              total={(webQuoteData?.webQuotes ?? []).length}
+              shown={webQuotePage.pageRows.length}
+              from={webQuotePage.from}
+              noun={(webQuoteData?.webQuotes ?? []).length === 1 ? 'enquiry' : 'enquiries'}
+            />
+          </div>
+
           <DataTable
             columns={WEB_QUOTE_COLUMNS}
-            rows={webQuoteData?.webQuotes ?? []}
+            rows={webQuotePage.pageRows}
             rowKey={(row) => row.id}
             loading={webQuotesLoading}
             defaultSort={{ key: 'createdAt', direction: 'desc' }}
@@ -1590,6 +1657,14 @@ export function AdminClientProfilePage() {
               />
             }
           />
+
+            <Pagination
+              page={webQuotePage.page}
+              pages={webQuotePage.totalPages}
+              onChange={webQuotePage.setPage}
+              hideWhenSingle
+              className="border-t border-line px-3 py-3 sm:px-4"
+            />
         </Panel>
       )}
 

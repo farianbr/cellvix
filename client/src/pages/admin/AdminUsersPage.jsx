@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircle, Lock, Plus, Trash2, UsersRound } from 'lucide-react';
 import { staffUserSchema } from '@shared/schemas/admin';
@@ -8,10 +8,13 @@ import Modal from '@/components/ui/Modal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Input from '@/components/ui/Input';
 import SelectField from '@/components/ui/SelectField';
+import PhoneField from '@/components/ui/PhoneField';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import PageHeader from '@/components/admin/PageHeader';
-import DataTable from '@/components/admin/DataTable';
+import DataTable, { CountLine } from '@/components/admin/DataTable';
+import Pagination from '@/components/ui/Pagination';
+import useTablePage from '@/hooks/useTablePage';
 import FilterStrip from '@/components/admin/FilterStrip';
 import KpiRow from '@/components/admin/KpiRow';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
@@ -67,7 +70,19 @@ function StaffForm({ roles, outlets, onSubmit, onCancel, isPending, error }) {
           error={errors.password?.message}
           {...register('password')}
         />
-        <Input label="Phone" {...register('phone')} />
+        <Controller
+          name="phone"
+          control={control}
+          render={({ field }) => (
+            <PhoneField
+              label="Phone"
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              error={errors.phone?.message}
+            />
+          )}
+        />
 
         <SelectField
           control={control}
@@ -140,6 +155,9 @@ export function AdminUsersPage() {
   const { createStaff, updateStaff, deleteStaff } = useAdminMutations();
 
   const users = data?.users ?? [];
+
+  // A page of rows for the table; counts and tiles still read the full set.
+  const { pageRows: pageStaff, page, totalPages, from, setPage } = useTablePage(users);
   const summary = data?.summary ?? {};
   const roles = rolesData?.roles ?? [];
   const outlets = outletsData?.outlets ?? [];
@@ -272,12 +290,29 @@ export function AdminUsersPage() {
           onPillChange={setRoleFilter}
         />
 
+        <div className="border-b border-line px-3 py-2 sm:px-4">
+          <CountLine
+            total={users.length}
+            shown={pageStaff.length}
+            from={from}
+            noun={users.length === 1 ? 'staff account' : 'staff accounts'}
+          />
+        </div>
+
         <DataTable
           columns={columns}
-          rows={users}
+          rows={pageStaff}
           loading={isLoading}
           empty={<PanelEmpty icon={UsersRound} title="No staff accounts" body="Add your first user." />}
           rowMenu={rowMenu}
+        />
+
+        <Pagination
+          page={page}
+          pages={totalPages}
+          onChange={setPage}
+          hideWhenSingle
+          className="border-t border-line px-3 py-3 sm:px-4"
         />
       </Panel>
 

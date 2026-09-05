@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { motion, useReducedMotion } from 'motion/react';
@@ -22,6 +22,7 @@ import api from '@/lib/api';
 import { BUSINESS_INFO } from '@/lib/constants';
 import { contactSchema, CONTACT_TOPICS } from '@shared/schemas/contact';
 import Input from '@/components/ui/Input';
+import PhoneField from '@/components/ui/PhoneField';
 import SelectField from '@/components/ui/SelectField';
 import Textarea from '@/components/ui/Textarea';
 import Button from '@/components/ui/Button';
@@ -333,7 +334,19 @@ export function ContactPage() {
                       error={errors.email?.message}
                       {...register('email')}
                     />
-                    <Input label="Phone" type="tel" placeholder="Optional" {...register('phone')} />
+                    <Controller
+                      name="phone"
+                      control={control}
+                      render={({ field }) => (
+                        <PhoneField
+                          label="Phone"
+                          value={field.value}
+                          onChange={field.onChange}
+                          onBlur={field.onBlur}
+                          hint="Optional."
+                        />
+                      )}
+                    />
                   </div>
 
                   <SelectField

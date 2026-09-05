@@ -62,6 +62,9 @@ const AdminPurchaseOrdersPage = lazy(() => import('@/pages/admin/AdminPurchaseOr
 const AdminPurchaseOrderDetailPage = lazy(
   () => import('@/pages/admin/AdminPurchaseOrderDetailPage'),
 );
+const AdminPurchaseOrderCreatePage = lazy(
+  () => import('@/pages/admin/AdminPurchaseOrderCreatePage'),
+);
 const AdminExpensesPage = lazy(() => import('@/pages/admin/AdminExpensesPage'));
 const AdminExpenseCategoriesPage = lazy(
   () => import('@/pages/admin/AdminExpenseCategoriesPage'),
@@ -151,6 +154,9 @@ export function App() {
         <Route path="supplier-services" element={<AdminSupplierServicesPage mode="service" />} />
         <Route path="supplier-subscriptions" element={<AdminSupplierServicesPage mode="subscription" />} />
         <Route path="purchase-orders" element={<AdminPurchaseOrdersPage />} />
+        {/* Before `:id`, or the dynamic route matches "create" as an order id
+            and the page renders "purchase order not found". */}
+        <Route path="purchase-orders/create" element={<AdminPurchaseOrderCreatePage />} />
         <Route path="purchase-orders/:id" element={<AdminPurchaseOrderDetailPage />} />
         <Route path="expenses" element={<AdminExpensesPage />} />
         {/* Categories live under Settings — the expense screen links there, and

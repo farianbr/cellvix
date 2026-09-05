@@ -6,7 +6,7 @@ import Badge from '@/components/ui/Badge';
 import Pagination from '@/components/ui/Pagination';
 import { PanelEmpty } from '@/components/ui/Panel';
 import PageHeader from '@/components/admin/PageHeader';
-import DataTable from '@/components/admin/DataTable';
+import DataTable, { CountLine } from '@/components/admin/DataTable';
 import FilterStrip from '@/components/admin/FilterStrip';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useAuditLog } from '@/hooks/useAdmin';
@@ -217,6 +217,13 @@ export function AuditLogScreen({ kind, page: meta, notice }) {
           setPage(1);
         }}
       />
+
+      <div className="border-b border-line px-3 py-2 sm:px-4">
+        <CountLine
+          total={entries.length}
+          noun={entries.length === 1 ? 'entry' : 'entries'}
+        />
+      </div>
 
       <DataTable
         columns={columns}

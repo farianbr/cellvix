@@ -17,6 +17,7 @@ import { money, date, count as formatCount } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Button from '@/components/ui/Button';
 import PageHeader from '@/components/admin/PageHeader';
+import { useTableClasses, CountLine } from '@/components/admin/DataTable';
 import KpiRow from '@/components/admin/KpiRow';
 import DateRangeBar, { useDateRange } from '@/components/admin/DateRangeBar';
 import { BarList, DonutChart } from '@/components/admin/charts/Charts';
@@ -41,14 +42,19 @@ const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/reports/business'], icon: adminIcon
 
 /** A total row that closes a table, so the eye can check the column adds up. */
 function TotalRow({ cells }) {
+  const t = useTableClasses();
+  // The heavier rule stays: the line between the last row and the total is a
+  // real boundary — data against a sum of it — unlike the hairlines between two
+  // rows of the same kind.
   return (
     <tr className="border-t-2 border-line-strong font-semibold">
       {cells.map((cell, index) => (
         <td
           key={index}
           className={cn(
-            'px-3 py-2 text-sm text-ink-900',
-            index === 0 ? 'text-left' : 'tnum text-right',
+            t.cell(index === 0 ? 'left' : 'right'),
+            'text-ink-900',
+            index !== 0 && 'tnum',
           )}
         >
           {cell}
@@ -63,6 +69,7 @@ function TotalRow({ cells }) {
  * table with a row menu is interactive furniture that means nothing on paper.
  */
 function ReportTable({ headers, rows, total, empty, caption }) {
+  const t = useTableClasses();
   if (!rows.length) {
     return (
       <>
@@ -75,18 +82,23 @@ function ReportTable({ headers, rows, total, empty, caption }) {
   return (
     <>
       {caption && <p className="mb-2 text-xs text-ink-400">{caption}</p>}
+
+      {/* Carries the density toggle, and is `print:hidden` for the same reason
+          this page avoids `DataTable` entirely — a control an operator presses
+          is chrome that means nothing on paper. */}
+      <div className="mb-2 border-b border-line pb-2 print:hidden">
+        <CountLine total={rows.length} noun="rows" />
+      </div>
+
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
-            <tr className="border-b border-line">
+            <tr className={t.headRow}>
               {headers.map((header, index) => (
                 <th
                   key={header}
                   scope="col"
-                  className={cn(
-                    'eyebrow whitespace-nowrap px-3 py-2 text-ink-400',
-                    index === 0 ? 'text-left' : 'text-right',
-                  )}
+                  className={t.headCell(index === 0 ? 'left' : 'right')}
                 >
                   {header}
                 </th>
@@ -95,13 +107,13 @@ function ReportTable({ headers, rows, total, empty, caption }) {
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row.key} className="border-b border-line last:border-0">
+              <tr key={row.key} className={t.row}>
                 {row.cells.map((cell, index) => (
                   <td
                     key={index}
                     className={cn(
-                      'px-3 py-2 text-sm',
-                      index === 0 ? 'text-left text-ink-900' : 'tnum text-right text-ink-700',
+                      t.cell(index === 0 ? 'left' : 'right'),
+                      index === 0 ? 'text-ink-900' : 'tnum text-ink-700',
                     )}
                   >
                     {cell}

@@ -25,7 +25,10 @@ const supplierSchema = new mongoose.Schema(
       city: String,
       region: String, // Canadian province code
       postal: String,
-      country: { type: String, default: 'CA' },
+      // A country name ('Canada'), as `User.address` and `Outlet.address` hold
+      // it. This was the 2-letter code until 2026-09-05; the five rows that
+      // predated the change were backfilled.
+      country: { type: String, default: 'Canada' },
     },
 
     // Same vocabulary as the buyer-side line of credit, read the other way
@@ -38,6 +41,30 @@ const supplierSchema = new mongoose.Schema(
 
     notes: { type: String, trim: true, maxlength: 2000 },
     isActive: { type: Boolean, default: true, index: true },
+
+    /**
+     * What this supplier agreed to be contacted on — the same four channels,
+     * and the same shape, as `User.contactConsent` (CASL, §6.13).
+     *
+     * A supplier is a business contact, not a customer, and CASL's implied
+     * consent for an existing business relationship covers most of what a
+     * buyer sends them. It is recorded anyway, for the reason the customer-side
+     * comment gives: an implied basis nobody wrote down is one nobody can
+     * defend. It also stops a purchasing clerk WhatsApping a supplier who
+     * asked to be emailed only.
+     *
+     * `undefined` is not `false`. A supplier row that predates this field has
+     * never been asked, which is a different fact from having declined, so
+     * `at`/`source` being unset is what marks "not recorded".
+     */
+    contactConsent: {
+      sms: { type: Boolean, default: false },
+      whatsapp: { type: Boolean, default: false },
+      email: { type: Boolean, default: false },
+      call: { type: Boolean, default: false },
+      at: Date,
+      source: String, // 'admin' | 'application' | 'import'
+    },
 
     /**
      * A supplier who applied through the storefront rather than being entered

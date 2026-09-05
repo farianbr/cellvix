@@ -5,9 +5,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircle, Building2, Mail, MapPin, Phone, UserRound } from 'lucide-react';
 import { outletSchema, OUTLET_COLOR_TOKENS } from '@shared/schemas/admin';
 import { PROVINCES } from '@shared/schemas/checkout';
+import { COUNTRY_OPTIONS } from '@shared/countries';
 import Panel from '@/components/ui/Panel';
 import Input from '@/components/ui/Input';
 import SelectField from '@/components/ui/SelectField';
+import PhoneField from '@/components/ui/PhoneField';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import PageHeader from '@/components/admin/PageHeader';
@@ -317,8 +319,25 @@ export function AdminOutletFormPage() {
                   error={errors.address?.postal?.message}
                   {...register('address.postal')}
                 />
-                <Input label="Country" {...register('address.country')} />
-                <Input label="Phone" {...register('phone')} />
+                <SelectField
+                  control={control}
+                  name="address.country"
+                  label="Country"
+                  options={COUNTRY_OPTIONS}
+                />
+                <Controller
+                  name="phone"
+                  control={control}
+                  render={({ field }) => (
+                    <PhoneField
+                      label="Phone"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      error={errors.phone?.message}
+                    />
+                  )}
+                />
                 <Input label="Email" error={errors.email?.message} {...register('email')} />
               </div>
             </Panel>

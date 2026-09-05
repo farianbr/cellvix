@@ -2,6 +2,7 @@ import { z } from 'zod';
 // The one password rule, shared rather than restated: an account an admin opens
 // must not be allowed a weaker password than one a business opens for itself.
 import { passwordSchema } from './auth.js';
+import { DEFAULT_COUNTRY } from '../countries.js';
 
 const cents = z.coerce.number().int().min(0).max(100_000_000);
 
@@ -660,12 +661,20 @@ const supplierSchema = z.object({
       city: z.string().trim().max(80).optional(),
       region: z.string().trim().max(2).optional(),
       postal: z.string().trim().max(10).optional(),
-      country: z.string().trim().max(2).default('CA'),
+      // A country **name**, matching customers and outlets — not the 2-letter
+      // code this field briefly held. One convention across the app is what
+      // lets `COUNTRY_OPTIONS` serve every address form (see shared/countries).
+      country: z.string().trim().max(60).default(DEFAULT_COUNTRY),
     })
     .optional(),
   paymentTerms: z.enum(['prepaid', 'net15', 'net30', 'net60']).default('net30'),
   notes: z.string().trim().max(2000).optional(),
   isActive: z.boolean().default(true),
+  // Optional, unlike the customer-side `contactConsentSchema`, which is a
+  // dedicated endpoint recording an answer. This rides along on a create or an
+  // edit that may not have touched the ticks at all, and omitting it has to
+  // mean "unchanged" rather than "all four declined".
+  contactConsent: contactConsentSchema.optional(),
 });
 
 /**

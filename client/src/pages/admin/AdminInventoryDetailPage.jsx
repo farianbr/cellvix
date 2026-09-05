@@ -16,7 +16,9 @@ import Badge from '@/components/ui/Badge';
 import { PartVisual } from '@/components/product/PartFrame';
 import PageHeader from '@/components/admin/PageHeader';
 import KpiRow from '@/components/admin/KpiRow';
-import DataTable from '@/components/admin/DataTable';
+import DataTable, { CountLine } from '@/components/admin/DataTable';
+import Pagination from '@/components/ui/Pagination';
+import useTablePage from '@/hooks/useTablePage';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
 import { useAdminInventoryItem } from '@/hooks/useAdmin';
 import Skeleton from '@/components/ui/Skeleton';
@@ -58,6 +60,8 @@ export function AdminInventoryDetailPage() {
   const product = data?.product;
   const movements = data?.movements ?? [];
   const purchases = data?.purchases ?? [];
+
+  const purchasePage = useTablePage(purchases);
 
   useSetRecordLabel(product?.name);
 
@@ -319,9 +323,18 @@ export function AdminInventoryDetailPage() {
             description="What this part has cost, per delivery."
             flush
           >
+            <div className="border-b border-line px-3 py-2 sm:px-4">
+              <CountLine
+                total={purchases.length}
+                shown={purchasePage.pageRows.length}
+                from={purchasePage.from}
+                noun={purchases.length === 1 ? 'delivery' : 'deliveries'}
+              />
+            </div>
+
             <DataTable
               columns={purchaseColumns}
-              rows={purchases}
+              rows={purchasePage.pageRows}
               rowKey={(row) => row.id}
               defaultSort={{ key: 'orderDate', direction: 'desc' }}
               empty={
@@ -331,6 +344,14 @@ export function AdminInventoryDetailPage() {
                   body="This part has not appeared on a purchase order yet."
                 />
               }
+            />
+
+            <Pagination
+              page={purchasePage.page}
+              pages={purchasePage.totalPages}
+              onChange={purchasePage.setPage}
+              hideWhenSingle
+              className="border-t border-line px-3 py-3 sm:px-4"
             />
           </Panel>
 

@@ -87,15 +87,17 @@ export function AdminWebQuotesPage() {
   }
 
   /**
-   * Opening an enquiry marks it read.
+   * Opening an enquiry only opens it.
    *
-   * The status is a record of whether anybody has *looked*, so it follows the
-   * looking rather than asking for a second click that says "yes, I read the
-   * thing I am reading".
+   * Status is set by hand, never as a side effect of looking. Skimming a
+   * message is not the same act as deciding the queue has dealt with it — an
+   * operator who opens an enquiry and leaves it for somebody better placed to
+   * answer has not worked that row, and a status that moved itself under them
+   * drops it out of the filter they were working from. Every move is a
+   * deliberate click: the row menu, or the drawer's own buttons.
    */
   function open(row) {
     setReading(row);
-    if (row.status === 'new') setWebQuoteStatus.mutate({ id: row.id, status: 'read' });
   }
 
   /** One status move, reported the same way wherever it was started. */
@@ -109,14 +111,13 @@ export function AdminWebQuotesPage() {
   /**
    * The bridge to a real quote.
    *
-   * The enquiry is closed and the quote form opens seeded with the enquirer.
-   * Closing here rather than on the quote's own save is deliberate: the queue
-   * is about whether the shop has *responded*, and an operator who opened the
-   * form has. A quote abandoned half-written is a quote problem, not an unread
-   * enquiry.
+   * The quote form opens seeded with the enquirer and the enquiry keeps the
+   * status it had. Closing it here would be the app deciding an enquiry was
+   * answered because a form was opened, and a quote abandoned half-written
+   * would leave the queue claiming work that never happened. The operator
+   * closes the row when the quote actually goes out.
    */
   function convert(row) {
-    setWebQuoteStatus.mutate({ id: row.id, status: 'closed' });
     setReading(null);
     const params = new URLSearchParams({ new: '1' });
     if (row.user?.id) params.set('client', row.user.id);
@@ -126,11 +127,11 @@ export function AdminWebQuotesPage() {
   /**
    * Row actions — the queue moves without opening each enquiry.
    *
-   * Reading one already marks it read, so the menu carries the moves an
-   * operator makes *about* a row rather than to it: close a duplicate, reopen
-   * something closed too early, or start the quote it deserves. Each item is
-   * hidden when it would be a no-op, so the menu never offers "mark read" on a
-   * row that is already read.
+   * This menu and the drawer's buttons are the only things that move an
+   * enquiry: mark one read, close a duplicate, reopen something closed too
+   * early, or start the quote it deserves. Each item is hidden when it would be
+   * a no-op, so the menu never offers "mark read" on a row that is already
+   * read.
    */
   const rowMenu = [
     {
@@ -372,6 +373,21 @@ export function AdminWebQuotesPage() {
             </p>
 
             <div className="flex flex-wrap justify-end gap-2 border-t border-line pt-4">
+              {/* Opening no longer marks anything read, so the drawer has to
+                  carry that move itself — the operator is here, not on the row
+                  menu they came from. */}
+              {reading.status === 'new' && (
+                <Button
+                  variant="outline"
+                  icon={Mail}
+                  onClick={() => {
+                    move(reading, 'read', 'Marked as read');
+                    setReading(null);
+                  }}
+                >
+                  Mark as read
+                </Button>
+              )}
               <Button
                 variant="outline"
                 onClick={() => {

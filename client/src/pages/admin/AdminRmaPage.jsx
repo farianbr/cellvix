@@ -23,6 +23,8 @@ import PageHeader from '@/components/admin/PageHeader';
 import KpiRow from '@/components/admin/KpiRow';
 import FilterStrip from '@/components/admin/FilterStrip';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
+import Pagination from '@/components/ui/Pagination';
+import useTablePage from '@/hooks/useTablePage';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminRmas, useAdminMutations } from '@/hooks/useAdmin';
@@ -182,6 +184,10 @@ export function AdminRmaPage() {
   const { createRma } = useAdminMutations();
 
   const rmas = data?.rmas ?? [];
+
+  // The KPI tiles are summed from the whole filtered set; the table gets a
+  // page of it. See `useTablePage` for why paging is client-side.
+  const { pageRows: pageRmas, page, totalPages, from, setPage } = useTablePage(rmas);
   const counts = data?.counts ?? {};
   const totals = data?.totals ?? {};
   const slaDays = data?.slaDays ?? 14;
@@ -364,12 +370,12 @@ export function AdminRmaPage() {
         />
 
         <div className="border-b border-line px-3 py-2 sm:px-4">
-          <CountLine total={rmas.length} noun={rmas.length === 1 ? 'return' : 'returns'} />
+          <CountLine total={rmas.length} shown={pageRmas.length} from={from} noun={rmas.length === 1 ? 'return' : 'returns'} />
         </div>
 
         <DataTable
           columns={columns}
-          rows={rmas}
+          rows={pageRmas}
           rowKey={(rma) => rma.id}
           onRowClick={(rma) => navigate(`/admin/rma/${rma.id}`)}
           loading={isLoading}
@@ -382,6 +388,15 @@ export function AdminRmaPage() {
             />
           }
         />
+
+        <Pagination
+          page={page}
+          pages={totalPages}
+          onChange={setPage}
+          hideWhenSingle
+          className="border-t border-line px-3 py-3 sm:px-4"
+        />
+
       </Panel>
 
       <Modal

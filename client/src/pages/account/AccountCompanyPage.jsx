@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircle, Check, ShieldCheck } from 'lucide-react';
 import { date } from '@/lib/format';
 import { profileSchema, changePasswordSchema } from '@shared/schemas/account';
 import Panel, { CollapsiblePanel } from '@/components/ui/Panel';
 import Input from '@/components/ui/Input';
+import PhoneField from '@/components/ui/PhoneField';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import { useAuth } from '@/hooks/useAuth';
@@ -19,6 +20,7 @@ function ProfileForm() {
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors, isDirty },
   } = useForm({
     resolver: zodResolver(profileSchema),
@@ -48,7 +50,19 @@ function ProfileForm() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Input label="Primary contact" error={errors.contactName?.message} {...register('contactName')} />
-        <Input label="Phone" type="tel" error={errors.phone?.message} {...register('phone')} />
+        <Controller
+          name="phone"
+          control={control}
+          render={({ field }) => (
+            <PhoneField
+              label="Phone"
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              error={errors.phone?.message}
+            />
+          )}
+        />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">

@@ -20,7 +20,9 @@ import Badge from '@/components/ui/Badge';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import PageHeader from '@/components/admin/PageHeader';
 import KpiRow from '@/components/admin/KpiRow';
-import DataTable from '@/components/admin/DataTable';
+import DataTable, { CountLine } from '@/components/admin/DataTable';
+import Pagination from '@/components/ui/Pagination';
+import useTablePage from '@/hooks/useTablePage';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminOutlets, useAdminMutations } from '@/hooks/useAdmin';
@@ -206,6 +208,9 @@ export function AdminOutletsPage() {
   const { deleteOutlet, setDefaultOutlet } = useAdminMutations();
 
   const outlets = data?.outlets ?? [];
+
+  // A page of rows for the table; counts and tiles still read the full set.
+  const { pageRows: pageOutlets, page, totalPages, from, setPage } = useTablePage(outlets);
   const summary = data?.summary ?? {};
 
   const tiles = useMemo(
@@ -334,13 +339,32 @@ export function AdminOutletsPage() {
         }
       >
         {view === 'table' ? (
-          <DataTable
-            columns={columns}
-            rows={outlets}
-            loading={isLoading}
-            onRowClick={(row) => navigate(`/admin/outlets/${row.id}`)}
-            empty={<PanelEmpty icon={Building2} title="No outlets" body="Add your first store." />}
-          />
+          <>
+            <div className="border-b border-line px-3 py-2 sm:px-4">
+              <CountLine
+                total={outlets.length}
+                shown={pageOutlets.length}
+                from={from}
+                noun={outlets.length === 1 ? 'outlet' : 'outlets'}
+              />
+            </div>
+
+            <DataTable
+              columns={columns}
+              rows={pageOutlets}
+              loading={isLoading}
+              onRowClick={(row) => navigate(`/admin/outlets/${row.id}`)}
+              empty={<PanelEmpty icon={Building2} title="No outlets" body="Add your first store." />}
+            />
+
+            <Pagination
+              page={page}
+              pages={totalPages}
+              onChange={setPage}
+              hideWhenSingle
+              className="border-t border-line px-3 py-3 sm:px-4"
+            />
+          </>
         ) : isLoading ? (
           <div className="p-4 text-sm text-ink-500">Loading outlets…</div>
         ) : outlets.length === 0 ? (

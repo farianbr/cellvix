@@ -29,7 +29,9 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import SelectField from '@/components/ui/SelectField';
 import PageHeader from '@/components/admin/PageHeader';
-import DataTable from '@/components/admin/DataTable';
+import DataTable, { CountLine } from '@/components/admin/DataTable';
+import Pagination from '@/components/ui/Pagination';
+import useTablePage from '@/hooks/useTablePage';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import {
@@ -373,6 +375,9 @@ export function AdminEmailPage() {
 
   const campaigns = data?.campaigns ?? [];
 
+  // A page of rows for the table; counts and tiles still read the full set.
+  const { pageRows: pageCampaigns, page, totalPages, from, setPage } = useTablePage(campaigns);
+
   async function handleCreate(values) {
     setError(null);
     try {
@@ -562,7 +567,26 @@ export function AdminEmailPage() {
               }
             />
           ) : (
-            <DataTable rows={campaigns} columns={columns} rowMenu={rowMenu} />
+            <>
+              <div className="border-b border-line px-3 py-2 sm:px-4">
+                <CountLine
+                  total={campaigns.length}
+                  shown={pageCampaigns.length}
+                  from={from}
+                  noun={campaigns.length === 1 ? 'campaign' : 'campaigns'}
+                />
+              </div>
+
+              <DataTable rows={pageCampaigns} columns={columns} rowMenu={rowMenu} />
+
+              <Pagination
+                page={page}
+                pages={totalPages}
+                onChange={setPage}
+                hideWhenSingle
+                className="border-t border-line px-3 py-3 sm:px-4"
+              />
+            </>
           )}
         </Panel>
       </div>

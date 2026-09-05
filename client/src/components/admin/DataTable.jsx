@@ -60,6 +60,71 @@ const DENSITY = {
   },
 };
 
+const ALIGN_CLASS = { right: 'text-right', center: 'text-center', left: 'text-left' };
+
+/**
+ * ## Every admin table looks the same (Instructions §3.2)
+ *
+ * `DataTable` is for **record lists** — a page of orders, clients, suppliers —
+ * and owns sorting, selection, the row menu and the responsive fold. A
+ * **line-item table** is the other kind: the parts on one order, a settings
+ * grid of editable rates. Those do not sort or select, often end in a totals
+ * row and sometimes hold form inputs, so `DataTable` would run with most of
+ * itself switched off, and they stay hand-written.
+ *
+ * **They must still be indistinguishable.** Which component rendered a table is
+ * an implementation detail; an operator looking at two tables on one screen
+ * must not be able to tell. So this hook does not merely *resemble* the table
+ * below — it returns `DENSITY`'s own values, at the density the operator chose.
+ *
+ * That last part is the whole reason this is a hook and not a set of constants.
+ * Density is live state, stored per browser and broadcast to every table on the
+ * page; static classes would leave a hand-rolled table at one row height while
+ * the `DataTable` beside it moved to another. An earlier version of these
+ * helpers hard-coded `py-3` with a permanent hairline, which put three
+ * different row heights on screen at once.
+ *
+ *   const t = useTableClasses();
+ *
+ *   <table className="w-full text-left">
+ *     <thead><tr className={t.headRow}>
+ *       <th scope="col" className={t.headCell()}>Item</th>
+ *       <th scope="col" className={t.headCell('right')}>Total</th>
+ *     </tr></thead>
+ *     <tbody><tr className={t.row}>
+ *       <td className={t.cell()}>…</td>
+ *     </tr></tbody>
+ *   </table>
+ */
+export function useTableClasses() {
+  const [density] = useTableDensity();
+  const d = DENSITY[density] ?? DENSITY.comfortable;
+
+  return {
+    /** The rule under the header — the one horizontal line a table needs. */
+    headRow: 'border-b border-line',
+
+    /** `eyebrow` type, muted, aligned. Identical to `DataTable`'s own header. */
+    headCell: (align = 'left') =>
+      cn(
+        'eyebrow whitespace-nowrap pt-2.5 text-ink-400',
+        d.head,
+        ALIGN_CLASS[align] ?? ALIGN_CLASS.left,
+      ),
+
+    /**
+     * A body row, carrying whatever rule the density carries — none at
+     * comfortable, a hairline at compact. Matching `DataTable` matters more
+     * than either choice on its own: two tables on one screen disagreeing about
+     * whether rows have rules is exactly what reads as broken.
+     */
+    row: d.row,
+
+    /** A body cell, on the same rhythm as the header. */
+    cell: (align = 'left') => cn(d.cell, 'text-sm', ALIGN_CLASS[align] ?? ALIGN_CLASS.left),
+  };
+}
+
 /**
  * A bare checkbox. `ui/Checkbox` is a labelled filter row and is the wrong shape
  * in a cell, but the **mark** is copied from it deliberately.
@@ -118,7 +183,6 @@ const PRIORITY_CLASS = {
   3: 'hidden lg:table-cell',
 };
 
-const ALIGN_CLASS = { right: 'text-right', center: 'text-center', left: 'text-left' };
 
 function defaultSortValue(row, column) {
   const raw = column.sortValue ? column.sortValue(row) : row[column.key];
@@ -459,10 +523,18 @@ export function DataTable({
  * summary on a detail page) where a density switch is more chrome than the
  * table it governs.
  */
-export function CountLine({ total, shown, noun, density = true, className }) {
+/**
+ * `from` is the 1-based index of the first row on screen.
+ *
+ * It used to be hardcoded: the label read `Showing 1–${shown}` whatever page
+ * you were on, so page three of ten claimed to be showing rows 1–10 while
+ * displaying 21–30. Pass it whenever the table is paged; omit it and the label
+ * falls back to a plain total, which is right for a table that shows everything.
+ */
+export function CountLine({ total, shown, from = 1, noun, density = true, className }) {
   const label =
     shown != null && total != null && shown < total
-      ? `Showing 1–${shown} of ${total} ${noun}`
+      ? `Showing ${from}–${from + shown - 1} of ${total} ${noun}`
       : `${total ?? shown ?? 0} ${noun}`;
 
   return (

@@ -1,4 +1,4 @@
-import { useFieldArray, useForm, useWatch } from 'react-hook-form';
+import { useFieldArray, useForm, useWatch, Controller } from 'react-hook-form';
 import {
   AlertCircle,
   ClipboardCheck,
@@ -22,6 +22,7 @@ import { PROVINCES } from '@shared/schemas/checkout';
 import cn from '@/lib/cn';
 import { money, titleize } from '@/lib/format';
 import Input from '@/components/ui/Input';
+import PhoneField from '@/components/ui/PhoneField';
 import Textarea from '@/components/ui/Textarea';
 import Button from '@/components/ui/Button';
 import SelectField from '@/components/ui/SelectField';
@@ -364,7 +365,19 @@ export function TicketForm({ ticket, seed, technicians = [], onSubmit, onCancel,
       <Section icon={Info} title="Basic information">
         <div className="grid gap-2 sm:grid-cols-2">
           <Input label="Customer name" required {...register('customerName')} />
-          <Input label="Phone" required placeholder="+1 780 555 0134" {...register('customerPhone')} />
+          <Controller
+            name="customerPhone"
+            control={control}
+            render={({ field }) => (
+              <PhoneField
+                label="Phone"
+                required
+                value={field.value}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+              />
+            )}
+          />
         </div>
         <Input
           label="Email"

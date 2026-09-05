@@ -6,7 +6,9 @@ import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import PageHeader from '@/components/admin/PageHeader';
-import DataTable from '@/components/admin/DataTable';
+import DataTable, { CountLine } from '@/components/admin/DataTable';
+import Pagination from '@/components/ui/Pagination';
+import useTablePage from '@/hooks/useTablePage';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminReferrals, useAdminMutations } from '@/hooks/useAdmin';
@@ -99,6 +101,9 @@ export function AdminReferralsPage() {
   const { data, isLoading } = useAdminReferrals();
 
   const rows = data?.referrals ?? [];
+
+  // A page of rows for the table; counts and tiles still read the full set.
+  const { pageRows: pageReferrals, page, totalPages, from, setPage } = useTablePage(rows);
   const totals = data?.totals ?? {};
 
   const columns = [
@@ -247,11 +252,30 @@ export function AdminReferralsPage() {
               body="An approved account gets a referral code. When somebody signs up with it and pays an invoice, the commission appears here."
             />
           ) : (
-            <DataTable
-              rows={rows}
-              columns={columns}
-              defaultSort={{ key: 'commissionEarned', direction: 'desc' }}
-            />
+            <>
+              <div className="border-b border-line px-3 py-2 sm:px-4">
+                <CountLine
+                  total={rows.length}
+                  shown={pageReferrals.length}
+                  from={from}
+                  noun={rows.length === 1 ? 'referral' : 'referrals'}
+                />
+              </div>
+
+              <DataTable
+                rows={pageReferrals}
+                columns={columns}
+                defaultSort={{ key: 'commissionEarned', direction: 'desc' }}
+              />
+
+              <Pagination
+                page={page}
+                pages={totalPages}
+                onChange={setPage}
+                hideWhenSingle
+                className="border-t border-line px-3 py-3 sm:px-4"
+              />
+            </>
           )}
         </Panel>
       </div>

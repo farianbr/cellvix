@@ -10,7 +10,7 @@ import Modal from '@/components/ui/Modal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Pagination from '@/components/ui/Pagination';
 import PageHeader from '@/components/admin/PageHeader';
-import DataTable from '@/components/admin/DataTable';
+import DataTable, { CountLine } from '@/components/admin/DataTable';
 import FilterStrip from '@/components/admin/FilterStrip';
 import KpiRow from '@/components/admin/KpiRow';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
@@ -399,6 +399,13 @@ export function AdminTaxonomyPage() {
           setPage(1);
         }}
       />
+
+      <div className="border-b border-line px-3 py-2 sm:px-4">
+        <CountLine
+          total={(data?.nodes ?? []).length}
+          noun={(data?.nodes ?? []).length === 1 ? 'entry' : 'entries'}
+        />
+      </div>
 
       <DataTable
         columns={columns}

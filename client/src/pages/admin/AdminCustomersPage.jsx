@@ -39,6 +39,7 @@ import { TERMS } from '@/components/admin/ApproveClientForm';
 import KpiRow from '@/components/admin/KpiRow';
 import FilterStrip from '@/components/admin/FilterStrip';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
+import { PER_PAGE_OPTIONS, DEFAULT_PER_PAGE } from '@/hooks/useTablePage';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminUsers, useAdminMutations } from '@/hooks/useAdmin';
@@ -70,7 +71,6 @@ const PILLS = [
 const TIER_TONE = { standard: 'neutral', silver: 'info', gold: 'warn', platinum: 'brand' };
 
 /** Rows per page. Matches the Tickets list, so the control reads the same everywhere. */
-const PER_PAGE_OPTIONS = [25, 50, 100].map((n) => ({ value: String(n), label: `${n} per page` }));
 
 const CREATE_STATUS = [
   { value: 'approved', label: 'Approved — can see prices and order' },
@@ -373,7 +373,7 @@ export function AdminCustomersPage() {
   const { createUser, setUserStatus } = useAdminMutations();
 
   const status = searchParams.get('status') ?? 'all';
-  const perPage = searchParams.get('perPage') ?? '25';
+  const perPage = searchParams.get('perPage') ?? String(DEFAULT_PER_PAGE);
   const page = Math.max(1, Number(searchParams.get('page') ?? 1));
 
   const { data, isLoading } = useAdminUsers({ q: query || undefined, status });
@@ -723,7 +723,7 @@ export function AdminCustomersPage() {
           // Rows-per-page counts as an active filter only when it is off the
           // default, so the badge means "you have changed something" rather
           // than being permanently lit.
-          activeFilterCount={perPage === '25' ? 0 : 1}
+          activeFilterCount={perPage === String(DEFAULT_PER_PAGE) ? 0 : 1}
           onClearFilters={() => setParam('perPage', '')}
           filters={
             <div>

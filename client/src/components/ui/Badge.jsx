@@ -41,6 +41,12 @@ const DOTS = {
   ok: 'bg-ok',
   warn: 'bg-warn',
   info: 'bg-info',
+  // `brand` belongs here for the same reason the rest do: its label is dark ink
+  // on a pale tint, so without the dot it is the one pill in a status column
+  // carrying no hue at all — `Out for delivery` sat in an orders table looking
+  // like a category the design had forgotten to colour. Flat `bg-brand`, not a
+  // gradient: at 5px a ramp has no room to read as depth.
+  brand: 'bg-brand',
 };
 
 const SIZES = {

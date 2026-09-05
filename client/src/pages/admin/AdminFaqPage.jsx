@@ -16,6 +16,8 @@ import Checkbox from '@/components/ui/Checkbox';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
+import Pagination from '@/components/ui/Pagination';
+import useTablePage from '@/hooks/useTablePage';
 import Skeleton from '@/components/ui/Skeleton';
 import PageHeader from '@/components/admin/PageHeader';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
@@ -170,6 +172,9 @@ export function AdminFaqPage() {
   const { data: partTypeFacets } = usePartTypes();
 
   const faqs = data?.faqs ?? [];
+
+  // A page of rows for the table; counts and tiles still read the full set.
+  const { pageRows: pageFaqs, page, totalPages, from, setPage } = useTablePage(faqs);
   const isPending = createFaq.isPending || updateFaq.isPending;
   const error = (createFaq.error ?? updateFaq.error)?.message;
 
@@ -377,15 +382,23 @@ export function AdminFaqPage() {
         ) : (
           <>
             <div className="border-b border-line px-3 py-2 sm:px-4">
-              <CountLine total={faqs.length} noun={faqs.length === 1 ? 'entry' : 'entries'} />
+              <CountLine total={faqs.length} shown={pageFaqs.length} from={from} noun={faqs.length === 1 ? 'entry' : 'entries'} />
             </div>
 
             <DataTable
               columns={columns}
-              rows={faqs}
+              rows={pageFaqs}
               rowKey={(faq) => faq.id}
               onRowClick={(faq) => setEditing(faq)}
               defaultSort={{ key: 'order', direction: 'asc' }}
+            />
+
+            <Pagination
+              page={page}
+              pages={totalPages}
+              onChange={setPage}
+              hideWhenSingle
+              className="border-t border-line px-3 py-3 sm:px-4"
             />
           </>
         )}

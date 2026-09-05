@@ -1,19 +1,23 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
+import { COUNTRY_OPTIONS, DEFAULT_COUNTRY } from '@shared/countries';
 import useCreateParam from '@/hooks/useCreateParam';
 import {
   AlertCircle,
+  CheckCircle2,
   ClipboardList,
   ExternalLink,
+  Globe,
   Mail,
   Pencil,
   Phone,
   Plus,
   Power,
   Truck,
+  Wallet,
 } from 'lucide-react';
-import { money, count as formatCount } from '@/lib/format';
+import { money, count as formatCount, date } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
@@ -21,21 +25,36 @@ import Textarea from '@/components/ui/Textarea';
 import SelectField from '@/components/ui/SelectField';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
+import ConsentChannels, { EMPTY_CONSENT } from '@/components/ui/ConsentChannels';
+import PhoneField from '@/components/ui/PhoneField';
 import PageHeader from '@/components/admin/PageHeader';
 import FilterStrip from '@/components/admin/FilterStrip';
+import KpiRow from '@/components/admin/KpiRow';
+import DataTable, { CountLine } from '@/components/admin/DataTable';
+import Pagination from '@/components/ui/Pagination';
+import useTablePage from '@/hooks/useTablePage';
+import ProcessStrip from '@/components/admin/ProcessStrip';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminSuppliers, useAdminMutations } from '@/hooks/useAdmin';
-import Skeleton from '@/components/ui/Skeleton';
 import { pressable } from '@/lib/motion';
 import cn from '@/lib/cn';
 
 /**
  * Suppliers — the businesses Cellvix buys stock from (ERP rework §6.7).
  *
- * A **card grid**, not the DataTable, and deliberately so: this is the one
- * Purchase screen whose records are read as contacts rather than as rows. Five
- * across at 1440+, three at 1024, two at 768, one at 320 (§6.7).
+ * A **table**, matched to CellShoppe. This was a card grid, and §6.7 specified
+ * one on the reasoning that suppliers are read as contacts rather than as rows.
+ * That held while a supplier was only a name and a phone number. It stopped
+ * holding once each one carried orders, spend and a last-order date: those are
+ * columns, and fifteen cards is fifteen scattered pairs of figures that cannot
+ * be compared or sorted. The contact detail survives inside the name cell as
+ * live `mailto:`/`tel:` links, so nothing the card did for an operator is lost.
+ *
+ * The `ProcessStrip` at the foot is the same one the Purchase Orders list
+ * carries — a supplier is stage one of the purchase automation cycle, and both
+ * screens showing the same seven stations is what makes it one pipeline rather
+ * than two similar-looking rows.
  */
 const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/suppliers'], icon: adminIcon('Truck') };
 
@@ -56,16 +75,6 @@ const PROVINCES = [
   'AB', 'BC', 'MB', 'NB', 'NL', 'NS', 'NT', 'NU', 'ON', 'PE', 'QC', 'SK', 'YT',
 ];
 
-/** Two letters from the business name — the card's avatar. */
-function initials(name = '') {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0]?.toUpperCase() ?? '')
-    .join('');
-}
-
 function termsLabel(value) {
   return TERMS.find((term) => term.value === value)?.label ?? value;
 }
@@ -77,6 +86,18 @@ function termsLabel(value) {
  * other way round: what Cellvix owes this supplier, not what it is owed.
  */
 function SupplierForm({ supplier, onSubmit, onCancel, isPending, error }) {
+  /**
+   * Consent is held outside the form, the way `CustomerForm` holds it.
+   *
+   * `undefined` until touched, and only sent when it is: an edit that never
+   * went near the ticks must not restamp the consent date, and a create that
+   * was not asked must not record four declines as though somebody had been.
+   */
+  const [consent, setConsent] = useState(
+    supplier ? (supplier.contactConsent ?? EMPTY_CONSENT) : EMPTY_CONSENT,
+  );
+  const [consentDirty, setConsentDirty] = useState(false);
+
   const { register, handleSubmit, control } = useForm({
     defaultValues: {
       name: supplier?.name ?? '',
@@ -92,15 +113,20 @@ function SupplierForm({ supplier, onSubmit, onCancel, isPending, error }) {
         city: supplier?.address?.city ?? '',
         region: supplier?.address?.region ?? 'ON',
         postal: supplier?.address?.postal ?? '',
-        country: supplier?.address?.country ?? 'CA',
+        country: supplier?.address?.country ?? DEFAULT_COUNTRY,
       },
       notes: supplier?.notes ?? '',
       isActive: supplier?.isActive ?? true,
     },
   });
 
+  /** Consent is attached only if somebody actually answered it. */
+  function submit(values) {
+    onSubmit({ ...values, contactConsent: consentDirty ? consent : undefined });
+  }
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(submit)} className="space-y-4">
       {error && (
         <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
@@ -108,30 +134,59 @@ function SupplierForm({ supplier, onSubmit, onCancel, isPending, error }) {
         </p>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-[1fr_140px]">
-        <Input label="Business name" {...register('name')} />
+      <div className="grid gap-3 sm:grid-cols-[1fr_100px]">
+        <Input
+          label="Supplier name"
+          required
+          placeholder="e.g. MobileSentrix Canada"
+          {...register('name')}
+        />
+        {/* A code is 3–4 characters. 100px holds that with room to spare. */}
         <Input label="Code" placeholder="SKC" {...register('code')} />
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <Input label="Contact" {...register('contactName')} />
+        <Input label="Contact person" placeholder="John Smith" {...register('contactName')} />
         <SelectField control={control} name="paymentTerms" label="Payment terms" options={TERMS} />
       </div>
 
+      {/* Email keeps a full row — an address is genuinely long, and truncating
+          one mid-domain while a 6-character postal box sits at the same width
+          is what made this form feel oversized. Phone and website pair up
+          because neither fills half of it. */}
+      <Input label="Email" type="email" placeholder="orders@supplier.com" {...register('email')} />
+
       <div className="grid gap-3 sm:grid-cols-2">
-        <Input label="Email" type="email" {...register('email')} />
-        <Input label="Phone" {...register('phone')} />
+        <Controller
+          name="phone"
+          control={control}
+          render={({ field }) => (
+            <PhoneField
+              label="Phone"
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              // Short enough to sit under a half-width field on one line. The
+              // country code is the part that matters and the picker already
+              // shows it, so the hint only has to say why it is not optional.
+              hint="Needed for WhatsApp."
+            />
+          )}
+        />
+        <Input label="Website" placeholder="https://…" {...register('website')} />
       </div>
 
-      <Input label="Website" placeholder="https://" {...register('website')} />
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Input label="Address" {...register('address.line1')} />
-        <Input label="Unit / suite" {...register('address.line2')} />
+      {/* Unit first, then street — the order they are said and written on an
+          envelope. `line2` holds the unit, as it does everywhere else. */}
+      <div className="grid gap-3 sm:grid-cols-[90px_1fr]">
+        <Input label="Unit / apt" placeholder="101" {...register('address.line2')} />
+        <Input label="Street address" placeholder="123 Main Street" {...register('address.line1')} />
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Input label="City" {...register('address.city')} />
+      {/* City takes the slack; the province code and a postal code are fixed
+          short and are sized to what they hold rather than to an even third. */}
+      <div className="grid gap-3 sm:grid-cols-[1fr_100px_120px]">
+        <Input label="City" placeholder="Edmonton" {...register('address.city')} />
         <SelectField
           control={control}
           name="address.region"
@@ -141,7 +196,52 @@ function SupplierForm({ supplier, onSubmit, onCancel, isPending, error }) {
         <Input label="Postal code" placeholder="A1A 1A1" {...register('address.postal')} />
       </div>
 
-      <Textarea label="Notes" rows={3} {...register('notes')} />
+      {/* The same country list every other address form uses. A parts supplier
+          is as likely to be in Shenzhen as in Edmonton, and this field had no
+          control at all until now, so every foreign supplier was being recorded
+          as Canadian by default.
+
+          Half width: the longest name in the list still fits, and a select
+          holding "Canada" stretched across the whole form was the single widest
+          piece of empty space on it. */}
+      <div className="grid gap-3 sm:grid-cols-2">
+        <SelectField
+          control={control}
+          name="address.country"
+          label="Country"
+          options={COUNTRY_OPTIONS}
+        />
+      </div>
+
+      <Textarea
+        label="Notes"
+        rows={3}
+        placeholder="Payment terms, shipping info…"
+        {...register('notes')}
+      />
+
+      <div>
+        <p className="mb-1.5 font-display text-sm font-semibold text-ink-900">
+          Communication consent
+        </p>
+        <p className="mb-2.5 text-sm text-ink-400">
+          Tick what the supplier agreed to. Recorded with today's date.
+        </p>
+        <ConsentChannels
+          value={consent}
+          onChange={(next) => {
+            setConsent(next);
+            setConsentDirty(true);
+          }}
+        />
+        {supplier?.contactConsent?.at && !consentDirty && (
+          // Ticks with no date behind them are just ticks. Saying when the
+          // answer was taken is what makes the record defensible.
+          <p className="mt-2 text-sm text-ink-400">
+            Last recorded {date(supplier.contactConsent.at)}.
+          </p>
+        )}
+      </div>
 
       <div className="flex justify-end gap-2">
         <Button type="button" variant="ghost" onClick={onCancel}>
@@ -155,105 +255,53 @@ function SupplierForm({ supplier, onSubmit, onCancel, isPending, error }) {
   );
 }
 
-function SupplierCard({ supplier, onEdit, onToggle }) {
+/**
+ * The supplier's identity cell — name over the two ways to reach them.
+ *
+ * Email and phone are real `mailto:`/`tel:` links rather than plain text. This
+ * is a contact list before it is a ledger: the operator who opens it is usually
+ * about to chase an order, and making them select-and-copy an address that was
+ * already on screen is the kind of friction a table is supposed to remove.
+ * They stop the row click so following one does not also open the profile.
+ */
+function SupplierIdentity({ supplier }) {
   return (
-    <article
-      className={`flex flex-col rounded-lg border border-line bg-surface p-4 transition-colors hover:border-line-strong ${
-        supplier.isActive ? '' : 'opacity-70'
-      }`}
-    >
-      <div className="mb-3 flex items-start gap-3">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-surface-2 font-display text-sm font-bold text-ink-600">
-          {initials(supplier.name)}
+    <>
+      <span className="flex flex-wrap items-center gap-2">
+        <span className="truncate font-display text-md font-semibold text-ink-900">
+          {supplier.name}
         </span>
+        {supplier.code && <span className="font-mono text-2xs text-ink-400">{supplier.code}</span>}
+        {/* Terms lost their own line when the card became a row. They stay
+            visible because they are what decides whether this supplier can be
+            ordered from today or has to be paid up front. */}
+        <span className="eyebrow text-ink-400">{termsLabel(supplier.paymentTerms)}</span>
+      </span>
 
-        <div className="min-w-0 flex-1">
-          <h2 className="truncate font-display text-md font-bold leading-snug text-ink-900">
-            {supplier.name}
-          </h2>
-          <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-ink-400">
-            {supplier.code && <span className="font-mono">{supplier.code}</span>}
-            <Badge tone={supplier.isActive ? 'ok' : 'neutral'} size="sm">
-              {supplier.isActive ? 'active' : 'inactive'}
-            </Badge>
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => onEdit(supplier)}
-          aria-label={`Edit ${supplier.name}`}
-          className={cn(pressable, 'flex size-7 shrink-0 items-center justify-center rounded-sm text-ink-300 hover:bg-surface-2 hover:text-ink-700')}
-        >
-          <Pencil className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
-        </button>
-      </div>
-
-      <dl className="mb-3 space-y-1 text-xs text-ink-500">
+      <span className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-ink-500">
         {supplier.email && (
-          <div className="flex items-center gap-1.5">
-            <Mail className="size-3 shrink-0 text-ink-300" strokeWidth={2.5} aria-hidden="true" />
-            <dd className="truncate">{supplier.email}</dd>
-          </div>
-        )}
-        {supplier.phone && (
-          <div className="flex items-center gap-1.5">
-            <Phone className="size-3 shrink-0 text-ink-300" strokeWidth={2.5} aria-hidden="true" />
-            <dd className="truncate">{supplier.phone}</dd>
-          </div>
-        )}
-      </dl>
-
-      <div className="mb-3 grid grid-cols-2 gap-2 rounded-md bg-surface-2 p-2.5">
-        <div>
-          <p className="eyebrow text-ink-400">Orders</p>
-          <p className="tnum font-display text-lg font-bold text-ink-900">
-            {formatCount(supplier.ordersCount)}
-          </p>
-        </div>
-        <div>
-          <p className="eyebrow text-ink-400">Total spent</p>
-          <p className="tnum font-display text-lg font-bold text-ink-900">
-            {money(supplier.totalSpent)}
-          </p>
-        </div>
-      </div>
-
-      <p className="mb-3 text-xs text-ink-400">Terms · {termsLabel(supplier.paymentTerms)}</p>
-
-      <div className="mt-auto flex items-center gap-2">
-        {/* `Button` renders a real <button>; a navigation needs an anchor, so
-            the link carries the button's own classes rather than being wrapped
-            in one. */}
-        <Link
-          to={`/admin/suppliers/${supplier.id}`}
-          className={cn(pressable, 'inline-flex h-9 flex-1 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3.5 font-display text-sm font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
-        >
-          View profile
-        </Link>
-
-        {supplier.website && (
           <a
-            href={supplier.website}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label={`Open ${supplier.name} website`}
-            className={cn(pressable, 'flex size-8 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 hover:border-line-strong hover:text-ink-700')}
+            href={`mailto:${supplier.email}`}
+            onClick={(event) => event.stopPropagation()}
+            className="inline-flex items-center gap-1.5 hover:text-brand hover:underline"
           >
-            <ExternalLink className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
+            <Mail className="size-3 shrink-0 text-ink-300" strokeWidth={2.5} aria-hidden="true" />
+            <span className="truncate">{supplier.email}</span>
           </a>
         )}
-
-        <button
-          type="button"
-          onClick={() => onToggle(supplier)}
-          aria-label={`${supplier.isActive ? 'Deactivate' : 'Reactivate'} ${supplier.name}`}
-          className={cn(pressable, 'flex size-8 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 hover:border-danger/30 hover:bg-danger-50 hover:text-danger')}
-        >
-          <Power className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
-        </button>
-      </div>
-    </article>
+        {supplier.email && supplier.phone && <span className="text-ink-300">·</span>}
+        {supplier.phone && (
+          <a
+            href={`tel:${supplier.phone.replace(/[^\d+]/g, '')}`}
+            onClick={(event) => event.stopPropagation()}
+            className="inline-flex items-center gap-1.5 hover:text-brand hover:underline"
+          >
+            <Phone className="size-3 shrink-0 text-ink-300" strokeWidth={2.5} aria-hidden="true" />
+            <span className="truncate">{supplier.phone}</span>
+          </a>
+        )}
+      </span>
+    </>
   );
 }
 
@@ -271,7 +319,32 @@ export function AdminSuppliersPage() {
   const { createSupplier, updateSupplier, toggleSupplier } = useAdminMutations();
 
   const suppliers = data?.suppliers ?? [];
+
+  // The KPI tiles are summed from the whole filtered set; the table gets a
+  // page of it. See `useTablePage` for why paging is client-side.
+  const { pageRows: pageSuppliers, page, totalPages, from, setPage } = useTablePage(suppliers);
   const counts = data?.counts ?? {};
+  const totals = data?.totals ?? {};
+
+  /**
+   * `?edit=<id>` opens the edit form on arrival.
+   *
+   * The supplier profile's Edit button links here rather than carrying its own
+   * copy of this modal — one form, one place it can drift. The row has to be
+   * loaded before it can be edited, so this resolves against the fetched list
+   * and clears the parameter once it has, which stops a back-navigation from
+   * reopening a form the operator already closed.
+   */
+  const editId = searchParams.get('edit');
+  useEffect(() => {
+    if (!editId || !suppliers.length) return;
+    const match = suppliers.find((row) => row.id === editId);
+    if (match) setEditing(match);
+
+    const params = new URLSearchParams(searchParams);
+    params.delete('edit');
+    setSearchParams(params, { replace: true });
+  }, [editId, suppliers, searchParams, setSearchParams]);
 
   function setStatus(next) {
     const params = new URLSearchParams(searchParams);
@@ -279,6 +352,113 @@ export function AdminSuppliersPage() {
     else params.set('status', next);
     setSearchParams(params, { replace: true });
   }
+
+  const columns = [
+    {
+      key: 'name',
+      header: 'Supplier',
+      priority: 1,
+      width: '38%',
+      sortValue: (row) => row.name,
+      render: (row) => <SupplierIdentity supplier={row} />,
+    },
+    {
+      key: 'ordersCount',
+      header: 'Orders',
+      priority: 2,
+      width: '10%',
+      align: 'right',
+      sortValue: (row) => row.ordersCount,
+      render: (row) => <span className="tnum">{formatCount(row.ordersCount)}</span>,
+    },
+    {
+      key: 'totalSpent',
+      header: 'Total spent',
+      priority: 1,
+      width: '14%',
+      align: 'right',
+      sortValue: (row) => row.totalSpent,
+      render: (row) => (
+        <span className="tnum font-semibold text-ink-900">{money(row.totalSpent)}</span>
+      ),
+    },
+    {
+      key: 'lastOrderAt',
+      header: 'Last order',
+      priority: 3,
+      width: '14%',
+      // A supplier with no orders sorts as the oldest possible date rather than
+      // as `null`, so "never ordered from" collects at one end of the sort
+      // instead of scattering through it.
+      sortValue: (row) => (row.lastOrderAt ? new Date(row.lastOrderAt).getTime() : 0),
+      render: (row) =>
+        row.lastOrderAt ? (
+          <span className="tnum text-ink-700">{date(row.lastOrderAt)}</span>
+        ) : (
+          <span className="text-ink-400">Never</span>
+        ),
+    },
+    {
+      key: 'isActive',
+      header: 'Status',
+      priority: 2,
+      width: '12%',
+      sortValue: (row) => (row.isActive ? 'active' : 'inactive'),
+      render: (row) => (
+        <Badge tone={row.isActive ? 'ok' : 'neutral'} size="sm">
+          {row.isActive ? 'active' : 'inactive'}
+        </Badge>
+      ),
+    },
+  ];
+
+  /**
+   * What the card's icon buttons used to do, moved into the row menu.
+   *
+   * The card carried an edit pencil, a website link and a power toggle as three
+   * separate targets; a table row cannot afford three, and `View profile` is
+   * the row click. `Visit website` hides itself when the supplier has no
+   * website rather than rendering a dead item.
+   */
+  const rowMenu = [
+    {
+      key: 'profile',
+      label: 'View profile',
+      icon: ExternalLink,
+      onSelect: (row) => navigate(`/admin/suppliers/${row.id}`),
+    },
+    {
+      key: 'edit',
+      label: 'Edit supplier',
+      icon: Pencil,
+      onSelect: (row) => setEditing(row),
+    },
+    {
+      key: 'website',
+      label: 'Visit website',
+      icon: Globe,
+      hidden: (row) => !row.website,
+      onSelect: (row) => window.open(row.website, '_blank', 'noopener,noreferrer'),
+    },
+    // Two entries rather than one with a computed tone: `ActionMenu` resolves
+    // `hidden` per row but takes `tone` as a fixed value, and deactivating is
+    // destructive where reactivating is not.
+    {
+      key: 'deactivate',
+      label: 'Deactivate',
+      icon: Power,
+      tone: 'danger',
+      hidden: (row) => !row.isActive,
+      onSelect: (row) => toggleSupplier.mutate(row.id),
+    },
+    {
+      key: 'reactivate',
+      label: 'Reactivate',
+      icon: Power,
+      hidden: (row) => row.isActive,
+      onSelect: (row) => toggleSupplier.mutate(row.id),
+    },
+  ];
 
   return (
     <>
@@ -302,7 +482,45 @@ export function AdminSuppliersPage() {
         }
       />
 
-      <Panel flush>
+      <KpiRow
+        tiles={[
+          {
+            key: 'total',
+            label: 'Total suppliers',
+            value: formatCount(counts.all ?? 0),
+            hint: 'Everyone on the books',
+            icon: Truck,
+          },
+          {
+            key: 'active',
+            label: 'Active suppliers',
+            value: formatCount(counts.active ?? 0),
+            hint: 'Available to raise an order against',
+            tone: 'ok',
+            icon: CheckCircle2,
+          },
+          {
+            key: 'orders',
+            label: 'Total orders',
+            value: formatCount(totals.orders ?? 0),
+            // Says what is counted, because the figure excludes drafts and so
+            // will not match the Purchase Orders list's own row count.
+            hint: 'Raised and not cancelled',
+            tone: 'info',
+            icon: ClipboardList,
+          },
+          {
+            key: 'spent',
+            label: 'Total spent',
+            value: money(totals.spent ?? 0),
+            hint: 'Across every supplier, all time',
+            tone: 'brand',
+            icon: Wallet,
+          },
+        ]}
+      />
+
+      <Panel flush className="mb-3">
         <FilterStrip
           search={query}
           onSearchChange={setQuery}
@@ -312,19 +530,24 @@ export function AdminSuppliersPage() {
           onPillChange={setStatus}
         />
 
-        <div className="p-3 sm:p-4">
-          <p className="mb-3 text-sm text-ink-500">
-            {formatCount(counts.all ?? 0)} supplier{(counts.all ?? 0) === 1 ? '' : 's'} total
-            {status !== 'all' && ` · ${formatCount(suppliers.length)} shown`}
-          </p>
+        <div className="border-b border-line px-3 py-2 sm:px-4">
+          <CountLine
+            total={suppliers.length}
+            shown={pageSuppliers.length}
+            from={from}
+            noun={suppliers.length === 1 ? 'supplier' : 'suppliers'}
+          />
+        </div>
 
-          {isLoading ? (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <Skeleton key={index} className="h-[248px]" rounded="lg" />
-              ))}
-            </div>
-          ) : suppliers.length === 0 ? (
+        <DataTable
+          columns={columns}
+          rows={pageSuppliers}
+          rowKey={(supplier) => supplier.id}
+          rowMenu={rowMenu}
+          onRowClick={(supplier) => navigate(`/admin/suppliers/${supplier.id}`)}
+          loading={isLoading}
+          defaultSort={{ key: 'name', direction: 'asc' }}
+          empty={
             <PanelEmpty
               icon={Truck}
               title="No suppliers match"
@@ -335,26 +558,29 @@ export function AdminSuppliersPage() {
                 </Button>
               }
             />
-          ) : (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
-              {suppliers.map((supplier) => (
-                <SupplierCard
-                  key={supplier.id}
-                  supplier={supplier}
-                  onEdit={setEditing}
-                  onToggle={(row) => toggleSupplier.mutate(row.id)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+          }
+        />
+
+        <Pagination
+          page={page}
+          pages={totalPages}
+          onChange={setPage}
+          hideWhenSingle
+          className="border-t border-line px-3 py-3 sm:px-4"
+        />
+
       </Panel>
+
+      {/* The same strip the Purchase Orders list carries. A supplier is stage
+          one of that cycle, so the page that creates them shows where they sit
+          in it — and both screens then describe one pipeline rather than two. */}
+      <ProcessStrip title="Purchase automation cycle" current="supplier" />
 
       <Modal
         open={creating}
         onClose={() => setCreating(false)}
         title="Add a supplier"
-        size="lg"
+        size="md"
         align="top"
       >
         <SupplierForm
@@ -378,7 +604,7 @@ export function AdminSuppliersPage() {
         open={Boolean(editing)}
         onClose={() => setEditing(null)}
         title="Edit supplier"
-        size="lg"
+        size="md"
         align="top"
       >
         {editing && (

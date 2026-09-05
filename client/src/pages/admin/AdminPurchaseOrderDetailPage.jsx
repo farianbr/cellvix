@@ -6,8 +6,11 @@ import {
   Ban,
   Boxes,
   CheckCircle2,
+  ChevronRight,
   ClipboardList,
+  Link2,
   PackageCheck,
+  Printer,
   Send,
   Truck,
   Wallet,
@@ -19,9 +22,11 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import SelectField from '@/components/ui/SelectField';
+import SelectMenu from '@/components/ui/SelectMenu';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import PageHeader from '@/components/admin/PageHeader';
+import { useTableClasses, CountLine } from '@/components/admin/DataTable';
 import KpiRow from '@/components/admin/KpiRow';
 import ProcessStrip from '@/components/admin/ProcessStrip';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
@@ -60,6 +65,40 @@ const METHODS = [
   { value: 'Cash', label: 'Cash' },
   { value: 'Other', label: 'Other' },
 ];
+
+/**
+ * The workflow pills at the top of the Workflow panel.
+ *
+ * Deliberately **not** `PURCHASE_CYCLE`, which the `ProcessStrip` at the foot
+ * of the page already draws. That strip describes the whole seven-station
+ * pipeline a purchase moves through, supplier to inventory, and is the same on
+ * every Purchase screen. This is the five states *this order* can be in, and
+ * it is what the buttons underneath act on. Same subject, different question:
+ * "how does purchasing work here" against "where is this one".
+ */
+const WORKFLOW_STAGES = [
+  { key: 'draft', label: 'Draft' },
+  { key: 'sent', label: 'Sent' },
+  { key: 'paid', label: 'Paid' },
+  { key: 'shipped', label: 'Shipped' },
+  { key: 'received', label: 'Received' },
+];
+
+/**
+ * Which pill is live.
+ *
+ * Payment and delivery are not sequential in practice — an order can be paid
+ * before it ships or after it lands — so this reports the furthest point
+ * reached rather than walking the list. A received order shows `Received` even
+ * if nobody ever recorded the payment, because that is true.
+ */
+function workflowStageIndex(order) {
+  if (order.status === 'received') return 4;
+  if (order.status === 'partial') return 3;
+  if (order.payment.status === 'paid') return 2;
+  if (order.status === 'sent') return 1;
+  return 0;
+}
 
 /** Where this one order actually sits in the purchase automation cycle. */
 function cycleStage(order) {
@@ -253,11 +292,15 @@ function PaymentForm({ order, categories, onSubmit, onCancel, isPending, error }
 }
 
 export function AdminPurchaseOrderDetailPage() {
+  const t = useTableClasses();
   const { id } = useParams();
   const [receiving, setReceiving] = useState(false);
   const [paying, setPaying] = useState(false);
   const [receiveResult, setReceiveResult] = useState(null);
   const [cancelling, setCancelling] = useState(false);
+  // The Workflow panel's one-click payment method. The full modal still owns
+  // reference, date and expense category.
+  const [quickMethod, setQuickMethod] = useState(METHODS[0].value);
 
   const { data, isLoading, error } = useAdminPurchaseOrder(id);
   const { data: categoryData } = useAdminExpenseCategories();
@@ -310,6 +353,7 @@ export function AdminPurchaseOrderDetailPage() {
   const canReceive = !['draft', 'received', 'cancelled'].includes(order.status);
   const canPay =
     !['draft', 'cancelled'].includes(order.status) && order.payment.status !== 'paid';
+  const workflowIndex = workflowStageIndex(order);
 
   return (
     <>
@@ -331,34 +375,15 @@ export function AdminPurchaseOrderDetailPage() {
         }
         action={
           <>
-            {order.status === 'draft' && (
-              <Button
-                icon={Send}
-                loading={setPurchaseOrderStatus.isPending}
-                onClick={() => setPurchaseOrderStatus.mutate({ id: order.id, status: 'sent' })}
-              >
-                Send to supplier
-              </Button>
-            )}
-            {canReceive && (
-              <Button icon={PackageCheck} onClick={() => setReceiving(true)}>
-                Receive delivery
-              </Button>
-            )}
-            {canPay && (
-              <Button variant="outline" icon={Wallet} onClick={() => setPaying(true)}>
-                Record payment
-              </Button>
-            )}
-            {order.status !== 'cancelled' && qtyReceived === 0 && (
-              <Button
-                variant="ghost"
-                icon={Ban}
-                onClick={() => setCancelling(true)}
-              >
-                Cancel
-              </Button>
-            )}
+            <Button variant="outline" icon={Printer} onClick={() => window.print()}>
+              Print
+            </Button>
+            <Link
+              to="/admin/purchase-orders"
+              className={cn(pressable, 'inline-flex h-11 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
+            >
+              Back
+            </Link>
           </>
         }
       />
@@ -412,26 +437,160 @@ export function AdminPurchaseOrderDetailPage() {
         ]}
       />
 
+      {/* Workflow — the stage actions, beside the stage they act on.
+          These used to sit in the page header, which put "Send to supplier"
+          next to "Back" and gave an operator no picture of where the order had
+          got to. Here the pills say what has happened and the buttons under
+          them say what can happen next, which is the same question asked twice
+          and answered in one place. */}
+      <Panel title="Workflow" className="mb-3">
+        <ol className="mb-4 flex flex-wrap items-center gap-x-1 gap-y-2">
+          {WORKFLOW_STAGES.map((stage, index) => {
+            const reached = workflowIndex >= index;
+            const current = workflowIndex === index;
+            return (
+              <li key={stage.key} className="flex items-center gap-1">
+                <span
+                  aria-current={current ? 'step' : undefined}
+                  className={cn(
+                    'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium',
+                    current
+                      ? 'bg-brand-gradient-compact text-white'
+                      : reached
+                        ? 'bg-ok-50 text-ok'
+                        : 'bg-surface-2 text-ink-400',
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'size-1.5 shrink-0 rounded-full',
+                      current ? 'bg-white' : reached ? 'bg-ok' : 'bg-ink-300',
+                    )}
+                    aria-hidden="true"
+                  />
+                  {stage.label}
+                </span>
+                {index < WORKFLOW_STAGES.length - 1 && (
+                  <ChevronRight
+                    className="size-3.5 shrink-0 text-ink-300"
+                    strokeWidth={2.25}
+                    aria-hidden="true"
+                  />
+                )}
+              </li>
+            );
+          })}
+        </ol>
+
+        {order.status === 'cancelled' ? (
+          <p className="rounded-md bg-surface-2 px-3 py-2.5 text-sm text-ink-500">
+            This order was cancelled. Nothing further can be recorded against it.
+          </p>
+        ) : (
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div className="flex flex-wrap items-end gap-2">
+              {order.status === 'draft' && (
+                <Button
+                  icon={Send}
+                  loading={setPurchaseOrderStatus.isPending}
+                  onClick={() => setPurchaseOrderStatus.mutate({ id: order.id, status: 'sent' })}
+                >
+                  Send to supplier
+                </Button>
+              )}
+
+              {canReceive && (
+                <Button variant="outline" icon={PackageCheck} onClick={() => setReceiving(true)}>
+                  Receive delivery
+                </Button>
+              )}
+
+              {/* Method sits beside the button rather than inside a modal: it
+                  is the only thing the quick path needs to know, and asking
+                  for it here is what lets Mark paid be one click. The modal
+                  behind `Record payment` still carries reference, date and
+                  expense category. */}
+              {canPay && (
+                <>
+                  <div className="w-42.5">
+                    <SelectMenu
+                      label="Pay via"
+                      size="md"
+                      value={quickMethod}
+                      onChange={setQuickMethod}
+                      options={METHODS}
+                    />
+                  </div>
+                  <Button
+                    variant="outline"
+                    icon={Wallet}
+                    loading={recordPurchasePayment.isPending}
+                    onClick={() =>
+                      recordPurchasePayment.mutate({
+                        id: order.id,
+                        method: quickMethod,
+                        reference: order.poNumber,
+                        paidAt: todayIso(),
+                      })
+                    }
+                  >
+                    Mark paid
+                  </Button>
+                  <Button variant="ghost" onClick={() => setPaying(true)}>
+                    Payment details…
+                  </Button>
+                </>
+              )}
+            </div>
+
+            {qtyReceived === 0 && (
+              <Button variant="ghost" icon={Ban} onClick={() => setCancelling(true)}>
+                Cancel PO
+              </Button>
+            )}
+          </div>
+        )}
+
+        {recordPurchasePayment.error && (
+          <p className="mt-3 flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
+            <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
+            {recordPurchasePayment.error.message}
+          </p>
+        )}
+      </Panel>
+
       <div className="grid gap-3 lg:grid-cols-[1fr_300px]">
         <div className="space-y-3">
           <Panel title="Lines" flush>
+            {/* Carries the density toggle. These lines follow the same density
+                as every list table, so the page has to offer a way to set it. */}
+            <div className="border-b border-line px-3 py-2 sm:px-4">
+              <CountLine
+                total={order.items.length}
+                noun={order.items.length === 1 ? 'line' : 'lines'}
+              />
+            </div>
+
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b border-line">
-                    <th scope="col" className="eyebrow px-4 py-2.5 text-ink-400">
+                  <tr className={t.headRow}>
+                    <th scope="col" className={t.headCell()}>
                       Product
                     </th>
-                    <th scope="col" className="eyebrow px-4 py-2.5 text-right text-ink-400">
+                    <th scope="col" className={t.headCell()}>
+                      Linked inventory
+                    </th>
+                    <th scope="col" className={t.headCell('right')}>
                       Ordered
                     </th>
-                    <th scope="col" className="eyebrow px-4 py-2.5 text-right text-ink-400">
+                    <th scope="col" className={t.headCell('right')}>
                       Received
                     </th>
-                    <th scope="col" className="eyebrow px-4 py-2.5 text-right text-ink-400">
+                    <th scope="col" className={t.headCell('right')}>
                       Unit cost
                     </th>
-                    <th scope="col" className="eyebrow px-4 py-2.5 text-right text-ink-400">
+                    <th scope="col" className={t.headCell('right')}>
                       Line total
                     </th>
                   </tr>
@@ -440,15 +599,39 @@ export function AdminPurchaseOrderDetailPage() {
                   {order.items.map((item) => {
                     const short = item.qtyOrdered - item.qtyReceived;
                     return (
-                      <tr key={item.sku} className="border-b border-line last:border-0">
-                        <td className="px-4 py-3">
+                      <tr key={item.sku} className={t.row}>
+                        <td className={t.cell()}>
                           <p className="text-sm text-ink-900">{item.name}</p>
                           <p className="font-mono text-xs text-ink-400">{item.sku}</p>
                         </td>
-                        <td className="tnum px-4 py-3 text-right text-sm text-ink-700">
+                        <td className={t.cell()}>
+                          {item.inventory ? (
+                            <Link
+                              to={`/admin/inventory/${item.inventory.id}`}
+                              className="inline-flex items-center gap-1.5 text-sm text-ink-700 hover:text-brand"
+                            >
+                              <Link2
+                                className="size-3.5 shrink-0 text-ink-300"
+                                strokeWidth={2.25}
+                                aria-hidden="true"
+                              />
+                              <span className="truncate">{item.inventory.name}</span>
+                              <span className="tnum shrink-0 text-xs text-ink-400">
+                                ({formatCount(item.inventory.stock)} in stock)
+                              </span>
+                            </Link>
+                          ) : (
+                            // A line with no catalogue product behind it will
+                            // not move stock when it is received, and saying so
+                            // here is cheaper than the operator finding out
+                            // after the delivery.
+                            <span className="text-xs text-ink-300">Not linked</span>
+                          )}
+                        </td>
+                        <td className={cn(t.cell('right'), 'tnum text-ink-700')}>
                           {formatCount(item.qtyOrdered)}
                         </td>
-                        <td className="tnum px-4 py-3 text-right text-sm">
+                        <td className={cn(t.cell('right'), 'tnum')}>
                           <span className={short > 0 ? 'text-warn' : 'text-ok'}>
                             {formatCount(item.qtyReceived)}
                           </span>
@@ -456,10 +639,10 @@ export function AdminPurchaseOrderDetailPage() {
                             <span className="block text-2xs text-ink-400">{short} short</span>
                           )}
                         </td>
-                        <td className="tnum px-4 py-3 text-right text-sm text-ink-700">
+                        <td className={cn(t.cell('right'), 'tnum text-ink-700')}>
                           {money(item.unitCost)}
                         </td>
-                        <td className="tnum px-4 py-3 text-right text-sm font-medium text-ink-900">
+                        <td className={cn(t.cell('right'), 'tnum font-medium text-ink-900')}>
                           {money(item.lineTotal)}
                         </td>
                       </tr>

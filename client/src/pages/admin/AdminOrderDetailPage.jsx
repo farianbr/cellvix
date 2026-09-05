@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router';
 import cn from '@/lib/cn';
+import { useTableClasses, CountLine } from '@/components/admin/DataTable';
 import { ArrowLeft } from 'lucide-react';
 
 import Panel, { StatTile } from '@/components/ui/Panel';
@@ -73,6 +74,7 @@ function titleCase(value) {
 }
 
 export function AdminOrderDetailPage() {
+  const t = useTableClasses();
   const { orderNumber } = useParams();
   const { data, isLoading, error } = useAdminOrder(orderNumber);
 
@@ -142,20 +144,29 @@ export function AdminOrderDetailPage() {
         <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
         <div className="space-y-4">
         <Panel title="Lines" description="What a warehouse picks. Bundle members are listed as parts.">
+          {/* Carries the density toggle. These lines follow the same density as
+              every list table, so the page has to offer a way to set it. */}
+          <div className="mb-2 border-b border-line pb-2">
+            <CountLine
+              total={order.items.length}
+              noun={order.items.length === 1 ? 'line' : 'lines'}
+            />
+          </div>
+
           <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-            <table className="w-full min-w-[520px] border-collapse text-sm">
+            <table className="w-full min-w-130 text-left">
               <thead>
-                <tr className="border-b border-line text-left">
-                  <th scope="col" className="pb-2 font-display text-xs font-semibold text-ink-500">Part</th>
-                  <th scope="col" className="pb-2 font-display text-xs font-semibold text-ink-500">Qty</th>
-                  <th scope="col" className="pb-2 text-right font-display text-xs font-semibold text-ink-500">Unit</th>
-                  <th scope="col" className="pb-2 text-right font-display text-xs font-semibold text-ink-500">Line</th>
+                <tr className={t.headRow}>
+                  <th scope="col" className={t.headCell()}>Part</th>
+                  <th scope="col" className={t.headCell()}>Qty</th>
+                  <th scope="col" className={t.headCell('right')}>Unit</th>
+                  <th scope="col" className={t.headCell('right')}>Line</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-line">
+              <tbody>
                 {order.items.map((item, index) => (
-                  <tr key={`${item.sku}-${index}`}>
-                    <td className="py-2 pr-3">
+                  <tr key={`${item.sku}-${index}`} className={t.row}>
+                    <td className={t.cell()}>
                       <span className="block font-medium text-ink-900">{item.name}</span>
                       <span className="flex flex-wrap items-center gap-1.5">
                         <span className="font-mono text-xs text-ink-400">{item.sku}</span>
@@ -165,9 +176,13 @@ export function AdminOrderDetailPage() {
                         {item.bundle?.title && <Badge tone="brand">{item.bundle.title}</Badge>}
                       </span>
                     </td>
-                    <td className="tnum py-2 pr-3 text-ink-700">{item.qty}</td>
-                    <td className="tnum py-2 pr-3 text-right text-ink-700">{money(item.unitPrice)}</td>
-                    <td className="tnum py-2 text-right font-medium text-ink-900">{money(item.lineTotal)}</td>
+                    <td className={cn(t.cell(), 'tnum text-ink-700')}>{item.qty}</td>
+                    <td className={cn(t.cell('right'), 'tnum text-ink-700')}>
+                      {money(item.unitPrice)}
+                    </td>
+                    <td className={cn(t.cell('right'), 'tnum font-medium text-ink-900')}>
+                      {money(item.lineTotal)}
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -1,21 +1,29 @@
-import { Link, useParams } from 'react-router';
+import { useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router';
 import {
   Boxes,
+  CalendarDays,
   ClipboardList,
   ExternalLink,
+  Globe,
   Mail,
   MapPin,
+  Pencil,
   Phone,
-  Receipt,
+  Plus,
   Truck,
   Wallet,
 } from 'lucide-react';
 import { money, date, count as formatCount } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Badge from '@/components/ui/Badge';
+import TabRow from '@/components/ui/TabRow';
+import { CONSENT_CHANNELS } from '@/components/ui/ConsentChannels';
 import PageHeader from '@/components/admin/PageHeader';
 import KpiRow from '@/components/admin/KpiRow';
-import DataTable from '@/components/admin/DataTable';
+import DataTable, { CountLine } from '@/components/admin/DataTable';
+import Pagination from '@/components/ui/Pagination';
+import useTablePage from '@/hooks/useTablePage';
 import { BarList } from '@/components/admin/charts/Charts';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
 import { useAdminSupplier } from '@/hooks/useAdmin';
@@ -24,8 +32,15 @@ import { pressable } from '@/lib/motion';
 import cn from '@/lib/cn';
 
 /**
- * One supplier — contact details, linked products, PO history and the spend
- * chart that feeds the Supplier Prices report (ERP rework §6.7).
+ * One supplier — contact details, consent, linked products, PO history and the
+ * spend chart that feeds the Supplier Prices report (ERP rework §6.7).
+ *
+ * **Tabbed**, matched to CellShoppe. Everything used to stack into one long
+ * two-column page, which works while a supplier has one purchase order and
+ * stops working at fifty: the contact details an operator opened the page for
+ * end up below a table that has grown without limit. Three views — who they
+ * are, what we ordered, what they supply — and the tab carries its own count so
+ * the empty ones answer themselves without being opened.
  *
  * The breadcrumb names the supplier rather than the type (§4b.6), which the
  * page publishes through `useRecordLabel` — the shell renders one `Breadcrumbs`
@@ -47,31 +62,68 @@ const TERMS_LABELS = {
   net60: 'Net 60',
 };
 
-/** `2026-03` → `Mar 2026`, for the spend chart's axis. */
+/** `2026-03` → `Mar 26`, for the spend chart's axis. */
 function monthLabel(key) {
   const [year, month] = String(key).split('-');
   const formatted = new Date(Number(year), Number(month) - 1, 1);
   return formatted.toLocaleDateString('en-CA', { month: 'short', year: '2-digit' });
 }
 
-function ContactRow({ icon: Icon, children }) {
+/** Two letters from the business name — the header's avatar. */
+function initials(name = '') {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase() ?? '')
+    .join('');
+}
+
+/**
+ * One labelled fact, as a definition row.
+ *
+ * A dash rather than an omitted row when the value is missing: a details panel
+ * that silently drops its empty fields makes "we never recorded a website" look
+ * identical to "this supplier has no website field at all", and an operator
+ * cannot tell which of them to go and fix.
+ */
+function DetailRow({ label, children }) {
+  return (
+    <div className="flex items-baseline justify-between gap-4 border-b border-line py-2.5 last:border-0">
+      <dt className="eyebrow shrink-0 text-ink-400">{label}</dt>
+      <dd className="min-w-0 wrap-break-word text-right text-sm text-ink-900">
+        {children ?? <span className="text-ink-300">—</span>}
+      </dd>
+    </div>
+  );
+}
+
+/** One header fact — an icon and a value, or nothing at all. */
+function HeaderFact({ icon: Icon, children }) {
   if (!children) return null;
   return (
-    <div className="flex items-start gap-2 text-sm text-ink-600">
-      <Icon className="mt-0.5 size-3.5 shrink-0 text-ink-300" strokeWidth={2.25} aria-hidden="true" />
-      <span className="min-w-0 break-words">{children}</span>
-    </div>
+    <span className="inline-flex items-center gap-1.5 text-sm text-ink-500">
+      <Icon className="size-3.5 shrink-0 text-ink-300" strokeWidth={2.25} aria-hidden="true" />
+      {children}
+    </span>
   );
 }
 
 export function AdminSupplierProfilePage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { data, isLoading, error } = useAdminSupplier(id);
+  const [tab, setTab] = useState('overview');
 
   const supplier = data?.supplier;
   const orders = data?.orders ?? [];
   const products = data?.products ?? [];
   const spend = data?.spend ?? [];
+
+  // One hook per tab. Only one table is on screen at a time, so they can
+  // share the  parameter without fighting over it.
+  const orderPage = useTablePage(orders);
+  const productPage = useTablePage(products);
 
   // The breadcrumb names the supplier rather than the type. It clears on
   // unmount, so a stale name cannot survive onto the next screen.
@@ -113,37 +165,33 @@ export function AdminSupplierProfilePage() {
   }
 
   const address = supplier.address ?? {};
-  const addressLine = [address.line1, address.line2, address.city, address.region, address.postal]
+  const addressLine = [address.line1, address.line2, address.city, address.region, address.postal, address.country]
     .filter(Boolean)
     .join(', ');
-
-  // Outstanding is what has been ordered and not yet paid for — a position, not
-  // a flow, so it is "as of today" regardless of any date filter (§9).
-  const outstanding = orders
-    .filter((order) => order.payment.status !== 'paid' && order.status !== 'cancelled')
-    .reduce((sum, order) => sum + order.total, 0);
 
   const openOrders = orders.filter(
     (order) => !['received', 'cancelled'].includes(order.status),
   ).length;
 
+  const termsLabel = TERMS_LABELS[supplier.paymentTerms] ?? supplier.paymentTerms;
+
   const orderColumns = [
     {
       key: 'poNumber',
-      header: 'PO',
+      header: 'PO #',
       priority: 1,
+      // Plain text, not a link: the row itself opens the order. A link inside a
+      // clickable row is two targets for one destination, and the one that is
+      // only a few characters wide is the one people miss.
       render: (order) => (
-        <Link
-          to={`/admin/purchase-orders/${order.id}`}
-          className="whitespace-nowrap font-mono text-sm font-medium text-ink-900 hover:text-brand"
-        >
+        <span className="whitespace-nowrap font-mono text-sm font-medium text-ink-900">
           {order.poNumber}
-        </Link>
+        </span>
       ),
     },
     {
       key: 'orderDate',
-      header: 'Ordered',
+      header: 'Date',
       priority: 2,
       render: (order) => <span className="text-sm text-ink-500">{date(order.orderDate)}</span>,
     },
@@ -153,9 +201,7 @@ export function AdminSupplierProfilePage() {
       priority: 3,
       render: (order) =>
         order.expectedDate ? (
-          <span
-            className={`text-sm ${order.overdue ? 'font-medium text-danger' : 'text-ink-500'}`}
-          >
+          <span className={`text-sm ${order.overdue ? 'font-medium text-danger' : 'text-ink-500'}`}>
             {date(order.expectedDate)}
           </span>
         ) : (
@@ -203,9 +249,7 @@ export function AdminSupplierProfilePage() {
       key: 'sku',
       header: 'SKU',
       priority: 2,
-      render: (product) => (
-        <span className="font-mono text-xs text-ink-500">{product.sku}</span>
-      ),
+      render: (product) => <span className="font-mono text-xs text-ink-500">{product.sku}</span>,
     },
     {
       key: 'stock',
@@ -229,11 +273,7 @@ export function AdminSupplierProfilePage() {
       align: 'right',
       className: 'tnum',
       render: (product) =>
-        product.cost > 0 ? (
-          money(product.cost)
-        ) : (
-          <span className="text-xs text-ink-300">—</span>
-        ),
+        product.cost > 0 ? money(product.cost) : <span className="text-xs text-ink-300">—</span>,
     },
     {
       key: 'price',
@@ -245,41 +285,113 @@ export function AdminSupplierProfilePage() {
     },
   ];
 
+  /**
+   * Row menus, so both tables carry the `Actions` column every other list
+   * screen has. Without one a `DataTable` renders as an inert grid: no trailing
+   * column, no row hover, nothing saying the row goes anywhere — which is why
+   * these two read as a different component from the Customers table.
+   */
+  const orderMenu = [
+    {
+      key: 'open',
+      label: 'Open purchase order',
+      icon: ExternalLink,
+      onSelect: (order) => navigate(`/admin/purchase-orders/${order.id}`),
+    },
+  ];
+
+  const productMenu = [
+    {
+      key: 'open',
+      label: 'Open inventory item',
+      icon: ExternalLink,
+      onSelect: (product) => navigate(`/admin/inventory/${product.id}`),
+    },
+    {
+      key: 'reorder',
+      label: 'Reorder from this supplier',
+      icon: Plus,
+      onSelect: () =>
+        navigate(`/admin/purchase-orders/create?supplier=${supplier.id}`),
+    },
+  ];
+
+  const tabs = [
+    { key: 'overview', label: 'Overview', icon: Truck },
+    { key: 'orders', label: 'Purchase orders', icon: ClipboardList, count: orders.length },
+    { key: 'products', label: 'Items supplied', icon: Boxes, count: products.length },
+  ];
+
   return (
     <>
       <PageHeader
-        icon={Truck}
+        icon={() => (
+          <span className="font-display text-md font-bold leading-none">
+            {initials(supplier.name)}
+          </span>
+        )}
         title={supplier.name}
-        description={
-          supplier.contactName
-            ? `${supplier.contactName} · terms ${TERMS_LABELS[supplier.paymentTerms] ?? supplier.paymentTerms}`
-            : `Terms ${TERMS_LABELS[supplier.paymentTerms] ?? supplier.paymentTerms}`
-        }
         badge={
           <Badge tone={supplier.isActive ? 'ok' : 'neutral'} size="sm">
             {supplier.isActive ? 'active' : 'inactive'}
           </Badge>
         }
         action={
-          <Link
-            to="/admin/suppliers"
-            className={cn(pressable, 'inline-flex h-11 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
-          >
-            All suppliers
-          </Link>
+          <>
+            {/* Straight into a new order against this supplier — the thing an
+                operator most often came to this page to do. */}
+            <Link
+              to={`/admin/purchase-orders/create?supplier=${supplier.id}`}
+              className={cn(pressable, 'inline-flex h-11 select-none items-center justify-center gap-2 rounded-md bg-brand-gradient px-5 font-display text-md font-semibold text-white')}
+            >
+              <Plus className="size-4 shrink-0" strokeWidth={2.25} aria-hidden="true" />
+              New PO
+            </Link>
+            {/* The supplier list owns the edit form, so this hands off to it
+                rather than the profile carrying a second copy of that modal. */}
+            <Link
+              to={`/admin/suppliers?edit=${supplier.id}`}
+              className={cn(pressable, 'inline-flex h-11 select-none items-center justify-center gap-2 rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
+            >
+              <Pencil className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
+              Edit
+            </Link>
+            <Link
+              to="/admin/suppliers"
+              className={cn(pressable, 'inline-flex h-11 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
+            >
+              All suppliers
+            </Link>
+          </>
         }
       />
 
+      {/* The facts an operator reads before deciding anything, on one line
+          under the name rather than buried in a panel below the fold. */}
+      <div className="-mt-2 mb-4 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+        <HeaderFact icon={Mail}>
+          {supplier.email && (
+            <a href={`mailto:${supplier.email}`} className="hover:text-brand hover:underline">
+              {supplier.email}
+            </a>
+          )}
+        </HeaderFact>
+        <HeaderFact icon={Phone}>
+          {supplier.phone && (
+            <a
+              href={`tel:${supplier.phone.replace(/[^\d+]/g, '')}`}
+              className="hover:text-brand hover:underline"
+            >
+              {supplier.phone}
+            </a>
+          )}
+        </HeaderFact>
+        <HeaderFact icon={MapPin}>{address.country || null}</HeaderFact>
+        <HeaderFact icon={Wallet}>Terms {termsLabel}</HeaderFact>
+      </div>
+
       <KpiRow
         tiles={[
-          {
-            key: 'spent',
-            label: 'Total spent',
-            value: money(supplier.totalSpent),
-            hint: 'Across every sent and received order',
-            tone: 'brand',
-            icon: Wallet,
-          },
           {
             key: 'orders',
             label: 'Purchase orders',
@@ -289,18 +401,24 @@ export function AdminSupplierProfilePage() {
             icon: ClipboardList,
           },
           {
-            key: 'outstanding',
-            label: 'Unpaid',
-            value: money(outstanding),
-            // A position, not a flow — it says so rather than reading as a
-            // figure belonging to some date range (§9).
-            hint: 'Ordered and not yet paid, as of today',
-            tone: outstanding > 0 ? 'warn' : 'ok',
-            icon: Receipt,
+            key: 'spent',
+            label: 'Total spent',
+            value: money(supplier.totalSpent),
+            hint: 'Across every sent and received order',
+            tone: 'brand',
+            icon: Wallet,
+          },
+          {
+            key: 'last',
+            label: 'Last order',
+            value: supplier.lastOrderAt ? date(supplier.lastOrderAt) : '—',
+            hint: supplier.lastOrderAt ? 'Most recent order placed' : 'Never ordered from',
+            tone: 'neutral',
+            icon: CalendarDays,
           },
           {
             key: 'products',
-            label: 'Linked products',
+            label: 'Items supplied',
             value: formatCount(products.length),
             hint: 'Reorder defaults to this supplier',
             tone: 'neutral',
@@ -309,105 +427,230 @@ export function AdminSupplierProfilePage() {
         ]}
       />
 
-      <div className="grid gap-3 lg:grid-cols-[300px_1fr]">
-        <div className="space-y-3">
-          <Panel title="Contact">
-            <div className="space-y-2.5">
-              <ContactRow icon={Mail}>
+      <TabRow
+        tabs={tabs}
+        value={tab}
+        onChange={setTab}
+        label="Supplier sections"
+        panel
+        className="mb-3"
+      />
+
+      {tab === 'overview' && (
+        <div className="grid gap-3 lg:grid-cols-[minmax(0,320px)_1fr]">
+          <Panel title="Supplier details">
+            <dl>
+              <DetailRow label="Contact">{supplier.contactName}</DetailRow>
+              <DetailRow label="Email">
                 {supplier.email && (
                   <a href={`mailto:${supplier.email}`} className="hover:text-brand">
                     {supplier.email}
                   </a>
                 )}
-              </ContactRow>
-              <ContactRow icon={Phone}>
+              </DetailRow>
+              <DetailRow label="Phone">
                 {supplier.phone && (
-                  <a href={`tel:${supplier.phone}`} className="hover:text-brand">
+                  <a
+                    href={`tel:${supplier.phone.replace(/[^\d+]/g, '')}`}
+                    className="hover:text-brand"
+                  >
                     {supplier.phone}
                   </a>
                 )}
-              </ContactRow>
-              <ContactRow icon={MapPin}>{addressLine || null}</ContactRow>
-              <ContactRow icon={ExternalLink}>
+              </DetailRow>
+              <DetailRow label="Website">
                 {supplier.website && (
                   <a
                     href={supplier.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="break-all hover:text-brand"
+                    className="inline-flex items-center gap-1 break-all hover:text-brand"
                   >
                     {supplier.website}
+                    <ExternalLink className="size-3 shrink-0" strokeWidth={2.25} aria-hidden="true" />
                   </a>
                 )}
-              </ContactRow>
+              </DetailRow>
+              <DetailRow label="Address">{addressLine || null}</DetailRow>
+              <DetailRow label="Code">
+                {supplier.code && <span className="font-mono">{supplier.code}</span>}
+              </DetailRow>
+              <DetailRow label="Terms">{termsLabel}</DetailRow>
+              <DetailRow label="Status">{supplier.isActive ? 'Active' : 'Inactive'}</DetailRow>
+            </dl>
+          </Panel>
 
-              {supplier.code && (
-                <p className="pt-1 text-xs text-ink-400">
-                  Code <span className="font-mono text-ink-600">{supplier.code}</span>
+          <div className="space-y-3">
+            <Panel
+              title="Communication & access"
+              description="What this supplier agreed to be contacted on."
+            >
+              <p className="eyebrow mb-2 text-ink-400">Consent</p>
+              <ConsentSummary consent={supplier.contactConsent} />
+              {supplier.contactConsent?.at ? (
+                <p className="mt-2.5 text-sm text-ink-400">
+                  Recorded {date(supplier.contactConsent.at)}.
+                </p>
+              ) : (
+                // Never asked is not the same fact as declined, and the panel
+                // has to be able to say which — see `Supplier.contactConsent`.
+                <p className="mt-2.5 text-sm text-ink-400">
+                  Not recorded yet. Set it from Edit.
                 </p>
               )}
-            </div>
-          </Panel>
-
-          {supplier.notes && (
-            <Panel title="Notes">
-              <p className="whitespace-pre-line text-sm leading-relaxed text-ink-600">
-                {supplier.notes}
-              </p>
             </Panel>
-          )}
 
-          <Panel title="Spend by month" description="Sent and received orders only — a draft is a plan, not money.">
-            <BarList
-              items={spend.map((row) => ({
-                label: monthLabel(row.label),
-                value: row.total,
-                hint: `${formatCount(row.count)} order${row.count === 1 ? '' : 's'}`,
-              }))}
-              caption="Spend by month"
-              formatValue={money}
-            />
-          </Panel>
+            <Panel title="Notes">
+              {supplier.notes ? (
+                <p className="whitespace-pre-line text-sm leading-relaxed text-ink-600">
+                  {supplier.notes}
+                </p>
+              ) : (
+                <p className="py-6 text-center text-sm text-ink-400">No notes recorded.</p>
+              )}
+            </Panel>
+
+            <Panel
+              title="Spend by month"
+              description="Sent and received orders only — a draft is a plan, not money."
+            >
+              <BarList
+                items={spend.map((row) => ({
+                  label: monthLabel(row.label),
+                  value: row.total,
+                  hint: `${formatCount(row.count)} order${row.count === 1 ? '' : 's'}`,
+                }))}
+                caption="Spend by month"
+                formatValue={money}
+              />
+            </Panel>
+          </div>
         </div>
+      )}
 
-        <div className="space-y-3">
-          <Panel title="Purchase orders" flush>
-            <DataTable
-              columns={orderColumns}
-              rows={orders}
-              rowKey={(order) => order.id}
-              defaultSort={{ key: 'orderDate', direction: 'desc' }}
-              empty={
-                <PanelEmpty
-                  icon={ClipboardList}
-                  title="No purchase orders"
-                  body="Nothing has been ordered from this supplier yet."
-                />
-              }
+      {tab === 'orders' && (
+        <Panel title="Purchase orders" flush>
+          {/* The count line is what carries the density toggle, so a table
+              without one is a table an operator cannot set the density of —
+              which is how every detail page ended up stuck at whatever the
+              last list screen left the preference on. */}
+          <div className="border-b border-line px-3 py-2 sm:px-4">
+            <CountLine
+              total={orders.length}
+              shown={orderPage.pageRows.length}
+              from={orderPage.from}
+              noun={orders.length === 1 ? 'purchase order' : 'purchase orders'}
             />
-          </Panel>
+          </div>
 
-          <Panel
-            title="Linked products"
-            description="Parts whose reorder defaults to this supplier."
-            flush
-          >
-            <DataTable
-              columns={productColumns}
-              rows={products}
-              rowKey={(product) => product.id}
-              empty={
-                <PanelEmpty
-                  icon={Boxes}
-                  title="No linked products"
-                  body="Set a default supplier on a product from the Inventory screen."
-                />
-              }
+          <DataTable
+            columns={orderColumns}
+            rows={orderPage.pageRows}
+            rowKey={(order) => order.id}
+            rowMenu={orderMenu}
+            onRowClick={(order) => navigate(`/admin/purchase-orders/${order.id}`)}
+            defaultSort={{ key: 'orderDate', direction: 'desc' }}
+            empty={
+              <PanelEmpty
+                icon={ClipboardList}
+                title="No purchase orders"
+                body="Nothing has been ordered from this supplier yet."
+              />
+            }
+          />
+
+          <Pagination
+            page={orderPage.page}
+            pages={orderPage.totalPages}
+            onChange={orderPage.setPage}
+            hideWhenSingle
+            className="border-t border-line px-3 py-3 sm:px-4"
+          />
+        </Panel>
+      )}
+
+      {tab === 'products' && (
+        <Panel
+          title="Items supplied"
+          description="Parts whose reorder defaults to this supplier."
+          flush
+        >
+          <div className="border-b border-line px-3 py-2 sm:px-4">
+            <CountLine
+              total={products.length}
+              shown={productPage.pageRows.length}
+              from={productPage.from}
+              noun={products.length === 1 ? 'item' : 'items'}
             />
-          </Panel>
-        </div>
-      </div>
+          </div>
+
+          <DataTable
+            columns={productColumns}
+            rows={productPage.pageRows}
+            rowKey={(product) => product.id}
+            rowMenu={productMenu}
+            onRowClick={(product) => navigate(`/admin/inventory/${product.id}`)}
+            defaultSort={{ key: 'name', direction: 'asc' }}
+            empty={
+              <PanelEmpty
+                icon={Boxes}
+                title="No inventory items linked to this supplier"
+                body="Set a default supplier on a product from the Inventory screen."
+              />
+            }
+          />
+
+          <Pagination
+            page={productPage.page}
+            pages={productPage.totalPages}
+            onChange={productPage.setPage}
+            hideWhenSingle
+            className="border-t border-line px-3 py-3 sm:px-4"
+          />
+        </Panel>
+      )}
     </>
+  );
+}
+
+/**
+ * The four channels, each showing its answer.
+ *
+ * Read-only, so this is not `ConsentChannels` — that component is a control and
+ * its chips invite a click. It reads from the same `CONSENT_CHANNELS` list, so
+ * a channel added later appears on both without either being edited.
+ *
+ * A channel that was never asked shows an em dash rather than a cross: "we did
+ * not ask" and "they said no" are different facts, and only one of them is a
+ * reason to go and ask.
+ */
+function ConsentSummary({ consent }) {
+  const recorded = Boolean(consent?.at);
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {CONSENT_CHANNELS.map(({ key, label, icon: Icon }) => {
+        const on = Boolean(consent?.[key]);
+        return (
+          <span
+            key={key}
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium',
+              on
+                ? 'border-ok/30 bg-ok-50 text-ok'
+                : 'border-line bg-surface text-ink-400',
+            )}
+          >
+            <Icon className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
+            {label}
+            <span aria-hidden="true">{!recorded ? '—' : on ? '✓' : '✕'}</span>
+            <span className="sr-only">
+              {!recorded ? 'not recorded' : on ? 'consented' : 'declined'}
+            </span>
+          </span>
+        );
+      })}
+    </div>
   );
 }
 

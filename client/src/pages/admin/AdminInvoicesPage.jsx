@@ -17,6 +17,8 @@ import { TERMS } from '@/components/admin/ApproveClientForm';
 import KpiRow from '@/components/admin/KpiRow';
 import FilterStrip from '@/components/admin/FilterStrip';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
+import Pagination from '@/components/ui/Pagination';
+import useTablePage from '@/hooks/useTablePage';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminInvoices, useAdminUsers, useAdminMutations } from '@/hooks/useAdmin';
@@ -292,6 +294,10 @@ export function AdminInvoicesPage() {
   const clients = clientData?.users ?? [];
 
   const invoices = data?.invoices ?? [];
+
+  // The KPI tiles are summed from the whole filtered set; the table gets a
+  // page of it. See `useTablePage` for why paging is client-side.
+  const { pageRows: pageInvoices, page, totalPages, from, setPage } = useTablePage(invoices);
   const counts = data?.counts ?? {};
   const totals = data?.totals ?? {};
 
@@ -477,13 +483,15 @@ export function AdminInvoicesPage() {
         <div className="border-b border-line px-3 py-2 sm:px-4">
           <CountLine
             total={invoices.length}
+            shown={pageInvoices.length}
+            from={from}
             noun={invoices.length === 1 ? 'invoice' : 'invoices'}
           />
         </div>
 
         <DataTable
           columns={columns}
-          rows={invoices}
+          rows={pageInvoices}
           rowKey={(invoice) => invoice.number}
           rowMenu={rowMenu}
           loading={isLoading}
@@ -496,6 +504,15 @@ export function AdminInvoicesPage() {
             />
           }
         />
+
+        <Pagination
+          page={page}
+          pages={totalPages}
+          onChange={setPage}
+          hideWhenSingle
+          className="border-t border-line px-3 py-3 sm:px-4"
+        />
+
       </Panel>
 
       <Modal

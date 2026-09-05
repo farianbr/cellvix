@@ -22,11 +22,14 @@ import {
 import cn from '@/lib/cn';
 import { money, date, count as formatCount } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
+import TabRow from '@/components/ui/TabRow';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import PageHeader from '@/components/admin/PageHeader';
 import KpiRow from '@/components/admin/KpiRow';
-import DataTable from '@/components/admin/DataTable';
+import DataTable, { CountLine } from '@/components/admin/DataTable';
+import Pagination from '@/components/ui/Pagination';
+import useTablePage from '@/hooks/useTablePage';
 import DateRangeBar, { useDateRange } from '@/components/admin/DateRangeBar';
 import { BarList, DonutChart } from '@/components/admin/charts/Charts';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
@@ -110,12 +113,24 @@ function CostCoverageNote({ coverage }) {
 }
 
 /** A panel whose emptiness is stated rather than left blank. */
-function TableCard({ title, description, columns, rows, empty, emptyIcon = FileText, footer, action }) {
+function TableCard({ title, description, columns, rows, empty, emptyIcon = FileText, footer, action, noun = 'rows' }) {
+  // Every report tab renders through here, so one hook paginates all ten.
+  const { pageRows, page, totalPages, from, setPage } = useTablePage(rows);
+
   return (
     <Panel title={title} description={description} action={action} flush>
+      {/* One `TableCard` serves every report tab, so the count line lands on
+          all of them at once — and with it the density toggle, without which
+          this whole screen was stuck at whatever a list page last set. */}
+      {rows.length > 0 && (
+        <div className="border-b border-line px-3 py-2 sm:px-4">
+          <CountLine total={rows.length} shown={pageRows.length} from={from} noun={noun} />
+        </div>
+      )}
+
       <DataTable
         columns={columns}
-        rows={rows}
+        rows={pageRows}
         // `DataTable` passes only the row, so the key has to come from the row
         // itself. Report rows are aggregates and have no id: the composite
         // below is what actually identifies one — a supplier-price row is an
@@ -130,6 +145,14 @@ function TableCard({ title, description, columns, rows, empty, emptyIcon = FileT
         }
         empty={<PanelEmpty icon={emptyIcon} title={empty} />}
       />
+      <Pagination
+        page={page}
+        pages={totalPages}
+        onChange={setPage}
+        hideWhenSingle
+        className="border-t border-line px-3 py-3 sm:px-4"
+      />
+
       {footer}
     </Panel>
   );
@@ -965,35 +988,11 @@ export function AdminReportsPage() {
 
       <DateRangeBar />
 
-      <div
-        role="tablist"
-        aria-label="Report"
-        className="scroll-slim mb-4 flex gap-1.5 overflow-x-auto pb-1"
-      >
-        {TABS.map((item) => {
-          const Icon = item.icon;
-          const isActive = item.key === tab;
-          return (
-            <button
-              key={item.key}
-              type="button"
-              role="tab"
-              aria-selected={isActive}
-              onClick={() => setTab(item.key)}
-              className={cn(
-                pressable,
-                'inline-flex h-9 shrink-0 select-none items-center gap-1.5 rounded-md px-3 font-display text-sm font-semibold',
-                isActive
-                  ? 'bg-brand-gradient text-white'
-                  : 'border border-line bg-surface text-ink-600 hover:border-line-strong hover:text-ink-900',
-              )}
-            >
-              <Icon className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
-              {item.label}
-            </button>
-          );
-        })}
-      </div>
+      {/* The shared `TabRow`. This was a local copy using the full
+          `.bg-brand-gradient` on a 36px pill, where the ramp's near-black
+          opening reads as a stripe rather than as depth — the shared component
+          uses the compact ramp, which is the rule for anything this short. */}
+      <TabRow tabs={TABS} value={tab} onChange={setTab} label="Report" className="mb-4" />
 
       {error ? (
         <Panel>

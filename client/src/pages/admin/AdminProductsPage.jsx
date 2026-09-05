@@ -30,6 +30,8 @@ import PageHeader from '@/components/admin/PageHeader';
 import KpiRow from '@/components/admin/KpiRow';
 import FilterStrip from '@/components/admin/FilterStrip';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
+import Pagination from '@/components/ui/Pagination';
+import useTablePage from '@/hooks/useTablePage';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useTaxonomy } from '@/hooks/useCatalog';
@@ -446,6 +448,10 @@ export function AdminProductsPage() {
   } = useAdminMutations();
 
   const products = data?.products ?? [];
+
+  // The KPI tiles are summed from the whole filtered set; the table gets a
+  // page of it. See `useTablePage` for why paging is client-side.
+  const { pageRows: pageProducts, page, totalPages, from, setPage } = useTablePage(products);
   const counts = data?.counts ?? {};
   const totals = data?.totals ?? {};
   const suppliers = supplierData?.suppliers ?? [];
@@ -685,14 +691,15 @@ export function AdminProductsPage() {
         <div className="border-b border-line px-3 py-2 sm:px-4">
           <CountLine
             total={counts.all ?? 0}
-            shown={products.length}
+            shown={pageProducts.length}
+            from={from}
             noun={(counts.all ?? 0) === 1 ? 'product' : 'products'}
           />
         </div>
 
         <DataTable
           columns={columns}
-          rows={products}
+          rows={pageProducts}
           rowMenu={rowMenu}
           onRowClick={(product) => navigate(`/admin/inventory/${product.id}`)}
           selectable
@@ -708,6 +715,15 @@ export function AdminProductsPage() {
             />
           }
         />
+
+        <Pagination
+          page={page}
+          pages={totalPages}
+          onChange={setPage}
+          hideWhenSingle
+          className="border-t border-line px-3 py-3 sm:px-4"
+        />
+
       </Panel>
 
       <Modal

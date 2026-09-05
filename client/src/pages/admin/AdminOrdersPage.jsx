@@ -27,6 +27,8 @@ import PageHeader from '@/components/admin/PageHeader';
 import KpiRow from '@/components/admin/KpiRow';
 import FilterStrip from '@/components/admin/FilterStrip';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
+import Pagination from '@/components/ui/Pagination';
+import useTablePage from '@/hooks/useTablePage';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import {
@@ -474,6 +476,10 @@ export function AdminOrdersPage() {
   const orders = data?.orders ?? [];
   const counts = data?.counts ?? {};
 
+  // The KPI tiles below are summed from `orders`, the whole filtered set — the
+  // table gets a page of it. See `useTablePage` for why paging is client-side.
+  const { pageRows: pageOrders, page, totalPages, from, setPage } = useTablePage(orders);
+
   const awaiting = (counts.placed ?? 0) + (counts.processing ?? 0);
   const shipped = (counts.shipped ?? 0) + (counts.out_for_delivery ?? 0);
   const rangeValue = orders.reduce((sum, order) => sum + order.total, 0);
@@ -633,7 +639,12 @@ export function AdminOrdersPage() {
         />
 
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-3 py-2 sm:px-4">
-          <CountLine total={orders.length} noun={orders.length === 1 ? 'order' : 'orders'} />
+          <CountLine
+            total={orders.length}
+            shown={pageOrders.length}
+            from={from}
+            noun={orders.length === 1 ? 'order' : 'orders'}
+          />
 
           {selected.length > 0 && (
             <div className="flex flex-wrap items-center gap-2">
@@ -705,7 +716,7 @@ export function AdminOrdersPage() {
 
         <DataTable
           columns={columns}
-          rows={orders}
+          rows={pageOrders}
           rowKey={(order) => order.orderNumber}
           selectable
           selected={selected}
@@ -720,6 +731,14 @@ export function AdminOrdersPage() {
               body="Try a different filter or search."
             />
           }
+        />
+
+        <Pagination
+          page={page}
+          pages={totalPages}
+          onChange={setPage}
+          hideWhenSingle
+          className="border-t border-line px-3 py-3 sm:px-4"
         />
       </Panel>
 

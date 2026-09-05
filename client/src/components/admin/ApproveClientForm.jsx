@@ -1,6 +1,7 @@
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { AlertCircle, Check } from 'lucide-react';
 import Input from '@/components/ui/Input';
+import PhoneField from '@/components/ui/PhoneField';
 import SelectField from '@/components/ui/SelectField';
 import Button from '@/components/ui/Button';
 
@@ -32,7 +33,9 @@ export function ApproveClientForm({ user, onSubmit, onCancel, isPending, error }
       terms: 'net30',
       repName: 'Marc Deveau',
       repEmail: 'marc@cellvix.ca',
-      repPhone: '+1 (416) 555-0110',
+      // Already in the composed shape `PhoneField` reads and writes, so the
+      // field does not silently reformat its own default on first paint.
+      repPhone: '+1 416 555 0110',
     },
   });
 
@@ -95,7 +98,18 @@ export function ApproveClientForm({ user, onSubmit, onCancel, isPending, error }
           <Input label="Name" {...register('repName')} />
           <div className="grid gap-3 sm:grid-cols-2">
             <Input label="Email" type="email" {...register('repEmail')} />
-            <Input label="Phone" type="tel" {...register('repPhone')} />
+            <Controller
+              name="repPhone"
+              control={control}
+              render={({ field }) => (
+                <PhoneField
+                  label="Phone"
+                  value={field.value}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                />
+              )}
+            />
           </div>
         </div>
       </fieldset>

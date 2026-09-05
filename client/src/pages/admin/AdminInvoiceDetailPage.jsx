@@ -26,6 +26,7 @@ import Input from '@/components/ui/Input';
 import SelectField from '@/components/ui/SelectField';
 import ActionMenu from '@/components/ui/ActionMenu';
 import ProcessStrip from '@/components/admin/ProcessStrip';
+import { useTableClasses, CountLine } from '@/components/admin/DataTable';
 import { toast } from '@/store/toastStore';
 import PageHeader from '@/components/admin/PageHeader';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
@@ -83,6 +84,7 @@ const INVOICE_LIFECYCLE = [
 ];
 
 export function AdminInvoiceDetailPage() {
+  const t = useTableClasses();
   const { number } = useParams();
   const navigate = useNavigate();
   const { data, isLoading, error } = useAdminInvoice(number);
@@ -321,36 +323,52 @@ export function AdminInvoiceDetailPage() {
                  four facts on every row — and a ledger is read down its columns.
                  The list forced the eye to re-find the amount on each line. */
               <div className="overflow-x-auto rounded-md border border-line">
+                {/* Carries the density toggle — these rows follow the same
+                    density as every list table. */}
+                <div className="border-b border-line px-3 py-2">
+                  <CountLine
+                    total={invoice.payments.length}
+                    noun={invoice.payments.length === 1 ? 'payment' : 'payments'}
+                  />
+                </div>
+
                 <table className="w-full table-fixed text-left">
                   <thead>
-                    <tr className="border-b border-line bg-surface-2">
-                      <th scope="col" className="w-[26%] px-3 py-2 text-2xs font-semibold uppercase tracking-wider text-ink-400">
+                    {/* Header type comes from the shared helpers, so this reads
+                        as the same component as every other admin table. The
+                        column widths stay — the table is `table-fixed` and the
+                        proportions are deliberate. */}
+                    <tr className={t.headRow}>
+                      <th scope="col" className={cn(t.headCell(), 'w-[26%]')}>
                         Date
                       </th>
-                      <th scope="col" className="w-[18%] px-3 py-2 text-right text-2xs font-semibold uppercase tracking-wider text-ink-400">
+                      <th scope="col" className={cn(t.headCell('right'), 'w-[18%]')}>
                         Amount
                       </th>
-                      <th scope="col" className="w-[18%] px-3 py-2 text-2xs font-semibold uppercase tracking-wider text-ink-400">
+                      <th scope="col" className={cn(t.headCell(), 'w-[18%]')}>
                         Method
                       </th>
-                      <th scope="col" className="w-[28%] px-3 py-2 text-2xs font-semibold uppercase tracking-wider text-ink-400">
+                      <th scope="col" className={cn(t.headCell(), 'w-[28%]')}>
                         Reference
                       </th>
-                      <th scope="col" className="w-[10%] px-3 py-2 text-right text-2xs font-semibold uppercase tracking-wider text-ink-400">
+                      <th scope="col" className={cn(t.headCell('right'), 'w-[10%]')}>
                         <span className="sr-only">Reverse</span>
                       </th>
                     </tr>
                   </thead>
 
-                  <tbody className="divide-y divide-line">
+                  <tbody>
                     {invoice.payments.map((payment, index) => {
                       const reversal = payment.amount < 0;
                       const reversed = Boolean(payment.reversedAt);
                       const forgiven = payment.method === 'void';
 
                       return (
-                        <tr key={`${payment.at}-${index}`} className={cn(reversed && 'bg-surface-2/60')}>
-                          <td className="tnum px-3 py-2.5 text-sm text-ink-500">
+                        <tr
+                          key={`${payment.at}-${index}`}
+                          className={cn(t.row, reversed && 'bg-surface-2/60')}
+                        >
+                          <td className={cn(t.cell(), 'tnum text-ink-500')}>
                             {dateTime(payment.at)}
                           </td>
 
@@ -368,7 +386,7 @@ export function AdminInvoiceDetailPage() {
                             {money(payment.amount)}
                           </td>
 
-                          <td className="px-3 py-2.5">
+                          <td className={t.cell()}>
                             {payment.method && (
                               <Badge
                                 tone={reversal ? 'danger' : forgiven ? 'neutral' : 'info'}
@@ -379,11 +397,11 @@ export function AdminInvoiceDetailPage() {
                             )}
                           </td>
 
-                          <td className="truncate px-3 py-2.5 font-mono text-xs text-ink-400">
+                          <td className={cn(t.cell(), 'truncate font-mono text-xs text-ink-400')}>
                             {payment.reference || '—'}
                           </td>
 
-                          <td className="px-3 py-2.5 text-right">
+                          <td className={t.cell('right')}>
                             {/* Only a real, un-reversed payment can be reversed.
                                 A void and a reversal are already corrections —
                                 offering to undo them would be a second way to

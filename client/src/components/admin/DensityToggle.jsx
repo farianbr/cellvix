@@ -18,7 +18,7 @@ import { pressable } from '@/lib/motion';
  * adjusted while looking at the rows.
  */
 export function DensityToggle({ className }) {
-  const [density, toggle] = useTableDensity();
+  const [density, setDensity] = useTableDensity();
 
   const options = [
     { value: 'comfortable', label: 'Comfortable rows', icon: Rows2 },
@@ -37,7 +37,11 @@ export function DensityToggle({ className }) {
           <button
             key={value}
             type="button"
-            onClick={active ? undefined : toggle}
+            // Sets its own value rather than flipping the current one. A
+            // segmented control's buttons are two destinations, not one switch
+            // pressed twice, and "flip from whatever is current" is what let a
+            // click land back on the density already showing.
+            onClick={() => setDensity(value)}
             aria-pressed={active}
             aria-label={label}
             title={label}

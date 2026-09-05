@@ -128,7 +128,15 @@ async function applyStockMovement({
 
 // ---- suppliers --------------------------------------------------------------
 
-function shapeSupplier(supplier) {
+/**
+ * `lastOrderAt` is passed in rather than read off the document, because unlike
+ * `ordersCount` and `totalSpent` it is not denormalised onto `Supplier` — it
+ * comes from an aggregation over the purchase orders (see `listSuppliers`).
+ * Callers that have no reason to run that aggregation omit it and the field is
+ * `null`, which the list renders as "Never" — the same thing it renders for a
+ * supplier that genuinely has never been ordered from.
+ */
+function shapeSupplier(supplier, lastOrderAt = null) {
   return {
     id: supplier._id.toString(),
     name: supplier.name,
@@ -141,8 +149,19 @@ function shapeSupplier(supplier) {
     paymentTerms: supplier.paymentTerms,
     notes: supplier.notes ?? null,
     isActive: supplier.isActive,
+    // `at` rides along because it is the half of a consent record that makes it
+    // evidence: the edit form shows when the answer was taken, so nobody has to
+    // guess whether ticks they are looking at were set last week or at import.
+    contactConsent: {
+      sms: supplier.contactConsent?.sms ?? false,
+      whatsapp: supplier.contactConsent?.whatsapp ?? false,
+      email: supplier.contactConsent?.email ?? false,
+      call: supplier.contactConsent?.call ?? false,
+      at: supplier.contactConsent?.at ?? null,
+    },
     ordersCount: supplier.ordersCount ?? 0,
     totalSpent: supplier.totalSpent ?? 0,
+    lastOrderAt: lastOrderAt ?? null,
   };
 }
 
@@ -156,18 +175,42 @@ async function listSuppliers({ q, status } = {}) {
     query.$or = [{ name: rx }, { code: rx }, { contactName: rx }, { email: rx }];
   }
 
-  const suppliers = await Supplier.find(query).sort({ name: 1 }).limit(300).lean();
+  const [suppliers, total, active, lastOrders, spend] = await Promise.all([
+    Supplier.find(query).sort({ name: 1 }).limit(300).lean(),
 
-  // Counts come from the whole collection, not the filtered set — the same rule
-  // the invoice pills follow, for the same reason.
-  const [total, active] = await Promise.all([
+    // Counts come from the whole collection, not the filtered set — the same
+    // rule the invoice pills follow, for the same reason.
     Supplier.countDocuments({}),
     Supplier.countDocuments({ isActive: true }),
+
+    // Newest order date per supplier. Drafts and cancellations are excluded on
+    // the same grounds the spend chart excludes them: a draft is a plan, and
+    // "last ordered Aug 16" is a claim that something was actually sent.
+    PurchaseOrder.aggregate([
+      { $match: { status: { $nin: ['draft', 'cancelled'] } } },
+      { $group: { _id: '$supplier', lastOrderAt: { $max: '$orderDate' } } },
+    ]),
+
+    // The header's Total Orders / Total Spent. Summed from the purchase orders
+    // rather than from the suppliers' denormalised counters: those are
+    // per-supplier running totals, and adding them up would double-count
+    // anything a future backfill touches twice.
+    PurchaseOrder.aggregate([
+      { $match: { status: { $nin: ['draft', 'cancelled'] } } },
+      { $group: { _id: null, orders: { $sum: 1 }, spent: { $sum: '$total' } } },
+    ]),
   ]);
 
+  const lastOrderBySupplier = new Map(
+    lastOrders.map((row) => [String(row._id), row.lastOrderAt]),
+  );
+
   return {
-    suppliers: suppliers.map(shapeSupplier),
+    suppliers: suppliers.map((supplier) =>
+      shapeSupplier(supplier, lastOrderBySupplier.get(String(supplier._id)) ?? null),
+    ),
     counts: { all: total, active, inactive: total - active },
+    totals: { orders: spend[0]?.orders ?? 0, spent: spend[0]?.spent ?? 0 },
   };
 }
 
@@ -210,8 +253,20 @@ async function getSupplier(id) {
     ]),
   ]);
 
+  // The profile's Last Order tile. Derived from the orders already loaded above
+  // rather than by re-running the list's aggregation — same rule it follows
+  // (drafts and cancellations are not an order having been placed), one fewer
+  // round trip.
+  const lastOrderAt =
+    orders
+      .filter((order) => !['draft', 'cancelled'].includes(order.status))
+      .reduce((latest, order) => {
+        const at = order.orderDate ? new Date(order.orderDate) : null;
+        return at && (!latest || at > latest) ? at : latest;
+      }, null) ?? null;
+
   return {
-    supplier: shapeSupplier(supplier),
+    supplier: shapeSupplier(supplier, lastOrderAt),
     orders: orders.map(shapePurchaseOrder),
     products: products.map((product) => ({
       id: product._id.toString(),
@@ -226,15 +281,37 @@ async function getSupplier(id) {
   };
 }
 
+/**
+ * Stamp a consent answer with when it was recorded and on what basis.
+ *
+ * The client sends four booleans; it does not send `at` or `source`, because a
+ * consent record whose provenance the client can write is not evidence of
+ * anything. An absent `contactConsent` means the form did not touch the ticks,
+ * which must leave whatever was there alone rather than writing four falses.
+ */
+function withConsentStamp(body, source = 'admin') {
+  if (!body.contactConsent) return body;
+  return {
+    ...body,
+    contactConsent: { ...body.contactConsent, at: new Date(), source },
+  };
+}
+
 async function createSupplier(body) {
-  const supplier = await Supplier.create({ ...body, code: body.code || undefined });
+  const supplier = await Supplier.create({
+    ...withConsentStamp(body),
+    code: body.code || undefined,
+  });
   return { supplier: shapeSupplier(supplier.toObject()) };
 }
 
 async function updateSupplier(id, body) {
   if (!isObjectId(id)) throw ApiError.notFound('Supplier not found.', 'SUPPLIER_NOT_FOUND');
 
-  const supplier = await Supplier.findByIdAndUpdate(id, body, { new: true, runValidators: true });
+  const supplier = await Supplier.findByIdAndUpdate(id, withConsentStamp(body), {
+    new: true,
+    runValidators: true,
+  });
   if (!supplier) throw ApiError.notFound('Supplier not found.', 'SUPPLIER_NOT_FOUND');
   return { supplier: shapeSupplier(supplier.toObject()) };
 }
@@ -435,16 +512,45 @@ async function getPurchaseOrder(id) {
     .lean();
   if (!po) throw ApiError.notFound('Purchase order not found.', 'PO_NOT_FOUND');
 
-  const movements = await StockMovement.find({
-    'reference.kind': 'purchase_order',
-    'reference.id': po._id,
-  })
-    .sort({ createdAt: -1 })
-    .populate('product', 'name sku')
-    .lean();
+  // The lines' Linked Inventory column: what each ordered part holds in stock
+  // *now*. Read live rather than snapshotted onto the line, because the number
+  // an operator is checking against is today's shelf, not the one that was
+  // there when the order was raised.
+  const productIds = (po.items ?? []).map((item) => item.product).filter(Boolean);
+
+  const [movements, linked] = await Promise.all([
+    StockMovement.find({
+      'reference.kind': 'purchase_order',
+      'reference.id': po._id,
+    })
+      .sort({ createdAt: -1 })
+      .populate('product', 'name sku')
+      .lean(),
+
+    productIds.length
+      ? Product.find({ _id: { $in: productIds } }).select('name sku stock').lean()
+      : [],
+  ]);
+
+  const stockByProduct = new Map(
+    linked.map((product) => [
+      product._id.toString(),
+      { id: product._id.toString(), name: product.name, sku: product.sku, stock: product.stock },
+    ]),
+  );
+
+  const order = shapePurchaseOrder(po);
 
   return {
-    order: shapePurchaseOrder(po),
+    order: {
+      ...order,
+      items: order.items.map((item) => ({
+        ...item,
+        // `null` when the line was never linked to a catalogue product — a real
+        // state, and the one the client renders as "not linked".
+        inventory: item.product ? (stockByProduct.get(item.product) ?? null) : null,
+      })),
+    },
     movements: movements.map((movement) => ({
       id: movement._id.toString(),
       product: movement.product

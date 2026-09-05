@@ -24,6 +24,7 @@ import SelectField from '@/components/ui/SelectField';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import PageHeader from '@/components/admin/PageHeader';
+import { useTableClasses, CountLine } from '@/components/admin/DataTable';
 import KpiRow from '@/components/admin/KpiRow';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
 import { useAdminRma, useAdminMutations } from '@/hooks/useAdmin';
@@ -242,6 +243,7 @@ function ResolveForm({ rma, refund, onSubmit, onCancel, isPending, error }) {
 }
 
 export function AdminRmaDetailPage() {
+  const t = useTableClasses();
   const { id } = useParams();
   const [inspecting, setInspecting] = useState(false);
   const [resolving, setResolving] = useState(false);
@@ -420,31 +422,38 @@ export function AdminRmaDetailPage() {
       <div className="grid gap-3 lg:grid-cols-[1fr_300px]">
         <div className="space-y-3">
           <Panel title="Items" description="What the client said, and what inspection found." flush>
+            <div className="border-b border-line px-3 py-2 sm:px-4">
+              <CountLine
+                total={rma.items.length}
+                noun={rma.items.length === 1 ? 'item' : 'items'}
+              />
+            </div>
+
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b border-line">
-                    <th scope="col" className="eyebrow px-4 py-2.5 text-ink-400">
+                  <tr className={t.headRow}>
+                    <th scope="col" className={t.headCell()}>
                       Product
                     </th>
-                    <th scope="col" className="eyebrow px-4 py-2.5 text-right text-ink-400">
+                    <th scope="col" className={t.headCell('right')}>
                       Qty
                     </th>
-                    <th scope="col" className="eyebrow px-4 py-2.5 text-ink-400">
+                    <th scope="col" className={t.headCell()}>
                       Condition
                     </th>
-                    <th scope="col" className="eyebrow px-4 py-2.5 text-ink-400">
+                    <th scope="col" className={t.headCell()}>
                       Disposition
                     </th>
-                    <th scope="col" className="eyebrow px-4 py-2.5 text-right text-ink-400">
+                    <th scope="col" className={t.headCell('right')}>
                       Value
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {rma.items.map((item) => (
-                    <tr key={item.sku} className="border-b border-line last:border-0">
-                      <td className="px-4 py-3">
+                    <tr key={item.sku} className={t.row}>
+                      <td className={t.cell()}>
                         <p className="text-sm text-ink-900">{item.name}</p>
                         <p className="font-mono text-xs text-ink-400">{item.sku}</p>
                         {item.reason && (
@@ -453,13 +462,13 @@ export function AdminRmaDetailPage() {
                           </p>
                         )}
                       </td>
-                      <td className="tnum px-4 py-3 text-right text-sm text-ink-700">
+                      <td className={cn(t.cell('right'), 'tnum text-ink-700')}>
                         {formatCount(item.qty)}
                       </td>
-                      <td className="px-4 py-3 text-sm text-ink-600">
+                      <td className={cn(t.cell(), 'text-ink-600')}>
                         {item.condition ?? <span className="text-ink-300">not inspected</span>}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className={t.cell()}>
                         <Badge
                           tone={
                             item.disposition === 'restock'
@@ -476,7 +485,7 @@ export function AdminRmaDetailPage() {
                           <span className="mt-0.5 block text-2xs text-ok">back on the shelf</span>
                         )}
                       </td>
-                      <td className="tnum px-4 py-3 text-right text-sm text-ink-900">
+                      <td className={cn(t.cell('right'), 'tnum text-ink-900')}>
                         {money(item.unitPrice * item.qty)}
                       </td>
                     </tr>

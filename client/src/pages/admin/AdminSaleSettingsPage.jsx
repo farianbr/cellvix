@@ -8,7 +8,9 @@ import Panel from '@/components/ui/Panel';
 import Input from '@/components/ui/Input';
 import SelectField from '@/components/ui/SelectField';
 import PageHeader from '@/components/admin/PageHeader';
+import { useTableClasses, CountLine } from '@/components/admin/DataTable';
 import { SettingsFormActions, PlaceholderNotice } from '@/components/admin/settings/SettingsForm';
+import cn from '@/lib/cn';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { GRADES, GRADE_ORDER } from '@/lib/constants';
@@ -67,6 +69,7 @@ const toPercent = (fraction) => String(Math.round(fraction * 1e6) / 1e4);
 const toFraction = (percent) => Math.round(Number(percent) * 1e4) / 1e6;
 
 export function AdminSaleSettingsPage() {
+  const t = useTableClasses();
   const { data, isLoading } = useAdminSettings();
   const { saveSaleSettings } = useAdminMutations();
   const [saved, setSaved] = useState(false);
@@ -244,35 +247,41 @@ export function AdminSaleSettingsPage() {
           title="GST/HST by province"
           description="The rate charged on an order, chosen by the shipping address. Entered as a percentage."
         >
+          {/* Carries the density toggle — this grid follows the same density as
+              every list table. */}
+          <div className="mb-2 border-b border-line pb-2">
+            <CountLine total={PROVINCES.length} noun="provinces" />
+          </div>
+
           {/* Scrolls inside itself rather than pushing the page sideways — the
               table is 13 rows of three controls and a phone cannot fit them. */}
           <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-            <table className="w-full min-w-[520px] border-collapse text-sm">
+            <table className="w-full min-w-130 text-left">
               <thead>
-                <tr className="border-b border-line text-left">
-                  <th scope="col" className="pb-2 font-display text-xs font-semibold text-ink-500">
+                <tr className={t.headRow}>
+                  <th scope="col" className={t.headCell()}>
                     Province
                   </th>
-                  <th scope="col" className="pb-2 font-display text-xs font-semibold text-ink-500">
+                  <th scope="col" className={t.headCell()}>
                     Rate
                   </th>
-                  <th scope="col" className="pb-2 font-display text-xs font-semibold text-ink-500">
+                  <th scope="col" className={t.headCell()}>
                     Kind
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-line">
+              <tbody>
                 {PROVINCES.map((province) => {
                   const row = rates[province.value];
                   if (!row) return null;
 
                   return (
-                    <tr key={province.value}>
-                      <th scope="row" className="py-2 pr-3 text-left font-medium text-ink-900">
+                    <tr key={province.value} className={t.row}>
+                      <th scope="row" className={cn(t.cell(), 'font-medium text-ink-900')}>
                         <span className="tnum mr-2 text-ink-400">{province.value}</span>
                         {province.label}
                       </th>
-                      <td className="py-2 pr-3">
+                      <td className={t.cell()}>
                         <Input
                           type="number"
                           min="0"
@@ -285,15 +294,11 @@ export function AdminSaleSettingsPage() {
                           containerClassName="w-32"
                         />
                       </td>
-                      <td className="py-2">
-                        {/* A plain select: this is inside a hand-managed table
-                            row, so there is no RHF field for SelectField to
-                            control. */}
-                        {/* SelectMenu, not a native select. The comment here
-                            used to say SelectField could not control it because
-                            the row has no react-hook-form field — true, but
-                            SelectField is only the RHF wrapper; SelectMenu is
-                            the primitive and takes value/onChange directly. */}
+                      <td className={t.cell()}>
+                        {/* `SelectMenu`, not `SelectField`: the latter is the
+                            react-hook-form wrapper and this row is hand-managed
+                            state, so the primitive taking value/onChange
+                            directly is the right one. */}
                         <SelectMenu
                           srLabel={`${province.label} tax kind`}
                           value={row.kind}

@@ -29,6 +29,8 @@ import Checkbox from '@/components/ui/Checkbox';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
+import Pagination from '@/components/ui/Pagination';
+import useTablePage from '@/hooks/useTablePage';
 import Skeleton from '@/components/ui/Skeleton';
 import PostCover from '@/components/blog/PostCover';
 import PageHeader from '@/components/admin/PageHeader';
@@ -304,6 +306,9 @@ export function AdminBlogPage() {
 
   const posts = data?.posts ?? [];
 
+  // A page of rows for the table; counts and tiles still read the full set.
+  const { pageRows: pagePosts, page, totalPages, from, setPage } = useTablePage(posts);
+
   /**
    * The columns.
    *
@@ -517,15 +522,23 @@ export function AdminBlogPage() {
         ) : (
           <>
             <div className="border-b border-line px-3 py-2 sm:px-4">
-              <CountLine total={posts.length} noun={posts.length === 1 ? 'post' : 'posts'} />
+              <CountLine total={posts.length} shown={pagePosts.length} from={from} noun={posts.length === 1 ? 'post' : 'posts'} />
             </div>
 
             <DataTable
               columns={columns}
-              rows={posts}
+              rows={pagePosts}
               rowKey={(post) => post.id}
               onRowClick={(post) => setEditingId(post.id)}
               defaultSort={{ key: 'updatedAt', direction: 'desc' }}
+            />
+
+            <Pagination
+              page={page}
+              pages={totalPages}
+              onChange={setPage}
+              hideWhenSingle
+              className="border-t border-line px-3 py-3 sm:px-4"
             />
           </>
         )}

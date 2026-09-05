@@ -27,6 +27,8 @@ import PageHeader from '@/components/admin/PageHeader';
 import KpiRow from '@/components/admin/KpiRow';
 import FilterStrip from '@/components/admin/FilterStrip';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
+import Pagination from '@/components/ui/Pagination';
+import useTablePage from '@/hooks/useTablePage';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import useCreateParam from '@/hooks/useCreateParam';
@@ -294,6 +296,10 @@ export function AdminSupplierServicesPage({ mode = 'service' }) {
   } = useAdminMutations();
 
   const rows = data?.services ?? [];
+
+  // The KPI tiles are summed from the whole filtered set; the table gets a
+  // page of it. See `useTablePage` for why paging is client-side.
+  const { pageRows: pageServices, page: tablePage, totalPages, from, setPage } = useTablePage(rows);
   const counts = data?.counts ?? {};
 
   function setStatus(next) {
@@ -510,12 +516,12 @@ export function AdminSupplierServicesPage({ mode = 'service' }) {
         />
 
         <div className="border-b border-line px-3 py-2 sm:px-4">
-          <CountLine total={rows.length} noun={rows.length === 1 ? meta.noun : meta.plural} />
+          <CountLine total={rows.length} shown={pageServices.length} from={from} noun={rows.length === 1 ? meta.noun : meta.plural} />
         </div>
 
         <DataTable
           columns={columns}
-          rows={rows}
+          rows={pageServices}
           rowKey={(row) => row.id}
           rowMenu={rowMenu}
           loading={isLoading}
@@ -527,6 +533,15 @@ export function AdminSupplierServicesPage({ mode = 'service' }) {
             />
           }
         />
+
+        <Pagination
+          page={tablePage}
+          pages={totalPages}
+          onChange={setPage}
+          hideWhenSingle
+          className="border-t border-line px-3 py-3 sm:px-4"
+        />
+
       </Panel>
 
       <Modal

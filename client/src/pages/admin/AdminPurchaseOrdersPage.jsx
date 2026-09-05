@@ -1,7 +1,5 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
-import { useFieldArray, useForm } from 'react-hook-form';
-import useCreateParam from '@/hooks/useCreateParam';
 import {
   AlertCircle,
   AlertTriangle,
@@ -14,9 +12,6 @@ import {
 } from 'lucide-react';
 import { money, date, count as formatCount } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
-import Modal from '@/components/ui/Modal';
-import Input from '@/components/ui/Input';
-import Textarea from '@/components/ui/Textarea';
 import SelectField from '@/components/ui/SelectField';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -24,6 +19,8 @@ import PageHeader from '@/components/admin/PageHeader';
 import KpiRow from '@/components/admin/KpiRow';
 import FilterStrip from '@/components/admin/FilterStrip';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
+import Pagination from '@/components/ui/Pagination';
+import useTablePage from '@/hooks/useTablePage';
 import ProcessStrip from '@/components/admin/ProcessStrip';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
@@ -33,7 +30,6 @@ import SelectMenu from '@/components/ui/SelectMenu';
 import {
   useAdminPurchaseOrders,
   useAdminSuppliers,
-  useAdminInventory,
   useAdminMutations,
 } from '@/hooks/useAdmin';
 
@@ -79,164 +75,9 @@ function cycleStage(status) {
   return 'supplier';
 }
 
-/** `YYYY-MM-DD` in local time — `toISOString()` would shift the day westward. */
-function todayIso() {
-  const now = new Date();
-  return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
-}
-
-/**
- * Raise a purchase order.
- *
- * The form sends product ids, quantities and a negotiated unit cost — and
- * nothing else. Every subtotal and total is recomputed server-side, so the
- * running figure below the lines is a preview, never the number that binds
- * (invariant 8).
- */
-function PurchaseOrderForm({ suppliers, products, onSubmit, onCancel, isPending, error }) {
-  const { register, handleSubmit, control, watch } = useForm({
-    defaultValues: {
-      supplier: suppliers[0]?.id ?? '',
-      orderDate: todayIso(),
-      expectedDate: '',
-      taxDollars: '0.00',
-      shippingDollars: '0.00',
-      notes: '',
-      items: [{ product: '', qtyOrdered: 10, unitCostDollars: '' }],
-    },
-  });
-
-  const { fields, append, remove } = useFieldArray({ control, name: 'items' });
-  const watched = watch('items');
-  const tax = Math.round(Number(watch('taxDollars') || 0) * 100);
-  const shipping = Math.round(Number(watch('shippingDollars') || 0) * 100);
-
-  const subtotal = (watched ?? []).reduce((sum, line) => {
-    const qty = Number(line?.qtyOrdered ?? 0);
-    const cost = Math.round(Number(line?.unitCostDollars ?? 0) * 100);
-    return sum + (Number.isFinite(qty) && Number.isFinite(cost) ? qty * cost : 0);
-  }, 0);
-
-  const productOptions = products.map((product) => ({
-    value: product.id,
-    label: `${product.sku} · ${product.name}`,
-  }));
-
-  return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      {error && (
-        <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
-          <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
-          {error}
-        </p>
-      )}
-
-      <div className="grid gap-3 sm:grid-cols-3">
-        <SelectField
-          control={control}
-          name="supplier"
-          label="Supplier"
-          options={suppliers.map((supplier) => ({ value: supplier.id, label: supplier.name }))}
-        />
-        <Input label="Order date" type="date" {...register('orderDate')} />
-        <Input label="Expected" type="date" {...register('expectedDate')} />
-      </div>
-
-      <div>
-        <p className="eyebrow mb-2 text-ink-400">Lines</p>
-
-        <div className="space-y-2">
-          {fields.map((field, index) => (
-            <div
-              key={field.id}
-              className="grid items-end gap-2 rounded-md bg-surface-2 p-2.5 sm:grid-cols-[1fr_90px_120px_auto]"
-            >
-              <SelectField
-                control={control}
-                name={`items.${index}.product`}
-                label={index === 0 ? 'Product' : undefined}
-                options={productOptions}
-                size="sm"
-              />
-              <Input
-                label={index === 0 ? 'Qty' : undefined}
-                type="number"
-                min="1"
-                {...register(`items.${index}.qtyOrdered`)}
-              />
-              <Input
-                label={index === 0 ? 'Unit cost' : undefined}
-                inputMode="decimal"
-                suffix="CAD"
-                placeholder="0.00"
-                {...register(`items.${index}.unitCostDollars`)}
-              />
-              <button
-                type="button"
-                onClick={() => remove(index)}
-                disabled={fields.length === 1}
-                aria-label={`Remove line ${index + 1}`}
-                className={cn(pressable, 'flex size-9 shrink-0 items-center justify-center rounded-md border border-line text-ink-400 hover:border-danger/30 hover:bg-danger-50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40')}
-              >
-                <Trash2 className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
-              </button>
-            </div>
-          ))}
-        </div>
-
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          icon={Plus}
-          className="mt-2"
-          onClick={() => append({ product: '', qtyOrdered: 10, unitCostDollars: '' })}
-        >
-          Add line
-        </Button>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2">
-        <Input label="Tax" inputMode="decimal" suffix="CAD" {...register('taxDollars')} />
-        <Input label="Shipping" inputMode="decimal" suffix="CAD" {...register('shippingDollars')} />
-      </div>
-
-      <Textarea label="Notes" rows={2} {...register('notes')} />
-
-      <div className="rounded-md bg-surface-2 px-3 py-2.5">
-        <p className="tnum flex items-baseline justify-between text-sm text-ink-600">
-          <span>Subtotal</span>
-          <span>{money(subtotal)}</span>
-        </p>
-        <p className="tnum mt-1 flex items-baseline justify-between text-sm text-ink-600">
-          <span>Tax and shipping</span>
-          <span>{money(tax + shipping)}</span>
-        </p>
-        <p className="tnum mt-1.5 flex items-baseline justify-between border-t border-line pt-1.5 text-md font-semibold text-ink-900">
-          <span>Total</span>
-          <span>{money(subtotal + tax + shipping)}</span>
-        </p>
-        <p className="mt-1.5 text-xs leading-relaxed text-ink-400">
-          A preview. Every total is recomputed on the server from the lines.
-        </p>
-      </div>
-
-      <div className="flex justify-end gap-2">
-        <Button type="button" variant="ghost" onClick={onCancel}>
-          Cancel
-        </Button>
-        <Button type="submit" loading={isPending}>
-          Create draft
-        </Button>
-      </div>
-    </form>
-  );
-}
 
 export function AdminPurchaseOrdersPage() {
   const [query, setQuery] = useState('');
-  // Opened directly by `+ Create` (§7.2), which arrives with `?new=1`.
-  const [creating, setCreating] = useCreateParam();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -249,16 +90,16 @@ export function AdminPurchaseOrdersPage() {
     q: query || undefined,
   });
   const { data: supplierData } = useAdminSuppliers({ status: 'active' });
-  // Only loaded while the create form is open — the catalogue is 400+ rows and
-  // nothing on the list screen itself needs it.
-  const { data: inventoryData } = useAdminInventory({}, creating);
-  const { createPurchaseOrder, setPurchaseOrderStatus } = useAdminMutations();
+  const { setPurchaseOrderStatus } = useAdminMutations();
 
   const orders = data?.orders ?? [];
+
+  // The KPI tiles are summed from the whole filtered set; the table gets a
+  // page of it. See `useTablePage` for why paging is client-side.
+  const { pageRows: pagePos, page, totalPages, from, setPage } = useTablePage(orders);
   const counts = data?.counts ?? {};
   const totals = data?.totals ?? {};
   const suppliers = supplierData?.suppliers ?? [];
-  const products = inventoryData?.products ?? [];
 
   const overdueCount = useMemo(
     () => orders.filter((order) => order.overdue).length,
@@ -399,9 +240,15 @@ export function AdminPurchaseOrdersPage() {
               <Truck className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
               Suppliers
             </Link>
-            <Button onClick={() => setCreating(true)} icon={Plus} disabled={!suppliers.length}>
-              New purchase order
-            </Button>
+            {/* A page now, not a dialog — a PO with a dozen scanned lines and a
+                running total is the wrong shape for a modal. */}
+            <Link
+              to="/admin/purchase-orders/create"
+              className={cn(pressable, 'inline-flex h-11 select-none items-center justify-center gap-2 rounded-md bg-brand-gradient px-5 font-display text-md font-semibold text-white')}
+            >
+              <Plus className="size-4 shrink-0" strokeWidth={2.25} aria-hidden="true" />
+              New PO
+            </Link>
           </>
         }
       />
@@ -492,13 +339,15 @@ export function AdminPurchaseOrdersPage() {
         <div className="border-b border-line px-3 py-2 sm:px-4">
           <CountLine
             total={orders.length}
+            shown={pagePos.length}
+            from={from}
             noun={orders.length === 1 ? 'purchase order' : 'purchase orders'}
           />
         </div>
 
         <DataTable
           columns={columns}
-          rows={orders}
+          rows={pagePos}
           rowKey={(order) => order.id}
           rowMenu={rowMenu}
           onRowClick={(order) => navigate(`/admin/purchase-orders/${order.id}`)}
@@ -516,54 +365,19 @@ export function AdminPurchaseOrdersPage() {
             />
           }
         />
+
+        <Pagination
+          page={page}
+          pages={totalPages}
+          onChange={setPage}
+          hideWhenSingle
+          className="border-t border-line px-3 py-3 sm:px-4"
+        />
+
       </Panel>
 
       <ProcessStrip title="Life cycle of a purchase order" current={cycleStage(status)} />
 
-      <Modal
-        open={creating}
-        onClose={() => setCreating(false)}
-        title="New purchase order"
-        size="xl"
-        align="top"
-      >
-        {creating && (
-          <PurchaseOrderForm
-            suppliers={suppliers}
-            products={products}
-            isPending={createPurchaseOrder.isPending}
-            error={createPurchaseOrder.error?.message}
-            onCancel={() => setCreating(false)}
-            onSubmit={(values) =>
-              createPurchaseOrder.mutate(
-                {
-                  supplier: values.supplier,
-                  orderDate: values.orderDate || undefined,
-                  expectedDate: values.expectedDate || undefined,
-                  tax: Math.round(Number(values.taxDollars || 0) * 100),
-                  shipping: Math.round(Number(values.shippingDollars || 0) * 100),
-                  notes: values.notes || undefined,
-                  items: values.items
-                    .filter((line) => line.product)
-                    .map((line) => ({
-                      product: line.product,
-                      qtyOrdered: Number(line.qtyOrdered),
-                      unitCost: Math.round(Number(line.unitCostDollars || 0) * 100),
-                    })),
-                },
-                {
-                  onSuccess: (payload) => {
-                    setCreating(false);
-                    // Straight to the order that was just raised — the next
-                    // thing an operator does is send it.
-                    if (payload?.order?.id) navigate(`/admin/purchase-orders/${payload.order.id}`);
-                  },
-                },
-              )
-            }
-          />
-        )}
-      </Modal>
     </>
   );
 }

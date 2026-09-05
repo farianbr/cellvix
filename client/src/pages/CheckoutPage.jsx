@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertCircle, ArrowLeft, Banknote, CreditCard, Lock, Package, ShieldCheck, Truck, WalletCards } from 'lucide-react';
@@ -15,6 +15,7 @@ import {
   checkoutSchema,
 } from '@shared/schemas/checkout';
 import Input from '@/components/ui/Input';
+import PhoneField from '@/components/ui/PhoneField';
 import SelectField from '@/components/ui/SelectField';
 import Button from '@/components/ui/Button';
 import Checkbox from '@/components/ui/Checkbox';
@@ -394,12 +395,18 @@ export function CheckoutPage() {
                   />
                 </div>
 
-                <Input
-                  label="Phone"
-                  type="tel"
-                  autoComplete="tel"
-                  error={formState.errors.shippingAddress?.phone?.message}
-                  {...register('shippingAddress.phone')}
+                <Controller
+                  name="shippingAddress.phone"
+                  control={control}
+                  render={({ field }) => (
+                    <PhoneField
+                      label="Phone"
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      error={formState.errors.shippingAddress?.phone?.message}
+                    />
+                  )}
                 />
 
                 <Checkbox

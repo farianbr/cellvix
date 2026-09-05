@@ -20,6 +20,7 @@ import Modal from '@/components/ui/Modal';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import PageHeader from '@/components/admin/PageHeader';
+import { useTableClasses, CountLine } from '@/components/admin/DataTable';
 import KpiRow from '@/components/admin/KpiRow';
 import ProcessStrip from '@/components/admin/ProcessStrip';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
@@ -55,6 +56,7 @@ const STATUS_TONES = {
  * numbers whichever moment they are looking at.
  */
 function DriftTable({ drift, compact = false }) {
+  const t = useTableClasses();
   const lines = (drift?.lines ?? []).filter(
     (line) => line.difference !== 0 || line.belowCost || line.unavailable || line.shortStock,
   );
@@ -71,15 +73,12 @@ function DriftTable({ drift, compact = false }) {
     <div className="overflow-x-auto">
       <table className="w-full text-left">
         <thead>
-          <tr className="border-b border-line">
+          <tr className={t.headRow}>
             {['Item', 'Qty', 'Quoted', 'Today', 'Difference'].map((header, index) => (
               <th
                 key={header}
                 scope="col"
-                className={cn(
-                  'eyebrow whitespace-nowrap px-3 py-2 text-ink-400',
-                  index === 0 ? 'text-left' : 'text-right',
-                )}
+                className={t.headCell(index === 0 ? 'left' : 'right')}
               >
                 {header}
               </th>
@@ -88,8 +87,8 @@ function DriftTable({ drift, compact = false }) {
         </thead>
         <tbody>
           {lines.map((line) => (
-            <tr key={line.sku} className="border-b border-line last:border-0">
-              <td className="px-3 py-2">
+            <tr key={line.sku} className={t.row}>
+              <td className={t.cell()}>
                 <span className="block truncate text-sm text-ink-900">{line.name}</span>
                 <span className="block font-mono text-2xs text-ink-300">{line.sku}</span>
 
@@ -111,14 +110,14 @@ function DriftTable({ drift, compact = false }) {
                   </Badge>
                 )}
               </td>
-              <td className="tnum px-3 py-2 text-right text-sm text-ink-700">{line.qty}</td>
-              <td className="tnum px-3 py-2 text-right text-sm font-medium text-ink-900">
+              <td className={cn(t.cell('right'), 'tnum text-ink-700')}>{line.qty}</td>
+              <td className={cn(t.cell('right'), 'tnum font-medium text-ink-900')}>
                 {money(line.quotedPrice)}
               </td>
-              <td className="tnum px-3 py-2 text-right text-sm text-ink-700">
+              <td className={cn(t.cell('right'), 'tnum text-ink-700')}>
                 {line.livePrice === null ? '—' : money(line.livePrice)}
               </td>
-              <td className="tnum px-3 py-2 text-right text-sm">
+              <td className={cn(t.cell('right'), 'tnum')}>
                 {line.difference === null ? (
                   <span className="text-ink-300">—</span>
                 ) : (
@@ -242,6 +241,7 @@ function QuoteLifecycle({ quote, className }) {
 }
 
 export function AdminQuoteDetailPage() {
+  const t = useTableClasses();
   const { id } = useParams();
   const navigate = useNavigate();
   const [converting, setConverting] = useState(false);
@@ -446,38 +446,47 @@ export function AdminQuoteDetailPage() {
       <div className="grid gap-3 lg:grid-cols-[1fr_300px]">
         <div className="space-y-3">
           <Panel title="Lines" flush>
+            {/* Carries the density toggle — these lines follow the same density
+                as every list table. */}
+            <div className="border-b border-line px-3 py-2 sm:px-4">
+              <CountLine
+                total={quote.items.length}
+                noun={quote.items.length === 1 ? 'line' : 'lines'}
+              />
+            </div>
+
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b border-line">
-                    <th scope="col" className="eyebrow px-4 py-2.5 text-ink-400">
+                  <tr className={t.headRow}>
+                    <th scope="col" className={t.headCell()}>
                       Product
                     </th>
-                    <th scope="col" className="eyebrow px-4 py-2.5 text-right text-ink-400">
+                    <th scope="col" className={t.headCell('right')}>
                       Qty
                     </th>
-                    <th scope="col" className="eyebrow px-4 py-2.5 text-right text-ink-400">
+                    <th scope="col" className={t.headCell('right')}>
                       Quoted price
                     </th>
-                    <th scope="col" className="eyebrow px-4 py-2.5 text-right text-ink-400">
+                    <th scope="col" className={t.headCell('right')}>
                       Line total
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {quote.items.map((item) => (
-                    <tr key={item.sku} className="border-b border-line last:border-0">
-                      <td className="px-4 py-3">
+                    <tr key={item.sku} className={t.row}>
+                      <td className={t.cell()}>
                         <p className="text-sm text-ink-900">{item.name}</p>
                         <p className="font-mono text-xs text-ink-400">{item.sku}</p>
                       </td>
-                      <td className="tnum px-4 py-3 text-right text-sm text-ink-700">
+                      <td className={cn(t.cell('right'), 'tnum text-ink-700')}>
                         {formatCount(item.qty)}
                       </td>
-                      <td className="tnum px-4 py-3 text-right text-sm text-ink-700">
+                      <td className={cn(t.cell('right'), 'tnum text-ink-700')}>
                         {money(item.unitPrice)}
                       </td>
-                      <td className="tnum px-4 py-3 text-right text-sm font-medium text-ink-900">
+                      <td className={cn(t.cell('right'), 'tnum font-medium text-ink-900')}>
                         {money(item.lineTotal)}
                       </td>
                     </tr>

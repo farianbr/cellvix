@@ -31,6 +31,7 @@ import PageHeader from '@/components/admin/PageHeader';
 import KpiRow from '@/components/admin/KpiRow';
 import FilterStrip from '@/components/admin/FilterStrip';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
+import { PER_PAGE_OPTIONS, DEFAULT_PER_PAGE } from '@/hooks/useTablePage';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminTickets, useAdminMutations } from '@/hooks/useAdmin';
@@ -90,7 +91,6 @@ const PRIORITY_OPTIONS = TICKET_PRIORITIES.map((value) => ({ value, label: title
 const SOURCE_OPTIONS = TICKET_SOURCES.map((value) => ({ value, label: titleize(value) }));
 
 
-const PER_PAGE_OPTIONS = [10, 25, 50, 100].map((n) => ({ value: String(n), label: `${n} per page` }));
 
 export function AdminTicketsPage() {
   const [query, setQuery] = useState('');
@@ -118,7 +118,7 @@ export function AdminTicketsPage() {
   const status = searchParams.get('status') ?? 'all';
   const priority = searchParams.get('priority') ?? 'all';
   const technician = searchParams.get('technician') ?? 'all';
-  const perPage = searchParams.get('perPage') ?? '25';
+  const perPage = searchParams.get('perPage') ?? String(DEFAULT_PER_PAGE);
   const page = Number(searchParams.get('page') ?? 1);
 
   const { data, isLoading } = useAdminTickets({
@@ -151,7 +151,7 @@ export function AdminTicketsPage() {
   }
 
   const activeFilterCount =
-    (priority === 'all' ? 0 : 1) + (technician === 'all' ? 0 : 1) + (perPage === '25' ? 0 : 1);
+    (priority === 'all' ? 0 : 1) + (technician === 'all' ? 0 : 1) + (perPage === String(DEFAULT_PER_PAGE) ? 0 : 1);
 
   const columns = [
     {

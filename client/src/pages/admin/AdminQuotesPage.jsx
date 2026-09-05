@@ -27,6 +27,8 @@ import KpiRow from '@/components/admin/KpiRow';
 import BulkBar from '@/components/admin/BulkBar';
 import FilterStrip from '@/components/admin/FilterStrip';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
+import Pagination from '@/components/ui/Pagination';
+import useTablePage from '@/hooks/useTablePage';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { pressable } from '@/lib/motion';
@@ -239,6 +241,10 @@ export function AdminQuotesPage() {
   const { createQuote, setQuoteStatus, deleteQuote } = useAdminMutations();
 
   const quotes = data?.quotes ?? [];
+
+  // The KPI tiles are summed from the whole filtered set; the table gets a
+  // page of it. See `useTablePage` for why paging is client-side.
+  const { pageRows: pageQuotes, page, totalPages, from, setPage } = useTablePage(quotes);
   const counts = data?.counts ?? {};
   const totals = data?.totals ?? {};
   const clients = clientData?.users ?? [];
@@ -470,12 +476,12 @@ export function AdminQuotesPage() {
         />
 
         <div className="border-b border-line px-3 py-2 sm:px-4">
-          <CountLine total={quotes.length} noun={quotes.length === 1 ? 'quote' : 'quotes'} />
+          <CountLine total={quotes.length} shown={pageQuotes.length} from={from} noun={quotes.length === 1 ? 'quote' : 'quotes'} />
         </div>
 
         <DataTable
           columns={columns}
-          rows={quotes}
+          rows={pageQuotes}
           rowKey={(quote) => quote.id}
           selectable
           selected={selected}
@@ -496,6 +502,15 @@ export function AdminQuotesPage() {
             />
           }
         />
+
+        <Pagination
+          page={page}
+          pages={totalPages}
+          onChange={setPage}
+          hideWhenSingle
+          className="border-t border-line px-3 py-3 sm:px-4"
+        />
+
       </Panel>
 
       {/* Bulk actions.
