@@ -177,7 +177,15 @@ async function createInvoiceFor(order, terms) {
  * making this one path behave differently from checkout on the same product
  * would be worse than the uniform gap.
  */
-async function raiseOrder({ user, items, shipping = 0, deliveryCode = 'ground', note, poNumber }) {
+async function raiseOrder({
+  user,
+  items,
+  shipping = 0,
+  deliveryCode = 'ground',
+  note,
+  poNumber,
+  outlet = null,
+}) {
   if (!user) throw ApiError.badRequest('That client no longer exists.', 'USER_NOT_FOUND');
 
   if (user.status !== 'approved') {
@@ -244,6 +252,9 @@ async function raiseOrder({ user, items, shipping = 0, deliveryCode = 'ground', 
   const order = await Order.create({
     orderNumber,
     user: user._id,
+    // The shop that fulfils this order. Null on a storefront checkout, which
+    // belongs to the business rather than to a counter.
+    outlet,
     items,
     subtotal,
     discount: 0,

@@ -1,6 +1,14 @@
 import { z } from 'zod';
+import { isValidPostal, postalExampleFor } from '../regions.js';
 
-/** Canadian provinces and territories — the only shipping destinations Cellvix serves. */
+/**
+ * Canadian provinces and territories.
+ *
+ * Kept as a named export because tax, GST/HST and the seller's own address are
+ * still Canadian facts, and several screens want exactly this list. An address
+ * FORM should not read it directly — use `regionsFor(country)`, which returns
+ * this for Canada and the right list everywhere else.
+ */
 const PROVINCES = [
   { value: 'AB', label: 'Alberta' },
   { value: 'BC', label: 'British Columbia' },
@@ -17,19 +25,55 @@ const PROVINCES = [
   { value: 'YT', label: 'Yukon' },
 ];
 
-const POSTAL = /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/;
-
-const addressSchema = z.object({
+/**
+ * An address anywhere.
+ *
+ * **Postal validation depends on the country**, so it cannot be a field-level
+ * regex — the rule is only knowable once `country` has been read. A
+ * `superRefine` runs after both fields are parsed and asks `regions.js` what
+ * shape this country uses; a country with no fixed format accepts anything
+ * non-empty, which is the honest answer rather than a false rejection.
+ *
+ * `region` says "region" and not "province" because it is a province in Canada,
+ * a state in the US and a prefecture in Japan. The stored field was always
+ * called `region`; only the validation assumed otherwise.
+ *
+ * **The raw object and the refined schema are separate exports.** A
+ * `superRefine` returns a `ZodEffects`, which has no `.extend()` — and
+ * `account.js` extends this to add a saved-address label. So the object stays
+ * extendable as `addressShape`, and `withPostalRule()` applies the country
+ * check to it or to anything built from it. An extender that forgets to call it
+ * loses only the postal format check, never a field.
+ */
+const addressShape = z.object({
   contactName: z.string().trim().min(2, 'Enter a contact name.'),
   company: z.string().trim().optional(),
   line1: z.string().trim().min(2, 'Enter a street address.'),
   line2: z.string().trim().optional(),
   city: z.string().trim().min(2, 'Enter a city.'),
-  region: z.string().trim().min(2, 'Select a province.'),
-  postal: z.string().trim().regex(POSTAL, 'Enter a valid postal code (A1A 1A1).'),
+  region: z.string().trim().min(2, 'Select a region.'),
+  postal: z.string().trim().min(1, 'Enter a postal code.'),
   country: z.string().trim().default('Canada'),
   phone: z.string().trim().min(7, 'Enter a phone number.'),
 });
+
+/** Applies the country's postal rule to any schema carrying postal + country. */
+const withPostalRule = (schema) =>
+  schema.superRefine((value, ctx) => {
+    if (!value.postal || isValidPostal(value.postal, value.country)) return;
+
+    const example = postalExampleFor(value.country);
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['postal'],
+      message: example
+        ? `Enter a valid postal code (${example}).`
+        : 'Enter a valid postal code.',
+    });
+  });
+
+/** The address as everything but an extender should use it. */
+const addressSchema = withPostalRule(addressShape);
 
 /** Flat-rate placeholder until the client confirms carriers (PROGRESS.md Q5). */
 const DELIVERY_METHODS = [
@@ -71,4 +115,4 @@ const CHECKOUT_STEPS = [
 /** Placeholder rate — awaiting the client's real tax rules (PROGRESS.md Q4). */
 const TAX_RATE = 0.13;
 
-export { PROVINCES, addressSchema, DELIVERY_METHODS, checkoutSchema, CHECKOUT_STEPS, TAX_RATE };
+export { PROVINCES, addressShape, withPostalRule, addressSchema, DELIVERY_METHODS, checkoutSchema, CHECKOUT_STEPS, TAX_RATE };

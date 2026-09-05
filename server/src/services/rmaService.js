@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 import Rma, { RMA_STATUSES, RMA_OPEN_STATUSES } from '../models/Rma.js';
+import { displayNameOf } from '../utils/displayName.js';
 import Order from '../models/Order.js';
 import User from '../models/User.js';
 import Settings from '../models/Settings.js';
@@ -98,14 +99,29 @@ function shapeRma(rma, slaDays) {
   return {
     id: rma._id.toString(),
     rmaNumber: rma.rmaNumber,
-    user: rma.user?.businessName
+    /**
+     * The account, labelled by the PERSON (§0).
+     *
+     * The gate was `businessName` existing — so a sole trader, who is allowed
+     * to have none, fell to the else branch and lost their id along with their
+     * name, rendering as a dash nothing could link to. The gate is now "did the
+     * populate run", which is the question that was actually being asked.
+     */
+    user: rma.user?._id
       ? {
           id: rma.user._id.toString(),
-          businessName: rma.user.businessName,
+          displayName: displayNameOf(rma.user),
+          businessName: rma.user.businessName ?? null,
           contactName: rma.user.contactName ?? null,
           email: rma.user.email ?? null,
         }
-      : { id: rma.user?.toString() ?? null, businessName: '—', contactName: null, email: null },
+      : {
+          id: rma.user?.toString() ?? null,
+          displayName: '—',
+          businessName: null,
+          contactName: null,
+          email: null,
+        },
     order: rma.order
       ? {
           id: (rma.order._id ?? rma.order).toString(),
@@ -157,11 +173,22 @@ function proposedRefund(rma) {
 
 // ---- read -------------------------------------------------------------------
 
-async function listRmas({ q, status, from, to } = {}) {
+async function listRmas({ q, status, from, to, user, outlet } = {}) {
   const settings = await Settings.load();
   const slaDays = settings?.operations?.rmaSlaDays ?? 14;
 
   const query = {};
+
+  // One customer's returns, for their profile tab. The screen already had the
+  // tab; it rendered a "coming in phase 7" placeholder while the feature was
+  // built and shipping, so an operator on a customer with five returns was
+  // told the feature did not exist yet.
+  if (user) query.user = user;
+  // Scoped to the outlet the panel is switched to, when it is switched to one.
+  // Resolved by `resolveOutletScope` rather than read from the query string,
+  // because a staff member's own outlet is binding and must not be widened by
+  // editing a URL.
+  if (outlet) query.outlet = outlet;
 
   if (status === 'open') query.status = { $in: RMA_OPEN_STATUSES };
   else if (status === 'overdue') query.status = { $in: RMA_OPEN_STATUSES };

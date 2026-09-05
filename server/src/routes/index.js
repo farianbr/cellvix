@@ -45,6 +45,7 @@ import {
   requirePermission,
 } from '../middleware/auth.js';
 import { requireSupplier } from '../middleware/supplierAuth.js';
+import { resolveOutletScope } from '../middleware/outletScope.js';
 import {
   loginSchema,
   registerSchema,
@@ -123,6 +124,7 @@ import {
   quoteSchema,
   quoteStatusSchema,
   quoteConvertSchema,
+  quoteToTicketSchema,
   rmaSchema,
   rmaStatusSchema,
   rmaInspectSchema,
@@ -130,6 +132,8 @@ import {
   ticketSchema,
   ticketUpdateSchema,
   ticketStatusSchema,
+  ticketDepositSchema,
+  ticketConvertSchema,
   outletSchema,
   roleSchema,
   staffUserSchema,
@@ -308,8 +312,13 @@ router.get('/account/referrals', ...account, accountController.referrals);
 // Panel access. `requireStaff` admits an admin or a staff member holding a
 // role; `requirePermission` on each route below decides what they may do with
 // it. Routes that must stay admin-only regardless of role use `adminOnly`.
-const admin = [requireAuth, requireStaff];
-const adminOnly = [requireAuth, requireAdmin];
+// `resolveOutletScope` reads which shop this request is about — a staff
+// member's own outlet, or the one an admin picked in the top-bar switcher. It
+// only sets `req.outletScope`; each service decides whether that scopes it,
+// because a few things are deliberately business-wide (the catalogue, the
+// customer list, settings) and filtering those would be wrong.
+const admin = [requireAuth, requireStaff, resolveOutletScope];
+const adminOnly = [requireAuth, requireAdmin, resolveOutletScope];
 
 // Deliberately not permissioned: the sidebar badges read this on every screen,
 // so gating it by area would blank the counters for a role that can still see
@@ -513,6 +522,9 @@ router.patch('/admin/quotes/:id/status', ...admin, requirePermission('sales', 'f
 // Refuses with QUOTE_PRICE_DRIFT and the full comparison when catalogue prices
 // have moved and the admin has not acknowledged them.
 router.post('/admin/quotes/:id/convert', ...admin, requirePermission('sales', 'full'), validate(quoteConvertSchema), salesController.convertQuote);
+// The other destination. A parts quote becomes an order; a repair estimate
+// becomes the ticket that does the work, and is invoiced off that ticket.
+router.post('/admin/quotes/:id/convert-ticket', ...admin, requirePermission('sales', 'full'), validate(quoteToTicketSchema), salesController.convertQuoteToTicket);
 router.delete('/admin/quotes/:id', ...admin, requirePermission('sales', 'full'), salesController.deleteQuote);
 
 // Refunds route through storeCreditService and restocking through the stock
@@ -534,6 +546,11 @@ router.get('/admin/tickets/:id', ...admin, requirePermission('sales', 'view'), t
 router.patch('/admin/tickets/:id', ...admin, requirePermission('sales', 'full'), validate(ticketUpdateSchema), ticketController.updateTicket);
 router.patch('/admin/tickets/:id/status', ...admin, requirePermission('sales', 'full'), validate(ticketStatusSchema), ticketController.setTicketStatus);
 router.delete('/admin/tickets/:id', ...admin, requirePermission('sales', 'full'), ticketController.deleteTicket);
+// Money taken before the invoice exists, and the conversion that turns a
+// finished repair into the invoice that bills it.
+router.post('/admin/tickets/:id/deposits', ...admin, requirePermission('sales', 'full'), validate(ticketDepositSchema), ticketController.recordDeposit);
+router.delete('/admin/tickets/:id/deposits/:depositId', ...admin, requirePermission('sales', 'full'), ticketController.removeDeposit);
+router.post('/admin/tickets/:id/convert', ...admin, requirePermission('sales', 'full'), validate(ticketConvertSchema), ticketController.convertToInvoice);
 
 // --- outlets, roles & staff (phase 8) ---------------------------------------
 // Outlets are an ordinary permissioned area. Roles and user accounts are NOT:

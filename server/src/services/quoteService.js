@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 import { displayNameOf } from '../utils/displayName.js';
 
+import Ticket from '../models/Ticket.js';
+import { nextTicketNumber, priceTicket } from './ticketService.js';
 import Quote from '../models/Quote.js';
 import Product from '../models/Product.js';
 import User from '../models/User.js';
@@ -166,9 +168,14 @@ function provinceFor(user) {
 
 // ---- read -------------------------------------------------------------------
 
-async function listQuotes({ q, status, user, from, to } = {}) {
+async function listQuotes({ q, status, user, from, to, outlet } = {}) {
   const now = new Date();
   const query = {};
+  // Scoped to the outlet the panel is switched to, when it is switched to one.
+  // Resolved by `resolveOutletScope` rather than read from the query string,
+  // because a staff member's own outlet is binding and must not be widened by
+  // editing a URL.
+  if (outlet) query.outlet = outlet;
 
   if (status === 'expired') {
     // Derived, so the filter is the same reading the shaper does: still live,
@@ -598,4 +605,143 @@ async function deleteQuote(id) {
   return { ok: true };
 }
 
-export { listQuotes, getQuote, createQuote, updateQuote, setQuoteStatus, convertQuote, deleteQuote };
+/**
+ * Turn an accepted estimate into the repair ticket that does the work.
+ *
+ * **A quote has two honest destinations.** A parts quote becomes an ORDER —
+ * goods ship and money is owed immediately. A repair estimate becomes a TICKET:
+ * the device comes in, the work happens over days, and the invoice is raised
+ * off the ticket at the end. `convertQuote` does the first; this does the
+ * second, and a quote records which way it went.
+ *
+ * The quoted lines land on the ticket as **parts on one device**, which is what
+ * a quote's items actually are — a SKU, a quantity and a price. The technician
+ * adds labour as services once they have seen the device; a quote cannot know
+ * that in advance, which is why the estimate and the final bill are allowed to
+ * differ and why the ticket, not the quote, is what gets invoiced.
+ *
+ * Accepted-only, for the same reason converting to an order is: starting work
+ * on an estimate the customer has not agreed to is how a shop ends up eating
+ * the cost of it.
+ */
+async function convertQuoteToTicket(id, { priority = 'normal', source = 'counter' } = {}, actor) {
+  const query = isObjectId(id) ? { _id: id } : { quoteNumber: String(id) };
+  const quote = await Quote.findOne(query).populate('user');
+  if (!quote) throw ApiError.notFound('Quote not found.', 'QUOTE_NOT_FOUND');
+
+  if (quote.convertedTicket) {
+    throw ApiError.badRequest(
+      `${quote.quoteNumber} has already become a ticket.`,
+      'QUOTE_ALREADY_CONVERTED',
+    );
+  }
+  if (quote.status === 'converted' && quote.convertedOrder) {
+    throw ApiError.badRequest(
+      `${quote.quoteNumber} has already been converted to an order.`,
+      'QUOTE_ALREADY_CONVERTED',
+    );
+  }
+  if (quote.status !== 'accepted') {
+    throw ApiError.badRequest(
+      `${quote.quoteNumber} has to be accepted before work starts on it.`,
+      'QUOTE_NOT_ACCEPTED',
+    );
+  }
+
+  const parts = (quote.items ?? []).map((item) => ({
+    name: item.name,
+    description: item.sku || undefined,
+    priceCents: item.unitPrice ?? 0,
+    qty: item.qty ?? 1,
+    product: item.product || undefined,
+  }));
+
+  // The rate, derived from the quote's tax amount: a quote stores tax as cents
+  // against a subtotal, a ticket stores a rate and recomputes from its own
+  // lines — which change as the technician works.
+  const taxRate =
+    quote.subtotal > 0 ? Math.round(((quote.tax ?? 0) / quote.subtotal) * 10000) / 100 : 0;
+
+  const devicesForPricing = [{ services: [], parts }];
+  const priced = priceTicket(devicesForPricing, { taxRate });
+
+  const ticket = await Ticket.create({
+    ticketNumber: await nextTicketNumber(),
+    user: quote.user?._id ?? null,
+    customerName: displayNameOf(quote.user),
+    customerPhone: quote.user?.phone ?? '',
+    customerEmail: quote.user?.email ?? '',
+    outlet: quote.outlet ?? null,
+
+    status: 'diagnosis',
+    priority,
+    source,
+
+    // Required on the model, and it is what the counter reads first: the
+    // quote's own note if it has one, otherwise a line saying where the job
+    // came from so the ticket is never blank about its own origin.
+    issue: quote.notes?.trim() || `Quoted work from ${quote.quoteNumber}.`,
+
+    // One device holding the quoted lines. The technician splits it or adds
+    // more once the hardware is actually on the bench.
+    devices: [
+      {
+        model: 'To be confirmed',
+        problem: quote.notes || `Quoted work from ${quote.quoteNumber}.`,
+        services: [],
+        parts,
+      },
+    ],
+
+    /**
+     * The tax RATE, derived from the quote's tax amount.
+     *
+     * A quote stores tax as cents against a subtotal; a ticket stores a rate
+     * and recomputes the cents from its own lines, because those lines change
+     * as the technician works. Copying the quote's total across without its
+     * rate left a ticket whose printed total disagreed with the lines under it
+     * — the total said the quote's figure and the tax row said zero.
+     */
+    taxRate,
+    // Priced by the same helper every other ticket uses, so a converted ticket
+    // and a hand-raised one cannot disagree about what their lines come to.
+    taxCents: priced.taxCents,
+    estimateCents: priced.total,
+
+    timeline: [
+      {
+        status: 'diagnosis',
+        at: new Date(),
+        note: `Created from quote ${quote.quoteNumber}.`,
+        by: actor?._id ?? null,
+      },
+    ],
+
+    createdBy: actor?._id ?? null,
+  });
+
+  quote.convertedTicket = ticket._id;
+  quote.status = 'converted';
+  quote.timeline.push({
+    status: 'converted',
+    at: new Date(),
+    note: `Became ticket ${ticket.ticketNumber}.`,
+  });
+  await quote.save();
+
+  return {
+    quote: shapeQuote(quote.toObject()),
+    ticket: { id: ticket._id.toString(), ticketNumber: ticket.ticketNumber },
+  };
+}
+
+export {
+  listQuotes,
+  getQuote,
+  createQuote,
+  updateQuote,
+  setQuoteStatus,
+  convertQuote,
+  convertQuoteToTicket,
+  deleteQuote,
+};

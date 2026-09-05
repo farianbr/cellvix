@@ -281,6 +281,12 @@ export function AdminTicketsPage() {
 
   const rowMenu = [
     {
+      key: 'open',
+      label: 'Open ticket',
+      icon: ClipboardList,
+      onSelect: (ticket) => navigate(`/admin/tickets/${ticket.id}`),
+    },
+    {
       key: 'edit',
       label: 'Edit ticket',
       icon: Pencil,
@@ -438,7 +444,7 @@ export function AdminTicketsPage() {
           rows={tickets}
           rowKey={(ticket) => ticket.id}
           rowMenu={rowMenu}
-          onRowClick={(ticket) => navigate(`/admin/tickets/${ticket.id}/edit`)}
+          onRowClick={(ticket) => navigate(`/admin/tickets/${ticket.id}`)}
           loading={isLoading}
           empty={
             <PanelEmpty

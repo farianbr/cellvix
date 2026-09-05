@@ -14,7 +14,7 @@ import auditService from '../services/auditService.js';
 // ---- quotes -----------------------------------------------------------------
 
 const listQuotes = asyncHandler(async (req, res) => {
-  res.json(await quoteService.listQuotes(req.query));
+  res.json(await quoteService.listQuotes({ ...req.query, outlet: req.outletScope }));
 });
 
 const getQuote = asyncHandler(async (req, res) => {
@@ -41,6 +41,13 @@ const convertQuote = asyncHandler(async (req, res) => {
   res.status(201).json(await quoteService.convertQuote(req.params.id, req.body, req.user._id));
 });
 
+/** The other destination: a repair estimate becomes the ticket that does it. */
+const convertQuoteToTicket = asyncHandler(async (req, res) => {
+  res
+    .status(201)
+    .json(await quoteService.convertQuoteToTicket(req.params.id, req.body, req.user));
+});
+
 const deleteQuote = asyncHandler(async (req, res) => {
   res.json(await quoteService.deleteQuote(req.params.id));
 });
@@ -48,7 +55,7 @@ const deleteQuote = asyncHandler(async (req, res) => {
 // ---- RMA --------------------------------------------------------------------
 
 const listRmas = asyncHandler(async (req, res) => {
-  res.json(await rmaService.listRmas(req.query));
+  res.json(await rmaService.listRmas({ ...req.query, outlet: req.outletScope }));
 });
 
 const getRma = asyncHandler(async (req, res) => {
@@ -95,4 +102,4 @@ const resolveRma = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
-export { listQuotes, getQuote, createQuote, updateQuote, setQuoteStatus, convertQuote, deleteQuote, listRmas, getRma, createRma, setRmaStatus, inspectRma, resolveRma };
+export { listQuotes, getQuote, createQuote, updateQuote, setQuoteStatus, convertQuote, convertQuoteToTicket, deleteQuote, listRmas, getRma, createRma, setRmaStatus, inspectRma, resolveRma };

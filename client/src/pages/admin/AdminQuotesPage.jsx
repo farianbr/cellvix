@@ -128,7 +128,10 @@ function QuoteForm({ clients, products, quote, seedClient, onSubmit, onCancel, i
           control={control}
           name="user"
           label="Client"
-          options={clients.map((client) => ({ value: client.id, label: client.businessName }))}
+          options={clients.map((client) => ({
+            value: client.id,
+            label: client.displayName ?? client.contactName ?? client.email,
+          }))}
         />
         <Input label="Valid until" type="date" min={todayIso()} {...register('validUntil')} />
       </div>
@@ -311,11 +314,11 @@ export function AdminQuotesPage() {
     },
     {
       key: 'client',
-      header: 'Client',
+      header: 'Customer',
       priority: 1,
       className: 'max-w-[180px] truncate',
-      sortValue: (quote) => quote.user.businessName,
-      render: (quote) => quote.user.businessName,
+      sortValue: (quote) => quote.user.displayName ?? '',
+      render: (quote) => quote.user.displayName ?? '—',
     },
     {
       key: 'createdAt',

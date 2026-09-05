@@ -4,8 +4,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircle, Building2, Mail, MapPin, Phone, UserRound } from 'lucide-react';
 import { outletSchema, OUTLET_COLOR_TOKENS } from '@shared/schemas/admin';
-import { PROVINCES } from '@shared/schemas/checkout';
-import { COUNTRY_OPTIONS } from '@shared/countries';
+import AddressFields from '@/components/admin/AddressFields';
 import Panel from '@/components/ui/Panel';
 import Input from '@/components/ui/Input';
 import SelectField from '@/components/ui/SelectField';
@@ -147,6 +146,7 @@ export function AdminOutletFormPage() {
     control,
     reset,
     watch,
+    setValue,
     setError,
     formState: { errors, isSubmitting },
   } = useForm({
@@ -303,28 +303,22 @@ export function AdminOutletFormPage() {
             </Panel>
 
             <Panel title="Contact & location">
-              <div className="grid gap-4 sm:grid-cols-2">
+              {/* Street lines first, then the country-keyed block. An outlet
+                  can be anywhere the business opens one, and this form asked
+                  every location for a Canadian province. */}
+              <div className="mb-4 grid gap-4 sm:grid-cols-2">
                 <Input label="Street" {...register('address.street')} />
                 <Input label="Suite / unit" {...register('address.line2')} />
-                <Input label="City" {...register('address.city')} />
-                <SelectField
-                  control={control}
-                  name="address.region"
-                  label="Province"
-                  options={PROVINCES}
-                />
-                <Input
-                  label="Postal code"
-                  placeholder="A1A 1A1"
-                  error={errors.address?.postal?.message}
-                  {...register('address.postal')}
-                />
-                <SelectField
-                  control={control}
-                  name="address.country"
-                  label="Country"
-                  options={COUNTRY_OPTIONS}
-                />
+              </div>
+
+              <AddressFields
+                control={control}
+                register={register}
+                setValue={setValue}
+                className="mb-4"
+              />
+
+              <div className="grid gap-4 sm:grid-cols-2">
                 <Controller
                   name="phone"
                   control={control}

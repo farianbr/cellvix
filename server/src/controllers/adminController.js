@@ -232,11 +232,17 @@ const toggleProduct = asyncHandler(async (req, res) => {
 // ---- orders -----------------------------------------------------------------
 
 const listOrders = asyncHandler(async (req, res) => {
-  res.json(await adminService.listOrders(req.query));
+  res.json(await adminService.listOrders({ ...req.query, outlet: req.outletScope }));
 });
 
 const createOrder = asyncHandler(async (req, res) => {
-  const order = await adminService.createOrder(req.body);
+  // The body's outlet wins — it is the fulfilling shop the operator chose —
+  // and the current scope is the fallback for the usual case where they did
+  // not change it.
+  const order = await adminService.createOrder({
+    ...req.body,
+    outlet: req.body.outlet || req.outletScope || null,
+  });
 
   await auditService.record({
     req,
@@ -313,7 +319,7 @@ const refundOrder = asyncHandler(async (req, res) => {
 // ---- invoices ---------------------------------------------------------------
 
 const listInvoices = asyncHandler(async (req, res) => {
-  res.json(await adminService.listInvoices(req.query));
+  res.json(await adminService.listInvoices({ ...req.query, outlet: req.outletScope }));
 });
 
 const createInvoice = asyncHandler(async (req, res) => {

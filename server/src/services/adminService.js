@@ -691,7 +691,16 @@ async function getUser(id) {
    * Tickets carry an optional `user`: a repair can walk in off the street with
    * no account behind it, so this counts only the ones actually linked here.
    */
-  const [orders, invoices, totals, orderCount, activeTickets, openQuotes, webQuotes] = await Promise.all([
+  const [
+    orders,
+    invoices,
+    totals,
+    orderCount,
+    activeTickets,
+    openQuotes,
+    webQuotes,
+    openRmas,
+  ] = await Promise.all([
     Order.find({ user: id }).sort({ createdAt: -1 }).limit(10).lean(),
     Invoice.find({ user: id }).sort({ issuedAt: -1 }).limit(10).lean(),
 
@@ -717,6 +726,12 @@ async function getUser(id) {
     // because the tab only fetches when it is open and the badge has to be
     // right before anybody clicks it.
     ContactMessage.countDocuments({ user: id }),
+
+    // Returns still needing somebody's attention, for the profile's Returns
+    // tab. Open rather than total, matching every other count on the strip:
+    // the number's job is to say how much work is here, and a resolved return
+    // is not work.
+    Rma.countDocuments({ user: id, status: { $in: RMA_OPEN_STATUSES } }),
   ]);
 
   const billed = totals[0] ?? { invoiced: 0, collected: 0, invoiceCount: 0 };
@@ -737,6 +752,7 @@ async function getUser(id) {
       activeTickets,
       openQuotes,
       webQuotes,
+      openRmas,
     },
     // Staff notes ride with the profile: they are the thing somebody reads
     // before picking up the phone, so a second request for them would just be
@@ -1302,6 +1318,7 @@ async function createOrder(body) {
     shipping: body.shipping ?? 0,
     deliveryCode: body.deliveryCode,
     poNumber: body.poNumber,
+    outlet: body.outlet || null,
     note: body.notes
       ? `Raised by an administrator. ${body.notes}`
       : 'Raised by an administrator.',
@@ -1310,8 +1327,14 @@ async function createOrder(body) {
   return serializeOrder(order);
 }
 
-async function listOrders({ status, q } = {}) {
+async function listOrders({ status, q, outlet } = {}) {
   const query = {};
+  // Scoped to the outlet the panel is switched to, when it is switched to one.
+  // Resolved by `resolveOutletScope` rather than read from the query string,
+  // because a staff member's own outlet is binding and must not be widened by
+  // editing a URL.
+  if (outlet) query.outlet = outlet;
+
   // `open` is a pseudo-status: not a value any order holds, but the set the
   // dashboard's "Open orders" tile counts. Without it that tile could only link
   // to one of the four and would show a list contradicting its own number.
@@ -1327,7 +1350,9 @@ async function listOrders({ status, q } = {}) {
   const orders = await Order.find(query)
     .sort({ createdAt: -1 })
     .limit(200)
-    .populate('user', 'businessName email')
+    // `contactName` is required for `displayNameOf` — without it every row
+    // falls back to the company name, which is the thing §0 says not to show.
+    .populate('user', 'businessName contactName email')
     .lean();
 
   const counts = await Order.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]);
@@ -1706,9 +1731,14 @@ async function createInvoice(body) {
  * so it is applied in the query as "not paid, and past due" — the dashboard
  * links straight here with it.
  */
-async function listInvoices({ status, q, from, to } = {}) {
+async function listInvoices({ status, q, from, to, outlet } = {}) {
   const now = new Date();
   const query = {};
+  // Scoped to the outlet the panel is switched to, when it is switched to one.
+  // Resolved by `resolveOutletScope` rather than read from the query string,
+  // because a staff member's own outlet is binding and must not be widened by
+  // editing a URL.
+  if (outlet) query.outlet = outlet;
 
   if (status === 'overdue') {
     query.status = { $ne: 'paid' };

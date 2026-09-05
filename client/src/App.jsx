@@ -85,6 +85,7 @@ const AdminWebQuotesPage = lazy(() => import('@/pages/admin/AdminWebQuotesPage')
 const AdminQuoteDetailPage = lazy(() => import('@/pages/admin/AdminQuoteDetailPage'));
 const AdminTicketsPage = lazy(() => import('@/pages/admin/AdminTicketsPage'));
 const AdminTicketFormPage = lazy(() => import('@/pages/admin/AdminTicketFormPage'));
+const AdminTicketDetailPage = lazy(() => import('@/pages/admin/AdminTicketDetailPage'));
 const AdminRmaPage = lazy(() => import('@/pages/admin/AdminRmaPage'));
 const AdminRmaDetailPage = lazy(() => import('@/pages/admin/AdminRmaDetailPage'));
 const AdminOutletsPage = lazy(() => import('@/pages/admin/AdminOutletsPage'));
@@ -197,6 +198,7 @@ export function App() {
         {/* Intake is a full screen, not a modal — see the page for why. */}
         <Route path="tickets/new" element={<AdminTicketFormPage />} />
         <Route path="tickets/:id/edit" element={<AdminTicketFormPage />} />
+        <Route path="tickets/:id" element={<AdminTicketDetailPage />} />
 
         <Route path="reports/business" element={<AdminBusinessReportPage />} />
         <Route path="reports" element={<AdminReportsPage />} />

@@ -676,7 +676,9 @@ export function AdminInvoicesPage() {
       ),
     },
     {
-      key: 'businessName',
+      // The account's name is the person's (§0); `businessName` renders blank
+      // for a sole trader.
+      key: 'displayName',
       header: 'Customer',
       priority: 2,
       className: 'max-w-[180px] truncate',

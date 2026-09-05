@@ -335,7 +335,7 @@ export function AdminQuoteDetailPage() {
       <PageHeader
         icon={FileSignature}
         title={quote.quoteNumber}
-        description={`${quote.user.businessName} · created ${date(quote.createdAt)}`}
+        description={`${quote.user.displayName ?? quote.user.contactName} · created ${date(quote.createdAt)}`}
         badge={
           <>
             <Badge tone={STATUS_TONES[quote.status]} size="sm">

@@ -6,6 +6,8 @@
  * can branch on `err.code` — never on message text.
  */
 
+import { getOutlet } from '@/store/outletStore';
+
 const BASE = import.meta.env.VITE_API_URL || '/api';
 
 export class ApiError extends Error {
@@ -20,10 +22,27 @@ export class ApiError extends Error {
 
 function buildUrl(path, params) {
   const url = `${BASE}${path}`;
-  if (!params) return url;
+
+  /**
+   * The selected outlet rides on every admin request.
+   *
+   * Injected here rather than at each call site because there are well over a
+   * hundred of them, and one that forgot would silently show another shop's
+   * data — the kind of bug nobody notices until the figures are wrong. The
+   * server decides what to do with it: most admin lists scope by it, a few
+   * (the catalogue, settings) deliberately do not.
+   *
+   * Only `/admin` paths, and never when a caller passed its own `outlet` —
+   * the customer profile asks for one account's records across all shops, and
+   * the switcher must not narrow that.
+   */
+  const outlet = path.startsWith('/admin') ? getOutlet() : null;
+  const scoped = outlet && !(params && 'outlet' in params) ? { ...params, outlet } : params;
+
+  if (!scoped) return url;
 
   const search = new URLSearchParams();
-  for (const [key, value] of Object.entries(params)) {
+  for (const [key, value] of Object.entries(scoped)) {
     if (value === null || value === undefined || value === '' || value === false) continue;
     if (Array.isArray(value)) {
       if (value.length === 0) continue;

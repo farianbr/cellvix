@@ -213,11 +213,13 @@ export function AdminRmaPage() {
     },
     {
       key: 'client',
-      header: 'Client',
+      header: 'Customer',
       priority: 1,
       className: 'max-w-[160px] truncate',
-      sortValue: (rma) => rma.user.businessName,
-      render: (rma) => rma.user.businessName,
+      // The person, not the company (§0) — a sole trader has no business name
+      // and rendered as a dash.
+      sortValue: (rma) => rma.user.displayName ?? '',
+      render: (rma) => rma.user.displayName ?? '—',
     },
     {
       key: 'orderNumber',

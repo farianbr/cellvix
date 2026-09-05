@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { useForm, Controller } from 'react-hook-form';
-import { COUNTRY_OPTIONS, DEFAULT_COUNTRY } from '@shared/countries';
+import { DEFAULT_COUNTRY } from '@shared/countries';
 import useCreateParam from '@/hooks/useCreateParam';
 import {
   AlertCircle,
@@ -29,6 +29,7 @@ import Badge from '@/components/ui/Badge';
 import ConsentChannels, { EMPTY_CONSENT } from '@/components/ui/ConsentChannels';
 import PhoneField from '@/components/ui/PhoneField';
 import PageHeader from '@/components/admin/PageHeader';
+import AddressFields from '@/components/admin/AddressFields';
 import FilterStrip from '@/components/admin/FilterStrip';
 import KpiRow from '@/components/admin/KpiRow';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
@@ -73,10 +74,6 @@ const TERMS = [
   { value: 'net60', label: 'Net 60' },
 ];
 
-const PROVINCES = [
-  'AB', 'BC', 'MB', 'NB', 'NL', 'NS', 'NT', 'NU', 'ON', 'PE', 'QC', 'SK', 'YT',
-];
-
 function termsLabel(value) {
   return TERMS.find((term) => term.value === value)?.label ?? value;
 }
@@ -110,7 +107,7 @@ function SupplierForm({ supplier, onSubmit, onCancel, isPending, error }) {
    */
   const [componentTypes, setComponentTypes] = useState(supplier?.componentTypes ?? []);
 
-  const { register, handleSubmit, control } = useForm({
+  const { register, handleSubmit, control, setValue } = useForm({
     defaultValues: {
       name: supplier?.name ?? '',
       code: supplier?.code ?? '',
@@ -123,7 +120,10 @@ function SupplierForm({ supplier, onSubmit, onCancel, isPending, error }) {
         line1: supplier?.address?.line1 ?? '',
         line2: supplier?.address?.line2 ?? '',
         city: supplier?.address?.city ?? '',
-        region: supplier?.address?.region ?? 'ON',
+        // Blank, not `ON`. Defaulting the region to Ontario meant every
+        // supplier saved without touching that field was recorded as being in
+        // Ontario — including the ones in Shenzhen.
+        region: supplier?.address?.region ?? '',
         postal: supplier?.address?.postal ?? '',
         country: supplier?.address?.country ?? DEFAULT_COUNTRY,
       },
@@ -199,35 +199,12 @@ function SupplierForm({ supplier, onSubmit, onCancel, isPending, error }) {
         <Input label="Street address" placeholder="123 Main Street" {...register('address.line1')} />
       </div>
 
-      {/* City takes the slack; the province code and a postal code are fixed
-          short and are sized to what they hold rather than to an even third. */}
-      <div className="grid gap-3 sm:grid-cols-[1fr_100px_120px]">
-        <Input label="City" placeholder="Edmonton" {...register('address.city')} />
-        <SelectField
-          control={control}
-          name="address.region"
-          label="Province"
-          options={PROVINCES.map((code) => ({ value: code, label: code }))}
-        />
-        <Input label="Postal code" placeholder="A1A 1A1" {...register('address.postal')} />
-      </div>
-
-      {/* The same country list every other address form uses. A parts supplier
-          is as likely to be in Shenzhen as in Edmonton, and this field had no
-          control at all until now, so every foreign supplier was being recorded
-          as Canadian by default.
-
-          Half width: the longest name in the list still fits, and a select
-          holding "Canada" stretched across the whole form was the single widest
-          piece of empty space on it. */}
-      <div className="grid gap-3 sm:grid-cols-2">
-        <SelectField
-          control={control}
-          name="address.country"
-          label="Country"
-          options={COUNTRY_OPTIONS}
-        />
-      </div>
+      {/* City, region, postal and country, all keyed off the country. A parts
+          supplier is as likely to be in Shenzhen as in Edmonton, and this form
+          asked every one of them for a Canadian province and an `A1A 1A1`
+          postal code — it even kept its own array of thirteen bare province
+          codes, so the select showed `ON` with no label saying Ontario. */}
+      <AddressFields control={control} register={register} setValue={setValue} />
 
       <Textarea
         label="Notes"

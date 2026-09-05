@@ -1215,6 +1215,27 @@ export function useAdminMutations() {
       onSuccess: invalidate,
     }),
 
+    /** Money taken before the invoice exists. Carried onto it on conversion. */
+    recordTicketDeposit: useMutation({
+      mutationFn: ({ id, ...body }) => api.post(`/admin/tickets/${id}/deposits`, body),
+      onSuccess: invalidate,
+    }),
+    removeTicketDeposit: useMutation({
+      mutationFn: ({ id, depositId }) =>
+        api.delete(`/admin/tickets/${id}/deposits/${depositId}`),
+      onSuccess: invalidate,
+    }),
+    /** The finished repair becomes the invoice that bills it. */
+    convertTicketToInvoice: useMutation({
+      mutationFn: ({ id, ...body }) => api.post(`/admin/tickets/${id}/convert`, body),
+      onSuccess: invalidate,
+    }),
+    /** The other direction: an accepted estimate becomes the ticket. */
+    convertQuoteToTicket: useMutation({
+      mutationFn: ({ id, ...body }) => api.post(`/admin/quotes/${id}/convert-ticket`, body),
+      onSuccess: invalidate,
+    }),
+
     createRma: useMutation({
       mutationFn: (body) => api.post('/admin/rma', body),
       onSuccess: invalidate,

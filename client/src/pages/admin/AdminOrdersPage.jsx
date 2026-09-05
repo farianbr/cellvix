@@ -35,6 +35,7 @@ import {
   useAdminOrders,
   useAdminUsers,
   useAdminInventory,
+  useAdminOutlets,
   useAdminMutations,
 } from '@/hooks/useAdmin';
 import useCreateParam from '@/hooks/useCreateParam';
@@ -114,7 +115,7 @@ function StatusForm({ order, onSubmit, onCancel, isPending, error }) {
       <div className="rounded-md bg-surface-2 p-3.5">
         <p className="font-mono text-md font-medium text-ink-900">{order.orderNumber}</p>
         <p className="mt-0.5 text-sm text-ink-500">
-          {order.businessName} · {money(order.total)}
+          {order.displayName ?? order.businessName} · {money(order.total)}
         </p>
         <p className="mt-1 text-xs text-ink-400">
           Currently {ORDER_STATUSES.find((s) => s.value === order.status)?.label ?? order.status}
@@ -248,10 +249,12 @@ const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/orders'], icon: adminIcon('Package'
  * totals below are a preview and say so — tax is the server's, at this client's
  * own provincial rate, which this form does not know.
  */
-function OrderForm({ clients, products, onSubmit, onCancel, isPending, error }) {
+function OrderForm({ clients, products, outlets = [], onSubmit, onCancel, isPending, error }) {
   const { register, handleSubmit, control, watch } = useForm({
     defaultValues: {
       user: clients[0]?.id ?? '',
+      // Blank means "the outlet I am working in", which the server fills in.
+      outlet: '',
       deliveryCode: 'ground',
       shippingDollars: '0.00',
       poNumber: '',
@@ -278,6 +281,7 @@ function OrderForm({ clients, products, onSubmit, onCancel, isPending, error }) 
       onSubmit={handleSubmit((values) =>
         onSubmit({
           user: values.user,
+          outlet: values.outlet || undefined,
           deliveryCode: values.deliveryCode,
           shipping: Math.round(Number(values.shippingDollars || 0) * 100),
           poNumber: values.poNumber || undefined,
@@ -308,7 +312,10 @@ function OrderForm({ clients, products, onSubmit, onCancel, isPending, error }) 
           name="user"
           label="Customer"
           hint="Approved accounts only — ordering needs approval."
-          options={clients.map((client) => ({ value: client.id, label: client.businessName }))}
+          options={clients.map((client) => ({
+            value: client.id,
+            label: client.displayName ?? client.contactName ?? client.email,
+          }))}
         />
         <Input label="Customer PO number" {...register('poNumber')} />
       </div>
@@ -387,6 +394,24 @@ function OrderForm({ clients, products, onSubmit, onCancel, isPending, error }) 
         <Input label="Shipping" inputMode="decimal" suffix="CAD" {...register('shippingDollars')} />
       </div>
 
+      {/* Which shop fulfils this. Only offered when there is more than one —
+          a picker with a single option is a question with one answer. Blank
+          means the outlet the panel is switched to, which is the common case;
+          it is asked because a customer collecting in person picks the shop
+          nearest them, not the one the operator happens to be sitting in. */}
+      {outlets.length > 1 && (
+        <SelectField
+          control={control}
+          name="outlet"
+          label="Fulfilled by"
+          hint="Leave blank to use the outlet you are working in."
+          options={[
+            { value: '', label: 'Current outlet' },
+            ...outlets.map((outlet) => ({ value: outlet.id, label: outlet.name })),
+          ]}
+        />
+      )}
+
       <Textarea label="Notes" rows={2} {...register('notes')} />
 
       <div className="rounded-md bg-surface-2 px-3 py-2.5">
@@ -448,6 +473,11 @@ export function AdminOrdersPage() {
   const { data, isLoading } = useAdminOrders({ status, q: query || undefined });
   // Only approved accounts can order, so only approved accounts are offered.
   const { data: clientData } = useAdminUsers({ status: 'approved' });
+  // For the "Fulfilled by" picker. `outlet: 'all'` because the list of shops is
+  // not itself scoped to a shop — an order must be sendable to one you are not
+  // currently working in.
+  const { data: outletData } = useAdminOutlets({ status: 'active', outlet: 'all' });
+  const outlets = outletData?.outlets ?? [];
   // The catalogue is 400+ rows; it loads only while the builder is open.
   const { data: inventoryData } = useAdminInventory({}, Boolean(creating));
   const { updateOrderStatus, refundOrder, bulkOrderStatus, createOrder } = useAdminMutations();
@@ -507,8 +537,10 @@ export function AdminOrdersPage() {
       ),
     },
     {
-      key: 'businessName',
-      header: 'Business',
+      // `displayName`, not `businessName`: the column identifies the account,
+      // and an account is identified by the person.
+      key: 'displayName',
+      header: 'Customer',
       // Folds away below 768: the order number, total and status are what an
       // operator scans a phone for, and all three fit only without this.
       priority: 2,
@@ -813,7 +845,7 @@ export function AdminOrdersPage() {
         title="Issue this refund?"
         body={
           refunding
-            ? `${money(Math.round((refundConfirm?.amountDollars ?? 0) * 100))} goes to ${refunding.businessName ?? 'this account'} as store credit against order ${refunding.orderNumber}.`
+            ? `${money(Math.round((refundConfirm?.amountDollars ?? 0) * 100))} goes to ${refunding.displayName ?? refunding.businessName ?? 'this account'} as store credit against order ${refunding.orderNumber}.`
             : ''
         }
         consequence="Store credit is spendable at checkout straight away. Reversing this means a manual adjustment on the credit ledger."
@@ -852,6 +884,7 @@ export function AdminOrdersPage() {
           <OrderForm
             clients={clients}
             products={products}
+            outlets={outlets}
             isPending={createOrder.isPending}
             error={createOrder.error?.message}
             onCancel={() => setCreating(false)}

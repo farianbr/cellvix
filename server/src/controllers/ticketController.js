@@ -11,7 +11,7 @@ import auditService from '../services/auditService.js';
  */
 
 const listTickets = asyncHandler(async (req, res) => {
-  res.json(await ticketService.listTickets(req.query));
+  res.json(await ticketService.listTickets({ ...req.query, outlet: req.outletScope }));
 });
 
 const getTicket = asyncHandler(async (req, res) => {
@@ -48,4 +48,53 @@ const deleteTicket = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
-export { listTickets, getTicket, createTicket, updateTicket, setTicketStatus, deleteTicket };
+const recordDeposit = asyncHandler(async (req, res) => {
+  const result = await ticketService.recordDeposit(req.params.id, req.body, req.user);
+
+  await auditService.record({
+    req,
+    action: 'ticket.deposit',
+    entity: { kind: 'ticket', id: req.params.id, label: result.ticket.ticketNumber },
+    description: `Recorded a deposit on ${result.ticket.ticketNumber}.`,
+  });
+
+  res.json(result);
+});
+
+const removeDeposit = asyncHandler(async (req, res) => {
+  const result = await ticketService.removeDeposit(req.params.id, req.params.depositId);
+
+  await auditService.record({
+    req,
+    action: 'ticket.deposit.remove',
+    entity: { kind: 'ticket', id: req.params.id, label: result.ticket.ticketNumber },
+    description: `Removed a deposit from ${result.ticket.ticketNumber}.`,
+  });
+
+  res.json(result);
+});
+
+const convertToInvoice = asyncHandler(async (req, res) => {
+  const result = await ticketService.convertToInvoice(req.params.id, req.body, req.user);
+
+  await auditService.record({
+    req,
+    action: 'ticket.convert',
+    entity: { kind: 'ticket', id: req.params.id, label: result.ticket.ticketNumber },
+    description: `${result.ticket.ticketNumber} became invoice ${result.invoice.number}.`,
+  });
+
+  res.json(result);
+});
+
+export {
+  listTickets,
+  getTicket,
+  createTicket,
+  updateTicket,
+  setTicketStatus,
+  deleteTicket,
+  recordDeposit,
+  removeDeposit,
+  convertToInvoice,
+};

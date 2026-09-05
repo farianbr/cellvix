@@ -72,6 +72,10 @@ const rmaSchema = new mongoose.Schema(
   {
     rmaNumber: { type: String, required: true, unique: true, index: true }, // RMA-2026-00001
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+
+    /** The shop the item came back to, which is not always the one that sold it. */
+    outlet: { type: mongoose.Schema.Types.ObjectId, ref: 'Outlet', default: null, index: true },
+
     order: { type: mongoose.Schema.Types.ObjectId, ref: 'Order', required: true, index: true },
     orderNumber: String,
 

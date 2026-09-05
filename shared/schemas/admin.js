@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { passwordSchema } from './auth.js';
 import { DEFAULT_COUNTRY } from '../countries.js';
 import { PROVINCES } from './checkout.js';
+import { isValidPostal, postalExampleFor } from '../regions.js';
 
 const cents = z.coerce.number().int().min(0).max(100_000_000);
 
@@ -67,13 +68,17 @@ const clientSchema = z.object({
       line1: z.string().trim().min(2, 'Enter a street address.').max(120),
       line2: z.string().trim().max(120).optional(),
       city: z.string().trim().min(2, 'Enter a city.').max(80),
-      region: z.string().trim().min(2, 'Select a province.').max(2),
-      postal: z
-        .string()
-        .trim()
-        .regex(/^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/, 'Enter a valid postal code.'),
+      // `max(2)` was a Canadian assumption: `NSW` and `QLD` are three letters,
+      // and a free-text region can be a word. The country decides what is valid.
+      region: z.string().trim().min(2, 'Select a region.').max(60),
+      postal: z.string().trim().min(1, 'Enter a postal code.').max(20),
+      country: z.string().trim().max(60).default('Canada'),
     })
-    .optional(),
+    .optional()
+    .refine((address) => !address?.postal || isValidPostal(address.postal, address.country), {
+      message: 'Enter a valid postal code.',
+      path: ['postal'],
+    }),
   status: z.enum(['pending', 'approved']).default('approved'),
   creditLimit: cents.default(0),
   terms: z.enum(['prepaid', 'net15', 'net30', 'net60']).default('prepaid'),
@@ -179,24 +184,24 @@ const refineClientAddress = (values, ctx) => {
       message: 'Enter a city.',
     });
   }
-  // `A1A 1A1` is a Canadian postal code and nothing else's. Applied to every
-  // address it would reject a valid UK or US one, so the pattern is checked
-  // only where it is the actual format; elsewhere the field just has to be
-  // filled in, because there is no single format to check it against.
+  // The rule is the country's, not Canada's. This used to check `A1A 1A1` for
+  // Canada and merely "at least three characters" for everywhere else, which
+  // accepted `abc` as a US ZIP. `regions.js` knows the real pattern for the
+  // countries Cellvix trades with, and honestly accepts anything for the ones
+  // where there is no fixed format.
   const country = values.address.country || 'Canada';
-  if (country === 'Canada') {
-    if (!/^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/.test(postal)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ['address', 'postal'],
-        message: 'Enter a valid postal code.',
-      });
-    }
-  } else if (postal.length < 3) {
+  if (!postal || postal.length < 3) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['address', 'postal'],
       message: 'Enter a postal or ZIP code.',
+    });
+  } else if (!isValidPostal(postal, country)) {
+    const example = postalExampleFor(country);
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['address', 'postal'],
+      message: example ? `Enter a valid postal code (${example}).` : 'Enter a valid postal code.',
     });
   }
 };
@@ -473,7 +478,10 @@ const ADMIN_NAV = [
       },
       {
         key: 'rma',
-        label: 'RMA / Returns',
+        // "Returns", not "RMA / Returns": the operator says returns, and the
+        // acronym was only ever there to disambiguate from the supplier-side
+        // row, which is now switched off.
+        label: 'Returns',
         to: '/admin/rma',
         icon: 'RotateCcw',
         badge: 'openRmas',
@@ -605,6 +613,29 @@ const ADMIN_NAV = [
       { key: 'whatsapp', label: 'WhatsApp', to: '/admin/marketing/whatsapp', icon: 'MessageCircle' },
       { key: 'referrals', label: 'Referrals', to: '/admin/marketing/referrals', icon: 'Gift' },
       { key: 'offers', label: 'Offers', to: '/admin/marketing/offers', icon: 'Tag' },
+    ],
+  },
+  {
+    /**
+     * Content published to the storefront for search engines and shoppers to
+     * find, as opposed to Marketing, which is outbound: campaigns, calls and
+     * offers pushed AT a known audience.
+     *
+     * Blog and FAQ were under Marketing because they are things you publish,
+     * but publishing is where the similarity ends — nobody writes a help
+     * article as part of a campaign, and an operator looking for one had to
+     * think of it as marketing first. They keep their `/admin/marketing/*`
+     * URLs: those are bookmarked and linked from the storefront, and moving a
+     * row in the nav is not a reason to break a link.
+     */
+    key: 'seo',
+    label: 'SEO',
+    icon: 'Globe',
+    // Under `marketing` rather than a new permission area: a role that can
+    // publish a campaign can publish a help article, and a seventh area is a
+    // column nobody maintains correctly in the roles matrix (§7.6).
+    area: 'marketing',
+    children: [
       { key: 'blog', label: 'Blog', to: '/admin/marketing/blog', icon: 'Newspaper' },
       { key: 'faq', label: 'FAQ', to: '/admin/marketing/faq', icon: 'HelpCircle' },
     ],
@@ -1061,6 +1092,7 @@ const quoteConvertSchema = z.object({
   deliveryCode: z.enum(['ground', 'express', 'pickup']).default('ground'),
 });
 
+
 /**
  * An admin raising an order directly — a phone order, a walk-in, an account
  * that placed it by email (§7.2's `+ Create > Order`).
@@ -1072,10 +1104,19 @@ const quoteConvertSchema = z.object({
  * client that can send a price is a client that can set one.
  */
 const adminOrderSchema = z.object({
-  user: z.string().trim().min(1, 'Pick a client.'),
+  user: z.string().trim().min(1, 'Pick a customer.'),
   items: z.array(quoteItemSchema).min(1, 'Add at least one line.').max(200),
   shipping: cents.default(0),
   deliveryCode: z.enum(['ground', 'express', 'pickup']).default('ground'),
+  /**
+   * Which shop fulfils this order.
+   *
+   * Optional, and the server falls back to the outlet the operator is working
+   * in. It is asked explicitly because the answer is not always that one: a
+   * customer collecting in person picks the shop nearest them, and a delivery
+   * goes out from whichever shop holds the stock.
+   */
+  outlet: z.string().trim().length(24).optional().or(z.literal('')),
   poNumber: z.string().trim().max(60).optional(),
   notes: z.string().trim().max(2000).optional(),
 });
@@ -1312,7 +1353,37 @@ const TICKET_STATUSES = [
 ];
 
 const TICKET_PRIORITIES = ['low', 'normal', 'high', 'urgent'];
+
+/** Money taken before the invoice exists. Dollars in; the server stores cents. */
+const ticketDepositSchema = z.object({
+  amountDollars: z.coerce.number().positive('Enter a deposit amount.').max(1_000_000),
+  method: z.enum(['cash', 'card', 'debit', 'transfer', 'cheque', 'other']).default('cash'),
+  note: z.string().trim().max(300).or(z.literal('')).optional(),
+});
+
+/**
+ * Turning a finished repair into its invoice.
+ *
+ * Only the terms are asked: everything billed comes off the ticket, which is
+ * where the job was priced. A form that let an operator restate the lines here
+ * would be a second place for them to differ.
+ */
+const ticketConvertSchema = z.object({
+  terms: z.enum(['prepaid', 'net15', 'net30', 'net60']).default('prepaid'),
+});
 const TICKET_SOURCES = ['counter', 'kiosk', 'web', 'phone'];
+
+/**
+ * Converting an estimate into the repair ticket that does the work.
+ *
+ * Only how the job arrived and how urgent it is: the lines come off the quote,
+ * because that is what the customer agreed to. Declared here rather than beside
+ * `quoteConvertSchema` because it reads the two ticket constants above it.
+ */
+const quoteToTicketSchema = z.object({
+  priority: z.enum(TICKET_PRIORITIES).default('normal'),
+  source: z.enum(TICKET_SOURCES).default('counter'),
+});
 
 /** Human labels, so the pills and the selects cannot drift apart. */
 const TICKET_STATUS_LABELS = {
@@ -1517,15 +1588,11 @@ const outletSchema = z.object({
       line2: z.string().trim().max(200).optional(),
       city: z.string().trim().max(120).optional(),
       region: z.string().trim().max(60).optional(),
-      // Canadian conventions throughout. Empty is allowed — an outlet can be
-      // filed before its lease is signed — but a value that is present must be
-      // a real postal code.
-      postal: z
-        .string()
-        .trim()
-        .regex(POSTAL_CA, 'Enter a valid postal code (A1A 1A1).')
-        .optional()
-        .or(z.literal('')),
+      // Empty is allowed — an outlet can be filed before its lease is signed —
+      // but a value that is present must be a real postal code FOR ITS OWN
+      // COUNTRY. Checked in the refinement below, because the rule cannot be
+      // known until `country` has been read.
+      postal: z.string().trim().max(20).optional().or(z.literal('')),
       country: z.string().trim().max(60).default('Canada'),
     })
     .default({}),
@@ -1534,6 +1601,16 @@ const outletSchema = z.object({
   manager: z.string().trim().max(120).optional(),
   hours: z.array(outletHoursSchema).max(7).optional(),
   notes: z.string().trim().max(2000).optional(),
+}).superRefine((value, ctx) => {
+  const postal = value.address?.postal;
+  if (!postal || isValidPostal(postal, value.address?.country)) return;
+
+  const example = postalExampleFor(value.address?.country);
+  ctx.addIssue({
+    code: z.ZodIssueCode.custom,
+    path: ['address', 'postal'],
+    message: example ? `Enter a valid postal code (${example}).` : 'Enter a valid postal code.',
+  });
 });
 
 const areasSchema = z.object(
@@ -2021,4 +2098,4 @@ const supplierChargeSchema = z.object({
   reference: z.string().trim().max(80).optional(),
 });
 
-export { TAX_RATES, INVOICE_SERVICE_TYPES, ORDER_OPEN_STATUSES, ORDER_UNFULFILLED_STATUSES, approveUserSchema, rejectUserSchema, creditSchema, clientSchema, clientFormSchema, clientCreateFormSchema, clientUpdateSchema, CONSENT_CHANNELS, contactConsentSchema, MEMBERSHIP_TIERS, tierSchema, internalNoteSchema, storeCreditSchema, refundSchema, userStatusSchema, productSchema, ORDER_STATUS_FLOW, orderStatusSchema, CARRIERS, ADMIN_NAV, ADMIN_LEGACY_REDIRECTS, invoicePaymentSchema, invoiceVoidSchema, webQuoteStatusSchema, creditPaymentSchema, invoiceUpdateSchema, bulkOrderStatusSchema, supplierSchema, purchaseOrderSchema, purchaseOrderStatusSchema, purchaseReceiveSchema, purchasePaymentSchema, rfqSchema, rfqSendSchema, rfqInviteSchema, rfqAwardSchema, rfqCancelSchema, supplierQuoteSchema, supplierDeclineSchema, supplierLoginSchema, supplierForgotSchema, supplierResetSchema, supplierPasswordSchema, expenseSchema, expenseCategorySchema, stockAdjustSchema, productOpsSchema, quoteSchema, quoteStatusSchema, quoteConvertSchema, adminOrderSchema, adminInvoiceSchema, RMA_ITEM_DISPOSITIONS, rmaSchema, TICKET_STATUSES, TICKET_PRIORITIES, TICKET_SOURCES, TICKET_STATUS_LABELS, CONDITION_GRADES, CONDITION_PARTS, ticketSchema, ticketDeviceSchema, ticketLineSchema, ticketUpdateSchema, ticketStatusSchema, rmaStatusSchema, rmaInspectSchema, rmaResolveSchema, PERMISSION_AREAS, PERMISSION_LEVELS, PERMISSION_LEVEL_LABELS, OUTLET_STATUSES, OUTLET_COLOR_TOKENS, outletSchema, roleSchema, staffUserSchema, staffUserUpdateSchema, MESSAGE_CHANNELS, TEMPLATE_DOCUMENTS, CAMPAIGN_AUDIENCES, CAMPAIGN_AUDIENCE_LABELS, messageSchema, callLogSchema, messageTemplateSchema, campaignSchema, unsubscribeSchema, referralRateSchema, businessInfoSchema, saleSettingsSchema, shippingSettingsSchema, paymentMethodsSettingsSchema, inventorySettingsSchema, providerCredentialSchema, taxonomyNodeSchema, invoiceStatusRuleSchema, communicationsSettingsSchema, SUPPLIER_RETURN_REASON_VALUES, supplierReturnSchema, supplierReturnStatusSchema, supplierCreditSchema, SUPPLIER_BILLING_CYCLES, supplierServiceSchema, supplierServiceUpdateSchema, supplierChargeSchema };
+export { quoteToTicketSchema, ticketDepositSchema, ticketConvertSchema, TAX_RATES, INVOICE_SERVICE_TYPES, ORDER_OPEN_STATUSES, ORDER_UNFULFILLED_STATUSES, approveUserSchema, rejectUserSchema, creditSchema, clientSchema, clientFormSchema, clientCreateFormSchema, clientUpdateSchema, CONSENT_CHANNELS, contactConsentSchema, MEMBERSHIP_TIERS, tierSchema, internalNoteSchema, storeCreditSchema, refundSchema, userStatusSchema, productSchema, ORDER_STATUS_FLOW, orderStatusSchema, CARRIERS, ADMIN_NAV, ADMIN_LEGACY_REDIRECTS, invoicePaymentSchema, invoiceVoidSchema, webQuoteStatusSchema, creditPaymentSchema, invoiceUpdateSchema, bulkOrderStatusSchema, supplierSchema, purchaseOrderSchema, purchaseOrderStatusSchema, purchaseReceiveSchema, purchasePaymentSchema, rfqSchema, rfqSendSchema, rfqInviteSchema, rfqAwardSchema, rfqCancelSchema, supplierQuoteSchema, supplierDeclineSchema, supplierLoginSchema, supplierForgotSchema, supplierResetSchema, supplierPasswordSchema, expenseSchema, expenseCategorySchema, stockAdjustSchema, productOpsSchema, quoteSchema, quoteStatusSchema, quoteConvertSchema, adminOrderSchema, adminInvoiceSchema, RMA_ITEM_DISPOSITIONS, rmaSchema, TICKET_STATUSES, TICKET_PRIORITIES, TICKET_SOURCES, TICKET_STATUS_LABELS, CONDITION_GRADES, CONDITION_PARTS, ticketSchema, ticketDeviceSchema, ticketLineSchema, ticketUpdateSchema, ticketStatusSchema, rmaStatusSchema, rmaInspectSchema, rmaResolveSchema, PERMISSION_AREAS, PERMISSION_LEVELS, PERMISSION_LEVEL_LABELS, OUTLET_STATUSES, OUTLET_COLOR_TOKENS, outletSchema, roleSchema, staffUserSchema, staffUserUpdateSchema, MESSAGE_CHANNELS, TEMPLATE_DOCUMENTS, CAMPAIGN_AUDIENCES, CAMPAIGN_AUDIENCE_LABELS, messageSchema, callLogSchema, messageTemplateSchema, campaignSchema, unsubscribeSchema, referralRateSchema, businessInfoSchema, saleSettingsSchema, shippingSettingsSchema, paymentMethodsSettingsSchema, inventorySettingsSchema, providerCredentialSchema, taxonomyNodeSchema, invoiceStatusRuleSchema, communicationsSettingsSchema, SUPPLIER_RETURN_REASON_VALUES, supplierReturnSchema, supplierReturnStatusSchema, supplierCreditSchema, SUPPLIER_BILLING_CYCLES, supplierServiceSchema, supplierServiceUpdateSchema, supplierChargeSchema };

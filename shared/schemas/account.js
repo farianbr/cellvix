@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { addressSchema } from './checkout.js';
+import { addressShape, withPostalRule } from './checkout.js';
 
 const profileSchema = z.object({
   businessName: z.string().trim().min(2, 'Enter your company name.').max(160).optional().or(z.literal('')),
@@ -11,12 +11,20 @@ const profileSchema = z.object({
   resellerCert: z.string().trim().max(60).optional(),
 });
 
-/** Saved addresses reuse the checkout address shape plus a label and defaults. */
-const savedAddressSchema = addressSchema.extend({
-  label: z.string().trim().min(1, 'Give this address a label.').max(40),
-  isDefaultShipping: z.boolean().optional().default(false),
-  isDefaultBilling: z.boolean().optional().default(false),
-});
+/**
+ * Saved addresses reuse the checkout address shape plus a label and defaults.
+ *
+ * Extends `addressShape` — the plain object — and then re-applies the country's
+ * postal rule, because `.extend()` exists on an object schema and not on the
+ * refined one. Extending the refined schema silently threw at import time.
+ */
+const savedAddressSchema = withPostalRule(
+  addressShape.extend({
+    label: z.string().trim().min(1, 'Give this address a label.').max(40),
+    isDefaultShipping: z.boolean().optional().default(false),
+    isDefaultBilling: z.boolean().optional().default(false),
+  }),
+);
 
 const paymentMethodSchema = z.object({
   type: z.enum(['card', 'ach']).default('card'),

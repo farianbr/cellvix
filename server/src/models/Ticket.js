@@ -134,6 +134,10 @@ const ticketSchema = new mongoose.Schema(
     customerEmail: { type: String, trim: true, lowercase: true, maxlength: 160 },
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
 
+    /** The shop whose bench holds the device. */
+    outlet: { type: mongoose.Schema.Types.ObjectId, ref: 'Outlet', default: null, index: true },
+
+
     // --- what --------------------------------------------------------------
     deviceBrand: { type: String, trim: true, maxlength: 60 },
     deviceModel: { type: String, trim: true, maxlength: 120 },
@@ -196,6 +200,29 @@ const ticketSchema = new mongoose.Schema(
     // accruing at the moment the work actually finished rather than at whatever
     // later edit happened to touch the document.
     closedAt: { type: Date, default: null },
+
+    /**
+     * Money taken before there is an invoice to take it against.
+     *
+     * A repair is quoted, the customer leaves a deposit, and the invoice does
+     * not exist until the work is done — so the payment has nowhere to live.
+     * Recorded here and **carried onto the invoice as a payment** when the
+     * ticket converts, which is the only reason to hold it on the ticket at
+     * all: a deposit that did not follow the money would have to be re-keyed,
+     * and a re-keyed payment is one that eventually gets keyed twice.
+     */
+    deposits: [
+      {
+        amount: { type: Number, required: true },
+        at: { type: Date, default: Date.now },
+        method: { type: String, default: 'cash' },
+        note: String,
+        by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+      },
+    ],
+
+    /** The invoice this ticket became, once it has become one. */
+    invoice: { type: mongoose.Schema.Types.ObjectId, ref: 'Invoice', default: null },
 
     timeline: [
       {

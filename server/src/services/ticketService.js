@@ -5,6 +5,9 @@ import Ticket, {
   TICKET_OPEN_STATUSES,
 } from '../models/Ticket.js';
 import User from '../models/User.js';
+import Invoice from '../models/Invoice.js';
+import orderBuilder from './orderBuilder.js';
+import creditService from './creditService.js';
 import Settings from '../models/Settings.js';
 import ApiError from '../utils/ApiError.js';
 import { likeRegex } from '../utils/regex.js';
@@ -163,6 +166,30 @@ function shapeTicket(ticket, slaDays) {
     estimateCents: ticket.estimateCents ?? 0,
     finalCents: ticket.finalCents ?? 0,
 
+    /**
+     * Money already taken, and what is left to bill.
+     *
+     * `depositTotal` is summed here rather than stored, for the same reason
+     * every other total is: a stored sum is one that can disagree with the rows
+     * it was summed from.
+     */
+    deposits: (ticket.deposits ?? []).map((deposit) => ({
+      id: deposit._id?.toString() ?? null,
+      amount: deposit.amount,
+      at: deposit.at,
+      method: deposit.method ?? 'cash',
+      note: deposit.note ?? null,
+    })),
+    depositTotal: (ticket.deposits ?? []).reduce((sum, deposit) => sum + (deposit.amount ?? 0), 0),
+
+    /** The invoice this became, if it has been converted. */
+    invoice: ticket.invoice
+      ? {
+          id: (ticket.invoice._id ?? ticket.invoice).toString(),
+          number: ticket.invoice.number ?? null,
+        }
+      : null,
+
     notes: ticket.notes ?? null,
 
     timeline: (ticket.timeline ?? []).map((entry) => ({
@@ -211,11 +238,27 @@ async function listTechnicians() {
  * excludes would be useless. `open` and `overdue` are readings of age, so they
  * are counted from the open rows rather than asked of Mongo.
  */
-async function listTickets({ status, q, priority, technician, user, from, to, limit, page } = {}) {
+async function listTickets({
+  status,
+  q,
+  priority,
+  technician,
+  user,
+  from,
+  to,
+  limit,
+  page,
+  outlet,
+} = {}) {
   const settings = await Settings.load();
   const slaDays = settings?.operations?.ticketSlaDays ?? 7;
 
   const query = {};
+
+  // Scoped to the outlet the panel is switched to, when it is switched to one.
+  // Resolved by `resolveOutletScope` rather than read from the query string,
+  // because a staff member's own outlet is binding.
+  if (outlet) query.outlet = outlet;
 
   if (status === 'open') query.status = { $in: TICKET_OPEN_STATUSES };
   else if (status === 'overdue') query.status = { $in: TICKET_OPEN_STATUSES };
@@ -541,4 +584,220 @@ async function deleteTicket(id) {
   return { deleted: true, ticketNumber: ticket.ticketNumber };
 }
 
-export { listTickets, getTicket, createTicket, setTicketStatus, updateTicket, deleteTicket, shapeTicket };
+/**
+ * Record money taken before there is an invoice to take it against.
+ *
+ * A repair is quoted, the customer leaves a deposit, and the invoice does not
+ * exist until the work is finished. The payment is held on the ticket and
+ * carried onto the invoice when it converts — see `convertToInvoice`.
+ *
+ * Amounts are integer cents and the caller sends dollars, converted here rather
+ * than in the controller so every path through this file agrees about units.
+ */
+async function recordDeposit(id, { amountDollars, method = 'cash', note } = {}, actor) {
+  const amount = Math.round(Number(amountDollars ?? 0) * 100);
+  if (!(amount > 0)) {
+    throw ApiError.badRequest('Enter a deposit amount.', 'DEPOSIT_EMPTY');
+  }
+
+  const query = isObjectId(id) ? { _id: id } : { ticketNumber: String(id) };
+  const ticket = await Ticket.findOne(query);
+  if (!ticket) throw ApiError.notFound('Ticket not found.', 'TICKET_NOT_FOUND');
+
+  if (ticket.invoice) {
+    // Once it is an invoice, a payment belongs on the invoice — recording it
+    // here would leave two records of one payment and no way to reconcile them.
+    throw ApiError.badRequest(
+      'This ticket is already invoiced. Record the payment against the invoice.',
+      'TICKET_ALREADY_INVOICED',
+    );
+  }
+
+  ticket.deposits.push({ amount, method, note: note || undefined, by: actor?._id ?? null });
+  await ticket.save();
+
+  const settings = await Settings.load();
+  return { ticket: shapeTicket(ticket.toObject(), settings?.operations?.ticketSlaDays ?? 7) };
+}
+
+/** Remove a deposit that was recorded in error. */
+async function removeDeposit(id, depositId) {
+  const query = isObjectId(id) ? { _id: id } : { ticketNumber: String(id) };
+  const ticket = await Ticket.findOne(query);
+  if (!ticket) throw ApiError.notFound('Ticket not found.', 'TICKET_NOT_FOUND');
+
+  if (ticket.invoice) {
+    throw ApiError.badRequest(
+      'This ticket is already invoiced. Reverse the payment on the invoice instead.',
+      'TICKET_ALREADY_INVOICED',
+    );
+  }
+
+  const before = ticket.deposits.length;
+  ticket.deposits = ticket.deposits.filter((deposit) => String(deposit._id) !== String(depositId));
+  if (ticket.deposits.length === before) {
+    throw ApiError.notFound('Deposit not found.', 'DEPOSIT_NOT_FOUND');
+  }
+
+  await ticket.save();
+  const settings = await Settings.load();
+  return { ticket: shapeTicket(ticket.toObject(), settings?.operations?.ticketSlaDays ?? 7) };
+}
+
+/**
+ * Turn a finished repair into the invoice that bills it.
+ *
+ * **The ticket is the source of truth for what is billed.** Its devices,
+ * services and parts become the invoice's lines, and its tax rate and discount
+ * come across with them — the operator priced the job once, on the ticket, and
+ * re-keying it onto an invoice is how the two end up disagreeing.
+ *
+ * **Deposits become payments.** Money already taken is recorded against the new
+ * invoice at the amount and method it was taken at, so the balance due is what
+ * is actually still owed rather than the full total.
+ *
+ * Converting **once** is enforced by `ticket.invoice`: a second conversion would
+ * bill the customer twice for one repair, which is the worst thing this function
+ * could do. The link is also what the detail screen reads to show where the
+ * ticket went.
+ */
+async function convertToInvoice(id, { terms = 'prepaid' } = {}, actor) {
+  const query = isObjectId(id) ? { _id: id } : { ticketNumber: String(id) };
+  const ticket = await Ticket.findOne(query).populate('user');
+  if (!ticket) throw ApiError.notFound('Ticket not found.', 'TICKET_NOT_FOUND');
+
+  if (ticket.invoice) {
+    throw ApiError.badRequest(
+      `${ticket.ticketNumber} has already been invoiced.`,
+      'TICKET_ALREADY_INVOICED',
+    );
+  }
+  if (!ticket.user) {
+    // A walk-in with no account cannot be invoiced: an invoice is raised
+    // against somebody, and there is nobody to raise it against.
+    throw ApiError.badRequest(
+      'Attach a customer to this ticket before invoicing it.',
+      'TICKET_NO_CUSTOMER',
+    );
+  }
+
+  const totals = priceTicket(ticket.devices, {
+    discountCents: ticket.discountCents ?? 0,
+    taxRate: ticket.taxRate ?? 0,
+  });
+  if (!(totals.total > 0)) {
+    throw ApiError.badRequest(
+      'Add a service or a part before invoicing this ticket.',
+      'TICKET_EMPTY',
+    );
+  }
+
+  // The devices come across whole — the invoice's own `devices` array has the
+  // same shape, so the document reproduces the job rather than summarising it.
+  const devices = (ticket.devices ?? []).map((device) => ({
+    category: device.category,
+    brand: device.brand,
+    series: device.series,
+    model: device.model,
+    serial: device.serial,
+    problem: device.problem,
+    solution: device.solution,
+    notes: device.notes,
+    services: (device.services ?? []).map(toInvoiceLine),
+    parts: (device.parts ?? []).map(toInvoiceLine),
+  }));
+
+  const issuedAt = new Date();
+  const dueDate = new Date(issuedAt);
+  dueDate.setDate(dueDate.getDate() + (orderBuilder.TERMS_DAYS[terms] ?? 0));
+
+  const invoice = await Invoice.create({
+    number: await orderBuilder.nextInvoiceNumber('CVX'),
+    kind: 'due',
+    user: ticket.user._id,
+    outlet: ticket.outlet ?? null,
+    amount: totals.total,
+    amountPaid: 0,
+    issuedAt,
+    dueDate,
+    terms,
+    status: 'unpaid',
+    reference: `Repair ${ticket.ticketNumber}`,
+
+    devices,
+    subtotalCents: totals.subtotal + totals.discount,
+    discountCents: totals.discount,
+    taxPercent: ticket.taxRate ?? 0,
+    taxCents: totals.taxCents,
+    province: ticket.province ?? undefined,
+
+    customerNotes: ticket.clientNotes || undefined,
+    technicianNotes: ticket.technicianNotes || undefined,
+
+    // Deposits ride across as real payments, so the invoice opens showing what
+    // is still owed rather than the full amount.
+    payments: (ticket.deposits ?? []).map((deposit) => ({
+      amount: deposit.amount,
+      at: deposit.at,
+      method: deposit.method ?? 'cash',
+      reference: `Deposit on ${ticket.ticketNumber}`,
+    })),
+  });
+
+  // `amountPaid` and `status` are derived from those payments rather than
+  // assumed — an invoice fully covered by deposits is already settled.
+  const paid = invoice.payments.reduce((sum, payment) => sum + payment.amount, 0);
+  invoice.amountPaid = paid;
+  if (paid >= invoice.amount) {
+    invoice.status = 'paid';
+    invoice.settledAt = new Date();
+  } else if (paid > 0) {
+    invoice.status = 'partial';
+  }
+  await invoice.save();
+
+  ticket.invoice = invoice._id;
+  ticket.finalCents = totals.total;
+  ticket.timeline.push({
+    status: ticket.status,
+    at: new Date(),
+    note: `Converted to invoice ${invoice.number}.`,
+    by: actor?._id ?? null,
+  });
+  await ticket.save();
+
+  // Terms draw on the line of credit, so the balance has to move with them.
+  if (terms !== 'prepaid') await creditService.syncBalance(ticket.user._id);
+
+  const settings = await Settings.load();
+  return {
+    ticket: shapeTicket(ticket.toObject(), settings?.operations?.ticketSlaDays ?? 7),
+    invoice: { id: invoice._id.toString(), number: invoice.number },
+  };
+}
+
+/** A ticket line as the invoice stores one. Cents stay cents. */
+function toInvoiceLine(line) {
+  return {
+    name: line.name,
+    description: line.description || undefined,
+    priceCents: line.priceCents ?? 0,
+    qty: line.qty ?? 1,
+    product: line.product || undefined,
+  };
+}
+
+export {
+  nextTicketNumber,
+  priceTicket,
+  listTickets,
+  getTicket,
+  createTicket,
+  setTicketStatus,
+  updateTicket,
+  deleteTicket,
+  recordDeposit,
+  removeDeposit,
+  convertToInvoice,
+  shapeTicket,
+};

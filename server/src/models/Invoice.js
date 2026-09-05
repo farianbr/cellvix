@@ -58,6 +58,16 @@ const invoiceSchema = new mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
 
     /**
+     * The shop this invoice is raised by.
+     *
+     * Copied from the order where there is one, so the money and the goods
+     * agree about which location they belong to; set from the operator's
+     * current outlet on a standalone invoice.
+     */
+    outlet: { type: mongoose.Schema.Types.ObjectId, ref: 'Outlet', default: null, index: true },
+
+
+    /**
      * The ledger row a receipt documents. Set on `kind: 'receipt'` only, and it
      * is what makes a receipt traceable back to the money that moved — and what
      * stops a replayed movement raising a second receipt for the same cents.

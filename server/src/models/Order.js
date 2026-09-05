@@ -62,6 +62,17 @@ const orderSchema = new mongoose.Schema(
   {
     orderNumber: { type: String, required: true, unique: true, index: true }, // CVX-2026-00042
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+
+    /**
+     * Which shop this order belongs to.
+     *
+     * Set at checkout from the outlet the operator is working in, or chosen
+     * explicitly when a customer wants to collect from — or be delivered by —
+     * a particular shop. Null on an order placed before outlets were scoped,
+     * which reads as the default outlet rather than as missing data.
+     */
+    outlet: { type: mongoose.Schema.Types.ObjectId, ref: 'Outlet', default: null, index: true },
+
     items: [orderItemSchema],
 
     subtotal: { type: Number, required: true }, // list value of every line

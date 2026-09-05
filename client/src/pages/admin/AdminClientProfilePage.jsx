@@ -68,6 +68,7 @@ import {
   useAdminTickets,
   useAdminQuotes,
   useAdminWebQuotes,
+  useAdminRmas,
 } from '@/hooks/useAdmin';
 
 
@@ -99,7 +100,7 @@ const TABS = [
   // Enquiries this account sent through the website's contact form. Only ever
   // populated for a customer who was signed in when they submitted.
   { key: 'web-quotes', label: 'Web Quotes', icon: Globe },
-  { key: 'rmas', label: 'RMAs', icon: RotateCcw },
+  { key: 'rmas', label: 'Returns', icon: RotateCcw },
   { key: 'notes', label: 'Notes', icon: FileText },
   // Consent, tier and the referral scheme: the terms of the relationship
   // rather than a record of it.
@@ -390,6 +391,66 @@ const QUOTE_TONES = {
 };
 
 /** Quotes on the customer profile. Even fifths, like the orders table. */
+/** Status tones and labels, matching `/admin/rma` so one record reads the
+ *  same from the queue and from the account. */
+const RMA_STATUS_TONES = {
+  requested: 'neutral',
+  approved: 'info',
+  in_transit: 'info',
+  received: 'warn',
+  inspecting: 'warn',
+  resolved: 'ok',
+  rejected: 'danger',
+};
+
+const RMA_COLUMNS = [
+  {
+    key: 'rmaNumber',
+    header: 'Return',
+    priority: 1,
+    render: (rma) => (
+      <span className="block whitespace-nowrap font-mono text-sm font-medium text-ink-900">
+        {rma.rmaNumber}
+      </span>
+    ),
+  },
+  {
+    key: 'orderNumber',
+    header: 'Order',
+    priority: 2,
+    render: (rma) => (
+      <span className="whitespace-nowrap font-mono text-xs text-ink-500">
+        {rma.orderNumber ?? '—'}
+      </span>
+    ),
+  },
+  {
+    key: 'qty',
+    header: 'Items',
+    priority: 3,
+    align: 'right',
+    className: 'tnum',
+    render: (rma) => formatCount(rma.qty),
+  },
+  {
+    key: 'status',
+    header: 'Status',
+    priority: 1,
+    render: (rma) => (
+      <Badge tone={RMA_STATUS_TONES[rma.status]} size="sm">
+        {String(rma.status).replace('_', ' ')}
+      </Badge>
+    ),
+  },
+  {
+    key: 'createdAt',
+    header: 'Raised',
+    priority: 2,
+    sortValue: (rma) => rma.createdAt,
+    render: (rma) => date(rma.createdAt),
+  },
+];
+
 const QUOTE_COLUMNS = [
   {
     key: 'quoteNumber',
@@ -607,6 +668,11 @@ export function AdminClientProfilePage() {
     tab === 'quotes' ? { user: id, status: 'all' } : undefined,
   );
 
+  /** This account's returns. Fetched on its own tab only, like the rest. */
+  const { data: rmaData, isLoading: rmasLoading } = useAdminRmas(
+    tab === 'rmas' ? { user: id, status: 'all' } : undefined,
+  );
+
   /** This account's website enquiries. Fetched on its own tab only. */
   const { data: webQuoteData, isLoading: webQuotesLoading } = useAdminWebQuotes(
     tab === 'web-quotes' ? { user: id, status: 'all' } : undefined,
@@ -659,6 +725,7 @@ export function AdminClientProfilePage() {
   const ticketPage = useTablePage(ticketData?.tickets ?? []);
   const quotePage = useTablePage(quoteData?.quotes ?? []);
   const webQuotePage = useTablePage(webQuoteData?.webQuotes ?? []);
+  const rmaPage = useTablePage(rmaData?.rmas ?? []);
 
   function setTab(next) {
     const params = new URLSearchParams(searchParams);
@@ -871,6 +938,9 @@ export function AdminClientProfilePage() {
     invoices: totals.invoiceCount ?? 0,
     quotes: openQuotes,
     'web-quotes': totals.webQuotes ?? 0,
+    // Open returns, matching the other counts on the strip — the tab had no
+    // entry at all, so an account with four returns in progress showed nothing.
+    rmas: totals.openRmas ?? 0,
     notes: notes.length,
   };
 
@@ -1657,7 +1727,54 @@ export function AdminClientProfilePage() {
         </Panel>
       )}
 
-      {tab === 'rmas' && <PendingTab icon={RotateCcw} title="RMAs arrive in phase 7" phase={7} />}
+      {/* The returns this account has raised.
+      
+          This tab rendered a "arrives in phase 7" placeholder long after phase
+          7 shipped — the list screen, the workflow and the data were all live,
+          so an operator looking at a customer with five returns was told the
+          feature did not exist. The tab now shows them, using the same columns
+          and the same status tones as `/admin/rma`, because it is the same
+          record seen from the account rather than from the queue. */}
+      {tab === 'rmas' && (
+        <Panel
+          flush
+          title="Returns"
+          description="Items this account has sent back, newest first. Click a row to open it."
+        >
+          <div className="border-b border-line px-3 py-2 sm:px-4">
+            <CountLine
+              total={(rmaData?.rmas ?? []).length}
+              shown={rmaPage.pageRows.length}
+              from={rmaPage.from}
+              noun={(rmaData?.rmas ?? []).length === 1 ? 'return' : 'returns'}
+            />
+          </div>
+
+          <DataTable
+            columns={RMA_COLUMNS}
+            rows={rmaPage.pageRows}
+            rowKey={(rma) => rma.id}
+            loading={rmasLoading}
+            defaultSort={{ key: 'createdAt', direction: 'desc' }}
+            onRowClick={(rma) => navigate(`/admin/rma/${rma.id}`)}
+            empty={
+              <PanelEmpty
+                icon={RotateCcw}
+                title="No returns"
+                body="Nothing has been sent back by this account."
+              />
+            }
+          />
+
+          <Pagination
+            page={rmaPage.page}
+            pages={rmaPage.totalPages}
+            onChange={rmaPage.setPage}
+            hideWhenSingle
+            className="border-t border-line px-3 py-3 sm:px-4"
+          />
+        </Panel>
+      )}
 
       {tab === 'activity' && (
         <Panel

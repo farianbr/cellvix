@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { AlertCircle, Building2, MapPin, Save, ShieldCheck, UserRound, X } from 'lucide-react';
-import { PROVINCES } from '@shared/schemas/checkout';
+import AddressFields from '@/components/admin/AddressFields';
 import { COUNTRY_OPTIONS, DEFAULT_COUNTRY } from '@shared/countries';
 import Input from '@/components/ui/Input';
 import PhoneField from '@/components/ui/PhoneField';
@@ -65,6 +65,7 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
     register,
     handleSubmit,
     control,
+    setValue,
     formState: { errors },
   } = useForm({
     defaultValues: {
@@ -203,28 +204,12 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
           </h2>
 
           <div className="space-y-3">
-            <Input label="Street" {...register('address.line1')} />
-            <Input label="Unit / suite" {...register('address.line2')} />
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Input label="City" {...register('address.city')} />
-              <SelectField
-                control={control}
-                name="address.region"
-                label="Province"
-                options={PROVINCES}
-              />
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Input label="Postal code" placeholder="A1A 1A1" {...register('address.postal')} />
-              <SelectField
-                control={control}
-                name="address.country"
-                label="Country"
-                options={COUNTRY_OPTIONS}
-              />
-            </div>
+            <AddressFields control={control} register={register} setValue={setValue}>
+              <div className="mb-3 space-y-3">
+                <Input label="Street" {...register('address.line1')} />
+                <Input label="Unit / suite" {...register('address.line2')} />
+              </div>
+            </AddressFields>
 
             <p className="text-xs leading-snug text-ink-400">
               The default shipping and billing address. Leave the street blank to record no address —

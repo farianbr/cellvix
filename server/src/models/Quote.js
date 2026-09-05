@@ -43,6 +43,10 @@ const quoteSchema = new mongoose.Schema(
   {
     quoteNumber: { type: String, required: true, unique: true, index: true }, // QT-2026-00001
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+
+    /** The shop that quoted. An accepted quote passes this to its order. */
+    outlet: { type: mongoose.Schema.Types.ObjectId, ref: 'Outlet', default: null, index: true },
+
     source: { type: String, enum: ['admin', 'web'], default: 'admin' },
 
     status: { type: String, enum: QUOTE_STATUSES, default: 'draft', index: true },
@@ -64,6 +68,17 @@ const quoteSchema = new mongoose.Schema(
     notes: { type: String, trim: true, maxlength: 2000 },
 
     convertedOrder: { type: mongoose.Schema.Types.ObjectId, ref: 'Order' },
+
+    /**
+     * The ticket this quote became, where it became one.
+     *
+     * A quote has two honest destinations and they are not the same thing: a
+     * parts quote becomes an ORDER (goods ship, money is owed), and a repair
+     * estimate becomes a TICKET (work starts, and the invoice comes later, off
+     * the ticket). Both are recorded so a converted quote can say which way it
+     * went rather than leaving somebody to search for it.
+     */
+    convertedTicket: { type: mongoose.Schema.Types.ObjectId, ref: 'Ticket' },
 
     timeline: [
       {
