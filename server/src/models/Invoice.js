@@ -1,5 +1,24 @@
 import mongoose from 'mongoose';
 
+/**
+ * One priced line — a service performed or a part fitted.
+ *
+ * `priceCents` is the price AT THE TIME OF INVOICING, copied rather than
+ * looked up: a catalogue price that moves next month must not silently rewrite
+ * an invoice that has already been sent. `product` stays as the link back to
+ * the row it came from, which is what lets stock move and what a reorder reads.
+ */
+const invoiceLineSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    description: String,
+    priceCents: { type: Number, default: 0 },
+    qty: { type: Number, default: 1 },
+    product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+  },
+  { _id: false },
+);
+
 const invoiceSchema = new mongoose.Schema(
   {
     number: { type: String, required: true, unique: true, index: true }, // INV-2026-00042
@@ -52,6 +71,69 @@ const invoiceSchema = new mongoose.Schema(
      */
     reference: String,
     notes: String,
+
+    /**
+     * The work this invoice bills for, when it bills for work.
+     *
+     * Empty on every invoice an order raises and on a flat standalone charge —
+     * those are a single figure by design, and the model comment above is still
+     * true of them. A repair invoice fills it, and its `amount` is then
+     * DERIVED from these lines by `invoiceTotals()` rather than typed.
+     *
+     * The shape mirrors `Ticket.devices` so a ticket can become an invoice
+     * without translating between two ideas of the same object.
+     */
+    devices: [
+      {
+        category: String,
+        brand: String,
+        series: String,
+        model: String,
+        serial: String,
+        problem: String,
+        solution: String,
+        notes: String,
+        services: [invoiceLineSchema],
+        parts: [invoiceLineSchema],
+        _id: false,
+      },
+    ],
+
+    /**
+     * The tax actually applied, stored as the rate AND the cents.
+     *
+     * Both, because a rate alone cannot reproduce an old invoice after the
+     * province's rate changes, and cents alone cannot explain themselves. A
+     * document has to still be readable in five years.
+     */
+    province: String,
+    taxPercent: { type: Number, default: 0 },
+    taxCents: { type: Number, default: 0 },
+    subtotalCents: { type: Number, default: 0 },
+    discountCents: { type: Number, default: 0 },
+    discountCode: String,
+
+    /**
+     * Kilometres driven, and whether the out-of-area fee was charged.
+     *
+     * `travelKm` is internal mileage — recorded for the business, never added
+     * to what the customer owes. The extended service fee is the opposite: a
+     * real charge, so it lands in the subtotal like any other line.
+     */
+    travelKm: { type: Number, default: 0 },
+    extendedServiceFee: { type: Boolean, default: false },
+
+    technician: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    serviceType: {
+      type: String,
+      enum: ['walk_in', 'pickup', 'onsite', 'mail_in'],
+      default: 'walk_in',
+    },
+
+    /** `internalNotes` is the only one that never reaches the document. */
+    customerNotes: String,
+    technicianNotes: String,
+    internalNotes: String,
 
     amount: { type: Number, required: true }, // cents
     amountPaid: { type: Number, default: 0 },

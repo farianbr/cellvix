@@ -640,6 +640,25 @@ export function AdminClientProfilePage() {
   // Called before the loading return, because a hook cannot be conditional.
   useSetRecordLabel(data?.user?.displayName);
 
+  /**
+   * Paging for the three tabs the hand-rolled orders/invoices paging never
+   * covered.
+   *
+   * **Above the loading return, for the same reason `useSetRecordLabel` is.**
+   * These sat below it, which meant the first render — while `data` was still
+   * loading — ran three fewer hooks than the render after it, and React threw
+   * `Rendered more hooks than during the previous render` the moment the fetch
+   * resolved. The page crashed on every visit.
+   *
+   * They read `?.` off possibly-absent data and default to an empty array,
+   * which is exactly what makes them safe to call before the guard: with no
+   * data yet they page an empty list, and nothing below this point runs until
+   * the guard has passed anyway.
+   */
+  const ticketPage = useTablePage(ticketData?.tickets ?? []);
+  const quotePage = useTablePage(quoteData?.quotes ?? []);
+  const webQuotePage = useTablePage(webQuoteData?.webQuotes ?? []);
+
   function setTab(next) {
     const params = new URLSearchParams(searchParams);
     if (next === 'overview') params.delete('tab');
@@ -751,11 +770,6 @@ export function AdminClientProfilePage() {
     (currentInvoicesPage - 1) * ROWS_PER_PAGE,
     currentInvoicesPage * ROWS_PER_PAGE,
   );
-
-  // The three tabs the hand-rolled paging above never covered.
-  const ticketPage = useTablePage(ticketData?.tickets ?? []);
-  const quotePage = useTablePage(quoteData?.quotes ?? []);
-  const webQuotePage = useTablePage(webQuoteData?.webQuotes ?? []);
 
   function setRowPage(key, next) {
     const params = new URLSearchParams(searchParams);

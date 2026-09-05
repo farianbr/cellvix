@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 import {
   AlertCircle,
@@ -5,7 +6,11 @@ import {
   ArrowUpRight,
   Boxes,
   ClipboardList,
+  Eye,
+  EyeOff,
   MapPin,
+  Pencil,
+  SlidersHorizontal,
   Truck,
   Wallet,
 } from 'lucide-react';
@@ -20,7 +25,16 @@ import DataTable, { CountLine } from '@/components/admin/DataTable';
 import Pagination from '@/components/ui/Pagination';
 import useTablePage from '@/hooks/useTablePage';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
-import { useAdminInventoryItem } from '@/hooks/useAdmin';
+import Button from '@/components/ui/Button';
+import Modal from '@/components/ui/Modal';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import { OpsForm, AdjustForm, ProductForm } from '@/components/admin/StockForms';
+import { useTaxonomy } from '@/hooks/useCatalog';
+import {
+  useAdminInventoryItem,
+  useAdminSuppliers,
+  useAdminMutations,
+} from '@/hooks/useAdmin';
 import Skeleton from '@/components/ui/Skeleton';
 import { pressable } from '@/lib/motion';
 
@@ -56,6 +70,24 @@ const PO_STATUS_TONES = {
 export function AdminInventoryDetailPage() {
   const { id } = useParams();
   const { data, isLoading, error } = useAdminInventoryItem(id);
+
+  // The same three mutations the inventory list uses. A product's own page is
+  // where an operator lands from a low-stock alert, and it was the one screen
+  // that could show the problem without offering any way to fix it.
+  const { adjustStock, updateInventoryOps, toggleProduct, updateProduct } = useAdminMutations();
+  // The catalogue form cascades brand → series → model, so it needs the tree.
+  const { data: tree } = useTaxonomy();
+  const { data: supplierData } = useAdminSuppliers({ status: 'active' });
+  const suppliers = supplierData?.suppliers ?? [];
+
+  const [adjusting, setAdjusting] = useState(false);
+  const [editingOps, setEditingOps] = useState(false);
+  // Hiding is the one action here that fires on the click itself — the other
+  // three open a form that already asks before it writes. A storefront listing
+  // vanishing because a button was next to the one somebody meant is exactly
+  // the mistake a confirm step exists to catch.
+  const [confirmingVisibility, setConfirmingVisibility] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   const product = data?.product;
   const movements = data?.movements ?? [];
@@ -170,13 +202,46 @@ export function AdminInventoryDetailPage() {
             )}
           </>
         }
+        // The actions the list already offers on this product, on the screen
+        // the operator actually arrives at from a low-stock alert. Adjust
+        // stock leads and takes the solid button: it is the reason somebody
+        // opens this page from an alert. Editing the catalogue record itself
+        // stays on the list, where the taxonomy pickers live.
         action={
-          <Link
-            to="/admin/inventory"
-            className={cn(pressable, 'inline-flex h-11 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-5 font-display text-md font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
-          >
-            All inventory
-          </Link>
+          <>
+            <Button size="sm" icon={Boxes} onClick={() => setAdjusting(true)}>
+              Adjust stock
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              icon={SlidersHorizontal}
+              onClick={() => setEditingOps(true)}
+            >
+              Reorder point
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              icon={product.isActive ? EyeOff : Eye}
+              loading={toggleProduct.isPending}
+              onClick={() => setConfirmingVisibility(true)}
+            >
+              {product.isActive ? 'Hide' : 'List'}
+            </Button>
+            {/* Opens the form HERE. It used to link to the list pre-searched
+                for this SKU, which meant "edit this product" answered with a
+                search results page the operator then had to act on again — the
+                work was one click further away than before they clicked. */}
+            <Button
+              size="sm"
+              variant="outline"
+              icon={Pencil}
+              onClick={() => setEditing(true)}
+            >
+              Edit product
+            </Button>
+          </>
         }
       />
 
@@ -197,7 +262,7 @@ export function AdminInventoryDetailPage() {
             key: 'price',
             label: 'Unit price',
             value: money(product.price),
-            hint: 'What a client pays',
+            hint: 'What a customer pays',
             tone: 'brand',
             icon: Wallet,
           },
@@ -416,6 +481,108 @@ export function AdminInventoryDetailPage() {
           </Panel>
         </div>
       </div>
+
+      {/* The same two forms the inventory list opens, imported rather than
+          re-declared — a second copy is how the two screens drift apart. */}
+      <Modal
+        open={editing}
+        onClose={() => setEditing(false)}
+        title="Edit product"
+        size="lg"
+        align="top"
+      >
+        <ProductForm
+          product={product}
+          tree={tree}
+          isPending={updateProduct.isPending}
+          error={updateProduct.error?.message}
+          onCancel={() => setEditing(false)}
+          onSubmit={(values) =>
+            updateProduct.mutate(
+              { id: product.id, ...values },
+              { onSuccess: () => setEditing(false) },
+            )
+          }
+        />
+      </Modal>
+
+      <Modal
+        open={adjusting}
+        onClose={() => setAdjusting(false)}
+        title="Adjust stock"
+        size="md"
+        align="top"
+      >
+        <AdjustForm
+          product={product}
+          isPending={adjustStock.isPending}
+          error={adjustStock.error?.message}
+          onCancel={() => setAdjusting(false)}
+          onSubmit={(values) =>
+            adjustStock.mutate(
+              {
+                id: product.id,
+                qtyChange: Number(values.qtyChange),
+                type: values.type,
+                note: values.note,
+              },
+              { onSuccess: () => setAdjusting(false) },
+            )
+          }
+        />
+      </Modal>
+
+      {/* `info`, not `danger`: nothing is destroyed and the same button puts
+          it back. The body states what actually changes for a buyer, because
+          "hide" alone does not say whether stock or history goes with it. */}
+      <ConfirmDialog
+        open={confirmingVisibility}
+        onClose={() => setConfirmingVisibility(false)}
+        onConfirm={() =>
+          toggleProduct.mutate(product.id, {
+            onSuccess: () => setConfirmingVisibility(false),
+          })
+        }
+        title={product.isActive ? `Hide ${product.name}?` : `List ${product.name}?`}
+        body={
+          product.isActive
+            ? 'It stops appearing in the catalogue and cannot be ordered. Stock, cost and history are untouched, and listing it again puts it straight back.'
+            : 'It returns to the catalogue and can be ordered again, at its current price and stock.'
+        }
+        tone="info"
+        confirmLabel={product.isActive ? 'Hide from storefront' : 'List on storefront'}
+        loading={toggleProduct.isPending}
+        error={toggleProduct.error?.message}
+      />
+
+      <Modal
+        open={editingOps}
+        onClose={() => setEditingOps(false)}
+        title="Reorder point and cost"
+        size="md"
+        align="top"
+      >
+        <OpsForm
+          product={product}
+          suppliers={suppliers}
+          isPending={updateInventoryOps.isPending}
+          error={updateInventoryOps.error?.message}
+          onCancel={() => setEditingOps(false)}
+          onSubmit={(values) =>
+            updateInventoryOps.mutate(
+              {
+                id: product.id,
+                minStock: Number(values.minStock) || 0,
+                cost: Math.round(Number(values.costDollars || 0) * 100),
+                location: values.location || undefined,
+                supplier: values.supplier || undefined,
+                barcode: values.barcode || undefined,
+              },
+              { onSuccess: () => setEditingOps(false) },
+            )
+          }
+        />
+      </Modal>
     </>
   );
 }

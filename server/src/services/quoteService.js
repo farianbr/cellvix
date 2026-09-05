@@ -9,6 +9,7 @@ import ApiError from '../utils/ApiError.js';
 import { likeRegex } from '../utils/regex.js';
 import notificationService from './notificationService.js';
 import orderBuilder from './orderBuilder.js';
+import { formatDate } from '../../../shared/dates.js';
 
 /**
  * Quotes (ERP rework §6.6, phase 7).
@@ -426,7 +427,7 @@ async function setQuoteStatus(id, { status, note }) {
   // date has to be extended first. That leaves a record of the extension.
   if (status === 'accepted' && isExpired(quote)) {
     throw ApiError.badRequest(
-      `${quote.quoteNumber} expired on ${new Date(quote.validUntil).toLocaleDateString('en-CA')} — extend its expiry before accepting it.`,
+      `${quote.quoteNumber} expired on ${formatDate(quote.validUntil)} — extend its expiry before accepting it.`,
       'QUOTE_EXPIRED',
     );
   }

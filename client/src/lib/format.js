@@ -3,6 +3,15 @@
  * everywhere else in the system — this is the only place it becomes a string.
  */
 
+import {
+  formatDate,
+  formatDateShort,
+  formatDateTime,
+  formatIsoDate,
+  formatDateRange,
+  toIsoDate,
+} from '@shared/dates';
+
 const CAD = new Intl.NumberFormat('en-CA', {
   style: 'currency',
   currency: 'CAD',
@@ -51,39 +60,19 @@ export function moneyAxis(cents) {
   return `${sign}$${Math.round(magnitude)}`;
 }
 
-const DATE_MED = new Intl.DateTimeFormat('en-CA', {
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
-});
-
-const DATE_SHORT = new Intl.DateTimeFormat('en-CA', { month: 'short', day: 'numeric' });
-
-const DATE_TIME = new Intl.DateTimeFormat('en-CA', {
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
-  hour: 'numeric',
-  minute: '2-digit',
-});
-
-/** "Mar 14, 2026" */
-export function date(value) {
-  if (!value) return '—';
-  return DATE_MED.format(new Date(value));
-}
-
-/** "Mar 14" */
-export function dateShort(value) {
-  if (!value) return '—';
-  return DATE_SHORT.format(new Date(value));
-}
-
-/** "Mar 14, 2026, 3:20 p.m." */
-export function dateTime(value) {
-  if (!value) return '—';
-  return DATE_TIME.format(new Date(value));
-}
+/**
+ * The date formats live in `shared/dates.js` so the invoice PDF the server
+ * renders and the table cell the client renders cannot drift apart. Re-exported
+ * under the short names the app already imports from here.
+ */
+export {
+  formatDate as date,
+  formatDateShort as dateShort,
+  formatDateTime as dateTime,
+  formatIsoDate as isoDate,
+  formatDateRange as dateRange,
+  toIsoDate,
+};
 
 /** "in 6 days" / "3 days ago" / "today" */
 export function relativeDays(value) {
@@ -96,7 +85,7 @@ export function relativeDays(value) {
 }
 
 /**
- * "just now" / "4m ago" / "3h ago" / "2d ago" / "Mar 14" — for the notification
+ * "just now" / "4m ago" / "3h ago" / "2d ago" / "14-Mar" — for the notification
  * bell (§7.3), which needs finer grain than `relativeDays`.
  *
  * A notification from eleven minutes ago rendered as "today" tells the operator
@@ -111,7 +100,7 @@ export function relativeTime(value) {
   if (seconds < 3600) return `${Math.round(seconds / 60)}m ago`;
   if (seconds < 86_400) return `${Math.round(seconds / 3600)}h ago`;
   if (seconds < 7 * 86_400) return `${Math.round(seconds / 86_400)}d ago`;
-  return dateShort(value);
+  return formatDateShort(value);
 }
 
 /** 1240 -> "1,240" */

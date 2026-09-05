@@ -20,13 +20,19 @@ import { serializeOrder } from './orderService.js';
 import orderBuilder from './orderBuilder.js';
 import invoicePaymentService from './invoicePaymentService.js';
 import { activityFeed } from './activityService.js';
+import { AuditLog } from '../models/AuditLog.js';
 import { displayNameOf } from '../utils/displayName.js';
 import { renderInvoiceHtml } from './invoiceDocument.js';
 import { renderStatementHtml } from './statementDocument.js';
 import { sendMail } from './mailer.js';
 import { BUSINESS_INFO } from '../../../shared/business.js';
 import { invalidateTree } from './taxonomyService.js';
-import { ORDER_STATUS_FLOW } from '../../../shared/schemas/admin.js';
+import {
+  ORDER_STATUS_FLOW,
+  ORDER_OPEN_STATUSES,
+  ORDER_UNFULFILLED_STATUSES,
+} from '../../../shared/schemas/admin.js';
+import { formatDate, formatDateShort } from '../../../shared/dates.js';
 
 const LOW_STOCK_THRESHOLD = 50;
 
@@ -64,19 +70,15 @@ function bucketFor(start, end) {
 }
 
 /**
- * Both units label by their first day: `Aug 27`. A week reads as its Monday.
+ * Both units label by their first day: `27-Aug`. A week reads as its Monday.
  *
  * The year is appended only when the range spans more than one, because a
  * weekly walk snaps back to Monday and can start in the previous December —
- * `Dec 29 → Dec 28` for a calendar year is correct but reads as nonsense
+ * `29-Dec` to `28-Dec` for a calendar year is correct but reads as nonsense
  * without it.
  */
 function bucketLabel(date, withYear) {
-  return date.toLocaleDateString('en-CA', {
-    month: 'short',
-    day: 'numeric',
-    ...(withYear ? { year: 'numeric' } : {}),
-  });
+  return withYear ? formatDate(date) : formatDateShort(date);
 }
 
 /**
@@ -178,15 +180,15 @@ async function stats({ from, to } = {}) {
     lowStockItems,
     openRmas,
     openTickets,
+    recentInvoices,
+    recentActivity,
   ] = await Promise.all([
     User.countDocuments({ status: 'pending' }),
     User.countDocuments({ status: 'approved', role: 'buyer' }),
     User.countDocuments({ role: 'buyer' }),
 
-    Order.countDocuments({
-      status: { $in: ['placed', 'processing', 'shipped', 'out_for_delivery'] },
-    }),
-    Order.countDocuments({ status: { $in: ['placed', 'processing'] } }),
+    Order.countDocuments({ status: { $in: ORDER_OPEN_STATUSES } }),
+    Order.countDocuments({ status: { $in: ORDER_UNFULFILLED_STATUSES } }),
 
     // Order value in range. Kept for `revenue.last30Days`, which the old shape
     // promised and other screens may still read.
@@ -235,6 +237,10 @@ async function stats({ from, to } = {}) {
         $group: {
           _id: null,
           outstanding: { $sum: { $subtract: ['$amount', '$amountPaid'] } },
+          // How MANY invoices make up that figure. The dashboard tile leads
+          // with the money and needs the count beside it, and counting rows
+          // here is free — the aggregation has already matched them.
+          count: { $sum: 1 },
           overdue: {
             $sum: {
               $cond: [{ $lt: ['$dueDate', now] }, { $subtract: ['$amount', '$amountPaid'] }, 0],
@@ -245,8 +251,39 @@ async function stats({ from, to } = {}) {
     ]),
     Invoice.countDocuments({ status: { $ne: 'paid' }, dueDate: { $lt: now } }),
 
-    Product.countDocuments({ isActive: true, stock: { $gt: 0, $lt: LOW_STOCK_THRESHOLD } }),
-    Product.countDocuments({ isActive: true, stock: 0 }),
+    // "Low" means BELOW THIS PRODUCT'S OWN REORDER POINT, falling back to the
+    // flat threshold only where none is set. That is the definition the
+    // inventory screen classifies by, and the two disagreeing is what made the
+    // sidebar badge unverifiable: it counted every product under 50 and read
+    // 189, while the screen counted each against its own `minStock` and showed
+    // 112. A badge that cannot be reconciled with any screen teaches the
+    // operator to ignore every badge.
+    //
+    // `$expr` because the comparison is against a sibling field, which a plain
+    // query cannot express.
+    // An aggregation rather than a query: the comparison is against a sibling
+    // field, and Mongoose cannot cast a `$cond` inside a query-level `$expr`.
+    Product.aggregate([
+      { $match: { isActive: true, stock: { $gt: 0 } } },
+      {
+        $match: {
+          $expr: {
+            $lte: [
+              '$stock',
+              {
+                $cond: [
+                  { $gt: [{ $ifNull: ['$minStock', 0] }, 0] },
+                  '$minStock',
+                  LOW_STOCK_THRESHOLD,
+                ],
+              },
+            ],
+          },
+        },
+      },
+      { $count: 'count' },
+    ]),
+    Product.countDocuments({ isActive: true, stock: { $lte: 0 } }),
     Product.countDocuments({ isActive: true }),
 
     Product.aggregate([
@@ -295,13 +332,43 @@ async function stats({ from, to } = {}) {
           _id: 0,
           id: { $toString: '$_id' },
           businessName: '$client.businessName',
+          // The same precedence `displayNameOf` applies — person, then company,
+          // then email. Expressed in the pipeline because this row never
+          // becomes a document the helper could be called on.
+          displayName: {
+            $let: {
+              vars: {
+                contact: { $trim: { input: { $ifNull: ['$client.contactName', ''] } } },
+                business: { $trim: { input: { $ifNull: ['$client.businessName', ''] } } },
+              },
+              in: {
+                $cond: [
+                  { $ne: ['$$contact', ''] },
+                  '$$contact',
+                  {
+                    $cond: [
+                      { $ne: ['$$business', ''] },
+                      '$$business',
+                      { $ifNull: ['$client.email', '—'] },
+                    ],
+                  },
+                ],
+              },
+            },
+          },
           total: 1,
           invoices: 1,
         },
       },
     ]),
 
-    Order.find({}).sort({ createdAt: -1 }).limit(6).populate('user', 'businessName').lean(),
+    // `contactName` too: `displayNameOf` needs it, and without it every order
+    // row would fall through to the business name.
+    Order.find({})
+      .sort({ createdAt: -1 })
+      .limit(6)
+      .populate('user', 'businessName contactName email')
+      .lean(),
     User.find({ status: 'pending' }).sort({ createdAt: 1 }).limit(5).lean(),
 
     Product.find({ isActive: true, stock: { $lt: LOW_STOCK_THRESHOLD } })
@@ -315,6 +382,23 @@ async function stats({ from, to } = {}) {
     // dates would be nonsense.
     Rma.countDocuments({ status: { $in: RMA_OPEN_STATUSES } }),
     Ticket.countDocuments({ status: { $in: TICKET_OPEN_STATUSES } }),
+
+    // Newest invoices, unranged like the other "recent" lists: the panel
+    // answers "what was billed lately", which a date filter would silently
+    // empty on a range with no billing in it.
+    Invoice.find({})
+      .sort({ issuedAt: -1 })
+      .limit(6)
+      .populate('user', 'businessName contactName')
+      .lean(),
+
+    // What staff did, newest first. Read from the audit trail rather than
+    // reconstructed from records: the trail already knows who acted and when,
+    // and a second derivation would disagree with the audit screen.
+    AuditLog.find({ kind: 'activity' })
+      .sort({ createdAt: -1 })
+      .limit(8)
+      .lean(),
   ]);
 
   const collected = collectedRows[0]?.total ?? 0;
@@ -354,13 +438,14 @@ async function stats({ from, to } = {}) {
 
     receivables: {
       outstanding: outstandingRows[0]?.outstanding ?? 0,
+      count: outstandingRows[0]?.count ?? 0,
       overdue: outstandingRows[0]?.overdue ?? 0,
       overdueCount,
     },
 
     inventory: {
       total: productCount,
-      lowStock,
+      lowStock: lowStock[0]?.count ?? 0,
       outOfStock,
       value: inventoryValueRows[0]?.value ?? 0,
     },
@@ -381,6 +466,35 @@ async function stats({ from, to } = {}) {
       businessName: order.user?.businessName ?? null,
       displayName: displayNameOf(order.user),
     })),
+    // Enough to render a row and link to the document. Labelled with
+    // `displayNameOf`, never `businessName` — an account is identified by the
+    // person, and a sole trader has no business name to show.
+    recentInvoices: recentInvoices.map((invoice) => ({
+      number: invoice.number,
+      displayName: displayNameOf(invoice.user),
+      amount: invoice.amount,
+      amountPaid: invoice.amountPaid ?? 0,
+      status: invoice.status,
+      issuedAt: invoice.issuedAt,
+      dueDate: invoice.dueDate,
+    })),
+
+    // The audit row, flattened to what a feed line needs. `entity` travels
+    // whole so the client can route the row to the record it describes without
+    // parsing the description text.
+    recentActivity: recentActivity.map((row) => ({
+      id: row._id.toString(),
+      action: row.action,
+      description: row.description,
+      actorName: row.actorName,
+      entity: {
+        kind: row.entity?.kind ?? null,
+        id: row.entity?.id ?? '',
+        label: row.entity?.label ?? '',
+      },
+      at: row.createdAt,
+    })),
+
     pendingQueue: pendingQueue.map(shapeUser),
     lowStockItems: lowStockItems.map((product) => ({
       id: product._id.toString(),
@@ -549,7 +663,17 @@ async function listUsers({ status, q } = {}) {
         lastOrderedAt: ordered?.lastOrderedAt ?? null,
       };
     }),
-    counts: Object.fromEntries(counts.map((row) => [row._id, row.count])),
+    counts: {
+      ...Object.fromEntries(counts.map((row) => [row._id, row.count])),
+      // The pseudo-status carries a count too, so its pill can show one like
+      // every other pill rather than being the single bare label in the row.
+      open: counts
+        .filter((row) => ORDER_OPEN_STATUSES.includes(row._id))
+        .reduce((total, row) => total + row.count, 0),
+      unfulfilled: counts
+        .filter((row) => ORDER_UNFULFILLED_STATUSES.includes(row._id))
+        .reduce((total, row) => total + row.count, 0),
+    },
   };
 }
 
@@ -1051,6 +1175,13 @@ async function listProducts({ q, stock, page = 1, limit = 40, all = false } = {}
 
   if (stock === 'out') query.stock = 0;
   else if (stock === 'low') query.stock = { $gt: 0, $lt: LOW_STOCK_THRESHOLD };
+  // Both at once — the set the sidebar badge counts. It exists so that clicking
+  // that badge lands on a list of exactly the rows it was counting; without it
+  // the badge said 189 and the only reachable views were 136 and 53.
+  else if (stock === 'attention') {
+    query.isActive = true;
+    query.stock = { $lt: LOW_STOCK_THRESHOLD };
+  }
   else if (stock === 'inactive') query.isActive = false;
 
   const pageNumber = all ? 1 : Math.max(1, Number(page) || 1);
@@ -1181,7 +1312,12 @@ async function createOrder(body) {
 
 async function listOrders({ status, q } = {}) {
   const query = {};
-  if (status && status !== 'all') query.status = String(status);
+  // `open` is a pseudo-status: not a value any order holds, but the set the
+  // dashboard's "Open orders" tile counts. Without it that tile could only link
+  // to one of the four and would show a list contradicting its own number.
+  if (status === 'open') query.status = { $in: ORDER_OPEN_STATUSES };
+  else if (status === 'unfulfilled') query.status = { $in: ORDER_UNFULFILLED_STATUSES };
+  else if (status && status !== 'all') query.status = String(status);
 
   if (q) {
     const rx = likeRegex(q);
@@ -1305,6 +1441,17 @@ function defaultNote(status) {
  * job whose only job is to keep a column honest. The account side already reads
  * it this way; this matches it exactly so the two never disagree.
  */
+/** A stored line, as the client reads it. Cents stay cents. */
+function shapeInvoiceLine(line) {
+  return {
+    name: line.name,
+    description: line.description ?? null,
+    priceCents: line.priceCents ?? 0,
+    qty: line.qty ?? 1,
+    product: line.product?.toString?.() ?? null,
+  };
+}
+
 function shapeAdminInvoice(invoice) {
   const balance = invoice.amount - invoice.amountPaid;
   const overdue =
@@ -1329,6 +1476,38 @@ function shapeAdminInvoice(invoice) {
     reference: invoice.reference ?? null,
     notes: invoice.notes ?? null,
     status: overdue ? 'overdue' : invoice.status,
+
+    // The work, and how the amount was arrived at. Empty on a flat charge and
+    // on every invoice an order raised — the detail screen shows the breakdown
+    // only when there is one, rather than a row of zeroes that explains
+    // nothing. Sent so the document can reproduce its own arithmetic instead
+    // of the reader taking the total on trust.
+    devices: (invoice.devices ?? []).map((device) => ({
+      category: device.category ?? null,
+      brand: device.brand ?? null,
+      series: device.series ?? null,
+      model: device.model ?? null,
+      serial: device.serial ?? null,
+      problem: device.problem ?? null,
+      solution: device.solution ?? null,
+      notes: device.notes ?? null,
+      services: (device.services ?? []).map(shapeInvoiceLine),
+      parts: (device.parts ?? []).map(shapeInvoiceLine),
+    })),
+    subtotalCents: invoice.subtotalCents ?? null,
+    discountCents: invoice.discountCents ?? 0,
+    discountCode: invoice.discountCode ?? null,
+    taxCents: invoice.taxCents ?? 0,
+    taxPercent: invoice.taxPercent ?? 0,
+    province: invoice.province ?? null,
+    travelKm: invoice.travelKm ?? 0,
+    extendedServiceFee: Boolean(invoice.extendedServiceFee),
+    serviceType: invoice.serviceType ?? null,
+    // `internalNotes` is deliberately NOT here: it is the one note that never
+    // leaves the building, and a field that reaches the client is a field that
+    // reaches a screenshot.
+    customerNotes: invoice.customerNotes ?? null,
+    technicianNotes: invoice.technicianNotes ?? null,
     payments: (invoice.payments ?? []).map((payment) => ({
       amount: payment.amount,
       at: payment.at,
@@ -1347,6 +1526,78 @@ function shapeAdminInvoice(invoice) {
  * ends up `partial` on one screen and `paid` on another.
  */
 const recomputeInvoice = invoicePaymentService.recompute;
+
+/**
+ * What an itemised invoice adds up to.
+ *
+ * **The server owns this number.** The form shows a running total so the
+ * operator can see what they are building, but that figure is a preview and is
+ * discarded: PROJECT_INSTRUCTIONS is explicit that totals are recomputed
+ * server-side and the client never sends a price. A browser that can name the
+ * amount is a browser that can name a smaller one.
+ *
+ * Order of operations, and it matters: lines, then the extended service fee,
+ * then the discount, then tax on what is left. Taxing before the discount
+ * charges tax on money nobody paid; discounting after tax quietly changes the
+ * tax remitted. Travel mileage is deliberately absent — it is internal
+ * bookkeeping, not a charge (§ the form says so on its face).
+ *
+ * Everything is integer cents, rounded once at each boundary. Rounding per line
+ * and again at the end is how a total ends up a cent off what the lines show.
+ */
+function invoiceTotals(body, { extendedServiceFeeCents = 0 } = {}) {
+  const devices = body.devices ?? [];
+
+  const lineCents = devices.reduce((deviceSum, device) => {
+    const lines = [...(device.services ?? []), ...(device.parts ?? [])];
+    return (
+      deviceSum +
+      lines.reduce(
+        (sum, line) =>
+          sum + Math.round(Number(line.priceDollars ?? 0) * 100) * Math.max(1, Number(line.qty ?? 1)),
+        0,
+      )
+    );
+  }, 0);
+
+  const feeCents = body.extendedServiceFee ? extendedServiceFeeCents : 0;
+  const subtotalCents = lineCents + feeCents;
+
+  // A discount cannot exceed what is being discounted: a negative subtotal is
+  // a refund, and a refund is a different document with a different ledger.
+  const discountCents = Math.min(
+    Math.round(Number(body.discountDollars ?? 0) * 100),
+    subtotalCents,
+  );
+
+  const taxableCents = subtotalCents - discountCents;
+  const taxCents = Math.round((taxableCents * Number(body.taxPercent ?? 0)) / 100);
+
+  return {
+    subtotalCents,
+    discountCents,
+    taxCents,
+    totalCents: taxableCents + taxCents,
+  };
+}
+
+/** A form line as the shape the model stores — dollars in, cents out. */
+function toInvoiceLine(line) {
+  return {
+    name: line.name,
+    description: line.description || undefined,
+    priceCents: Math.round(Number(line.priceDollars ?? 0) * 100),
+    qty: Math.max(1, Number(line.qty ?? 1)),
+    product: line.product || undefined,
+  };
+}
+
+/** True when the body describes work rather than a single agreed figure. */
+function isItemised(body) {
+  return (body.devices ?? []).some(
+    (device) => (device.services?.length ?? 0) + (device.parts?.length ?? 0) > 0,
+  );
+}
 
 /**
  * A standalone invoice (§7.2's `+ Create > Invoice`) — one raised against an
@@ -1375,6 +1626,21 @@ async function createInvoice(body) {
     dueDate.setDate(dueDate.getDate() + (orderBuilder.TERMS_DAYS[body.terms] ?? 0));
   }
 
+  // An itemised invoice bills its lines; a flat one bills the figure typed.
+  // Either way the amount stored is the one this function computed — the
+  // client's is never trusted with it.
+  const itemised = isItemised(body);
+  const totals = itemised
+    ? invoiceTotals(body, {
+        extendedServiceFeeCents: Math.round(Number(body.extendedServiceFeeDollars ?? 0) * 100),
+      })
+    : null;
+
+  const amount = itemised ? totals.totalCents : body.amount;
+  if (!(amount > 0)) {
+    throw ApiError.badRequest('An invoice needs an amount.', 'INVOICE_EMPTY');
+  }
+
   const invoice = await Invoice.create({
     // A charge raised by hand is money owed, not money received, so it starts
     // life as a `due` record in the `CVX-` series and is renumbered into `INV-`
@@ -1384,7 +1650,7 @@ async function createInvoice(body) {
     // No `order`: that is what makes this one standalone, and the field has
     // always been optional so nothing else has to change to allow it.
     user: user._id,
-    amount: body.amount,
+    amount,
     amountPaid: 0,
     issuedAt,
     dueDate,
@@ -1392,6 +1658,37 @@ async function createInvoice(body) {
     status: 'unpaid',
     reference: body.reference,
     notes: body.notes,
+
+    // Prices are stored in cents on the line, so the document reproduces
+    // itself later without re-reading a catalogue that has since moved.
+    devices: (body.devices ?? []).map((device) => ({
+      category: device.category,
+      brand: device.brand,
+      series: device.series,
+      model: device.model,
+      serial: device.serial,
+      problem: device.problem,
+      solution: device.solution,
+      notes: device.notes,
+      services: (device.services ?? []).map(toInvoiceLine),
+      parts: (device.parts ?? []).map(toInvoiceLine),
+    })),
+
+    province: body.province || undefined,
+    taxPercent: itemised ? (body.taxPercent ?? 0) : 0,
+    taxCents: totals?.taxCents ?? 0,
+    subtotalCents: totals?.subtotalCents ?? amount,
+    discountCents: totals?.discountCents ?? 0,
+    discountCode: body.discountCode || undefined,
+
+    travelKm: body.travelKm ?? 0,
+    extendedServiceFee: Boolean(body.extendedServiceFee),
+    serviceType: body.serviceType ?? 'walk_in',
+    technician: body.technician || undefined,
+
+    customerNotes: body.customerNotes || undefined,
+    technicianNotes: body.technicianNotes || undefined,
+    internalNotes: body.internalNotes || undefined,
   });
 
   // Re-derived from the invoices rather than incremented — see `creditService`.

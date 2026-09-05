@@ -48,9 +48,15 @@ const DELIVERY = [
   { value: 'pickup', label: 'Pickup' },
 ];
 
-/** Segmented pills, not a select — the counts are the point (§4, convention 8). */
+/** Segmented pills, not a select — the counts are the point (§4, convention 8).
+ *
+ * `Open` sits directly after `All` because it is the working set — everything
+ * still owing somebody an action. It is also what the dashboard's "Open orders"
+ * tile links to, so the number on that tile and the list it opens are the same
+ * query rather than two definitions that drifted apart. */
 const PILLS = [
   { value: 'all', label: 'All' },
+  { value: 'open', label: 'Open' },
   ...ORDER_STATUSES.map((status) => ({ value: status.value, label: status.label })),
   { value: 'cancelled', label: 'Cancelled' },
 ];
@@ -300,11 +306,11 @@ function OrderForm({ clients, products, onSubmit, onCancel, isPending, error }) 
         <SelectField
           control={control}
           name="user"
-          label="Client"
+          label="Customer"
           hint="Approved accounts only — ordering needs approval."
           options={clients.map((client) => ({ value: client.id, label: client.businessName }))}
         />
-        <Input label="Client PO number" {...register('poNumber')} />
+        <Input label="Customer PO number" {...register('poNumber')} />
       </div>
 
       <div>

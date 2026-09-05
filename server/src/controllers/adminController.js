@@ -400,7 +400,7 @@ const reverseInvoicePayment = asyncHandler(async (req, res) => {
  * Cash (or a transfer) paid against the line of credit at the counter.
  *
  * The audit line names the invoices it actually landed on, because "paid
- *  " and "settled INV-10042 and part of INV-10043" are the same event and
+ * " and "settled INV-10042 and part of INV-10043" are the same event and
  * only the second one can be reconciled later.
  */
 const recordCreditPayment = asyncHandler(async (req, res) => {

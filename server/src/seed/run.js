@@ -10,6 +10,7 @@ import BlogPost from '../models/BlogPost.js';
 import Faq from '../models/Faq.js';
 import Offer from '../models/Offer.js';
 import Supplier from '../models/Supplier.js';
+import Rfq from '../models/Rfq.js';
 import PurchaseOrder from '../models/PurchaseOrder.js';
 import Expense from '../models/Expense.js';
 import ExpenseCategory from '../models/ExpenseCategory.js';
@@ -18,6 +19,7 @@ import { buildTaxonomyDocs, buildProducts } from './generate.js';
 import { BLOG_POSTS, GENERAL_FAQS, PRODUCT_FAQS, buildOffers } from './content.data.js';
 import { EXPENSE_CATEGORIES } from './expense-categories.js';
 import { SUPPLIERS, buildPurchaseOrders, buildExpenses, costFor } from './purchase.data.js';
+import { seedRfqs } from './rfqs.js';
 import Settings from '../models/Settings.js';
 import Quote from '../models/Quote.js';
 import Rma from '../models/Rma.js';
@@ -204,6 +206,11 @@ async function seedDatabase({ quiet = false } = {}) {
     Expense.deleteMany({}),
     ExpenseCategory.deleteMany({}),
     StockMovement.deleteMany({}),
+    // §6.8a. A request for quote holds product ids in its lines and supplier
+    // ids in its invites, so leaving one behind while both are rebuilt would
+    // leave a request asking suppliers who no longer exist about parts that no
+    // longer exist.
+    Rfq.deleteMany({}),
     // Phase 6. Dropped and recreated from defaults so a reseed cannot leave a
     // half-edited settings document behind; `Settings.load()` rebuilds it.
     Settings.deleteMany({}),
@@ -727,6 +734,22 @@ async function seedDatabase({ quiet = false } = {}) {
     ),
   );
 
+  /**
+   * The supplier process flow (§6.8a) — tags, portal logins and requests.
+   *
+   * Last of the purchase block, because it needs all of it: suppliers to tag
+   * and invite, products to ask about, and a `cost` on each one to base a
+   * plausible quote on. Awarding runs through `rfqService`, so the purchase
+   * order it raises is a real one and the supplier totals recomputed above are
+   * refreshed again by the service itself.
+   */
+  const rfqResult = await seedRfqs({ quiet: true });
+  log(
+    `  requests for quote: ${rfqResult.requests}` +
+      ` (${rfqResult.tagged} suppliers tagged, ${rfqResult.credentialed} given portal access` +
+      `${rfqResult.purchaseOrder ? `, awarded ${rfqResult.purchaseOrder}` : ''})`,
+  );
+
   // The settings singleton, recreated from its seeded defaults — per-province
   // tax rates included, which the tax report reads (§9.5).
   const settings = await Settings.load();
@@ -767,6 +790,7 @@ async function seedDatabase({ quiet = false } = {}) {
     expenseCategories: categories.length,
     expenses: insertedPoExpenses.length + manualExpenses.length,
     stockMovements: movementDocs.length,
+    requestsForQuote: rfqResult.requests,
     quotes: quotes.length,
     returns: rmas.length,
   };
@@ -787,7 +811,16 @@ if (process.argv[1] && process.argv[1].endsWith('run.js')) {
     console.log(`\n  Demo logins (password: ${DEMO_PASSWORD})`);
     console.log('    buyer@cellvix.ca    approved buyer, Net 30, order history');
     console.log('    pending@cellvix.ca  pending approval');
-    console.log('    admin@cellvix.ca    admin\n');
+    console.log('    admin@cellvix.ca    admin');
+    // The portal is a separate session against a separate collection (§6.8a),
+    // so its logins are listed apart — reading them as a fourth kind of user
+    // account is exactly the confusion the split exists to prevent.
+    console.log(`\n  Supplier portal at /supplier (same password)`);
+    console.log('    orders@northbridgeparts.example     quoted most, won one');
+    console.log('    sales@kaiyuan-components.example    the best complete quote');
+    console.log('    hello@pacificcell.example           batteries and charging ports');
+    console.log('    procurement@atlasoem.example        declined one request');
+    console.log('    sales@rivettools.example            deactivated — cannot sign in\n');
     await disconnectDb();
     await mongoose.connection.close();
     process.exit(0);

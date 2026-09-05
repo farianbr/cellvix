@@ -33,6 +33,7 @@ import SelectField from '@/components/ui/SelectField';
 import SelectMenu from '@/components/ui/SelectMenu';
 import Pagination from '@/components/ui/Pagination';
 import PageHeader from '@/components/admin/PageHeader';
+import BadgeExplainer from '@/components/admin/BadgeExplainer';
 import BulkBar from '@/components/admin/BulkBar';
 import { STATUS_TONES } from '@/components/admin/ClientDetail';
 import { TERMS } from '@/components/admin/ApproveClientForm';
@@ -663,6 +664,8 @@ export function AdminCustomersPage() {
           </>
         }
       />
+
+      <BadgeExplainer />
 
       <KpiRow
         tiles={[

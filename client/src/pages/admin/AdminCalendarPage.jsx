@@ -10,6 +10,7 @@ import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminAppointments } from '@/hooks/useAdmin';
 import { pressable } from '@/lib/motion';
 import SelectMenu from '@/components/ui/SelectMenu';
+import { date, dateShort } from '@/lib/format';
 
 /**
  * The scheduling board (§6.15 category 4 — **UI only, §6b U1**, phase 11e).
@@ -113,12 +114,7 @@ export function AdminCalendarPage() {
           </button>
 
           <span className="font-display text-md font-semibold text-ink-900">
-            {weekStart.toLocaleDateString('en-CA', { month: 'long', day: 'numeric' })} —{' '}
-            {days[6].date.toLocaleDateString('en-CA', {
-              month: 'long',
-              day: 'numeric',
-              year: 'numeric',
-            })}
+            {dateShort(weekStart)} — {date(days[6].date)}
           </span>
 
           <button

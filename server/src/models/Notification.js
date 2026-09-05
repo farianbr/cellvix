@@ -52,6 +52,10 @@ const NOTIFICATION_TYPES = [
   // route to the approvals queue: it lands in Suppliers as an inactive record
   // for the purchasing team to review.
   'supplier_application',
+  // A supplier answered a request for quote from the portal. Like an
+  // application it arrives from outside the panel, which is exactly the class
+  // of event nobody discovers on their own.
+  'rfq_quoted',
   'new_order',
   'quote_accepted',
   'new_rma',

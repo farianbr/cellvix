@@ -528,7 +528,7 @@ export function AdminQuoteDetailPage() {
         </div>
 
         <div className="space-y-3">
-          <Panel title="Client">
+          <Panel title="Customer">
             <p className="text-md font-medium text-ink-900">{quote.user.businessName}</p>
             {quote.user.contactName && (
               <p className="mt-0.5 text-sm text-ink-500">{quote.user.contactName}</p>

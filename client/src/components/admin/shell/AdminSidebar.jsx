@@ -72,11 +72,45 @@ function navRowClass(isActive, extra) {
   );
 }
 
-function Badge({ count }) {
+/**
+ * The count beside a nav row.
+ *
+ * **A bare number is unreadable twice over**, and both halves were broken here.
+ * A sighted operator saw "Inventory 189" with no way to tell whether 189 was a
+ * total, an alert or an unread count — and landing on the page showed 420 rows,
+ * so the number could not even be checked. A screen reader announced
+ * "Inventory 189" with no noun at all.
+ *
+ * `label` fixes both: it names what is being counted, in the words the operator
+ * would use. It becomes the accessible name ("189 out of stock or running low")
+ * and the native `title`, so the answer is available on hover, on focus and to
+ * assistive tech — never hover alone, which no keyboard user can reach.
+ *
+ * The number stays visually quiet. It is a wayfinding hint, not an alarm: the
+ * dashboard's "things to do today" is where work is actually triaged, and a
+ * sidebar of loud red pills would compete with it while saying less.
+ */
+function Badge({ count, label, description: full }) {
   if (!count) return null;
+
+  const shown = count > 99 ? '99+' : String(count);
+  // Two callers, two shapes. A child row passes `label` — the bare noun — and
+  // the count is prefixed here: "3 waiting for approval". A collapsed group
+  // passes `description`, already a complete sentence enumerating its parts,
+  // because its own total ("109") is a sum of unlike things and prefixing it
+  // would say the number twice.
+  const description = full ?? (label ? `${count} ${label}` : String(count));
+
   return (
-    <span className="tnum ml-auto min-w-[20px] rounded-full bg-white/15 px-1.5 py-0.5 text-center text-2xs font-semibold leading-none text-white">
-      {count > 99 ? '99+' : count}
+    <span
+      className="tnum ml-auto min-w-[20px] shrink-0 rounded-full bg-white/15 px-1.5 py-0.5 text-center text-2xs font-semibold leading-none text-white"
+      title={description}
+    >
+      {/* The digits are decorative to a screen reader — the sentence beside
+          them is the real content, so the glyphs are hidden and the phrase is
+          announced instead. Without this the reader hears "189" twice. */}
+      <span aria-hidden="true">{shown}</span>
+      <span className="sr-only">{description}</span>
     </span>
   );
 }
@@ -104,7 +138,15 @@ function NavTree({ badges, onNavigate }) {
           if (!item.children) {
             return (
               <li key={item.key}>
-                <NavLink to={item.to} end onClick={onNavigate} className={({ isActive }) => navRowClass(isActive)}>
+                <NavLink
+                  to={item.to}
+                  end
+                  // The destination goes with the click so the shell can tell
+                  // "go there" from "I am already there" — the second is a
+                  // no-op in the router and has to be handled by hand.
+                  onClick={() => onNavigate?.(item.to)}
+                  className={({ isActive }) => navRowClass(isActive)}
+                >
                   {Icon && <Icon className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />}
                   <span>{item.label}</span>
                 </NavLink>
@@ -113,6 +155,31 @@ function NavTree({ badges, onNavigate }) {
           }
 
           const isOpen = openGroup === item.key;
+          /**
+           * The collapsed group's roll-up.
+           *
+           * The number alone is close to meaningless — "Sales 14" adds pending
+           * customers to open tickets to overdue invoices, four different kinds
+           * of work summed into one figure that matches nothing on any screen.
+           * It stays, because a collapsed group does need to say "there is
+           * something in here", but it now carries the breakdown as its
+           * accessible name and tooltip: "3 customers waiting for approval,
+           * 6 tickets open, 4 returns still to resolve".
+           *
+           * That is the honest reading of the number, and it is what makes it
+           * safe to keep: the digit is the signal, the sentence is the meaning.
+           */
+          const groupParts = item.children
+            .map((child) => {
+              const count = child.badge ? (badges[child.badge] ?? 0) : 0;
+              if (!count) return null;
+              const phrase = child.badgePhrase
+                ? child.badgePhrase[count === 1 ? 0 : 1]
+                : child.label.toLowerCase();
+              return `${count} ${phrase}`;
+            })
+            .filter(Boolean);
+
           const groupBadge = item.children.reduce(
             (sum, child) => sum + (child.badge ? (badges[child.badge] ?? 0) : 0),
             0,
@@ -134,7 +201,27 @@ function NavTree({ badges, onNavigate }) {
               >
                 {Icon && <Icon className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />}
                 <span className="flex-1 text-left">{item.label}</span>
-                {!isOpen && <Badge count={groupBadge} />}
+                {/* A DOT, not the sum.
+                
+                    Adding 109 low-stock products to 4 returns to 1 overdue
+                    invoice produces a number in no unit at all, and past a
+                    hundred it rendered as "99+" — a cap on a quantity that was
+                    already meaningless. What a collapsed group actually needs
+                    to say is "there is something in here", which is a boolean,
+                    so it is drawn as one.
+                
+                    The real counts are one click away on the children, and the
+                    breakdown is on this dot as its accessible name, so nothing
+                    is hidden — only the false precision is gone. */}
+                {!isOpen && groupBadge > 0 && (
+                  <span
+                    className="ml-auto flex size-4 shrink-0 items-center justify-center"
+                    title={groupParts.join(', ')}
+                  >
+                    <span className="size-1.5 rounded-full bg-brand" aria-hidden="true" />
+                    <span className="sr-only">{groupParts.join(', ')}</span>
+                  </span>
+                )}
                 <ChevronDown
                   className={cn('size-3.5 shrink-0 transition-transform', isOpen && 'rotate-180')}
                   strokeWidth={2.25}
@@ -152,14 +239,17 @@ function NavTree({ badges, onNavigate }) {
                       <li key={child.key}>
                         <NavLink
                           to={child.to}
-                          onClick={onNavigate}
+                          onClick={() => onNavigate?.(child.to)}
                           className={navRowClass(isActive, 'text-sm')}
                         >
                           {ChildIcon && (
                             <ChildIcon className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
                           )}
                           <span className="min-w-0 truncate">{child.label}</span>
-                          <Badge count={child.badge ? badges[child.badge] : 0} />
+                          <Badge
+                            count={child.badge ? badges[child.badge] : 0}
+                            label={child.badgeLabel}
+                          />
                         </NavLink>
                       </li>
                     );
@@ -178,7 +268,7 @@ function NavTree({ badges, onNavigate }) {
  * The 768–1023 rail: group icons only, each linking to its first child. A
  * tooltip carries the label, because an icon alone is not a name.
  */
-function IconRail({ badges }) {
+function IconRail({ badges, onNavigate }) {
   const location = useLocation();
   const { permissions } = useAuth();
   const nav = useMemo(() => visibleNav(ADMIN_NAV, permissions), [permissions]);
@@ -195,12 +285,31 @@ function IconRail({ badges }) {
             ? item.children.reduce((sum, c) => sum + (c.badge ? (badges[c.badge] ?? 0) : 0), 0)
             : 0;
 
+          // What the dot is about, so the rail is not a row of unexplained
+          // marks. Same phrasing as the full sidebar's roll-up.
+          const parts = (item.children ?? [])
+            .map((child) => {
+              const n = child.badge ? (badges[child.badge] ?? 0) : 0;
+              if (!n) return null;
+              const phrase = child.badgePhrase
+                ? child.badgePhrase[n === 1 ? 0 : 1]
+                : child.label.toLowerCase();
+              return `${n} ${phrase}`;
+            })
+            .filter(Boolean)
+            .join(', ');
+
           return (
             <li key={item.key} className="group relative">
               <NavLink
                 to={to}
                 end={item.to === '/admin'}
-                aria-label={item.label}
+                // The label carries the reason for the dot, because the dot
+                // itself is decorative and a rail row is otherwise announced
+                // as a bare section name with an unexplained mark on it.
+                aria-label={parts ? `${item.label} — ${parts}` : item.label}
+                title={parts ? `${item.label} — ${parts}` : item.label}
+                onClick={() => onNavigate?.(to)}
                 className={cn(
                   pressable,
                   'relative flex size-10 items-center justify-center rounded-md',
@@ -209,7 +318,7 @@ function IconRail({ badges }) {
               >
                 {Icon && <Icon className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />}
                 {count > 0 && (
-                  <span className="absolute right-1 top-1 size-1.5 rounded-full bg-danger" aria-hidden="true" />
+                  <span className="absolute right-1 top-1 size-1.5 rounded-full bg-brand" aria-hidden="true" />
                 )}
               </NavLink>
 
@@ -275,21 +384,45 @@ function UserFooter({ user, onSignOut, compact }) {
   );
 }
 
-export function AdminSidebar({ user, badges = {}, onSignOut, onOpenSearch, mobileOpen, onCloseMobile }) {
+export function AdminSidebar({
+  user,
+  badges = {},
+  onSignOut,
+  onOpenSearch,
+  mobileOpen,
+  onCloseMobile,
+  /** Called when a nav row for the route already open is clicked. */
+  onSameRoute,
+}) {
+  const { pathname } = useLocation();
+
+  /**
+   * One handler for every nav row.
+   *
+   * Navigating to the route you are already on is a no-op in the router — no
+   * render, no scroll, nothing — so a reader at the bottom of a long page who
+   * clicks the section they are in gets no response at all. The one useful
+   * reading of that click is "back to the top", which is what this does.
+   */
+  const handleNavigate = (to) => {
+    onCloseMobile?.();
+    if (to === pathname) onSameRoute?.();
+  };
+
   return (
     <>
       {/* 1024+ — the full tree. */}
       <aside className="hidden h-dvh w-[220px] shrink-0 flex-col bg-ink-deep lg:flex xl:w-[250px] print:hidden">
         <BrandBlock />
         <QuickSearch onOpenSearch={onOpenSearch} />
-        <NavTree badges={badges} />
+        <NavTree badges={badges} onNavigate={handleNavigate} />
         <UserFooter user={user} onSignOut={onSignOut} />
       </aside>
 
       {/* 768–1023 — the icon rail. */}
       <aside className="hidden h-dvh w-16 shrink-0 flex-col items-center bg-ink-deep md:flex lg:hidden print:hidden">
         <BrandBlock compact />
-        <IconRail badges={badges} />
+        <IconRail badges={badges} onNavigate={handleNavigate} />
         <UserFooter user={user} onSignOut={onSignOut} compact />
       </aside>
 
@@ -322,7 +455,7 @@ export function AdminSidebar({ user, badges = {}, onSignOut, onOpenSearch, mobil
                 onOpenSearch?.();
               }}
             />
-            <NavTree badges={badges} onNavigate={onCloseMobile} />
+            <NavTree badges={badges} onNavigate={handleNavigate} />
             <UserFooter user={user} onSignOut={onSignOut} />
           </div>
         </div>

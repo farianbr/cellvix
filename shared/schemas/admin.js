@@ -3,6 +3,7 @@ import { z } from 'zod';
 // must not be allowed a weaker password than one a business opens for itself.
 import { passwordSchema } from './auth.js';
 import { DEFAULT_COUNTRY } from '../countries.js';
+import { PROVINCES } from './checkout.js';
 
 const cents = z.coerce.number().int().min(0).max(100_000_000);
 
@@ -349,6 +350,32 @@ const ORDER_STATUS_FLOW = [
   'delivered',
 ];
 
+/**
+ * An order still owing somebody work: placed, and not yet delivered or
+ * cancelled.
+ *
+ * **This exists so a count and its own link cannot disagree.** The dashboard's
+ * "Open orders" tile counted these four statuses and then linked to
+ * `?status=placed`, so a tile reading 2 opened a list showing one row — or an
+ * empty one, when both open orders happened to be `shipped`. The operator is
+ * told a number and then shown something that contradicts it, which makes the
+ * whole row untrustworthy.
+ *
+ * Exported as one list and read by both sides: the counter in
+ * `adminService.stats`, the `?status=open` filter in `listOrders`, and the
+ * pill on the orders screen.
+ */
+const ORDER_OPEN_STATUSES = ['placed', 'processing', 'shipped', 'out_for_delivery'];
+
+/**
+ * An order that has not gone out yet — the picking queue.
+ *
+ * Narrower than `ORDER_OPEN_STATUSES`: a shipped order is still open, but
+ * nobody has to pack it. Same reason as above for existing as a shared list —
+ * the "Fulfil orders" card counts these two and has to link to the same two.
+ */
+const ORDER_UNFULFILLED_STATUSES = ['placed', 'processing'];
+
 const orderStatusSchema = z.object({
   status: z.enum([...ORDER_STATUS_FLOW, 'cancelled']),
   note: z.string().trim().max(300).optional(),
@@ -382,6 +409,33 @@ const CARRIERS = [
  * `badge` names a counter on `GET /admin/stats`; the sidebar renders it when
  * the count is non-zero.
  *
+ * `badgeLabel` is what that number COUNTS, as a noun the operator would say
+ * out loud — "waiting for approval", "out of stock or running low". It is not
+ * decoration: a bare number in a sidebar is unreadable twice over. A sighted
+ * operator cannot tell whether "6" is unread, overdue or merely total, and a
+ * screen reader announces "Tickets 6" with no clue what six means. The label
+ * supplies the noun for both, as a `title`, an `aria-label` and a line in the
+ * page header it lands on.
+ *
+ * `badgePhrase` is the same fact written as a standalone clause, for the
+ * collapsed group's roll-up where several are joined with commas. Stitching
+ * the label onto the row name produced "1 invoices overdue" and "4 rma /
+ * returns still to resolve"; a written phrase costs one line each and reads
+ * like English.
+ *
+ * It is written `[singular, plural]` because these counts pass through one
+ * routinely — one overdue invoice is the good day, and "1 overdue invoices" in
+ * the tooltip is exactly the kind of detail that makes an interface feel
+ * unfinished.
+ *
+ * `badgeFilter` is the view that shows exactly the badged rows. The rule it
+ * enforces: **a count must be reachable**. Inventory badged 189 and opened a
+ * list of 420 with no 189 anywhere on it, which teaches an operator that the
+ * numbers are decorative. The row still navigates to the unfiltered page —
+ * that is what a nav row is for — and the page states the count and offers the
+ * filter on arrival, so the number is explained where it is doubted rather
+ * than only in a tooltip nobody hovers.
+ *
  * `area` is the permission area this item lives under (§7.6). Group-level, so
  * every child inherits its parent's area — a per-page matrix is twenty rows
  * nobody maintains correctly.
@@ -403,6 +457,9 @@ const ADMIN_NAV = [
         to: '/admin/clients',
         icon: 'Users',
         badge: 'pendingUsers',
+        badgeLabel: 'waiting for approval',
+        badgePhrase: ['customer waiting for approval', 'customers waiting for approval'],
+        badgeFilter: 'status=pending',
       },
       {
         key: 'tickets',
@@ -410,8 +467,20 @@ const ADMIN_NAV = [
         to: '/admin/tickets',
         icon: 'ClipboardList',
         badge: 'openTickets',
+        badgeLabel: 'open',
+        badgePhrase: ['open ticket', 'open tickets'],
+        badgeFilter: 'status=open',
       },
-      { key: 'rma', label: 'RMA / Returns', to: '/admin/rma', icon: 'RotateCcw', badge: 'openRmas' },
+      {
+        key: 'rma',
+        label: 'RMA / Returns',
+        to: '/admin/rma',
+        icon: 'RotateCcw',
+        badge: 'openRmas',
+        badgeLabel: 'still to resolve',
+        badgePhrase: ['return to resolve', 'returns to resolve'],
+        badgeFilter: 'status=open',
+      },
       { key: 'orders', label: 'Orders', to: '/admin/orders', icon: 'Package' },
       {
         key: 'invoices',
@@ -419,6 +488,9 @@ const ADMIN_NAV = [
         to: '/admin/invoices',
         icon: 'FileText',
         badge: 'overdueInvoices',
+        badgeLabel: 'overdue',
+        badgePhrase: ['overdue invoice', 'overdue invoices'],
+        badgeFilter: 'status=overdue',
       },
       { key: 'quotes', label: 'Quotes', to: '/admin/quotes', icon: 'FileSignature' },
       // Enquiries from the storefront's contact form, before anybody has priced
@@ -433,6 +505,15 @@ const ADMIN_NAV = [
     area: 'purchase',
     children: [
       { key: 'suppliers', label: 'Suppliers', to: '/admin/suppliers', icon: 'Truck' },
+      {
+        // Ahead of Purchase Orders because it comes before one: a request asks
+        // several suppliers for a price, and awarding the best answer is what
+        // raises the PO below it. The nav reads in the order the work happens.
+        key: 'rfqs',
+        label: 'Requests for Quote',
+        to: '/admin/rfqs',
+        icon: 'Send',
+      },
       {
         key: 'pos',
         label: 'Purchase Orders',
@@ -460,7 +541,21 @@ const ADMIN_NAV = [
         icon: 'Wrench',
       },
       { key: 'expenses', label: 'Expenses', to: '/admin/expenses', icon: 'Receipt' },
-      { key: 'inventory', label: 'Inventory', to: '/admin/inventory', icon: 'Boxes', badge: 'lowStock' },
+      {
+        key: 'inventory',
+        label: 'Inventory',
+        to: '/admin/inventory',
+        icon: 'Boxes',
+        badge: 'lowStock',
+        // Two conditions in one number, so the label says both rather than
+        // leaving "189" to be read as one of them.
+        badgeLabel: 'out of stock or running low',
+        badgePhrase: [
+          'product out of stock or running low',
+          'products out of stock or running low',
+        ],
+        badgeFilter: 'stock=attention',
+      },
     ],
   },
   {
@@ -670,6 +765,16 @@ const supplierSchema = z.object({
   paymentTerms: z.enum(['prepaid', 'net15', 'net30', 'net60']).default('net30'),
   notes: z.string().trim().max(2000).optional(),
   isActive: z.boolean().default(true),
+  /**
+   * The component types this supplier is tagged with — `Product.partType`
+   * slugs, which is what a request for quote picks suppliers by.
+   *
+   * Not an enum: the list of component types is derived from the catalogue
+   * (`taxonomyService.getComponentTypes`), so hard-coding one here would be a
+   * second source of truth that goes stale the first time a new part type is
+   * stocked. The picker offers the live list; this just validates the shape.
+   */
+  componentTypes: z.array(z.string().trim().min(1).max(60)).max(60).default([]),
   // Optional, unlike the customer-side `contactConsentSchema`, which is a
   // dedicated endpoint recording an answer. This rides along on a create or an
   // edit that may not have touched the ticks at all, and omitting it has to
@@ -732,6 +837,123 @@ const purchasePaymentSchema = z.object({
   reference: z.string().trim().max(80).optional(),
   paidAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a calendar date.').optional(),
   category: z.string().trim().optional(),
+});
+
+// ---- requests for quote (supplier process flow, §6.8a) ----------------------
+
+/**
+ * A request for quote: one line list, several suppliers, no prices.
+ *
+ * `componentTypes` is what the suppliers were **chosen by**, and it is sent
+ * alongside the lines rather than derived from them — a clerk who picks
+ * "battery", invites the battery suppliers and then adds a screen to the list
+ * has still asked the battery suppliers, and recomputing would rewrite that.
+ */
+const rfqSchema = z.object({
+  title: z.string().trim().max(200).optional(),
+  componentTypes: z.array(z.string().trim().min(1).max(60)).max(60).default([]),
+  items: z
+    .array(
+      z.object({
+        product: z.string().trim().min(1, 'Pick a product.'),
+        qty: z.coerce.number().int().min(1, 'Ask for at least one.').max(100_000),
+      }),
+    )
+    .min(1, 'Add at least one part.')
+    .max(200),
+  suppliers: z.array(z.string().trim().min(1)).max(50).default([]),
+  // A full timestamp, not a calendar day: "answers close Friday at 5" is a real
+  // deadline, where a bare date leaves whether Friday itself counts unanswered.
+  closesAt: z.string().trim().max(40).optional().or(z.literal('')),
+  notes: z.string().trim().max(2000).optional(),
+});
+
+const rfqSendSchema = z.object({
+  note: z.string().trim().max(300).optional(),
+});
+
+const rfqInviteSchema = z.object({
+  supplier: z.string().trim().min(1, 'Pick a supplier.'),
+});
+
+/**
+ * Accepting one quote.
+ *
+ * The client names the winning **invite**, never a price: the costs the
+ * resulting purchase order carries are the ones the supplier already submitted,
+ * read from the stored quote. A price in this payload would be a way to award
+ * one number and order at another.
+ */
+const rfqAwardSchema = z.object({
+  inviteId: z.string().trim().min(1, 'Pick the quote to accept.'),
+  expectedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a calendar date.').optional().or(z.literal('')),
+  note: z.string().trim().max(300).optional(),
+});
+
+const rfqCancelSchema = z.object({
+  note: z.string().trim().max(300).optional(),
+});
+
+/**
+ * A supplier's answer, submitted from the portal.
+ *
+ * **The one payload in this app where a price is accepted and kept**, because
+ * collecting prices from outside is the entire purpose of the document. Lines
+ * are matched against the request's own SKUs server-side, so a supplier cannot
+ * add a line nobody asked for, and every total is still recomputed (§8).
+ *
+ * `available: false` is how a supplier says "not this one" — distinct from a
+ * price of zero, which is a legitimate answer for a sample.
+ */
+const supplierQuoteSchema = z.object({
+  lines: z
+    .array(
+      z.object({
+        sku: z.string().trim().min(1),
+        unitCost: cents.default(0),
+        available: z.boolean().default(true),
+        note: z.string().trim().max(300).optional(),
+      }),
+    )
+    .min(1, 'Price at least one line.')
+    .max(200),
+  shipping: cents.default(0),
+  leadTimeDays: z.coerce.number().int().min(0).max(365).optional(),
+  validUntil: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a calendar date.').optional().or(z.literal('')),
+  note: z.string().trim().max(2000).optional(),
+});
+
+const supplierDeclineSchema = z.object({
+  reason: z.string().trim().max(500).optional(),
+});
+
+// ---- the supplier portal's own session --------------------------------------
+
+const supplierLoginSchema = z.object({
+  email: z.string().trim().email('Enter a valid email.'),
+  password: z.string().min(1, 'Enter your password.'),
+});
+
+const supplierForgotSchema = z.object({
+  email: z.string().trim().email('Enter a valid email.'),
+});
+
+/** Mirrors the buyer-side password rule, so both sides hold one standard. */
+const supplierPortalPassword = z
+  .string()
+  .min(10, 'Use at least 10 characters.')
+  .max(128)
+  .regex(/[A-Za-z]/, 'Include a letter.')
+  .regex(/[0-9]/, 'Include a number.');
+
+const supplierResetSchema = z.object({
+  token: z.string().trim().min(10),
+  password: supplierPortalPassword,
+});
+
+const supplierPasswordSchema = z.object({
+  currentPassword: z.string().min(1, 'Enter your current password.'),
+  password: supplierPortalPassword,
 });
 
 const expenseSchema = z.object({
@@ -859,9 +1081,121 @@ const adminOrderSchema = z.object({
  * mean the number on screen and the number in the database came from different
  * places.
  */
+/**
+ * Canadian sales tax, by province, as a single combined rate.
+ *
+ * One number per province rather than a GST/PST/HST breakdown: the invoice
+ * shows one tax line, which is what an HST province genuinely has, and the
+ * participating provinces are the ones where the distinction matters least. A
+ * business that has to file GST and PST separately needs a bookkeeping package,
+ * not a second row on this form.
+ *
+ * The rate is a DEFAULT. The form lets an operator override it, because zero is
+ * a real answer — an exempt customer, an out-of-country sale — and a rate the
+ * software insists on is a rate somebody works around by editing the total.
+ */
+/** The province codes, taken from the one list the checkout already uses. */
+const PROVINCE_CODES = PROVINCES.map((province) => province.value);
+
+const TAX_RATES = {
+  AB: 5, BC: 12, MB: 12, NB: 15, NL: 15, NS: 14, NT: 5,
+  NU: 5, ON: 13, PE: 15, QC: 14.975, SK: 11, YT: 5,
+};
+
+/**
+ * One priced line — a service performed, or a part fitted.
+ *
+ * Services and parts are the same shape because they are the same thing on an
+ * invoice: a description, a quantity and a price. `product` links a part back
+ * to the catalogue row it came from, which is what lets stock move when the
+ * invoice is raised; a service has no product and never will.
+ */
+/** How the job reached the bench. Mirrors the ticket's own sources. */
+const INVOICE_SERVICE_TYPES = [
+  { value: 'walk_in', label: 'Walk-in' },
+  { value: 'pickup', label: 'Pickup' },
+  { value: 'onsite', label: 'On-site' },
+  { value: 'mail_in', label: 'Mail-in' },
+];
+
+const invoiceLineSchema = z.object({
+  name: z.string().trim().min(1, 'Name the line.').max(160),
+  description: z.string().trim().max(300).or(z.literal('')).optional(),
+  priceDollars: z.coerce.number().min(0).max(1_000_000).default(0),
+  qty: z.coerce.number().int().min(1).max(999).default(1),
+  /** The catalogue product, for a part. Absent on a service. */
+  product: z.string().trim().length(24).optional(),
+});
+
+/**
+ * A device on an invoice, with the work done to it.
+ *
+ * Deliberately the same shape as `ticketDeviceSchema` minus the intake-only
+ * fields (condition grid, passcode): a repair invoice describes the same object
+ * a ticket does, and two different shapes for one thing is how a ticket stops
+ * being convertible into an invoice.
+ */
+const invoiceDeviceSchema = z.object({
+  category: z.string().trim().max(60).or(z.literal('')).optional(),
+  brand: z.string().trim().max(60).or(z.literal('')).optional(),
+  series: z.string().trim().max(120).or(z.literal('')).optional(),
+  model: z.string().trim().max(120).or(z.literal('')).optional(),
+  serial: z.string().trim().max(80).or(z.literal('')).optional(),
+
+  problem: z.string().trim().max(500).or(z.literal('')).optional(),
+  solution: z.string().trim().max(500).or(z.literal('')).optional(),
+  notes: z.string().trim().max(500).or(z.literal('')).optional(),
+
+  services: z.array(invoiceLineSchema).max(40).default([]),
+  parts: z.array(invoiceLineSchema).max(40).default([]),
+});
+
+/**
+ * Raising an invoice by hand (§7.2).
+ *
+ * Two shapes, one schema. A **flat charge** sends `amount` and nothing else —
+ * a restocking fee, an agreed adjustment, the case this form was built for. An
+ * **itemised invoice** sends `devices`, and the server computes the amount
+ * from the lines; whatever `amount` the client sent is ignored, because a
+ * total the browser calculated is a total the browser can be wrong about.
+ *
+ * The flat path stays because most standalone invoices are one number and
+ * making an operator open a device panel to type it would be a worse form.
+ */
 const adminInvoiceSchema = z.object({
-  user: z.string().trim().min(1, 'Pick a client.'),
-  amount: cents.refine((value) => value > 0, 'Enter an amount.'),
+  user: z.string().trim().min(1, 'Pick a customer.'),
+  // Required for a flat charge, ignored when `devices` carries lines — the
+  // superRefine below enforces exactly that.
+  amount: cents.optional(),
+
+  devices: z.array(invoiceDeviceSchema).max(20).default([]),
+
+  /** Province drives the default rate; the rate itself is what gets applied. */
+  province: z.enum(PROVINCE_CODES).or(z.literal('')).optional(),
+  taxPercent: z.coerce.number().min(0).max(100).default(0),
+
+  discountDollars: z.coerce.number().min(0).max(1_000_000).default(0),
+  discountCode: z.string().trim().max(40).or(z.literal('')).optional(),
+
+  /** Internal only — recorded, never added to what the customer owes. */
+  travelKm: z.coerce.number().min(0).max(100_000).default(0),
+  /**
+   * The one travel figure that IS charged, when the job is out of area.
+   *
+   * The amount travels with the flag rather than coming from a setting: there
+   * is no service-area rate configured anywhere yet, and inventing a silent
+   * default would put a number on a customer's invoice that nobody chose.
+   */
+  extendedServiceFee: z.boolean().default(false),
+  extendedServiceFeeDollars: z.coerce.number().min(0).max(100_000).default(0),
+
+  technician: z.string().trim().max(24).or(z.literal('')).optional(),
+  serviceType: z.enum(['walk_in', 'pickup', 'onsite', 'mail_in']).default('walk_in'),
+
+  /** Rendered on the document. `internalNotes` never is. */
+  customerNotes: z.string().trim().max(2000).or(z.literal('')).optional(),
+  technicianNotes: z.string().trim().max(2000).or(z.literal('')).optional(),
+  internalNotes: z.string().trim().max(2000).or(z.literal('')).optional(),
   terms: z.enum(['prepaid', 'net15', 'net30', 'net60']).default('prepaid'),
   issuedAt: z
     .string()
@@ -875,7 +1209,23 @@ const adminInvoiceSchema = z.object({
     .optional(),
   reference: z.string().trim().max(80).optional(),
   notes: z.string().trim().max(2000).optional(),
-});
+})
+  .superRefine((value, ctx) => {
+    const hasLines = (value.devices ?? []).some(
+      (device) => (device.services?.length ?? 0) + (device.parts?.length ?? 0) > 0,
+    );
+
+    // An itemised invoice computes its own total, so an amount is not asked
+    // for. A flat one has nothing else to bill from, so it is required — and
+    // an invoice for nothing is not a document.
+    if (!hasLines && !(value.amount > 0)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['amount'],
+        message: 'Enter an amount, or add a service or part.',
+      });
+    }
+  });
 
 const RMA_ITEM_DISPOSITIONS = ['pending', 'restock', 'scrap', 'return_to_supplier', 'reject'];
 
@@ -1661,4 +2011,4 @@ const supplierChargeSchema = z.object({
   reference: z.string().trim().max(80).optional(),
 });
 
-export { approveUserSchema, rejectUserSchema, creditSchema, clientSchema, clientFormSchema, clientCreateFormSchema, clientUpdateSchema, CONSENT_CHANNELS, contactConsentSchema, MEMBERSHIP_TIERS, tierSchema, internalNoteSchema, storeCreditSchema, refundSchema, userStatusSchema, productSchema, ORDER_STATUS_FLOW, orderStatusSchema, CARRIERS, ADMIN_NAV, ADMIN_LEGACY_REDIRECTS, invoicePaymentSchema, invoiceVoidSchema, webQuoteStatusSchema, creditPaymentSchema, invoiceUpdateSchema, bulkOrderStatusSchema, supplierSchema, purchaseOrderSchema, purchaseOrderStatusSchema, purchaseReceiveSchema, purchasePaymentSchema, expenseSchema, expenseCategorySchema, stockAdjustSchema, productOpsSchema, quoteSchema, quoteStatusSchema, quoteConvertSchema, adminOrderSchema, adminInvoiceSchema, RMA_ITEM_DISPOSITIONS, rmaSchema, TICKET_STATUSES, TICKET_PRIORITIES, TICKET_SOURCES, TICKET_STATUS_LABELS, CONDITION_GRADES, CONDITION_PARTS, ticketSchema, ticketDeviceSchema, ticketLineSchema, ticketUpdateSchema, ticketStatusSchema, rmaStatusSchema, rmaInspectSchema, rmaResolveSchema, PERMISSION_AREAS, PERMISSION_LEVELS, PERMISSION_LEVEL_LABELS, OUTLET_STATUSES, OUTLET_COLOR_TOKENS, outletSchema, roleSchema, staffUserSchema, staffUserUpdateSchema, MESSAGE_CHANNELS, TEMPLATE_DOCUMENTS, CAMPAIGN_AUDIENCES, CAMPAIGN_AUDIENCE_LABELS, messageSchema, callLogSchema, messageTemplateSchema, campaignSchema, unsubscribeSchema, referralRateSchema, businessInfoSchema, saleSettingsSchema, shippingSettingsSchema, paymentMethodsSettingsSchema, inventorySettingsSchema, providerCredentialSchema, taxonomyNodeSchema, invoiceStatusRuleSchema, communicationsSettingsSchema, SUPPLIER_RETURN_REASON_VALUES, supplierReturnSchema, supplierReturnStatusSchema, supplierCreditSchema, SUPPLIER_BILLING_CYCLES, supplierServiceSchema, supplierServiceUpdateSchema, supplierChargeSchema };
+export { TAX_RATES, INVOICE_SERVICE_TYPES, ORDER_OPEN_STATUSES, ORDER_UNFULFILLED_STATUSES, approveUserSchema, rejectUserSchema, creditSchema, clientSchema, clientFormSchema, clientCreateFormSchema, clientUpdateSchema, CONSENT_CHANNELS, contactConsentSchema, MEMBERSHIP_TIERS, tierSchema, internalNoteSchema, storeCreditSchema, refundSchema, userStatusSchema, productSchema, ORDER_STATUS_FLOW, orderStatusSchema, CARRIERS, ADMIN_NAV, ADMIN_LEGACY_REDIRECTS, invoicePaymentSchema, invoiceVoidSchema, webQuoteStatusSchema, creditPaymentSchema, invoiceUpdateSchema, bulkOrderStatusSchema, supplierSchema, purchaseOrderSchema, purchaseOrderStatusSchema, purchaseReceiveSchema, purchasePaymentSchema, rfqSchema, rfqSendSchema, rfqInviteSchema, rfqAwardSchema, rfqCancelSchema, supplierQuoteSchema, supplierDeclineSchema, supplierLoginSchema, supplierForgotSchema, supplierResetSchema, supplierPasswordSchema, expenseSchema, expenseCategorySchema, stockAdjustSchema, productOpsSchema, quoteSchema, quoteStatusSchema, quoteConvertSchema, adminOrderSchema, adminInvoiceSchema, RMA_ITEM_DISPOSITIONS, rmaSchema, TICKET_STATUSES, TICKET_PRIORITIES, TICKET_SOURCES, TICKET_STATUS_LABELS, CONDITION_GRADES, CONDITION_PARTS, ticketSchema, ticketDeviceSchema, ticketLineSchema, ticketUpdateSchema, ticketStatusSchema, rmaStatusSchema, rmaInspectSchema, rmaResolveSchema, PERMISSION_AREAS, PERMISSION_LEVELS, PERMISSION_LEVEL_LABELS, OUTLET_STATUSES, OUTLET_COLOR_TOKENS, outletSchema, roleSchema, staffUserSchema, staffUserUpdateSchema, MESSAGE_CHANNELS, TEMPLATE_DOCUMENTS, CAMPAIGN_AUDIENCES, CAMPAIGN_AUDIENCE_LABELS, messageSchema, callLogSchema, messageTemplateSchema, campaignSchema, unsubscribeSchema, referralRateSchema, businessInfoSchema, saleSettingsSchema, shippingSettingsSchema, paymentMethodsSettingsSchema, inventorySettingsSchema, providerCredentialSchema, taxonomyNodeSchema, invoiceStatusRuleSchema, communicationsSettingsSchema, SUPPLIER_RETURN_REASON_VALUES, supplierReturnSchema, supplierReturnStatusSchema, supplierCreditSchema, SUPPLIER_BILLING_CYCLES, supplierServiceSchema, supplierServiceUpdateSchema, supplierChargeSchema };

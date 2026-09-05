@@ -26,8 +26,10 @@ import Pagination from '@/components/ui/Pagination';
 import useTablePage from '@/hooks/useTablePage';
 import { BarList } from '@/components/admin/charts/Charts';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
-import { useAdminSupplier } from '@/hooks/useAdmin';
+import { useAdminSupplier, useAdminMutations } from '@/hooks/useAdmin';
 import Skeleton from '@/components/ui/Skeleton';
+import Button from '@/components/ui/Button';
+import { toast } from '@/store/toastStore';
 import { pressable } from '@/lib/motion';
 import cn from '@/lib/cn';
 
@@ -128,6 +130,33 @@ export function AdminSupplierProfilePage() {
   // The breadcrumb names the supplier rather than the type. It clears on
   // unmount, so a stale name cannot survive onto the next screen.
   useSetRecordLabel(supplier?.name);
+
+  const { inviteSupplierPortal } = useAdminMutations();
+
+  /**
+   * Issue portal credentials and say honestly whether the email left.
+   *
+   * The same handler the Suppliers list carries, and it must stay the same
+   * shape: the password is reset **either way**, so a mail failure is not a
+   * no-op to report and forget — the supplier's old password has stopped
+   * working, and the message has to say that rather than only that something
+   * went wrong.
+   */
+  function sendPortalInvite() {
+    inviteSupplierPortal.mutate(supplier.id, {
+      onSuccess: (result) => {
+        if (result.delivered) {
+          toast.ok('Portal link sent', `${supplier.name} can sign in with the details we emailed.`);
+        } else {
+          toast.error(
+            'The email did not send',
+            `${supplier.name}'s password was reset, so their old one no longer works. Check the mail settings and send it again.`,
+          );
+        }
+      },
+      onError: (mutationError) => toast.error('Nothing was sent', mutationError.message),
+    });
+  }
 
   if (error) {
     return (
@@ -498,6 +527,75 @@ export function AdminSupplierProfilePage() {
                   Not recorded yet. Set it from Edit.
                 </p>
               )}
+
+              {/**
+               * Portal access (§6.8a).
+               *
+               * **Here, not only in the list's row menu.** The button existed
+               * solely as a `···` entry on `/admin/suppliers`, which is the
+               * wrong place to look: you open a supplier's profile to act on
+               * that supplier, and this page — the one about them — could not
+               * say whether they could even sign in, let alone invite them.
+               *
+               * The state is stated before the button, because "has this
+               * supplier got access?" is a question the screen has to be able
+               * to answer on its own. A supplier who has never been invited
+               * cannot answer a request for quote, and nothing anywhere said so.
+               */}
+              <div className="mt-4 border-t border-line pt-3">
+                <p className="eyebrow mb-2 text-ink-400">Supplier portal</p>
+
+                {!supplier.email ? (
+                  <p className="text-sm text-ink-400">
+                    No email address on file, so there is nowhere to send a portal link. Add one
+                    from Edit.
+                  </p>
+                ) : !supplier.isActive ? (
+                  // Deactivating is how the purchasing team ends a relationship,
+                  // and it closes the portal door too — `invitePortal` refuses an
+                  // inactive supplier, so offering the button here would only ever
+                  // produce an error.
+                  <p className="text-sm text-ink-400">
+                    Inactive suppliers cannot sign in. Reactivate them to send a portal link.
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-sm text-ink-600">
+                      {supplier.portalInviteAt ? (
+                        <>
+                          Credentials sent {date(supplier.portalInviteAt)}.
+                          {supplier.portalLastLoginAt
+                            ? ` Last signed in ${date(supplier.portalLastLoginAt)}.`
+                            : ' Not signed in yet.'}
+                        </>
+                      ) : (
+                        'No portal access yet — they cannot answer a request for quote.'
+                      )}
+                    </p>
+
+                    <Button
+                      variant="outline"
+                      icon={Mail}
+                      className="mt-2.5"
+                      loading={inviteSupplierPortal.isPending}
+                      onClick={sendPortalInvite}
+                    >
+                      {supplier.portalInviteAt ? 'Resend portal link' : 'Send portal link'}
+                    </Button>
+
+                    {/* Said before the click, not after. Resending always mints a
+                        new password — the stored value is a hash, so the old one
+                        cannot be read back out to be sent again — and a supplier
+                        whose working password silently stopped working is a
+                        support call nobody expected. */}
+                    {supplier.portalInviteAt && (
+                      <p className="mt-1.5 text-xs leading-relaxed text-ink-400">
+                        Sends a new password and replaces the current one.
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
             </Panel>
 
             <Panel title="Notes">

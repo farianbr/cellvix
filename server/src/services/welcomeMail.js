@@ -445,5 +445,14 @@ async function sendPasswordResetEmail({ user, token, origin, expiresMinutes = 60
   }
 }
 
-export { generatePassword, sendWelcomeEmail, sendPasswordResetEmail };
+/**
+ * `MAIL` and `escapeHtml` are exported for `supplierMail.js`, which builds the
+ * portal-invite and request-for-quote messages.
+ *
+ * Exported rather than copied for the reason the palette was hoisted out of the
+ * two renderers below in the first place: a second file with its own greys and
+ * its own radii is a second design, and the two drift the first time either is
+ * touched. This is the closest thing mail has to a stylesheet.
+ */
+export { generatePassword, sendWelcomeEmail, sendPasswordResetEmail, MAIL, escapeHtml };
 export default sendWelcomeEmail;

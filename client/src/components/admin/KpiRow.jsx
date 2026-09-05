@@ -73,15 +73,31 @@ export function KpiTile({
   delta,
   goodWhen,
   to,
+  /** The period this figure covers, shown small beside the label. */
+  meta,
   className,
 }) {
   const body = (
     <>
-      <div className="mb-2.5 flex items-center gap-1.5">
+      {/* Wraps rather than truncates: a period cut to "AUG 7 – SEP 5, 2…" has
+          lost the one thing it was added to say. On a narrow tile it takes a
+          second line, which costs less than an unreadable qualifier. */}
+      <div className="mb-2.5 flex flex-wrap items-center gap-x-1.5">
         {Icon && (
           <Icon className="size-3.5 shrink-0 text-ink-300" strokeWidth={2.25} aria-hidden="true" />
         )}
-        <p className="eyebrow min-w-0 flex-1 truncate text-ink-400">{label}</p>
+        {/* The label owns the row; the period rides along beside it, quieter.
+            It belongs HERE and not in the hint below because it qualifies the
+            heading — "Collected, for this month" — rather than adding a second
+            fact. In the hint it competed with the thing the hint is for. */}
+        <p className="eyebrow truncate text-ink-400">{label}</p>
+        {meta && (
+          <p className="eyebrow whitespace-nowrap text-2xs font-normal text-ink-300">
+            <span aria-hidden="true">· </span>
+            {meta}
+          </p>
+        )}
+        <span className="flex-1" aria-hidden="true" />
         {to && (
           <ArrowUpRight
             className="size-3.5 shrink-0 text-ink-300 opacity-0 transition-opacity duration-fast group-hover:opacity-100"

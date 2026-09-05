@@ -26,6 +26,17 @@ export const TERMS = [
   { value: 'net60', label: 'Net 60' },
 ];
 
+/** Two letters for the summary's avatar. Mirrors the queue card's own mark, so
+ *  the modal opens on something the operator recognises from the card. */
+function initials(name = '') {
+  return name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase() ?? '')
+    .join('');
+}
+
 export function ApproveClientForm({ user, onSubmit, onCancel, isPending, error }) {
   const { register, handleSubmit, watch, control } = useForm({
     defaultValues: {
@@ -58,19 +69,49 @@ export function ApproveClientForm({ user, onSubmit, onCancel, isPending, error }
       )}
       className="space-y-4"
     >
-      <div className="rounded-md bg-surface-2 p-3.5">
-        <p className="font-display text-md font-bold text-ink-900">{user.businessName}</p>
-        {/* The bell opens this knowing only the account's name, so the contact
-            line is joined from what is actually there — a bare "·" between two
-            blanks reads as data that failed to load. */}
-        {[user.contactName, user.email].filter(Boolean).length > 0 && (
-          <p className="mt-0.5 text-sm text-ink-500">
-            {[user.contactName, user.email].filter(Boolean).join(' · ')}
+      {/* Who is being approved, stated before the terms are set.
+
+          The operator arrives here from a card or a bell and is about to extend
+          credit to a business — the summary has to carry enough that they are
+          not approving a name they cannot place. `displayName` labels the
+          account, never `businessName` directly: an account is identified by
+          the person, and a sole trader has no business name to print. */}
+      <div className="flex items-start gap-3 rounded-md bg-surface-2 p-3.5">
+        <span
+          className="flex size-10 shrink-0 items-center justify-center rounded-md bg-brand-50 font-display text-sm font-bold text-brand-700"
+          aria-hidden="true"
+        >
+          {initials(user.displayName ?? user.contactName ?? user.email)}
+        </span>
+
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-display text-md font-bold text-ink-900">
+            {user.displayName ?? user.contactName ?? user.email}
           </p>
-        )}
-        {user.taxId && (
-          <p className="mt-1 font-mono text-xs text-ink-400">Tax ID {user.taxId}</p>
-        )}
+          {/* The detail line carries what the TITLE does not already say.
+              `displayName` usually resolves to the contact name, so listing
+              `contactName` here unconditionally printed the person twice. The
+              business name earns its place (it is the other half of who this
+              is); the contact name only appears when the title is something
+              else. The bell opens this knowing only the account's name, so the
+              line is joined from what is actually there — a bare "·" between
+              two blanks reads as data that failed to load. */}
+          {(() => {
+            const title = user.displayName ?? user.contactName ?? user.email;
+            const parts = [
+              user.businessName,
+              user.contactName !== title ? user.contactName : null,
+              user.email !== title ? user.email : null,
+            ].filter(Boolean);
+
+            return parts.length > 0 ? (
+              <p className="mt-0.5 truncate text-sm text-ink-500">{parts.join(' · ')}</p>
+            ) : null;
+          })()}
+          {user.taxId && (
+            <p className="mt-1 font-mono text-xs text-ink-400">Tax ID {user.taxId}</p>
+          )}
+        </div>
       </div>
 
       {error && (

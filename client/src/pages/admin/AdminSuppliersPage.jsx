@@ -23,6 +23,7 @@ import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import SelectField from '@/components/ui/SelectField';
+import ComponentTypePicker from '@/components/admin/ComponentTypePicker';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import ConsentChannels, { EMPTY_CONSENT } from '@/components/ui/ConsentChannels';
@@ -38,6 +39,7 @@ import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminSuppliers, useAdminMutations } from '@/hooks/useAdmin';
 import { pressable } from '@/lib/motion';
+import { toast } from '@/store/toastStore';
 import cn from '@/lib/cn';
 
 /**
@@ -98,6 +100,16 @@ function SupplierForm({ supplier, onSubmit, onCancel, isPending, error }) {
   );
   const [consentDirty, setConsentDirty] = useState(false);
 
+  /**
+   * What this supplier sells, as component-type slugs.
+   *
+   * Held outside `useForm` because it is a set of toggles rather than a field —
+   * the same reason consent is. Unlike consent it is always sent: an empty list
+   * is a real answer here ("we have not tagged them yet"), and it is the fact
+   * that keeps them out of the request-for-quote picker.
+   */
+  const [componentTypes, setComponentTypes] = useState(supplier?.componentTypes ?? []);
+
   const { register, handleSubmit, control } = useForm({
     defaultValues: {
       name: supplier?.name ?? '',
@@ -122,7 +134,11 @@ function SupplierForm({ supplier, onSubmit, onCancel, isPending, error }) {
 
   /** Consent is attached only if somebody actually answered it. */
   function submit(values) {
-    onSubmit({ ...values, contactConsent: consentDirty ? consent : undefined });
+    onSubmit({
+      ...values,
+      componentTypes,
+      contactConsent: consentDirty ? consent : undefined,
+    });
   }
 
   return (
@@ -220,6 +236,18 @@ function SupplierForm({ supplier, onSubmit, onCancel, isPending, error }) {
         {...register('notes')}
       />
 
+      {/* What they sell. This is the field a request for quote picks suppliers
+          by, so an untagged supplier is one nobody can ask — which is why the
+          hint says so rather than describing the control. */}
+      <div>
+        <p className="mb-1.5 font-display text-sm font-semibold text-ink-900">Component types</p>
+        <p className="mb-2.5 text-sm text-ink-400">
+          What this supplier sells. A request for quote finds suppliers by these
+          tags — one with none set will never appear in the picker.
+        </p>
+        <ComponentTypePicker value={componentTypes} onChange={setComponentTypes} />
+      </div>
+
       <div>
         <p className="mb-1.5 font-display text-sm font-semibold text-ink-900">
           Communication consent
@@ -316,7 +344,33 @@ export function AdminSuppliersPage() {
   const status = searchParams.get('status') ?? 'all';
 
   const { data, isLoading } = useAdminSuppliers({ status, q: query || undefined });
-  const { createSupplier, updateSupplier, toggleSupplier } = useAdminMutations();
+  const { createSupplier, updateSupplier, toggleSupplier, inviteSupplierPortal } =
+    useAdminMutations();
+
+  /**
+   * Issue portal credentials and say honestly whether the email left.
+   *
+   * The password is reset either way — it is a fresh one every time, because
+   * the stored value is a hash and the previous password cannot be read back
+   * out. So a mail failure is not a no-op to be reported as an error and
+   * forgotten: the supplier's old password has stopped working, and the message
+   * has to say that rather than only that something went wrong.
+   */
+  function sendPortalInvite(row) {
+    inviteSupplierPortal.mutate(row.id, {
+      onSuccess: (result) => {
+        if (result.delivered) {
+          toast.ok('Portal link sent', `${row.name} can sign in with the details we emailed.`);
+        } else {
+          toast.error(
+            'The email did not send',
+            `${row.name}'s password was reset, so their old one no longer works. Check the mail settings and send it again.`,
+          );
+        }
+      },
+      onError: (error) => toast.error('Nothing was sent', error.message),
+    });
+  }
 
   const suppliers = data?.suppliers ?? [];
 
@@ -439,6 +493,34 @@ export function AdminSuppliersPage() {
       icon: Globe,
       hidden: (row) => !row.website,
       onSelect: (row) => window.open(row.website, '_blank', 'noopener,noreferrer'),
+    },
+    /**
+     * Email this supplier their portal link and a fresh password (§6.8a).
+     *
+     * Two entries for the same call, so the label tells the truth about which
+     * of the two things is happening — a supplier who has never been invited
+     * needs a different sentence from one whose contact changed. Hidden
+     * entirely when there is no address: there would be nowhere to send it, and
+     * an action that can only fail should not be offered.
+     *
+     * **The toast reports what actually happened.** The password is reset
+     * whether or not the mail leaves, so a failure has to say so rather than
+     * claim a send — otherwise a clerk waits for an answer from a supplier who
+     * never got the message, and the old password no longer works either.
+     */
+    {
+      key: 'portal-invite',
+      label: 'Send portal link',
+      icon: Mail,
+      hidden: (row) => !row.email || !row.isActive || Boolean(row.portalInviteAt),
+      onSelect: (row) => sendPortalInvite(row),
+    },
+    {
+      key: 'portal-resend',
+      label: 'Resend portal link',
+      icon: Mail,
+      hidden: (row) => !row.email || !row.isActive || !row.portalInviteAt,
+      onSelect: (row) => sendPortalInvite(row),
     },
     // Two entries rather than one with a computed tone: `ActionMenu` resolves
     // `hidden` per row but takes `tone` as a fixed value, and deactivating is

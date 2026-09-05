@@ -1,6 +1,7 @@
 import { asyncHandler } from '../utils/ApiError.js';
 import * as purchaseService from '../services/purchaseService.js';
 import auditService from '../services/auditService.js';
+import * as supplierPortalService from '../services/supplierPortalService.js';
 
 /**
  * Purchase — suppliers, purchase orders, expenses, categories and inventory
@@ -32,6 +33,36 @@ const updateSupplier = asyncHandler(async (req, res) => {
 /** Deactivates rather than deletes — purchase orders reference a supplier. */
 const toggleSupplier = asyncHandler(async (req, res) => {
   res.json(await purchaseService.toggleSupplier(req.params.id));
+});
+
+/**
+ * Send this supplier their portal link and a fresh password.
+ *
+ * The manual counterpart of the invite a new supplier gets automatically — for
+ * the address that bounced, the contact who left, the supplier onboarded before
+ * the portal existed. **Always a new password**: the stored value is a bcrypt
+ * hash, so the old one cannot be read back out, and keeping a plaintext copy so
+ * this button could resend it would be a worse trade than asking them to use a
+ * new one.
+ *
+ * Audited: it is a credential being issued, and who issued it is a security
+ * question. `delivered` in the response is what lets the screen say "saved, but
+ * the email did not send" rather than claiming a success mail never had.
+ */
+const invitePortal = asyncHandler(async (req, res) => {
+  const result = await supplierPortalService.invitePortal(req.params.id);
+
+  await auditService.record({
+    req,
+    kind: 'security',
+    action: 'supplier.portal.invite',
+    entity: { kind: 'supplier', id: req.params.id, label: result.supplier.name },
+    description: result.delivered
+      ? `Portal credentials emailed to ${result.supplier.email}.`
+      : `Portal credentials reset for ${result.supplier.email}, but the email did not send.`,
+  });
+
+  res.json(result);
 });
 
 // ---- purchase orders --------------------------------------------------------
@@ -197,4 +228,4 @@ const listStockMovements = asyncHandler(async (req, res) => {
   res.json(await purchaseService.listStockMovements(req.query));
 });
 
-export { listSuppliers, getSupplier, createSupplier, updateSupplier, toggleSupplier, listPurchaseOrders, getPurchaseOrder, createPurchaseOrder, updatePurchaseOrder, setPurchaseOrderStatus, receivePurchaseOrder, recordPurchasePayment, listExpenses, createExpense, updateExpense, deleteExpense, listExpenseCategories, createExpenseCategory, updateExpenseCategory, deleteExpenseCategory, listInventory, getInventoryItem, updateInventoryOps, adjustStock, listStockMovements };
+export { listSuppliers, getSupplier, createSupplier, updateSupplier, toggleSupplier, invitePortal, listPurchaseOrders, getPurchaseOrder, createPurchaseOrder, updatePurchaseOrder, setPurchaseOrderStatus, receivePurchaseOrder, recordPurchasePayment, listExpenses, createExpense, updateExpense, deleteExpense, listExpenseCategories, createExpenseCategory, updateExpenseCategory, deleteExpenseCategory, listInventory, getInventoryItem, updateInventoryOps, adjustStock, listStockMovements };

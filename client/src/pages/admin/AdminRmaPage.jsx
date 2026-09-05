@@ -20,6 +20,7 @@ import Textarea from '@/components/ui/Textarea';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import PageHeader from '@/components/admin/PageHeader';
+import BadgeExplainer from '@/components/admin/BadgeExplainer';
 import KpiRow from '@/components/admin/KpiRow';
 import FilterStrip from '@/components/admin/FilterStrip';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
@@ -315,6 +316,8 @@ export function AdminRmaPage() {
           </Button>
         }
       />
+
+      <BadgeExplainer />
 
       <KpiRow
         tiles={[

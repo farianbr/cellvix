@@ -8,14 +8,64 @@ import { ease } from '@/lib/motion';
  * The account dashboard's building block: a bordered surface with an optional
  * header row. ERP density without ERP starkness (brief §10.7).
  */
-export function Panel({ title, description, action, children, className, bodyClassName, flush }) {
+export function Panel({
+  title,
+  description,
+  action,
+  /**
+   * A lucide glyph beside the title, in flat brand.
+   *
+   * A stack of panels whose headings are all the same weight of ink gives the
+   * eye no way to find one section again — the operator re-reads every heading
+   * on every visit. The glyph is the thing they actually navigate by, and it is
+   * the panel's only colour, so it locates the section without turning the
+   * header into a second focus of attention.
+   *
+   * Flat `text-brand`, never the gradient: §2.2 keeps the ramp for CTAs and
+   * hero blocks, and a 14px glyph is far below the size where a ramp reads as
+   * anything but a stripe.
+   */
+  icon: Icon,
+  /**
+   * A qualifier beside the title, in a smaller, quieter type — the period a
+   * panel's figures cover, most often. It sits on the title's line rather than
+   * in `description` because it narrows the heading itself; in the description
+   * it read as a second sentence competing with what that line is for.
+   */
+  meta,
+  children,
+  className,
+  bodyClassName,
+  flush,
+}) {
   return (
     <section className={cn('overflow-hidden rounded-lg border border-line bg-surface', className)}>
       {(title || action) && (
         <header className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3 sm:px-5">
-          <div className="min-w-0">
-            {title && <h2 className="font-display text-md font-bold">{title}</h2>}
-            {description && <p className="mt-0.5 text-sm text-ink-500">{description}</p>}
+          <div className="flex min-w-0 items-start gap-2.5">
+            {Icon && (
+              <Icon
+                // `mt-px` sits the glyph on the title's optical baseline rather
+                // than its box top, which reads a hair high next to bold text.
+                className="mt-px size-4 shrink-0 text-brand"
+                strokeWidth={2}
+                aria-hidden="true"
+              />
+            )}
+            <div className="min-w-0">
+              {title && (
+                <h2 className="flex flex-wrap items-baseline gap-x-1.5 font-display text-md font-bold">
+                  {title}
+                  {meta && (
+                    <span className="text-xs font-medium text-ink-400">
+                      <span aria-hidden="true">· </span>
+                      {meta}
+                    </span>
+                  )}
+                </h2>
+              )}
+              {description && <p className="mt-0.5 text-sm text-ink-500">{description}</p>}
+            </div>
           </div>
           {action}
         </header>

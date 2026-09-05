@@ -84,6 +84,58 @@ const supplierSchema = new mongoose.Schema(
     /** What they say they supply. Free text: this is their pitch, not a taxonomy. */
     supplies: { type: String, trim: true, maxlength: 600 },
 
+    /**
+     * Which component types this supplier is tagged with — `Product.partType`
+     * slugs, the same vocabulary the storefront's step 1 offers.
+     *
+     * **The tag is what makes a request for quote possible.** A purchasing
+     * clerk raising an RFQ picks component types, not suppliers: "who sells
+     * batteries" is the question they actually have, and asking them to
+     * remember which of forty suppliers those are is how a supplier who could
+     * have quoted never gets asked.
+     *
+     * Deliberately NOT a taxonomy reference. A component type cuts across the
+     * device tree and has no node of its own (see `taxonomyService`), so this
+     * stores the slug and `taxonomyService.getComponentTypes()` stays the one
+     * place that list is derived — from the catalogue, so a tag can never name
+     * a component nothing is sold under.
+     */
+    componentTypes: { type: [String], default: [], index: true },
+
+    /**
+     * Portal credentials (supplier process flow, §6.8a).
+     *
+     * A supplier signs in at `/supplier` to answer a request for quote, and
+     * that login lives HERE rather than in `User`. The separation is the point:
+     * `User.role` gates the buyer storefront and the admin panel, and a
+     * supplier belongs to neither. A fourth role would mean every `requireAuth`
+     * route in the app silently gained a population that has no cart, no
+     * orders, no invoices and no credit — a supplier session must not reach
+     * those routes at all, and the way to guarantee that rather than remember
+     * it is for the session to carry a different cookie, which `authenticate`
+     * does not read.
+     *
+     * `select: false` on the hash for the reason `User.passwordHash` has it: a
+     * serializer that forgets to strip a field it never loaded cannot leak it.
+     *
+     * `portalInviteAt` is when credentials were last sent — what the admin's
+     * **Resend portal link** button reports.
+     */
+    passwordHash: { type: String, select: false },
+    portalInviteAt: Date,
+    portalLastLoginAt: Date,
+
+    /**
+     * The invite / reset token, hashed. Same shape and same reasoning as
+     * `User.resetTokenHash`: the mail carries the only copy of the plaintext,
+     * so a stolen database cannot be used to set a supplier's password.
+     *
+     * `portalTokenAt` is the EXPIRY, not the issue time — checked on use, the
+     * way the buyer-side reset token is.
+     */
+    portalTokenHash: { type: String, select: false },
+    portalTokenAt: { type: Date, select: false },
+
     // Caches. See the note above.
     ordersCount: { type: Number, default: 0 },
     totalSpent: { type: Number, default: 0 }, // integer cents
@@ -92,6 +144,10 @@ const supplierSchema = new mongoose.Schema(
 );
 
 supplierSchema.index({ name: 'text', code: 'text', contactName: 'text' });
+
+// The supplier picker on a request for quote: active suppliers carrying one of
+// the chosen component types, in name order.
+supplierSchema.index({ componentTypes: 1, isActive: 1, name: 1 });
 
 const Supplier = mongoose.model('Supplier', supplierSchema);
 

@@ -28,6 +28,7 @@ import Badge from '@/components/ui/Badge';
 import SelectMenu from '@/components/ui/SelectMenu';
 import Pagination from '@/components/ui/Pagination';
 import PageHeader from '@/components/admin/PageHeader';
+import BadgeExplainer from '@/components/admin/BadgeExplainer';
 import KpiRow from '@/components/admin/KpiRow';
 import FilterStrip from '@/components/admin/FilterStrip';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
@@ -315,6 +316,8 @@ export function AdminTicketsPage() {
           </Button>
         }
       />
+
+      <BadgeExplainer />
 
       <KpiRow
         tiles={[

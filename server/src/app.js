@@ -10,6 +10,7 @@ import morgan from 'morgan';
 import env from './config/env.js';
 import routes from './routes/index.js';
 import { authenticate } from './middleware/auth.js';
+import { authenticateSupplier } from './middleware/supplierAuth.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -42,6 +43,21 @@ function createApp() {
 
   // Every route can read req.user; individual routes decide whether it is required.
   app.use(authenticate);
+
+  /**
+   * The supplier portal's session, resolved alongside the buyer/admin one and
+   * kept entirely separate from it (§6.8a).
+   *
+   * Two cookies, two collections. `authenticate` above sets `req.user` from
+   * `User`; this sets `req.supplier` from `Supplier`, and neither can produce
+   * the other. That is what makes "a supplier cannot reach a buyer route" a
+   * property of the wiring rather than a rule somebody has to remember when
+   * adding the next route.
+   *
+   * Both run on every request so one browser can hold both sessions — which is
+   * what a Cellvix employee testing the portal actually needs.
+   */
+  app.use(authenticateSupplier);
 
   app.use('/api', routes);
 

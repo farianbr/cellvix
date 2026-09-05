@@ -1,7 +1,19 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
-import { useForm } from 'react-hook-form';
-import { AlertCircle, Ban, Download, FileText, Plus, Receipt, Wallet } from 'lucide-react';
+import { useFieldArray, useForm, useWatch } from 'react-hook-form';
+import {
+  AlertCircle,
+  Ban,
+  Car,
+  Download,
+  FileText,
+  Info,
+  Plus,
+  Receipt,
+  Smartphone,
+  StickyNote,
+  Wallet,
+} from 'lucide-react';
 import { money, date, count as formatCount } from '@/lib/format';
 import { apiUrl } from '@/lib/api';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
@@ -10,10 +22,15 @@ import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import SelectField from '@/components/ui/SelectField';
+import Checkbox from '@/components/ui/Checkbox';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import PageHeader from '@/components/admin/PageHeader';
+import BadgeExplainer from '@/components/admin/BadgeExplainer';
 import { TERMS } from '@/components/admin/ApproveClientForm';
+import { Section, DeviceBlock } from '@/components/admin/DeviceLines';
+import { PROVINCES } from '@shared/schemas/checkout';
+import { TAX_RATES, INVOICE_SERVICE_TYPES } from '@shared/schemas/admin';
 import KpiRow from '@/components/admin/KpiRow';
 import FilterStrip from '@/components/admin/FilterStrip';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
@@ -21,9 +38,73 @@ import Pagination from '@/components/ui/Pagination';
 import useTablePage from '@/hooks/useTablePage';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
-import { useAdminInvoices, useAdminUsers, useAdminMutations } from '@/hooks/useAdmin';
+import {
+  useAdminInvoices,
+  useAdminUsers,
+  useAdminTickets,
+  useAdminMutations,
+} from '@/hooks/useAdmin';
 import useCreateParam from '@/hooks/useCreateParam';
 import downloadExport from '@/lib/exportDownload';
+
+/** A device as the invoice form starts it — no condition grid, that is intake. */
+const emptyInvoiceDevice = () => ({
+  category: '',
+  brand: '',
+  series: '',
+  model: '',
+  serial: '',
+  problem: '',
+  solution: '',
+  notes: '',
+  services: [],
+  parts: [],
+});
+
+/**
+ * The running total, in the order the server applies it.
+ *
+ * A preview, recomputed on every keystroke, and deliberately mirroring
+ * `invoiceTotals()` step for step — lines, then the fee, then the discount,
+ * then tax on what is left. Two different orders of operation between the form
+ * and the server is how an operator quotes one number and the customer receives
+ * another.
+ */
+function useInvoiceTotal(control) {
+  const devices = useWatch({ control, name: 'devices' }) ?? [];
+  const taxPercent = Number(useWatch({ control, name: 'taxPercent' }) ?? 0) || 0;
+  const discount = Number(useWatch({ control, name: 'discountDollars' }) ?? 0) || 0;
+  const chargeFee = useWatch({ control, name: 'extendedServiceFee' });
+  const feeDollars = Number(useWatch({ control, name: 'extendedServiceFeeDollars' }) ?? 0) || 0;
+
+  const lineCents = devices.reduce((sum, device) => {
+    const lines = [...(device?.services ?? []), ...(device?.parts ?? [])];
+    return (
+      sum +
+      lines.reduce(
+        (n, line) =>
+          n + Math.round((Number(line?.priceDollars) || 0) * 100) * Math.max(1, Number(line?.qty) || 1),
+        0,
+      )
+    );
+  }, 0);
+
+  const feeCents = chargeFee ? Math.round(feeDollars * 100) : 0;
+  const subtotalCents = lineCents + feeCents;
+  // Clamped exactly as the server clamps it: a discount cannot exceed the work.
+  const discountCents = Math.min(Math.round(discount * 100), subtotalCents);
+  const taxableCents = subtotalCents - discountCents;
+  const taxCents = Math.round((taxableCents * taxPercent) / 100);
+
+  return {
+    lineCents,
+    feeCents,
+    discountCents,
+    taxPercent,
+    taxCents,
+    totalCents: taxableCents + taxCents,
+  };
+}
 
 /**
  * Header metadata read from the same table the breadcrumb uses, so a page
@@ -165,21 +246,32 @@ function VoidForm({ invoice, onSubmit, onCancel, isPending, error }) {
  * A standalone invoice — one raised against an account for something no order
  * covers: a restocking fee, a repair, an agreed adjustment (§7.2).
  *
- * It has no line items, and that is the model rather than an omission: an
- * invoice stores a single `amount`, so a reference and a note carry what it is
- * for. An invoice reading only "$240" is one nobody can reconcile six weeks
- * later, which is why the reference is asked for rather than tucked away.
+ * **Two documents share this form, and the operator picks which by what they
+ * type.** Leave the devices alone and it is a flat charge: one amount, a
+ * reference saying what for. Add a device and it becomes an itemised repair
+ * invoice — services, parts, tax and a computed total. The server decides the
+ * same way (`isItemised`), so the form and the API cannot disagree about which
+ * kind of document was just raised.
+ *
+ * The flat path stays first and stays cheap because most standalone invoices
+ * genuinely are one number, and making somebody open a device panel to type it
+ * would be a worse form than the one this replaces.
+ *
+ * **Every figure here is a preview.** The running total exists so the counter
+ * can quote while the customer is standing there; the amount that gets stored
+ * is recomputed server-side from the same lines. PROJECT_INSTRUCTIONS is
+ * explicit that the client never sends a price it wants honoured.
  *
  * **A blank due date is not empty, it is "use the terms".** The hint says so,
  * because a date field that silently fills itself in after submission looks
  * like the form ignored what was typed.
  */
-function InvoiceForm({ clients, defaultUser, onSubmit, onCancel, isPending, error }) {
-  const { register, handleSubmit, control, watch } = useForm({
+function InvoiceForm({ clients, technicians = [], defaultUser, onSubmit, onCancel, isPending, error }) {
+  const { register, handleSubmit, control, watch, setValue } = useForm({
     defaultValues: {
       // `defaultUser` is how the customer profile raises an invoice against the
       // account already on screen (`?new=1&client=<id>`): it pre-picks the
-      // client instead of forking a second, near-identical form that would
+      // customer instead of forking a second, near-identical form that would
       // eventually disagree with this one about terms or due dates.
       user: defaultUser ?? clients[0]?.id ?? '',
       amountDollars: '',
@@ -188,24 +280,74 @@ function InvoiceForm({ clients, defaultUser, onSubmit, onCancel, isPending, erro
       dueDate: '',
       reference: '',
       notes: '',
+
+      serviceType: 'walk_in',
+      technician: '',
+      devices: [],
+
+      province: '',
+      taxPercent: 0,
+      discountDollars: '',
+      discountCode: '',
+
+      travelKm: '',
+      extendedServiceFee: false,
+      extendedServiceFeeDollars: '',
+
+      customerNotes: '',
+      technicianNotes: '',
+      internalNotes: '',
     },
   });
 
   const terms = watch('terms');
+  const devices = useFieldArray({ control, name: 'devices' });
+
+  // Which document this is. Adding a device is the gesture that switches it,
+  // so the summary and the amount field follow that rather than a mode toggle
+  // the operator would have to find and understand first.
+  const itemised = devices.fields.length > 0;
+
+  const totals = useInvoiceTotal(control);
 
   return (
     <form
-      onSubmit={handleSubmit((values) =>
+      onSubmit={handleSubmit((values) => {
+        const lines = (values.devices ?? []).map((device) => ({
+          ...device,
+          services: (device.services ?? []).filter((line) => line.name?.trim()),
+          parts: (device.parts ?? []).filter((line) => line.name?.trim()),
+        }));
+
         onSubmit({
           user: values.user,
-          amount: Math.round(Number(values.amountDollars || 0) * 100),
+          // Sent only on the flat path. On the itemised one the server bills
+          // the lines and ignores whatever this says.
+          amount: itemised ? undefined : Math.round(Number(values.amountDollars || 0) * 100),
           terms: values.terms,
           issuedAt: values.issuedAt || undefined,
           dueDate: values.dueDate || undefined,
           reference: values.reference || undefined,
           notes: values.notes || undefined,
-        }),
-      )}
+
+          devices: lines,
+          serviceType: values.serviceType,
+          technician: values.technician || undefined,
+
+          province: values.province || undefined,
+          taxPercent: Number(values.taxPercent || 0),
+          discountDollars: Number(values.discountDollars || 0),
+          discountCode: values.discountCode || undefined,
+
+          travelKm: Number(values.travelKm || 0),
+          extendedServiceFee: Boolean(values.extendedServiceFee),
+          extendedServiceFeeDollars: Number(values.extendedServiceFeeDollars || 0),
+
+          customerNotes: values.customerNotes || undefined,
+          technicianNotes: values.technicianNotes || undefined,
+          internalNotes: values.internalNotes || undefined,
+        });
+      })}
       className="space-y-4"
     >
       {error && (
@@ -215,44 +357,234 @@ function InvoiceForm({ clients, defaultUser, onSubmit, onCancel, isPending, erro
         </p>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        <SelectField
-          control={control}
-          name="user"
-          label="Client"
-          options={clients.map((client) => ({ value: client.id, label: client.displayName ?? client.businessName }))}
-        />
+      <Section icon={Info} title="Basic information">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <SelectField
+            control={control}
+            name="user"
+            label="Customer"
+            options={clients.map((client) => ({
+              value: client.id,
+              label: client.displayName ?? client.businessName,
+            }))}
+          />
+          <Input label="Issued" type="date" {...register('issuedAt')} />
+          <Input
+            label="Due"
+            type="date"
+            hint={terms === 'prepaid' ? 'Blank means on issue.' : `Blank uses ${terms}.`}
+            {...register('dueDate')}
+          />
+          <SelectField control={control} name="terms" label="Payment terms" options={TERMS} />
+        </div>
+
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <SelectField
+            control={control}
+            name="serviceType"
+            label="Service type"
+            options={INVOICE_SERVICE_TYPES}
+          />
+          <SelectField
+            control={control}
+            name="technician"
+            label="Technician"
+            options={[
+              { value: '', label: 'Unassigned' },
+              ...technicians.map((person) => ({
+                value: person.id,
+                label: person.displayName ?? person.contactName ?? person.email,
+              })),
+            ]}
+          />
+        </div>
+
         <Input
-          label="Amount"
-          inputMode="decimal"
-          suffix="CAD"
-          {...register('amountDollars')}
+          label="Reference"
+          className="mt-3"
+          placeholder="Restocking fee, bench repair, agreed adjustment…"
+          hint="What this invoice is for. It is what a statement shows beside the number."
+          {...register('reference')}
         />
-      </div>
+      </Section>
 
-      <Input
-        label="Reference"
-        placeholder="Restocking fee, bench repair, agreed adjustment…"
-        hint="What this invoice is for. It is the only description the invoice carries."
-        {...register('reference')}
-      />
+      {/* The flat amount, and it disappears the moment there is a device.
+          Two ways to state the same total on one form is how an invoice ends
+          up billing a figure nobody meant. */}
+      {!itemised && (
+        <Section icon={Wallet} title="Amount">
+          <Input
+            label="Amount"
+            inputMode="decimal"
+            suffix="CAD"
+            hint="Or add a device below to bill by service and part instead."
+            {...register('amountDollars')}
+          />
+        </Section>
+      )}
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <SelectField control={control} name="terms" label="Payment terms" options={TERMS} />
-        <Input label="Issued" type="date" {...register('issuedAt')} />
-        <Input
-          label="Due"
-          type="date"
-          hint={terms === 'prepaid' ? 'Blank means on issue.' : `Blank uses ${terms}.`}
-          {...register('dueDate')}
-        />
-      </div>
+      <Section
+        icon={Smartphone}
+        title="Devices and services"
+        hint={itemised ? undefined : '(optional — for a repair invoice)'}
+      >
+        {devices.fields.length === 0 ? (
+          <p className="text-sm text-ink-500">
+            Nothing itemised. Add a device to bill for services and parts, and the amount above
+            gives way to a calculated total.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {devices.fields.map((field, index) => (
+              <DeviceBlock
+                key={field.id}
+                control={control}
+                register={register}
+                index={index}
+                variant="invoice"
+                canRemove
+                onRemove={() => devices.remove(index)}
+              />
+            ))}
+          </div>
+        )}
 
-      <Textarea label="Notes" rows={2} {...register('notes')} />
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          icon={Plus}
+          className="mt-3"
+          onClick={() => devices.append(emptyInvoiceDevice())}
+        >
+          Add device
+        </Button>
+      </Section>
+
+      <Section icon={StickyNote} title="Notes">
+        <div className="grid gap-3 lg:grid-cols-2">
+          <Textarea
+            label="Customer notes"
+            rows={2}
+            hint="Printed on the invoice."
+            {...register('customerNotes')}
+          />
+          <Textarea
+            label="Technician notes"
+            rows={2}
+            hint="Printed on the invoice."
+            {...register('technicianNotes')}
+          />
+        </div>
+
+        {/* Visually separated because the difference is the whole point: one of
+            these three reaches the customer and two do not. */}
+        <div className="mt-3 rounded-md border border-warn/30 bg-warn-50/50 p-3">
+          <Textarea
+            label="Internal notes"
+            rows={2}
+            hint="Never printed, and never shown to the customer."
+            {...register('internalNotes')}
+          />
+        </div>
+
+        <Textarea label="Reference notes" rows={2} className="mt-3" {...register('notes')} />
+      </Section>
+
+      {itemised && (
+        <>
+          <Section icon={Car} title="Travel" hint="(internal — not on the invoice)">
+            <p className="mb-3 rounded-md bg-surface-2 px-3 py-2.5 text-xs leading-relaxed text-ink-500">
+              Mileage is recorded for the business and is <strong>not</strong> added to what the
+              customer owes. The extended service area fee, if charged, is.
+            </p>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Input
+                label="Total km travelled"
+                inputMode="decimal"
+                placeholder="e.g. 45"
+                hint="Internal only."
+                {...register('travelKm')}
+              />
+              <Input
+                label="Extended service area fee"
+                inputMode="decimal"
+                suffix="CAD"
+                placeholder="0.00"
+                hint="Charged only when the box below is ticked."
+                {...register('extendedServiceFeeDollars')}
+              />
+            </div>
+
+            <Checkbox
+              className="mt-3"
+              label="Charge the extended service area fee"
+              {...register('extendedServiceFee')}
+            />
+          </Section>
+
+          <Section icon={Receipt} title="Invoice summary">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Input
+                label="Discount"
+                inputMode="decimal"
+                suffix="CAD"
+                placeholder="0.00"
+                {...register('discountDollars')}
+              />
+              <Input label="Discount code" placeholder="e.g. SUMMER10" {...register('discountCode')} />
+            </div>
+
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <SelectField
+                control={control}
+                name="province"
+                label="Province"
+                options={[{ value: '', label: '— pick province —' }, ...PROVINCES]}
+                // Picking a province fills the rate in; the rate stays editable
+                // because zero is a real answer for an exempt customer.
+                onValueChange={(value) => setValue('taxPercent', TAX_RATES[value] ?? 0)}
+              />
+              <Input
+                label="Tax rate"
+                inputMode="decimal"
+                suffix="%"
+                hint="0 is tax exempt."
+                {...register('taxPercent')}
+              />
+            </div>
+
+            {/* The arithmetic, shown in the order the server applies it. An
+                operator who can see the steps can spot the wrong one. */}
+            <dl className="mt-4 space-y-1.5 border-t border-line pt-3 text-sm">
+              <TotalRow label="Services and parts" value={money(totals.lineCents)} />
+              {totals.feeCents > 0 && (
+                <TotalRow label="Extended service area fee" value={money(totals.feeCents)} />
+              )}
+              {totals.discountCents > 0 && (
+                <TotalRow label="Discount" value={`− ${money(totals.discountCents)}`} />
+              )}
+              <TotalRow
+                label={`Tax${totals.taxPercent ? ` (${totals.taxPercent}%)` : ''}`}
+                value={money(totals.taxCents)}
+              />
+              <div className="flex items-baseline justify-between border-t border-line pt-2 font-display text-md font-bold text-ink-900">
+                <dt>Total</dt>
+                <dd className="tnum">{money(totals.totalCents)}</dd>
+              </div>
+            </dl>
+
+            <p className="mt-2 text-2xs text-ink-400">
+              Recalculated by the server when this is raised — this figure is a preview.
+            </p>
+          </Section>
+        </>
+      )}
 
       {terms !== 'prepaid' && (
         <p className="rounded-md bg-surface-2 px-3 py-2.5 text-sm text-ink-500">
-          On terms, this draws on the client's line of credit until it is paid — the same as an
+          On terms, this draws on the customer's line of credit until it is paid — the same as an
           invoice raised by an order.
         </p>
       )}
@@ -266,6 +598,16 @@ function InvoiceForm({ clients, defaultUser, onSubmit, onCancel, isPending, erro
         </Button>
       </div>
     </form>
+  );
+}
+
+/** One line of the summary. Label left, figure right, tabular so they line up. */
+function TotalRow({ label, value }) {
+  return (
+    <div className="flex items-baseline justify-between text-ink-600">
+      <dt>{label}</dt>
+      <dd className="tnum">{value}</dd>
+    </div>
   );
 }
 
@@ -292,6 +634,13 @@ export function AdminInvoicesPage() {
   const { recordInvoicePayment, voidInvoice, createInvoice } = useAdminMutations();
 
   const clients = clientData?.users ?? [];
+
+  // The tickets list already returns the technicians, and it is not admin-only
+  // the way `useAdminStaff` is — a staff account with invoice permission has to
+  // be able to assign one. Same source the ticket form uses, for the same
+  // reason: a second endpoint whose only caller is this screen earns nothing.
+  const { data: ticketData } = useAdminTickets({ status: 'all', limit: 1 });
+  const technicians = ticketData?.technicians ?? [];
 
   const invoices = data?.invoices ?? [];
 
@@ -328,7 +677,7 @@ export function AdminInvoicesPage() {
     },
     {
       key: 'businessName',
-      header: 'Client',
+      header: 'Customer',
       priority: 2,
       className: 'max-w-[180px] truncate',
     },
@@ -432,6 +781,8 @@ export function AdminInvoicesPage() {
         }
       />
 
+      <BadgeExplainer />
+
       <KpiRow
         tiles={[
           {
@@ -493,6 +844,10 @@ export function AdminInvoicesPage() {
           columns={columns}
           rows={pageInvoices}
           rowKey={(invoice) => invoice.number}
+          // The row opens the invoice, the same way it already does on a
+          // customer's profile. A table of invoice numbers whose rows are inert
+          // teaches the operator to hunt for the menu instead.
+          onRowClick={(invoice) => navigate(`/admin/invoices/${invoice.number}`)}
           rowMenu={rowMenu}
           loading={isLoading}
           defaultSort={{ key: 'issuedAt', direction: 'desc' }}
@@ -592,12 +947,16 @@ export function AdminInvoicesPage() {
         open={Boolean(creating)}
         onClose={() => setCreating(false)}
         title="New invoice"
-        size="lg"
+        // `xl`: a device block is four fields across plus its service and part
+        // rows, and at `lg` those wrapped into a column of stacked inputs that
+        // read as a list rather than a device.
+        size="xl"
         align="top"
       >
         {creating && (
           <InvoiceForm
             clients={clients}
+            technicians={technicians}
             defaultUser={createSeed.client}
             isPending={createInvoice.isPending}
             error={createInvoice.error?.message}

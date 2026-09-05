@@ -32,6 +32,8 @@ import * as searchController from '../controllers/searchController.js';
 import * as profileController from '../controllers/profileController.js';
 import * as exportController from '../controllers/exportController.js';
 import * as notificationController from '../controllers/notificationController.js';
+import * as rfqController from '../controllers/rfqController.js';
+import * as supplierPortalController from '../controllers/supplierPortalController.js';
 
 import validate from '../middleware/validate.js';
 import {
@@ -42,6 +44,7 @@ import {
   denyAdmin,
   requirePermission,
 } from '../middleware/auth.js';
+import { requireSupplier } from '../middleware/supplierAuth.js';
 import {
   loginSchema,
   registerSchema,
@@ -102,6 +105,17 @@ import {
   purchaseOrderStatusSchema,
   purchaseReceiveSchema,
   purchasePaymentSchema,
+  rfqSchema,
+  rfqSendSchema,
+  rfqInviteSchema,
+  rfqAwardSchema,
+  rfqCancelSchema,
+  supplierQuoteSchema,
+  supplierDeclineSchema,
+  supplierLoginSchema,
+  supplierForgotSchema,
+  supplierResetSchema,
+  supplierPasswordSchema,
   expenseSchema,
   expenseCategorySchema,
   stockAdjustSchema,
@@ -417,6 +431,51 @@ router.patch('/admin/purchase-orders/:id/status', ...admin, requirePermission('p
 router.post('/admin/purchase-orders/:id/receive', ...admin, requirePermission('purchase', 'full'), validate(purchaseReceiveSchema), purchaseController.receivePurchaseOrder);
 // Recording a payment creates the Expense row — once. A second call is refused.
 router.post('/admin/purchase-orders/:id/payment', ...admin, requirePermission('purchase', 'full'), validate(purchasePaymentSchema), purchaseController.recordPurchasePayment);
+
+// --- requests for quote (supplier process flow, §6.8a) ----------------------
+// The step before a purchase order: ask several suppliers, compare, award. Same
+// `purchase` permission area as the PO routes it feeds, because it is the same
+// job — awarding one raises a real purchase order, so anybody who may do this
+// may already raise one by hand.
+//
+// The supplier picker is registered ahead of `/admin/rfqs/:id`, or the literal
+// path is swallowed as an id — the ordering the expense categories need too.
+router.get('/admin/rfqs/suppliers', ...admin, requirePermission('purchase', 'view'), rfqController.suppliersForComponentTypes);
+router.get('/admin/rfqs', ...admin, requirePermission('purchase', 'view'), rfqController.listRfqs);
+router.post('/admin/rfqs', ...admin, requirePermission('purchase', 'full'), validate(rfqSchema), rfqController.createRfq);
+router.get('/admin/rfqs/:id', ...admin, requirePermission('purchase', 'view'), rfqController.getRfq);
+router.patch('/admin/rfqs/:id', ...admin, requirePermission('purchase', 'full'), validate(rfqSchema), rfqController.updateRfq);
+router.post('/admin/rfqs/:id/send', ...admin, requirePermission('purchase', 'full'), validate(rfqSendSchema), rfqController.sendRfq);
+router.post('/admin/rfqs/:id/invite', ...admin, requirePermission('purchase', 'full'), validate(rfqInviteSchema), rfqController.inviteSupplier);
+// Commits money to one supplier and raises the PO. Audited by name.
+router.post('/admin/rfqs/:id/award', ...admin, requirePermission('purchase', 'full'), validate(rfqAwardSchema), rfqController.awardRfq);
+router.post('/admin/rfqs/:id/cancel', ...admin, requirePermission('purchase', 'full'), validate(rfqCancelSchema), rfqController.cancelRfq);
+
+// Issues a credential, so it needs `full` rather than `view` — and it is
+// audited as a security event in the controller.
+router.post('/admin/suppliers/:id/portal-invite', ...admin, requirePermission('purchase', 'full'), purchaseController.invitePortal);
+
+// --- the supplier portal (supplier process flow, §6.8a) ---------------------
+//
+// **A separate population behind a separate cookie.** These routes are guarded
+// by `requireSupplier`, which reads the supplier session and resolves it in
+// `Supplier` — a buyer or admin token satisfies none of them, and a supplier
+// token satisfies nothing above. See `middleware/supplierAuth.js` for why the
+// guarantee is structural rather than a matter of having audited each route.
+//
+// Credential endpoints take the same rate limiter as the buyer side.
+router.post('/supplier-portal/login', authLimiter, validate(supplierLoginSchema), supplierPortalController.login);
+router.post('/supplier-portal/logout', supplierPortalController.logout);
+// Not `requireSupplier`: signed out is a valid answer, as it is for `/auth/me`.
+router.get('/supplier-portal/me', supplierPortalController.me);
+router.post('/supplier-portal/forgot-password', authLimiter, validate(supplierForgotSchema), supplierPortalController.forgotPassword);
+router.post('/supplier-portal/reset-password', authLimiter, validate(supplierResetSchema), supplierPortalController.resetPassword);
+router.post('/supplier-portal/password', requireSupplier, validate(supplierPasswordSchema), supplierPortalController.changePassword);
+
+router.get('/supplier-portal/rfqs', requireSupplier, supplierPortalController.listRfqs);
+router.get('/supplier-portal/rfqs/:id', requireSupplier, supplierPortalController.getRfq);
+router.post('/supplier-portal/rfqs/:id/quote', requireSupplier, validate(supplierQuoteSchema), supplierPortalController.submitQuote);
+router.post('/supplier-portal/rfqs/:id/decline', requireSupplier, validate(supplierDeclineSchema), supplierPortalController.declineQuote);
 
 // Categories are registered ahead of `/admin/expenses/:id` so a literal path
 // can never be swallowed by a parameter — the same ordering the bulk order

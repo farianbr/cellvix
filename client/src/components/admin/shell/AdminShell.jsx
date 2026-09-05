@@ -1,11 +1,10 @@
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation } from 'react-router';
 import { ShieldAlert } from 'lucide-react';
 import Skeleton from '@/components/ui/Skeleton';
 import Breadcrumbs from '@/components/admin/Breadcrumbs';
 import { useAuth, useSignOut } from '@/hooks/useAuth';
 import { useAdminStats } from '@/hooks/useAdmin';
-import RouteFallback from '@/components/layout/RouteFallback';
 import SignOutConfirm from '@/components/account/SignOutConfirm';
 import AdminSidebar from './AdminSidebar';
 import AdminTopBar from './AdminTopBar';
@@ -30,9 +29,35 @@ export function AdminShell() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
 
+  /**
+   * The panel scrolls INSIDE `<main>`, not on the document, so none of the
+   * browser's own scroll handling applies to it.
+   *
+   * Two things follow, and neither worked before. Arriving at a new route left
+   * the reader wherever the last page happened to be scrolled to — halfway down
+   * a screen they had never seen. And clicking the section you are already in
+   * did nothing at all, when the one thing it can usefully mean is "take me
+   * back to the top of this".
+   */
+  const mainRef = useRef(null);
+
+  const scrollToTop = useCallback((behavior = 'smooth') => {
+    const main = mainRef.current;
+    if (!main) return;
+    // `smooth` for a deliberate re-click, instant for a route change: the
+    // second is a new page, and animating a scroll the reader did not ask for
+    // just delays the content.
+    main.scrollTo({ top: 0, behavior });
+  }, []);
+
   // A drawer that survives a route change is a drawer covering the page the
   // user just asked for.
   useEffect(() => setMobileNavOpen(false), [location.pathname]);
+
+  // A new route starts at its own beginning.
+  useEffect(() => {
+    mainRef.current?.scrollTo({ top: 0, behavior: 'auto' });
+  }, [location.pathname]);
 
   // Ctrl+K / ⌘K anywhere in the panel. The palette itself owns Escape and the
   // arrow keys once it is open.
@@ -113,6 +138,7 @@ export function AdminShell() {
           onOpenSearch={openSearch}
           mobileOpen={mobileNavOpen}
           onCloseMobile={() => setMobileNavOpen(false)}
+          onSameRoute={scrollToTop}
         />
 
         <div className="flex min-w-0 flex-1 flex-col print:block">
@@ -123,9 +149,23 @@ export function AdminShell() {
           />
           <Breadcrumbs />
 
-          <main className="min-h-0 flex-1 overflow-y-auto print:overflow-visible">
+          <main ref={mainRef} className="min-h-0 flex-1 overflow-y-auto print:overflow-visible">
             <div className="mx-auto w-full max-w-[1600px] px-3 py-5 sm:px-4 lg:px-6 lg:py-7 print:max-w-none print:p-0">
-              <Suspense fallback={<RouteFallback />}>
+              {/* An EMPTY fallback, deliberately.
+              
+                  A page-shaped skeleton here meant every navigation repainted
+                  twice — content, then a skeleton in a different shape, then
+                  the real page — which is the "jump". The chunk for a route
+                  usually arrives in a few frames, and `RouteProgress` is
+                  already reporting the wait at the top of the window, so the
+                  honest thing to render meanwhile is nothing at all rather than
+                  a placeholder that resembles neither the page leaving nor the
+                  one arriving.
+              
+                  The skeleton still earns its place on a first paint, where the
+                  screen is genuinely empty — the screens keep their own
+                  `isLoading` skeletons for that. */}
+              <Suspense fallback={null}>
                 <Outlet />
               </Suspense>
             </div>

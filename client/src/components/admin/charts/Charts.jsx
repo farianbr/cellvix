@@ -1,5 +1,7 @@
 import { useId, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router';
 import cn from '@/lib/cn';
+import { pressableSurface } from '@/lib/motion';
 
 /**
  * Hand-rolled inline SVG charts (ERP rework §4, Charts).
@@ -524,8 +526,25 @@ export function BarList({
     // Each row already states its label, its value and its hint as text, so the
     // list is the accessible representation and the bars are decoration.
     <div className={cn('space-y-3', className)} role="list" aria-label={caption}>
-      {items.map((item, index) => (
-        <div key={item.label} role="listitem">
+      {items.map((item, index) => {
+        // A row becomes a link when the caller gives that item a `to`. Ranked
+        // lists name real records — a customer, a product — and the operator
+        // reading "who is my biggest account" wants to open it, not go and find
+        // it by name. Rows without one stay plain: the P&L breakdowns on
+        // Reports rank categories that have no screen of their own.
+        const Row = item.to ? Link : 'div';
+        const rowProps = item.to
+          ? {
+              to: item.to,
+              className: cn(
+                pressableSurface,
+                'group -mx-2 block rounded-md px-2 py-1 hover:bg-surface-2',
+              ),
+            }
+          : {};
+
+        return (
+        <Row key={item.label} role="listitem" {...rowProps}>
           <div className="mb-1.5 flex items-baseline gap-2 text-sm">
             {rank && (
               <span
@@ -535,7 +554,14 @@ export function BarList({
                 {index + 1}
               </span>
             )}
-            <span className="min-w-0 flex-1 truncate text-ink-700">{item.label}</span>
+            <span
+              className={cn(
+                'min-w-0 flex-1 truncate text-ink-700',
+                item.to && 'group-hover:text-brand',
+              )}
+            >
+              {item.label}
+            </span>
             {showShare && total > 0 && (
               <span className="tnum shrink-0 text-2xs text-ink-300">
                 {Math.round((item.value / total) * 100)}%
@@ -563,8 +589,9 @@ export function BarList({
           {item.hint && (
             <p className={cn('mt-1 text-2xs text-ink-400', rank && 'pl-6')}>{item.hint}</p>
           )}
-        </div>
-      ))}
+        </Row>
+        );
+      })}
     </div>
   );
 }

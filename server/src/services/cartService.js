@@ -5,6 +5,7 @@ import { canSeePricing } from '../middleware/auth.js';
 import Offer from '../models/Offer.js';
 import { offerStatus } from './offerService.js';
 import { OfferRejection, priceCart, resolveCode } from './pricingService.js';
+import { formatDate } from '../../../shared/dates.js';
 
 /** A user has exactly one active cart. Saved carts are separate documents. */
 async function getOrCreateCart(userId) {
@@ -249,7 +250,7 @@ async function saveForLater(userId, name) {
     items: cart.items,
     bundles: cart.bundles,
     savedForLater: true,
-    name: name || `Saved ${new Date().toLocaleDateString('en-CA')}`,
+    name: name || `Saved ${formatDate(new Date())}`,
   });
 
   cart.items = [];

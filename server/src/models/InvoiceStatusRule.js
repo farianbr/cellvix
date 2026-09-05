@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 import { MESSAGE_CHANNELS } from './MessageLog.js';
+import { formatDate } from '../../../shared/dates.js';
 
 /**
  * Time-lapse invoice messages (ERP rework §6.15 category 2, §8, phase 11d).
@@ -124,7 +125,7 @@ invoiceStatusRuleSchema.statics.render = function render(body, { invoice, user, 
     '{{invoice_number}}': invoice?.number ?? '',
     '{{amount}}': money ?? '',
     '{{status}}': invoice?.status ?? '',
-    '{{due_date}}': invoice?.dueDate ? new Date(invoice.dueDate).toLocaleDateString('en-CA') : '',
+    '{{due_date}}': formatDate(invoice?.dueDate, ''),
   };
 
   return String(body ?? '').replace(

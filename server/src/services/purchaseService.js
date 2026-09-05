@@ -8,6 +8,7 @@ import StockMovement from '../models/StockMovement.js';
 import Product from '../models/Product.js';
 import ApiError from '../utils/ApiError.js';
 import { likeRegex } from '../utils/regex.js';
+import * as supplierPortalService from './supplierPortalService.js';
 
 /**
  * Purchase — suppliers, purchase orders, expenses and the stock ledger
@@ -159,6 +160,15 @@ function shapeSupplier(supplier, lastOrderAt = null) {
       call: supplier.contactConsent?.call ?? false,
       at: supplier.contactConsent?.at ?? null,
     },
+    // What this supplier sells, as component-type slugs. The request-for-quote
+    // picker filters on these (§6.8a).
+    componentTypes: supplier.componentTypes ?? [],
+    // Portal state, never the credential itself. `portalInviteAt` is what the
+    // Suppliers screen reads to decide between "Send portal link" and "Resend"
+    // — a supplier who has never been invited cannot answer a request, and the
+    // button should say which of the two it is doing.
+    portalInviteAt: supplier.portalInviteAt ?? null,
+    portalLastLoginAt: supplier.portalLastLoginAt ?? null,
     ordersCount: supplier.ordersCount ?? 0,
     totalSpent: supplier.totalSpent ?? 0,
     lastOrderAt: lastOrderAt ?? null,
@@ -297,12 +307,42 @@ function withConsentStamp(body, source = 'admin') {
   };
 }
 
+/**
+ * A new supplier, with portal access mailed out if we have an address.
+ *
+ * **The invitation is part of adding a supplier, not a second step somebody has
+ * to remember** (§6.8a). A supplier who was never sent their link cannot answer
+ * a request for quote, and nothing on the Suppliers screen would say why — so
+ * the credential is minted and emailed on create, and `portalInvited` in the
+ * response tells the screen whether it actually went.
+ *
+ * An inactive supplier gets no invite: an application from the storefront
+ * arrives inactive by design and must not be handed a login before anybody has
+ * reviewed it. Activating them and pressing **Resend portal link** is the path.
+ *
+ * The mail never fails the create — `invitePortal` resolves either way, and the
+ * supplier is already written by then. The same rule registration follows.
+ */
 async function createSupplier(body) {
   const supplier = await Supplier.create({
     ...withConsentStamp(body),
     code: body.code || undefined,
   });
-  return { supplier: shapeSupplier(supplier.toObject()) };
+
+  let portalInvited = false;
+  let portalError = null;
+  if (supplier.email && supplier.isActive) {
+    try {
+      const invite = await supplierPortalService.invitePortal(supplier._id);
+      portalInvited = invite.delivered;
+      portalError = invite.error;
+    } catch (error) {
+      portalError = error.message;
+    }
+  }
+
+  const saved = await Supplier.findById(supplier._id).lean();
+  return { supplier: shapeSupplier(saved), portalInvited, portalError };
 }
 
 async function updateSupplier(id, body) {
@@ -1208,22 +1248,39 @@ async function listInventory({ q, stock, brand, grade } = {}) {
     .lean();
 
   let rows = products.map(shapeInventoryRow);
-  if (stock && stock !== 'all') rows = rows.filter((row) => row.stockStatus === stock);
+  if (stock === 'attention') {
+    // The set the sidebar badge counts: anything not comfortably in stock, and
+    // still listed. Clicking that badge now lands on exactly its own number.
+    rows = rows.filter((row) => row.stockStatus !== 'in' && row.isActive !== false);
+  } else if (stock && stock !== 'all') {
+    rows = rows.filter((row) => row.stockStatus === stock);
+  }
 
   // The pills and the KPI row describe the whole catalogue, not the filtered
   // set: a pill reading "Low stock 0" because you are already filtered to
   // Out of stock tells the operator nothing (the invoice-pill rule, §6.5).
-  const all = await Product.find({}).select('stock minStock price cost').lean();
+  //
+  // `isActive` is carried so the stock pills can exclude hidden products. A
+  // product that is not listed cannot be sold, so it is not work — counting it
+  // as low stock put three phantom rows between this screen's total and the
+  // sidebar badge's, and a badge that reconciles with nothing is a badge the
+  // operator learns to ignore.
+  const all = await Product.find({}).select('stock minStock price cost isActive').lean();
+  const sellable = all.filter((product) => product.isActive !== false);
   const classify = (product) => {
     const threshold = product.minStock > 0 ? product.minStock : LOW_STOCK_FALLBACK;
     return product.stock <= 0 ? 'out' : product.stock <= threshold ? 'low' : 'in';
   };
 
+  // `all` counts the catalogue, because that is what the All pill selects.
+  // The condition pills count only what is sellable, for the reason above.
   const counts = { all: all.length, in: 0, low: 0, out: 0 };
+  for (const product of sellable) counts[classify(product)] += 1;
+  counts.attention = counts.low + counts.out;
+
   let totalStock = 0;
   let totalValue = 0;
   for (const product of all) {
-    counts[classify(product)] += 1;
     totalStock += product.stock;
     totalValue += product.stock * (product.cost > 0 ? product.cost : product.price);
   }

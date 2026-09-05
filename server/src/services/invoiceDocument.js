@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { BUSINESS_INFO } from '../../../shared/business.js';
+import { formatDate } from '../../../shared/dates.js';
 
 /**
  * The invoice document.
@@ -41,14 +42,8 @@ const CAD = new Intl.NumberFormat('en-CA', {
   currencyDisplay: 'narrowSymbol',
 });
 
-const LONG_DATE = new Intl.DateTimeFormat('en-CA', {
-  month: 'long',
-  day: 'numeric',
-  year: 'numeric',
-});
-
 const money = (cents) => CAD.format((cents ?? 0) / 100);
-const day = (value) => (value ? LONG_DATE.format(new Date(value)) : '—');
+const day = (value) => formatDate(value);
 
 const TERMS_COPY = {
   prepaid: 'Paid at checkout. No credit is extended on this account.',
@@ -158,6 +153,66 @@ function itemRows(order) {
           <td style="padding:13px 10px;border-bottom:1px solid ${LINE};font-size:${T.item};color:${INK};text-align:right;vertical-align:top;white-space:nowrap;font-weight:700;">${money(item.lineTotal)}</td>
         </tr>`,
     )
+    .join('');
+}
+
+/**
+ * The rows for an itemised (repair) invoice.
+ *
+ * Grouped by device, because that is how the customer reads it: "what did you
+ * do to my phone, and what did each thing cost". A flat list of eight lines
+ * across two devices makes them work out which belonged to which.
+ *
+ * The device header spans the table rather than sitting in the description
+ * column, so a device with one service still reads as a heading over a line
+ * rather than as two lines of similar text.
+ */
+function deviceRows(devices = []) {
+  let counter = 0;
+
+  return devices
+    .map((device) => {
+      const lines = [...(device.services ?? []), ...(device.parts ?? [])];
+      if (lines.length === 0) return '';
+
+      const title = [device.brand, device.series, device.model].filter(Boolean).join(' ');
+      const subtitle = [
+        device.serial ? `Serial ${device.serial}` : '',
+        device.problem ?? '',
+      ]
+        .filter(Boolean)
+        .join(' · ');
+
+      const header = `
+        <tr>
+          <td colspan="5" style="padding:14px 10px 6px;border-bottom:1px solid ${LINE};background:#fafafb;">
+            <div style="font-size:${T.item};font-weight:700;color:${INK};">${escapeHtml(title || 'Device')}</div>
+            ${subtitle ? `<div style="font-size:${T.micro};color:${MUTED};margin-top:2px;">${escapeHtml(subtitle)}</div>` : ''}
+          </td>
+        </tr>`;
+
+      const rows = lines
+        .map((line) => {
+          counter += 1;
+          const qty = line.qty ?? 1;
+          const lineTotal = (line.priceCents ?? 0) * qty;
+
+          return `
+        <tr>
+          <td style="padding:11px 10px;border-bottom:1px solid ${LINE};font-size:${T.body};color:${MUTED};vertical-align:top;">${counter}.</td>
+          <td style="padding:11px 10px;border-bottom:1px solid ${LINE};font-size:${T.item};color:${INK};vertical-align:top;">
+            <div style="font-weight:600;">${escapeHtml(line.name)}</div>
+            ${line.description ? `<div style="font-size:${T.micro};color:${MUTED};margin-top:3px;">${escapeHtml(line.description)}</div>` : ''}
+          </td>
+          <td style="padding:11px 10px;border-bottom:1px solid ${LINE};font-size:${T.item};color:${INK};text-align:right;vertical-align:top;white-space:nowrap;">${money(line.priceCents)}</td>
+          <td style="padding:11px 10px;border-bottom:1px solid ${LINE};font-size:${T.item};color:${INK};text-align:right;vertical-align:top;">${qty}</td>
+          <td style="padding:11px 10px;border-bottom:1px solid ${LINE};font-size:${T.item};color:${INK};text-align:right;vertical-align:top;white-space:nowrap;font-weight:700;">${money(lineTotal)}</td>
+        </tr>`;
+        })
+        .join('');
+
+      return header + rows;
+    })
     .join('');
 }
 
@@ -305,7 +360,8 @@ ${
         <tbody>
           ${
             itemRows(order) ||
-            `<tr><td colspan="5" style="padding:16px 10px;border-bottom:1px solid ${LINE};font-size:${T.item};color:${MUTED};">${escapeHtml(`Account charge — ${invoice.number}`)}</td></tr>`
+            deviceRows(invoice.devices) ||
+            `<tr><td colspan="5" style="padding:16px 10px;border-bottom:1px solid ${LINE};font-size:${T.item};color:${MUTED};">${escapeHtml(invoice.reference || `Account charge — ${invoice.number}`)}</td></tr>`
           }
         </tbody>
       </table>
@@ -360,10 +416,30 @@ ${
           </td>
           <td style="vertical-align:top;">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
-              ${totalsRow('Subtotal', money(order?.subtotal ?? invoice.amount))}
+${/*
+                An order supplies its own subtotal, shipping and tax. A
+                standalone invoice has none of those — so an itemised one
+                supplies its OWN, and a flat charge shows a subtotal equal to
+                the total and no tax line, which is exactly what it is.
+              */''}
+              ${totalsRow('Subtotal', money(order?.subtotal ?? invoice.subtotalCents ?? invoice.amount))}
               ${discountRows}
+              ${
+                !order && invoice.discountCents > 0
+                  ? totalsRow('Discount', `−${money(invoice.discountCents)}`)
+                  : ''
+              }
               ${order?.shipping !== undefined ? totalsRow('Shipping', money(order.shipping)) : ''}
-              ${order?.tax !== undefined ? totalsRow('GST/HST', money(order.tax)) : ''}
+              ${
+                order?.tax !== undefined
+                  ? totalsRow('GST/HST', money(order.tax))
+                  : invoice.taxCents > 0
+                    ? totalsRow(
+                        `GST/HST${invoice.taxPercent ? ` (${invoice.taxPercent}%)` : ''}`,
+                        money(invoice.taxCents),
+                      )
+                    : ''
+              }
               ${totalsRow('Grand total', money(invoice.amount), { strong: true })}
               ${invoice.amountPaid > 0 ? totalsRow('Paid', `−${money(invoice.amountPaid)}`) : ''}
               ${totalsRow('Balance due', money(Math.max(0, balance)), { strong: true, tone: balance > 0 ? BRAND : INK })}

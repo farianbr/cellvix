@@ -1,5 +1,6 @@
 import { BUSINESS_INFO } from '../../../shared/business.js';
 import { displayNameOf } from '../utils/displayName.js';
+import { formatDate } from '../../../shared/dates.js';
 
 /**
  * The account statement.
@@ -27,14 +28,8 @@ const CAD = new Intl.NumberFormat('en-CA', {
   currencyDisplay: 'narrowSymbol',
 });
 
-const LONG_DATE = new Intl.DateTimeFormat('en-CA', {
-  month: 'short',
-  day: 'numeric',
-  year: 'numeric',
-});
-
 const money = (cents) => CAD.format((cents ?? 0) / 100);
-const day = (value) => (value ? LONG_DATE.format(new Date(value)) : '—');
+const day = (value) => formatDate(value);
 
 const INK = '#111113';
 const MUTED = '#6b6b73';

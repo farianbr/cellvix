@@ -182,6 +182,45 @@ export function useAdminSupplier(id) {
   });
 }
 
+// ---- requests for quote (supplier process flow, §6.8a) ----------------------
+
+export function useAdminRfqs(params) {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'rfqs', params],
+    queryFn: () => api.get('/admin/rfqs', params),
+    enabled: canUseAdmin,
+    staleTime: 15 * 1000,
+  });
+}
+
+export function useAdminRfq(id) {
+  return useQuery({
+    queryKey: ['admin', 'rfqs', 'one', id],
+    queryFn: () => api.get(`/admin/rfqs/${id}`),
+    enabled: Boolean(id),
+  });
+}
+
+/**
+ * The supplier picker: who is tagged with these component types.
+ *
+ * Disabled until at least one type is chosen, because the endpoint answers with
+ * nothing rather than everything — an empty filter must not put a hundred
+ * suppliers in front of somebody who has not said what they are buying yet.
+ */
+export function useSuppliersForComponentTypes(componentTypes = []) {
+  const { canUseAdmin } = useAuth();
+  const types = componentTypes.filter(Boolean);
+
+  return useQuery({
+    queryKey: ['admin', 'rfqs', 'suppliers', types],
+    queryFn: () => api.get('/admin/rfqs/suppliers', { componentTypes: types }),
+    enabled: canUseAdmin && types.length > 0,
+    staleTime: 60 * 1000,
+  });
+}
+
 export function useAdminPurchaseOrders(params) {
   const { canUseAdmin } = useAuth();
   return useQuery({
@@ -1003,6 +1042,50 @@ export function useAdminMutations() {
     }),
     toggleSupplier: useMutation({
       mutationFn: (id) => api.delete(`/admin/suppliers/${id}`),
+      onSuccess: invalidate,
+    }),
+
+    /**
+     * Email this supplier their portal link and a fresh password.
+     *
+     * Resolves to `{ delivered, error }` rather than throwing on a mail
+     * failure — the credential is reset either way, and the screen has to be
+     * able to say "reset, but the email did not send" instead of claiming a
+     * success that never left the building.
+     */
+    inviteSupplierPortal: useMutation({
+      mutationFn: (id) => api.post(`/admin/suppliers/${id}/portal-invite`, {}),
+      onSuccess: invalidate,
+    }),
+
+    // ---- requests for quote (supplier process flow, §6.8a) ------------------
+
+    createRfq: useMutation({
+      mutationFn: (body) => api.post('/admin/rfqs', body),
+      onSuccess: invalidate,
+    }),
+    updateRfq: useMutation({
+      mutationFn: ({ id, ...body }) => api.patch(`/admin/rfqs/${id}`, body),
+      onSuccess: invalidate,
+    }),
+    // Resolves to `{ sent, failed }`: one bad address must not stop the rest
+    // going out, so the caller shows who was not reached rather than reporting
+    // a clean success.
+    sendRfq: useMutation({
+      mutationFn: ({ id, ...body }) => api.post(`/admin/rfqs/${id}/send`, body),
+      onSuccess: invalidate,
+    }),
+    inviteRfqSupplier: useMutation({
+      mutationFn: ({ id, supplier }) => api.post(`/admin/rfqs/${id}/invite`, { supplier }),
+      onSuccess: invalidate,
+    }),
+    // Raises a real purchase order, so the PO lists move too.
+    awardRfq: useMutation({
+      mutationFn: ({ id, ...body }) => api.post(`/admin/rfqs/${id}/award`, body),
+      onSuccess: invalidate,
+    }),
+    cancelRfq: useMutation({
+      mutationFn: ({ id, ...body }) => api.post(`/admin/rfqs/${id}/cancel`, body),
       onSuccess: invalidate,
     }),
 

@@ -2,6 +2,7 @@ import { Suspense, lazy } from 'react';
 import Toaster from '@/components/ui/Toaster';
 import { Navigate, Route, Routes } from 'react-router';
 import RootLayout from '@/components/layout/RootLayout';
+import RouteProgress from '@/components/layout/RouteProgress';
 import ShopPage from '@/pages/ShopPage';
 import RouteFallback from '@/components/layout/RouteFallback';
 
@@ -26,6 +27,10 @@ const OffersPage = lazy(() => import('@/pages/OffersPage'));
 // Public and outside RootLayout: somebody arriving here is leaving, and the
 // shop header would be reading the moment badly (phase 9, §6.13).
 const UnsubscribePage = lazy(() => import('@/pages/UnsubscribePage'));
+
+const SupplierPortalLayout = lazy(() => import('@/components/supplier/SupplierPortalLayout'));
+const SupplierDashboardPage = lazy(() => import('@/pages/supplier/SupplierDashboardPage'));
+const SupplierRfqPage = lazy(() => import('@/pages/supplier/SupplierRfqPage'));
 
 const AccountLayout = lazy(() => import('@/components/account/AccountLayout'));
 const AccountOverviewPage = lazy(() => import('@/pages/account/AccountOverviewPage'));
@@ -58,6 +63,9 @@ const AdminSupplierReturnsPage = lazy(() => import('@/pages/admin/AdminSupplierR
 const AdminSupplierServicesPage = lazy(() => import('@/pages/admin/AdminSupplierServicesPage'));
 const AdminSuppliersPage = lazy(() => import('@/pages/admin/AdminSuppliersPage'));
 const AdminSupplierProfilePage = lazy(() => import('@/pages/admin/AdminSupplierProfilePage'));
+const AdminRfqsPage = lazy(() => import('@/pages/admin/AdminRfqsPage'));
+const AdminRfqCreatePage = lazy(() => import('@/pages/admin/AdminRfqCreatePage'));
+const AdminRfqDetailPage = lazy(() => import('@/pages/admin/AdminRfqDetailPage'));
 const AdminPurchaseOrdersPage = lazy(() => import('@/pages/admin/AdminPurchaseOrdersPage'));
 const AdminPurchaseOrderDetailPage = lazy(
   () => import('@/pages/admin/AdminPurchaseOrderDetailPage'),
@@ -126,6 +134,11 @@ export function App() {
           the operator has navigated on. */}
       <Toaster />
 
+      {/* Same reasoning, and the same place: one bar for the whole app rather
+          than one per shell. It reports every in-flight request, so a route
+          change, a filter and a background refetch all say so the same way. */}
+      <RouteProgress />
+
     <Routes>
       {/* The ERP panel. Outside RootLayout by design (§4) — it owns the whole
           viewport. AdminShell is also the UI half of the guard; requireAdmin
@@ -153,6 +166,11 @@ export function App() {
         <Route path="supplier-returns" element={<AdminSupplierReturnsPage />} />
         <Route path="supplier-services" element={<AdminSupplierServicesPage mode="service" />} />
         <Route path="supplier-subscriptions" element={<AdminSupplierServicesPage mode="subscription" />} />
+        {/* Requests for quote (§6.8a) — the step before a purchase order.
+            `create` before `:id` for the reason the PO routes need it. */}
+        <Route path="rfqs" element={<AdminRfqsPage />} />
+        <Route path="rfqs/create" element={<AdminRfqCreatePage />} />
+        <Route path="rfqs/:id" element={<AdminRfqDetailPage />} />
         <Route path="purchase-orders" element={<AdminPurchaseOrdersPage />} />
         {/* Before `:id`, or the dynamic route matches "create" as an order id
             and the page renders "purchase order not found". */}
@@ -260,6 +278,24 @@ export function App() {
           </Suspense>
         }
       />
+
+      {/* The supplier portal (§6.8a). Outside RootLayout for the same reason
+          the admin panel is: a supplier is not a customer, and the shop header,
+          mega menu, cart and price gate all belong to a buyer's session. Its
+          own layout handles the signed-out case by rendering sign-in in place,
+          so an emailed request link survives the login. */}
+      <Route
+        path="supplier"
+        element={
+          <Suspense fallback={<RouteFallback />}>
+            <SupplierPortalLayout />
+          </Suspense>
+        }
+      >
+        <Route index element={<SupplierDashboardPage />} />
+        <Route path="rfq/:id" element={<SupplierRfqPage />} />
+        <Route path="*" element={<Navigate to="/supplier" replace />} />
+      </Route>
 
       <Route element={<RootLayout />}>
         <Route index element={<ShopPage />} />

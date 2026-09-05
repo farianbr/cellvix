@@ -54,6 +54,11 @@ const TYPE_AREA = {
   // Gated on `purchase`, not `clients`: a supplier application is the
   // purchasing team's work, and it is their screen it lands on.
   supplier_application: 'purchase',
+  // A supplier priced a request for quote. Same area and the same reasoning as
+  // an application: it arrives from outside, and the purchasing team is the
+  // only one who acts on it. Without a bell, an answer sits unread until
+  // somebody happens to reopen the request.
+  rfq_quoted: 'purchase',
   new_order: 'sales',
   quote_accepted: 'sales',
   new_rma: 'sales',

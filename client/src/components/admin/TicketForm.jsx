@@ -11,8 +11,6 @@ import {
   Wrench,
 } from 'lucide-react';
 import {
-  CONDITION_GRADES,
-  CONDITION_PARTS,
   TICKET_STATUSES,
   TICKET_STATUS_LABELS,
   TICKET_PRIORITIES,
@@ -27,6 +25,13 @@ import Textarea from '@/components/ui/Textarea';
 import Button from '@/components/ui/Button';
 import SelectField from '@/components/ui/SelectField';
 import { pressable } from '@/lib/motion';
+import {
+  emptyLine,
+  Section,
+  LineEditor,
+  DeviceBlock,
+  useTicketTotal,
+} from '@/components/admin/DeviceLines';
 
 /**
  * Taking a repair in at the counter.
@@ -61,7 +66,6 @@ const STATUS_OPTIONS = TICKET_STATUSES.map((value) => ({
 }));
 const PRIORITY_OPTIONS = TICKET_PRIORITIES.map((value) => ({ value, label: titleize(value) }));
 const SOURCE_OPTIONS = TICKET_SOURCES.map((value) => ({ value, label: titleize(value) }));
-const CONDITION_OPTIONS = [{ value: '', label: '— select —' }, ...CONDITION_GRADES];
 
 /** One blank device. Only the model is required, so the rest starts empty. */
 const emptyDevice = () => ({
@@ -79,204 +83,6 @@ const emptyDevice = () => ({
   parts: [],
 });
 
-const emptyLine = () => ({ name: '', description: '', priceDollars: '', qty: 1 });
-
-/** A titled slab. The form is long, and unbroken it reads as one wall of inputs. */
-function Section({ icon: Icon, title, hint, children, className }) {
-  return (
-    <section className={cn('rounded-lg border border-line bg-surface p-4', className)}>
-      <h3 className="mb-3 flex items-center gap-2 border-b border-line pb-2.5 font-display text-md font-bold text-ink-900">
-        <Icon className="size-4 shrink-0 text-brand" strokeWidth={2} aria-hidden="true" />
-        {title}
-        {hint && <span className="font-normal text-xs text-ink-400">{hint}</span>}
-      </h3>
-      {children}
-    </section>
-  );
-}
-
-/**
- * The priced lines on one device — services performed, or parts fitted.
- *
- * One component for both because they are the same thing on an invoice: a
- * description and a price. They are separate arrays only because a technician
- * thinks about them separately.
- */
-function LineEditor({ control, register, name, label, addLabel }) {
-  const { fields, append, remove } = useFieldArray({ control, name });
-
-  return (
-    <div className="mt-3">
-      <p className="eyebrow mb-2 text-ink-400">{label}</p>
-
-      {fields.length === 0 && (
-        <p className="mb-2 text-xs text-ink-400">Nothing added yet.</p>
-      )}
-
-      <div className="space-y-2">
-        {fields.map((field, index) => (
-          <div key={field.id} className="grid gap-2 sm:grid-cols-[1fr_1fr_90px_80px_auto]">
-            <Input
-              placeholder="Name"
-              aria-label={`${label} name`}
-              {...register(`${name}.${index}.name`)}
-            />
-            <Input
-              placeholder="Description (optional)"
-              aria-label={`${label} description`}
-              {...register(`${name}.${index}.description`)}
-            />
-            <Input
-              placeholder="0.00"
-              inputMode="decimal"
-              aria-label={`${label} price`}
-              {...register(`${name}.${index}.priceDollars`)}
-            />
-            <Input
-              placeholder="Qty"
-              inputMode="numeric"
-              aria-label={`${label} quantity`}
-              {...register(`${name}.${index}.qty`)}
-            />
-            <button
-              type="button"
-              onClick={() => remove(index)}
-              aria-label={`Remove this ${label.toLowerCase()} line`}
-              className={cn(pressable, 'flex size-9 shrink-0 items-center justify-center self-end rounded-md border border-line text-ink-400 hover:border-danger/40 hover:text-danger')}
-            >
-              <Trash2 className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
-            </button>
-          </div>
-        ))}
-      </div>
-
-      <Button
-        type="button"
-        size="xs"
-        variant="outline"
-        icon={Plus}
-        className="mt-2"
-        onClick={() => append(emptyLine())}
-      >
-        {addLabel}
-      </Button>
-    </div>
-  );
-}
-
-/** One device block: what it is, what is wrong, how it tested, what it costs. */
-function DeviceBlock({ control, register, index, canRemove, onRemove }) {
-  return (
-    <div className="rounded-md border border-line bg-surface-2/50 p-3.5">
-      <div className="mb-3 flex items-center justify-between gap-2">
-        <p className="flex items-center gap-1.5 font-display text-sm font-bold text-ink-900">
-          <Smartphone className="size-3.5 text-brand" strokeWidth={2.25} aria-hidden="true" />
-          Device #{index + 1}
-        </p>
-        {canRemove && (
-          <Button type="button" size="xs" variant="outline" icon={Trash2} onClick={onRemove}>
-            Remove
-          </Button>
-        )}
-      </div>
-
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-        <Input label="Category" placeholder="Smartphone" {...register(`devices.${index}.category`)} />
-        <Input label="Brand" placeholder="Apple" {...register(`devices.${index}.brand`)} />
-        <Input label="Device / Series" placeholder="iPhone 15" {...register(`devices.${index}.series`)} />
-        <Input label="Model" required placeholder="iPhone 15 Pro" {...register(`devices.${index}.model`)} />
-      </div>
-
-      <div className="mt-2 grid gap-2 sm:grid-cols-2">
-        <Input label="Serial number" placeholder="e.g. IMEI or S/N" {...register(`devices.${index}.serial`)} />
-        <Input
-          label="Passcode / PIN"
-          placeholder="For testing (optional)"
-          hint="Never printed on a customer document."
-          {...register(`devices.${index}.passcode`)}
-        />
-      </div>
-
-      <div className="mt-2 grid gap-2 lg:grid-cols-3">
-        <Textarea label="Problem" rows={2} placeholder="What's wrong with this device…" {...register(`devices.${index}.problem`)} />
-        <Textarea label="Solution" rows={2} placeholder="How it was / will be fixed…" {...register(`devices.${index}.solution`)} />
-        <Textarea label="Notes" rows={2} placeholder="Anything else about this device…" {...register(`devices.${index}.notes`)} />
-      </div>
-
-      {/* Graded at drop-off — see the note at the top of this file. */}
-      <div className="mt-3">
-        <p className="eyebrow mb-2 flex items-center gap-1.5 text-ink-400">
-          <ClipboardCheck className="size-3.5 text-brand" strokeWidth={2.25} aria-hidden="true" />
-          Device condition <span className="normal-case tracking-normal">(at drop-off)</span>
-        </p>
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          {CONDITION_PARTS.map((part) => (
-            <SelectField
-              key={part.key}
-              control={control}
-              name={`devices.${index}.condition.${part.key}`}
-              label={part.label}
-              options={CONDITION_OPTIONS}
-            />
-          ))}
-        </div>
-      </div>
-
-      <LineEditor
-        control={control}
-        register={register}
-        name={`devices.${index}.services`}
-        label="Services for this device"
-        addLabel="Add service"
-      />
-      <LineEditor
-        control={control}
-        register={register}
-        name={`devices.${index}.parts`}
-        label="Parts required for this device"
-        addLabel="Add part"
-      />
-    </div>
-  );
-}
-
-/**
- * The running total.
- *
- * Recomputed on every keystroke from the lines above, and **recomputed again by
- * the server** from the same lines when the form is submitted. This is a
- * preview so the counter can quote a figure while the customer is standing
- * there; it is never the number that gets stored.
- */
-function useTicketTotal(control) {
-  const devices = useWatch({ control, name: 'devices' }) ?? [];
-  const discount = Number(useWatch({ control, name: 'discountDollars' }) ?? 0) || 0;
-  const taxRate = Number(useWatch({ control, name: 'taxRate' }) ?? 0) || 0;
-
-  const gross = devices.reduce((sum, device) => {
-    const lines = [...(device?.services ?? []), ...(device?.parts ?? [])];
-    return (
-      sum +
-      lines.reduce(
-        (n, line) => n + (Number(line?.priceDollars) || 0) * (Number(line?.qty) || 1),
-        0,
-      )
-    );
-  }, 0);
-
-  // A discount can never exceed the work — the server clamps it the same way.
-  const applied = Math.min(discount, gross);
-  const subtotal = gross - applied;
-  const tax = subtotal * (taxRate / 100);
-
-  return {
-    gross: Math.round(gross * 100),
-    discount: Math.round(applied * 100),
-    subtotal: Math.round(subtotal * 100),
-    tax: Math.round(tax * 100),
-    total: Math.round((subtotal + tax) * 100),
-  };
-}
 
 export function TicketForm({ ticket, seed, technicians = [], onSubmit, onCancel, isPending, error }) {
   const editing = Boolean(ticket);
