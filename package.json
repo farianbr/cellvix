@@ -20,11 +20,13 @@
     "seed:expense-categories": "npm run seed:expense-categories --workspace server",
     "seed:tickets": "npm run seed:tickets --workspace server",
     "seed:rfqs": "npm run seed:rfqs --workspace server",
-    "backfill:competitors": "npm run backfill:competitors --workspace server",
-    "backfill:outlet": "npm run backfill:outlet --workspace server",
-    "backfill:invoice-kind": "npm run backfill:invoice-kind --workspace server",
+    "backfill:competitors": "npm run backfill:competitors --workspace server --",
+    "backfill:outlet": "npm run backfill:outlet --workspace server --",
+    "backfill:invoice-kind": "npm run backfill:invoice-kind --workspace server --",
+    "backfill:lineage": "npm run backfill:lineage --workspace server --",
     "shoot": "node scripts/shoot.mjs",
     "smoke": "node scripts/smoke.mjs",
+    "smoke:clean": "node scripts/smoke-teardown.mjs",
     "a11y": "node scripts/a11y.mjs"
   },
   "devDependencies": {

@@ -383,4 +383,373 @@ function buildExpenses({ categoriesBySlug, year = new Date().getFullYear(), star
   });
 }
 
-export { daysAgo, daysAhead, SUPPLIERS, costFor, buildPurchaseOrders, buildExpenses };
+/**
+ * Supplier returns — stock going back up the chain (§6.8b).
+ *
+ * The mirror of an RMA: a customer returns to us, we return to a supplier. The
+ * screen had no seeded rows at all, so it was only ever seen in its empty
+ * state and none of its statuses, credit handling or SLA ageing had anything
+ * to render.
+ *
+ * Every return is built **from a real purchase order line**, exactly as
+ * `supplierReturnService` requires — you cannot send back a part you never
+ * bought, and a seeded return naming a part that was never ordered would be
+ * teaching the opposite.
+ *
+ * `expectedCredit` is what we claimed; `creditAmount` is what the supplier
+ * actually issued, and the two differ on purpose — a supplier who part-credits
+ * a claim is the case worth being able to see.
+ */
+const SUPPLIER_RETURN_PLANS = [
+  {
+    status: 'draft',
+    reason: 'faulty',
+    itemReason: 'faulty',
+    lines: 1,
+    qty: 3,
+    daysAgo: 1,
+    note: 'Three panels dead on arrival out of the last carton.',
+  },
+  {
+    status: 'requested',
+    reason: 'wrong_item',
+    itemReason: 'wrong_item',
+    lines: 1,
+    qty: 5,
+    daysAgo: 4,
+    note: 'Pro Max panels shipped against a Pro line. RMA number requested.',
+  },
+  {
+    status: 'authorised',
+    reason: 'faulty',
+    itemReason: 'faulty',
+    lines: 2,
+    qty: 4,
+    daysAgo: 9,
+    supplierRma: 'NB-RMA-88214',
+    note: 'Touch layer delaminating within a fortnight of fitting.',
+  },
+  {
+    status: 'shipped',
+    reason: 'over_shipped',
+    itemReason: 'over_shipped',
+    lines: 1,
+    qty: 8,
+    daysAgo: 16,
+    supplierRma: 'KY-2026-0451',
+    carrier: 'Purolator',
+    tracking: 'CVX441907722',
+    note: 'Eight over the ordered quantity — returned at their cost.',
+  },
+  {
+    status: 'credited',
+    reason: 'damaged_in_transit',
+    itemReason: 'damaged_in_transit',
+    lines: 2,
+    qty: 6,
+    daysAgo: 31,
+    closedDaysAgo: 22,
+    supplierRma: 'PC-RMA-3390',
+    carrier: 'Canada Post',
+    tracking: 'CVX441822015',
+    // Credited in full.
+    creditRatio: 1,
+    note: 'Carton crushed in transit; photographed on arrival.',
+  },
+  {
+    status: 'credited',
+    reason: 'faulty',
+    itemReason: 'faulty',
+    lines: 1,
+    qty: 4,
+    daysAgo: 44,
+    closedDaysAgo: 35,
+    supplierRma: 'NB-RMA-87001',
+    // Part-credited: the supplier accepted three of the four.
+    creditRatio: 0.75,
+    note: 'Supplier accepted three of the four as genuine failures.',
+  },
+  {
+    status: 'rejected',
+    reason: 'not_as_described',
+    itemReason: 'not_as_described',
+    lines: 1,
+    qty: 2,
+    daysAgo: 58,
+    closedDaysAgo: 49,
+    supplierRma: 'AT-RMA-1120',
+    note: 'Supplier held the grading was as listed. Claim refused.',
+  },
+];
+
+/**
+ * `purchaseOrders` are the inserted POs, so their lines carry real product ids
+ * and the costs the parts were actually bought at.
+ */
+function buildSupplierReturns({ purchaseOrders = [], year = new Date().getFullYear() }) {
+  // Only a PO that actually went out can have stock coming back off it.
+  const usable = purchaseOrders.filter(
+    (po) => po.status !== 'draft' && (po.items ?? []).length > 0,
+  );
+  if (!usable.length) return [];
+
+  let sequence = 1;
+
+  return SUPPLIER_RETURN_PLANS.map((plan, index) => {
+    const po = usable[index % usable.length];
+    const sourceLines = (po.items ?? []).slice(0, plan.lines);
+    if (!sourceLines.length) return null;
+
+    const createdAt = daysAgo(plan.daysAgo);
+    const closedAt = plan.closedDaysAgo != null ? daysAgo(plan.closedDaysAgo) : null;
+
+    const items = sourceLines.map((line) => ({
+      product: line.product,
+      sku: line.sku,
+      name: line.name,
+      // Never more than were bought — the cap the service enforces.
+      qty: Math.min(plan.qty, line.qtyOrdered ?? plan.qty),
+      unitCost: line.unitCost,
+      reason: plan.itemReason,
+    }));
+
+    const expectedCredit = items.reduce((sum, item) => sum + item.qty * item.unitCost, 0);
+    const credited = plan.status === 'credited';
+
+    // The rungs this return actually climbed. `rejected` is an exit rather than
+    // a rung, so it follows the stages that did happen instead of replacing
+    // them — the same treatment the ticket and quote life cycles get.
+    const ladder =
+      plan.status === 'rejected'
+        ? ['draft', 'requested', 'rejected']
+        : ['draft', 'requested', 'authorised', 'shipped', 'credited'].slice(
+            0,
+            ['draft', 'requested', 'authorised', 'shipped', 'credited'].indexOf(plan.status) + 1,
+          );
+
+    const span = Math.max(1, plan.daysAgo - (plan.closedDaysAgo ?? 0));
+
+    return {
+      returnNumber: `SRT-${year}-${String(sequence++).padStart(5, '0')}`,
+
+      supplier: po.supplier,
+      supplierName: po.supplierName,
+      purchaseOrder: po._id,
+      purchaseOrderNumber: po.poNumber,
+
+      status: plan.status,
+      reason: plan.note,
+      items,
+
+      supplierRmaNumber: plan.supplierRma,
+      expectedCredit,
+      // Only a credited return has money back; everything else is a claim.
+      creditAmount: credited ? Math.round(expectedCredit * (plan.creditRatio ?? 1)) : 0,
+      creditReference: credited ? `CN-${plan.supplierRma ?? sequence}` : undefined,
+      creditedAt: credited ? closedAt : undefined,
+
+      carrier: plan.carrier,
+      trackingNumber: plan.tracking,
+
+      shippedAt: ['shipped', 'credited'].includes(plan.status)
+        ? closedAt ?? daysAgo(Math.max(0, plan.daysAgo - 3))
+        : undefined,
+
+      timeline: ladder.map((status, i) => ({
+        status,
+        at: daysAgo(plan.daysAgo - Math.round((span * i) / Math.max(1, ladder.length - 1))),
+        note: i === 0 ? plan.note : null,
+      })),
+
+      createdAt,
+      updatedAt: closedAt ?? createdAt,
+    };
+  }).filter(Boolean);
+}
+
+/**
+ * Supplier services and subscriptions (§6.8c).
+ *
+ * **Neither is the customer catalogue.** These are costs the business buys in —
+ * a licence, a courier account, an outsourced repair — and they land in the
+ * P&L as real expense rows. Nothing here has stock or reaches the storefront.
+ *
+ * One screen renders both, split by billing cycle: a recurring `billing`
+ * makes it a subscription with a renewal date, `one_off` makes it a service
+ * product bought as needed. Both shapes are seeded, and the renewal dates are
+ * spread either side of today on purpose — the board's "due soon" and
+ * "overdue" counts are derived from that date, and a set that all renew next
+ * year leaves both reading zero.
+ */
+const SUPPLIER_SERVICE_PLANS = [
+  {
+    name: 'Repair shop management licence',
+    code: 'SW-RSM-PRO',
+    categorySlug: 'software',
+    billing: 'monthly',
+    amount: 18_900,
+    startedDaysAgo: 400,
+    renewsInDays: 6,
+    supplierCode: 'NPD',
+    description: 'Per-seat licence for the workshop management suite. Five seats.',
+  },
+  {
+    name: 'Courier account — Purolator',
+    code: 'LOG-PURO',
+    categorySlug: 'shipping',
+    billing: 'monthly',
+    amount: 42_500,
+    startedDaysAgo: 300,
+    renewsInDays: 11,
+    description: 'Business account, billed on volume with a monthly minimum.',
+  },
+  {
+    name: 'Liability and stock insurance',
+    code: 'INS-GL-2026',
+    categorySlug: 'insurance',
+    billing: 'yearly',
+    amount: 1_450_000,
+    startedDaysAgo: 200,
+    renewsInDays: 165,
+    description: 'General liability plus stock cover at both locations.',
+  },
+  {
+    name: 'Accounting and payroll',
+    code: 'PRO-ACCT',
+    categorySlug: 'professional-fees',
+    billing: 'quarterly',
+    amount: 135_000,
+    startedDaysAgo: 270,
+    renewsInDays: 34,
+    description: 'Quarterly filing, payroll runs and year-end preparation.',
+  },
+  {
+    name: 'Parts diagnostic subscription',
+    code: 'SW-DIAG',
+    categorySlug: 'software',
+    billing: 'monthly',
+    amount: 7_900,
+    startedDaysAgo: 150,
+    // Already past its date — the overdue count needs a row.
+    renewsInDays: -4,
+    supplierCode: 'SKC',
+    description: 'Board-level schematics and boardview library.',
+  },
+  {
+    name: 'Waste electronics disposal',
+    code: 'SVC-WEEE',
+    categorySlug: 'supplies',
+    billing: 'quarterly',
+    amount: 24_000,
+    startedDaysAgo: 500,
+    renewsInDays: 52,
+    description: 'Certified disposal and the paperwork that proves it.',
+  },
+
+  // ---- one-offs: services bought as needed, never renewing -----------------
+  {
+    name: 'Outsourced micro-soldering',
+    code: 'SVC-MICRO',
+    categorySlug: 'professional-fees',
+    billing: 'one_off',
+    amount: 12_000,
+    startedDaysAgo: 21,
+    supplierCode: 'AOD',
+    description: 'Board work sent out when it is beyond the bench.',
+  },
+  {
+    name: 'Data recovery — sent out',
+    code: 'SVC-DATA',
+    categorySlug: 'professional-fees',
+    billing: 'one_off',
+    amount: 35_000,
+    startedDaysAgo: 9,
+    description: 'Chip-off recovery for water-damaged handsets.',
+  },
+  {
+    name: 'Shopfront window signage',
+    code: 'SVC-SIGN',
+    categorySlug: 'marketing',
+    billing: 'one_off',
+    amount: 89_000,
+    startedDaysAgo: 64,
+    description: 'Vinyl refit at the Toronto storefront.',
+  },
+  // Cancelled, so the screen's inactive filter has something to find.
+  {
+    name: 'Legacy till software',
+    code: 'SW-TILL-OLD',
+    categorySlug: 'software',
+    billing: 'monthly',
+    amount: 5_900,
+    startedDaysAgo: 700,
+    renewsInDays: 14,
+    cancelledDaysAgo: 40,
+    description: 'Replaced by the management suite. Kept for the audit trail.',
+  },
+];
+
+/**
+ * @param categoriesBySlug  the inserted expense categories, keyed by slug —
+ *                          `category` is required and is a real reference
+ * @param suppliersByCode   inserted suppliers, so a service bought from a known
+ *                          supplier names it rather than repeating a string
+ */
+function buildSupplierServices({ categoriesBySlug = new Map(), suppliersByCode = new Map() }) {
+  // `supplier` is required — a cost is owed to somebody, and a service with no
+  // payee is not a record anybody can act on. Plans that do not name one are
+  // given a supplier by rotation rather than being dropped.
+  const allSuppliers = [...suppliersByCode.values()];
+
+  return SUPPLIER_SERVICE_PLANS.map((plan, index) => {
+    const category = categoriesBySlug.get(plan.categorySlug);
+    // A service with no category cannot be saved — the field is required and
+    // it is what the P&L groups by. Skipped rather than forced onto whatever
+    // category happens to be first.
+    if (!category) return null;
+
+    const supplier =
+      (plan.supplierCode ? suppliersByCode.get(plan.supplierCode) : null) ??
+      allSuppliers[index % Math.max(1, allSuppliers.length)];
+    if (!supplier) return null;
+
+    const cancelled = plan.cancelledDaysAgo != null;
+
+    return {
+      name: plan.name,
+      code: plan.code,
+      description: plan.description,
+
+      supplier: supplier._id,
+      supplierName: supplier.name,
+
+      amount: plan.amount,
+      billing: plan.billing,
+      category: category._id,
+
+      startedAt: daysAgo(plan.startedDaysAgo),
+      // A one-off never renews, so it carries no renewal date at all — a date
+      // on it would put it on the renewals board, which is for commitments.
+      nextRenewalAt:
+        plan.billing === 'one_off' || plan.renewsInDays == null
+          ? undefined
+          : daysAhead(plan.renewsInDays),
+
+      cancelledAt: cancelled ? daysAgo(plan.cancelledDaysAgo) : undefined,
+      isActive: !cancelled,
+
+      createdAt: daysAgo(plan.startedDaysAgo),
+    };
+  }).filter(Boolean);
+}
+
+export {
+  daysAgo,
+  daysAhead,
+  SUPPLIERS,
+  costFor,
+  buildPurchaseOrders,
+  buildExpenses,
+  buildSupplierReturns,
+  buildSupplierServices,
+};

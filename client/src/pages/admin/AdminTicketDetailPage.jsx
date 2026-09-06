@@ -6,10 +6,10 @@ import {
   ArrowRight,
   Banknote,
   ClipboardList,
-  FileSignature,
   FileText,
   History,
   Mail,
+  PackageCheck,
   Phone,
   Receipt,
   Smartphone,
@@ -29,9 +29,11 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Skeleton from '@/components/ui/Skeleton';
 import PageHeader from '@/components/admin/PageHeader';
+import ProcessStrip from '@/components/admin/ProcessStrip';
+import WorkflowLineage from '@/components/admin/WorkflowLineage';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
 import { useAdminTicket, useAdminMutations } from '@/hooks/useAdmin';
-import { pressable, pressableSurface } from '@/lib/motion';
+import { pressable } from '@/lib/motion';
 
 /**
  * One repair, from drop-off to invoice.
@@ -79,19 +81,56 @@ const TERMS = [
 ];
 
 /**
- * The four stations a repair passes through, as a map rather than a control.
+ * The stages a repair moves through.
  *
- * Not `StepIndicator`: that marks a position the user is moving through in a
- * form. This is a reference — the real ladder has nine statuses, and collapsing
- * them to four here would lie about where the ticket is. It says what the
- * process IS; the Move Stage control above says where this one sits.
+ * Rendered by the shared `ProcessStrip`, **not a local component**. This page
+ * used to draw its own row of brand-tinted pills with an ASCII arrow between
+ * them — the same idea as the quote's and the invoice's life cycle, in a
+ * different shape, so the one pattern looked like three patterns and only this
+ * one lacked the tick-versus-clock distinction that tells a finished stage from
+ * a live one. Quote is the standard; this now follows it.
+ *
+ * **Four stations, not nine.** The real ladder in `TICKET_STATUSES` has nine
+ * rungs and most are shades of the same station — `ready_to_repair` and
+ * `waiting_for_parts` are both "in repair" as far as anyone outside the bench
+ * is concerned. `Move stage` above is where the exact rung lives; this is the
+ * shape of the process, which is what somebody scanning wants.
+ *
+ * `cancelled` is not a fifth station. It is an exit that can happen from any
+ * rung, so it stops the strip at whichever station the ticket had reached
+ * rather than laying itself out as a stage a ticket passes *through*.
  */
 const LIFECYCLE = [
   { key: 'diagnosis', label: 'Diagnosis', icon: Stethoscope },
   { key: 'processing', label: 'In repair', icon: Wrench },
-  { key: 'ready_to_pickup', label: 'Ready to pickup', icon: ClipboardList },
+  { key: 'ready_to_pickup', label: 'Ready to pickup', icon: PackageCheck },
   { key: 'invoiced', label: 'Invoiced', icon: Receipt },
 ];
+
+/**
+ * Which of the four stations a ticket's nine-rung status sits at.
+ *
+ * A cancelled ticket keeps the station it died at — `timeline` is the only
+ * record of how far it got, so the last status before the cancellation is
+ * where the strip stops. Without that a cancelled ticket showed as stopped at
+ * Diagnosis whether it was cancelled at the counter or on the bench.
+ */
+function stationOf(ticket, invoiced) {
+  if (invoiced) return 'invoiced';
+
+  const status =
+    ticket.status === 'cancelled'
+      ? ([...(ticket.timeline ?? [])]
+          .reverse()
+          .find((entry) => entry.status && entry.status !== 'cancelled')?.status ?? 'diagnosis')
+      : ticket.status;
+
+  if (['ready_to_pickup', 'completed'].includes(status)) return 'ready_to_pickup';
+  if (['processing', 'ready_to_repair', 'waiting_for_parts', 'retention_policy'].includes(status)) {
+    return 'processing';
+  }
+  return 'diagnosis';
+}
 
 export function AdminTicketDetailPage() {
   const { id } = useParams();
@@ -142,7 +181,11 @@ export function AdminTicketDetailPage() {
   const balance = Math.max(0, (ticket.finalCents || ticket.estimateCents || 0) - ticket.depositTotal);
 
   return (
-    <>
+    // The record measure, centred. `.record-page` carries the whole treatment
+    // (see the container tokens in index.css) — this page used to hard-code its
+    // own 1120px, which is exactly the per-page invented number that token
+    // exists to prevent.
+    <div className="record-page">
       <PageHeader
         icon={ClipboardList}
         title={ticket.ticketNumber}
@@ -183,29 +226,23 @@ export function AdminTicketDetailPage() {
         }
       />
 
-      {/* Where it came from, when it came from somewhere. A ticket raised off a
-          quote is the same job the customer already agreed a price for, and
-          losing that link makes the estimate look like it appeared by itself. */}
-      {ticket.quote && (
-        <Link
-          to={`/admin/quotes/${ticket.quote.id}`}
-          className={cn(
-            pressableSurface,
-            'group mb-4 flex items-center gap-3 rounded-lg border border-line bg-surface px-4 py-2.5 hover:border-line-strong',
-          )}
-        >
-          <FileSignature className="size-4 shrink-0 text-brand" strokeWidth={2} aria-hidden="true" />
-          <p className="min-w-0 flex-1 text-sm text-ink-600">
-            Created from quote{' '}
-            <span className="font-mono font-medium text-ink-900">{ticket.quote.quoteNumber}</span>
-          </p>
-          <ArrowRight
-            className="size-3.5 shrink-0 text-ink-300 transition-transform duration-fast ease-entrance group-hover:translate-x-0.5"
-            strokeWidth={2.25}
-            aria-hidden="true"
-          />
-        </Link>
-      )}
+      {/* Where this job came from and where it went — the whole chain, above
+          the record, because "am I looking at the right one?" is the first
+          question an operator arrives with. It replaces the single "created
+          from quote" banner this page used to carry, which only ever showed
+          the half of the chain behind the ticket. */}
+      <WorkflowLineage
+        current="ticket"
+        quote={ticket.quote}
+        ticket={ticket}
+        invoice={ticket.invoice}
+        // A ticket that has not been invoiced still has that step ahead of it,
+        // so the station is drawn in waiting. A ticket raised at the counter
+        // with no quote behind it is not shown a quote station at all — that
+        // step did not happen and never will.
+        pending={invoiced ? undefined : 'invoice'}
+        className="mb-4"
+      />
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-4">
@@ -264,7 +301,10 @@ export function AdminTicketDetailPage() {
         </div>
       </div>
 
-      <Lifecycle ticket={ticket} invoiced={invoiced} />
+      {/* At the foot, matching the quote, the invoice and the purchase order:
+          it summarises where the record ended up after everything above it, so
+          it reads as a conclusion rather than a heading. */}
+      <Lifecycle ticket={ticket} invoiced={invoiced} className="mt-4" />
 
       {!invoiced && (
         <button
@@ -335,7 +375,7 @@ export function AdminTicketDetailPage() {
         loading={setTicketStatus.isPending}
         error={setTicketStatus.error?.message}
       />
-    </>
+    </div>
   );
 }
 
@@ -659,65 +699,31 @@ function Detail({ label, value }) {
 }
 
 /**
- * The four stations a repair passes through.
+ * Where this ticket sits in the repair process.
  *
- * A map of the process, not a control and not a claim about this ticket's exact
- * rung — the real ladder has nine statuses. The station the ticket is nearest
- * is marked so the strip answers "roughly where are we" at a glance, which is
- * the question somebody scanning has.
+ * The quote's treatment, applied here: `ProcessStrip` at the foot of the page,
+ * `successOnLast` so reaching Invoiced reads as an outcome rather than an
+ * alert, and a cancelled ticket drawn in `danger` at the station it stopped at
+ * instead of being replaced by a banner. One component, one placement, one
+ * vocabulary across quote, ticket, invoice and purchase order.
  */
-function Lifecycle({ ticket, invoiced }) {
-  const reached = invoiced
-    ? 3
-    : ['ready_to_pickup', 'completed'].includes(ticket.status)
-      ? 2
-      : ['processing', 'ready_to_repair', 'waiting_for_parts'].includes(ticket.status)
-        ? 1
-        : 0;
+function Lifecycle({ ticket, invoiced, className }) {
+  const cancelled = ticket.status === 'cancelled';
 
   return (
-    <section className="mt-4 rounded-lg border border-line bg-surface p-5">
-      <h2 className="mb-4 text-center font-display text-md font-bold text-ink-900">
-        Life cycle of a ticket
-      </h2>
-
-      <ol className="flex flex-wrap items-center justify-center gap-x-2 gap-y-3">
-        {LIFECYCLE.map((station, index) => {
-          const done = index <= reached;
-
-          return (
-            <li key={station.key} className="flex items-center gap-2">
-              <div
-                className={cn(
-                  'flex items-center gap-2 rounded-md border px-3 py-2',
-                  done ? 'border-brand/30 bg-brand-50' : 'border-line bg-surface',
-                )}
-              >
-                <station.icon
-                  className={cn('size-4 shrink-0', done ? 'text-brand' : 'text-ink-300')}
-                  strokeWidth={2}
-                  aria-hidden="true"
-                />
-                <span
-                  className={cn(
-                    'text-sm font-semibold',
-                    done ? 'text-brand-700' : 'text-ink-400',
-                  )}
-                >
-                  {station.label}
-                </span>
-              </div>
-
-              {index < LIFECYCLE.length - 1 && (
-                <span className="text-ink-300" aria-hidden="true">
-                  →
-                </span>
-              )}
-            </li>
-          );
-        })}
-      </ol>
-    </section>
+    <ProcessStrip
+      title="Life cycle of a ticket"
+      successOnLast
+      steps={LIFECYCLE}
+      current={stationOf(ticket, invoiced)}
+      stoppedTone={cancelled ? 'danger' : undefined}
+      caption={
+        cancelled
+          ? 'Cancelled — the job stopped here. Any deposit taken stays recorded against it.'
+          : 'The stage follows the Move stage control above; invoicing settles it.'
+      }
+      className={className}
+    />
   );
 }
 

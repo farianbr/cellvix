@@ -100,7 +100,9 @@ export function AdminOrderDetailPage() {
   const sameAddress = sameAddressAs(order.shippingAddress, order.billingAddress);
 
   return (
-    <>
+    // Header inside the measure, so it is not wider than the record it
+    // titles. `.record-page` is the shared treatment — see index.css.
+    <div className="record-page">
       <PageHeader
         icon={ADMIN_PAGE.icon}
         title={order.orderNumber}
@@ -116,7 +118,7 @@ export function AdminOrderDetailPage() {
         }
       />
 
-      <div className="max-w-record space-y-4">
+      <div className="space-y-4">
         <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-4">
           <StatTile label="Total" value={money(order.total)} />
           {/* Title-cased, not the raw enum. Every other status in the app is
@@ -304,7 +306,7 @@ export function AdminOrderDetailPage() {
         </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

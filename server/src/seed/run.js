@@ -18,12 +18,28 @@ import StockMovement from '../models/StockMovement.js';
 import { buildTaxonomyDocs, buildProducts } from './generate.js';
 import { BLOG_POSTS, GENERAL_FAQS, PRODUCT_FAQS, buildOffers } from './content.data.js';
 import { EXPENSE_CATEGORIES } from './expense-categories.js';
-import { SUPPLIERS, buildPurchaseOrders, buildExpenses, costFor } from './purchase.data.js';
+import {
+  SUPPLIERS,
+  buildPurchaseOrders,
+  buildExpenses,
+  buildSupplierReturns,
+  buildSupplierServices,
+  costFor,
+} from './purchase.data.js';
 import { seedRfqs } from './rfqs.js';
 import Settings from '../models/Settings.js';
 import Quote from '../models/Quote.js';
 import Rma from '../models/Rma.js';
-import { buildQuotes, buildRmas } from './sales.data.js';
+import { buildQuotes, buildRmas, buildWebQuotes } from './sales.data.js';
+import Ticket from '../models/Ticket.js';
+import ContactMessage from '../models/ContactMessage.js';
+import Cart from '../models/Cart.js';
+import Notification from '../models/Notification.js';
+import { AuditLog } from '../models/AuditLog.js';
+import SupplierReturn from '../models/SupplierReturn.js';
+import SupplierService from '../models/SupplierService.js';
+import Appointment from '../models/Appointment.js';
+import { buildRepairs } from './repairs.data.js';
 import Role from '../models/Role.js';
 import Outlet from '../models/Outlet.js';
 import { ensureBuiltInRoles, ensureDefaultOutlet } from '../services/accessService.js';
@@ -168,12 +184,35 @@ const DEMO_USERS = [
   },
 ];
 
+/**
+ * The order book.
+ *
+ * `account` names whose order it is: `'primary'` is `buyer@cellvix.ca`, whose
+ * history the account screens and the demo login are written around, and
+ * anything else rotates through the other approved buyers. Every order used to
+ * belong to the primary buyer, which left the admin Orders list a single-column
+ * screen — no way to see the customer filter do anything, and every seeded
+ * return came from the same account.
+ *
+ * The early rungs of the status ladder are represented on purpose: a board
+ * where everything is `delivered` teaches nothing about the screen, and the
+ * fulfilment actions only appear on an order that still has somewhere to go.
+ */
 const ORDER_HISTORY = [
-  { daysAgo: 3, status: 'processing', itemCount: 4 },
-  { daysAgo: 11, status: 'out_for_delivery', itemCount: 2 },
-  { daysAgo: 24, status: 'delivered', itemCount: 6 },
-  { daysAgo: 47, status: 'delivered', itemCount: 3 },
-  { daysAgo: 68, status: 'delivered', itemCount: 5 },
+  { daysAgo: 1, status: 'placed', itemCount: 3, account: 'other' },
+  { daysAgo: 3, status: 'processing', itemCount: 4, account: 'primary' },
+  { daysAgo: 5, status: 'processing', itemCount: 2, account: 'other' },
+  { daysAgo: 8, status: 'shipped', itemCount: 5, account: 'other' },
+  { daysAgo: 11, status: 'out_for_delivery', itemCount: 2, account: 'primary' },
+  { daysAgo: 14, status: 'shipped', itemCount: 3, account: 'other' },
+  { daysAgo: 19, status: 'delivered', itemCount: 4, account: 'other' },
+  { daysAgo: 24, status: 'delivered', itemCount: 6, account: 'primary' },
+  { daysAgo: 33, status: 'delivered', itemCount: 2, account: 'other' },
+  { daysAgo: 41, status: 'cancelled', itemCount: 3, account: 'other' },
+  { daysAgo: 47, status: 'delivered', itemCount: 3, account: 'primary' },
+  { daysAgo: 55, status: 'delivered', itemCount: 5, account: 'other' },
+  { daysAgo: 68, status: 'delivered', itemCount: 5, account: 'primary' },
+  { daysAgo: 82, status: 'delivered', itemCount: 4, account: 'other' },
 ];
 
 const STATUS_SEQUENCE = ['placed', 'processing', 'shipped', 'out_for_delivery', 'delivered'];
@@ -223,6 +262,30 @@ async function seedDatabase({ quiet = false } = {}) {
     // Phase 8. Staff users reference both, so they are rebuilt with the users.
     Role.deleteMany({}),
     Outlet.deleteMany({}),
+
+    /**
+     * The collections this used to leave standing.
+     *
+     * Every one of them holds a reference to a user, a product or an order, so
+     * leaving them behind while those are rebuilt orphans the lot: a cart
+     * pointing at deleted products, a notification linking to an order that no
+     * longer exists, an audit entry describing a record nobody can open.
+     *
+     * It is also where the smoke suite's residue accumulated. `npm run smoke`
+     * creates accounts to exercise the approval flow and does not clean them
+     * up, so a database that had been smoke-tested a few times was carrying
+     * ten `smoke-…@example.test` users and their notifications — visible in
+     * the admin panel, and indistinguishable from demo data to anyone reading
+     * the screen.
+     */
+    Ticket.deleteMany({}),
+    ContactMessage.deleteMany({}),
+    Cart.deleteMany({}),
+    Notification.deleteMany({}),
+    AuditLog.deleteMany({}),
+    SupplierReturn.deleteMany({}),
+    SupplierService.deleteMany({}),
+    Appointment.deleteMany({}),
   ]);
 
   // ---- roles & outlet ------------------------------------------------------
@@ -342,13 +405,38 @@ async function seedDatabase({ quiet = false } = {}) {
   }
   log(`  users: ${users.length} (staff: ${staffIds.length})`);
 
-  // ---- orders + invoices for the primary demo buyer ------------------------
-  const buyer = users.find((u) => u.email === 'buyer@cellvix.ca');
+  // ---- orders + invoices ---------------------------------------------------
+  const primaryBuyer = users.find((u) => u.email === 'buyer@cellvix.ca');
+
+  /**
+   * The other approved buyers an order can belong to.
+   *
+   * An account needs an address before it can be shipped to — the order stores
+   * a delivery address copied off the account, and one without an address would
+   * produce an order nobody could dispatch. Falls back to the primary buyer if
+   * no other approved account has one, so the seed still works on a cut-down
+   * user list.
+   */
+  const otherBuyers = users.filter(
+    (user) =>
+      user.role === 'buyer' &&
+      user.status === 'approved' &&
+      user.email !== 'buyer@cellvix.ca' &&
+      user.addresses?.length,
+  );
+
   const inStock = insertedProducts.filter((p) => p.stock > 0);
   const orders = [];
   const invoices = [];
 
+  let otherCursor = 0;
+
   ORDER_HISTORY.forEach((spec, index) => {
+    const buyer =
+      spec.account === 'primary' || !otherBuyers.length
+        ? primaryBuyer
+        : otherBuyers[otherCursor++ % otherBuyers.length];
+
     const placedAt = new Date(Date.now() - spec.daysAgo * 86_400_000);
     const picks = Array.from({ length: spec.itemCount }, (_, i) => {
       // Deterministic spread through the catalogue, not random.
@@ -383,7 +471,20 @@ async function seedDatabase({ quiet = false } = {}) {
     const tax = Math.round((subtotal + shipping) * 0.13); // placeholder HST, see PROGRESS.md Q4
     const total = subtotal + shipping + tax;
 
-    const reached = STATUS_SEQUENCE.slice(0, STATUS_SEQUENCE.indexOf(spec.status) + 1);
+    /**
+     * The rungs this order actually climbed.
+     *
+     * `cancelled` is not on the ladder — it is an exit that can happen from
+     * anywhere — so an order that stopped there is given the rungs it reached
+     * before it did, plus the cancellation itself. Without this its
+     * `indexOf` is -1 and the order lands with an empty timeline, which the
+     * tracking stepper renders as an order that never happened.
+     */
+    const reached =
+      spec.status === 'cancelled'
+        ? ['placed', 'processing', 'cancelled']
+        : STATUS_SEQUENCE.slice(0, STATUS_SEQUENCE.indexOf(spec.status) + 1);
+
     const timeline = reached.map((status, i) => ({
       status,
       at: new Date(placedAt.getTime() + i * 26 * 3_600_000),
@@ -396,7 +497,9 @@ async function seedDatabase({ quiet = false } = {}) {
               ? 'Handed to the carrier.'
               : status === 'out_for_delivery'
                 ? 'On the delivery vehicle.'
-                : 'Signed for at the delivery address.',
+                : status === 'cancelled'
+                  ? 'Cancelled at the customer’s request before dispatch.'
+                  : 'Signed for at the delivery address.',
     }));
 
     const carrier = CARRIERS[index % CARRIERS.length];
@@ -450,6 +553,12 @@ async function seedDatabase({ quiet = false } = {}) {
   log(`  orders: ${insertedOrders.length}`);
 
   insertedOrders.forEach((order, index) => {
+    // A cancelled order is never billed. It used to be impossible to reach
+    // here — every seeded order was delivered or on its way — and raising an
+    // invoice for goods that were never sent would put money on the books
+    // that nobody owes.
+    if (order.status === 'cancelled') return;
+
     const issuedAt = order.createdAt;
     const dueDate = new Date(issuedAt.getTime() + 30 * 86_400_000);
     const paid = order.status === 'delivered';
@@ -462,7 +571,11 @@ async function seedDatabase({ quiet = false } = {}) {
     invoices.push({
       number: `INV-2026-${String(10_042 + index).padStart(5, '0')}`,
       order: order._id,
-      user: buyer._id,
+      // The order's own buyer, not the loop variable left over from building
+      // the orders above — that pointed at whoever happened to be assigned
+      // last, so every invoice would have been billed to one account once the
+      // order book stopped belonging to a single buyer.
+      user: order.user,
       amount: order.total,
       amountPaid: paid ? order.total : 0,
       issuedAt,
@@ -533,7 +646,7 @@ async function seedDatabase({ quiet = false } = {}) {
   const creditDocs = creditRows.map((row) => {
     creditRunning += row.amount;
     return {
-      user: buyer._id,
+      user: primaryBuyer._id,
       amount: row.amount,
       balanceAfter: creditRunning,
       type: row.type,
@@ -546,7 +659,7 @@ async function seedDatabase({ quiet = false } = {}) {
   });
 
   await CreditTransaction.insertMany(creditDocs);
-  await User.updateOne({ _id: buyer._id }, { $set: { storeCredit: creditRunning } });
+  await User.updateOne({ _id: primaryBuyer._id }, { $set: { storeCredit: creditRunning } });
   log(`  store credit: ${creditDocs.length} movements, balance ${creditRunning}c`);
 
   // ---- editorial content ---------------------------------------------------
@@ -693,6 +806,25 @@ async function seedDatabase({ quiet = false } = {}) {
   );
   log(`  expenses: ${insertedPoExpenses.length + manualExpenses.length}`);
 
+  /**
+   * Supplier returns and supplier services (§6.8b, §6.8c).
+   *
+   * Both screens had no seeded rows at all, so each was only ever seen in its
+   * empty state. The returns are built from real purchase-order lines — you
+   * cannot send back a part you never bought, which is the rule
+   * `supplierReturnService` enforces — and the services reference real expense
+   * categories, since that is what the P&L groups them by.
+   */
+  const supplierReturns = await SupplierReturn.insertMany(
+    buildSupplierReturns({ purchaseOrders: insertedPos, year }),
+  );
+  log(`  supplier returns: ${supplierReturns.length}`);
+
+  const supplierServices = await SupplierService.insertMany(
+    buildSupplierServices({ categoriesBySlug, suppliersByCode }),
+  );
+  log(`  supplier services: ${supplierServices.length}`);
+
   // Supplier card figures, recomputed from the orders exactly as
   // `purchaseService.refreshSupplierTotals` does — never incremented.
   await Promise.all(
@@ -772,6 +904,99 @@ async function seedDatabase({ quiet = false } = {}) {
   );
   log(`  quotes: ${quotes.length}`);
 
+  /**
+   * Repairs, as whole chains rather than as loose records.
+   *
+   * A repair is up to three linked records, and the lineage strip on all three
+   * screens reads the links. Seeding tickets on their own left every one an
+   * orphan: nothing in the demo database exercised quote → ticket → invoice,
+   * so the one thing those screens are built around could only be seen by
+   * clicking a conversion through by hand.
+   *
+   * Built first and inserted in dependency order, because each row has to
+   * carry the *ids* of its neighbours and only the database can issue those.
+   * The builder returns them matched by number; the linking below is what
+   * turns that into references.
+   */
+  const repairs = buildRepairs({
+    products: insertedProducts,
+    users: approvedBuyers,
+    staff: users.filter((user) => ['staff', 'admin'].includes(user.role)),
+    taxRate: Math.round(Settings.rateFor(settings, 'ON') * 100),
+    // Continue the `QT-` series the goods quotes above just used.
+    quoteSeq: quotes.length + 1,
+  });
+
+  // Tickets first: a quote points at the ticket it became, and an invoice
+  // points back at the ticket it bills, so the ticket is the one both ends
+  // need an id for.
+  const insertedRepairTickets = await Ticket.insertMany(
+    repairs.tickets.map(({ quoteNumber, invoiceNumber, ...ticket }) => ticket),
+  );
+  const ticketIdByNumber = new Map(
+    insertedRepairTickets.map((ticket) => [ticket.ticketNumber, ticket._id]),
+  );
+
+  // Repair quotes, each already converted, carrying the id of its ticket.
+  const repairQuotes = await Quote.insertMany(
+    repairs.quotes.map(({ convertedTicketNumber, ...quote }) => ({
+      ...quote,
+      source: 'admin',
+      convertedTicket: ticketIdByNumber.get(convertedTicketNumber) ?? null,
+    })),
+  );
+
+  // Repair invoices, each carrying the id of the ticket it bills.
+  const repairInvoices = await Invoice.insertMany(
+    repairs.invoices.map(({ ticketNumber, ...invoice }) => ({
+      ...invoice,
+      ticket: ticketIdByNumber.get(ticketNumber) ?? null,
+    })),
+  );
+
+  // The back-references, now that every id exists: `Ticket.quote` and
+  // `Ticket.invoice` are the halves the lineage strip reads, and writing them
+  // here is the same pair of edges `convertQuoteToTicket` and
+  // `convertToInvoice` write at runtime.
+  const quoteIdByTicket = new Map(
+    repairQuotes.map((quote) => [String(quote.convertedTicket), quote._id]),
+  );
+  const invoiceIdByTicket = new Map(
+    repairInvoices.map((invoice) => [String(invoice.ticket), invoice._id]),
+  );
+
+  const links = insertedRepairTickets
+    .map((ticket) => {
+      const set = {};
+      const quoteId = quoteIdByTicket.get(String(ticket._id));
+      const invoiceId = invoiceIdByTicket.get(String(ticket._id));
+      if (quoteId) set.quote = quoteId;
+      if (invoiceId) set.invoice = invoiceId;
+
+      return Object.keys(set).length
+        ? { updateOne: { filter: { _id: ticket._id }, update: { $set: set } } }
+        : null;
+    })
+    .filter(Boolean);
+
+  if (links.length) await Ticket.bulkWrite(links);
+
+  log(
+    `  repairs: ${insertedRepairTickets.length} tickets` +
+      ` (${repairQuotes.length} from a quote, ${repairInvoices.length} invoiced)`,
+  );
+
+  /**
+   * Web quotes — storefront enquiries, before anybody has priced them.
+   *
+   * The Web Quote screen is the queue an operator raises a real quote *from*,
+   * and it had no seeded rows at all: the only thing that ever landed in
+   * `contactmessages` was whatever someone had typed into the contact form by
+   * hand while testing.
+   */
+  const webQuotes = await ContactMessage.insertMany(buildWebQuotes({ users }));
+  log(`  web quotes: ${webQuotes.length}`);
+
   const rmas = await Rma.insertMany(buildRmas({ orders: insertedOrders }));
   log(`  returns: ${rmas.length}`);
 
@@ -790,8 +1015,13 @@ async function seedDatabase({ quiet = false } = {}) {
     expenseCategories: categories.length,
     expenses: insertedPoExpenses.length + manualExpenses.length,
     stockMovements: movementDocs.length,
+    supplierReturns: supplierReturns.length,
+    supplierServices: supplierServices.length,
     requestsForQuote: rfqResult.requests,
-    quotes: quotes.length,
+    quotes: quotes.length + repairQuotes.length,
+    tickets: insertedRepairTickets.length,
+    repairInvoices: repairInvoices.length,
+    webQuotes: webQuotes.length,
     returns: rmas.length,
   };
 }

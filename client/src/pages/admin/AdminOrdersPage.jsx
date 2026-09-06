@@ -756,6 +756,11 @@ export function AdminOrdersPage() {
           columns={columns}
           rows={pageOrders}
           rowKey={(order) => order.orderNumber}
+          // Addressed by number, not id — the route reads `:orderNumber`.
+          // Every other list in the panel opens its record this way and Orders
+          // was the one that did not, so the busiest screen in Sales was the
+          // only one where clicking a row did nothing.
+          onRowClick={(order) => navigate(`/admin/orders/${order.orderNumber}`)}
           selectable
           selected={selected}
           onSelectionChange={setSelected}

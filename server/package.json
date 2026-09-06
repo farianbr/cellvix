@@ -15,7 +15,8 @@
     "seed:rfqs": "node src/seed/rfqs.js",
     "backfill:competitors": "node src/seed/backfill-competitors.js",
     "backfill:outlet": "node src/seed/backfill-outlet.js",
-    "backfill:invoice-kind": "node src/seed/backfill-invoice-kind.js"
+    "backfill:invoice-kind": "node src/seed/backfill-invoice-kind.js",
+    "backfill:lineage": "node src/seed/backfill-lineage.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

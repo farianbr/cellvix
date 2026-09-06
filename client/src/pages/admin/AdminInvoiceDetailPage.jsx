@@ -4,7 +4,10 @@ import { useForm } from 'react-hook-form';
 import {
   AlertCircle,
   ArrowLeft,
+  BadgeCheck,
   Check,
+  CircleDollarSign,
+  FileText,
   History,
   Mail,
   MoreHorizontal,
@@ -26,6 +29,7 @@ import Input from '@/components/ui/Input';
 import SelectField from '@/components/ui/SelectField';
 import ActionMenu from '@/components/ui/ActionMenu';
 import ProcessStrip from '@/components/admin/ProcessStrip';
+import WorkflowLineage from '@/components/admin/WorkflowLineage';
 import { useTableClasses, CountLine } from '@/components/admin/DataTable';
 import { toast } from '@/store/toastStore';
 import PageHeader from '@/components/admin/PageHeader';
@@ -78,9 +82,9 @@ const PAYMENT_METHODS = [
  * it sits at `unpaid` on the track and the header badge carries the lateness.
  */
 const INVOICE_LIFECYCLE = [
-  { key: 'unpaid', label: 'Unpaid' },
-  { key: 'partial', label: 'Partially paid' },
-  { key: 'paid', label: 'Paid' },
+  { key: 'unpaid', label: 'Unpaid', icon: FileText },
+  { key: 'partial', label: 'Partially paid', icon: CircleDollarSign },
+  { key: 'paid', label: 'Paid', icon: BadgeCheck },
 ];
 
 export function AdminInvoiceDetailPage() {
@@ -143,7 +147,10 @@ export function AdminInvoiceDetailPage() {
   const documentUrl = apiUrl(`/admin/invoices/${invoice.number}/document`);
 
   return (
-    <>
+    // Header inside the measure, so it is not wider than the record it
+    // titles. Modals stay in here harmlessly: Overlay portals to the body, so
+    // a dialog is never constrained by this wrapper.
+    <div className="record-page">
       <PageHeader
         icon={ADMIN_PAGE.icon}
         title={invoice.number}
@@ -235,7 +242,21 @@ export function AdminInvoiceDetailPage() {
       />
 
 
-      <div className="max-w-record space-y-4">
+      <div className="space-y-4">
+        {/* The chain this invoice ends, when it ends one. An invoice raised
+            from a repair is the last of three records for one job, and until
+            now it said so only through a `reference` string reading "Repair
+            TK-…" — a sentence, not something an operator could follow. An
+            invoice behind an *order* has no such chain and draws nothing. */}
+        {invoice.ticket && (
+          <WorkflowLineage
+            current="invoice"
+            quote={invoice.ticket.quote}
+            ticket={invoice.ticket}
+            invoice={invoice}
+          />
+        )}
+
         {/**
          * Payment information, leading the page.
          *
@@ -688,7 +709,7 @@ export function AdminInvoiceDetailPage() {
         confirmLabel="Delete invoice"
         loading={deleteInvoice.isPending}
       />
-    </>
+    </div>
   );
 }
 

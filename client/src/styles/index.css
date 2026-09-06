@@ -183,15 +183,26 @@
      the line, and a text input stretched to 1400px is a worse target than a
      short one, not a better one.
 
-     `record` is an order, an invoice, a client: a set of RELATED blocks that
+     `record` is an order, an invoice, a ticket: a set of RELATED blocks that
      want to sit beside each other. Capping those at 900px on a 1440px screen
      left a third of the width empty while the blocks stacked and pushed the
      last of them below the fold.
 
+     1120 rather than the 1280 this started at. At 1280 inside a 1600px shell a
+     record's main column still reached about 1200px, which stretched a
+     three-field form across a third of a metre and left table rows with a name
+     at one edge and a price at the other, nothing between them for the eye to
+     travel along. A record is a READING screen; a list is the thing that earns
+     every pixel.
+
+     Centred, not left against the nav: at these widths the empty band would
+     otherwise all pile up on one side of a wide monitor, which reads as a
+     layout that failed to fill rather than one that chose its measure.
+
      A list, a board or a dashboard takes neither and runs to the shell's own
      max-width. */
   --container-form: 760px;
-  --container-record: 1280px;
+  --container-record: 1120px;
 
   /* --- shape ------------------------------------------------------------ */
   --radius-sm: 6px;
@@ -357,6 +368,23 @@
    ========================================================================== */
 
 @layer utilities {
+  /* One record, at its measure, centred in the shell.
+
+     `max-w-record` alone leaves the page hard against the nav, so every screen
+     that wanted the measure had to remember `mx-auto w-full` beside it — and
+     the ones that forgot were the ones that looked wrong. This is the whole
+     treatment as one class, so a record screen takes a single thing and cannot
+     take half of it.
+
+     Use it on the OUTERMOST element of a record detail page, above the page
+     header, so the header is measured with the body rather than running wider
+     than the content it titles. */
+  .record-page {
+    margin-inline: auto;
+    width: 100%;
+    max-width: var(--container-record);
+  }
+
   /* The brand gradient. ACCENT ONLY — CTAs, active indicators, progress fills,
      thin rules, at most one promo block per page. Never a page or card ground. */
   /* Black on the left, brightening to red on the right — the direction the

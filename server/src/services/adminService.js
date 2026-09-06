@@ -1486,6 +1486,27 @@ function shapeAdminInvoice(invoice) {
     id: invoice._id.toString(),
     number: invoice.number,
     orderNumber: invoice.order?.orderNumber ?? null,
+
+    /**
+     * The repair this invoice bills, and the quote behind that repair.
+     *
+     * Only ever set on an invoice raised from a ticket — an invoice behind an
+     * order says what it is for through `orderNumber` instead, and neither
+     * chain is ever both.
+     */
+    ticket: invoice.ticket
+      ? {
+          id: (invoice.ticket._id ?? invoice.ticket).toString(),
+          ticketNumber: invoice.ticket.ticketNumber ?? null,
+          quote: invoice.ticket.quote
+            ? {
+                id: (invoice.ticket.quote._id ?? invoice.ticket.quote).toString(),
+                quoteNumber: invoice.ticket.quote.quoteNumber ?? null,
+              }
+            : null,
+        }
+      : null,
+
     businessName: invoice.user?.businessName ?? null,
     displayName: displayNameOf(invoice.user),
     contactName: invoice.user?.contactName ?? null,
@@ -1802,6 +1823,14 @@ async function getInvoice(number) {
   const invoice = await Invoice.findOne({ number })
     .populate('order', 'orderNumber items total status')
     .populate('user', 'businessName contactName email phone')
+    // The chain behind a repair invoice — its ticket, and the quote that ticket
+    // came from. Two hops in one read, because the lineage strip sits above the
+    // fold and a second round trip would draw it late.
+    .populate({
+      path: 'ticket',
+      select: 'ticketNumber quote',
+      populate: { path: 'quote', select: 'quoteNumber' },
+    })
     .lean();
 
   if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');

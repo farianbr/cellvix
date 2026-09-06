@@ -221,6 +221,17 @@ const ticketSchema = new mongoose.Schema(
       },
     ],
 
+    /**
+     * The quote this ticket was raised from, where it came from one.
+     *
+     * `Quote.convertedTicket` already points forwards; this is the same edge
+     * read backwards. A ticket that only knew its invoice could show half a
+     * chain — where it went, never where it came from — and the lineage strip
+     * has to draw quote → ticket → invoice from whichever of the three the
+     * operator happens to have open.
+     */
+    quote: { type: mongoose.Schema.Types.ObjectId, ref: 'Quote', default: null, index: true },
+
     /** The invoice this ticket became, once it has become one. */
     invoice: { type: mongoose.Schema.Types.ObjectId, ref: 'Invoice', default: null },
 

@@ -1,4 +1,13 @@
-import { Check, Circle, Clock } from 'lucide-react';
+import {
+  Banknote,
+  Building2,
+  Boxes,
+  CircleDashed,
+  FileText,
+  PackageCheck,
+  Send,
+  Truck,
+} from 'lucide-react';
 import cn from '@/lib/cn';
 
 /**
@@ -26,19 +35,33 @@ import cn from '@/lib/cn';
  * is this?" answerable without reading a word — the thing an operator actually
  * does with this component.
  *
- * A stage that is already behind us keeps its colour but drops to a tick, so
- * completed and current are distinguishable by shape as well as by tone. That
- * matters for anyone who cannot separate the two hues.
+ * ## Every stage wears its own icon, and only the current one is ringed
+ *
+ * This used to swap the glyph by *state*: a tick for anything behind us, a
+ * clock for the live one, a dot for anything ahead. That is a timeline's
+ * vocabulary — it described a stage's progress and said nothing about what the
+ * stage IS, so all seven stations of a purchase cycle looked identical apart
+ * from their labels, and the row could only be read by reading it.
+ *
+ * Each stage now carries a glyph for its own meaning — money, a truck, a
+ * stethoscope — which is constant wherever that stage appears and is what
+ * makes the row scannable as a shape rather than as a sentence. Position is
+ * carried by **the ring alone**: the current stage is the one circled and the
+ * one solid card on the row, and that single difference is easier to find than
+ * three shapes competing.
+ *
+ * Steps that name no `icon` fall back to a neutral dashed circle, so a caller
+ * that has not chosen glyphs still renders — badly, but not broken.
  */
 
 export const PURCHASE_CYCLE = [
-  { key: 'supplier', label: 'Supplier Info' },
-  { key: 'po', label: 'Purchase Order' },
-  { key: 'sent', label: 'Send to Supplier' },
-  { key: 'payment', label: 'Payment' },
-  { key: 'shipment', label: 'Shipment' },
-  { key: 'received', label: 'Received' },
-  { key: 'inventory', label: 'Inventory' },
+  { key: 'supplier', label: 'Supplier Info', icon: Building2 },
+  { key: 'po', label: 'Purchase Order', icon: FileText },
+  { key: 'sent', label: 'Send to Supplier', icon: Send },
+  { key: 'payment', label: 'Payment', icon: Banknote },
+  { key: 'shipment', label: 'Shipment', icon: Truck },
+  { key: 'received', label: 'Received', icon: PackageCheck },
+  { key: 'inventory', label: 'Inventory', icon: Boxes },
 ];
 
 /**
@@ -50,6 +73,18 @@ const STOPPED = {
   danger: { ring: 'border-danger text-danger', card: 'border-danger', label: 'text-danger' },
   warn: { ring: 'border-warn text-warn', card: 'border-warn', label: 'text-warn' },
 };
+
+/**
+ * A stage's own glyph.
+ *
+ * `CircleDashed` where a caller has not named one — a step set that predates
+ * icons still renders as a legible row rather than a gap, and the dashed
+ * outline reads as "unnamed stage" rather than as a state of its own.
+ */
+function StepIcon({ step }) {
+  const Icon = step.icon ?? CircleDashed;
+  return <Icon className="size-3.5" strokeWidth={2.25} aria-hidden="true" />;
+}
 
 export function ProcessStrip({
   steps = PURCHASE_CYCLE,
@@ -114,26 +149,27 @@ export function ProcessStrip({
                   !active && 'border-line',
                 )}
               >
+                {/* The stage's own glyph, always. Only the RING moves: it is
+                    drawn on the current stage and nowhere else, so position is
+                    carried by one difference rather than by three shapes. */}
                 <span
                   className={cn(
-                    'flex size-6 shrink-0 items-center justify-center rounded-full border-2',
-                    done && 'border-ok text-ok',
-                    active &&
-                      (stopped
-                        ? stopped.ring
-                        : finished
-                          ? 'border-ok text-ok'
-                          : 'border-brand text-brand'),
-                    !done && !active && 'border-line-strong text-ink-300',
+                    'flex size-6 shrink-0 items-center justify-center rounded-full',
+                    active
+                      ? cn(
+                          'border-2',
+                          stopped
+                            ? stopped.ring
+                            : finished
+                              ? 'border-ok text-ok'
+                              : 'border-brand text-brand',
+                        )
+                      : done
+                        ? 'text-ink-500'
+                        : 'text-ink-300',
                   )}
                 >
-                  {done || finished ? (
-                    <Check className="size-3" strokeWidth={3.5} aria-hidden="true" />
-                  ) : active ? (
-                    <Clock className="size-3" strokeWidth={2.5} aria-hidden="true" />
-                  ) : (
-                    <Circle className="size-2 fill-current" strokeWidth={0} aria-hidden="true" />
-                  )}
+                  <StepIcon step={step} />
                 </span>
 
                 <span

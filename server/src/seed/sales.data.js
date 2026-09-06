@@ -43,10 +43,22 @@ const QUOTE_PLANS = [
  * `quoteService.recomputeTotals` does, so a seeded quote cannot disagree with
  * one the running code would produce.
  */
-function buildQuotes({ products, users, rate = 0.13, year = new Date().getFullYear() }) {
+/**
+ * `startSequence` lets a second batch of quotes continue this one's numbering.
+ * Repair quotes are built separately (`repairs.data.js`) and land in the same
+ * `QT-` series, and `quoteNumber` is uniquely indexed — two builders both
+ * starting at 1 would collide on insert.
+ */
+function buildQuotes({
+  products,
+  users,
+  rate = 0.13,
+  year = new Date().getFullYear(),
+  startSequence = 1,
+}) {
   if (!products.length || !users.length) return [];
 
-  let sequence = 1;
+  let sequence = startSequence;
   let cursor = 0;
 
   return QUOTE_PLANS.map((plan, index) => {
@@ -209,4 +221,125 @@ function buildRmas({ orders, year = new Date().getFullYear() }) {
   });
 }
 
-export { daysAgo, daysAhead, buildQuotes, buildRmas };
+/**
+ * Web quotes — the storefront's contact form, before anybody has priced it.
+ *
+ * These are enquiries, not quotes: the Web Quote screen is the queue an
+ * operator works *from* to raise a real one, which is why it sits under Quotes
+ * in the nav. Spread across all three statuses and all five topics so the
+ * screen's filters have something to separate, and deliberately mixed between
+ * signed-in accounts and strangers — an enquiry from someone with no account is
+ * the common case and the one the screen must not assume away.
+ */
+const WEB_QUOTE_PLANS = [
+  {
+    name: 'Nadia Fontaine',
+    business: 'Fontaine Mobile',
+    email: 'nadia@fontainemobile.example',
+    phone: '+1 5145550171',
+    topic: 'stock',
+    daysAgo: 0,
+    status: 'new',
+    message:
+      'Do you carry OEM iPhone 14 Pro panels in volume? We fit roughly forty a month across two shops and would want a standing order.',
+  },
+  {
+    name: 'Terrence Bell',
+    business: 'Bell Device Repair',
+    email: 'terrence@belldevice.example',
+    phone: '+1 9055550188',
+    topic: 'account',
+    daysAgo: 1,
+    status: 'new',
+    message:
+      'Applied for a wholesale account last week and have not heard back. Happy to send incorporation papers again if they did not arrive.',
+  },
+  {
+    name: 'Grace Okonjo',
+    email: 'grace.okonjo@example.ca',
+    phone: '+1 6135550124',
+    topic: 'warranty',
+    daysAgo: 2,
+    status: 'new',
+    message:
+      'A battery we fitted in March has started swelling. It is within your ninety days — what do you need from us to process it?',
+  },
+  {
+    name: 'Samuel Ortega',
+    business: 'Northline Cellular',
+    email: 'sam@northlinecellular.example',
+    phone: '+1 7805550196',
+    topic: 'stock',
+    daysAgo: 4,
+    status: 'read',
+    message:
+      'Looking for Pixel 8 Pro charging port flexes, fifty units. What is the lead time if they are not on the shelf?',
+  },
+  {
+    name: 'Imani Clarke',
+    email: 'imani.clarke@example.ca',
+    topic: 'order',
+    daysAgo: 6,
+    status: 'read',
+    message:
+      'My last order arrived one screen short. The packing slip lists six, the box had five.',
+  },
+  {
+    name: 'Victor Aubry',
+    business: 'Aubry Telecom',
+    email: 'victor@aubrytelecom.example',
+    phone: '+1 4185550109',
+    topic: 'other',
+    daysAgo: 11,
+    status: 'read',
+    message:
+      'Do you offer board-level repair as a subcontract? We get micro-soldering work we cannot take on ourselves.',
+  },
+  {
+    name: 'Rachel Mbeki',
+    business: 'Coastline Phone Clinic',
+    email: 'rachel@coastlineclinic.example',
+    phone: '+1 2505550115',
+    topic: 'stock',
+    daysAgo: 19,
+    status: 'closed',
+    message:
+      'Quoted on a hundred Samsung A54 assemblies — thank you, we have gone ahead with the order.',
+  },
+  {
+    name: 'Devon Wray',
+    email: 'devon.wray@example.ca',
+    topic: 'warranty',
+    daysAgo: 27,
+    status: 'closed',
+    message: 'Charging port replaced in January has failed again. Resolved at the counter.',
+  },
+];
+
+/**
+ * `users` are the seeded accounts. An enquiry whose email matches one is linked
+ * to it, so the screen can show the account context the model keeps a `user`
+ * field for; the rest stay unattached, which is what a stranger's enquiry is.
+ */
+function buildWebQuotes({ users = [] } = {}) {
+  const byEmail = new Map(users.map((user) => [user.email, user._id]));
+
+  return WEB_QUOTE_PLANS.map((plan) => {
+    const at = daysAgo(plan.daysAgo);
+
+    return {
+      name: plan.name,
+      business: plan.business,
+      email: plan.email,
+      phone: plan.phone,
+      topic: plan.topic,
+      message: plan.message,
+      user: byEmail.get(plan.email) ?? null,
+      status: plan.status,
+      createdAt: at,
+      updatedAt: at,
+    };
+  });
+}
+
+export { daysAgo, daysAhead, buildQuotes, buildRmas, buildWebQuotes };

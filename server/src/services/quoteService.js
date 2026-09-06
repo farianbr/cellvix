@@ -134,6 +134,30 @@ function shapeQuote(quote) {
           orderNumber: quote.convertedOrder.orderNumber ?? null,
         }
       : null,
+
+    /**
+     * The repair ticket this quote became, and the invoice that ticket became.
+     *
+     * A quote converts one of two ways — into an order for goods, or into a
+     * ticket for work — and only the goods half was ever serialized. The
+     * lineage strip is the reason the ticket's own invoice comes across too:
+     * the quote is the head of the chain, so it is the record furthest from
+     * the invoice and the one that most needs told where the chain ended.
+     */
+    convertedTicket: quote.convertedTicket
+      ? {
+          id: (quote.convertedTicket._id ?? quote.convertedTicket).toString(),
+          ticketNumber: quote.convertedTicket.ticketNumber ?? null,
+          invoice: quote.convertedTicket.invoice
+            ? {
+                id: (
+                  quote.convertedTicket.invoice._id ?? quote.convertedTicket.invoice
+                ).toString(),
+                number: quote.convertedTicket.invoice.number ?? null,
+              }
+            : null,
+        }
+      : null,
     timeline: (quote.timeline ?? []).map((entry) => ({
       status: entry.status,
       at: entry.at,
@@ -250,6 +274,14 @@ async function getQuote(id) {
   const quote = await Quote.findOne(query)
     .populate('user', 'businessName contactName email phone addresses terms')
     .populate('convertedOrder', 'orderNumber')
+    // Two hops, because the chain is three long: this quote's ticket, and that
+    // ticket's invoice. One read rather than the screen making a second call
+    // for a strip that is above the fold.
+    .populate({
+      path: 'convertedTicket',
+      select: 'ticketNumber invoice',
+      populate: { path: 'invoice', select: 'number' },
+    })
     .lean();
 
   if (!quote) throw ApiError.notFound('Quote not found.', 'QUOTE_NOT_FOUND');
@@ -667,6 +699,10 @@ async function convertQuoteToTicket(id, { priority = 'normal', source = 'counter
 
   const ticket = await Ticket.create({
     ticketNumber: await nextTicketNumber(),
+    // Both ends of the edge, set together. `quote.convertedTicket` below is
+    // the same link forwards; a ticket that could not name its own quote left
+    // the lineage strip guessing at the half of the chain behind it.
+    quote: quote._id,
     user: quote.user?._id ?? null,
     customerName: displayNameOf(quote.user),
     customerPhone: quote.user?.phone ?? '',

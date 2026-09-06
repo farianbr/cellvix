@@ -6,6 +6,12 @@ import Ticket, {
 } from '../models/Ticket.js';
 import User from '../models/User.js';
 import Invoice from '../models/Invoice.js';
+// Side-effect import, no binding: `getTicket` populates `quote`, and mongoose
+// resolves a `ref` by model name at call time. Without this the populate throws
+// "Schema hasn't been registered for model Quote" in any process that has not
+// already loaded a module importing it — every entry point except the full
+// server, which is why a script or a test hit it and the app did not.
+import '../models/Quote.js';
 import orderBuilder from './orderBuilder.js';
 import creditService from './creditService.js';
 import Settings from '../models/Settings.js';
@@ -182,6 +188,20 @@ function shapeTicket(ticket, slaDays) {
     })),
     depositTotal: (ticket.deposits ?? []).reduce((sum, deposit) => sum + (deposit.amount ?? 0), 0),
 
+    /**
+     * Either end of the chain this ticket sits in the middle of.
+     *
+     * Both are populated on the detail read and left as bare ids in the list,
+     * so the shape is the same either way and the caller checks `number` /
+     * `quoteNumber` rather than the presence of the key.
+     */
+    quote: ticket.quote
+      ? {
+          id: (ticket.quote._id ?? ticket.quote).toString(),
+          quoteNumber: ticket.quote.quoteNumber ?? null,
+        }
+      : null,
+
     /** The invoice this became, if it has been converted. */
     invoice: ticket.invoice
       ? {
@@ -350,6 +370,10 @@ async function getTicket(id) {
   const query = isObjectId(id) ? { _id: id } : { ticketNumber: String(id) };
   const ticket = await Ticket.findOne(query)
     .populate('technician', 'contactName businessName email')
+    // The lineage strip names its neighbours, so it needs their numbers rather
+    // than their ids — an operator navigates by QT-101018, not by an ObjectId.
+    .populate('quote', 'quoteNumber')
+    .populate('invoice', 'number')
     .lean();
 
   if (!ticket) throw ApiError.notFound('Ticket not found.', 'TICKET_NOT_FOUND');
@@ -714,6 +738,10 @@ async function convertToInvoice(id, { terms = 'prepaid' } = {}, actor) {
   const invoice = await Invoice.create({
     number: await orderBuilder.nextInvoiceNumber('CVX'),
     kind: 'due',
+    // The other half of `ticket.invoice`, set below. `reference` says "Repair
+    // TK-…" for a human; this is the same fact as a link the invoice screen
+    // can follow back up the chain.
+    ticket: ticket._id,
     user: ticket.user._id,
     outlet: ticket.outlet ?? null,
     amount: totals.total,

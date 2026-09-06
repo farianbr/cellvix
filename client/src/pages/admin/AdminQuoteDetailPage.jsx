@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   Clock,
   FileSignature,
+  PencilLine,
   Send,
   TrendingDown,
   Wallet,
@@ -23,6 +24,7 @@ import PageHeader from '@/components/admin/PageHeader';
 import { useTableClasses, CountLine } from '@/components/admin/DataTable';
 import KpiRow from '@/components/admin/KpiRow';
 import ProcessStrip from '@/components/admin/ProcessStrip';
+import WorkflowLineage from '@/components/admin/WorkflowLineage';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
 import { useAdminQuote, useAdminMutations } from '@/hooks/useAdmin';
 import Skeleton from '@/components/ui/Skeleton';
@@ -164,10 +166,10 @@ function DriftTable({ drift, compact = false }) {
  * Instructions forbid forking `StepIndicator`, and this does not touch it.
  */
 const QUOTE_LIFECYCLE = [
-  { key: 'draft', label: 'Draft' },
-  { key: 'sent', label: 'Sent' },
-  { key: 'accepted', label: 'Accepted' },
-  { key: 'converted', label: 'Converted' },
+  { key: 'draft', label: 'Draft', icon: PencilLine },
+  { key: 'sent', label: 'Sent', icon: Send },
+  { key: 'accepted', label: 'Accepted', icon: CheckCircle2 },
+  { key: 'converted', label: 'Converted', icon: ArrowRight },
 ];
 
 function QuoteLifecycle({ quote, className }) {
@@ -331,7 +333,10 @@ export function AdminQuoteDetailPage() {
   }
 
   return (
-    <>
+    // The record measure, centred — one record is a reading screen, and a
+    // list is what earns the shell's full width. The `.record-page` class carries
+    // the whole treatment; see the container tokens in index.css.
+    <div className="record-page">
       <PageHeader
         icon={FileSignature}
         title={quote.quoteNumber}
@@ -385,6 +390,23 @@ export function AdminQuoteDetailPage() {
           </>
         }
       />
+
+      {/* Only a quote that became a repair has this chain. A quote converted
+          into an *order* for goods never touches a ticket, and drawing three
+          empty stations on it would invent a workflow it is not in — the
+          "Converted" panel in the sidebar is where that route is reported. */}
+      {quote.convertedTicket && (
+        <WorkflowLineage
+          current="quote"
+          quote={quote}
+          ticket={quote.convertedTicket}
+          invoice={quote.convertedTicket.invoice}
+          // The repair is under way but not yet billed — that step is still to
+          // come, so it is drawn in waiting rather than left off.
+          pending={quote.convertedTicket.invoice ? undefined : 'invoice'}
+          className="mb-3"
+        />
+      )}
 
       {(setQuoteStatus.error || (convertQuote.error && convertQuote.error.code !== 'QUOTE_PRICE_DRIFT')) && (
         <p className="mb-3 flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
@@ -655,7 +677,7 @@ export function AdminQuoteDetailPage() {
           </div>
         </div>
       </Modal>
-    </>
+    </div>
   );
 }
 

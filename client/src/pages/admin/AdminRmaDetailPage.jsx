@@ -298,7 +298,10 @@ export function AdminRmaDetailPage() {
   const canResolve = rma.status === 'inspecting';
 
   return (
-    <>
+    // The record measure, centred — one record is a reading screen, and a
+    // list is what earns the shell's full width. The `.record-page` class carries
+    // the whole treatment; see the container tokens in index.css.
+    <div className="record-page">
       <PageHeader
         icon={RotateCcw}
         title={rma.rmaNumber}
@@ -637,7 +640,7 @@ export function AdminRmaDetailPage() {
         loading={setRmaStatus.isPending}
         error={setRmaStatus.error?.message}
       />
-    </>
+    </div>
   );
 }
 

@@ -47,6 +47,7 @@ import {
   UserPlus,
   Users,
   UsersRound,
+  Wrench,
 } from 'lucide-react';
 
 /**
@@ -103,6 +104,7 @@ export const ADMIN_ICONS = {
   UserPlus,
   Users,
   UsersRound,
+  Wrench,
 };
 
 /** Named icon or nothing — a missing key must not crash a nav row. */

@@ -55,6 +55,18 @@ const invoiceSchema = new mongoose.Schema(
      * Every invoice an order raises still sets it.
      */
     order: { type: mongoose.Schema.Types.ObjectId, ref: 'Order' },
+
+    /**
+     * The repair ticket this invoice bills, where it came from one.
+     *
+     * `Ticket.invoice` points forwards and was the only edge, so an invoice
+     * knew it was for a repair from its `reference` string and nothing more —
+     * a sentence a human reads, not a link a screen can follow. This is the
+     * same relationship stored as a reference, which is what lets the invoice
+     * draw the quote → ticket → invoice chain it sits at the end of.
+     */
+    ticket: { type: mongoose.Schema.Types.ObjectId, ref: 'Ticket', default: null, index: true },
+
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
 
     /**
