@@ -18,6 +18,7 @@ import Textarea from '@/components/ui/Textarea';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Skeleton from '@/components/ui/Skeleton';
+import ActionMenu from '@/components/ui/ActionMenu';
 import { useTableClasses } from '@/components/admin/DataTable';
 import { toast } from '@/store/toastStore';
 import { apiUrl } from '@/lib/api';
@@ -176,7 +177,7 @@ export function PurchaseBidsPanel({ order }) {
           />
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-200 text-left">
+            <table className="w-full min-w-160 text-left">
               <thead>
                 <tr className={t.headRow}>
                   <th scope="col" className={t.headCell()}>
@@ -194,7 +195,7 @@ export function PurchaseBidsPanel({ order }) {
                   <th scope="col" className={cn(t.headCell(), 'w-28')}>
                     Proforma
                   </th>
-                  <th scope="col" className={cn(t.headCell('right'), 'w-56')}>
+                  <th scope="col" className={cn(t.headCell('right'), 'w-12')}>
                     <span className="sr-only">Actions</span>
                   </th>
                 </tr>
@@ -302,42 +303,47 @@ export function PurchaseBidsPanel({ order }) {
                         )}
                       </td>
 
+                      {/* A row menu, not a row of buttons.
+
+                          Two full-width buttons per row pushed this table past
+                          its column and the actions — the primary thing an
+                          operator comes here to do — were what scrolled out of
+                          sight. `ActionMenu` is portalled, so unlike the buttons
+                          it cannot be clipped by the scroll wrapper. */}
                       <td className={cn(t.cell('right'), 'whitespace-nowrap')}>
-                        {open && answered && (
-                          <>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              icon={MessageSquare}
-                              onClick={() => setNegotiating(bid)}
-                            >
-                              Negotiate
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              icon={Check}
-                              onClick={() => setConfirming(bid)}
-                            >
-                              Confirm
-                            </Button>
-                          </>
-                        )}
-                        {open && !answered && bid.status !== 'declined' && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            icon={Trash2}
-                            loading={removePoSupplier.isPending}
-                            onClick={() =>
-                              removePoSupplier.mutate(
-                                { id: order.id, supplierId: bid.supplier.id },
-                                { onError: (err) => setError(err.message) },
-                              )
-                            }
-                          >
-                            Remove
-                          </Button>
+                        {open && (
+                          <ActionMenu
+                            align="right"
+                            label={`Actions for ${bid.supplier.name}`}
+                            items={[
+                              {
+                                key: 'negotiate',
+                                label: 'Negotiate…',
+                                icon: MessageSquare,
+                                hidden: !answered,
+                                onSelect: () => setNegotiating(bid),
+                              },
+                              {
+                                key: 'confirm',
+                                label: 'Confirm this supplier',
+                                icon: Check,
+                                hidden: !answered,
+                                onSelect: () => setConfirming(bid),
+                              },
+                              {
+                                key: 'remove',
+                                label: 'Remove from order',
+                                icon: Trash2,
+                                danger: true,
+                                hidden: answered || bid.status === 'declined',
+                                onSelect: () =>
+                                  removePoSupplier.mutate(
+                                    { id: order.id, supplierId: bid.supplier.id },
+                                    { onError: (err) => setError(err.message) },
+                                  ),
+                              },
+                            ]}
+                          />
                         )}
                       </td>
                     </tr>

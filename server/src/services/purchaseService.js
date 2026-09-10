@@ -429,7 +429,11 @@ function shapePurchaseOrder(po) {
       : { id: po.supplier?.toString() ?? null, name: '—', email: null },
     componentTypes: po.componentTypes ?? [],
     bidCount: (po.bids ?? []).length,
-    quoteCount: (po.bids ?? []).filter((bid) => bid.status === 'quoted').length,
+    // How many suppliers actually priced it. Counted on `quotedAt` rather than
+    // on status, because confirming moves the winner to `confirmed` and the
+    // rest to `lost` — a decided order counted by status reported that nobody
+    // had answered. See the fuller note in `purchaseBidService.getBidBoard`.
+    quoteCount: (po.bids ?? []).filter((bid) => bid.quotedAt).length,
     confirmedBid: po.confirmedBid?.toString() ?? null,
     confirmedAt: po.confirmedAt ?? null,
     closesAt: po.closesAt ?? null,

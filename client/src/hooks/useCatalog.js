@@ -14,6 +14,29 @@ export function useTaxonomy() {
 }
 
 /**
+ * The component types, from the same request the tree comes on.
+ *
+ * **A second hook rather than a wider `useTaxonomy`.** `GET /api/taxonomy`
+ * answers `{ tree, componentTypes }`, but `useTaxonomy` selects `data.tree` and
+ * six callers rely on its result *being* the tree array — widening the select
+ * would break all of them to fix one. Two hooks over one query key means one
+ * request still serves both, and each caller gets the shape it expects.
+ *
+ * This existing gap is why the component-type picker rendered its empty state:
+ * it read `.componentTypes` off the bare tree array and always found nothing,
+ * so the purchase-order form offered no types and the supplier picker below it
+ * had nothing to filter on.
+ */
+export function useComponentTypes() {
+  return useQuery({
+    queryKey: ['taxonomy'],
+    queryFn: () => api.get('/taxonomy'),
+    staleTime: 10 * 60 * 1000,
+    select: (data) => data.componentTypes ?? [],
+  });
+}
+
+/**
  * The taxonomy as the wizard needs it: the component types for step 1, and a
  * tree pruned to the chosen component for steps 2-5.
  *

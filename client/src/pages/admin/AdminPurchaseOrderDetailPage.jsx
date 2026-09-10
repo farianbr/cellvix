@@ -5,10 +5,13 @@ import {
   AlertCircle,
   Ban,
   Boxes,
+  Check,
   CheckCircle2,
-  ChevronRight,
   ClipboardList,
+  FileText,
+  History,
   Link2,
+  MessageSquare,
   PackageCheck,
   Printer,
   Send,
@@ -27,7 +30,6 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import PageHeader from '@/components/admin/PageHeader';
 import { useTableClasses, CountLine } from '@/components/admin/DataTable';
-import KpiRow from '@/components/admin/KpiRow';
 import ProcessStrip from '@/components/admin/ProcessStrip';
 import PurchaseBidsPanel from '@/components/admin/PurchaseBidsPanel';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
@@ -70,46 +72,46 @@ const METHODS = [
 ];
 
 /**
- * The workflow pills at the top of the Workflow panel.
+ * This order's own life cycle, drawn by the shared `ProcessStrip`.
  *
- * Deliberately **not** `PURCHASE_CYCLE`, which the `ProcessStrip` at the foot
- * of the page already draws. That strip describes the whole seven-station
- * pipeline a purchase moves through, supplier to inventory, and is the same on
- * every Purchase screen. This is the states *this order* can be in, and it is
- * what the buttons underneath act on. Same subject, different question:
- * "how does purchasing work here" against "where is this one".
+ * **Six stations, rendered by the same component every other record uses.** It
+ * was a hand-rolled row of pills inside a panel titled "Workflow", which is the
+ * thing invariant 10 exists to prevent: one idea looking like two patterns, and
+ * only the local copy missing the tick-versus-clock distinction between a
+ * finished stage and a live one.
  *
- * `Quoted` and `Confirmed` joined the list with the bidding rework: an order is
- * now put to several suppliers before it is placed with one, and a strip
- * jumping straight from Sent to Paid would skip the half of the process where
- * the buying decision actually happens.
+ * Deliberately **not** `PURCHASE_CYCLE`, which the strip at the foot draws.
+ * That describes the whole seven-station pipeline a purchase moves through,
+ * supplier to inventory, and is the same on every Purchase screen. This is the
+ * states *this order* can be in. Same subject, different question: "how does
+ * purchasing work here" against "where is this one".
  */
-const WORKFLOW_STAGES = [
-  { key: 'draft', label: 'Draft' },
-  { key: 'sent', label: 'Sent' },
-  { key: 'quoted', label: 'Quoted' },
-  { key: 'confirmed', label: 'Confirmed' },
-  { key: 'paid', label: 'Paid' },
-  { key: 'received', label: 'Received' },
+const PO_LIFECYCLE = [
+  { key: 'draft', label: 'Draft', icon: FileText },
+  { key: 'sent', label: 'Out for pricing', icon: Send },
+  { key: 'quoted', label: 'Quoted', icon: MessageSquare },
+  { key: 'confirmed', label: 'Confirmed', icon: Check },
+  { key: 'paid', label: 'Paid', icon: Wallet },
+  { key: 'received', label: 'Received', icon: PackageCheck },
 ];
 
 /**
- * Which pill is live.
+ * Which station is live.
  *
  * Payment and delivery are not sequential in practice — an order can be paid
  * before it ships or after it lands — so this reports the furthest point
  * reached rather than walking the list. A received order shows `Received` even
  * if nobody ever recorded the payment, because that is true.
  */
-function workflowStageIndex(order) {
-  if (['received', 'partial'].includes(order.status)) return 5;
-  if (order.payment.status === 'paid') return 4;
-  if (order.status === 'confirmed') return 3;
-  if (order.status === 'negotiating') return 2;
+function lifecycleStage(order) {
+  if (['received', 'partial'].includes(order.status)) return 'received';
+  if (order.payment.status === 'paid') return 'paid';
+  if (order.status === 'confirmed') return 'confirmed';
+  if (order.status === 'negotiating') return 'quoted';
   // Sent, and somebody has answered. The stage is about the answers, not about
   // how long the order has been out.
-  if (order.status === 'sent') return order.quoteCount > 0 ? 2 : 1;
-  return 0;
+  if (order.status === 'sent') return order.quoteCount > 0 ? 'quoted' : 'sent';
+  return 'draft';
 }
 
 /** Where this one order actually sits in the purchase automation cycle. */
@@ -352,7 +354,7 @@ export function AdminPurchaseOrderDetailPage() {
     return (
       <>
         <PageHeader icon={ClipboardList} title="Purchase order" />
-        <div className="space-y-3">
+        <div className="space-y-4">
           <Skeleton className="h-24" rounded="lg" />
           <Skeleton className="h-64" rounded="lg" />
         </div>
@@ -365,7 +367,6 @@ export function AdminPurchaseOrderDetailPage() {
   const canReceive = !['draft', 'received', 'cancelled'].includes(order.status);
   const canPay =
     !['draft', 'cancelled'].includes(order.status) && order.payment.status !== 'paid';
-  const workflowIndex = workflowStageIndex(order);
 
   return (
     // The record measure, centred — one record is a reading screen, and a
@@ -375,7 +376,14 @@ export function AdminPurchaseOrderDetailPage() {
       <PageHeader
         icon={ClipboardList}
         title={order.poNumber}
-        description={`${order.supplier.name} · ordered ${date(order.orderDate)}`}
+        description={
+          // Who it is with, and when. Before a supplier is confirmed there is
+          // nobody it is with — saying "—" there would read as missing data
+          // rather than as the honest answer, which is that we are still asking.
+          order.supplier.id
+            ? `${order.supplier.name} · ordered ${date(order.orderDate)}`
+            : `${order.bidCount ? `${formatCount(order.bidCount)} supplier(s) asked` : 'No supplier asked yet'} · raised ${date(order.orderDate)}`
+        }
         badge={
           <>
             <Badge tone={STATUS_TONES[order.status]} size="sm">
@@ -410,98 +418,35 @@ export function AdminPurchaseOrderDetailPage() {
         </p>
       )}
 
-      <KpiRow
-        tiles={[
-          {
-            key: 'total',
-            label: 'Order total',
-            value: money(order.total),
-            hint: `${money(order.subtotal)} of goods`,
-            tone: 'brand',
-            icon: Wallet,
-          },
-          {
-            key: 'received',
-            label: 'Received',
-            value: `${formatCount(qtyReceived)} / ${formatCount(qtyOrdered)}`,
-            hint: qtyOrdered - qtyReceived > 0
-              ? `${formatCount(qtyOrdered - qtyReceived)} still outstanding`
-              : 'Every line landed',
-            tone: qtyReceived >= qtyOrdered ? 'ok' : 'warn',
-            icon: PackageCheck,
-          },
-          {
-            key: 'expected',
-            label: 'Expected',
-            value: order.expectedDate ? date(order.expectedDate) : '—',
-            hint: order.overdue ? 'Past its expected date' : 'On schedule',
-            tone: order.overdue ? 'danger' : 'info',
-            icon: Truck,
-          },
-          {
-            key: 'payment',
-            label: 'Payment',
-            value: order.payment.status === 'paid' ? 'Paid' : 'Unpaid',
-            hint:
-              order.payment.status === 'paid'
-                ? `${order.payment.method ?? 'Recorded'} · ${date(order.payment.paidAt)}`
-                : 'No expense recorded yet',
-            tone: order.payment.status === 'paid' ? 'ok' : 'neutral',
-            icon: Wallet,
-          },
-        ]}
+      {/* Where this order has got to — the shared strip, not a local row of
+          pills. It leads the record because "where is this one?" is the first
+          question an operator arrives with, and the actions below it are what
+          they came to do about it. */}
+      <ProcessStrip
+        steps={PO_LIFECYCLE}
+        current={lifecycleStage(order)}
+        title="This order"
+        caption={
+          order.status === 'cancelled'
+            ? 'Cancelled — nothing further can be recorded against it.'
+            : 'Send it out, compare the prices, confirm one supplier, then pay and receive.'
+        }
+        // A cancelled order stopped where it stood rather than passing through,
+        // which is what `stoppedTone` draws.
+        stoppedTone={order.status === 'cancelled' ? 'danger' : undefined}
+        successOnLast
+        className="mb-4"
       />
 
-      {/* Workflow — the stage actions, beside the stage they act on.
-          These used to sit in the page header, which put "Send to supplier"
-          next to "Back" and gave an operator no picture of where the order had
-          got to. Here the pills say what has happened and the buttons under
-          them say what can happen next, which is the same question asked twice
-          and answered in one place. */}
-      <Panel title="Workflow" className="mb-3">
-        <ol className="mb-4 flex flex-wrap items-center gap-x-1 gap-y-2">
-          {WORKFLOW_STAGES.map((stage, index) => {
-            const reached = workflowIndex >= index;
-            const current = workflowIndex === index;
-            return (
-              <li key={stage.key} className="flex items-center gap-1">
-                <span
-                  aria-current={current ? 'step' : undefined}
-                  className={cn(
-                    'inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium',
-                    current
-                      ? 'bg-brand-gradient-compact text-white'
-                      : reached
-                        ? 'bg-ok-50 text-ok'
-                        : 'bg-surface-2 text-ink-400',
-                  )}
-                >
-                  <span
-                    className={cn(
-                      'size-1.5 shrink-0 rounded-full',
-                      current ? 'bg-white' : reached ? 'bg-ok' : 'bg-ink-300',
-                    )}
-                    aria-hidden="true"
-                  />
-                  {stage.label}
-                </span>
-                {index < WORKFLOW_STAGES.length - 1 && (
-                  <ChevronRight
-                    className="size-3.5 shrink-0 text-ink-300"
-                    strokeWidth={2.25}
-                    aria-hidden="true"
-                  />
-                )}
-              </li>
-            );
-          })}
-        </ol>
+      {/* What can be done to this order right now.
 
-        {order.status === 'cancelled' ? (
-          <p className="rounded-md bg-surface-2 px-3 py-2.5 text-sm text-ink-500">
-            This order was cancelled. Nothing further can be recorded against it.
-          </p>
-        ) : (
+          The stage strip above says where it is; this says what to do about it,
+          and every control here is one an operator reaches for at exactly this
+          point in the process. No panel title: a heading reading "Workflow"
+          above a row of buttons named for what they do is a label for something
+          the buttons already say. */}
+      {order.status !== 'cancelled' && (
+        <Panel className="mb-4">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div className="flex flex-wrap items-end gap-2">
               {/* Sending lives in the Suppliers panel, which is the only place
@@ -572,18 +517,26 @@ export function AdminPurchaseOrderDetailPage() {
               </Button>
             )}
           </div>
-        )}
 
-        {recordPurchasePayment.error && (
-          <p className="mt-3 flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
-            <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
-            {recordPurchasePayment.error.message}
-          </p>
-        )}
-      </Panel>
+          {recordPurchasePayment.error && (
+            <p className="mt-3 flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
+              <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
+              {recordPurchasePayment.error.message}
+            </p>
+          )}
+        </Panel>
+      )}
 
-      <div className="grid gap-3 lg:grid-cols-[1fr_300px]">
-        <div className="space-y-3">
+      {/* `minmax(0,1fr)`, never a bare `1fr`.
+
+          A `1fr` track refuses to shrink below its content's intrinsic width,
+          and this column holds the Lines table — so a wide table pushed the
+          summary column off the right edge of the viewport and clipped it. The
+          `minmax(0,…)` lets the track shrink and the table scroll inside its own
+          `overflow-x-auto` instead, which is the rule Instructions 3.1 states
+          for wide content. Same shape the ticket detail page uses. */}
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="space-y-4">
           {/* Above Lines because it is the live question while an order is
               open: the lines say what was asked for, and until somebody is
               confirmed the prices on them are zero. */}
@@ -591,7 +544,7 @@ export function AdminPurchaseOrderDetailPage() {
             <PurchaseBidsPanel order={order} />
           </div>
 
-          <Panel title="Lines" flush>
+          <Panel icon={Boxes} title="Lines" flush>
             {/* Carries the density toggle. These lines follow the same density
                 as every list table, so the page has to offer a way to set it. */}
             <div className="border-b border-line px-3 py-2 sm:px-4">
@@ -712,7 +665,7 @@ export function AdminPurchaseOrderDetailPage() {
             </div>
           </Panel>
 
-          <Panel title="Stock movements" description="Every receipt against this order." flush>
+          <Panel icon={PackageCheck} title="Stock movements" description="Every receipt against this order." flush>
             {movements.length ? (
               <ul className="divide-y divide-line">
                 {movements.map((movement) => (
@@ -746,36 +699,106 @@ export function AdminPurchaseOrderDetailPage() {
           </Panel>
         </div>
 
-        <div className="space-y-3">
-          <Panel title="Supplier">
-            <p className="text-md font-medium text-ink-900">{order.supplier.name}</p>
-            {order.supplier.email && (
-              <a
-                href={`mailto:${order.supplier.email}`}
-                className="mt-0.5 block break-all text-sm text-ink-500 hover:text-brand"
-              >
-                {order.supplier.email}
-              </a>
-            )}
-            {order.supplier.id && (
-              <Link
-                to={`/admin/suppliers/${order.supplier.id}`}
-                className={cn(pressable, 'mt-3 inline-flex h-8 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3 font-display text-sm font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
-              >
-                View profile
-              </Link>
+        <div className="space-y-4">
+          {/* The figures the KPI row used to carry, in the column that reads as
+              a summary rather than as four tiles across the top.
+
+              A tile row is right for a LIST, where the numbers describe a set
+              somebody is about to filter. On one record they described that one
+              record — and two of the four repeated the status badge and the
+              stage strip, so the page opened by saying where the order was
+              three times before showing a single line of it. */}
+          <Panel icon={Wallet} title="Summary">
+            <dl className="space-y-2 text-sm">
+              <div className="flex items-baseline justify-between gap-3">
+                <dt className="text-ink-500">Goods</dt>
+                <dd className="tnum font-medium text-ink-900">{money(order.subtotal)}</dd>
+              </div>
+              {order.tax > 0 && (
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="text-ink-500">Tax</dt>
+                  <dd className="tnum text-ink-700">{money(order.tax)}</dd>
+                </div>
+              )}
+              {order.shipping > 0 && (
+                <div className="flex items-baseline justify-between gap-3">
+                  <dt className="text-ink-500">Shipping</dt>
+                  <dd className="tnum text-ink-700">{money(order.shipping)}</dd>
+                </div>
+              )}
+              <div className="flex items-baseline justify-between gap-3 border-t border-line pt-2 font-display text-lg font-bold text-ink-900">
+                <dt>Total</dt>
+                <dd className="tnum">{money(order.total)}</dd>
+              </div>
+            </dl>
+
+            <dl className="mt-3 space-y-2 border-t border-line pt-3 text-sm">
+              <div className="flex items-baseline justify-between gap-3">
+                <dt className="text-ink-500">Received</dt>
+                <dd
+                  className={cn(
+                    'tnum font-medium',
+                    qtyReceived >= qtyOrdered && qtyOrdered > 0 ? 'text-ok' : 'text-ink-900',
+                  )}
+                >
+                  {formatCount(qtyReceived)} / {formatCount(qtyOrdered)}
+                </dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-3">
+                <dt className="text-ink-500">Expected</dt>
+                <dd className={cn('text-right', order.overdue ? 'font-medium text-danger' : 'text-ink-700')}>
+                  {order.expectedDate ? date(order.expectedDate) : '—'}
+                </dd>
+              </div>
+              <div className="flex items-baseline justify-between gap-3">
+                <dt className="text-ink-500">Payment</dt>
+                <dd className={order.payment.status === 'paid' ? 'text-ok' : 'text-ink-700'}>
+                  {order.payment.status === 'paid'
+                    ? `${order.payment.method ?? 'Paid'} · ${date(order.payment.paidAt)}`
+                    : 'Unpaid'}
+                </dd>
+              </div>
+            </dl>
+          </Panel>
+
+          <Panel icon={Truck} title={order.supplier.id ? 'Supplier' : 'No supplier yet'}>
+            {order.supplier.id ? (
+              <>
+                <p className="text-md font-medium text-ink-900">{order.supplier.name}</p>
+                {order.supplier.email && (
+                  <a
+                    href={`mailto:${order.supplier.email}`}
+                    className="mt-0.5 block break-all text-sm text-ink-500 hover:text-brand"
+                  >
+                    {order.supplier.email}
+                  </a>
+                )}
+                <Link
+                  to={`/admin/suppliers/${order.supplier.id}`}
+                  className={cn(pressable, 'mt-3 inline-flex h-8 select-none items-center justify-center rounded-md border border-line-strong bg-surface px-3 font-display text-sm font-semibold text-ink-700 hover:border-ink-300 hover:bg-surface-2')}
+                >
+                  View profile
+                </Link>
+              </>
+            ) : (
+              // An order out for pricing genuinely has nobody it is with. Saying
+              // so beats an em-dash, which reads as data somebody forgot to fill in.
+              <p className="text-sm leading-relaxed text-ink-500">
+                This order has not been placed with anybody yet. Compare the prices in
+                <strong className="font-semibold text-ink-700"> Suppliers</strong> and confirm one.
+              </p>
             )}
           </Panel>
 
           {order.notes && (
-            <Panel title="Notes">
+            <Panel icon={FileText} title="Notes">
               <p className="whitespace-pre-line text-sm leading-relaxed text-ink-600">
                 {order.notes}
               </p>
             </Panel>
           )}
 
-          <Panel title="Timeline" flush>
+          <Panel icon={History} title="Timeline" flush>
             <ul className="divide-y divide-line">
               {order.timeline.map((entry, index) => (
                 <li key={`${entry.status}-${index}`} className="flex items-start gap-2.5 px-4 py-3">

@@ -3,7 +3,7 @@ import { Check, Search } from 'lucide-react';
 import cn from '@/lib/cn';
 import { pressable } from '@/lib/motion';
 import Input from '@/components/ui/Input';
-import { useTaxonomy } from '@/hooks/useCatalog';
+import { useComponentTypes } from '@/hooks/useCatalog';
 
 /**
  * Pick component types — the tags that decide which suppliers can be asked for
@@ -34,10 +34,10 @@ export function ComponentTypePicker({
   emptyHint = 'No component types in the catalogue yet.',
   className,
 }) {
-  const { data: taxonomy } = useTaxonomy();
+  const { data: types = [] } = useComponentTypes();
   const [query, setQuery] = useState('');
 
-  const types = useMemo(() => taxonomy?.componentTypes ?? [], [taxonomy]);
+
 
   const shown = useMemo(() => {
     const needle = query.trim().toLowerCase();

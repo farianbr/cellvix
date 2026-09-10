@@ -1030,7 +1030,23 @@ async function getBidBoard(id) {
     confirmedAt: po.confirmedAt ?? null,
     bids,
     bidCount: bids.length,
-    quoteCount: bids.filter((bid) => bid.status === 'quoted').length,
+    /**
+     * How many suppliers **answered**, which is not the same as how many are
+     * sitting at `quoted` right now.
+     *
+     * Confirming an order moves the winner to `confirmed` and everyone else to
+     * `lost`, so counting only `quoted` made a decided order report "0 of 2
+     * have answered" — the two suppliers who priced it had both been moved on
+     * from the status being counted. `negotiating` is the same case mid-flight.
+     * A supplier who answered has answered, whatever we did with it afterwards.
+     *
+     * Counted on **evidence of a price** rather than on status, because
+     * confirming also marks an invite nobody ever opened as `lost` — status
+     * alone would count that supplier as having answered. `quotedAt` is written
+     * only by `submitBid`, so it is the fact that cannot be produced any other
+     * way.
+     */
+    quoteCount: bids.filter((bid) => bid.quotedAt).length,
     bestBid: bids.find((bid) => bid.isBest)?.id ?? null,
   };
 }

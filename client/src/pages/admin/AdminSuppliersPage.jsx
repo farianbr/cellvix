@@ -40,7 +40,7 @@ import ProcessStrip from '@/components/admin/ProcessStrip';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminSuppliers, useAdminMutations } from '@/hooks/useAdmin';
-import { useTaxonomy } from '@/hooks/useCatalog';
+import { useComponentTypes } from '@/hooks/useCatalog';
 import { pressable } from '@/lib/motion';
 import { toast } from '@/store/toastStore';
 import cn from '@/lib/cn';
@@ -367,8 +367,7 @@ export function AdminSuppliersPage() {
   // Slug → display name, from the same catalogue-derived list the tag picker
   // offers. `taxonomyService` aggregates it from live products, so a tag can
   // never name a component nothing is sold under.
-  const { data: taxonomy } = useTaxonomy();
-  const componentTypes = taxonomy?.componentTypes ?? [];
+  const { data: componentTypes = [] } = useComponentTypes();
   const typeLabels = new Map(componentTypes.map((type) => [type.slug, type.name]));
   const { createSupplier, updateSupplier, toggleSupplier, inviteSupplierPortal } =
     useAdminMutations();
