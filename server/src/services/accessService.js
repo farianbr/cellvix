@@ -1,13 +1,13 @@
 import mongoose from 'mongoose';
 
 import Role, { PERMISSION_AREAS, PERMISSION_LEVELS } from '../models/Role.js';
-import Outlet from '../models/Outlet.js';
+import Business from '../models/Business.js';
 import User from '../models/User.js';
 import ApiError from '../utils/ApiError.js';
 import { likeRegex } from '../utils/regex.js';
 
 /**
- * Outlets, roles and staff accounts (ERP rework §6.14, §6.15/3, §7.6 — phase 8).
+ * Businesses, roles and staff accounts (ERP rework §6.14, §6.15/3, §7.6 — phase 8).
  *
  * Three rules hold this file together:
  *
@@ -18,8 +18,8 @@ import { likeRegex } from '../utils/regex.js';
  *      re-grant or revoke access for everyone holding it, so deletion is
  *      refused while a member remains — the same reasoning that makes a used
  *      `ExpenseCategory` deactivate rather than delete.
- *   3. **Exactly one default outlet exists, always.** It is where a stock
- *      movement lands when nothing names an outlet, so the field cannot be
+ *   3. **Exactly one default business exists, always.** It is where a stock
+ *      movement lands when nothing names an business, so the field cannot be
  *      allowed to go empty or to hold two winners.
  */
 
@@ -41,7 +41,7 @@ const BUILT_IN_ROLES = [
       purchase: 'view',
       reports: 'full',
       marketing: 'full',
-      outlet: 'view',
+      business: 'view',
       settings: 'none',
     },
   },
@@ -55,7 +55,7 @@ const BUILT_IN_ROLES = [
       purchase: 'full',
       reports: 'view',
       marketing: 'none',
-      outlet: 'view',
+      business: 'view',
       settings: 'none',
     },
   },
@@ -69,7 +69,7 @@ const BUILT_IN_ROLES = [
       purchase: 'view',
       reports: 'none',
       marketing: 'none',
-      outlet: 'view',
+      business: 'view',
       settings: 'none',
     },
   },
@@ -101,23 +101,27 @@ async function ensureBuiltInRoles() {
 }
 
 /**
- * One location today (§0.9), but the switcher and every `outlet` field need a
+ * One location today (§0.9), but the switcher and every `business` field need a
  * row to point at from day one.
  */
-async function ensureDefaultOutlet() {
-  const existing = await Outlet.findOne({ isDefault: true });
+async function ensureDefaultBusiness() {
+  const existing = await Business.findOne({ isDefault: true });
   if (existing) return existing;
 
-  const any = await Outlet.findOne();
+  const any = await Business.findOne();
   if (any) {
     any.isDefault = true;
     await any.save();
     return any;
   }
 
-  return Outlet.create({
-    name: 'Cellvix Main',
-    code: await nextOutletCode(),
+  return Business.create({
+    name: 'Cellvix',
+    code: await nextBusinessCode(),
+    // Tenant #1's product business — the parts wholesaler. The type is what
+    // decides which sections its panel renders (SAAS_PLATFORM §1.1), so it is
+    // set explicitly here rather than left to the schema default.
+    businessType: 'product',
     status: 'active',
     colorToken: 'brand',
     address: { city: 'Toronto', region: 'ON', country: 'Canada' },
@@ -125,20 +129,20 @@ async function ensureDefaultOutlet() {
   });
 }
 
-// ---- outlets ----------------------------------------------------------------
+// ---- businesses ----------------------------------------------------------------
 
 /**
  * The zero-padded `#000001` form (§6.14). Assigned here rather than accepted
  * from the client: a code the form proposes is a code two operators can pick in
  * the same moment.
  */
-async function nextOutletCode() {
-  const last = await Outlet.findOne().sort({ code: -1 }).select('code').lean();
+async function nextBusinessCode() {
+  const last = await Business.findOne().sort({ code: -1 }).select('code').lean();
   const current = Number(String(last?.code ?? '#000000').replace(/\D/g, '')) || 0;
   return `#${String(current + 1).padStart(6, '0')}`;
 }
 
-async function listOutlets({ search, status } = {}) {
+async function listBusinesses({ search, status } = {}) {
   const filter = {};
   if (status && status !== 'all') filter.status = status;
   if (search) {
@@ -146,11 +150,11 @@ async function listOutlets({ search, status } = {}) {
     filter.$or = [{ name: rx }, { code: rx }, { manager: rx }, { 'address.city': rx }];
   }
 
-  const outlets = await Outlet.find(filter).sort({ isDefault: -1, name: 1 }).lean();
+  const businesses = await Business.find(filter).sort({ isDefault: -1, name: 1 }).lean();
 
-  // The summary strip. Counted across every outlet, not the filtered set — a
+  // The summary strip. Counted across every business, not the filtered set — a
   // total that moves when you type in the search box is not a total.
-  const all = await Outlet.find().select('status').lean();
+  const all = await Business.find().select('status').lean();
   const summary = {
     total: all.length,
     active: all.filter((o) => o.status === 'active').length,
@@ -159,98 +163,98 @@ async function listOutlets({ search, status } = {}) {
   };
 
   const staffCounts = await User.aggregate([
-    { $match: { role: 'staff', outlet: { $ne: null } } },
-    { $group: { _id: '$outlet', count: { $sum: 1 } } },
+    { $match: { role: 'staff', business: { $ne: null } } },
+    { $group: { _id: '$business', count: { $sum: 1 } } },
   ]);
-  const byOutlet = new Map(staffCounts.map((row) => [String(row._id), row.count]));
+  const byBusiness = new Map(staffCounts.map((row) => [String(row._id), row.count]));
 
   return {
-    outlets: outlets.map((o) => ({
+    businesses: businesses.map((o) => ({
       ...o,
       id: String(o._id),
-      staffCount: byOutlet.get(String(o._id)) ?? 0,
+      staffCount: byBusiness.get(String(o._id)) ?? 0,
     })),
     summary,
   };
 }
 
-async function getOutlet(id) {
-  if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('Outlet not found.');
-  const outlet = await Outlet.findById(id).lean();
-  if (!outlet) throw ApiError.notFound('Outlet not found.');
+async function getBusiness(id) {
+  if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('Business not found.');
+  const business = await Business.findById(id).lean();
+  if (!business) throw ApiError.notFound('Business not found.');
 
-  const staff = await User.find({ outlet: id, role: 'staff' })
+  const staff = await User.find({ business: id, role: 'staff' })
     .select('contactName email staffRole lockedAt')
     .populate('staffRole', 'name slug')
     .lean();
 
-  return { ...outlet, id: String(outlet._id), staff };
+  return { ...business, id: String(business._id), staff };
 }
 
-async function createOutlet(payload) {
-  const outlet = await Outlet.create({
+async function createBusiness(payload) {
+  const business = await Business.create({
     ...payload,
-    code: await nextOutletCode(),
-    // The first outlet ever created is the default by necessity — there is
+    code: await nextBusinessCode(),
+    // The first business ever created is the default by necessity — there is
     // nothing else for an unattributed movement to point at.
-    isDefault: (await Outlet.countDocuments()) === 0,
+    isDefault: (await Business.countDocuments()) === 0,
   });
-  return outlet.toPublic();
+  return business.toPublic();
 }
 
-async function updateOutlet(id, payload) {
-  if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('Outlet not found.');
-  const outlet = await Outlet.findById(id);
-  if (!outlet) throw ApiError.notFound('Outlet not found.');
+async function updateBusiness(id, payload) {
+  if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('Business not found.');
+  const business = await Business.findById(id);
+  if (!business) throw ApiError.notFound('Business not found.');
 
   // `code` and `isDefault` are not the form's to set: one is server-assigned,
   // the other has its own endpoint so the "exactly one" rule stays in one place.
   const { code, isDefault, ...editable } = payload;
-  Object.assign(outlet, editable);
-  await outlet.save();
-  return outlet.toPublic();
+  Object.assign(business, editable);
+  await business.save();
+  return business.toPublic();
 }
 
 /** Moves the default flag, keeping exactly one winner. */
-async function setDefaultOutlet(id) {
-  if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('Outlet not found.');
-  const outlet = await Outlet.findById(id);
-  if (!outlet) throw ApiError.notFound('Outlet not found.');
-  if (outlet.status !== 'active') {
-    throw ApiError.badRequest('Only an active outlet can be the default.', 'OUTLET_NOT_ACTIVE');
+async function setDefaultBusiness(id) {
+  if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('Business not found.');
+  const business = await Business.findById(id);
+  if (!business) throw ApiError.notFound('Business not found.');
+  if (business.status !== 'active') {
+    throw ApiError.badRequest('Only an active business can be the default.', 'BUSINESS_NOT_ACTIVE');
   }
 
-  await Outlet.updateMany({ _id: { $ne: id } }, { $set: { isDefault: false } });
-  outlet.isDefault = true;
-  await outlet.save();
-  return outlet.toPublic();
+  await Business.updateMany({ _id: { $ne: id } }, { $set: { isDefault: false } });
+  business.isDefault = true;
+  await business.save();
+  return business.toPublic();
 }
 
 /**
- * Refused while the outlet is the default or still has staff — the same
+ * Refused while the business is the default or still has staff — the same
  * reasoning as a role in use. Reassign, then delete.
  */
-async function deleteOutlet(id) {
-  if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('Outlet not found.');
-  const outlet = await Outlet.findById(id);
-  if (!outlet) throw ApiError.notFound('Outlet not found.');
+async function deleteBusiness(id) {
+  if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('Business not found.');
+  const business = await Business.findById(id);
+  if (!business) throw ApiError.notFound('Business not found.');
 
-  if (outlet.isDefault) {
+  if (business.isDefault) {
     throw ApiError.badRequest(
-      'The default outlet cannot be deleted. Make another outlet the default first.',
-      'OUTLET_IS_DEFAULT',
+      'The default business cannot be deleted. Make another business the default first.',
+      'BUSINESS_IS_DEFAULT',
     );
   }
 
-  const staffCount = await User.countDocuments({ outlet: id });
+  const staffCount = await User.countDocuments({ business: id });
   if (staffCount > 0) {
     throw ApiError.badRequest(
-      `${staffCount} staff ${staffCount === 1 ? 'member is' : 'members are'} assigned to this outlet. Reassign them first.`,
-      'OUTLET_HAS_STAFF',
+      `${staffCount} staff ${staffCount === 1 ? 'member is' : 'members are'} assigned to this business. Reassign them first.`,
+      'BUSINESS_HAS_STAFF',
     );
   }
 
-  await outlet.deleteOne();
+  await business.deleteOne();
   return { deleted: true };
 }
 
@@ -368,7 +372,7 @@ function staffRow(user) {
     phone: user.phone,
     accountType: user.role,
     role: user.staffRole ? { id: String(user.staffRole._id), name: user.staffRole.name } : null,
-    outlet: user.outlet ? { id: String(user.outlet._id), name: user.outlet.name } : null,
+    business: user.business ? { id: String(user.business._id), name: user.business.name } : null,
     locked: Boolean(user.lockedAt),
     lastLoginAt: user.lastLoginAt ?? null,
     createdAt: user.createdAt,
@@ -396,9 +400,9 @@ async function listStaff({ search, role, status } = {}) {
   }
 
   const users = await User.find(filter)
-    .select('contactName businessName email phone role staffRole outlet lockedAt lastLoginAt createdAt')
+    .select('contactName businessName email phone role staffRole business lockedAt lastLoginAt createdAt')
     .populate('staffRole', 'name slug')
-    .populate('outlet', 'name code')
+    .populate('business', 'name code')
     .sort({ createdAt: -1 })
     .lean();
 
@@ -419,7 +423,7 @@ async function listStaff({ search, role, status } = {}) {
   };
 }
 
-async function assertRoleAndOutlet({ accountType, staffRole, outlet }) {
+async function assertRoleAndBusiness({ accountType, staffRole, business }) {
   if (accountType === 'staff') {
     if (!staffRole || !mongoose.isValidObjectId(staffRole)) {
       throw ApiError.badRequest('Choose a role for this staff member.', 'STAFF_ROLE_REQUIRED');
@@ -436,20 +440,20 @@ async function assertRoleAndOutlet({ accountType, staffRole, outlet }) {
     }
   }
 
-  if (outlet) {
-    if (!mongoose.isValidObjectId(outlet)) throw ApiError.notFound('Outlet not found.');
-    const found = await Outlet.findById(outlet);
-    if (!found) throw ApiError.notFound('Outlet not found.');
+  if (business) {
+    if (!mongoose.isValidObjectId(business)) throw ApiError.notFound('Business not found.');
+    const found = await Business.findById(business);
+    if (!found) throw ApiError.notFound('Business not found.');
   }
 }
 
 async function createStaff(payload) {
-  const { name, email, password, phone, accountType = 'staff', staffRole, outlet } = payload;
+  const { name, email, password, phone, accountType = 'staff', staffRole, business } = payload;
 
   const existing = await User.findOne({ email: String(email).toLowerCase() });
   if (existing) throw ApiError.badRequest('That email already has an account.', 'EMAIL_IN_USE');
 
-  await assertRoleAndOutlet({ accountType, staffRole, outlet });
+  await assertRoleAndBusiness({ accountType, staffRole, business });
 
   const user = new User({
     // A staff account is a person, not a business, but `businessName` is
@@ -460,7 +464,7 @@ async function createStaff(payload) {
     phone,
     role: accountType,
     staffRole: accountType === 'staff' ? staffRole : null,
-    outlet: outlet ?? null,
+    business: business ?? null,
     // Staff bypass the buyer approval ladder entirely; `approved` here only
     // means "not sitting in the pending queue", which staff never enter.
     status: 'approved',
@@ -468,12 +472,12 @@ async function createStaff(payload) {
   await user.setPassword(password);
   await user.save();
 
-  if (outlet) await Outlet.updateOne({ _id: outlet }, { $addToSet: { staff: user._id } });
+  if (business) await Business.updateOne({ _id: business }, { $addToSet: { staff: user._id } });
 
   return staffRow(
     await User.findById(user._id)
       .populate('staffRole', 'name slug')
-      .populate('outlet', 'name code')
+      .populate('business', 'name code')
       .lean(),
   );
 }
@@ -486,7 +490,7 @@ async function updateStaff(id, payload, actorId) {
     throw ApiError.badRequest('That is a customer account, not a staff account.', 'NOT_STAFF');
   }
 
-  const { name, phone, accountType, staffRole, outlet, locked } = payload;
+  const { name, phone, accountType, staffRole, business, locked } = payload;
 
   // Nobody demotes or locks themselves. Both are how an operator removes their
   // own last admin account and locks everyone out of the panel.
@@ -515,34 +519,34 @@ async function updateStaff(id, payload, actorId) {
     }
   }
 
-  await assertRoleAndOutlet({ accountType: nextType, staffRole, outlet });
+  await assertRoleAndBusiness({ accountType: nextType, staffRole, business });
 
-  const previousOutlet = user.outlet ? String(user.outlet) : null;
+  const previousBusiness = user.business ? String(user.business) : null;
 
   if (name !== undefined) user.contactName = name;
   if (phone !== undefined) user.phone = phone;
   if (accountType !== undefined) user.role = accountType;
   if (staffRole !== undefined) user.staffRole = nextType === 'staff' ? staffRole : null;
-  if (outlet !== undefined) user.outlet = outlet || null;
+  if (business !== undefined) user.business = business || null;
   if (locked !== undefined) user.lockedAt = locked ? new Date() : null;
 
   await user.save();
 
-  // Keep `Outlet.staff` — the reverse index the outlet card reads — honest.
-  const nextOutlet = user.outlet ? String(user.outlet) : null;
-  if (previousOutlet !== nextOutlet) {
-    if (previousOutlet) {
-      await Outlet.updateOne({ _id: previousOutlet }, { $pull: { staff: user._id } });
+  // Keep `Business.staff` — the reverse index the business card reads — honest.
+  const nextBusiness = user.business ? String(user.business) : null;
+  if (previousBusiness !== nextBusiness) {
+    if (previousBusiness) {
+      await Business.updateOne({ _id: previousBusiness }, { $pull: { staff: user._id } });
     }
-    if (nextOutlet) {
-      await Outlet.updateOne({ _id: nextOutlet }, { $addToSet: { staff: user._id } });
+    if (nextBusiness) {
+      await Business.updateOne({ _id: nextBusiness }, { $addToSet: { staff: user._id } });
     }
   }
 
   return staffRow(
     await User.findById(id)
       .populate('staffRole', 'name slug')
-      .populate('outlet', 'name code')
+      .populate('business', 'name code')
       .lean(),
   );
 }
@@ -569,7 +573,7 @@ async function deleteStaff(id, actorId) {
     }
   }
 
-  if (user.outlet) await Outlet.updateOne({ _id: user.outlet }, { $pull: { staff: user._id } });
+  if (user.business) await Business.updateOne({ _id: user.business }, { $pull: { staff: user._id } });
   await user.deleteOne();
   return { deleted: true };
 }
@@ -598,7 +602,7 @@ async function getStaffSnapshot(id) {
   if (!mongoose.isValidObjectId(id)) return null;
   const user = await User.findById(id)
     .populate('staffRole', 'name slug')
-    .populate('outlet', 'name code')
+    .populate('business', 'name code')
     .lean();
   if (!user) return null;
 
@@ -607,23 +611,23 @@ async function getStaffSnapshot(id) {
     email: row.email,
     accountType: row.accountType,
     role: row.role?.name ?? null,
-    outlet: row.outlet?.name ?? null,
+    business: row.business?.name ?? null,
     locked: row.locked,
   };
 }
 
 export default {
   ensureBuiltInRoles,
-  ensureDefaultOutlet,
+  ensureDefaultBusiness,
   getRoleSnapshot,
   getStaffSnapshot,
-  nextOutletCode,
-  listOutlets,
-  getOutlet,
-  createOutlet,
-  updateOutlet,
-  setDefaultOutlet,
-  deleteOutlet,
+  nextBusinessCode,
+  listBusinesses,
+  getBusiness,
+  createBusiness,
+  updateBusiness,
+  setDefaultBusiness,
+  deleteBusiness,
   listRoles,
   createRole,
   updateRole,
@@ -634,4 +638,4 @@ export default {
   deleteStaff,
 };
 
-export { ensureBuiltInRoles, ensureDefaultOutlet, nextOutletCode, listOutlets, getOutlet, createOutlet, updateOutlet, setDefaultOutlet, deleteOutlet, listRoles, createRole, updateRole, deleteRole, listStaff, createStaff, updateStaff, deleteStaff, getRoleSnapshot, getStaffSnapshot };
+export { ensureBuiltInRoles, ensureDefaultBusiness, nextBusinessCode, listBusinesses, getBusiness, createBusiness, updateBusiness, setDefaultBusiness, deleteBusiness, listRoles, createRole, updateRole, deleteRole, listStaff, createStaff, updateStaff, deleteStaff, getRoleSnapshot, getStaffSnapshot };

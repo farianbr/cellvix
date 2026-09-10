@@ -2,33 +2,33 @@ import env from './config/env.js';
 import { connectDb, disconnectDb } from './config/db.js';
 import { createApp } from './app.js';
 import { isDatabaseEmpty } from './seed/run.js';
-import { ensureBuiltInRoles, ensureDefaultOutlet } from './services/accessService.js';
+import { ensureBuiltInRoles, ensureDefaultBusiness } from './services/accessService.js';
 import { ensureBuiltInRules } from './models/InvoiceStatusRule.js';
 
 /**
  * Everything boots inside `main` rather than at module scope.
  *
  * The sequence is order-dependent — the database must be connected before the
- * role and outlet upserts run, and those must finish before the app listens —
+ * role and business upserts run, and those must finish before the app listens —
  * so it is kept in one async function with explicit `await`s and a single
  * failure path, rather than spread across top-level awaits.
  */
 async function main() {
   await connectDb();
 
-  // The built-in roles and the default outlet are established at boot, not only
+  // The built-in roles and the default business are established at boot, not only
   // by the seed.
   //
   // Both are **additive upserts** — they create what is missing and touch nothing
   // else — which is what makes them safe here when `seedDatabase` is not: seeding
   // wipes, these do not. Leaving them to the seed alone meant any database that
-  // was populated before phase 8 had zero roles and no default outlet, so the
+  // was populated before phase 8 had zero roles and no default business, so the
   // Roles screen rendered empty, no staff account could be created, and an
   // unattributed stock movement had nowhere to land. A durable database must not
   // have to be wiped to gain a table of constants.
   try {
     await ensureBuiltInRoles();
-    await ensureDefaultOutlet();
+    await ensureDefaultBusiness();
     // Same reasoning, phase 11d: the built-in invoice messages are constants, and
     // all four ship inactive, so creating them sends nobody anything.
     await ensureBuiltInRules();

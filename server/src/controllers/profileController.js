@@ -1,6 +1,6 @@
 import { asyncHandler } from '../utils/ApiError.js';
 import Role, { PERMISSION_AREAS } from '../models/Role.js';
-import Outlet from '../models/Outlet.js';
+import Business from '../models/Business.js';
 import AuditLog from '../models/AuditLog.js';
 
 /**
@@ -13,9 +13,9 @@ import AuditLog from '../models/AuditLog.js';
 const me = asyncHandler(async (req, res) => {
   const user = req.user;
 
-  const [role, outlet, recent] = await Promise.all([
+  const [role, business, recent] = await Promise.all([
     user.staffRole ? Role.findById(user.staffRole).lean() : null,
-    user.outlet ? Outlet.findById(user.outlet).select('name code').lean() : null,
+    user.business ? Business.findById(user.business).select('name code').lean() : null,
     // The actor's own recent activity, from the audit trail phase 11b built.
     // Scoped to this user by id, so it can never show somebody else's actions.
     AuditLog.find({ kind: 'activity', actor: user._id })
@@ -41,7 +41,7 @@ const me = asyncHandler(async (req, res) => {
               (out, area) => ({ ...out, [area]: role?.areas?.[area] ?? 'none' }),
               {},
             ),
-      outlet: outlet ? { name: outlet.name, code: outlet.code } : null,
+      business: business ? { name: business.name, code: business.code } : null,
       status: user.status,
       locked: Boolean(user.lockedAt),
       memberSince: user.createdAt,

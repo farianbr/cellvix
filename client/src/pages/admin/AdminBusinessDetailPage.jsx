@@ -5,7 +5,7 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import PageHeader from '@/components/admin/PageHeader';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
-import { useAdminOutlet, useAdminMutations } from '@/hooks/useAdmin';
+import { useAdminBusiness, useAdminMutations } from '@/hooks/useAdmin';
 import { useAuth } from '@/hooks/useAuth';
 import { canEdit } from '@/lib/permissions';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
@@ -26,21 +26,21 @@ const DAY_LABEL = {
   sun: 'Sunday',
 };
 
-export function AdminOutletDetailPage() {
+export function AdminBusinessDetailPage() {
   const { id } = useParams();
-  const { data: outlet, isLoading } = useAdminOutlet(id);
-  const { setDefaultOutlet } = useAdminMutations();
+  const { data: business, isLoading } = useAdminBusiness(id);
+  const { setDefaultBusiness } = useAdminMutations();
   const { permissions } = useAuth();
-  const editable = canEdit(permissions, 'outlet');
+  const editable = canEdit(permissions, 'business');
 
   // The breadcrumb is a sibling of this page, not a child, so the record name
   // is published rather than passed down.
-  useSetRecordLabel(outlet?.name);
+  useSetRecordLabel(business?.name);
 
-  if (isLoading) return <p className="text-sm text-ink-500">Loading outlet…</p>;
-  if (!outlet) return <PanelEmpty icon={Building2} title="Outlet not found" body="It may have been deleted." />;
+  if (isLoading) return <p className="text-sm text-ink-500">Loading business…</p>;
+  if (!business) return <PanelEmpty icon={Building2} title="Business not found" body="It may have been deleted." />;
 
-  const address = [outlet.address?.street, outlet.address?.line2, outlet.address?.city, outlet.address?.region, outlet.address?.postal, outlet.address?.country]
+  const address = [business.address?.street, business.address?.line2, business.address?.city, business.address?.region, business.address?.postal, business.address?.country]
     .filter(Boolean)
     .join(', ');
 
@@ -51,14 +51,14 @@ export function AdminOutletDetailPage() {
     <div className="record-page">
       <PageHeader
         icon={adminIcon('Store')}
-        title={outlet.name}
-        description={outlet.code}
+        title={business.name}
+        description={business.code}
         badge={
           <div className="flex gap-1.5">
-            <Badge tone={STATUS_TONE[outlet.status] ?? 'neutral'} size="sm">
-              {STATUS_LABEL[outlet.status] ?? outlet.status}
+            <Badge tone={STATUS_TONE[business.status] ?? 'neutral'} size="sm">
+              {STATUS_LABEL[business.status] ?? business.status}
             </Badge>
-            {outlet.isDefault && (
+            {business.isDefault && (
               <Badge tone="brand" size="sm">
                 Default
               </Badge>
@@ -68,14 +68,14 @@ export function AdminOutletDetailPage() {
         action={
           editable && (
             <div className="flex gap-2">
-              {!outlet.isDefault && outlet.status === 'active' && (
-                <Button variant="outline" size="sm" onClick={() => setDefaultOutlet.mutate(outlet.id)}>
+              {!business.isDefault && business.status === 'active' && (
+                <Button variant="outline" size="sm" onClick={() => setDefaultBusiness.mutate(business.id)}>
                   <Star className="size-4" strokeWidth={2} aria-hidden="true" />
                   Make default
                 </Button>
               )}
               <Link
-                to={`/admin/outlets/${outlet.id}/edit`}
+                to={`/admin/businesses/${business.id}/edit`}
                 className={cn(pressable, 'inline-flex h-9 items-center gap-1.5 rounded-md bg-ink-900 px-3.5 text-sm font-medium text-white hover:bg-ink-800')}
               >
                 <Pencil className="size-4" strokeWidth={2} aria-hidden="true" />
@@ -101,30 +101,30 @@ export function AdminOutletDetailPage() {
                 <Phone className="mt-0.5 size-4 shrink-0 text-ink-400" strokeWidth={2} aria-hidden="true" />
                 <div>
                   <dt className="text-xs text-ink-400">Phone</dt>
-                  <dd className="text-ink-900">{outlet.phone || 'Not set'}</dd>
+                  <dd className="text-ink-900">{business.phone || 'Not set'}</dd>
                 </div>
               </div>
               <div className="flex items-start gap-2.5">
                 <Mail className="mt-0.5 size-4 shrink-0 text-ink-400" strokeWidth={2} aria-hidden="true" />
                 <div>
                   <dt className="text-xs text-ink-400">Email</dt>
-                  <dd className="text-ink-900">{outlet.email || 'Not set'}</dd>
+                  <dd className="text-ink-900">{business.email || 'Not set'}</dd>
                 </div>
               </div>
               <div className="flex items-start gap-2.5">
                 <UserRound className="mt-0.5 size-4 shrink-0 text-ink-400" strokeWidth={2} aria-hidden="true" />
                 <div>
                   <dt className="text-xs text-ink-400">Manager</dt>
-                  <dd className="text-ink-900">{outlet.manager || 'Not set'}</dd>
+                  <dd className="text-ink-900">{business.manager || 'Not set'}</dd>
                 </div>
               </div>
             </dl>
           </Panel>
 
-          {outlet.hours?.length > 0 && (
+          {business.hours?.length > 0 && (
             <Panel title="Hours">
               <dl className="flex flex-col gap-1.5 text-sm">
-                {outlet.hours.map((row) => (
+                {business.hours.map((row) => (
                   <div key={row.day} className="flex justify-between border-b border-line py-1.5 last:border-0">
                     <dt className="text-ink-600">{DAY_LABEL[row.day] ?? row.day}</dt>
                     <dd className={row.closed ? 'text-ink-400' : 'text-ink-900'}>
@@ -136,9 +136,9 @@ export function AdminOutletDetailPage() {
             </Panel>
           )}
 
-          {outlet.notes && (
+          {business.notes && (
             <Panel title="Notes">
-              <p className="text-md leading-relaxed text-ink-600">{outlet.notes}</p>
+              <p className="text-md leading-relaxed text-ink-600">{business.notes}</p>
             </Panel>
           )}
         </div>
@@ -147,9 +147,9 @@ export function AdminOutletDetailPage() {
           title="Staff"
           description="Assigned from the Users screen."
         >
-          {outlet.staff?.length ? (
+          {business.staff?.length ? (
             <ul className="flex flex-col gap-2">
-              {outlet.staff.map((member) => (
+              {business.staff.map((member) => (
                 <li
                   key={member._id ?? member.id}
                   className="flex items-center justify-between gap-2 rounded-md border border-line px-3 py-2"
@@ -172,7 +172,7 @@ export function AdminOutletDetailPage() {
               ))}
             </ul>
           ) : (
-            <p className="text-sm text-ink-500">Nobody is assigned to this outlet yet.</p>
+            <p className="text-sm text-ink-500">Nobody is assigned to this business yet.</p>
           )}
         </Panel>
       </div>
@@ -180,4 +180,4 @@ export function AdminOutletDetailPage() {
   );
 }
 
-export default AdminOutletDetailPage;
+export default AdminBusinessDetailPage;

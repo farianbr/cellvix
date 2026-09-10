@@ -18,8 +18,8 @@ const stockMovementSchema = new mongoose.Schema(
   {
     product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true, index: true },
     // One location today, modelled so more can be added without a migration
-    // (§0.9). Null means the default outlet until `Outlet` lands in phase 8.
-    outlet: { type: mongoose.Schema.Types.ObjectId, ref: 'Outlet' },
+    // (§0.9). Null means the default business until `Business` lands in phase 8.
+    business: { type: mongoose.Schema.Types.ObjectId, ref: 'Business' },
 
     type: { type: String, enum: MOVEMENT_TYPES, required: true, index: true },
 

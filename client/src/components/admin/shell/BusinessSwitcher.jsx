@@ -5,29 +5,29 @@ import cn from '@/lib/cn';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
 import { pressable } from '@/lib/motion';
 import { useAuth } from '@/hooks/useAuth';
-import { useAdminOutlets } from '@/hooks/useAdmin';
-import { getOutlet, setOutlet, subscribeOutlet } from '@/store/outletStore';
+import { useAdminBusinesses } from '@/hooks/useAdmin';
+import { getBusiness, setBusiness, subscribeBusiness } from '@/store/businessStore';
 
 /**
  * Which shop the panel is looking at (§6.14).
  *
  * **An admin sees everything by default and narrows to one shop from here.** A
- * staff member does not see this control at all: their outlet is fixed by
- * `User.outlet` and enforced server-side, so offering them a switcher would be
+ * staff member does not see this control at all: their business is fixed by
+ * `User.business` and enforced server-side, so offering them a switcher would be
  * offering a choice the API will refuse.
  *
  * Switching **drops every cached admin query and refetches them**. Each was
- * fetched for the previous outlet, so serving them under a new outlet's name —
+ * fetched for the previous business, so serving them under a new business's name —
  * even for a beat — is the most misleading thing this control could do. See
  * `choose()` for why both steps are needed.
  *
  * `useSyncExternalStore` rather than local state, because `lib/api.js` reads the
  * same value synchronously on every request and the two must not disagree.
  */
-export function OutletSwitcher() {
+export function BusinessSwitcher() {
   const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
-  const selected = useSyncExternalStore(subscribeOutlet, getOutlet, getOutlet);
+  const selected = useSyncExternalStore(subscribeBusiness, getBusiness, getBusiness);
 
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -41,23 +41,23 @@ export function OutletSwitcher() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [open]);
 
-  const { data } = useAdminOutlets(isAdmin ? { status: 'all' } : undefined);
-  const outlets = data?.outlets ?? [];
+  const { data } = useAdminBusinesses(isAdmin ? { status: 'all' } : undefined);
+  const businesses = data?.businesses ?? [];
 
-  // Staff are pinned. One outlet in the business is not a choice either — a
+  // Staff are pinned. One business in the business is not a choice either — a
   // switcher offering a single option is a control that cannot do anything.
-  if (!isAdmin || outlets.length < 2) return null;
+  if (!isAdmin || businesses.length < 2) return null;
 
-  const active = outlets.find((outlet) => outlet.id === selected);
+  const active = businesses.find((business) => business.id === selected);
 
   function choose(id) {
-    setOutlet(id);
+    setBusiness(id);
     setOpen(false);
 
     /**
-     * Refetch every admin query against the new outlet.
+     * Refetch every admin query against the new business.
      *
-     * The outlet is injected in `lib/api.js` rather than being part of any
+     * The business is injected in `lib/api.js` rather than being part of any
      * query key, so React Query sees identical keys across a switch and would
      * otherwise sit still — leaving one shop's orders on screen under the
      * other shop's name.
@@ -68,6 +68,17 @@ export function OutletSwitcher() {
      * request went out.
      */
     queryClient.invalidateQueries({ queryKey: ['admin'], refetchType: 'all' });
+
+    /**
+     * And the session, because the **feature set** rides on it.
+     *
+     * A business carries a type, and the type decides which nav sections exist
+     * (SAAS_PLATFORM §1.1). That answer arrives from `/auth/me` under
+     * `['auth', 'me']`, not under `['admin']` — so without this the records
+     * would switch and the sidebar would not, leaving a service business
+     * showing Orders and Returns until the next reload.
+     */
+    queryClient.invalidateQueries({ queryKey: ['auth', 'me'], refetchType: 'all' });
   }
 
   return (
@@ -77,7 +88,7 @@ export function OutletSwitcher() {
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
         aria-haspopup="listbox"
-        aria-label={`Outlet: ${active?.name ?? 'All outlets'}`}
+        aria-label={`Business: ${active?.name ?? 'All businesses'}`}
         className={cn(
           pressable,
           'flex h-9 max-w-[200px] items-center gap-1.5 rounded-md border px-2.5 text-sm font-medium',
@@ -91,7 +102,7 @@ export function OutletSwitcher() {
         ) : (
           <Layers className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
         )}
-        <span className="min-w-0 truncate">{active?.name ?? 'All outlets'}</span>
+        <span className="min-w-0 truncate">{active?.name ?? 'All businesses'}</span>
         <ChevronDown
           className={cn(
             'size-3.5 shrink-0 transition-transform duration-fast ease-entrance',
@@ -105,12 +116,12 @@ export function OutletSwitcher() {
       {open && (
         <div
           role="listbox"
-          aria-label="Outlet"
+          aria-label="Business"
           className="absolute right-0 top-full z-50 mt-1.5 w-[260px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-lg border border-line bg-surface py-1 shadow-card"
         >
           <Option
             icon={Layers}
-            label="All outlets"
+            label="All businesses"
             hint="Everything, across every shop"
             selected={!selected}
             onSelect={() => choose(null)}
@@ -118,16 +129,16 @@ export function OutletSwitcher() {
 
           <div className="my-1 border-t border-line" aria-hidden="true" />
 
-          {outlets.map((outlet) => (
+          {businesses.map((business) => (
             <Option
-              key={outlet.id}
+              key={business.id}
               icon={Store}
-              label={outlet.name}
+              label={business.name}
               // The code, because two shops in one city are told apart by it
               // long before they are told apart by name.
-              hint={outlet.code}
-              selected={selected === outlet.id}
-              onSelect={() => choose(outlet.id)}
+              hint={business.code}
+              selected={selected === business.id}
+              onSelect={() => choose(business.id)}
             />
           ))}
         </div>
@@ -161,4 +172,4 @@ function Option({ icon: Icon, label, hint, selected, onSelect }) {
   );
 }
 
-export default OutletSwitcher;
+export default BusinessSwitcher;

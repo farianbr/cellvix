@@ -3,7 +3,7 @@ import accessService from '../services/accessService.js';
 import auditService from '../services/auditService.js';
 
 /**
- * Outlets, roles and staff accounts (ERP rework §6.14, §6.15/3, §7.6).
+ * Businesses, roles and staff accounts (ERP rework §6.14, §6.15/3, §7.6).
  *
  * Thin, like every other controller here. The self-demotion, last-admin and
  * role-in-use rules live in the service so a second route cannot reach around
@@ -11,34 +11,34 @@ import auditService from '../services/auditService.js';
  * request knows who is asking.
  */
 
-// ---- outlets ----------------------------------------------------------------
+// ---- businesses ----------------------------------------------------------------
 
-const listOutlets = asyncHandler(async (req, res) => {
-  res.json(await accessService.listOutlets(req.query));
+const listBusinesses = asyncHandler(async (req, res) => {
+  res.json(await accessService.listBusinesses(req.query));
 });
 
-const getOutlet = asyncHandler(async (req, res) => {
-  res.json(await accessService.getOutlet(req.params.id));
+const getBusiness = asyncHandler(async (req, res) => {
+  res.json(await accessService.getBusiness(req.params.id));
 });
 
-const nextOutletCode = asyncHandler(async (_req, res) => {
-  res.json({ code: await accessService.nextOutletCode() });
+const nextBusinessCode = asyncHandler(async (_req, res) => {
+  res.json({ code: await accessService.nextBusinessCode() });
 });
 
-const createOutlet = asyncHandler(async (req, res) => {
-  res.status(201).json(await accessService.createOutlet(req.body));
+const createBusiness = asyncHandler(async (req, res) => {
+  res.status(201).json(await accessService.createBusiness(req.body));
 });
 
-const updateOutlet = asyncHandler(async (req, res) => {
-  res.json(await accessService.updateOutlet(req.params.id, req.body));
+const updateBusiness = asyncHandler(async (req, res) => {
+  res.json(await accessService.updateBusiness(req.params.id, req.body));
 });
 
-const setDefaultOutlet = asyncHandler(async (req, res) => {
-  res.json(await accessService.setDefaultOutlet(req.params.id));
+const setDefaultBusiness = asyncHandler(async (req, res) => {
+  res.json(await accessService.setDefaultBusiness(req.params.id));
 });
 
-const deleteOutlet = asyncHandler(async (req, res) => {
-  res.json(await accessService.deleteOutlet(req.params.id));
+const deleteBusiness = asyncHandler(async (req, res) => {
+  res.json(await accessService.deleteBusiness(req.params.id));
 });
 
 // ---- roles ------------------------------------------------------------------
@@ -137,7 +137,7 @@ const createStaff = asyncHandler(async (req, res) => {
       email: staff.email,
       accountType: staff.accountType,
       role: staff.role?.name ?? null,
-      outlet: staff.outlet?.name ?? null,
+      business: staff.business?.name ?? null,
     },
     description: `Created the staff account ${staff.email}.`,
   });
@@ -159,7 +159,7 @@ const updateStaff = asyncHandler(async (req, res) => {
       email: staff.email,
       accountType: staff.accountType,
       role: staff.role?.name ?? null,
-      outlet: staff.outlet?.name ?? null,
+      business: staff.business?.name ?? null,
       locked: staff.locked,
     },
     description: `Updated the staff account ${staff.email}.`,
@@ -184,4 +184,4 @@ const deleteStaff = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
-export { listOutlets, getOutlet, nextOutletCode, createOutlet, updateOutlet, setDefaultOutlet, deleteOutlet, listRoles, createRole, updateRole, deleteRole, listStaff, createStaff, updateStaff, deleteStaff };
+export { listBusinesses, getBusiness, nextBusinessCode, createBusiness, updateBusiness, setDefaultBusiness, deleteBusiness, listRoles, createRole, updateRole, deleteRole, listStaff, createStaff, updateStaff, deleteStaff };

@@ -30,7 +30,6 @@ import SelectMenu from '@/components/ui/SelectMenu';
 import {
   useAdminPurchaseOrders,
   useAdminSuppliers,
-  useAdminMutations,
 } from '@/hooks/useAdmin';
 
 /**
@@ -46,7 +45,9 @@ const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/purchase-orders'], icon: adminIcon(
 const PILLS = [
   { value: 'all', label: 'All' },
   { value: 'draft', label: 'Draft' },
-  { value: 'sent', label: 'Sent' },
+  { value: 'sent', label: 'Out for pricing' },
+  { value: 'negotiating', label: 'Negotiating' },
+  { value: 'confirmed', label: 'Confirmed' },
   { value: 'partial', label: 'Partial' },
   { value: 'received', label: 'Received' },
   { value: 'overdue', label: 'Overdue' },
@@ -55,6 +56,8 @@ const PILLS = [
 const STATUS_TONES = {
   draft: 'neutral',
   sent: 'info',
+  negotiating: 'brand',
+  confirmed: 'info',
   partial: 'warn',
   received: 'ok',
   cancelled: 'danger',
@@ -90,7 +93,6 @@ export function AdminPurchaseOrdersPage() {
     q: query || undefined,
   });
   const { data: supplierData } = useAdminSuppliers({ status: 'active' });
-  const { setPurchaseOrderStatus } = useAdminMutations();
 
   const orders = data?.orders ?? [];
 
@@ -125,12 +127,30 @@ export function AdminPurchaseOrdersPage() {
       ),
     },
     {
+      /**
+       * The confirmed supplier — and before one is confirmed, how many were
+       * asked and how many answered.
+       *
+       * An order out for pricing genuinely has no supplier yet, and printing
+       * `—` there would leave the most active rows on the screen looking like
+       * the emptiest. "3 asked · 2 quoted" is the live fact instead.
+       */
       key: 'supplier',
       header: 'Supplier',
       priority: 1,
       className: 'max-w-[180px] truncate',
       sortValue: (order) => order.supplier.name,
-      render: (order) => order.supplier.name,
+      render: (order) =>
+        order.supplier.id ? (
+          order.supplier.name
+        ) : order.bidCount ? (
+          <span className="text-sm text-ink-500">
+            {formatCount(order.bidCount)} asked
+            {order.quoteCount > 0 && ` · ${formatCount(order.quoteCount)} quoted`}
+          </span>
+        ) : (
+          <span className="text-ink-300">Nobody asked yet</span>
+        ),
     },
     {
       key: 'orderDate',
@@ -215,13 +235,14 @@ export function AdminPurchaseOrdersPage() {
     },
     {
       key: 'send',
-      label: 'Send to supplier',
+      label: 'Send to suppliers',
       icon: Send,
       // Only a draft can be sent. The server refuses anything else regardless,
       // so this is a courtesy rather than the control (invariant 13).
       disabled: (order) => order.status !== 'draft',
-      onSelect: (order) =>
-        setPurchaseOrderStatus.mutate({ id: order.id, status: 'sent' }),
+      // Opens the order rather than sending from here: sending mails everybody
+      // on it, and that is a decision to take while looking at who they are.
+      onSelect: (order) => navigate(`/admin/purchase-orders/${order.id}#po-suppliers`),
     },
   ];
 
@@ -259,15 +280,18 @@ export function AdminPurchaseOrdersPage() {
             key: 'draft',
             label: 'Draft',
             value: formatCount(counts.draft ?? 0),
-            hint: 'Not yet sent to a supplier',
+            hint: 'Not yet sent to suppliers',
             tone: 'neutral',
             icon: ClipboardList,
           },
           {
+            // Out for pricing and mid-negotiation are one tile: both mean
+            // "asked, not yet decided", which is the figure somebody scanning
+            // this row wants. The pills split them for anyone who needs it.
             key: 'sent',
-            label: 'Sent',
-            value: formatCount(counts.sent ?? 0),
-            hint: 'Awaiting delivery',
+            label: 'Out for pricing',
+            value: formatCount((counts.sent ?? 0) + (counts.negotiating ?? 0)),
+            hint: 'Waiting on supplier prices',
             tone: 'info',
             icon: Send,
           },
@@ -311,6 +335,10 @@ export function AdminPurchaseOrdersPage() {
           }))}
           activePill={status}
           onPillChange={(next) => setParam('status', next)}
+          // Eight statuses since bidding landed. On one line with the search box
+          // and two menus they scroll sideways, and a filter somebody has to
+          // scroll to find is one they stop using — the ticket queue's reasoning.
+          stackPills
           activeFilterCount={supplierId ? 1 : 0}
           onClearFilters={() => setParam('supplier', '')}
           filters={

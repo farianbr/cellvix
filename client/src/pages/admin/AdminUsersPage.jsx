@@ -19,7 +19,7 @@ import FilterStrip from '@/components/admin/FilterStrip';
 import KpiRow from '@/components/admin/KpiRow';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
-import { useAdminStaff, useAdminRoles, useAdminOutlets, useAdminMutations } from '@/hooks/useAdmin';
+import { useAdminStaff, useAdminRoles, useAdminBusinesses, useAdminMutations } from '@/hooks/useAdmin';
 import { useAuth } from '@/hooks/useAuth';
 import { date as formatDate } from '@/lib/format';
 
@@ -37,7 +37,7 @@ import { date as formatDate } from '@/lib/format';
  */
 const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/settings/users'], icon: adminIcon('UsersRound') };
 
-function StaffForm({ roles, outlets, onSubmit, onCancel, isPending, error }) {
+function StaffForm({ roles, businesses, onSubmit, onCancel, isPending, error }) {
   const {
     register,
     handleSubmit,
@@ -46,7 +46,7 @@ function StaffForm({ roles, outlets, onSubmit, onCancel, isPending, error }) {
     formState: { errors },
   } = useForm({
     resolver: zodResolver(staffUserSchema),
-    defaultValues: { name: '', email: '', password: '', phone: '', accountType: 'staff', staffRole: '', outlet: '' },
+    defaultValues: { name: '', email: '', password: '', phone: '', accountType: 'staff', staffRole: '', business: '' },
   });
 
   const accountType = watch('accountType');
@@ -110,11 +110,11 @@ function StaffForm({ roles, outlets, onSubmit, onCancel, isPending, error }) {
 
         <SelectField
           control={control}
-          name="outlet"
-          label="Outlet"
+          name="business"
+          label="Business"
           options={[
             { value: '', label: 'Unassigned' },
-            ...outlets.map((outlet) => ({ value: outlet.id, label: outlet.name })),
+            ...businesses.map((business) => ({ value: business.id, label: business.name })),
           ]}
         />
       </div>
@@ -151,7 +151,7 @@ export function AdminUsersPage() {
 
   const { data, isLoading } = useAdminStaff(params);
   const { data: rolesData } = useAdminRoles();
-  const { data: outletsData } = useAdminOutlets();
+  const { data: businessesData } = useAdminBusinesses();
   const { createStaff, updateStaff, deleteStaff } = useAdminMutations();
 
   const users = data?.users ?? [];
@@ -160,7 +160,7 @@ export function AdminUsersPage() {
   const { pageRows: pageStaff, page, totalPages, from, setPage } = useTablePage(users);
   const summary = data?.summary ?? {};
   const roles = rolesData?.roles ?? [];
-  const outlets = outletsData?.outlets ?? [];
+  const businesses = businessesData?.businesses ?? [];
 
   const tiles = [
     { label: 'Total', value: summary.total ?? 0, tone: 'brand', icon: UsersRound },
@@ -221,7 +221,7 @@ export function AdminUsersPage() {
           <span>{row.role?.name ?? <span className="text-danger">No role</span>}</span>
         ),
     },
-    { key: 'outlet', header: 'Outlet', render: (row) => row.outlet?.name ?? '—' },
+    { key: 'business', header: 'Business', render: (row) => row.business?.name ?? '—' },
     {
       key: 'status',
       header: 'Status',
@@ -241,7 +241,7 @@ export function AdminUsersPage() {
   async function handleCreate(values) {
     setError(null);
     try {
-      await createStaff.mutateAsync({ ...values, outlet: values.outlet || undefined });
+      await createStaff.mutateAsync({ ...values, business: values.business || undefined });
       setAdding(false);
     } catch (err) {
       setError(err.message);
@@ -319,7 +319,7 @@ export function AdminUsersPage() {
       <Modal open={adding} onClose={() => setAdding(false)} title="Add staff account" size="lg">
         <StaffForm
           roles={roles}
-          outlets={outlets}
+          businesses={businesses}
           onSubmit={handleCreate}
           onCancel={() => setAdding(false)}
           isPending={createStaff.isPending}

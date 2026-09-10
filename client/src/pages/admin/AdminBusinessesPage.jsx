@@ -25,25 +25,25 @@ import Pagination from '@/components/ui/Pagination';
 import useTablePage from '@/hooks/useTablePage';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
-import { useAdminOutlets, useAdminMutations } from '@/hooks/useAdmin';
+import { useAdminBusinesses, useAdminMutations } from '@/hooks/useAdmin';
 import { useAuth } from '@/hooks/useAuth';
 import { canEdit } from '@/lib/permissions';
 import cn from '@/lib/cn';
 import { pressable } from '@/lib/motion';
 
 /**
- * Outlets — physical stores (§6.14).
+ * Businesses — the businesses this tenant operates (SAAS_PLATFORM §1.1).
  *
- * Cellvix runs one location today (§0.9), so this screen usually renders a
- * single card. It ships now anyway because `StockMovement` already carries an
- * `outlet`, and the switcher needs somewhere to point: adding the second store
- * later becomes data entry rather than a migration.
+ * **This screen was Outlets.** An outlet was a physical shop inside one
+ * business; a business is the thing that owns records and carries a **type**,
+ * and the type is what decides which sections the panel renders. Cellvix is the
+ * `product` business, CellShoppe the `service` one.
  *
- * **Each store carries a colour identity** so the operator builds muscle memory
- * across the list — drawn from the design system's tokens, never arbitrary hex
- * (§2b).
+ * **Each business carries a colour identity** so the operator builds muscle
+ * memory across the list and the switcher — drawn from the design system's
+ * tokens, never arbitrary hex (§2b).
  */
-const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/outlets'], icon: adminIcon('Store') };
+const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/businesses'], icon: adminIcon('Store') };
 
 /**
  * `Button` renders a real `<button>`, so anything that navigates is a styled
@@ -88,14 +88,14 @@ function addressLine(address = {}) {
     .join(', ');
 }
 
-function OutletCard({ outlet, editable, onDelete, onMakeDefault }) {
-  const wash = COLOR_WASH[outlet.colorToken] ?? COLOR_WASH.ink;
+function BusinessCard({ business, editable, onDelete, onMakeDefault }) {
+  const wash = COLOR_WASH[business.colorToken] ?? COLOR_WASH.ink;
 
   return (
     <article
       className={cn(
         'flex flex-col rounded-lg border border-line border-t-[3px] bg-surface p-4',
-        COLOR_BORDER[outlet.colorToken] ?? COLOR_BORDER.ink,
+        COLOR_BORDER[business.colorToken] ?? COLOR_BORDER.ink,
       )}
     >
       <div className="flex items-start gap-3">
@@ -105,74 +105,74 @@ function OutletCard({ outlet, editable, onDelete, onMakeDefault }) {
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="truncate text-lg font-medium text-ink-900">{outlet.name}</h3>
-            {/* The spec's YOU'RE HERE chip. With one outlet it always shows;
+            <h3 className="truncate text-lg font-medium text-ink-900">{business.name}</h3>
+            {/* The spec's YOU'RE HERE chip. With one business it always shows;
                 with several it is the one an unattributed movement lands in. */}
-            {outlet.isDefault && (
+            {business.isDefault && (
               <Badge tone="brand" size="sm">
                 You&rsquo;re here
               </Badge>
             )}
           </div>
-          <p className="mt-0.5 font-mono text-xs text-ink-400">{outlet.code}</p>
+          <p className="mt-0.5 font-mono text-xs text-ink-400">{business.code}</p>
         </div>
 
-        <Badge tone={STATUS_TONE[outlet.status] ?? 'neutral'} size="sm">
-          {STATUS_LABEL[outlet.status] ?? outlet.status}
+        <Badge tone={STATUS_TONE[business.status] ?? 'neutral'} size="sm">
+          {STATUS_LABEL[business.status] ?? business.status}
         </Badge>
       </div>
 
       <dl className="mt-4 flex flex-col gap-1.5 text-sm text-ink-500">
-        {addressLine(outlet.address) && (
+        {addressLine(business.address) && (
           <div className="flex items-start gap-2">
             <MapPin className="mt-0.5 size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
-            <dd className="min-w-0">{addressLine(outlet.address)}</dd>
+            <dd className="min-w-0">{addressLine(business.address)}</dd>
           </div>
         )}
-        {outlet.phone && (
+        {business.phone && (
           <div className="flex items-center gap-2">
             <Phone className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
-            <dd>{outlet.phone}</dd>
+            <dd>{business.phone}</dd>
           </div>
         )}
-        {outlet.email && (
+        {business.email && (
           <div className="flex items-center gap-2">
             <Mail className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
-            <dd className="truncate">{outlet.email}</dd>
+            <dd className="truncate">{business.email}</dd>
           </div>
         )}
         <div className="flex items-center gap-2">
           <UserRound className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
           <dd>
-            {outlet.manager || 'No manager set'}
+            {business.manager || 'No manager set'}
             <span className="text-ink-400">
               {' · '}
-              {outlet.staffCount} {outlet.staffCount === 1 ? 'staff member' : 'staff'}
+              {business.staffCount} {business.staffCount === 1 ? 'staff member' : 'staff'}
             </span>
           </dd>
         </div>
       </dl>
 
       <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-line pt-3">
-        <Link to={`/admin/outlets/${outlet.id}`} className={LINK_BTN}>
+        <Link to={`/admin/businesses/${business.id}`} className={LINK_BTN}>
           View details
         </Link>
         {editable && (
           <>
             <Link
-              to={`/admin/outlets/${outlet.id}/edit`}
+              to={`/admin/businesses/${business.id}/edit`}
               className={LINK_ICON_BTN}
-              aria-label={`Edit ${outlet.name}`}
+              aria-label={`Edit ${business.name}`}
             >
               <Pencil className="size-4" strokeWidth={2} aria-hidden="true" />
             </Link>
-            {!outlet.isDefault && (
+            {!business.isDefault && (
               <>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => onMakeDefault(outlet)}
-                  aria-label={`Make ${outlet.name} the default outlet`}
+                  onClick={() => onMakeDefault(business)}
+                  aria-label={`Make ${business.name} the default business`}
                 >
                   <Star className="size-4" strokeWidth={2} aria-hidden="true" />
                 </Button>
@@ -180,8 +180,8 @@ function OutletCard({ outlet, editable, onDelete, onMakeDefault }) {
                   variant="ghost"
                   size="sm"
                   className="text-danger"
-                  onClick={() => onDelete(outlet)}
-                  aria-label={`Delete ${outlet.name}`}
+                  onClick={() => onDelete(business)}
+                  aria-label={`Delete ${business.name}`}
                 >
                   <Trash2 className="size-4" strokeWidth={2} aria-hidden="true" />
                 </Button>
@@ -194,7 +194,7 @@ function OutletCard({ outlet, editable, onDelete, onMakeDefault }) {
   );
 }
 
-export function AdminOutletsPage() {
+export function AdminBusinessesPage() {
   const [search, setSearch] = useState('');
   const [view, setView] = useState('cards');
   const [confirming, setConfirming] = useState(null);
@@ -202,15 +202,15 @@ export function AdminOutletsPage() {
 
   const navigate = useNavigate();
   const { permissions } = useAuth();
-  const editable = canEdit(permissions, 'outlet');
+  const editable = canEdit(permissions, 'business');
 
-  const { data, isLoading } = useAdminOutlets(search ? { search } : undefined);
-  const { deleteOutlet, setDefaultOutlet } = useAdminMutations();
+  const { data, isLoading } = useAdminBusinesses(search ? { search } : undefined);
+  const { deleteBusiness, setDefaultBusiness } = useAdminMutations();
 
-  const outlets = data?.outlets ?? [];
+  const businesses = data?.businesses ?? [];
 
   // A page of rows for the table; counts and tiles still read the full set.
-  const { pageRows: pageOutlets, page, totalPages, from, setPage } = useTablePage(outlets);
+  const { pageRows: pageBusinesses, page, totalPages, from, setPage } = useTablePage(businesses);
   const summary = data?.summary ?? {};
 
   const tiles = useMemo(
@@ -226,7 +226,7 @@ export function AdminOutletsPage() {
   const columns = [
     {
       key: 'name',
-      header: 'Outlet',
+      header: 'Business',
       render: (row) => (
         <div className="flex items-center gap-2">
           <span
@@ -267,10 +267,10 @@ export function AdminOutletsPage() {
   async function confirmDelete() {
     setError(null);
     try {
-      await deleteOutlet.mutateAsync(confirming.id);
+      await deleteBusiness.mutateAsync(confirming.id);
       setConfirming(null);
     } catch (err) {
-      // The server refuses a default outlet or one with staff still on it.
+      // The server refuses a default business or one with staff still on it.
       // Surfacing the real sentence beats a generic failure — it names the
       // thing the operator has to do first.
       setError(err.message);
@@ -290,9 +290,9 @@ export function AdminOutletsPage() {
         }
         action={
           editable && (
-            <Link to="/admin/outlets/add" className={PRIMARY_LINK_BTN}>
+            <Link to="/admin/businesses/add" className={PRIMARY_LINK_BTN}>
               <Plus className="size-4" strokeWidth={2} aria-hidden="true" />
-              Add outlet
+              Add business
             </Link>
           )
         }
@@ -307,11 +307,11 @@ export function AdminOutletsPage() {
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search outlets"
+              placeholder="Search businesses"
               className="w-full sm:w-56"
-              aria-label="Search outlets"
+              aria-label="Search businesses"
             />
-            {/* Cards read better for one or two stores; the table wins the
+            {/* Cards read better for one or two businesses; the table wins the
                 moment there are enough to scan down a column. */}
             <div className="flex rounded-md border border-line p-0.5" role="group" aria-label="View">
               {[
@@ -342,19 +342,19 @@ export function AdminOutletsPage() {
           <>
             <div className="border-b border-line px-3 py-2 sm:px-4">
               <CountLine
-                total={outlets.length}
-                shown={pageOutlets.length}
+                total={businesses.length}
+                shown={pageBusinesses.length}
                 from={from}
-                noun={outlets.length === 1 ? 'outlet' : 'outlets'}
+                noun={businesses.length === 1 ? 'business' : 'businesses'}
               />
             </div>
 
             <DataTable
               columns={columns}
-              rows={pageOutlets}
+              rows={pageBusinesses}
               loading={isLoading}
-              onRowClick={(row) => navigate(`/admin/outlets/${row.id}`)}
-              empty={<PanelEmpty icon={Building2} title="No outlets" body="Add your first store." />}
+              onRowClick={(row) => navigate(`/admin/businesses/${row.id}`)}
+              empty={<PanelEmpty icon={Building2} title="No businesses" body="Add your first business." />}
             />
 
             <Pagination
@@ -366,29 +366,29 @@ export function AdminOutletsPage() {
             />
           </>
         ) : isLoading ? (
-          <div className="p-4 text-sm text-ink-500">Loading outlets…</div>
-        ) : outlets.length === 0 ? (
+          <div className="p-4 text-sm text-ink-500">Loading businesses…</div>
+        ) : businesses.length === 0 ? (
           <PanelEmpty
             icon={Building2}
-            title="No outlets"
-            body="Add your first store to start assigning staff."
+            title="No businesses"
+            body="Add your first business to start assigning staff."
             action={
               editable && (
-                <Link to="/admin/outlets/add" className={PRIMARY_LINK_BTN}>
-                  Add outlet
+                <Link to="/admin/businesses/add" className={PRIMARY_LINK_BTN}>
+                  Add business
                 </Link>
               )
             }
           />
         ) : (
           <div className="grid gap-3 p-4 sm:grid-cols-2 xl:grid-cols-3">
-            {outlets.map((outlet) => (
-              <OutletCard
-                key={outlet.id}
-                outlet={outlet}
+            {businesses.map((business) => (
+              <BusinessCard
+                key={business.id}
+                business={business}
                 editable={editable}
                 onDelete={setConfirming}
-                onMakeDefault={(row) => setDefaultOutlet.mutate(row.id)}
+                onMakeDefault={(row) => setDefaultBusiness.mutate(row.id)}
               />
             ))}
           </div>
@@ -402,14 +402,14 @@ export function AdminOutletsPage() {
           setError(null);
         }}
         onConfirm={confirmDelete}
-        title={`Delete ${confirming?.name ?? 'outlet'}?`}
-        body="This removes the outlet permanently. Staff assigned to it must be moved first."
-        confirmLabel="Delete outlet"
-        loading={deleteOutlet.isPending}
+        title={`Delete ${confirming?.name ?? 'business'}?`}
+        body="This removes the business permanently. Staff assigned to it must be moved first."
+        confirmLabel="Delete business"
+        loading={deleteBusiness.isPending}
         error={error}
       />
     </>
   );
 }
 
-export default AdminOutletsPage;
+export default AdminBusinessesPage;

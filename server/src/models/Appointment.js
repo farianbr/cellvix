@@ -66,7 +66,7 @@ const appointmentSchema = new mongoose.Schema(
     // be blocked out before it is assigned to anybody.
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null, index: true },
     staff: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null, index: true },
-    outlet: { type: mongoose.Schema.Types.ObjectId, ref: 'Outlet', default: null, index: true },
+    business: { type: mongoose.Schema.Types.ObjectId, ref: 'Business', default: null, index: true },
 
     /**
      * The record this is about, if any.

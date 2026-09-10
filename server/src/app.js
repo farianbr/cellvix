@@ -11,6 +11,8 @@ import env from './config/env.js';
 import routes from './routes/index.js';
 import { authenticate } from './middleware/auth.js';
 import { authenticateSupplier } from './middleware/supplierAuth.js';
+import { attachFeatures } from './middleware/feature.js';
+import { resolveBusinessScope } from './middleware/businessScope.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -58,6 +60,23 @@ function createApp() {
    * what a Cellvix employee testing the portal actually needs.
    */
   app.use(authenticateSupplier);
+
+  /**
+   * Which business this request is about, then what that business can do.
+   *
+   * **The order is load-bearing and this is why they are mounted together.**
+   * `attachFeatures` reads `req.businessScope`, so scope has to be resolved
+   * first — and `resolveBusinessScope` is *also* listed in the per-route
+   * `admin` guard array, where it runs again harmlessly. Mounting it here as
+   * well is what makes the feature set correct: without it the scope was still
+   * undefined when features resolved, and every request silently got the union
+   * of every business's sections instead of the selected business's.
+   *
+   * Both are cheap: scope is a query-string read, and features is one indexed
+   * lookup cached on the request (§3.2 rule 5).
+   */
+  app.use(resolveBusinessScope);
+  app.use(attachFeatures);
 
   app.use('/api', routes);
 

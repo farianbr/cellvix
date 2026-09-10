@@ -74,9 +74,9 @@ const invoiceSchema = new mongoose.Schema(
      *
      * Copied from the order where there is one, so the money and the goods
      * agree about which location they belong to; set from the operator's
-     * current outlet on a standalone invoice.
+     * current business on a standalone invoice.
      */
-    outlet: { type: mongoose.Schema.Types.ObjectId, ref: 'Outlet', default: null, index: true },
+    business: { type: mongoose.Schema.Types.ObjectId, ref: 'Business', default: null, index: true },
 
 
     /**

@@ -192,14 +192,14 @@ function provinceFor(user) {
 
 // ---- read -------------------------------------------------------------------
 
-async function listQuotes({ q, status, user, from, to, outlet } = {}) {
+async function listQuotes({ q, status, user, from, to, business } = {}) {
   const now = new Date();
   const query = {};
-  // Scoped to the outlet the panel is switched to, when it is switched to one.
-  // Resolved by `resolveOutletScope` rather than read from the query string,
-  // because a staff member's own outlet is binding and must not be widened by
+  // Scoped to the business the panel is switched to, when it is switched to one.
+  // Resolved by `resolveBusinessScope` rather than read from the query string,
+  // because a staff member's own business is binding and must not be widened by
   // editing a URL.
-  if (outlet) query.outlet = outlet;
+  if (business) query.business = business;
 
   if (status === 'expired') {
     // Derived, so the filter is the same reading the shaper does: still live,
@@ -707,7 +707,7 @@ async function convertQuoteToTicket(id, { priority = 'normal', source = 'counter
     customerName: displayNameOf(quote.user),
     customerPhone: quote.user?.phone ?? '',
     customerEmail: quote.user?.email ?? '',
-    outlet: quote.outlet ?? null,
+    business: quote.business ?? null,
 
     status: 'diagnosis',
     priority,

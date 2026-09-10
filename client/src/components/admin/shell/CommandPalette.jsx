@@ -7,6 +7,8 @@ import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from './adminIcons';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 import { useAdminSearch } from '@/hooks/useAdmin';
+import { visibleNav } from '@/lib/permissions';
+import { useAuth } from '@/hooks/useAuth';
 
 /**
  * Ctrl+K / ⌘K jump-to (ERP rework §7.1).
@@ -32,11 +34,20 @@ import { useAdminSearch } from '@/hooks/useAdmin';
 const RECENTS_KEY = 'cellvix.admin.palette.recents';
 const RECENTS_MAX = 5;
 
-/** Flatten the nav tree to searchable rows, each remembering its group for context. */
-function buildIndex() {
+/**
+ * Flatten the nav tree to searchable rows, each remembering its group for
+ * context.
+ *
+ * **Built from the nav this session can actually see**, not from `ADMIN_NAV`
+ * raw. A palette that offers a screen the role cannot reach sends somebody to a
+ * 403; one that offers a switched-off feature tells them it exists, which is
+ * the thing a 404 gate is withholding (§3.2 rule 2).
+ */
+function buildIndex(permissions, features) {
+  const visible = visibleNav(ADMIN_NAV, permissions, features);
   const rows = [];
 
-  for (const group of ADMIN_NAV) {
+  for (const group of visible) {
     if (group.to) {
       rows.push({ to: group.to, label: group.label, group: null, icon: group.icon });
       continue;
@@ -46,11 +57,18 @@ function buildIndex() {
     }
   }
 
+  // Which top-level sections survived the filters. A route belonging to a
+  // section that did not is not offered — `ADMIN_ROUTES` also describes screens
+  // that have a nav row, so without this the loop below would put a hidden
+  // section straight back in and quietly undo the filter above it.
+  const visibleSections = new Set(visible.map((group) => group.key));
+
   // Screens with a route but no nav row of their own — Approvals, My Profile —
   // are reachable targets too, and someone will type their name.
   for (const [path, meta] of Object.entries(ADMIN_ROUTES)) {
     if (path.includes(':')) continue;
     if (rows.some((row) => row.to.split('?')[0] === path)) continue;
+    if (meta.section && !visibleSections.has(meta.section)) continue;
     rows.push({ to: path, label: meta.title ?? meta.label, group: null, icon: meta.icon });
   }
 
@@ -122,7 +140,11 @@ export function CommandPalette({ open, onClose }) {
   const [cursor, setCursor] = useState(0);
   const [recents, setRecents] = useState(readRecents);
 
-  const index = useMemo(buildIndex, []);
+  const { permissions, features } = useAuth();
+  const index = useMemo(
+    () => buildIndex(permissions, features),
+    [permissions, features],
+  );
 
   // Debounced so a typed invoice number is one request rather than fifteen.
   const debouncedQuery = useDebouncedValue(query, 200);
@@ -307,7 +329,7 @@ export function CommandPalette({ open, onClose }) {
 
         <p className="border-t border-line bg-surface-2 px-3.5 py-2 text-xs leading-snug text-ink-400">
           Searches screens, clients, orders, invoices, quotes, RMAs, inventory, suppliers, purchase
-          orders and outlets — limited to what your role can open.
+          orders and businesses — limited to what your role can open.
         </p>
       </div>
     </div>

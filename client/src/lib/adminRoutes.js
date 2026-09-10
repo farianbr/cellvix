@@ -18,7 +18,7 @@ const GROUPS = {
   purchase: { label: 'Purchase' },
   reports: { label: 'Reports' },
   marketing: { label: 'Marketing' },
-  outlet: { label: 'Outlet' },
+  business: { label: 'Business' },
   settings: { label: 'Settings' },
 };
 
@@ -270,33 +270,6 @@ export const ADMIN_ROUTES = {
     title: 'Supplier profile',
     description: 'Terms, linked products, purchase history and price history.',
   },
-  '/admin/rfqs': {
-    label: 'Requests for Quote',
-    parent: 'purchase',
-    icon: 'Send',
-    section: 'purchase',
-    phase: 5,
-    title: 'Requests for quote',
-    description: 'Ask several suppliers for a price, compare the answers, award the best.',
-  },
-  '/admin/rfqs/create': {
-    label: 'New request',
-    parent: '/admin/rfqs',
-    icon: 'Send',
-    section: 'purchase',
-    phase: 5,
-    title: 'New request for quote',
-    description: 'Pick component types, choose who to ask, and list what you need priced.',
-  },
-  '/admin/rfqs/:id': {
-    label: 'Request',
-    parent: '/admin/rfqs',
-    icon: 'Send',
-    section: 'purchase',
-    phase: 5,
-    title: 'Request for quote',
-    description: 'Who was asked, what they quoted, and which answer wins.',
-  },
   '/admin/purchase-orders': {
     label: 'Purchase Orders',
     parent: 'purchase',
@@ -304,7 +277,16 @@ export const ADMIN_ROUTES = {
     section: 'purchase',
     phase: 5,
     title: 'Purchase orders',
-    description: 'Stock on order, what has arrived and what is still outstanding.',
+    description: 'Stock on order, who is pricing it, and what is still outstanding.',
+  },
+  '/admin/purchase-orders/create': {
+    label: 'New purchase order',
+    parent: '/admin/purchase-orders',
+    icon: 'ClipboardList',
+    section: 'purchase',
+    phase: 5,
+    title: 'New purchase order',
+    description: 'List what you need, then choose which suppliers to ask for a price.',
   },
   '/admin/purchase-orders/:id': {
     label: 'Purchase order',
@@ -313,7 +295,7 @@ export const ADMIN_ROUTES = {
     section: 'purchase',
     phase: 5,
     title: 'Purchase order detail',
-    description: 'Lines, receiving, landed cost and the automation stages.',
+    description: 'Suppliers asked, their prices, receiving and the automation stages.',
   },
   '/admin/supplier-returns': {
     label: 'RMA / Returns',
@@ -475,41 +457,41 @@ export const ADMIN_ROUTES = {
     description: 'Questions and answers published to the storefront.',
   },
 
-  // Outlet
-  '/admin/outlets': {
-    label: 'Outlets',
-    parent: 'outlet',
+  // Business
+  '/admin/businesses': {
+    label: 'Businesses',
+    parent: 'business',
     icon: 'Store',
-    section: 'outlet',
+    section: 'business',
     phase: 8,
-    title: 'Outlets',
+    title: 'Businesses',
     description: 'Physical stores, their staff and their contact details.',
   },
-  '/admin/outlets/add': {
-    label: 'Add outlet',
-    parent: '/admin/outlets',
+  '/admin/businesses/add': {
+    label: 'Add business',
+    parent: '/admin/businesses',
     icon: 'PlusCircle',
-    section: 'outlet',
+    section: 'business',
     phase: 8,
-    title: 'Add outlet',
+    title: 'Add business',
     description: 'Identity, location, management and hours — with a live preview.',
   },
-  '/admin/outlets/:id/edit': {
-    label: 'Edit outlet',
-    parent: '/admin/outlets',
+  '/admin/businesses/:id/edit': {
+    label: 'Edit business',
+    parent: '/admin/businesses',
     icon: 'Pencil',
-    section: 'outlet',
+    section: 'business',
     phase: 8,
-    title: 'Edit outlet',
+    title: 'Edit business',
     description: 'Identity, location, management and hours — with a live preview.',
   },
-  '/admin/outlets/:id': {
-    label: 'Outlet',
-    parent: '/admin/outlets',
+  '/admin/businesses/:id': {
+    label: 'Business',
+    parent: '/admin/businesses',
     icon: 'Store',
-    section: 'outlet',
+    section: 'business',
     phase: 8,
-    title: 'Outlet detail',
+    title: 'Business detail',
     description: 'One store, its staff and its details.',
   },
 

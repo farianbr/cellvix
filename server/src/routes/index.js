@@ -32,7 +32,7 @@ import * as searchController from '../controllers/searchController.js';
 import * as profileController from '../controllers/profileController.js';
 import * as exportController from '../controllers/exportController.js';
 import * as notificationController from '../controllers/notificationController.js';
-import * as rfqController from '../controllers/rfqController.js';
+
 import * as supplierPortalController from '../controllers/supplierPortalController.js';
 
 import validate from '../middleware/validate.js';
@@ -45,7 +45,8 @@ import {
   requirePermission,
 } from '../middleware/auth.js';
 import { requireSupplier } from '../middleware/supplierAuth.js';
-import { resolveOutletScope } from '../middleware/outletScope.js';
+import { requireFeature } from '../middleware/feature.js';
+import { resolveBusinessScope } from '../middleware/businessScope.js';
 import {
   loginSchema,
   registerSchema,
@@ -106,13 +107,14 @@ import {
   purchaseOrderStatusSchema,
   purchaseReceiveSchema,
   purchasePaymentSchema,
-  rfqSchema,
-  rfqSendSchema,
-  rfqInviteSchema,
-  rfqAwardSchema,
-  rfqCancelSchema,
+  purchaseInviteSchema,
+  purchaseSendSchema,
+  purchaseNegotiateSchema,
+  purchaseConfirmSchema,
   supplierQuoteSchema,
   supplierDeclineSchema,
+  supplierProformaSchema,
+  supplierDeliverySchema,
   supplierLoginSchema,
   supplierForgotSchema,
   supplierResetSchema,
@@ -134,7 +136,7 @@ import {
   ticketStatusSchema,
   ticketDepositSchema,
   ticketConvertSchema,
-  outletSchema,
+  businessSchema,
   roleSchema,
   staffUserSchema,
   staffUserUpdateSchema,
@@ -312,13 +314,13 @@ router.get('/account/referrals', ...account, accountController.referrals);
 // Panel access. `requireStaff` admits an admin or a staff member holding a
 // role; `requirePermission` on each route below decides what they may do with
 // it. Routes that must stay admin-only regardless of role use `adminOnly`.
-// `resolveOutletScope` reads which shop this request is about — a staff
-// member's own outlet, or the one an admin picked in the top-bar switcher. It
-// only sets `req.outletScope`; each service decides whether that scopes it,
+// `resolveBusinessScope` reads which shop this request is about — a staff
+// member's own business, or the one an admin picked in the top-bar switcher. It
+// only sets `req.businessScope`; each service decides whether that scopes it,
 // because a few things are deliberately business-wide (the catalogue, the
 // customer list, settings) and filtering those would be wrong.
-const admin = [requireAuth, requireStaff, resolveOutletScope];
-const adminOnly = [requireAuth, requireAdmin, resolveOutletScope];
+const admin = [requireAuth, requireStaff, resolveBusinessScope];
+const adminOnly = [requireAuth, requireAdmin, resolveBusinessScope];
 
 // Deliberately not permissioned: the sidebar badges read this on every screen,
 // so gating it by area would blank the counters for a role that can still see
@@ -410,12 +412,19 @@ router.delete('/admin/suppliers/:id', ...admin, requirePermission('purchase', 'f
 // --- returns to a supplier (Purchase § RMA / Returns) ------------------------
 // The purchase-side counterpart of `/admin/rma`: stock going back out, and a
 // credit claimed from the supplier rather than given to a customer.
-router.get('/admin/supplier-returns', ...admin, requirePermission('purchase', 'view'), supplierReturnController.list);
-router.post('/admin/supplier-returns', ...admin, requirePermission('purchase', 'full'), validate(supplierReturnSchema), supplierReturnController.create);
-router.get('/admin/supplier-returns/:id', ...admin, requirePermission('purchase', 'view'), supplierReturnController.get);
-router.patch('/admin/supplier-returns/:id/status', ...admin, requirePermission('purchase', 'full'), validate(supplierReturnStatusSchema), supplierReturnController.setStatus);
-router.post('/admin/supplier-returns/:id/credit', ...admin, requirePermission('purchase', 'full'), validate(supplierCreditSchema), supplierReturnController.recordCredit);
-router.delete('/admin/supplier-returns/:id', ...admin, requirePermission('purchase', 'full'), supplierReturnController.remove);
+//
+// **Gated on `purchase.returns`, which is OFF for Cellvix.** The nav row has
+// carried `hidden: true` since the section was switched off, but the routes
+// stayed open — and §3.2 rule 1 is explicit that hiding a nav item while
+// leaving its routes reachable is a defect, not a partial implementation. The
+// screen, its model and its schema all stay exactly where they are; switching
+// the feature on is the whole of bringing it back.
+router.get('/admin/supplier-returns', ...admin, requireFeature('purchase.returns'), requirePermission('purchase', 'view'), supplierReturnController.list);
+router.post('/admin/supplier-returns', ...admin, requireFeature('purchase.returns'), requirePermission('purchase', 'full'), validate(supplierReturnSchema), supplierReturnController.create);
+router.get('/admin/supplier-returns/:id', ...admin, requireFeature('purchase.returns'), requirePermission('purchase', 'view'), supplierReturnController.get);
+router.patch('/admin/supplier-returns/:id/status', ...admin, requireFeature('purchase.returns'), requirePermission('purchase', 'full'), validate(supplierReturnStatusSchema), supplierReturnController.setStatus);
+router.post('/admin/supplier-returns/:id/credit', ...admin, requireFeature('purchase.returns'), requirePermission('purchase', 'full'), validate(supplierCreditSchema), supplierReturnController.recordCredit);
+router.delete('/admin/supplier-returns/:id', ...admin, requireFeature('purchase.returns'), requirePermission('purchase', 'full'), supplierReturnController.remove);
 
 // --- bought-in services & supplier subscriptions -----------------------------
 // One collection behind two screens: `?kind=service` is anything billed once,
@@ -429,6 +438,11 @@ router.post('/admin/supplier-services/:id/charges', ...admin, requirePermission(
 router.patch('/admin/supplier-services/:id/cancel', ...admin, requirePermission('purchase', 'full'), supplierServiceController.setCancelled);
 router.delete('/admin/supplier-services/:id', ...admin, requirePermission('purchase', 'full'), supplierServiceController.remove);
 
+// The supplier picker is registered ahead of `/admin/purchase-orders/:id`, or
+// the literal path is swallowed as an id — the ordering expense categories need
+// too.
+router.get('/admin/purchase-orders/suppliers', ...admin, requirePermission('purchase', 'view'), purchaseController.suppliersForComponentTypes);
+
 router.get('/admin/purchase-orders', ...admin, requirePermission('purchase', 'view'), purchaseController.listPurchaseOrders);
 router.post('/admin/purchase-orders', ...admin, requirePermission('purchase', 'full'), validate(purchaseOrderSchema), purchaseController.createPurchaseOrder);
 router.get('/admin/purchase-orders/:id', ...admin, requirePermission('purchase', 'view'), purchaseController.getPurchaseOrder);
@@ -441,24 +455,24 @@ router.post('/admin/purchase-orders/:id/receive', ...admin, requirePermission('p
 // Recording a payment creates the Expense row — once. A second call is refused.
 router.post('/admin/purchase-orders/:id/payment', ...admin, requirePermission('purchase', 'full'), validate(purchasePaymentSchema), purchaseController.recordPurchasePayment);
 
-// --- requests for quote (supplier process flow, §6.8a) ----------------------
-// The step before a purchase order: ask several suppliers, compare, award. Same
-// `purchase` permission area as the PO routes it feeds, because it is the same
-// job — awarding one raises a real purchase order, so anybody who may do this
-// may already raise one by hand.
+// --- supplier bidding on a purchase order (supplier process flow, §6.8a) ----
+// An order is put to several suppliers, negotiated, and confirmed to one. This
+// was a separate `Rfq` record until 2026-09-11; folding it into the PO means
+// one document answers both "who did we ask" and "what did we pay".
 //
-// The supplier picker is registered ahead of `/admin/rfqs/:id`, or the literal
-// path is swallowed as an id — the ordering the expense categories need too.
-router.get('/admin/rfqs/suppliers', ...admin, requirePermission('purchase', 'view'), rfqController.suppliersForComponentTypes);
-router.get('/admin/rfqs', ...admin, requirePermission('purchase', 'view'), rfqController.listRfqs);
-router.post('/admin/rfqs', ...admin, requirePermission('purchase', 'full'), validate(rfqSchema), rfqController.createRfq);
-router.get('/admin/rfqs/:id', ...admin, requirePermission('purchase', 'view'), rfqController.getRfq);
-router.patch('/admin/rfqs/:id', ...admin, requirePermission('purchase', 'full'), validate(rfqSchema), rfqController.updateRfq);
-router.post('/admin/rfqs/:id/send', ...admin, requirePermission('purchase', 'full'), validate(rfqSendSchema), rfqController.sendRfq);
-router.post('/admin/rfqs/:id/invite', ...admin, requirePermission('purchase', 'full'), validate(rfqInviteSchema), rfqController.inviteSupplier);
-// Commits money to one supplier and raises the PO. Audited by name.
-router.post('/admin/rfqs/:id/award', ...admin, requirePermission('purchase', 'full'), validate(rfqAwardSchema), rfqController.awardRfq);
-router.post('/admin/rfqs/:id/cancel', ...admin, requirePermission('purchase', 'full'), validate(rfqCancelSchema), rfqController.cancelRfq);
+// All on the same `purchase` area as the PO routes they sit beside, because it
+// is the same job — confirming a supplier prices a real purchase order, so
+// anybody who may do this may already raise one by hand.
+router.get('/admin/purchase-orders/:id/bids', ...admin, requirePermission('purchase', 'view'), purchaseController.getBidBoard);
+router.post('/admin/purchase-orders/:id/bids', ...admin, requirePermission('purchase', 'full'), validate(purchaseInviteSchema), purchaseController.inviteSuppliers);
+router.delete('/admin/purchase-orders/:id/bids/:supplierId', ...admin, requirePermission('purchase', 'full'), purchaseController.removeSupplierFromPo);
+router.post('/admin/purchase-orders/:id/send', ...admin, requirePermission('purchase', 'full'), validate(purchaseSendSchema), purchaseController.sendPurchaseOrder);
+router.post('/admin/purchase-orders/:id/bids/:supplierId/negotiate', ...admin, requirePermission('purchase', 'full'), validate(purchaseNegotiateSchema), purchaseController.negotiate);
+// Commits money to one supplier and prices the order's lines. Audited by name.
+router.post('/admin/purchase-orders/:id/confirm', ...admin, requirePermission('purchase', 'full'), validate(purchaseConfirmSchema), purchaseController.confirmSupplier);
+// A supplier's proforma invoice, as a printable sheet. Its own CSP, like the
+// other two rendered documents.
+router.get('/admin/purchase-orders/:id/bids/:supplierId/proforma', ...admin, requirePermission('purchase', 'view'), purchaseController.proformaDocument);
 
 // Issues a credential, so it needs `full` rather than `view` — and it is
 // audited as a security event in the controller.
@@ -481,10 +495,19 @@ router.post('/supplier-portal/forgot-password', authLimiter, validate(supplierFo
 router.post('/supplier-portal/reset-password', authLimiter, validate(supplierResetSchema), supplierPortalController.resetPassword);
 router.post('/supplier-portal/password', requireSupplier, validate(supplierPasswordSchema), supplierPortalController.changePassword);
 
-router.get('/supplier-portal/rfqs', requireSupplier, supplierPortalController.listRfqs);
-router.get('/supplier-portal/rfqs/:id', requireSupplier, supplierPortalController.getRfq);
-router.post('/supplier-portal/rfqs/:id/quote', requireSupplier, validate(supplierQuoteSchema), supplierPortalController.submitQuote);
-router.post('/supplier-portal/rfqs/:id/decline', requireSupplier, validate(supplierDeclineSchema), supplierPortalController.declineQuote);
+router.get('/supplier-portal/orders', requireSupplier, supplierPortalController.listOrders);
+router.get('/supplier-portal/orders/:id', requireSupplier, supplierPortalController.getOrder);
+router.post('/supplier-portal/orders/:id/quote', requireSupplier, validate(supplierQuoteSchema), supplierPortalController.submitQuote);
+router.post('/supplier-portal/orders/:id/decline', requireSupplier, validate(supplierDeclineSchema), supplierPortalController.declineQuote);
+// The supplier's own proforma invoice against an order they have priced. Every
+// figure on it is computed from the bid lines — no total is accepted here.
+router.post('/supplier-portal/orders/:id/proforma', requireSupplier, validate(supplierProformaSchema), supplierPortalController.submitProforma);
+// Only the confirmed supplier may report a delivery, and reporting one never
+// moves stock — receiving is a count somebody makes at our end.
+router.post('/supplier-portal/orders/:id/delivery', requireSupplier, validate(supplierDeliverySchema), supplierPortalController.setDeliveryStatus);
+// Their own proforma, as a printable sheet. The session supplies the supplier
+// id, so this can only ever render their own.
+router.get('/supplier-portal/orders/:id/proforma', requireSupplier, supplierPortalController.proformaDocument);
 
 // Categories are registered ahead of `/admin/expenses/:id` so a literal path
 // can never be swallowed by a parameter — the same ordering the bulk order
@@ -552,24 +575,24 @@ router.post('/admin/tickets/:id/deposits', ...admin, requirePermission('sales', 
 router.delete('/admin/tickets/:id/deposits/:depositId', ...admin, requirePermission('sales', 'full'), ticketController.removeDeposit);
 router.post('/admin/tickets/:id/convert', ...admin, requirePermission('sales', 'full'), validate(ticketConvertSchema), ticketController.convertToInvoice);
 
-// --- outlets, roles & staff (phase 8) ---------------------------------------
-// Outlets are an ordinary permissioned area. Roles and user accounts are NOT:
+// --- businesses, roles & staff (phase 8) ---------------------------------------
+// Businesses are an ordinary permissioned area. Roles and user accounts are NOT:
 // they stay `requireAdmin` regardless of role, because a role that can grant
 // itself power is not a permission system (§7.6).
 
-const outletView = [...admin, requirePermission('outlet', 'view')];
-const outletFull = [...admin, requirePermission('outlet', 'full')];
+const businessView = [...admin, requirePermission('business', 'view')];
+const businessFull = [...admin, requirePermission('business', 'full')];
 
-router.get('/admin/outlets', ...outletView, accessController.listOutlets);
+router.get('/admin/businesses', ...businessView, accessController.listBusinesses);
 // Registered ahead of `/:id` so the literal path cannot be swallowed.
-router.get('/admin/outlets/next-code', ...outletFull, accessController.nextOutletCode);
-router.get('/admin/outlets/:id', ...outletView, accessController.getOutlet);
-router.post('/admin/outlets', ...outletFull, validate(outletSchema), accessController.createOutlet);
-router.patch('/admin/outlets/:id', ...outletFull, validate(outletSchema), accessController.updateOutlet);
+router.get('/admin/businesses/next-code', ...businessFull, accessController.nextBusinessCode);
+router.get('/admin/businesses/:id', ...businessView, accessController.getBusiness);
+router.post('/admin/businesses', ...businessFull, validate(businessSchema), accessController.createBusiness);
+router.patch('/admin/businesses/:id', ...businessFull, validate(businessSchema), accessController.updateBusiness);
 // Its own route rather than a field on the form, so "exactly one default" is
 // decided in one place.
-router.patch('/admin/outlets/:id/default', ...outletFull, accessController.setDefaultOutlet);
-router.delete('/admin/outlets/:id', ...outletFull, accessController.deleteOutlet);
+router.patch('/admin/businesses/:id/default', ...businessFull, accessController.setDefaultBusiness);
+router.delete('/admin/businesses/:id', ...businessFull, accessController.deleteBusiness);
 
 router.get('/admin/roles', ...adminOnly, accessController.listRoles);
 router.post('/admin/roles', ...adminOnly, validate(roleSchema), accessController.createRole);

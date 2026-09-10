@@ -29,6 +29,7 @@ import PageHeader from '@/components/admin/PageHeader';
 import { useTableClasses, CountLine } from '@/components/admin/DataTable';
 import KpiRow from '@/components/admin/KpiRow';
 import ProcessStrip from '@/components/admin/ProcessStrip';
+import PurchaseBidsPanel from '@/components/admin/PurchaseBidsPanel';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
 import {
   useAdminPurchaseOrder,
@@ -52,6 +53,8 @@ import cn from '@/lib/cn';
 const STATUS_TONES = {
   draft: 'neutral',
   sent: 'info',
+  negotiating: 'brand',
+  confirmed: 'info',
   partial: 'warn',
   received: 'ok',
   cancelled: 'danger',
@@ -72,15 +75,21 @@ const METHODS = [
  * Deliberately **not** `PURCHASE_CYCLE`, which the `ProcessStrip` at the foot
  * of the page already draws. That strip describes the whole seven-station
  * pipeline a purchase moves through, supplier to inventory, and is the same on
- * every Purchase screen. This is the five states *this order* can be in, and
- * it is what the buttons underneath act on. Same subject, different question:
+ * every Purchase screen. This is the states *this order* can be in, and it is
+ * what the buttons underneath act on. Same subject, different question:
  * "how does purchasing work here" against "where is this one".
+ *
+ * `Quoted` and `Confirmed` joined the list with the bidding rework: an order is
+ * now put to several suppliers before it is placed with one, and a strip
+ * jumping straight from Sent to Paid would skip the half of the process where
+ * the buying decision actually happens.
  */
 const WORKFLOW_STAGES = [
   { key: 'draft', label: 'Draft' },
   { key: 'sent', label: 'Sent' },
+  { key: 'quoted', label: 'Quoted' },
+  { key: 'confirmed', label: 'Confirmed' },
   { key: 'paid', label: 'Paid' },
-  { key: 'shipped', label: 'Shipped' },
   { key: 'received', label: 'Received' },
 ];
 
@@ -93,10 +102,13 @@ const WORKFLOW_STAGES = [
  * if nobody ever recorded the payment, because that is true.
  */
 function workflowStageIndex(order) {
-  if (order.status === 'received') return 4;
-  if (order.status === 'partial') return 3;
-  if (order.payment.status === 'paid') return 2;
-  if (order.status === 'sent') return 1;
+  if (['received', 'partial'].includes(order.status)) return 5;
+  if (order.payment.status === 'paid') return 4;
+  if (order.status === 'confirmed') return 3;
+  if (order.status === 'negotiating') return 2;
+  // Sent, and somebody has answered. The stage is about the answers, not about
+  // how long the order has been out.
+  if (order.status === 'sent') return order.quoteCount > 0 ? 2 : 1;
   return 0;
 }
 
@@ -492,13 +504,21 @@ export function AdminPurchaseOrderDetailPage() {
         ) : (
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div className="flex flex-wrap items-end gap-2">
+              {/* Sending lives in the Suppliers panel, which is the only place
+                  that knows who the order is going to — a second Send here
+                  would either skip the mail or duplicate the picker. This
+                  points at it rather than repeating it. */}
               {order.status === 'draft' && (
                 <Button
+                  variant="outline"
                   icon={Send}
-                  loading={setPurchaseOrderStatus.isPending}
-                  onClick={() => setPurchaseOrderStatus.mutate({ id: order.id, status: 'sent' })}
+                  onClick={() => {
+                    document
+                      .getElementById('po-suppliers')
+                      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }}
                 >
-                  Send to supplier
+                  Send to suppliers
                 </Button>
               )}
 
@@ -564,6 +584,13 @@ export function AdminPurchaseOrderDetailPage() {
 
       <div className="grid gap-3 lg:grid-cols-[1fr_300px]">
         <div className="space-y-3">
+          {/* Above Lines because it is the live question while an order is
+              open: the lines say what was asked for, and until somebody is
+              confirmed the prices on them are zero. */}
+          <div id="po-suppliers" className="scroll-mt-4">
+            <PurchaseBidsPanel order={order} />
+          </div>
+
           <Panel title="Lines" flush>
             {/* Carries the density toggle. These lines follow the same density
                 as every list table, so the page has to offer a way to set it. */}

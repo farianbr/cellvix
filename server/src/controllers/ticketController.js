@@ -11,7 +11,7 @@ import auditService from '../services/auditService.js';
  */
 
 const listTickets = asyncHandler(async (req, res) => {
-  res.json(await ticketService.listTickets({ ...req.query, outlet: req.outletScope }));
+  res.json(await ticketService.listTickets({ ...req.query, business: req.businessScope }));
 });
 
 const getTicket = asyncHandler(async (req, res) => {

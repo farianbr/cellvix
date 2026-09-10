@@ -1,5 +1,7 @@
+import { randomBytes } from 'node:crypto';
 import { asyncHandler } from '../utils/ApiError.js';
 import * as purchaseService from '../services/purchaseService.js';
+import * as purchaseBidService from '../services/purchaseBidService.js';
 import auditService from '../services/auditService.js';
 import * as supplierPortalService from '../services/supplierPortalService.js';
 
@@ -228,4 +230,112 @@ const listStockMovements = asyncHandler(async (req, res) => {
   res.json(await purchaseService.listStockMovements(req.query));
 });
 
-export { listSuppliers, getSupplier, createSupplier, updateSupplier, toggleSupplier, invitePortal, listPurchaseOrders, getPurchaseOrder, createPurchaseOrder, updatePurchaseOrder, setPurchaseOrderStatus, receivePurchaseOrder, recordPurchasePayment, listExpenses, createExpense, updateExpense, deleteExpense, listExpenseCategories, createExpenseCategory, updateExpenseCategory, deleteExpenseCategory, listInventory, getInventoryItem, updateInventoryOps, adjustStock, listStockMovements };
+// ---- supplier bidding on a purchase order (§6.8a) ---------------------------
+
+/**
+ * The supplier picker.
+ *
+ * Answers nothing when no component type is given — see the service. A GET
+ * because it is a lookup: the clerk ticks component types and the list of
+ * suppliers who carry them appears, with no request body involved.
+ */
+const suppliersForComponentTypes = asyncHandler(async (req, res) => {
+  // `?componentTypes=battery,screen-assembly`, and a repeated
+  // `?componentTypes=a&componentTypes=b` still arrives as an array — the same
+  // two shapes `taxonomyController` normalises for `partType`.
+  const raw = req.query.componentTypes ?? req.query.componentType;
+  const types = Array.isArray(raw)
+    ? raw.flatMap((value) => String(value).split(','))
+    : String(raw ?? '').split(',');
+
+  res.json(await purchaseBidService.suppliersForComponentTypes(types));
+});
+
+const getBidBoard = asyncHandler(async (req, res) => {
+  res.json(await purchaseBidService.getBidBoard(req.params.id));
+});
+
+const inviteSuppliers = asyncHandler(async (req, res) => {
+  const result = await purchaseBidService.inviteSuppliers(req.params.id, req.body);
+  await auditService.record({
+    req,
+    action: 'purchase_order.invite',
+    entity: { kind: 'purchaseOrder', id: req.params.id, label: result.po?.poNumber ?? '' },
+    description: `Added ${result.added} supplier(s).`,
+  });
+  res.json(result);
+});
+
+const removeSupplierFromPo = asyncHandler(async (req, res) => {
+  res.json(await purchaseBidService.removeSupplier(req.params.id, req.params.supplierId));
+});
+
+/** Sending commits nothing but does reach outside, so it is audited. */
+const sendPurchaseOrder = asyncHandler(async (req, res) => {
+  const result = await purchaseBidService.sendPurchaseOrder(req.params.id, req.body);
+  await auditService.record({
+    req,
+    action: 'purchase_order.send',
+    entity: { kind: 'purchaseOrder', id: req.params.id, label: result.po?.poNumber ?? '' },
+    description: `Sent to ${result.total} supplier(s); ${result.mailed} emailed.`,
+  });
+  res.json(result);
+});
+
+const negotiate = asyncHandler(async (req, res) => {
+  const result = await purchaseBidService.negotiate(
+    req.params.id,
+    req.params.supplierId,
+    req.body,
+    req.user._id,
+  );
+  await auditService.record({
+    req,
+    action: 'purchase_order.negotiate',
+    entity: { kind: 'purchaseOrder', id: req.params.id, label: result.po?.poNumber ?? '' },
+    description: 'Opened a negotiation round with a supplier.',
+  });
+  res.json(result);
+});
+
+/** Commits the order to one supplier and prices its lines. Audited by name. */
+const confirmSupplier = asyncHandler(async (req, res) => {
+  const result = await purchaseBidService.confirmSupplier(req.params.id, req.body);
+  await auditService.record({
+    req,
+    action: 'purchase_order.confirm',
+    entity: { kind: 'purchaseOrder', id: req.params.id, label: result.po?.poNumber ?? '' },
+    after: { confirmedBid: result.po?.confirmedBid ?? null, dropped: result.dropped ?? [] },
+    description: `Confirmed a supplier for ${result.po?.poNumber ?? req.params.id}.`,
+  });
+  res.json(result);
+});
+
+/**
+ * A supplier's proforma invoice, rendered for print-to-PDF.
+ *
+ * Same CSP shape as the invoice document: the page carries one inline script
+ * (its print button) and nothing else, so the nonce is the only thing allowed
+ * to run and every other source is denied.
+ */
+const proformaDocument = asyncHandler(async (req, res) => {
+  const nonce = randomBytes(16).toString('base64');
+  const html = await purchaseBidService.proformaDocument(req.params.id, req.params.supplierId, {
+    nonce,
+  });
+
+  res.setHeader(
+    'Content-Security-Policy',
+    [
+      "default-src 'none'",
+      "style-src 'unsafe-inline'",
+      'img-src data:',
+      `script-src 'nonce-${nonce}'`,
+      "base-uri 'none'",
+      "form-action 'none'",
+    ].join('; '),
+  );
+  res.type('html').send(html);
+});
+
+export { listSuppliers, getSupplier, createSupplier, updateSupplier, toggleSupplier, invitePortal, listPurchaseOrders, getPurchaseOrder, createPurchaseOrder, updatePurchaseOrder, setPurchaseOrderStatus, receivePurchaseOrder, recordPurchasePayment, listExpenses, createExpense, updateExpense, deleteExpense, listExpenseCategories, createExpenseCategory, updateExpenseCategory, deleteExpenseCategory, listInventory, getInventoryItem, updateInventoryOps, adjustStock, listStockMovements, suppliersForComponentTypes, getBidBoard, inviteSuppliers, removeSupplierFromPo, sendPurchaseOrder, negotiate, confirmSupplier, proformaDocument };

@@ -17,8 +17,8 @@ import { pressable } from '@/lib/motion';
  * catalogue they cannot order from and a cart they can never check out.
  *
  * **Signed out renders the sign-in page in place**, rather than redirecting.
- * A supplier arriving on `/supplier/rfq/<id>` from an emailed link and being
- * bounced to `/supplier` would lose the request they were sent, and coming back
+ * A supplier arriving on `/supplier/orders/<id>` from an emailed link and being
+ * bounced to `/supplier` would lose the order they were sent, and coming back
  * to it means finding the email again. Signing in here leaves them exactly
  * where they were headed.
  *

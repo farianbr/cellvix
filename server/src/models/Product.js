@@ -56,7 +56,7 @@ const productSchema = new mongoose.Schema(
     // cost change cannot rewrite the margin on a sale that already happened.
     cost: { type: Number, default: 0 },
 
-    // Bin or shelf, free text — 'A-12-3'. One outlet today (§0.9).
+    // Bin or shelf, free text — 'A-12-3'. One business today (§0.9).
     location: { type: String, trim: true, maxlength: 40 },
 
     // The default supplier for a reorder. A purchase-order line may still name

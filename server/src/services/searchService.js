@@ -6,7 +6,7 @@ import Quote from '../models/Quote.js';
 import Rma from '../models/Rma.js';
 import Supplier from '../models/Supplier.js';
 import PurchaseOrder from '../models/PurchaseOrder.js';
-import Outlet from '../models/Outlet.js';
+import Business from '../models/Business.js';
 import Role from '../models/Role.js';
 import { likeRegex } from '../utils/regex.js';
 
@@ -38,7 +38,7 @@ const GROUP_AREA = {
   products: 'purchase',
   suppliers: 'purchase',
   purchaseOrders: 'purchase',
-  outlets: 'outlet',
+  businesses: 'business',
 };
 
 const PER_GROUP = 5;
@@ -250,21 +250,21 @@ async function search(term, user) {
     );
   }
 
-  if (allowed.has('outlets')) {
+  if (allowed.has('businesses')) {
     runners.push(
-      Outlet.find({ $or: [{ name: rx }, { code: rx }] })
+      Business.find({ $or: [{ name: rx }, { code: rx }] })
         .select('name code')
         .limit(PER_GROUP)
         .lean()
         .then((rows) => ({
-          key: 'outlets',
-          label: 'Outlets',
+          key: 'businesses',
+          label: 'Businesses',
           icon: 'Store',
           hits: rows.map((row) => ({
             id: row._id.toString(),
             title: row.name,
             detail: row.code,
-            to: `/admin/outlets/${row._id}`,
+            to: `/admin/businesses/${row._id}`,
           })),
         })),
     );

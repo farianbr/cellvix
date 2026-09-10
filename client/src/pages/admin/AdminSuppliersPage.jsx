@@ -23,6 +23,7 @@ import Modal from '@/components/ui/Modal';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 import SelectField from '@/components/ui/SelectField';
+import SelectMenu from '@/components/ui/SelectMenu';
 import ComponentTypePicker from '@/components/admin/ComponentTypePicker';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -39,6 +40,7 @@ import ProcessStrip from '@/components/admin/ProcessStrip';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminSuppliers, useAdminMutations } from '@/hooks/useAdmin';
+import { useTaxonomy } from '@/hooks/useCatalog';
 import { pressable } from '@/lib/motion';
 import { toast } from '@/store/toastStore';
 import cn from '@/lib/cn';
@@ -310,6 +312,45 @@ function SupplierIdentity({ supplier }) {
   );
 }
 
+/**
+ * The component types a supplier is tagged with (§6.8a).
+ *
+ * **Three chips, then a count.** The tag list is what decides who can be asked
+ * to price a part, so it belongs in the table rather than only in the edit
+ * form — but a supplier carrying nine tags would otherwise set the height of
+ * every row on the page. Three is enough to recognise a supplier by; the
+ * overflow chip carries the rest in its `title` so the full list is one hover
+ * away without a second request.
+ *
+ * Labels come from the catalogue-derived taxonomy, never from a constant here,
+ * for the reason `ComponentTypePicker` gives — a slug with no matching type
+ * falls back to showing the slug rather than rendering an empty chip.
+ */
+function SupplierTags({ slugs = [], labels }) {
+  if (!slugs.length) return <span className="text-ink-300">—</span>;
+
+  const shown = slugs.slice(0, 3);
+  const rest = slugs.slice(3);
+
+  return (
+    <span className="flex flex-wrap items-center gap-1">
+      {shown.map((slug) => (
+        <Badge key={slug} tone="neutral" size="sm">
+          {labels.get(slug) ?? slug}
+        </Badge>
+      ))}
+      {rest.length > 0 && (
+        <span
+          className="tnum text-xs font-medium text-ink-400"
+          title={rest.map((slug) => labels.get(slug) ?? slug).join(', ')}
+        >
+          +{rest.length}
+        </span>
+      )}
+    </span>
+  );
+}
+
 export function AdminSuppliersPage() {
   const [query, setQuery] = useState('');
   const [editing, setEditing] = useState(null);
@@ -319,8 +360,16 @@ export function AdminSuppliersPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const status = searchParams.get('status') ?? 'all';
+  const componentType = searchParams.get('componentType') ?? '';
 
   const { data, isLoading } = useAdminSuppliers({ status, q: query || undefined });
+
+  // Slug → display name, from the same catalogue-derived list the tag picker
+  // offers. `taxonomyService` aggregates it from live products, so a tag can
+  // never name a component nothing is sold under.
+  const { data: taxonomy } = useTaxonomy();
+  const componentTypes = taxonomy?.componentTypes ?? [];
+  const typeLabels = new Map(componentTypes.map((type) => [type.slug, type.name]));
   const { createSupplier, updateSupplier, toggleSupplier, inviteSupplierPortal } =
     useAdminMutations();
 
@@ -349,7 +398,19 @@ export function AdminSuppliersPage() {
     });
   }
 
-  const suppliers = data?.suppliers ?? [];
+  /**
+   * The tag filter is applied here rather than on the server.
+   *
+   * `listSuppliers` already caps at 300 rows and this table pages client-side,
+   * so the whole set is in hand and a round-trip would buy nothing. The KPI
+   * tiles keep reading the server's unfiltered counts, which is the rule the
+   * status pills follow too — a tile that moved with the filter would stop
+   * being the total it is labelled as.
+   */
+  const allSuppliers = data?.suppliers ?? [];
+  const suppliers = componentType
+    ? allSuppliers.filter((supplier) => (supplier.componentTypes ?? []).includes(componentType))
+    : allSuppliers;
 
   // The KPI tiles are summed from the whole filtered set; the table gets a
   // page of it. See `useTablePage` for why paging is client-side.
@@ -365,17 +426,21 @@ export function AdminSuppliersPage() {
    * loaded before it can be edited, so this resolves against the fetched list
    * and clears the parameter once it has, which stops a back-navigation from
    * reopening a form the operator already closed.
+   *
+   * Resolves against the UNFILTERED list: arriving with both `?edit=` and an
+   * active tag filter must still open the form, and a supplier the filter
+   * happens to exclude is still a supplier somebody asked to edit.
    */
   const editId = searchParams.get('edit');
   useEffect(() => {
-    if (!editId || !suppliers.length) return;
-    const match = suppliers.find((row) => row.id === editId);
+    if (!editId || !allSuppliers.length) return;
+    const match = allSuppliers.find((row) => row.id === editId);
     if (match) setEditing(match);
 
     const params = new URLSearchParams(searchParams);
     params.delete('edit');
     setSearchParams(params, { replace: true });
-  }, [editId, suppliers, searchParams, setSearchParams]);
+  }, [editId, allSuppliers, searchParams, setSearchParams]);
 
   function setStatus(next) {
     const params = new URLSearchParams(searchParams);
@@ -384,14 +449,40 @@ export function AdminSuppliersPage() {
     setSearchParams(params, { replace: true });
   }
 
+  // In the URL rather than in local state, like `status` above: a purchasing
+  // clerk who has narrowed the list to battery suppliers can send that link.
+  function setComponentType(next) {
+    const params = new URLSearchParams(searchParams);
+    if (!next) params.delete('componentType');
+    else params.set('componentType', next);
+    setSearchParams(params, { replace: true });
+  }
+
   const columns = [
     {
       key: 'name',
       header: 'Supplier',
       priority: 1,
-      width: '38%',
+      width: '30%',
       sortValue: (row) => row.name,
       render: (row) => <SupplierIdentity supplier={row} />,
+    },
+    {
+      /**
+       * What this supplier sells. The column that makes the tag system visible
+       * — tags decide who appears in the picker when a purchase order goes out,
+       * and a tag nobody can see on the list is a tag nobody maintains.
+       *
+       * Sorts on the count rather than the names: "who covers the most" is the
+       * question the ordering answers, and sorting alphabetically by first tag
+       * would rank on whichever one happened to be added first.
+       */
+      key: 'componentTypes',
+      header: 'Tags',
+      priority: 2,
+      width: '20%',
+      sortValue: (row) => (row.componentTypes ?? []).length,
+      render: (row) => <SupplierTags slugs={row.componentTypes} labels={typeLabels} />,
     },
     {
       key: 'ordersCount',
@@ -417,7 +508,7 @@ export function AdminSuppliersPage() {
       key: 'lastOrderAt',
       header: 'Last order',
       priority: 3,
-      width: '14%',
+      width: '12%',
       // A supplier with no orders sorts as the oldest possible date rather than
       // as `null`, so "never ordered from" collects at one end of the sort
       // instead of scattering through it.
@@ -587,6 +678,23 @@ export function AdminSuppliersPage() {
           pills={PILLS.map((pill) => ({ ...pill, count: counts[pill.value] }))}
           activePill={status}
           onPillChange={setStatus}
+          activeFilterCount={componentType ? 1 : 0}
+          onClearFilters={() => setComponentType('')}
+          filters={
+            <div>
+              <p className="eyebrow mb-1.5 text-ink-400">Component type</p>
+              <SelectMenu
+                srLabel="Filter by component type"
+                value={componentType}
+                onChange={setComponentType}
+                options={[
+                  { value: '', label: 'All component types' },
+                  ...componentTypes.map((type) => ({ value: type.slug, label: type.name })),
+                ]}
+                containerClassName="w-full"
+              />
+            </div>
+          }
         />
 
         <div className="border-b border-line px-3 py-2 sm:px-4">

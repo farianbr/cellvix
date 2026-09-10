@@ -153,8 +153,8 @@ function activityHref(entity) {
       return '/admin/purchase-orders';
     case 'offer':
       return '/admin/marketing/offers';
-    case 'outlet':
-      return '/admin/outlets';
+    case 'business':
+      return '/admin/businesses';
     // campaign, staff, role, settings, referral, storeCredit, session,
     // taxonomy and invoiceStatusRule have no per-record screen to open.
     default:

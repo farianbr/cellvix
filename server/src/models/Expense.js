@@ -41,7 +41,7 @@ const expenseSchema = new mongoose.Schema(
 
     // Set on rows the purchase-order payment step created. See the note above.
     purchaseOrder: { type: mongoose.Schema.Types.ObjectId, ref: 'PurchaseOrder', index: true },
-    outlet: { type: mongoose.Schema.Types.ObjectId, ref: 'Outlet' },
+    business: { type: mongoose.Schema.Types.ObjectId, ref: 'Business' },
 
     attachment: String,
     notes: { type: String, trim: true, maxlength: 2000 },

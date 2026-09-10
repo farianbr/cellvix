@@ -4,12 +4,12 @@ import { MAIL, escapeHtml } from './welcomeMail.js';
 import { BUSINESS_INFO } from '../../../shared/business.js';
 
 /**
- * Mail to suppliers — the portal invitation, and a request for quote
- * (supplier process flow, §6.8a).
+ * Mail to suppliers — the portal invitation, and everything a purchase order
+ * puts to them (supplier process flow, §6.8a).
  *
  * Same contract as `welcomeMail.js` and for the same reason: **never throws**.
  * Every message here is a side effect of something already written to the
- * database — a supplier that exists, an RFQ that has been sent — and a dead
+ * database — a supplier that exists, an order that has been sent — and a dead
  * SMTP host must not turn any of those into an error. Callers read `delivered`.
  *
  * Sent from `MAIL_FROM_ADMIN`, not `MAIL_FROM`. A supplier replying to their
@@ -20,6 +20,10 @@ import { BUSINESS_INFO } from '../../../shared/business.js';
  * than being redefined here, so supplier mail and customer mail stay one
  * design. What differs is only what these messages have to say.
  */
+
+/** Cents to `$1,234.56`. Canadian conventions, as everywhere else. */
+const CAD = new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' });
+const money = (cents) => CAD.format((cents ?? 0) / 100);
 
 /** The card shell every message below fills. Kept in one place, as in the buyer mail. */
 function shell({ preheader, title, intro, blocks, footerNote }) {
@@ -239,28 +243,28 @@ async function sendSupplierResetEmail({ supplier, link, expiresDays = 7 }) {
  * supplier's. The whole document is a question, and a number in it would be an
  * anchor we did not mean to set.
  */
-async function sendRfqInvitation({ supplier, rfq }) {
+async function sendPurchaseOrderInvitation({ supplier, po }) {
   if (!supplier?.email) {
     return { delivered: false, via: null, error: 'No email address on file.' };
   }
 
   try {
     const origin = env.publicOrigin;
-    const link = `${origin}/supplier/rfq/${rfq._id ?? rfq.id}`;
+    const link = `${origin}/supplier/orders/${po._id ?? po.id}`;
 
-    const lineRows = (rfq.items ?? [])
+    const lineRows = (po.items ?? [])
       .slice(0, 12)
       .map(
         (item) => `
             <tr>
               <td style="padding:9px 16px;border-top:1px solid ${MAIL.line};font:400 ${MAIL.small}/1.4 ${MAIL.body};color:${MAIL.ink900};">${escapeHtml(item.name ?? item.sku ?? '')}</td>
               <td style="padding:9px 16px;border-top:1px solid ${MAIL.line};font:400 ${MAIL.small}/1.4 ${MAIL.mono};color:${MAIL.ink500};">${escapeHtml(item.sku ?? '')}</td>
-              <td align="right" style="padding:9px 16px;border-top:1px solid ${MAIL.line};font:600 ${MAIL.small}/1.4 ${MAIL.body};color:${MAIL.ink900};">${item.qty}</td>
+              <td align="right" style="padding:9px 16px;border-top:1px solid ${MAIL.line};font:600 ${MAIL.small}/1.4 ${MAIL.body};color:${MAIL.ink900};">${item.qtyOrdered}</td>
             </tr>`,
       )
       .join('');
 
-    const more = (rfq.items ?? []).length > 12 ? (rfq.items ?? []).length - 12 : 0;
+    const more = (po.items ?? []).length > 12 ? (po.items ?? []).length - 12 : 0;
 
     const blocks =
       `
@@ -277,11 +281,13 @@ async function sendRfqInvitation({ supplier, rfq }) {
         </td></tr>` + button(link, 'Send us your price');
 
     const text = [
-      `${BUSINESS_INFO.name} is asking for a price — ${rfq.rfqNumber}.`,
+      `${BUSINESS_INFO.name} is asking for a price — ${po.poNumber}.`,
       '',
-      ...(rfq.items ?? []).map((item) => `  ${item.qty} x ${item.name ?? ''} (${item.sku ?? ''})`),
+      ...(po.items ?? []).map(
+        (item) => `  ${item.qtyOrdered} x ${item.name ?? ''} (${item.sku ?? ''})`,
+      ),
       '',
-      ...(rfq.closesAt ? [`Answers close ${new Date(rfq.closesAt).toDateString()}.`, ''] : []),
+      ...(po.closesAt ? [`Answers close ${new Date(po.closesAt).toDateString()}.`, ''] : []),
       `  Quote here  ${link}`,
       '',
       `${BUSINESS_INFO.name} · ${BUSINESS_INFO.address.city}, ${BUSINESS_INFO.address.region}`,
@@ -290,61 +296,59 @@ async function sendRfqInvitation({ supplier, rfq }) {
     return await sendMail({
       to: supplier.email,
       from: env.MAIL_FROM_ADMIN,
-      subject: `Request for quote ${rfq.rfqNumber}`,
+      subject: `Purchase order ${po.poNumber} — your price, please`,
       html: shell({
-        preheader: `We would like a price for ${(rfq.items ?? []).length} line${(rfq.items ?? []).length === 1 ? '' : 's'}.`,
-        title: 'Request for quote',
-        intro: `We would like a price from <strong style="color:${MAIL.ink900};font-weight:600;">${escapeHtml(supplier.name)}</strong> for the parts below${rfq.closesAt ? `, by ${escapeHtml(new Date(rfq.closesAt).toDateString())}` : ''}. Prices go in the portal — the button is at the bottom.`,
+        preheader: `We would like a price for ${(po.items ?? []).length} line${(po.items ?? []).length === 1 ? '' : 's'}.`,
+        title: 'Request for your price',
+        intro: `We would like a price from <strong style="color:${MAIL.ink900};font-weight:600;">${escapeHtml(supplier.name)}</strong> for the parts below${po.closesAt ? `, by ${escapeHtml(new Date(po.closesAt).toDateString())}` : ''}. Prices go in the portal — the button is at the bottom.`,
         blocks,
-        footerNote: `Reference ${escapeHtml(rfq.rfqNumber)}. Reply to this email and it reaches our purchasing team.`,
+        footerNote: `Reference ${escapeHtml(po.poNumber)}. Reply to this email and it reaches our purchasing team.`,
       }),
       text,
     });
   } catch (error) {
-    console.error(`  Mail: RFQ invite for ${supplier?.email} could not be built — ${error.message}`);
+    console.error(
+      `  Mail: purchase order invite for ${supplier?.email} could not be built — ${error.message}`,
+    );
     return { delivered: false, via: null, error: error.message };
   }
 }
 
 /**
- * The award outcome, sent to every supplier who quoted.
+ * The outcome, sent to every supplier who priced the order.
  *
  * Losers are told, deliberately. A supplier who priced work and hears nothing
- * learns only that answering is not worth the effort, and the next request gets
+ * learns only that answering is not worth the effort, and the next order gets
  * fewer answers. The message carries no competitor's price and no ranking —
  * what another supplier charges is not this one's business.
  */
-async function sendRfqOutcome({ supplier, rfq, won, poNumber = null }) {
+async function sendPurchaseOrderOutcome({ supplier, po, won }) {
   if (!supplier?.email) {
     return { delivered: false, via: null, error: 'No email address on file.' };
   }
 
   try {
     const origin = env.publicOrigin;
-    const link = won && poNumber ? `${origin}/supplier` : `${origin}/supplier`;
+    const link = `${origin}/supplier/orders/${po._id ?? po.id}`;
 
     const intro = won
-      ? `Thank you for quoting ${escapeHtml(rfq.rfqNumber)} — we would like to go ahead. The purchase order is in your portal.`
-      : `Thank you for quoting ${escapeHtml(rfq.rfqNumber)}. We have placed this order elsewhere on this occasion, and we will be in touch with the next one.`;
+      ? `Thank you for pricing ${escapeHtml(po.poNumber)} — we would like to go ahead. The order is confirmed with you, and the details are in your portal.`
+      : `Thank you for pricing ${escapeHtml(po.poNumber)}. We have placed this order elsewhere on this occasion, and we will be in touch with the next one.`;
 
     const blocks = won
-      ? detailTable([
-          ['Request', rfq.rfqNumber, false],
-          ...(poNumber ? [['Purchase order', poNumber, true]] : []),
-        ]) + button(link, 'Open the portal')
+      ? detailTable([['Purchase order', po.poNumber, true]]) + button(link, 'Open the portal')
       : '';
 
     const text = [
       won
-        ? `Your quote for ${rfq.rfqNumber} was accepted.`
-        : `Thank you for quoting ${rfq.rfqNumber}.`,
+        ? `Your price for ${po.poNumber} was accepted.`
+        : `Thank you for pricing ${po.poNumber}.`,
       '',
       ...(won
-        ? [
-            ...(poNumber ? [`  Purchase order  ${poNumber}`] : []),
-            `  Portal          ${link}`,
-          ]
-        : ['We have placed this order elsewhere on this occasion, and we will be in touch with the next one.']),
+        ? [`  Purchase order  ${po.poNumber}`, `  Portal          ${link}`]
+        : [
+            'We have placed this order elsewhere on this occasion, and we will be in touch with the next one.',
+          ]),
       '',
       `${BUSINESS_INFO.name} · ${BUSINESS_INFO.address.city}, ${BUSINESS_INFO.address.region}`,
     ].join('\n');
@@ -352,10 +356,12 @@ async function sendRfqOutcome({ supplier, rfq, won, poNumber = null }) {
     return await sendMail({
       to: supplier.email,
       from: env.MAIL_FROM_ADMIN,
-      subject: won ? `Your quote was accepted — ${rfq.rfqNumber}` : `Request for quote ${rfq.rfqNumber}`,
+      subject: won
+        ? `Your price was accepted — ${po.poNumber}`
+        : `Purchase order ${po.poNumber}`,
       html: shell({
-        preheader: won ? 'We would like to go ahead.' : 'Thank you for quoting.',
-        title: won ? 'Your quote was accepted' : 'Thank you for quoting',
+        preheader: won ? 'We would like to go ahead.' : 'Thank you for pricing.',
+        title: won ? 'Your price was accepted' : 'Thank you for pricing',
         intro,
         blocks,
         footerNote: 'Reply to this email and it reaches our purchasing team.',
@@ -363,7 +369,159 @@ async function sendRfqOutcome({ supplier, rfq, won, poNumber = null }) {
       text,
     });
   } catch (error) {
-    console.error(`  Mail: RFQ outcome for ${supplier?.email} could not be built — ${error.message}`);
+    console.error(
+      `  Mail: purchase outcome for ${supplier?.email} could not be built — ${error.message}`,
+    );
+    return { delivered: false, via: null, error: error.message };
+  }
+}
+
+/**
+ * We would like a better price. Sent whenever a negotiation round opens.
+ *
+ * The ask is stated plainly — a round that only says "please review" gives the
+ * supplier nothing to answer. Where a target total was set it goes in the
+ * message, because the number is the whole point of the conversation.
+ */
+async function sendNegotiationEmail({ supplier, po, askedTotal, note, subject }) {
+  if (!supplier?.email) {
+    return { delivered: false, via: null, error: 'No email address on file.' };
+  }
+
+  try {
+    const origin = env.publicOrigin;
+    const link = `${origin}/supplier/orders/${po._id ?? po.id}`;
+
+    const blocks =
+      detailTable([
+        ['Purchase order', po.poNumber, false],
+        ...(askedTotal != null ? [['Our target', money(askedTotal), true]] : []),
+      ]) +
+      (note
+        ? `
+        <tr><td style="padding:18px 36px 0;">
+          <p style="margin:0;font:400 ${MAIL.small}/1.6 ${MAIL.body};color:${MAIL.ink700};">${escapeHtml(note)}</p>
+        </td></tr>`
+        : '') +
+      button(link, 'Revise your price');
+
+    const text = [
+      `We would like to revisit ${po.poNumber}.`,
+      '',
+      ...(askedTotal != null ? [`  Our target  ${money(askedTotal)}`] : []),
+      ...(note ? ['', note] : []),
+      '',
+      `  Revise here  ${link}`,
+      '',
+      `${BUSINESS_INFO.name} · ${BUSINESS_INFO.address.city}, ${BUSINESS_INFO.address.region}`,
+    ].join('\n');
+
+    return await sendMail({
+      to: supplier.email,
+      from: env.MAIL_FROM_ADMIN,
+      subject: subject ?? `We would like to revisit ${po.poNumber}`,
+      html: shell({
+        preheader: 'We would like to talk about the price.',
+        title: 'About your price',
+        intro: `Thank you for pricing <strong style="color:${MAIL.ink900};font-weight:600;">${escapeHtml(po.poNumber)}</strong>. Before we place it we would like to see whether there is any movement on the figure below.`,
+        blocks,
+        footerNote: `Reference ${escapeHtml(po.poNumber)}. Reply to this email and it reaches our purchasing team.`,
+      }),
+      text,
+    });
+  } catch (error) {
+    console.error(
+      `  Mail: negotiation for ${supplier?.email} could not be built — ${error.message}`,
+    );
+    return { delivered: false, via: null, error: error.message };
+  }
+}
+
+/**
+ * The non-email channels, where the supplier has consented to them.
+ *
+ * **Nothing sends yet, and this says so rather than pretending.** There is no
+ * Twilio or WhatsApp client anywhere in this codebase — `marketingService`'s
+ * own adapters declare `delivers: () => false` for both, so credentials can be
+ * saved on the API Keys screen and still transmit nothing (§6b U3, phase 13).
+ *
+ * So this returns `false` **always**, and the negotiation round records only the
+ * channels that genuinely carried the message. That matters more here than on
+ * the customer side: a round claiming it was WhatsApped is a fact a buyer would
+ * act on — they would stop chasing, believing the supplier had been reached.
+ * The message is logged so the intent is not lost, and wiring a real client
+ * later is a change to this one function.
+ *
+ * `MessageLog` is deliberately not written: every row in it is keyed to a
+ * `User`, and a supplier is not one (rule 4).
+ */
+async function sendSupplierMessage({ supplier, channel, po, askedTotal, note }) {
+  const body = [
+    `${BUSINESS_INFO.name}: we would like to revisit ${po.poNumber}.`,
+    askedTotal != null ? `Our target is ${money(askedTotal)}.` : null,
+    note,
+    `${env.publicOrigin}/supplier/orders/${po._id ?? po.id}`,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  console.warn(
+    `  Purchase: ${channel} to ${supplier?.name ?? 'supplier'} not sent — no ${channel} client is wired up. Message was: ${body}`,
+  );
+  return false;
+}
+
+/**
+ * Tell the purchasing desk that a supplier did something.
+ *
+ * A proforma invoice and a delivery update both arrive from **outside** the
+ * panel, which is exactly the class of event nobody discovers on their own —
+ * the bell catches it, and this makes sure it also reaches somebody not looking
+ * at the screen.
+ */
+async function sendPurchaseAdminAlert({ subject, po, supplierName, kind, status }) {
+  const to = env.MAIL_FROM_ADMIN;
+  if (!to) return { delivered: false, via: null, error: 'No admin address configured.' };
+
+  try {
+    const origin = env.publicOrigin;
+    const link = `${origin}/admin/purchase-orders/${po._id ?? po.id}`;
+
+    const intro =
+      kind === 'proforma'
+        ? `<strong style="color:${MAIL.ink900};font-weight:600;">${escapeHtml(supplierName ?? 'A supplier')}</strong> has issued a proforma invoice against ${escapeHtml(po.poNumber)}. It is on the order for review.`
+        : `<strong style="color:${MAIL.ink900};font-weight:600;">${escapeHtml(supplierName ?? 'A supplier')}</strong> has updated the delivery on ${escapeHtml(po.poNumber)}${status ? ` — now ${escapeHtml(String(status).replace('_', ' '))}` : ''}.`;
+
+    const text = [
+      subject,
+      '',
+      `  Purchase order  ${po.poNumber}`,
+      `  Supplier        ${supplierName ?? '—'}`,
+      ...(status ? [`  Delivery        ${String(status).replace('_', ' ')}`] : []),
+      '',
+      `  Open  ${link}`,
+    ].join('\n');
+
+    return await sendMail({
+      to,
+      from: env.MAIL_FROM_ADMIN,
+      subject,
+      html: shell({
+        preheader: subject,
+        title: kind === 'proforma' ? 'Proforma invoice received' : 'Delivery update',
+        intro,
+        blocks:
+          detailTable([
+            ['Purchase order', po.poNumber, false],
+            ['Supplier', supplierName ?? '—', false],
+            ...(status ? [['Delivery', String(status).replace('_', ' '), true]] : []),
+          ]) + button(link, 'Open the order'),
+        footerNote: 'You are receiving this because you handle purchasing.',
+      }),
+      text,
+    });
+  } catch (error) {
+    console.error(`  Mail: purchase admin alert could not be built — ${error.message}`);
     return { delivered: false, via: null, error: error.message };
   }
 }
@@ -371,6 +529,9 @@ async function sendRfqOutcome({ supplier, rfq, won, poNumber = null }) {
 export {
   sendSupplierPortalInvite,
   sendSupplierResetEmail,
-  sendRfqInvitation,
-  sendRfqOutcome,
+  sendPurchaseOrderInvitation,
+  sendPurchaseOrderOutcome,
+  sendNegotiationEmail,
+  sendSupplierMessage,
+  sendPurchaseAdminAlert,
 };

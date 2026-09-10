@@ -41,7 +41,7 @@ const AUDIT_ENTITIES = [
   'quote',
   'rma',
   'offer',
-  'outlet',
+  'business',
   'campaign',
   'settings',
   'referral',

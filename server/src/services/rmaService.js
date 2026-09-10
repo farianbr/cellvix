@@ -173,7 +173,7 @@ function proposedRefund(rma) {
 
 // ---- read -------------------------------------------------------------------
 
-async function listRmas({ q, status, from, to, user, outlet } = {}) {
+async function listRmas({ q, status, from, to, user, business } = {}) {
   const settings = await Settings.load();
   const slaDays = settings?.operations?.rmaSlaDays ?? 14;
 
@@ -184,11 +184,11 @@ async function listRmas({ q, status, from, to, user, outlet } = {}) {
   // built and shipping, so an operator on a customer with five returns was
   // told the feature did not exist yet.
   if (user) query.user = user;
-  // Scoped to the outlet the panel is switched to, when it is switched to one.
-  // Resolved by `resolveOutletScope` rather than read from the query string,
-  // because a staff member's own outlet is binding and must not be widened by
+  // Scoped to the business the panel is switched to, when it is switched to one.
+  // Resolved by `resolveBusinessScope` rather than read from the query string,
+  // because a staff member's own business is binding and must not be widened by
   // editing a URL.
-  if (outlet) query.outlet = outlet;
+  if (business) query.business = business;
 
   if (status === 'open') query.status = { $in: RMA_OPEN_STATUSES };
   else if (status === 'overdue') query.status = { $in: RMA_OPEN_STATUSES };

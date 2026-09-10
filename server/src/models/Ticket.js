@@ -135,7 +135,7 @@ const ticketSchema = new mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
 
     /** The shop whose bench holds the device. */
-    outlet: { type: mongoose.Schema.Types.ObjectId, ref: 'Outlet', default: null, index: true },
+    business: { type: mongoose.Schema.Types.ObjectId, ref: 'Business', default: null, index: true },
 
 
     // --- what --------------------------------------------------------------

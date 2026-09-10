@@ -1,20 +1,34 @@
 import { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { useFieldArray, useForm } from 'react-hook-form';
-import { AlertCircle, ArrowLeft, ClipboardList, Plus, Save, Trash2, Truck, X } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowLeft,
+  Check,
+  ClipboardList,
+  Plus,
+  Save,
+  Trash2,
+  Truck,
+  X,
+} from 'lucide-react';
 import cn from '@/lib/cn';
 import { money } from '@/lib/format';
 import Panel from '@/components/ui/Panel';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
-import SelectField from '@/components/ui/SelectField';
 import Button from '@/components/ui/Button';
 import PageHeader from '@/components/admin/PageHeader';
 import InventoryPicker from '@/components/admin/InventoryPicker';
+import ComponentTypePicker from '@/components/admin/ComponentTypePicker';
 import { useTableClasses } from '@/components/admin/DataTable';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
-import { useAdminSuppliers, useAdminMutations } from '@/hooks/useAdmin';
+import {
+  useAdminSuppliers,
+  useAdminMutations,
+  useSuppliersForComponentTypes,
+} from '@/hooks/useAdmin';
 import { pressable } from '@/lib/motion';
 
 /**
@@ -30,20 +44,120 @@ import { pressable } from '@/lib/motion';
  * `?supplier=<id>` preselects, which is how the supplier profile's **New PO**
  * button arrives here.
  *
+ * **An order is raised to several suppliers, not one** (re-ruled 2026-09-11).
+ * The picker is tag-driven — tick the component types, and every active
+ * supplier carrying one of them is offered — because "who sells batteries" is
+ * the question a purchasing clerk actually has. Anybody can still be added by
+ * hand: the tags are a default, not a rule.
+ *
  * **Nothing this page computes is trusted.** The totals below are a preview;
  * `purchaseService` recomputes every one of them from the lines on write
- * (§8, invariant 8). What the client does send is `unitCost` — a purchase price
- * is negotiated per order and has no catalogue value to read it from.
+ * (§8, invariant 8). Unit costs typed here are an *expectation* — the price the
+ * order is finally placed at comes from the confirmed supplier's own bid.
  */
 const ADMIN_PAGE = {
   ...ADMIN_ROUTES['/admin/purchase-orders'],
   icon: adminIcon('ClipboardList'),
 };
 
-const STATUSES = [
-  { value: 'draft', label: 'Draft' },
-  { value: 'sent', label: 'Sent' },
-];
+/**
+ * Who the order goes to.
+ *
+ * **Tag-suggested and pre-ticked, with every other supplier underneath.** The
+ * suggestion answers the question a clerk actually has — "who sells batteries"
+ * — and pre-ticking it means the common case is no clicks at all. The full list
+ * stays reachable because a tag is a default, not a rule: a supplier nobody has
+ * tagged yet is still a supplier somebody may want a price from.
+ */
+function SupplierMultiSelect({ componentTypes, allSuppliers, value, onChange }) {
+  const { data, isLoading } = useSuppliersForComponentTypes(componentTypes);
+  const suggested = data?.suppliers ?? [];
+  const suggestedIds = new Set(suggested.map((supplier) => supplier.id));
+
+  // Everything the tags did not surface, so the picker is never a dead end.
+  const others = allSuppliers.filter((supplier) => !suggestedIds.has(supplier.id));
+
+  function toggle(id) {
+    onChange(value.includes(id) ? value.filter((item) => item !== id) : [...value, id]);
+  }
+
+  function Row({ id, name, hint }) {
+    const on = value.includes(id);
+    return (
+      <button
+        key={id}
+        type="button"
+        aria-pressed={on}
+        onClick={() => toggle(id)}
+        className={cn(
+          pressable,
+          'flex w-full items-start gap-2.5 rounded-md border p-2.5 text-left',
+          on ? 'border-ok/40 bg-ok-50' : 'border-line bg-surface hover:border-line-strong',
+        )}
+      >
+        <span
+          className={cn(
+            'mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-sm border',
+            on ? 'border-ok bg-ok text-white' : 'border-line-strong',
+          )}
+        >
+          {on && <Check className="size-3" strokeWidth={3} aria-hidden="true" />}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-medium text-ink-900">{name}</span>
+          {hint && <span className="block truncate text-xs text-ink-400">{hint}</span>}
+        </span>
+      </button>
+    );
+  }
+
+  return (
+    <div className="mt-3 space-y-3">
+      {componentTypes.length > 0 && (
+        <div>
+          <p className="eyebrow mb-1.5 text-ink-400">Tagged with what you picked</p>
+          {isLoading ? (
+            <p className="text-sm text-ink-400">Looking…</p>
+          ) : !suggested.length ? (
+            <p className="text-sm text-ink-400">
+              Nobody is tagged with these component types yet. Tag your suppliers on the Suppliers
+              screen, or pick from the full list below.
+            </p>
+          ) : (
+            <div className="grid gap-1.5 sm:grid-cols-2">
+              {suggested.map((supplier) => (
+                <Row
+                  key={supplier.id}
+                  id={supplier.id}
+                  name={supplier.name}
+                  hint={`${supplier.matched.join(', ')}${supplier.hasPortal ? '' : ' · no portal access'}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {others.length > 0 && (
+        <details className="rounded-md border border-line">
+          <summary
+            className={cn(
+              pressable,
+              'cursor-pointer select-none px-3 py-2 text-sm font-medium text-ink-700',
+            )}
+          >
+            Every other supplier ({others.length})
+          </summary>
+          <div className="grid gap-1.5 border-t border-line p-2.5 sm:grid-cols-2">
+            {others.map((supplier) => (
+              <Row key={supplier.id} id={supplier.id} name={supplier.name} />
+            ))}
+          </div>
+        </details>
+      )}
+    </div>
+  );
+}
 
 /** `YYYY-MM-DD` in local time — `toISOString()` would shift the day westward. */
 function isoDay(offsetDays = 0) {
@@ -66,9 +180,17 @@ export function AdminPurchaseOrderCreatePage() {
   const { createPurchaseOrder } = useAdminMutations();
   const [error, setError] = useState(null);
 
+  // Who the order goes to, and what it is tagged with. Local state rather than
+  // form fields: both are lists the pickers own, and `react-hook-form` gains
+  // nothing from holding an array nobody validates per-field.
+  const preselected = searchParams.get('supplier');
+  const [pickedSuppliers, setPickedSuppliers] = useState(
+    preselected ? [preselected] : [],
+  );
+  const [componentTypes, setComponentTypes] = useState([]);
+
   const { register, handleSubmit, control, watch, setValue } = useForm({
     defaultValues: {
-      supplier: searchParams.get('supplier') ?? '',
       orderDate: isoDay(),
       // A week out. A date an operator can correct beats an empty field they
       // have to fill in on every order.
@@ -122,9 +244,12 @@ export function AdminPurchaseOrderCreatePage() {
 
     createPurchaseOrder.mutate(
       {
-        supplier: values.supplier,
+        title: values.title || undefined,
+        suppliers: pickedSuppliers,
+        componentTypes,
         orderDate: values.orderDate || undefined,
         expectedDate: values.expectedDate || undefined,
+        closesAt: values.closesAt || undefined,
         tax,
         shipping,
         notes: values.notes || undefined,
@@ -133,10 +258,6 @@ export function AdminPurchaseOrderCreatePage() {
           qtyOrdered: Number(line.qtyOrdered),
           unitCost: Math.round(Number(line.unitCostDollars || 0) * 100),
         })),
-        // `sent` on create is a real choice — an order raised from a phone call
-        // was already placed, and making the operator create a draft and then
-        // immediately send it records a state that never existed.
-        status: values.status,
       },
       {
         onSuccess: (payload) => {
@@ -172,34 +293,53 @@ export function AdminPurchaseOrderCreatePage() {
         </p>
       )}
 
-      <Panel title="Supplier & order details" className="mb-3">
-        <div className="mb-3">
-          <SelectField
-            control={control}
-            name="supplier"
-            label="Supplier"
-            required
-            rules={{ required: 'Choose the supplier this order goes to.' }}
-            options={[
-              { value: '', label: '— Select saved supplier —' },
-              ...suppliers.map((supplier) => ({ value: supplier.id, label: supplier.name })),
-            ]}
-          />
-          {/* The supplier list owns the add form, so this hands off to it and
-              comes back — one form, one place its rules can drift. */}
-          <Link
-            to="/admin/suppliers?new=1"
-            className="mt-1.5 inline-flex items-center gap-1 text-sm font-semibold text-brand hover:underline"
-          >
-            <Plus className="size-3.5 shrink-0" strokeWidth={2.5} aria-hidden="true" />
-            Add new supplier
-          </Link>
-        </div>
+      <Panel title="Who to ask" className="mb-3">
+        <p className="mb-2 text-sm text-ink-500">
+          Tick the component types this order covers and the suppliers tagged with them appear
+          below, already selected. Add anybody else by hand.
+        </p>
 
+        <ComponentTypePicker value={componentTypes} onChange={setComponentTypes} />
+
+        <SupplierMultiSelect
+          componentTypes={componentTypes}
+          allSuppliers={suppliers}
+          value={pickedSuppliers}
+          onChange={setPickedSuppliers}
+        />
+
+        {/* The supplier list owns the add form, so this hands off to it and
+            comes back — one form, one place its rules can drift. */}
+        <Link
+          to="/admin/suppliers?new=1"
+          className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand hover:underline"
+        >
+          <Plus className="size-3.5 shrink-0" strokeWidth={2.5} aria-hidden="true" />
+          Add new supplier
+        </Link>
+      </Panel>
+
+      <Panel title="Order details" className="mb-3">
+        <Input
+          label="Title"
+          placeholder="Q4 screen restock — Samsung S-series"
+          hint="Optional. What this order is for, in a few words."
+          containerClassName="mb-3"
+          {...register('title')}
+        />
+
+        {/* Status is no longer chosen here. An order reaches `sent` by actually
+            being sent — which mails every supplier on it — so offering it as a
+            dropdown on create would record a state nobody was told about. */}
         <div className="grid gap-3 sm:grid-cols-3">
           <Input label="Order date" type="date" required {...register('orderDate')} />
           <Input label="Expected delivery" type="date" {...register('expectedDate')} />
-          <SelectField control={control} name="status" label="Status" options={STATUSES} />
+          <Input
+            label="Prices due by"
+            type="date"
+            hint="Optional deadline for answers."
+            {...register('closesAt')}
+          />
         </div>
 
         <Textarea

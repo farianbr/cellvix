@@ -9,7 +9,7 @@ import { regionsFor, regionLabelFor, postalLabelFor, postalExampleFor } from '@s
  * shape depending on where it is.
  *
  * **One component because there were three**, and they had already drifted: the
- * customer form imported the shared Canadian province list, the outlet form
+ * customer form imported the shared Canadian province list, the business form
  * imported the same list, and the supplier form declared its own array of
  * thirteen two-letter codes with no labels. All three offered a country select
  * that changed nothing — so an operator could pick Germany and then be asked

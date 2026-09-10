@@ -94,7 +94,7 @@ async function applyStockMovement({
   reference,
   note,
   createdBy,
-  outlet,
+  business,
 }) {
   const doc = await Product.findById(product).select('_id stock name sku');
   if (!doc) throw ApiError.notFound('Product not found.', 'PRODUCT_NOT_FOUND');
@@ -114,7 +114,7 @@ async function applyStockMovement({
 
   await StockMovement.create({
     product: doc._id,
-    outlet: outlet ?? undefined,
+    business: business ?? undefined,
     type,
     qtyChange,
     qtyAfter: updated.stock,
@@ -381,6 +381,11 @@ async function toggleSupplier(id) {
  * excludes them.
  */
 async function refreshSupplierTotals(supplierId) {
+  // A purchase order has no supplier until one is confirmed, so every caller
+  // that runs before that point passes nothing. Returning early beats making
+  // each of them remember to check.
+  if (!supplierId || !isObjectId(supplierId)) return;
+
   const [row] = await PurchaseOrder.aggregate([
     {
       $match: {
@@ -415,9 +420,20 @@ function shapePurchaseOrder(po) {
   return {
     id: po._id.toString(),
     poNumber: po.poNumber,
+    title: po.title ?? null,
+    // The CONFIRMED supplier, which is null until one is picked. A PO out for
+    // pricing genuinely has nobody it is with, and `—` is the honest answer
+    // rather than a name borrowed from whoever happens to be bidding.
     supplier: po.supplier?.name
       ? { id: po.supplier._id.toString(), name: po.supplier.name, email: po.supplier.email ?? null }
       : { id: po.supplier?.toString() ?? null, name: '—', email: null },
+    componentTypes: po.componentTypes ?? [],
+    bidCount: (po.bids ?? []).length,
+    quoteCount: (po.bids ?? []).filter((bid) => bid.status === 'quoted').length,
+    confirmedBid: po.confirmedBid?.toString() ?? null,
+    confirmedAt: po.confirmedAt ?? null,
+    closesAt: po.closesAt ?? null,
+    closed: Boolean(po.closesAt && new Date(po.closesAt) < new Date()),
     status: po.status,
     orderDate: po.orderDate,
     expectedDate: po.expectedDate ?? null,
@@ -470,19 +486,31 @@ function recomputeTotals(po) {
 /**
  * Status from receiving, not from a client.
  *
- * `draft` and `cancelled` are decisions and are left alone; everything else is
- * a reading of the lines. A PO with nothing received stays `sent`, one with a
- * short line is `partial`, and only a PO with every line complete is
- * `received`. Same shape as `recomputeInvoice` in `adminService`, for the same
- * reason: a header that disagrees with its rows is a header nobody can trust.
+ * **Only the receiving half of the life cycle is derived.** Everything up to
+ * and including `confirmed` is a decision somebody made — a draft is being
+ * written, a sent order is out with suppliers, a negotiating one is mid
+ * conversation, a confirmed one is placed — and none of those can be read off
+ * the quantities, because all four have received nothing. Deriving them would
+ * mean `received <= 0` stamping every one of them back to `sent`, which is how
+ * a negotiation in progress silently loses its stage.
+ *
+ * Past that point it is a reading of the lines: a PO with a short line is
+ * `partial`, and only one with every line complete is `received`. Same shape as
+ * `recomputeInvoice` in `adminService`, for the same reason: a header that
+ * disagrees with its rows is a header nobody can trust.
  */
-function recomputeStatus(po) {
-  if (po.status === 'draft' || po.status === 'cancelled') return po;
+const PO_PRE_RECEIVING = ['draft', 'sent', 'negotiating', 'confirmed', 'cancelled'];
 
+function recomputeStatus(po) {
   const received = po.items.reduce((sum, item) => sum + (item.qtyReceived ?? 0), 0);
+
+  // A stage nothing has been received against keeps whatever it was set to.
+  if (received <= 0 && PO_PRE_RECEIVING.includes(po.status)) return po;
+  if (po.status === 'cancelled') return po;
+
   const ordered = po.items.reduce((sum, item) => sum + item.qtyOrdered, 0);
 
-  if (received <= 0) po.status = 'sent';
+  if (received <= 0) po.status = 'confirmed';
   else if (received >= ordered) po.status = 'received';
   else po.status = 'partial';
 
@@ -615,12 +643,19 @@ async function getPurchaseOrder(id) {
  * an order line is — a PO raised in March must still read correctly when the
  * product is renamed in June.
  */
+/**
+ * Raise a purchase order.
+ *
+ * **No supplier is named yet** — the order is raised to ask several of them
+ * what it costs, and `confirmSupplier` picks the one it is placed with. The
+ * suppliers ticked at this stage become `bids` in the `invited` state; nothing
+ * reaches them until the order is sent.
+ */
 async function createPurchaseOrder(body, createdBy) {
-  const supplier = await Supplier.findById(body.supplier).lean();
-  if (!supplier) throw ApiError.badRequest('Pick a supplier.', 'SUPPLIER_NOT_FOUND');
-
   const ids = body.items.map((item) => item.product).filter(isObjectId);
-  const products = await Product.find({ _id: { $in: ids } }).select('name sku').lean();
+  const products = await Product.find({ _id: { $in: ids } })
+    .select('name sku partType')
+    .lean();
   const byId = new Map(products.map((product) => [product._id.toString(), product]));
 
   const items = body.items.map((item) => {
@@ -634,18 +669,32 @@ async function createPurchaseOrder(body, createdBy) {
       name: product.name,
       qtyOrdered: item.qtyOrdered,
       qtyReceived: 0,
-      unitCost: item.unitCost,
-      lineTotal: item.qtyOrdered * item.unitCost,
+      // Zero until a supplier is confirmed. A cost typed on the create form is
+      // an expectation, not the price the order is placed at.
+      unitCost: item.unitCost ?? 0,
+      lineTotal: item.qtyOrdered * (item.unitCost ?? 0),
     };
   });
 
+  const bids = await buildBids(body.suppliers ?? []);
+
+  // What the suppliers were chosen by. Falls back to the component types the
+  // lines actually carry, so an order raised without ticking any still records
+  // what it covers.
+  const componentTypes = body.componentTypes?.length
+    ? body.componentTypes
+    : [...new Set(products.map((product) => product.partType).filter(Boolean))];
+
   const po = new PurchaseOrder({
     poNumber: await nextNumber(PurchaseOrder, 'poNumber', 'PO'),
-    supplier: supplier._id,
+    title: body.title,
     status: 'draft',
+    componentTypes,
     orderDate: toDate(body.orderDate, new Date()),
     expectedDate: toDate(body.expectedDate),
+    closesAt: toDate(body.closesAt),
     items,
+    bids,
     tax: body.tax ?? 0,
     shipping: body.shipping ?? 0,
     notes: body.notes,
@@ -655,9 +704,24 @@ async function createPurchaseOrder(body, createdBy) {
 
   recomputeTotals(po);
   await po.save();
-  await refreshSupplierTotals(supplier._id);
 
   return { order: shapePurchaseOrder(po.toObject()) };
+}
+
+/** Turns a list of supplier ids into `invited` bids, skipping any that are gone. */
+async function buildBids(supplierIds) {
+  const ids = [...new Set((supplierIds ?? []).map(String))].filter(isObjectId);
+  if (!ids.length) return [];
+
+  const suppliers = await Supplier.find({ _id: { $in: ids }, isActive: true })
+    .select('name')
+    .lean();
+
+  return suppliers.map((supplier) => ({
+    supplier: supplier._id,
+    supplierName: supplier.name,
+    status: 'invited',
+  }));
 }
 
 /** Edits stop at `draft` — once a PO has been sent, the supplier is working
@@ -674,21 +738,20 @@ async function updatePurchaseOrder(id, body) {
     );
   }
 
-  const supplier = await Supplier.findById(body.supplier).lean();
-  if (!supplier) throw ApiError.badRequest('Pick a supplier.', 'SUPPLIER_NOT_FOUND');
-
-  const previousSupplier = po.supplier;
-
   const ids = body.items.map((item) => item.product).filter(isObjectId);
-  const products = await Product.find({ _id: { $in: ids } }).select('name sku').lean();
+  const products = await Product.find({ _id: { $in: ids } })
+    .select('name sku partType')
+    .lean();
   const byId = new Map(products.map((product) => [product._id.toString(), product]));
 
-  po.supplier = supplier._id;
+  po.title = body.title;
   po.orderDate = toDate(body.orderDate, po.orderDate);
   po.expectedDate = toDate(body.expectedDate);
+  po.closesAt = toDate(body.closesAt);
   po.tax = body.tax ?? 0;
   po.shipping = body.shipping ?? 0;
   po.notes = body.notes;
+  if (body.componentTypes?.length) po.componentTypes = body.componentTypes;
   po.items = body.items.map((item) => {
     const product = byId.get(String(item.product));
     if (!product) {
@@ -700,26 +763,36 @@ async function updatePurchaseOrder(id, body) {
       name: product.name,
       qtyOrdered: item.qtyOrdered,
       qtyReceived: 0,
-      unitCost: item.unitCost,
-      lineTotal: item.qtyOrdered * item.unitCost,
+      unitCost: item.unitCost ?? 0,
+      lineTotal: item.qtyOrdered * (item.unitCost ?? 0),
     };
   });
 
+  // Suppliers on a draft are replaced wholesale, but a bid that already carries
+  // a price is kept: re-saving the form after adding a line must not throw away
+  // an answer that has already come back.
+  if (body.suppliers) {
+    const wanted = new Set(body.suppliers.map(String));
+    const keep = (po.bids ?? []).filter((bid) => wanted.has(String(bid.supplier)));
+    const kept = new Set(keep.map((bid) => String(bid.supplier)));
+    const added = await buildBids(body.suppliers.filter((id) => !kept.has(String(id))));
+    po.bids = [...keep, ...added];
+  }
+
   recomputeTotals(po);
   await po.save();
-
-  // Both suppliers are refreshed when the PO moved between them, or the old
-  // one keeps counting money it is no longer owed.
-  await refreshSupplierTotals(supplier._id);
-  if (String(previousSupplier) !== String(supplier._id)) {
-    await refreshSupplierTotals(previousSupplier);
-  }
 
   return { order: shapePurchaseOrder(po.toObject()) };
 }
 
 /**
- * `draft → sent`, or cancel.
+ * Cancel a purchase order.
+ *
+ * **Sending is no longer reachable here.** It lives in
+ * `purchaseBidService.sendPurchaseOrder`, which also mails every supplier the
+ * order is being put to — two routes that both set `sent` would mean one of
+ * them silently skipping the mail, and an order nobody was told about looks
+ * identical to one they ignored.
  *
  * Cancelling a PO that has already taken delivery is refused: that stock is on
  * the shelf, and cancelling the paperwork behind it would leave a quantity with
@@ -731,13 +804,10 @@ async function setPurchaseOrderStatus(id, { status, note }) {
   if (!po) throw ApiError.notFound('Purchase order not found.', 'PO_NOT_FOUND');
 
   if (status === 'sent') {
-    if (po.status !== 'draft') {
-      throw ApiError.badRequest(`${po.poNumber} has already been sent.`, 'PO_ALREADY_SENT');
-    }
-    if (!po.items.length) {
-      throw ApiError.badRequest('Add a line before sending this order.', 'PO_EMPTY');
-    }
-    po.status = 'sent';
+    throw ApiError.badRequest(
+      'Send this order from its suppliers panel, so the suppliers on it are actually told.',
+      'PO_SEND_VIA_BIDS',
+    );
   } else {
     if (po.status === 'cancelled') {
       throw ApiError.badRequest(`${po.poNumber} is already cancelled.`, 'PO_ALREADY_CANCELLED');

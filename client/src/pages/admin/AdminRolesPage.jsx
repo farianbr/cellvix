@@ -45,7 +45,7 @@ const AREA_LABELS = {
   purchase: 'Purchase',
   reports: 'Reports',
   marketing: 'Marketing',
-  outlet: 'Outlet',
+  business: 'Business',
   settings: 'Settings',
 };
 

@@ -25,7 +25,7 @@ const supplierSchema = new mongoose.Schema(
       city: String,
       region: String, // Canadian province code
       postal: String,
-      // A country name ('Canada'), as `User.address` and `Outlet.address` hold
+      // A country name ('Canada'), as `User.address` and `Business.address` hold
       // it. This was the 2-letter code until 2026-09-05; the five rows that
       // predated the change were backfilled.
       country: { type: String, default: 'Canada' },
@@ -67,6 +67,24 @@ const supplierSchema = new mongoose.Schema(
     },
 
     /**
+     * Which channel this supplier actually wants to be reached on.
+     *
+     * **Consent and preference are different facts.** `contactConsent` says what
+     * we are *allowed* to use; this says which of those they would rather we
+     * did. A supplier who consents to all four and prefers WhatsApp gets one
+     * message on WhatsApp, not four messages everywhere — and one who prefers a
+     * channel they have not consented to is a contradiction the send path
+     * resolves in consent's favour, because permission outranks preference.
+     *
+     * Email is never in this list: it always sends regardless, because it is
+     * the record a dispute reads back.
+     */
+    preferredChannel: {
+      type: String,
+      enum: ['sms', 'whatsapp', 'call'],
+    },
+
+    /**
      * A supplier who applied through the storefront rather than being entered
      * by a buyer (§ sign-up, account type "Supplying Cellvix").
      *
@@ -88,11 +106,13 @@ const supplierSchema = new mongoose.Schema(
      * Which component types this supplier is tagged with — `Product.partType`
      * slugs, the same vocabulary the storefront's step 1 offers.
      *
-     * **The tag is what makes a request for quote possible.** A purchasing
-     * clerk raising an RFQ picks component types, not suppliers: "who sells
+     * **The tag is what makes supplier bidding possible.** A purchasing clerk
+     * raising a purchase order picks component types, not suppliers: "who sells
      * batteries" is the question they actually have, and asking them to
      * remember which of forty suppliers those are is how a supplier who could
-     * have quoted never gets asked.
+     * have quoted never gets asked. It is also a column on the Suppliers table
+     * and a filter above it, because a tag nobody can see is a tag nobody
+     * maintains.
      *
      * Deliberately NOT a taxonomy reference. A component type cuts across the
      * device tree and has no node of its own (see `taxonomyService`), so this

@@ -514,15 +514,10 @@ const ADMIN_NAV = [
     children: [
       { key: 'suppliers', label: 'Suppliers', to: '/admin/suppliers', icon: 'Truck' },
       {
-        // Ahead of Purchase Orders because it comes before one: a request asks
-        // several suppliers for a price, and awarding the best answer is what
-        // raises the PO below it. The nav reads in the order the work happens.
-        key: 'rfqs',
-        label: 'Requests for Quote',
-        to: '/admin/rfqs',
-        icon: 'Send',
-      },
-      {
+        // Requests for Quote used to sit above this row. It is gone: a purchase
+        // order now carries its own bidding, so asking several suppliers and
+        // recording what was bought are one record and one screen rather than
+        // two that had to be read together (re-ruled 2026-09-11).
         key: 'pos',
         label: 'Purchase Orders',
         to: '/admin/purchase-orders',
@@ -641,13 +636,13 @@ const ADMIN_NAV = [
     ],
   },
   {
-    key: 'outlet',
-    label: 'Outlet',
+    key: 'business',
+    label: 'Businesses',
     icon: 'Store',
-    area: 'outlet',
+    area: 'business',
     children: [
-      { key: 'outlet-add', label: 'Add Outlet', to: '/admin/outlets/add', icon: 'PlusCircle' },
-      { key: 'outlet-list', label: 'List Outlet', to: '/admin/outlets', icon: 'List' },
+      { key: 'business-list', label: 'All Businesses', to: '/admin/businesses', icon: 'List' },
+      { key: 'business-add', label: 'Add Business', to: '/admin/businesses/add', icon: 'PlusCircle' },
     ],
   },
   {
@@ -712,6 +707,10 @@ const ADMIN_LEGACY_REDIRECTS = {
   '/admin/blog': '/admin/marketing/blog',
   '/admin/faqs': '/admin/marketing/faq',
   '/admin/expenses/categories': '/admin/settings/expense-categories',
+  // Requests for quote folded into the purchase order on 2026-09-11. A
+  // bookmarked or emailed `/admin/rfqs` link lands on the screen that now does
+  // that job rather than on a 404 that says only that something used to exist.
+  '/admin/rfqs': '/admin/purchase-orders',
 };
 
 /**
@@ -797,7 +796,7 @@ const supplierSchema = z.object({
       city: z.string().trim().max(80).optional(),
       region: z.string().trim().max(2).optional(),
       postal: z.string().trim().max(10).optional(),
-      // A country **name**, matching customers and outlets — not the 2-letter
+      // A country **name**, matching customers and businesses — not the 2-letter
       // code this field briefly held. One convention across the app is what
       // lets `COUNTRY_OPTIONS` serve every address form (see shared/countries).
       country: z.string().trim().max(60).default(DEFAULT_COUNTRY),
@@ -834,14 +833,34 @@ const supplierSchema = z.object({
 const purchaseOrderItemSchema = z.object({
   product: z.string().trim().min(1, 'Pick a product.'),
   qtyOrdered: z.coerce.number().int().min(1, 'Order at least one.').max(100_000),
-  unitCost: cents,
+  // Optional since the bidding rework: a line is raised to ask what it costs,
+  // and the price arrives from the confirmed supplier's bid. A cost typed at
+  // this stage is a starting expectation, not the figure the order is placed at.
+  unitCost: cents.default(0),
 });
 
+/**
+ * Raising a purchase order.
+ *
+ * **`supplier` is gone and `suppliers` replaces it** (re-ruled 2026-09-11). An
+ * order is now put to several suppliers and confirmed to one, so at the moment
+ * it is raised there is nobody it is with yet — naming a single required
+ * supplier would mean picking the winner before anybody had quoted.
+ *
+ * `unitCost` is likewise no longer collected here: the whole point of sending
+ * the order out is to find out what it costs. `confirmSupplier` copies the
+ * winning bid's prices on to the lines.
+ */
 const purchaseOrderSchema = z.object({
-  supplier: z.string().trim().min(1, 'Pick a supplier.'),
+  title: z.string().trim().max(200).optional(),
+  componentTypes: z.array(z.string().trim().min(1).max(60)).max(60).default([]),
   items: z.array(purchaseOrderItemSchema).min(1, 'Add at least one line.').max(200),
+  suppliers: z.array(z.string().trim().min(1)).max(50).default([]),
   orderDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a calendar date.').optional(),
   expectedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a calendar date.').optional(),
+  // A full timestamp, not a calendar day: "answers close Friday at 5" is a real
+  // deadline, where a bare date leaves whether Friday itself counts unanswered.
+  closesAt: z.string().trim().max(40).optional().or(z.literal('')),
   tax: cents.default(0),
   shipping: cents.default(0),
   notes: z.string().trim().max(2000).optional(),
@@ -890,58 +909,55 @@ const purchasePaymentSchema = z.object({
  * "battery", invites the battery suppliers and then adds a screen to the list
  * has still asked the battery suppliers, and recomputing would rewrite that.
  */
-const rfqSchema = z.object({
-  title: z.string().trim().max(200).optional(),
-  componentTypes: z.array(z.string().trim().min(1).max(60)).max(60).default([]),
-  items: z
-    .array(
-      z.object({
-        product: z.string().trim().min(1, 'Pick a product.'),
-        qty: z.coerce.number().int().min(1, 'Ask for at least one.').max(100_000),
-      }),
-    )
-    .min(1, 'Add at least one part.')
-    .max(200),
-  suppliers: z.array(z.string().trim().min(1)).max(50).default([]),
-  // A full timestamp, not a calendar day: "answers close Friday at 5" is a real
-  // deadline, where a bare date leaves whether Friday itself counts unanswered.
-  closesAt: z.string().trim().max(40).optional().or(z.literal('')),
-  notes: z.string().trim().max(2000).optional(),
+/** Adding suppliers to an order that is already being priced. */
+const purchaseInviteSchema = z.object({
+  supplierIds: z.array(z.string().trim().min(1)).min(1, 'Pick a supplier.').max(50),
 });
 
-const rfqSendSchema = z.object({
+const purchaseSendSchema = z.object({
   note: z.string().trim().max(300).optional(),
 });
 
-const rfqInviteSchema = z.object({
-  supplier: z.string().trim().min(1, 'Pick a supplier.'),
+/**
+ * Pushing back on a supplier's price.
+ *
+ * Either a target for the whole order or a per-line ask — both are optional,
+ * because "can you do better?" with a note and no number is a real opening
+ * move. What is never accepted is a total: `askedTotal` is what we are *asking
+ * for*, and the supplier's answer arrives as a fresh bid that is recomputed
+ * from its own lines.
+ */
+const purchaseNegotiateSchema = z.object({
+  askedTotal: cents.optional(),
+  askedLines: z
+    .array(z.object({ sku: z.string().trim().min(1), unitCost: cents.default(0) }))
+    .max(200)
+    .default([]),
+  note: z.string().trim().max(2000).optional(),
 });
 
 /**
- * Accepting one quote.
+ * Confirming the supplier this order is placed with.
  *
- * The client names the winning **invite**, never a price: the costs the
- * resulting purchase order carries are the ones the supplier already submitted,
- * read from the stored quote. A price in this payload would be a way to award
- * one number and order at another.
+ * The client names the **supplier**, never a price: the costs the order carries
+ * are the ones that supplier already submitted, read from their stored bid. A
+ * price in this payload would be a way to confirm one number and order at
+ * another.
  */
-const rfqAwardSchema = z.object({
-  inviteId: z.string().trim().min(1, 'Pick the quote to accept.'),
+const purchaseConfirmSchema = z.object({
+  supplierId: z.string().trim().min(1, 'Pick the supplier to confirm.'),
   expectedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a calendar date.').optional().or(z.literal('')),
   note: z.string().trim().max(300).optional(),
 });
 
-const rfqCancelSchema = z.object({
-  note: z.string().trim().max(300).optional(),
-});
-
 /**
- * A supplier's answer, submitted from the portal.
+ * A supplier's price, submitted from the portal.
  *
  * **The one payload in this app where a price is accepted and kept**, because
- * collecting prices from outside is the entire purpose of the document. Lines
- * are matched against the request's own SKUs server-side, so a supplier cannot
- * add a line nobody asked for, and every total is still recomputed (§8).
+ * collecting prices from outside is the entire purpose of sending the order
+ * out. Lines are matched against the order's own SKUs server-side, so a
+ * supplier cannot add a line nobody asked for, and every total is still
+ * recomputed against **our** quantities (§8).
  *
  * `available: false` is how a supplier says "not this one" — distinct from a
  * price of zero, which is a legitimate answer for a sample.
@@ -958,6 +974,7 @@ const supplierQuoteSchema = z.object({
     )
     .min(1, 'Price at least one line.')
     .max(200),
+  tax: cents.default(0),
   shipping: cents.default(0),
   leadTimeDays: z.coerce.number().int().min(0).max(365).optional(),
   validUntil: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a calendar date.').optional().or(z.literal('')),
@@ -966,6 +983,33 @@ const supplierQuoteSchema = z.object({
 
 const supplierDeclineSchema = z.object({
   reason: z.string().trim().max(500).optional(),
+});
+
+/**
+ * A proforma invoice, raised by the supplier against an order they have priced.
+ *
+ * **No totals are accepted.** The supplier states their reference, their terms
+ * and their bank details; every figure on the document is computed from the bid
+ * lines already stored. A PI whose total disagreed with the prices it was
+ * raised from would be a document nobody could reconcile.
+ */
+const supplierProformaSchema = z.object({
+  number: z.string().trim().max(60).optional(),
+  validUntil: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a calendar date.').optional().or(z.literal('')),
+  tax: cents.optional(),
+  shipping: cents.optional(),
+  paymentTerms: z.string().trim().max(300).optional(),
+  bankDetails: z.string().trim().max(1000).optional(),
+  note: z.string().trim().max(2000).optional(),
+});
+
+/** What the confirmed supplier reports about getting the goods to us. */
+const supplierDeliverySchema = z.object({
+  status: z.enum(['pending', 'preparing', 'dispatched', 'in_transit', 'delivered']),
+  carrier: z.string().trim().max(120).optional(),
+  trackingNumber: z.string().trim().max(120).optional(),
+  expectedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a calendar date.').optional().or(z.literal('')),
+  note: z.string().trim().max(1000).optional(),
 });
 
 // ---- the supplier portal's own session --------------------------------------
@@ -1111,12 +1155,12 @@ const adminOrderSchema = z.object({
   /**
    * Which shop fulfils this order.
    *
-   * Optional, and the server falls back to the outlet the operator is working
+   * Optional, and the server falls back to the business the operator is working
    * in. It is asked explicitly because the answer is not always that one: a
    * customer collecting in person picks the shop nearest them, and a delivery
    * goes out from whichever shop holds the stock.
    */
-  outlet: z.string().trim().length(24).optional().or(z.literal('')),
+  business: z.string().trim().length(24).optional().or(z.literal('')),
   poNumber: z.string().trim().max(60).optional(),
   notes: z.string().trim().max(2000).optional(),
 });
@@ -1536,7 +1580,7 @@ const ticketStatusSchema = z.object({
   note: z.string().trim().max(300).optional(),
 });
 
-// ---- phase 8: outlets, roles and staff --------------------------------------
+// ---- phase 8: businesses, roles and staff --------------------------------------
 
 /**
  * Access areas and levels (§7.6). Duplicated from `models/Role.js` rather than
@@ -1549,7 +1593,7 @@ const PERMISSION_AREAS = [
   'purchase',
   'reports',
   'marketing',
-  'outlet',
+  'business',
   'settings',
 ];
 
@@ -1562,12 +1606,12 @@ const PERMISSION_LEVEL_LABELS = {
   full: 'Full',
 };
 
-const OUTLET_STATUSES = ['active', 'inactive', 'maintenance'];
-const OUTLET_COLOR_TOKENS = ['brand', 'info', 'success', 'warn', 'danger', 'ink'];
+const BUSINESS_STATUSES = ['active', 'inactive', 'maintenance'];
+const BUSINESS_COLOR_TOKENS = ['brand', 'info', 'success', 'warn', 'danger', 'ink'];
 
 const POSTAL_CA = /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/;
 
-const outletHoursSchema = z.object({
+const businessHoursSchema = z.object({
   day: z.enum(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']),
   open: z.string().trim().max(5).optional(),
   close: z.string().trim().max(5).optional(),
@@ -1578,17 +1622,17 @@ const outletHoursSchema = z.object({
  * `code` is absent on purpose — it is assigned server-side (§6.14). A code the
  * form proposes is a code two operators can pick in the same moment.
  */
-const outletSchema = z.object({
-  name: z.string().trim().min(1, 'Enter an outlet name.').max(120),
-  status: z.enum(OUTLET_STATUSES).default('active'),
-  colorToken: z.enum(OUTLET_COLOR_TOKENS).default('brand'),
+const businessSchema = z.object({
+  name: z.string().trim().min(1, 'Enter an business name.').max(120),
+  status: z.enum(BUSINESS_STATUSES).default('active'),
+  colorToken: z.enum(BUSINESS_COLOR_TOKENS).default('brand'),
   address: z
     .object({
       street: z.string().trim().max(200).optional(),
       line2: z.string().trim().max(200).optional(),
       city: z.string().trim().max(120).optional(),
       region: z.string().trim().max(60).optional(),
-      // Empty is allowed — an outlet can be filed before its lease is signed —
+      // Empty is allowed — an business can be filed before its lease is signed —
       // but a value that is present must be a real postal code FOR ITS OWN
       // COUNTRY. Checked in the refinement below, because the rule cannot be
       // known until `country` has been read.
@@ -1599,7 +1643,7 @@ const outletSchema = z.object({
   phone: z.string().trim().max(40).optional(),
   email: z.string().trim().email('Enter a valid email.').optional().or(z.literal('')),
   manager: z.string().trim().max(120).optional(),
-  hours: z.array(outletHoursSchema).max(7).optional(),
+  hours: z.array(businessHoursSchema).max(7).optional(),
   notes: z.string().trim().max(2000).optional(),
 }).superRefine((value, ctx) => {
   const postal = value.address?.postal;
@@ -1639,7 +1683,7 @@ const staffUserSchema = z
     phone: z.string().trim().max(40).optional(),
     accountType: z.enum(['staff', 'admin']).default('staff'),
     staffRole: z.string().trim().optional(),
-    outlet: z.string().trim().optional(),
+    business: z.string().trim().optional(),
   })
   .refine((value) => value.accountType !== 'staff' || Boolean(value.staffRole), {
     message: 'Choose a role for this staff member.',
@@ -1652,7 +1696,7 @@ const staffUserUpdateSchema = z.object({
   phone: z.string().trim().max(40).optional(),
   accountType: z.enum(['staff', 'admin']).optional(),
   staffRole: z.string().trim().nullable().optional(),
-  outlet: z.string().trim().nullable().optional(),
+  business: z.string().trim().nullable().optional(),
   locked: z.boolean().optional(),
 });
 
@@ -2098,4 +2142,4 @@ const supplierChargeSchema = z.object({
   reference: z.string().trim().max(80).optional(),
 });
 
-export { quoteToTicketSchema, ticketDepositSchema, ticketConvertSchema, TAX_RATES, INVOICE_SERVICE_TYPES, ORDER_OPEN_STATUSES, ORDER_UNFULFILLED_STATUSES, approveUserSchema, rejectUserSchema, creditSchema, clientSchema, clientFormSchema, clientCreateFormSchema, clientUpdateSchema, CONSENT_CHANNELS, contactConsentSchema, MEMBERSHIP_TIERS, tierSchema, internalNoteSchema, storeCreditSchema, refundSchema, userStatusSchema, productSchema, ORDER_STATUS_FLOW, orderStatusSchema, CARRIERS, ADMIN_NAV, ADMIN_LEGACY_REDIRECTS, invoicePaymentSchema, invoiceVoidSchema, webQuoteStatusSchema, creditPaymentSchema, invoiceUpdateSchema, bulkOrderStatusSchema, supplierSchema, purchaseOrderSchema, purchaseOrderStatusSchema, purchaseReceiveSchema, purchasePaymentSchema, rfqSchema, rfqSendSchema, rfqInviteSchema, rfqAwardSchema, rfqCancelSchema, supplierQuoteSchema, supplierDeclineSchema, supplierLoginSchema, supplierForgotSchema, supplierResetSchema, supplierPasswordSchema, expenseSchema, expenseCategorySchema, stockAdjustSchema, productOpsSchema, quoteSchema, quoteStatusSchema, quoteConvertSchema, adminOrderSchema, adminInvoiceSchema, RMA_ITEM_DISPOSITIONS, rmaSchema, TICKET_STATUSES, TICKET_PRIORITIES, TICKET_SOURCES, TICKET_STATUS_LABELS, CONDITION_GRADES, CONDITION_PARTS, ticketSchema, ticketDeviceSchema, ticketLineSchema, ticketUpdateSchema, ticketStatusSchema, rmaStatusSchema, rmaInspectSchema, rmaResolveSchema, PERMISSION_AREAS, PERMISSION_LEVELS, PERMISSION_LEVEL_LABELS, OUTLET_STATUSES, OUTLET_COLOR_TOKENS, outletSchema, roleSchema, staffUserSchema, staffUserUpdateSchema, MESSAGE_CHANNELS, TEMPLATE_DOCUMENTS, CAMPAIGN_AUDIENCES, CAMPAIGN_AUDIENCE_LABELS, messageSchema, callLogSchema, messageTemplateSchema, campaignSchema, unsubscribeSchema, referralRateSchema, businessInfoSchema, saleSettingsSchema, shippingSettingsSchema, paymentMethodsSettingsSchema, inventorySettingsSchema, providerCredentialSchema, taxonomyNodeSchema, invoiceStatusRuleSchema, communicationsSettingsSchema, SUPPLIER_RETURN_REASON_VALUES, supplierReturnSchema, supplierReturnStatusSchema, supplierCreditSchema, SUPPLIER_BILLING_CYCLES, supplierServiceSchema, supplierServiceUpdateSchema, supplierChargeSchema };
+export { quoteToTicketSchema, ticketDepositSchema, ticketConvertSchema, TAX_RATES, INVOICE_SERVICE_TYPES, ORDER_OPEN_STATUSES, ORDER_UNFULFILLED_STATUSES, approveUserSchema, rejectUserSchema, creditSchema, clientSchema, clientFormSchema, clientCreateFormSchema, clientUpdateSchema, CONSENT_CHANNELS, contactConsentSchema, MEMBERSHIP_TIERS, tierSchema, internalNoteSchema, storeCreditSchema, refundSchema, userStatusSchema, productSchema, ORDER_STATUS_FLOW, orderStatusSchema, CARRIERS, ADMIN_NAV, ADMIN_LEGACY_REDIRECTS, invoicePaymentSchema, invoiceVoidSchema, webQuoteStatusSchema, creditPaymentSchema, invoiceUpdateSchema, bulkOrderStatusSchema, supplierSchema, purchaseOrderSchema, purchaseOrderStatusSchema, purchaseReceiveSchema, purchasePaymentSchema, purchaseInviteSchema, purchaseSendSchema, purchaseNegotiateSchema, purchaseConfirmSchema, supplierQuoteSchema, supplierDeclineSchema, supplierProformaSchema, supplierDeliverySchema, supplierLoginSchema, supplierForgotSchema, supplierResetSchema, supplierPasswordSchema, expenseSchema, expenseCategorySchema, stockAdjustSchema, productOpsSchema, quoteSchema, quoteStatusSchema, quoteConvertSchema, adminOrderSchema, adminInvoiceSchema, RMA_ITEM_DISPOSITIONS, rmaSchema, TICKET_STATUSES, TICKET_PRIORITIES, TICKET_SOURCES, TICKET_STATUS_LABELS, CONDITION_GRADES, CONDITION_PARTS, ticketSchema, ticketDeviceSchema, ticketLineSchema, ticketUpdateSchema, ticketStatusSchema, rmaStatusSchema, rmaInspectSchema, rmaResolveSchema, PERMISSION_AREAS, PERMISSION_LEVELS, PERMISSION_LEVEL_LABELS, BUSINESS_STATUSES, BUSINESS_COLOR_TOKENS, businessSchema, roleSchema, staffUserSchema, staffUserUpdateSchema, MESSAGE_CHANNELS, TEMPLATE_DOCUMENTS, CAMPAIGN_AUDIENCES, CAMPAIGN_AUDIENCE_LABELS, messageSchema, callLogSchema, messageTemplateSchema, campaignSchema, unsubscribeSchema, referralRateSchema, businessInfoSchema, saleSettingsSchema, shippingSettingsSchema, paymentMethodsSettingsSchema, inventorySettingsSchema, providerCredentialSchema, taxonomyNodeSchema, invoiceStatusRuleSchema, communicationsSettingsSchema, SUPPLIER_RETURN_REASON_VALUES, supplierReturnSchema, supplierReturnStatusSchema, supplierCreditSchema, SUPPLIER_BILLING_CYCLES, supplierServiceSchema, supplierServiceUpdateSchema, supplierChargeSchema };

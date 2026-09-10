@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircle, Building2, Mail, MapPin, Phone, UserRound } from 'lucide-react';
-import { outletSchema, OUTLET_COLOR_TOKENS } from '@shared/schemas/admin';
+import { businessSchema, BUSINESS_COLOR_TOKENS } from '@shared/schemas/admin';
 import AddressFields from '@/components/admin/AddressFields';
 import Panel from '@/components/ui/Panel';
 import Input from '@/components/ui/Input';
@@ -14,12 +14,12 @@ import Badge from '@/components/ui/Badge';
 import PageHeader from '@/components/admin/PageHeader';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
-import { useAdminOutlet, useNextOutletCode, useAdminMutations } from '@/hooks/useAdmin';
+import { useAdminBusiness, useNextBusinessCode, useAdminMutations } from '@/hooks/useAdmin';
 import cn from '@/lib/cn';
 import { pressable } from '@/lib/motion';
 
 /**
- * Add / edit an outlet (§6.14) — form on the left, **live preview card** on the
+ * Add / edit an business (§6.14) — form on the left, **live preview card** on the
  * right showing exactly how it will appear in the list.
  *
  * The preview is the reason the colour picker is worth having: a token name
@@ -99,7 +99,7 @@ function PreviewCard({ values, code }) {
         </span>
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-lg font-medium text-ink-900">
-            {values.name || 'Outlet name'}
+            {values.name || 'Business name'}
           </h3>
           <p className="mt-0.5 font-mono text-xs text-ink-400">{code || '#000000'}</p>
         </div>
@@ -130,15 +130,15 @@ function PreviewCard({ values, code }) {
   );
 }
 
-export function AdminOutletFormPage() {
+export function AdminBusinessFormPage() {
   const { id } = useParams();
   const editing = Boolean(id);
   const navigate = useNavigate();
 
-  const { data: existing, isLoading } = useAdminOutlet(id);
-  // Only asked for on the Add form — an existing outlet already owns its code.
-  const { data: codeData } = useNextOutletCode(!editing);
-  const { createOutlet, updateOutlet } = useAdminMutations();
+  const { data: existing, isLoading } = useAdminBusiness(id);
+  // Only asked for on the Add form — an existing business already owns its code.
+  const { data: codeData } = useNextBusinessCode(!editing);
+  const { createBusiness, updateBusiness } = useAdminMutations();
 
   const {
     register,
@@ -150,7 +150,7 @@ export function AdminOutletFormPage() {
     setError,
     formState: { errors, isSubmitting },
   } = useForm({
-    resolver: zodResolver(outletSchema),
+    resolver: zodResolver(businessSchema),
     defaultValues: {
       name: '',
       status: 'active',
@@ -193,32 +193,32 @@ export function AdminOutletFormPage() {
   async function onSubmit(payload) {
     try {
       if (editing) {
-        await updateOutlet.mutateAsync({ id, ...payload });
-        navigate(`/admin/outlets/${id}`);
+        await updateBusiness.mutateAsync({ id, ...payload });
+        navigate(`/admin/businesses/${id}`);
       } else {
-        const created = await createOutlet.mutateAsync(payload);
-        navigate(`/admin/outlets/${created.id}`);
+        const created = await createBusiness.mutateAsync(payload);
+        navigate(`/admin/businesses/${created.id}`);
       }
     } catch (err) {
       setError('root', { message: err.message });
     }
   }
 
-  const page = ADMIN_ROUTES[editing ? '/admin/outlets/:id' : '/admin/outlets/add'];
+  const page = ADMIN_ROUTES[editing ? '/admin/businesses/:id' : '/admin/businesses/add'];
 
   if (editing && isLoading) {
-    return <p className="text-sm text-ink-500">Loading outlet…</p>;
+    return <p className="text-sm text-ink-500">Loading business…</p>;
   }
 
   return (
     <>
       <PageHeader
         icon={adminIcon(editing ? 'Store' : 'PlusCircle')}
-        title={editing ? `Edit ${existing?.name ?? 'outlet'}` : 'Add outlet'}
+        title={editing ? `Edit ${existing?.name ?? 'business'}` : 'Add business'}
         description={page?.description}
         action={
           <Link
-            to={editing ? `/admin/outlets/${id}` : '/admin/outlets'}
+            to={editing ? `/admin/businesses/${id}` : '/admin/businesses'}
             className={cn(pressable, 'inline-flex h-9 items-center rounded-md border border-line bg-surface px-3.5 text-sm font-medium text-ink-600 hover:border-line-strong hover:text-ink-900')}
           >
             Cancel
@@ -241,7 +241,7 @@ export function AdminOutletFormPage() {
             <Panel title="Identity">
               <div className="grid gap-4 sm:grid-cols-2">
                 <Input
-                  label="Outlet name"
+                  label="Business name"
                   placeholder="Cellvix Mississauga"
                   error={errors.name?.message}
                   {...register('name')}
@@ -276,7 +276,7 @@ export function AdminOutletFormPage() {
                         Colour identity
                       </span>
                       <div className="flex flex-wrap gap-1.5">
-                        {OUTLET_COLOR_TOKENS.map((token) => (
+                        {BUSINESS_COLOR_TOKENS.map((token) => (
                           <button
                             key={token}
                             type="button"
@@ -303,7 +303,7 @@ export function AdminOutletFormPage() {
             </Panel>
 
             <Panel title="Contact & location">
-              {/* Street lines first, then the country-keyed block. An outlet
+              {/* Street lines first, then the country-keyed block. An business
                   can be anywhere the business opens one, and this form asked
                   every location for a Canadian province. */}
               <div className="mb-4 grid gap-4 sm:grid-cols-2">
@@ -338,7 +338,7 @@ export function AdminOutletFormPage() {
 
             <Panel
               title="Management"
-              description="Staff are assigned from the Users screen — an outlet does not own its roster."
+              description="Staff are assigned from the Users screen — an business does not own its roster."
             >
               <Input label="Manager" placeholder="Name of the person running this store" {...register('manager')} />
               <div className="mt-4">
@@ -369,7 +369,7 @@ export function AdminOutletFormPage() {
             </Panel>
 
             <Button type="submit" fullWidth className="mt-3" loading={isSubmitting}>
-              {editing ? 'Save changes' : 'Create outlet'}
+              {editing ? 'Save changes' : 'Create business'}
             </Button>
           </div>
         </div>
@@ -378,4 +378,4 @@ export function AdminOutletFormPage() {
   );
 }
 
-export default AdminOutletFormPage;
+export default AdminBusinessFormPage;

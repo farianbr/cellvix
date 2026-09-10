@@ -182,22 +182,13 @@ export function useAdminSupplier(id) {
   });
 }
 
-// ---- requests for quote (supplier process flow, §6.8a) ----------------------
+// ---- supplier bidding on a purchase order (§6.8a) ---------------------------
 
-export function useAdminRfqs(params) {
-  const { canUseAdmin } = useAuth();
+/** Every bid on one purchase order, with the comparison already ranked. */
+export function useAdminPoBids(id) {
   return useQuery({
-    queryKey: ['admin', 'rfqs', params],
-    queryFn: () => api.get('/admin/rfqs', params),
-    enabled: canUseAdmin,
-    staleTime: 15 * 1000,
-  });
-}
-
-export function useAdminRfq(id) {
-  return useQuery({
-    queryKey: ['admin', 'rfqs', 'one', id],
-    queryFn: () => api.get(`/admin/rfqs/${id}`),
+    queryKey: ['admin', 'purchase-orders', 'bids', id],
+    queryFn: () => api.get(`/admin/purchase-orders/${id}/bids`),
     enabled: Boolean(id),
   });
 }
@@ -214,8 +205,8 @@ export function useSuppliersForComponentTypes(componentTypes = []) {
   const types = componentTypes.filter(Boolean);
 
   return useQuery({
-    queryKey: ['admin', 'rfqs', 'suppliers', types],
-    queryFn: () => api.get('/admin/rfqs/suppliers', { componentTypes: types }),
+    queryKey: ['admin', 'purchase-orders', 'suppliers', types],
+    queryFn: () => api.get('/admin/purchase-orders/suppliers', { componentTypes: types }),
     enabled: canUseAdmin && types.length > 0,
     staleTime: 60 * 1000,
   });
@@ -405,31 +396,31 @@ export function useAdminReport(tab, range, extra) {
  * whole admin cache is invalidated rather than surgically patched — these are
  * low-frequency, high-consequence actions.
  */
-// ---- phase 8: outlets, roles and staff --------------------------------------
+// ---- phase 8: businesses, roles and staff --------------------------------------
 
-export function useAdminOutlets(params) {
+export function useAdminBusinesses(params) {
   const { canUseAdmin } = useAuth();
   return useQuery({
-    queryKey: ['admin', 'outlets', params],
-    queryFn: () => api.get('/admin/outlets', params),
+    queryKey: ['admin', 'businesses', params],
+    queryFn: () => api.get('/admin/businesses', params),
     enabled: canUseAdmin,
     staleTime: 30 * 1000,
   });
 }
 
-export function useAdminOutlet(id) {
+export function useAdminBusiness(id) {
   return useQuery({
-    queryKey: ['admin', 'outlets', id],
-    queryFn: () => api.get(`/admin/outlets/${id}`),
+    queryKey: ['admin', 'businesses', id],
+    queryFn: () => api.get(`/admin/businesses/${id}`),
     enabled: Boolean(id),
   });
 }
 
 /** The next `#000001` code, so the Add form can show it before saving. */
-export function useNextOutletCode(enabled = true) {
+export function useNextBusinessCode(enabled = true) {
   return useQuery({
-    queryKey: ['admin', 'outlets', 'next-code'],
-    queryFn: () => api.get('/admin/outlets/next-code'),
+    queryKey: ['admin', 'businesses', 'next-code'],
+    queryFn: () => api.get('/admin/businesses/next-code'),
     enabled,
     staleTime: 0,
   });
@@ -1058,34 +1049,33 @@ export function useAdminMutations() {
       onSuccess: invalidate,
     }),
 
-    // ---- requests for quote (supplier process flow, §6.8a) ------------------
+    // ---- supplier bidding on a purchase order (§6.8a) -----------------------
 
-    createRfq: useMutation({
-      mutationFn: (body) => api.post('/admin/rfqs', body),
+    invitePoSuppliers: useMutation({
+      mutationFn: ({ id, supplierIds }) =>
+        api.post(`/admin/purchase-orders/${id}/bids`, { supplierIds }),
       onSuccess: invalidate,
     }),
-    updateRfq: useMutation({
-      mutationFn: ({ id, ...body }) => api.patch(`/admin/rfqs/${id}`, body),
+    removePoSupplier: useMutation({
+      mutationFn: ({ id, supplierId }) =>
+        api.delete(`/admin/purchase-orders/${id}/bids/${supplierId}`),
       onSuccess: invalidate,
     }),
-    // Resolves to `{ sent, failed }`: one bad address must not stop the rest
+    // Resolves to `{ mailed, total }`: one bad address must not stop the rest
     // going out, so the caller shows who was not reached rather than reporting
     // a clean success.
-    sendRfq: useMutation({
-      mutationFn: ({ id, ...body }) => api.post(`/admin/rfqs/${id}/send`, body),
+    sendPurchaseOrder: useMutation({
+      mutationFn: ({ id, ...body }) => api.post(`/admin/purchase-orders/${id}/send`, body),
       onSuccess: invalidate,
     }),
-    inviteRfqSupplier: useMutation({
-      mutationFn: ({ id, supplier }) => api.post(`/admin/rfqs/${id}/invite`, { supplier }),
+    negotiatePoBid: useMutation({
+      mutationFn: ({ id, supplierId, ...body }) =>
+        api.post(`/admin/purchase-orders/${id}/bids/${supplierId}/negotiate`, body),
       onSuccess: invalidate,
     }),
-    // Raises a real purchase order, so the PO lists move too.
-    awardRfq: useMutation({
-      mutationFn: ({ id, ...body }) => api.post(`/admin/rfqs/${id}/award`, body),
-      onSuccess: invalidate,
-    }),
-    cancelRfq: useMutation({
-      mutationFn: ({ id, ...body }) => api.post(`/admin/rfqs/${id}/cancel`, body),
+    // Prices the order's lines from the winning bid, so every PO list moves too.
+    confirmPoSupplier: useMutation({
+      mutationFn: ({ id, ...body }) => api.post(`/admin/purchase-orders/${id}/confirm`, body),
       onSuccess: invalidate,
     }),
 
@@ -1259,20 +1249,20 @@ export function useAdminMutations() {
     }),
 
     // ---- phase 8 ----------------------------------------------------------
-    createOutlet: useMutation({
-      mutationFn: (body) => api.post('/admin/outlets', body),
+    createBusiness: useMutation({
+      mutationFn: (body) => api.post('/admin/businesses', body),
       onSuccess: invalidate,
     }),
-    updateOutlet: useMutation({
-      mutationFn: ({ id, ...body }) => api.patch(`/admin/outlets/${id}`, body),
+    updateBusiness: useMutation({
+      mutationFn: ({ id, ...body }) => api.patch(`/admin/businesses/${id}`, body),
       onSuccess: invalidate,
     }),
-    setDefaultOutlet: useMutation({
-      mutationFn: (id) => api.patch(`/admin/outlets/${id}/default`),
+    setDefaultBusiness: useMutation({
+      mutationFn: (id) => api.patch(`/admin/businesses/${id}/default`),
       onSuccess: invalidate,
     }),
-    deleteOutlet: useMutation({
-      mutationFn: (id) => api.delete(`/admin/outlets/${id}`),
+    deleteBusiness: useMutation({
+      mutationFn: (id) => api.delete(`/admin/businesses/${id}`),
       onSuccess: invalidate,
     }),
 

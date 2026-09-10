@@ -121,7 +121,7 @@ export function AdminShell() {
   const openSearch = () => setPaletteOpen(true);
 
   return (
-    // The provider wraps both the trail and the outlet: a detail page publishes
+    // The provider wraps both the trail and the business: a detail page publishes
     // its record name, and the breadcrumb — a sibling, not a child — reads it.
     <RecordLabelProvider>
       {/*

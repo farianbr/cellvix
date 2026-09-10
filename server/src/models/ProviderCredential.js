@@ -51,7 +51,7 @@ const PROVIDER_FIELDS = [
   {
     provider: 'google',
     label: 'Google Maps & Places',
-    description: 'Address autocomplete on client and outlet forms.',
+    description: 'Address autocomplete on client and business forms.',
     unblocks: null,
     fields: [{ key: 'apiKey', label: 'API key', secret: true }],
   },

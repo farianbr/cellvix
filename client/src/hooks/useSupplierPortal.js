@@ -36,28 +36,28 @@ export function useSupplierSession() {
   };
 }
 
-export function useSupplierRfqs() {
+export function useSupplierOrders() {
   const { isAuthenticated } = useSupplierSession();
   return useQuery({
-    queryKey: ['supplier-portal', 'rfqs'],
-    queryFn: () => api.get('/supplier-portal/rfqs'),
+    queryKey: ['supplier-portal', 'orders'],
+    queryFn: () => api.get('/supplier-portal/orders'),
     enabled: isAuthenticated,
     staleTime: 30 * 1000,
   });
 }
 
 /**
- * One request.
+ * One order.
  *
- * Fetching it marks the invite `viewed` server-side, which is why this is not
+ * Fetching it marks the bid `viewed` server-side, which is why this is not
  * prefetched with the list: "opened it and has not answered" is a fact the
  * purchasing team acts on, and it would stop being true if merely loading the
- * dashboard marked every request read.
+ * dashboard marked every order read.
  */
-export function useSupplierRfq(id) {
+export function useSupplierOrder(id) {
   return useQuery({
-    queryKey: ['supplier-portal', 'rfqs', id],
-    queryFn: () => api.get(`/supplier-portal/rfqs/${id}`),
+    queryKey: ['supplier-portal', 'orders', id],
+    queryFn: () => api.get(`/supplier-portal/orders/${id}`),
     enabled: Boolean(id),
   });
 }
@@ -81,8 +81,8 @@ export function useSupplierPortalMutations() {
       onSuccess: () => {
         queryClient.setQueryData(ME, { supplier: null });
         // Cleared rather than refetched: the next supplier to sign in on this
-        // browser must not see the previous one's requests for even a frame.
-        queryClient.removeQueries({ queryKey: ['supplier-portal', 'rfqs'] });
+        // browser must not see the previous one's orders for even a frame.
+        queryClient.removeQueries({ queryKey: ['supplier-portal', 'orders'] });
       },
     }),
     forgotPassword: useMutation({
@@ -95,11 +95,22 @@ export function useSupplierPortalMutations() {
       mutationFn: (body) => api.post('/supplier-portal/password', body),
     }),
     submitQuote: useMutation({
-      mutationFn: ({ id, ...body }) => api.post(`/supplier-portal/rfqs/${id}/quote`, body),
+      mutationFn: ({ id, ...body }) => api.post(`/supplier-portal/orders/${id}/quote`, body),
       onSuccess: invalidate,
     }),
     declineQuote: useMutation({
-      mutationFn: ({ id, ...body }) => api.post(`/supplier-portal/rfqs/${id}/decline`, body),
+      mutationFn: ({ id, ...body }) => api.post(`/supplier-portal/orders/${id}/decline`, body),
+      onSuccess: invalidate,
+    }),
+    // The supplier's own proforma invoice. Every figure on it is computed
+    // server-side from the prices they already sent.
+    submitProforma: useMutation({
+      mutationFn: ({ id, ...body }) => api.post(`/supplier-portal/orders/${id}/proforma`, body),
+      onSuccess: invalidate,
+    }),
+    // Only the confirmed supplier may report this, and it never moves stock.
+    setDeliveryStatus: useMutation({
+      mutationFn: ({ id, ...body }) => api.post(`/supplier-portal/orders/${id}/delivery`, body),
       onSuccess: invalidate,
     }),
   };

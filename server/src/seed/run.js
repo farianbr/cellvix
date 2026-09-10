@@ -10,7 +10,7 @@ import BlogPost from '../models/BlogPost.js';
 import Faq from '../models/Faq.js';
 import Offer from '../models/Offer.js';
 import Supplier from '../models/Supplier.js';
-import Rfq from '../models/Rfq.js';
+
 import PurchaseOrder from '../models/PurchaseOrder.js';
 import Expense from '../models/Expense.js';
 import ExpenseCategory from '../models/ExpenseCategory.js';
@@ -26,7 +26,7 @@ import {
   buildSupplierServices,
   costFor,
 } from './purchase.data.js';
-import { seedRfqs } from './rfqs.js';
+import { seedPurchaseBids } from './purchase-bids.js';
 import Settings from '../models/Settings.js';
 import Quote from '../models/Quote.js';
 import Rma from '../models/Rma.js';
@@ -41,8 +41,8 @@ import SupplierService from '../models/SupplierService.js';
 import Appointment from '../models/Appointment.js';
 import { buildRepairs } from './repairs.data.js';
 import Role from '../models/Role.js';
-import Outlet from '../models/Outlet.js';
-import { ensureBuiltInRoles, ensureDefaultOutlet } from '../services/accessService.js';
+import Business from '../models/Business.js';
+import { ensureBuiltInRoles, ensureDefaultBusiness, nextBusinessCode } from '../services/accessService.js';
 import { ensureReferralCode } from '../services/referralService.js';
 
 const DEMO_PASSWORD = 'Cellvix123!';
@@ -245,11 +245,6 @@ async function seedDatabase({ quiet = false } = {}) {
     Expense.deleteMany({}),
     ExpenseCategory.deleteMany({}),
     StockMovement.deleteMany({}),
-    // §6.8a. A request for quote holds product ids in its lines and supplier
-    // ids in its invites, so leaving one behind while both are rebuilt would
-    // leave a request asking suppliers who no longer exist about parts that no
-    // longer exist.
-    Rfq.deleteMany({}),
     // Phase 6. Dropped and recreated from defaults so a reseed cannot leave a
     // half-edited settings document behind; `Settings.load()` rebuilds it.
     Settings.deleteMany({}),
@@ -261,7 +256,7 @@ async function seedDatabase({ quiet = false } = {}) {
 
     // Phase 8. Staff users reference both, so they are rebuilt with the users.
     Role.deleteMany({}),
-    Outlet.deleteMany({}),
+    Business.deleteMany({}),
 
     /**
      * The collections this used to leave standing.
@@ -288,13 +283,45 @@ async function seedDatabase({ quiet = false } = {}) {
     Appointment.deleteMany({}),
   ]);
 
-  // ---- roles & outlet ------------------------------------------------------
+  // ---- roles & businesses ----------------------------------------------------
   // Before users: a staff account cannot be created without a role to hold and
-  // an outlet to stand in.
+  // a business to stand in.
   await ensureBuiltInRoles();
-  const defaultOutlet = await ensureDefaultOutlet();
+  const defaultBusiness = await ensureDefaultBusiness();
+
+  /**
+   * The second business, and the whole reason business *type* exists.
+   *
+   * **CellShoppe is service-based**, so its panel renders Tickets and Quotes
+   * where Cellvix renders Orders and Returns, and it has no storefront at all
+   * (SAAS_PLATFORM §1.1). Seeding both is what makes the switcher demonstrate
+   * something rather than list one row — and what proves the feature resolver
+   * actually reads the type rather than always answering with Cellvix's set.
+   */
+  const serviceBusiness = await Business.create({
+    name: 'CellShoppe Phone & Laptop Fix',
+    code: await nextBusinessCode(),
+    businessType: 'service',
+    status: 'active',
+    colorToken: 'info',
+    address: {
+      street: '1180 Kingsway',
+      city: 'Vancouver',
+      region: 'BC',
+      postal: 'V5V 3C8',
+      country: 'Canada',
+    },
+    phone: '+1 (604) 555-0175',
+    email: 'shop@cellshoppe.ca',
+    manager: 'Priya Raman',
+    isDefault: false,
+  });
+
   const rolesBySlug = new Map((await Role.find().lean()).map((r) => [r.slug, r]));
-  log(`  roles: ${rolesBySlug.size} · outlet: ${defaultOutlet.code}`);
+  log(
+    `  roles: ${rolesBySlug.size} · businesses: ${defaultBusiness.code} (${defaultBusiness.businessType})` +
+      ` · ${serviceBusiness.code} (${serviceBusiness.businessType})`,
+  );
 
   // ---- taxonomy -----------------------------------------------------------
   const taxonomyDocs = buildTaxonomyDocs();
@@ -371,11 +398,11 @@ async function seedDatabase({ quiet = false } = {}) {
       if (unsubscribed) user.unsubscribedAt = new Date(Date.now() - 14 * 86_400_000);
     }
 
-    // Staff are Cellvix people: they hold a role and stand in an outlet. An
+    // Staff are Cellvix people: they hold a role and stand in an business. An
     // admin holds neither — it bypasses the role system by design (§7.6).
     if (staffRoleSlug) {
       user.staffRole = rolesBySlug.get(staffRoleSlug)?._id ?? null;
-      user.outlet = defaultOutlet._id;
+      user.business = defaultBusiness._id;
     }
 
     // Referral code, minted on approval exactly as `approveUser` does it
@@ -401,7 +428,7 @@ async function seedDatabase({ quiet = false } = {}) {
 
   const staffIds = users.filter((u) => u.role === 'staff').map((u) => u._id);
   if (staffIds.length) {
-    await Outlet.updateOne({ _id: defaultOutlet._id }, { $set: { staff: staffIds } });
+    await Business.updateOne({ _id: defaultBusiness._id }, { $set: { staff: staffIds } });
   }
   log(`  users: ${users.length} (staff: ${staffIds.length})`);
 
@@ -867,19 +894,19 @@ async function seedDatabase({ quiet = false } = {}) {
   );
 
   /**
-   * The supplier process flow (§6.8a) — tags, portal logins and requests.
+   * The supplier process flow (§6.8a) — tags, portal logins and bid orders.
    *
    * Last of the purchase block, because it needs all of it: suppliers to tag
    * and invite, products to ask about, and a `cost` on each one to base a
-   * plausible quote on. Awarding runs through `rfqService`, so the purchase
-   * order it raises is a real one and the supplier totals recomputed above are
+   * plausible bid on. Confirming runs through `purchaseBidService`, so the
+   * priced order is a real one and the supplier totals recomputed above are
    * refreshed again by the service itself.
    */
-  const rfqResult = await seedRfqs({ quiet: true });
+  const bidResult = await seedPurchaseBids({ quiet: true });
   log(
-    `  requests for quote: ${rfqResult.requests}` +
-      ` (${rfqResult.tagged} suppliers tagged, ${rfqResult.credentialed} given portal access` +
-      `${rfqResult.purchaseOrder ? `, awarded ${rfqResult.purchaseOrder}` : ''})`,
+    `  bid purchase orders: ${bidResult.orders}` +
+      ` (${bidResult.tagged} suppliers tagged, ${bidResult.credentialed} given portal access` +
+      `${bidResult.confirmed ? `, confirmed ${bidResult.confirmed}` : ''})`,
   );
 
   // The settings singleton, recreated from its seeded defaults — per-province
@@ -927,11 +954,24 @@ async function seedDatabase({ quiet = false } = {}) {
     quoteSeq: quotes.length + 1,
   });
 
+  /**
+   * **Every repair record belongs to CellShoppe**, the service business.
+   *
+   * This is what makes the switcher mean something: tickets, their quotes and
+   * their invoices are the service pipeline, and stamping them here is why
+   * switching to CellShoppe changes the *figures* and not only which nav rows
+   * render. Cellvix's own orders, returns and invoices stay on Cellvix below.
+   */
+  const serviceBusinessId = serviceBusiness._id;
+
   // Tickets first: a quote points at the ticket it became, and an invoice
   // points back at the ticket it bills, so the ticket is the one both ends
   // need an id for.
   const insertedRepairTickets = await Ticket.insertMany(
-    repairs.tickets.map(({ quoteNumber, invoiceNumber, ...ticket }) => ticket),
+    repairs.tickets.map(({ quoteNumber, invoiceNumber, ...ticket }) => ({
+      ...ticket,
+      business: serviceBusinessId,
+    })),
   );
   const ticketIdByNumber = new Map(
     insertedRepairTickets.map((ticket) => [ticket.ticketNumber, ticket._id]),
@@ -942,6 +982,7 @@ async function seedDatabase({ quiet = false } = {}) {
     repairs.quotes.map(({ convertedTicketNumber, ...quote }) => ({
       ...quote,
       source: 'admin',
+      business: serviceBusinessId,
       convertedTicket: ticketIdByNumber.get(convertedTicketNumber) ?? null,
     })),
   );
@@ -950,6 +991,7 @@ async function seedDatabase({ quiet = false } = {}) {
   const repairInvoices = await Invoice.insertMany(
     repairs.invoices.map(({ ticketNumber, ...invoice }) => ({
       ...invoice,
+      business: serviceBusinessId,
       ticket: ticketIdByNumber.get(ticketNumber) ?? null,
     })),
   );
@@ -1000,6 +1042,38 @@ async function seedDatabase({ quiet = false } = {}) {
   const rmas = await Rma.insertMany(buildRmas({ orders: insertedOrders }));
   log(`  returns: ${rmas.length}`);
 
+  /**
+   * Stamp every unassigned record onto Cellvix.
+   *
+   * **One pass at the end rather than a `business:` on eight `insertMany`
+   * calls.** The builders in `sales.data.js`, `purchase.data.js` and
+   * `generate.js` do not know about businesses and should not have to — they
+   * build records, and which business owns one is a fact about this seed rather
+   * than about the shape of an order.
+   *
+   * `business: null` is the filter, so this cannot touch the repair records
+   * already stamped for CellShoppe above: they have a business and are skipped.
+   * That also makes it idempotent — a second run finds nothing to do.
+   *
+   * **Every collection that carries the field is listed.** One left out is a
+   * set of rows that belong to no business, and `businessFilter` matches
+   * exactly — so they would be invisible under every business rather than
+   * visible under all of them.
+   */
+  const cellvixId = defaultBusiness._id;
+  const stamped = await Promise.all(
+    [Order, Invoice, Quote, Rma, Ticket, PurchaseOrder, Expense, StockMovement, Appointment].map(
+      (Model) =>
+        Model.updateMany(
+          { $or: [{ business: null }, { business: { $exists: false } }] },
+          { $set: { business: cellvixId } },
+        ),
+    ),
+  );
+  log(
+    `  business assignment: ${stamped.reduce((sum, r) => sum + (r.modifiedCount ?? 0), 0)} records → ${defaultBusiness.name}`,
+  );
+
   return {
     taxonomy: bySlug.size,
     products: insertedProducts.length,
@@ -1017,7 +1091,7 @@ async function seedDatabase({ quiet = false } = {}) {
     stockMovements: movementDocs.length,
     supplierReturns: supplierReturns.length,
     supplierServices: supplierServices.length,
-    requestsForQuote: rfqResult.requests,
+    bidPurchaseOrders: bidResult.orders,
     quotes: quotes.length + repairQuotes.length,
     tickets: insertedRepairTickets.length,
     repairInvoices: repairInvoices.length,

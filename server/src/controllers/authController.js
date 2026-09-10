@@ -34,6 +34,26 @@ async function sessionUser(user) {
   return shape;
 }
 
+/**
+ * The business's feature set, for the panel's shell.
+ *
+ * **Sent beside the user, not inside it** — a feature is a property of the
+ * business, and a permission is a property of the account. Nesting one in the
+ * other would be the first step towards a per-user feature, which is a thing
+ * this design does not have (§4.4).
+ *
+ * **Staff only.** A buyer's client has no nav to filter and no use for the set,
+ * and shipping it would tell every storefront visitor which sections the ERP
+ * runs. `null` for a guest or a customer.
+ *
+ * A courtesy, exactly as `permissions` is: `requireFeature` answers for real on
+ * every request, so a client that ignores this gets 404s rather than access.
+ */
+function staffFeatures(req) {
+  if (!req.user || !['admin', 'staff'].includes(req.user.role)) return null;
+  return req.features ?? null;
+}
+
 const register = asyncHandler(async (req, res) => {
   // The IP is recorded with the CASL consent, so it is read here — only the
   // request knows it, and the service must not reach for `req` (§6.13).
@@ -89,7 +109,7 @@ const login = asyncHandler(async (req, res) => {
     subject: user,
   });
 
-  res.json({ user: await sessionUser(user) });
+  res.json({ user: await sessionUser(user), features: staffFeatures(req) });
 });
 
 const logout = asyncHandler(async (req, res) => {
@@ -115,7 +135,7 @@ const logout = asyncHandler(async (req, res) => {
  * on every anonymous page load, which no client-side catch can suppress.
  */
 const me = asyncHandler(async (req, res) => {
-  res.json({ user: await sessionUser(req.user) });
+  res.json({ user: await sessionUser(req.user), features: staffFeatures(req) });
 });
 
 /**

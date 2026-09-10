@@ -24,7 +24,7 @@ const PHASE_NAMES = {
   5: 'Purchase',
   6: 'Reports',
   7: 'Quotes & RMA',
-  8: 'Outlet, staff & roles',
+  8: 'Business, staff & roles',
   9: 'Marketing',
   10: 'Referrals',
   11: 'Settings',

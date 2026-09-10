@@ -5,6 +5,7 @@ import cn from '@/lib/cn';
 import useOnClickOutside from '@/hooks/useOnClickOutside';
 import { useAuth } from '@/hooks/useAuth';
 import { can } from '@/lib/permissions';
+import { featureEnabled } from '@shared/schemas/features';
 import { adminIcon } from './adminIcons';
 import { pressable } from '@/lib/motion';
 
@@ -32,27 +33,33 @@ import { pressable } from '@/lib/motion';
  * the flag on arrival so the URL stops describing a modal the moment it closes.
  */
 
+/**
+ * `area` is the permission this entry needs; `feature` is the capability the
+ * business has to have for it to exist at all. The two are filtered
+ * independently below, because an admin bypasses the first and nobody bypasses
+ * the second (SAAS_PLATFORM §4.4).
+ */
 const GROUPS = [
   {
     key: 'income',
     label: 'Income',
     items: [
-      { key: 'client', label: 'Client', to: '/admin/clients', icon: 'Users', area: 'clients' },
-      { key: 'order', label: 'Order', to: '/admin/orders', icon: 'Package', area: 'sales' },
-      { key: 'invoice', label: 'Invoice', to: '/admin/invoices', icon: 'FileText', area: 'sales' },
-      { key: 'quote', label: 'Quote', to: '/admin/quotes', icon: 'FileSignature', area: 'sales' },
-      { key: 'rma', label: 'RMA', to: '/admin/rma', icon: 'RotateCcw', area: 'sales' },
-      { key: 'ticket', label: 'Ticket', to: '/admin/tickets', icon: 'ClipboardList', area: 'sales' },
+      { key: 'client', label: 'Client', to: '/admin/clients', icon: 'Users', area: 'clients', feature: 'sales.clients' },
+      { key: 'order', label: 'Order', to: '/admin/orders', icon: 'Package', area: 'sales', feature: 'sales.orders' },
+      { key: 'invoice', label: 'Invoice', to: '/admin/invoices', icon: 'FileText', area: 'sales', feature: 'sales.invoices' },
+      { key: 'quote', label: 'Quote', to: '/admin/quotes', icon: 'FileSignature', area: 'sales', feature: 'sales.quotes' },
+      { key: 'rma', label: 'RMA', to: '/admin/rma', icon: 'RotateCcw', area: 'sales', feature: 'sales.rma' },
+      { key: 'ticket', label: 'Ticket', to: '/admin/tickets', icon: 'ClipboardList', area: 'sales', feature: 'sales.tickets' },
     ],
   },
   {
     key: 'expense',
     label: 'Expense',
     items: [
-      { key: 'supplier', label: 'Supplier', to: '/admin/suppliers', icon: 'Truck', area: 'purchase' },
-      { key: 'po', label: 'Purchase Order', to: '/admin/purchase-orders', icon: 'ClipboardList', area: 'purchase' },
-      { key: 'expense', label: 'Expense', to: '/admin/expenses', icon: 'Receipt', area: 'purchase' },
-      { key: 'product', label: 'Product', to: '/admin/inventory', icon: 'Boxes', area: 'purchase' },
+      { key: 'supplier', label: 'Supplier', to: '/admin/suppliers', icon: 'Truck', area: 'purchase', feature: 'purchase.suppliers' },
+      { key: 'po', label: 'Purchase Order', to: '/admin/purchase-orders', icon: 'ClipboardList', area: 'purchase', feature: 'purchase.orders' },
+      { key: 'expense', label: 'Expense', to: '/admin/expenses', icon: 'Receipt', area: 'purchase', feature: 'purchase.expenses' },
+      { key: 'product', label: 'Product', to: '/admin/inventory', icon: 'Boxes', area: 'purchase', feature: 'purchase.inventory' },
     ],
   },
 ];
@@ -61,23 +68,28 @@ export function CreateMenu() {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   const navigate = useNavigate();
-  const { permissions, isAdmin } = useAuth();
+  const { permissions, features, isAdmin } = useAuth();
   useOnClickOutside(ref, () => setOpen(false));
 
   /**
    * What this session may actually create.
    *
-   * An admin bypasses the map entirely (§7.6), so it is checked first rather
-   * than relying on the map an admin session happens to carry.
+   * **Two filters, and only one of them an admin bypasses.** A permission is
+   * what this account may do, and an admin bypasses the map entirely (§7.6). A
+   * feature is what the business has at all — nobody bypasses that, because an
+   * admin creating a record in a section the business does not run would hit
+   * the same 404 as anyone else (§4.4).
    */
   const visibleGroups = useMemo(() => {
-    if (isAdmin) return GROUPS;
+    const hasFeature = (item) => !item.feature || featureEnabled(features, item.feature);
 
     return GROUPS.map((group) => ({
       ...group,
-      items: group.items.filter((item) => can(permissions, item.area, 'full')),
+      items: group.items.filter(
+        (item) => hasFeature(item) && (isAdmin || can(permissions, item.area, 'full')),
+      ),
     })).filter((group) => group.items.length > 0);
-  }, [permissions, isAdmin]);
+  }, [permissions, features, isAdmin]);
 
   // A role that can create nothing gets no button at all — a `+ Create` that
   // opens an empty panel is worse than its absence.

@@ -1,4 +1,5 @@
 import { PERMISSION_LEVELS } from '@shared/schemas/admin';
+import { featureEnabled, featureForNav } from '@shared/schemas/features';
 
 /**
  * Client-side permission reads (ERP rework §7.6).
@@ -48,27 +49,47 @@ const UNFILTERED_AREAS = new Set(['home']);
 /**
  * The nav a given role sees, with switched-off rows removed.
  *
- * `hidden` is how a feature is turned OFF rather than deleted, which is what
- * SAAS_PLATFORM §5.5 asks for: the screen, its routes and its model stay
- * exactly where they are, and one flag decides whether this tenant is offered
- * it. When the `FEATURES` registry of §5.1 lands, that flag becomes the thing
- * that sets this — the shape here does not have to change.
+ * **Two independent filters, and they answer different questions.**
+ * `permissions` is what this ACCOUNT may do; `features` is what this BUSINESS
+ * has at all (SAAS_PLATFORM §4.4). A row survives only if both say yes, and
+ * neither is the control — `requirePermission` and `requireFeature` decide for
+ * real on every request.
+ *
+ * `hidden` on a nav row is the older form of the same idea and still works: the
+ * screen, its routes and its model stay exactly where they are, and one flag
+ * decides whether this tenant is offered it (§5.5). A row can now be switched
+ * off from either place, and `hidden` is what a row uses when no feature key
+ * names it.
+ *
+ * **`features` being absent means everything is on.** A buyer's client never
+ * receives a set, and a staff client renders once before `/auth/me` resolves —
+ * defaulting to "off" would blank the sidebar on every first paint and look
+ * exactly like a permissions bug.
  *
  * Applied to children as well as groups, because a switched-off feature is
  * usually one row inside a section rather than a whole section.
  */
-export function visibleNav(nav, permissions) {
+export function visibleNav(nav, permissions, features = null) {
+  const allowed = (row) => {
+    if (row.hidden) return false;
+    if (!features) return true;
+    const feature = featureForNav(row.key);
+    return !feature || featureEnabled(features, feature.key);
+  };
+
   return nav
-    .filter((group) => !group.hidden)
+    .filter(allowed)
     .filter(
       (group) =>
         !group.area || UNFILTERED_AREAS.has(group.area) || can(permissions, group.area, 'view'),
     )
     .map((group) =>
-      group.children
-        ? { ...group, children: group.children.filter((child) => !child.hidden) }
-        : group,
-    );
+      group.children ? { ...group, children: group.children.filter(allowed) } : group,
+    )
+    // A group whose every child was switched off is dropped whole rather than
+    // rendered empty — an expandable section that opens onto nothing reads as a
+    // bug, which is the same reasoning the permission filter above follows.
+    .filter((group) => !group.children || group.children.length > 0);
 }
 
 export default can;

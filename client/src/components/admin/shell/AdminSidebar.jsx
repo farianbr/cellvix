@@ -117,11 +117,15 @@ function Badge({ count, label, description: full }) {
 
 function NavTree({ badges, onNavigate }) {
   const location = useLocation();
-  const { permissions } = useAuth();
+  const { permissions, features } = useAuth();
 
-  // A group the role cannot reach is not rendered. The server refuses it
-  // anyway; hiding it stops an operator clicking into a wall (§7.6).
-  const nav = useMemo(() => visibleNav(ADMIN_NAV, permissions), [permissions]);
+  // A group the role cannot reach, or the business does not have, is not
+  // rendered. The server refuses both anyway — with a 403 and a 404
+  // respectively; hiding them stops an operator clicking into a wall (§7.6).
+  const nav = useMemo(
+    () => visibleNav(ADMIN_NAV, permissions, features),
+    [permissions, features],
+  );
   const { group: activeGroup, child: activeChild } = activeNavKeys(location.pathname, location.search);
 
   // One parent expanded at a time (§2, convention 2). Kept in state rather than
@@ -270,8 +274,11 @@ function NavTree({ badges, onNavigate }) {
  */
 function IconRail({ badges, onNavigate }) {
   const location = useLocation();
-  const { permissions } = useAuth();
-  const nav = useMemo(() => visibleNav(ADMIN_NAV, permissions), [permissions]);
+  const { permissions, features } = useAuth();
+  const nav = useMemo(
+    () => visibleNav(ADMIN_NAV, permissions, features),
+    [permissions, features],
+  );
   const { group: activeGroup } = activeNavKeys(location.pathname, location.search);
 
   return (

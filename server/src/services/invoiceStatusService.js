@@ -71,7 +71,7 @@ function shape(rule) {
  *
  * Seeds the built-ins on read rather than only in `npm run seed`: a live cluster
  * that predates this phase would otherwise show an empty screen, which is the
- * exact failure phase 9 hit with roles and outlets (Session 34).
+ * exact failure phase 9 hit with roles and businesses (Session 34).
  */
 async function list() {
   await ensureBuiltInRules();

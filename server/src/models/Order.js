@@ -66,12 +66,12 @@ const orderSchema = new mongoose.Schema(
     /**
      * Which shop this order belongs to.
      *
-     * Set at checkout from the outlet the operator is working in, or chosen
+     * Set at checkout from the business the operator is working in, or chosen
      * explicitly when a customer wants to collect from — or be delivered by —
-     * a particular shop. Null on an order placed before outlets were scoped,
-     * which reads as the default outlet rather than as missing data.
+     * a particular shop. Null on an order placed before businesses were scoped,
+     * which reads as the default business rather than as missing data.
      */
-    outlet: { type: mongoose.Schema.Types.ObjectId, ref: 'Outlet', default: null, index: true },
+    business: { type: mongoose.Schema.Types.ObjectId, ref: 'Business', default: null, index: true },
 
     items: [orderItemSchema],
 

@@ -184,7 +184,7 @@ async function raiseOrder({
   deliveryCode = 'ground',
   note,
   poNumber,
-  outlet = null,
+  business = null,
 }) {
   if (!user) throw ApiError.badRequest('That client no longer exists.', 'USER_NOT_FOUND');
 
@@ -254,7 +254,7 @@ async function raiseOrder({
     user: user._id,
     // The shop that fulfils this order. Null on a storefront checkout, which
     // belongs to the business rather than to a counter.
-    outlet,
+    business,
     items,
     subtotal,
     discount: 0,

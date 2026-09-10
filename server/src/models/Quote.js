@@ -45,7 +45,7 @@ const quoteSchema = new mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
 
     /** The shop that quoted. An accepted quote passes this to its order. */
-    outlet: { type: mongoose.Schema.Types.ObjectId, ref: 'Outlet', default: null, index: true },
+    business: { type: mongoose.Schema.Types.ObjectId, ref: 'Business', default: null, index: true },
 
     source: { type: String, enum: ['admin', 'web'], default: 'admin' },
 

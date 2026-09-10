@@ -1318,7 +1318,7 @@ async function createOrder(body) {
     shipping: body.shipping ?? 0,
     deliveryCode: body.deliveryCode,
     poNumber: body.poNumber,
-    outlet: body.outlet || null,
+    business: body.business || null,
     note: body.notes
       ? `Raised by an administrator. ${body.notes}`
       : 'Raised by an administrator.',
@@ -1327,13 +1327,13 @@ async function createOrder(body) {
   return serializeOrder(order);
 }
 
-async function listOrders({ status, q, outlet } = {}) {
+async function listOrders({ status, q, business } = {}) {
   const query = {};
-  // Scoped to the outlet the panel is switched to, when it is switched to one.
-  // Resolved by `resolveOutletScope` rather than read from the query string,
-  // because a staff member's own outlet is binding and must not be widened by
+  // Scoped to the business the panel is switched to, when it is switched to one.
+  // Resolved by `resolveBusinessScope` rather than read from the query string,
+  // because a staff member's own business is binding and must not be widened by
   // editing a URL.
-  if (outlet) query.outlet = outlet;
+  if (business) query.business = business;
 
   // `open` is a pseudo-status: not a value any order holds, but the set the
   // dashboard's "Open orders" tile counts. Without it that tile could only link
@@ -1752,14 +1752,14 @@ async function createInvoice(body) {
  * so it is applied in the query as "not paid, and past due" — the dashboard
  * links straight here with it.
  */
-async function listInvoices({ status, q, from, to, outlet } = {}) {
+async function listInvoices({ status, q, from, to, business } = {}) {
   const now = new Date();
   const query = {};
-  // Scoped to the outlet the panel is switched to, when it is switched to one.
-  // Resolved by `resolveOutletScope` rather than read from the query string,
-  // because a staff member's own outlet is binding and must not be widened by
+  // Scoped to the business the panel is switched to, when it is switched to one.
+  // Resolved by `resolveBusinessScope` rather than read from the query string,
+  // because a staff member's own business is binding and must not be widened by
   // editing a URL.
-  if (outlet) query.outlet = outlet;
+  if (business) query.business = business;
 
   if (status === 'overdue') {
     query.status = { $ne: 'paid' };

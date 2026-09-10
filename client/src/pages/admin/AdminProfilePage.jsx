@@ -33,7 +33,7 @@ const AREA_LABELS = {
   purchase: 'Purchase',
   reports: 'Reports',
   marketing: 'Marketing',
-  outlet: 'Outlet',
+  business: 'Business',
   settings: 'Settings',
 };
 
@@ -101,12 +101,12 @@ export function AdminProfilePage() {
                   <dd className="text-ink-900">{profile.phone}</dd>
                 </div>
               )}
-              {profile.outlet && (
+              {profile.business && (
                 <div className="flex justify-between gap-3">
-                  <dt className="text-ink-500">Outlet</dt>
+                  <dt className="text-ink-500">Business</dt>
                   <dd className="flex items-center gap-1.5 text-ink-900">
                     <Store className="size-3.5 text-ink-400" strokeWidth={2.25} aria-hidden="true" />
-                    {profile.outlet.name}
+                    {profile.business.name}
                   </dd>
                 </div>
               )}

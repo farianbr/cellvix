@@ -35,7 +35,7 @@ import {
   useAdminOrders,
   useAdminUsers,
   useAdminInventory,
-  useAdminOutlets,
+  useAdminBusinesses,
   useAdminMutations,
 } from '@/hooks/useAdmin';
 import useCreateParam from '@/hooks/useCreateParam';
@@ -249,12 +249,12 @@ const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/orders'], icon: adminIcon('Package'
  * totals below are a preview and say so — tax is the server's, at this client's
  * own provincial rate, which this form does not know.
  */
-function OrderForm({ clients, products, outlets = [], onSubmit, onCancel, isPending, error }) {
+function OrderForm({ clients, products, businesses = [], onSubmit, onCancel, isPending, error }) {
   const { register, handleSubmit, control, watch } = useForm({
     defaultValues: {
       user: clients[0]?.id ?? '',
-      // Blank means "the outlet I am working in", which the server fills in.
-      outlet: '',
+      // Blank means "the business I am working in", which the server fills in.
+      business: '',
       deliveryCode: 'ground',
       shippingDollars: '0.00',
       poNumber: '',
@@ -281,7 +281,7 @@ function OrderForm({ clients, products, outlets = [], onSubmit, onCancel, isPend
       onSubmit={handleSubmit((values) =>
         onSubmit({
           user: values.user,
-          outlet: values.outlet || undefined,
+          business: values.business || undefined,
           deliveryCode: values.deliveryCode,
           shipping: Math.round(Number(values.shippingDollars || 0) * 100),
           poNumber: values.poNumber || undefined,
@@ -396,18 +396,18 @@ function OrderForm({ clients, products, outlets = [], onSubmit, onCancel, isPend
 
       {/* Which shop fulfils this. Only offered when there is more than one —
           a picker with a single option is a question with one answer. Blank
-          means the outlet the panel is switched to, which is the common case;
+          means the business the panel is switched to, which is the common case;
           it is asked because a customer collecting in person picks the shop
           nearest them, not the one the operator happens to be sitting in. */}
-      {outlets.length > 1 && (
+      {businesses.length > 1 && (
         <SelectField
           control={control}
-          name="outlet"
+          name="business"
           label="Fulfilled by"
-          hint="Leave blank to use the outlet you are working in."
+          hint="Leave blank to use the business you are working in."
           options={[
-            { value: '', label: 'Current outlet' },
-            ...outlets.map((outlet) => ({ value: outlet.id, label: outlet.name })),
+            { value: '', label: 'Current business' },
+            ...businesses.map((business) => ({ value: business.id, label: business.name })),
           ]}
         />
       )}
@@ -473,11 +473,11 @@ export function AdminOrdersPage() {
   const { data, isLoading } = useAdminOrders({ status, q: query || undefined });
   // Only approved accounts can order, so only approved accounts are offered.
   const { data: clientData } = useAdminUsers({ status: 'approved' });
-  // For the "Fulfilled by" picker. `outlet: 'all'` because the list of shops is
+  // For the "Fulfilled by" picker. `business: 'all'` because the list of shops is
   // not itself scoped to a shop — an order must be sendable to one you are not
   // currently working in.
-  const { data: outletData } = useAdminOutlets({ status: 'active', outlet: 'all' });
-  const outlets = outletData?.outlets ?? [];
+  const { data: businessData } = useAdminBusinesses({ status: 'active', business: 'all' });
+  const businesses = businessData?.businesses ?? [];
   // The catalogue is 400+ rows; it loads only while the builder is open.
   const { data: inventoryData } = useAdminInventory({}, Boolean(creating));
   const { updateOrderStatus, refundOrder, bulkOrderStatus, createOrder } = useAdminMutations();
@@ -889,7 +889,7 @@ export function AdminOrdersPage() {
           <OrderForm
             clients={clients}
             products={products}
-            outlets={outlets}
+            businesses={businesses}
             isPending={createOrder.isPending}
             error={createOrder.error?.message}
             onCancel={() => setCreating(false)}

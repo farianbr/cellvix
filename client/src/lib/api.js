@@ -6,7 +6,7 @@
  * can branch on `err.code` — never on message text.
  */
 
-import { getOutlet } from '@/store/outletStore';
+import { getBusiness } from '@/store/businessStore';
 
 const BASE = import.meta.env.VITE_API_URL || '/api';
 
@@ -24,7 +24,7 @@ function buildUrl(path, params) {
   const url = `${BASE}${path}`;
 
   /**
-   * The selected outlet rides on every admin request.
+   * The selected business rides on every admin request.
    *
    * Injected here rather than at each call site because there are well over a
    * hundred of them, and one that forgot would silently show another shop's
@@ -32,12 +32,19 @@ function buildUrl(path, params) {
    * server decides what to do with it: most admin lists scope by it, a few
    * (the catalogue, settings) deliberately do not.
    *
-   * Only `/admin` paths, and never when a caller passed its own `outlet` —
-   * the customer profile asks for one account's records across all shops, and
-   * the switcher must not narrow that.
+   * Only `/admin` paths **and `/auth/me`**, and never when a caller passed its
+   * own `business` — the customer profile asks for one account's records across
+   * all businesses, and the switcher must not narrow that.
+   *
+   * `/auth/me` is on the list because the **feature set** comes back with the
+   * session, and a business's type is what decides which sections exist
+   * (SAAS_PLATFORM §1.1). Without the scope on this one call the server would
+   * resolve the union on every request and the sidebar would never change,
+   * however many admin lists switched correctly underneath it.
    */
-  const outlet = path.startsWith('/admin') ? getOutlet() : null;
-  const scoped = outlet && !(params && 'outlet' in params) ? { ...params, outlet } : params;
+  const scopedPath = path.startsWith('/admin') || path === '/auth/me';
+  const business = scopedPath ? getBusiness() : null;
+  const scoped = business && !(params && 'business' in params) ? { ...params, business } : params;
 
   if (!scoped) return url;
 

@@ -75,8 +75,15 @@ const userSchema = new mongoose.Schema(
     // granted, never inherited — an unassigned employee is a locked door.
     staffRole: { type: mongoose.Schema.Types.ObjectId, ref: 'Role', default: null },
 
-    // Staff are scoped to one outlet; an admin sees everything (§6.14).
-    outlet: { type: mongoose.Schema.Types.ObjectId, ref: 'Outlet', default: null },
+    /**
+     * Which of OUR businesses this staff account works in (§6.14).
+     *
+     * **Not to be confused with `businessName` / `businessType` above**, which
+     * describe the CUSTOMER's own company — a buyer's shop, its industry. This
+     * references a `Business` document, meaning one of the businesses the
+     * tenant operates, and it is what scopes a staff member's view.
+     */
+    business: { type: mongoose.Schema.Types.ObjectId, ref: 'Business', default: null },
     status: {
       type: String,
       enum: ['pending', 'approved', 'rejected', 'suspended'],
@@ -281,7 +288,7 @@ userSchema.methods.toPublic = function toPublic() {
     phone: this.phone,
     role: this.role,
     staffRole: this.staffRole ? String(this.staffRole._id ?? this.staffRole) : null,
-    outlet: this.outlet ? String(this.outlet._id ?? this.outlet) : null,
+    business: this.business ? String(this.business._id ?? this.business) : null,
     status: this.status,
     taxId: this.taxId,
     website: this.website,

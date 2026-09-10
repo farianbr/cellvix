@@ -14,7 +14,7 @@ import auditService from '../services/auditService.js';
 // ---- quotes -----------------------------------------------------------------
 
 const listQuotes = asyncHandler(async (req, res) => {
-  res.json(await quoteService.listQuotes({ ...req.query, outlet: req.outletScope }));
+  res.json(await quoteService.listQuotes({ ...req.query, business: req.businessScope }));
 });
 
 const getQuote = asyncHandler(async (req, res) => {
@@ -55,7 +55,7 @@ const deleteQuote = asyncHandler(async (req, res) => {
 // ---- RMA --------------------------------------------------------------------
 
 const listRmas = asyncHandler(async (req, res) => {
-  res.json(await rmaService.listRmas({ ...req.query, outlet: req.outletScope }));
+  res.json(await rmaService.listRmas({ ...req.query, business: req.businessScope }));
 });
 
 const getRma = asyncHandler(async (req, res) => {

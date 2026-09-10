@@ -3,7 +3,7 @@ import { ArrowLeft, Menu, Search } from 'lucide-react';
 import cn from '@/lib/cn';
 import { matchAdminRoute } from '@/lib/adminRoutes';
 import CreateMenu from './CreateMenu';
-import OutletSwitcher from './OutletSwitcher';
+import BusinessSwitcher from './BusinessSwitcher';
 import NotificationMenu from './NotificationMenu';
 import { pressable } from '@/lib/motion';
 
@@ -79,8 +79,8 @@ export function AdminTopBar({ user, onOpenSearch, onOpenMobileNav }) {
 
         {/* Which shop the panel is looking at. Left of Create because it
             qualifies everything to its right — what you create lands in the
-            outlet you are in. */}
-        <OutletSwitcher />
+            business you are in. */}
+        <BusinessSwitcher />
 
         <CreateMenu />
 

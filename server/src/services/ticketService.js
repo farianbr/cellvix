@@ -268,17 +268,17 @@ async function listTickets({
   to,
   limit,
   page,
-  outlet,
+  business,
 } = {}) {
   const settings = await Settings.load();
   const slaDays = settings?.operations?.ticketSlaDays ?? 7;
 
   const query = {};
 
-  // Scoped to the outlet the panel is switched to, when it is switched to one.
-  // Resolved by `resolveOutletScope` rather than read from the query string,
-  // because a staff member's own outlet is binding.
-  if (outlet) query.outlet = outlet;
+  // Scoped to the business the panel is switched to, when it is switched to one.
+  // Resolved by `resolveBusinessScope` rather than read from the query string,
+  // because a staff member's own business is binding.
+  if (business) query.business = business;
 
   if (status === 'open') query.status = { $in: TICKET_OPEN_STATUSES };
   else if (status === 'overdue') query.status = { $in: TICKET_OPEN_STATUSES };
@@ -743,7 +743,7 @@ async function convertToInvoice(id, { terms = 'prepaid' } = {}, actor) {
     // can follow back up the chain.
     ticket: ticket._id,
     user: ticket.user._id,
-    outlet: ticket.outlet ?? null,
+    business: ticket.business ?? null,
     amount: totals.total,
     amountPaid: 0,
     issuedAt,

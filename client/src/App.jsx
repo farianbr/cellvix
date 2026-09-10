@@ -30,7 +30,7 @@ const UnsubscribePage = lazy(() => import('@/pages/UnsubscribePage'));
 
 const SupplierPortalLayout = lazy(() => import('@/components/supplier/SupplierPortalLayout'));
 const SupplierDashboardPage = lazy(() => import('@/pages/supplier/SupplierDashboardPage'));
-const SupplierRfqPage = lazy(() => import('@/pages/supplier/SupplierRfqPage'));
+const SupplierPurchaseOrderPage = lazy(() => import('@/pages/supplier/SupplierPurchaseOrderPage'));
 
 const AccountLayout = lazy(() => import('@/components/account/AccountLayout'));
 const AccountOverviewPage = lazy(() => import('@/pages/account/AccountOverviewPage'));
@@ -63,9 +63,6 @@ const AdminSupplierReturnsPage = lazy(() => import('@/pages/admin/AdminSupplierR
 const AdminSupplierServicesPage = lazy(() => import('@/pages/admin/AdminSupplierServicesPage'));
 const AdminSuppliersPage = lazy(() => import('@/pages/admin/AdminSuppliersPage'));
 const AdminSupplierProfilePage = lazy(() => import('@/pages/admin/AdminSupplierProfilePage'));
-const AdminRfqsPage = lazy(() => import('@/pages/admin/AdminRfqsPage'));
-const AdminRfqCreatePage = lazy(() => import('@/pages/admin/AdminRfqCreatePage'));
-const AdminRfqDetailPage = lazy(() => import('@/pages/admin/AdminRfqDetailPage'));
 const AdminPurchaseOrdersPage = lazy(() => import('@/pages/admin/AdminPurchaseOrdersPage'));
 const AdminPurchaseOrderDetailPage = lazy(
   () => import('@/pages/admin/AdminPurchaseOrderDetailPage'),
@@ -88,9 +85,9 @@ const AdminTicketFormPage = lazy(() => import('@/pages/admin/AdminTicketFormPage
 const AdminTicketDetailPage = lazy(() => import('@/pages/admin/AdminTicketDetailPage'));
 const AdminRmaPage = lazy(() => import('@/pages/admin/AdminRmaPage'));
 const AdminRmaDetailPage = lazy(() => import('@/pages/admin/AdminRmaDetailPage'));
-const AdminOutletsPage = lazy(() => import('@/pages/admin/AdminOutletsPage'));
-const AdminOutletFormPage = lazy(() => import('@/pages/admin/AdminOutletFormPage'));
-const AdminOutletDetailPage = lazy(() => import('@/pages/admin/AdminOutletDetailPage'));
+const AdminBusinessesPage = lazy(() => import('@/pages/admin/AdminBusinessesPage'));
+const AdminBusinessFormPage = lazy(() => import('@/pages/admin/AdminBusinessFormPage'));
+const AdminBusinessDetailPage = lazy(() => import('@/pages/admin/AdminBusinessDetailPage'));
 const AdminUsersPage = lazy(() => import('@/pages/admin/AdminUsersPage'));
 const AdminRolesPage = lazy(() => import('@/pages/admin/AdminRolesPage'));
 const AdminSmsPage = lazy(() => import('@/pages/admin/AdminSmsPage'));
@@ -167,11 +164,9 @@ export function App() {
         <Route path="supplier-returns" element={<AdminSupplierReturnsPage />} />
         <Route path="supplier-services" element={<AdminSupplierServicesPage mode="service" />} />
         <Route path="supplier-subscriptions" element={<AdminSupplierServicesPage mode="subscription" />} />
-        {/* Requests for quote (§6.8a) — the step before a purchase order.
-            `create` before `:id` for the reason the PO routes need it. */}
-        <Route path="rfqs" element={<AdminRfqsPage />} />
-        <Route path="rfqs/create" element={<AdminRfqCreatePage />} />
-        <Route path="rfqs/:id" element={<AdminRfqDetailPage />} />
+        {/* Supplier bidding lives on the purchase order itself (§6.8a) — the
+            separate `/admin/rfqs` screens folded in on 2026-09-11, and
+            `ADMIN_LEGACY_REDIRECTS` forwards the old path. */}
         <Route path="purchase-orders" element={<AdminPurchaseOrdersPage />} />
         {/* Before `:id`, or the dynamic route matches "create" as an order id
             and the page renders "purchase order not found". */}
@@ -217,12 +212,12 @@ export function App() {
             real money on an automatic trigger (§6.13). */}
         <Route path="marketing/referrals" element={<AdminReferralsPage />} />
 
-        {/* Outlet, staff & roles (phase 8). `add` and `:id/edit` share one
+        {/* Business, staff & roles (phase 8). `add` and `:id/edit` share one
             form component — the same fields with a different verb. */}
-        <Route path="outlets" element={<AdminOutletsPage />} />
-        <Route path="outlets/add" element={<AdminOutletFormPage />} />
-        <Route path="outlets/:id/edit" element={<AdminOutletFormPage />} />
-        <Route path="outlets/:id" element={<AdminOutletDetailPage />} />
+        <Route path="businesses" element={<AdminBusinessesPage />} />
+        <Route path="businesses/add" element={<AdminBusinessFormPage />} />
+        <Route path="businesses/:id/edit" element={<AdminBusinessFormPage />} />
+        <Route path="businesses/:id" element={<AdminBusinessDetailPage />} />
         <Route path="settings/users" element={<AdminUsersPage />} />
         <Route path="settings/roles" element={<AdminRolesPage />} />
 
@@ -295,7 +290,7 @@ export function App() {
         }
       >
         <Route index element={<SupplierDashboardPage />} />
-        <Route path="rfq/:id" element={<SupplierRfqPage />} />
+        <Route path="orders/:id" element={<SupplierPurchaseOrderPage />} />
         <Route path="*" element={<Navigate to="/supplier" replace />} />
       </Route>
 

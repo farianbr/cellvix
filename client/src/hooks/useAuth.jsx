@@ -28,6 +28,9 @@ export function AuthProvider({ children }) {
   });
 
   const user = data?.user ?? null;
+  // The business's switched-on features, for staff only — `null` for everyone
+  // else. A courtesy that shapes the nav; `requireFeature` decides for real.
+  const features = data?.features ?? null;
 
   const refresh = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
@@ -42,7 +45,12 @@ export function AuthProvider({ children }) {
   const signIn = useCallback(
     async (credentials) => {
       const result = await api.post('/auth/login', credentials);
-      queryClient.setQueryData(['auth', 'me'], { user: result.user });
+      // `features` rides along with the user, or the panel renders once with an
+      // empty set — every gated nav row missing until the next `/auth/me`.
+      queryClient.setQueryData(['auth', 'me'], {
+        user: result.user,
+        features: result.features ?? null,
+      });
       queryClient.invalidateQueries({ queryKey: ['products'] });
       queryClient.invalidateQueries({ queryKey: ['search'] });
       // Combo bundle prices are gated exactly like the catalogue.
@@ -56,7 +64,7 @@ export function AuthProvider({ children }) {
 
   const signOut = useCallback(async () => {
     await api.post('/auth/logout');
-    queryClient.setQueryData(['auth', 'me'], { user: null });
+    queryClient.setQueryData(['auth', 'me'], { user: null, features: null });
     queryClient.invalidateQueries({ queryKey: ['products'] });
     queryClient.invalidateQueries({ queryKey: ['search'] });
     // Combo bundle prices are gated exactly like the catalogue.
@@ -78,12 +86,15 @@ export function AuthProvider({ children }) {
       canUseAdmin: user?.role === 'admin' || (user?.role === 'staff' && Boolean(user?.staffRole)),
       // Area permissions, or null for an admin — who bypasses the map entirely.
       permissions: user?.permissions ?? null,
+      // What this BUSINESS has switched on, which is a different question from
+      // what this ACCOUNT may do with it (SAAS_PLATFORM §4.4).
+      features,
       signIn,
       signUp,
       signOut,
       refresh,
     }),
-    [user, isLoading, signIn, signUp, signOut, refresh],
+    [user, features, isLoading, signIn, signUp, signOut, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

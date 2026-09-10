@@ -20,7 +20,7 @@ const PERMISSION_AREAS = [
   'purchase',
   'reports',
   'marketing',
-  'outlet',
+  'business',
   'settings',
 ];
 
@@ -54,7 +54,7 @@ const roleSchema = new mongoose.Schema(
       purchase: areaField,
       reports: areaField,
       marketing: areaField,
-      outlet: areaField,
+      business: areaField,
       settings: areaField,
     },
   },

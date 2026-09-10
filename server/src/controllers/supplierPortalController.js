@@ -1,6 +1,7 @@
+import { randomBytes } from 'node:crypto';
 import { asyncHandler } from '../utils/ApiError.js';
 import * as supplierPortalService from '../services/supplierPortalService.js';
-import rfqService from '../services/rfqService.js';
+import * as purchaseBidService from '../services/purchaseBidService.js';
 
 /**
  * The supplier portal (supplier process flow, §6.8a).
@@ -40,33 +41,70 @@ const changePassword = asyncHandler(async (req, res) => {
   res.json(await supplierPortalService.changePassword(req.supplier._id, req.body));
 });
 
-// ---- requests for quote -----------------------------------------------------
+// ---- purchase orders this supplier was asked to price ----------------------
 
-const listRfqs = asyncHandler(async (req, res) => {
-  res.json(await rfqService.listForSupplier(req.supplier._id));
+const listOrders = asyncHandler(async (req, res) => {
+  res.json(await purchaseBidService.listForSupplier(req.supplier._id));
 });
 
-const getRfq = asyncHandler(async (req, res) => {
-  res.json(await rfqService.getForSupplier(req.params.id, req.supplier._id));
+const getOrder = asyncHandler(async (req, res) => {
+  res.json(await purchaseBidService.getForSupplier(req.params.id, req.supplier._id));
 });
 
 const submitQuote = asyncHandler(async (req, res) => {
-  res.json(await rfqService.submitQuote(req.params.id, req.supplier._id, req.body));
+  res.json(await purchaseBidService.submitBid(req.params.id, req.supplier._id, req.body));
 });
 
 const declineQuote = asyncHandler(async (req, res) => {
-  res.json(await rfqService.declineQuote(req.params.id, req.supplier._id, req.body));
+  res.json(await purchaseBidService.declineBid(req.params.id, req.supplier._id, req.body));
+});
+
+const submitProforma = asyncHandler(async (req, res) => {
+  res.json(await purchaseBidService.submitProforma(req.params.id, req.supplier._id, req.body));
+});
+
+const setDeliveryStatus = asyncHandler(async (req, res) => {
+  res.json(await purchaseBidService.setDeliveryStatus(req.params.id, req.supplier._id, req.body));
+});
+
+/**
+ * The supplier's own proforma invoice, as a printable sheet.
+ *
+ * `req.supplier._id` is the session's, never a parameter, so a supplier can
+ * only ever render their own — the same guarantee the JSON serializer gives.
+ */
+const proformaDocument = asyncHandler(async (req, res) => {
+  const nonce = randomBytes(16).toString('base64');
+  const html = await purchaseBidService.proformaDocument(req.params.id, req.supplier._id, {
+    nonce,
+  });
+
+  res.setHeader(
+    'Content-Security-Policy',
+    [
+      "default-src 'none'",
+      "style-src 'unsafe-inline'",
+      'img-src data:',
+      `script-src 'nonce-${nonce}'`,
+      "base-uri 'none'",
+      "form-action 'none'",
+    ].join('; '),
+  );
+  res.type('html').send(html);
 });
 
 export {
   changePassword,
   declineQuote,
   forgotPassword,
-  getRfq,
-  listRfqs,
+  getOrder,
+  listOrders,
   login,
   logout,
   me,
+  proformaDocument,
   resetPassword,
+  setDeliveryStatus,
+  submitProforma,
   submitQuote,
 };
