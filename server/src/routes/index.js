@@ -34,6 +34,7 @@ import * as exportController from '../controllers/exportController.js';
 import * as notificationController from '../controllers/notificationController.js';
 
 import * as supplierPortalController from '../controllers/supplierPortalController.js';
+import * as superAdminController from '../controllers/superAdminController.js';
 
 import validate from '../middleware/validate.js';
 import {
@@ -45,6 +46,7 @@ import {
   requirePermission,
 } from '../middleware/auth.js';
 import { requireSupplier } from '../middleware/supplierAuth.js';
+import { requireSuperAdmin } from '../middleware/superAdminAuth.js';
 import { requireFeature } from '../middleware/feature.js';
 import { resolveBusinessScope } from '../middleware/businessScope.js';
 import {
@@ -115,6 +117,13 @@ import {
   supplierDeclineSchema,
   supplierProformaSchema,
   supplierDeliverySchema,
+  superAdminLoginSchema,
+  tenantSchema,
+  tenantSlotsSchema,
+  superAdminBusinessSchema,
+  businessAssignSchema,
+  businessFeatureSchema,
+  planSchema,
   supplierLoginSchema,
   supplierForgotSchema,
   supplierResetSchema,
@@ -477,6 +486,37 @@ router.get('/admin/purchase-orders/:id/bids/:supplierId/proforma', ...admin, req
 // Issues a credential, so it needs `full` rather than `view` — and it is
 // audited as a security event in the controller.
 router.post('/admin/suppliers/:id/portal-invite', ...admin, requirePermission('purchase', 'full'), purchaseController.invitePortal);
+
+// --- the super-admin console (SAAS_PLATFORM §4.5, §6) -----------------------
+//
+// **A third population behind a third cookie**, on the same argument the
+// supplier portal makes one level down: `requireSuperAdmin` resolves its
+// subject in `SuperAdmin`, so an admin's token satisfies none of these and a
+// super admin's token satisfies nothing else in this file.
+//
+// Nothing here returns a tenant's business RECORDS — no customer, invoice,
+// order or ticket. The console lists businesses and their configuration, which
+// is a deliberate limit (§4.5) and not an omission.
+router.post('/superadmin/login', authLimiter, validate(superAdminLoginSchema), superAdminController.login);
+router.post('/superadmin/logout', superAdminController.logout);
+// Not `requireSuperAdmin`: signed out is a valid answer, as it is for `/auth/me`.
+router.get('/superadmin/me', superAdminController.me);
+
+router.get('/superadmin/tenants', requireSuperAdmin, superAdminController.listTenants);
+router.post('/superadmin/tenants', requireSuperAdmin, validate(tenantSchema), superAdminController.createTenant);
+router.patch('/superadmin/tenants/:id', requireSuperAdmin, validate(tenantSchema), superAdminController.updateTenant);
+// Refused below what the tenant already runs — see the service.
+router.patch('/superadmin/tenants/:id/slots', requireSuperAdmin, validate(tenantSlotsSchema), superAdminController.setSlots);
+// Spends a slot. Refused when none is left.
+router.post('/superadmin/tenants/:id/businesses', requireSuperAdmin, validate(superAdminBusinessSchema), superAdminController.createBusiness);
+
+router.patch('/superadmin/businesses/:id/tenant', requireSuperAdmin, validate(businessAssignSchema), superAdminController.assignBusiness);
+router.get('/superadmin/businesses/:id/features', requireSuperAdmin, superAdminController.getBusinessFeatures);
+// A `locked` key is refused rather than silently ignored (§3.2 rule 4).
+router.patch('/superadmin/businesses/:id/features', requireSuperAdmin, validate(businessFeatureSchema), superAdminController.setBusinessFeature);
+
+router.get('/superadmin/plans', requireSuperAdmin, superAdminController.listPlans);
+router.post('/superadmin/plans', requireSuperAdmin, validate(planSchema), superAdminController.createPlan);
 
 // --- the supplier portal (supplier process flow, §6.8a) ---------------------
 //

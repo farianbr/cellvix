@@ -1019,6 +1019,64 @@ const supplierLoginSchema = z.object({
   password: z.string().min(1, 'Enter your password.'),
 });
 
+// ---- the super-admin console (SAAS_PLATFORM §4.5) ---------------------------
+
+const superAdminLoginSchema = z.object({
+  email: z.string().trim().email('Enter a valid email.'),
+  password: z.string().min(1, 'Enter your password.'),
+});
+
+const tenantSchema = z.object({
+  name: z.string().trim().min(1, 'Give the tenant a name.').max(120),
+  // Derived from the name when omitted — the service slugifies either way, so
+  // this never has to be typed.
+  slug: z.string().trim().max(60).optional(),
+  status: z.enum(['active', 'suspended', 'cancelled']).optional(),
+  contactName: z.string().trim().max(120).optional(),
+  contactEmail: z.string().trim().email('Enter a valid email.').optional().or(z.literal('')),
+  phone: z.string().trim().max(40).optional(),
+  slots: z.coerce.number().int().min(0).max(500).optional(),
+  plan: z.string().trim().optional().or(z.literal('')),
+  notes: z.string().trim().max(2000).optional(),
+});
+
+const tenantSlotsSchema = z.object({
+  slots: z.coerce.number().int().min(0, 'Slots cannot be negative.').max(500),
+});
+
+const superAdminBusinessSchema = z.object({
+  name: z.string().trim().min(1, 'Give the business a name.').max(120),
+  businessType: z.enum(['product', 'service', 'both']),
+  colorToken: z.enum(['brand', 'info', 'success', 'warn', 'danger', 'ink']).optional(),
+});
+
+const businessAssignSchema = z.object({
+  // Empty unassigns, which is a different act from moving it and has to stay
+  // expressible.
+  tenant: z.string().trim().optional().or(z.literal('')),
+});
+
+/**
+ * Switching one feature for one business.
+ *
+ * `enabled` is **nullable on purpose**: `null` clears the override and returns
+ * the key to its plan or business-type default, which is not the same as
+ * switching it off. A boolean-only field would make "back to default"
+ * unreachable from the console.
+ */
+const businessFeatureSchema = z.object({
+  key: z.string().trim().min(1),
+  enabled: z.boolean().nullable(),
+});
+
+const planSchema = z.object({
+  name: z.string().trim().min(1, 'Give the plan a name.').max(80),
+  slug: z.string().trim().max(60).optional(),
+  description: z.string().trim().max(500).optional(),
+  priceCents: cents.default(0),
+  includedSlots: z.coerce.number().int().min(0).max(500).default(1),
+});
+
 const supplierForgotSchema = z.object({
   email: z.string().trim().email('Enter a valid email.'),
 });
@@ -2142,4 +2200,4 @@ const supplierChargeSchema = z.object({
   reference: z.string().trim().max(80).optional(),
 });
 
-export { quoteToTicketSchema, ticketDepositSchema, ticketConvertSchema, TAX_RATES, INVOICE_SERVICE_TYPES, ORDER_OPEN_STATUSES, ORDER_UNFULFILLED_STATUSES, approveUserSchema, rejectUserSchema, creditSchema, clientSchema, clientFormSchema, clientCreateFormSchema, clientUpdateSchema, CONSENT_CHANNELS, contactConsentSchema, MEMBERSHIP_TIERS, tierSchema, internalNoteSchema, storeCreditSchema, refundSchema, userStatusSchema, productSchema, ORDER_STATUS_FLOW, orderStatusSchema, CARRIERS, ADMIN_NAV, ADMIN_LEGACY_REDIRECTS, invoicePaymentSchema, invoiceVoidSchema, webQuoteStatusSchema, creditPaymentSchema, invoiceUpdateSchema, bulkOrderStatusSchema, supplierSchema, purchaseOrderSchema, purchaseOrderStatusSchema, purchaseReceiveSchema, purchasePaymentSchema, purchaseInviteSchema, purchaseSendSchema, purchaseNegotiateSchema, purchaseConfirmSchema, supplierQuoteSchema, supplierDeclineSchema, supplierProformaSchema, supplierDeliverySchema, supplierLoginSchema, supplierForgotSchema, supplierResetSchema, supplierPasswordSchema, expenseSchema, expenseCategorySchema, stockAdjustSchema, productOpsSchema, quoteSchema, quoteStatusSchema, quoteConvertSchema, adminOrderSchema, adminInvoiceSchema, RMA_ITEM_DISPOSITIONS, rmaSchema, TICKET_STATUSES, TICKET_PRIORITIES, TICKET_SOURCES, TICKET_STATUS_LABELS, CONDITION_GRADES, CONDITION_PARTS, ticketSchema, ticketDeviceSchema, ticketLineSchema, ticketUpdateSchema, ticketStatusSchema, rmaStatusSchema, rmaInspectSchema, rmaResolveSchema, PERMISSION_AREAS, PERMISSION_LEVELS, PERMISSION_LEVEL_LABELS, BUSINESS_STATUSES, BUSINESS_COLOR_TOKENS, businessSchema, roleSchema, staffUserSchema, staffUserUpdateSchema, MESSAGE_CHANNELS, TEMPLATE_DOCUMENTS, CAMPAIGN_AUDIENCES, CAMPAIGN_AUDIENCE_LABELS, messageSchema, callLogSchema, messageTemplateSchema, campaignSchema, unsubscribeSchema, referralRateSchema, businessInfoSchema, saleSettingsSchema, shippingSettingsSchema, paymentMethodsSettingsSchema, inventorySettingsSchema, providerCredentialSchema, taxonomyNodeSchema, invoiceStatusRuleSchema, communicationsSettingsSchema, SUPPLIER_RETURN_REASON_VALUES, supplierReturnSchema, supplierReturnStatusSchema, supplierCreditSchema, SUPPLIER_BILLING_CYCLES, supplierServiceSchema, supplierServiceUpdateSchema, supplierChargeSchema };
+export { quoteToTicketSchema, ticketDepositSchema, ticketConvertSchema, TAX_RATES, INVOICE_SERVICE_TYPES, ORDER_OPEN_STATUSES, ORDER_UNFULFILLED_STATUSES, approveUserSchema, rejectUserSchema, creditSchema, clientSchema, clientFormSchema, clientCreateFormSchema, clientUpdateSchema, CONSENT_CHANNELS, contactConsentSchema, MEMBERSHIP_TIERS, tierSchema, internalNoteSchema, storeCreditSchema, refundSchema, userStatusSchema, productSchema, ORDER_STATUS_FLOW, orderStatusSchema, CARRIERS, ADMIN_NAV, ADMIN_LEGACY_REDIRECTS, invoicePaymentSchema, invoiceVoidSchema, webQuoteStatusSchema, creditPaymentSchema, invoiceUpdateSchema, bulkOrderStatusSchema, supplierSchema, purchaseOrderSchema, purchaseOrderStatusSchema, purchaseReceiveSchema, purchasePaymentSchema, purchaseInviteSchema, purchaseSendSchema, purchaseNegotiateSchema, purchaseConfirmSchema, supplierQuoteSchema, supplierDeclineSchema, supplierProformaSchema, supplierDeliverySchema, superAdminLoginSchema, tenantSchema, tenantSlotsSchema, superAdminBusinessSchema, businessAssignSchema, businessFeatureSchema, planSchema, supplierLoginSchema, supplierForgotSchema, supplierResetSchema, supplierPasswordSchema, expenseSchema, expenseCategorySchema, stockAdjustSchema, productOpsSchema, quoteSchema, quoteStatusSchema, quoteConvertSchema, adminOrderSchema, adminInvoiceSchema, RMA_ITEM_DISPOSITIONS, rmaSchema, TICKET_STATUSES, TICKET_PRIORITIES, TICKET_SOURCES, TICKET_STATUS_LABELS, CONDITION_GRADES, CONDITION_PARTS, ticketSchema, ticketDeviceSchema, ticketLineSchema, ticketUpdateSchema, ticketStatusSchema, rmaStatusSchema, rmaInspectSchema, rmaResolveSchema, PERMISSION_AREAS, PERMISSION_LEVELS, PERMISSION_LEVEL_LABELS, BUSINESS_STATUSES, BUSINESS_COLOR_TOKENS, businessSchema, roleSchema, staffUserSchema, staffUserUpdateSchema, MESSAGE_CHANNELS, TEMPLATE_DOCUMENTS, CAMPAIGN_AUDIENCES, CAMPAIGN_AUDIENCE_LABELS, messageSchema, callLogSchema, messageTemplateSchema, campaignSchema, unsubscribeSchema, referralRateSchema, businessInfoSchema, saleSettingsSchema, shippingSettingsSchema, paymentMethodsSettingsSchema, inventorySettingsSchema, providerCredentialSchema, taxonomyNodeSchema, invoiceStatusRuleSchema, communicationsSettingsSchema, SUPPLIER_RETURN_REASON_VALUES, supplierReturnSchema, supplierReturnStatusSchema, supplierCreditSchema, SUPPLIER_BILLING_CYCLES, supplierServiceSchema, supplierServiceUpdateSchema, supplierChargeSchema };

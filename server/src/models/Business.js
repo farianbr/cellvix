@@ -129,17 +129,21 @@ const businessSchema = new mongoose.Schema(
     /**
      * Per-business feature switches, written **only** by a super admin (§3.3).
      *
-     * `{ 'sales.tickets': true }` — a sparse map of deliberate answers, not a
-     * full set. Anything absent falls back to the business type's default, so
+     * `{ 'sales.tickets': true }` — a sparse object of deliberate answers, not
+     * a full set. Anything absent falls back to the business type's default, so
      * this document never has to be rewritten when a new feature key is added.
      *
      * A `locked` key here is ignored: `resolveFeatures` forces those on
      * whatever any layer says (§3.2 rule 4).
+     *
+     * **`Mixed`, not `Map`.** Mongoose maps reject keys containing a dot, and
+     * every feature key in the registry is dot-namespaced (`sales.orders`) —
+     * a `Map` threw on the first write the console attempted. The dots are the
+     * namespace and are not negotiable, so the field type gives way instead.
      */
     featureOverrides: {
-      type: Map,
-      of: Boolean,
-      default: () => new Map(),
+      type: mongoose.Schema.Types.Mixed,
+      default: () => ({}),
     },
 
     /** The plan this business is on. Sets feature defaults beneath overrides. */
@@ -172,7 +176,7 @@ businessSchema.methods.toPublic = function toPublic() {
     isDefault: this.isDefault,
     tenant: this.tenant?.toString() ?? null,
     // A plain object, because a Map does not survive `res.json` as one.
-    featureOverrides: Object.fromEntries(this.featureOverrides ?? []),
+    featureOverrides: this.featureOverrides ?? {},
     plan: this.plan?.toString() ?? null,
     notes: this.notes,
     createdAt: this.createdAt,

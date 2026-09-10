@@ -35,6 +35,9 @@ const SupplierOrdersPage = lazy(() => import('@/pages/supplier/SupplierOrdersPag
 const SupplierProformasPage = lazy(() => import('@/pages/supplier/SupplierProformasPage'));
 const SupplierDeliveriesPage = lazy(() => import('@/pages/supplier/SupplierDeliveriesPage'));
 const SupplierProfilePage = lazy(() => import('@/pages/supplier/SupplierProfilePage'));
+const SuperAdminLayout = lazy(() => import('@/components/superadmin/SuperAdminLayout'));
+const SuperAdminTenantsPage = lazy(() => import('@/pages/superadmin/SuperAdminTenantsPage'));
+const SuperAdminPlansPage = lazy(() => import('@/pages/superadmin/SuperAdminPlansPage'));
 
 const AccountLayout = lazy(() => import('@/components/account/AccountLayout'));
 const AccountOverviewPage = lazy(() => import('@/pages/account/AccountOverviewPage'));
@@ -279,6 +282,28 @@ export function App() {
           </Suspense>
         }
       />
+
+      {/* The platform console (SAAS_PLATFORM §4.5). A third application on a
+          third session — outside RootLayout and outside AdminShell, because a
+          super admin belongs to neither population and must not carry either
+          one's chrome.
+
+          `/superadmin` is the path form. `admin.<domain>` is the intended
+          production host and resolves to the same routes; the path stays so the
+          console is reachable in development without a DNS entry or an
+          `/etc/hosts` edit. */}
+      <Route
+        path="superadmin"
+        element={
+          <Suspense fallback={<RouteFallback />}>
+            <SuperAdminLayout />
+          </Suspense>
+        }
+      >
+        <Route index element={<SuperAdminTenantsPage />} />
+        <Route path="plans" element={<SuperAdminPlansPage />} />
+        <Route path="*" element={<Navigate to="/superadmin" replace />} />
+      </Route>
 
       {/* The supplier portal (§6.8a). Outside RootLayout for the same reason
           the admin panel is: a supplier is not a customer, and the shop header,

@@ -11,6 +11,7 @@ import env from './config/env.js';
 import routes from './routes/index.js';
 import { authenticate } from './middleware/auth.js';
 import { authenticateSupplier } from './middleware/supplierAuth.js';
+import { authenticateSuperAdmin } from './middleware/superAdminAuth.js';
 import { attachFeatures } from './middleware/feature.js';
 import { resolveBusinessScope } from './middleware/businessScope.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
@@ -60,6 +61,16 @@ function createApp() {
    * what a Cellvix employee testing the portal actually needs.
    */
   app.use(authenticateSupplier);
+
+  /**
+   * The super-admin console's session — a third cookie into a third collection
+   * (SAAS_PLATFORM §4.5).
+   *
+   * Resolved alongside the other two and separate from both. All three run on
+   * every request so one browser can hold any combination, which is what an
+   * operator testing the platform actually needs.
+   */
+  app.use(authenticateSuperAdmin);
 
   /**
    * Which business this request is about, then what that business can do.

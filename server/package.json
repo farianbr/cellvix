@@ -13,6 +13,7 @@
     "seed:expense-categories": "node src/seed/expense-categories.js",
     "seed:tickets": "node src/seed/tickets.js",
     "seed:bids": "node src/seed/purchase-bids.js",
+    "seed:superadmin": "node src/seed/superadmin.js",
     "backfill:competitors": "node src/seed/backfill-competitors.js",
     "backfill:business": "node src/seed/backfill-business.js",
     "backfill:invoice-kind": "node src/seed/backfill-invoice-kind.js",
