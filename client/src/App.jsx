@@ -31,6 +31,10 @@ const UnsubscribePage = lazy(() => import('@/pages/UnsubscribePage'));
 const SupplierPortalLayout = lazy(() => import('@/components/supplier/SupplierPortalLayout'));
 const SupplierDashboardPage = lazy(() => import('@/pages/supplier/SupplierDashboardPage'));
 const SupplierPurchaseOrderPage = lazy(() => import('@/pages/supplier/SupplierPurchaseOrderPage'));
+const SupplierOrdersPage = lazy(() => import('@/pages/supplier/SupplierOrdersPage'));
+const SupplierProformasPage = lazy(() => import('@/pages/supplier/SupplierProformasPage'));
+const SupplierDeliveriesPage = lazy(() => import('@/pages/supplier/SupplierDeliveriesPage'));
+const SupplierProfilePage = lazy(() => import('@/pages/supplier/SupplierProfilePage'));
 
 const AccountLayout = lazy(() => import('@/components/account/AccountLayout'));
 const AccountOverviewPage = lazy(() => import('@/pages/account/AccountOverviewPage'));
@@ -290,7 +294,13 @@ export function App() {
         }
       >
         <Route index element={<SupplierDashboardPage />} />
+        {/* `orders` before `orders/:id`, or the dynamic route matches the list
+            path as an id and the page renders "order not found". */}
+        <Route path="orders" element={<SupplierOrdersPage />} />
         <Route path="orders/:id" element={<SupplierPurchaseOrderPage />} />
+        <Route path="proformas" element={<SupplierProformasPage />} />
+        <Route path="deliveries" element={<SupplierDeliveriesPage />} />
+        <Route path="profile" element={<SupplierProfilePage />} />
         <Route path="*" element={<Navigate to="/supplier" replace />} />
       </Route>
 

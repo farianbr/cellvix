@@ -1,9 +1,10 @@
 import { Link } from 'react-router';
-import { ArrowRight, CheckCircle2, Clock, FileText, Inbox, MessageSquare, Truck } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Clock, FileText, Inbox, MessageSquare, Trophy, Truck } from 'lucide-react';
 import { money, date, count as formatCount } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Badge from '@/components/ui/Badge';
 import Skeleton from '@/components/ui/Skeleton';
+import KpiRow from '@/components/admin/KpiRow';
 import cn from '@/lib/cn';
 import { pressable } from '@/lib/motion';
 import { useSupplierSession, useSupplierOrders } from '@/hooks/useSupplierPortal';
@@ -181,6 +182,48 @@ export function SupplierDashboardPage() {
           Signed in as {supplier?.name}. We will email you when a new order goes out.
         </p>
       </div>
+
+      {/* The same `KpiRow` the admin panel uses. Four figures, in the order a
+          supplier cares about them: what they owe us, what we owe them an
+          answer on, what is theirs to deliver, and what it is worth. */}
+      {orders.length > 0 && (
+        <KpiRow
+          tiles={[
+            {
+              key: 'needs-price',
+              label: 'Needs your price',
+              value: formatCount(needsPrice.length),
+              hint: 'Waiting on you',
+              tone: needsPrice.length ? 'brand' : 'neutral',
+              icon: Clock,
+            },
+            {
+              key: 'waiting',
+              label: 'Waiting on us',
+              value: formatCount(waiting.length),
+              hint: 'Priced, being compared',
+              tone: 'info',
+              icon: CheckCircle2,
+            },
+            {
+              key: 'confirmed',
+              label: 'Confirmed with you',
+              value: formatCount(confirmed.length),
+              hint: 'Yours to deliver',
+              tone: 'ok',
+              icon: Truck,
+            },
+            {
+              key: 'value',
+              label: 'Confirmed value',
+              value: money(confirmed.reduce((sum, order) => sum + (order.myBid.total ?? 0), 0)),
+              hint: 'Across every confirmed order',
+              tone: 'brand',
+              icon: Trophy,
+            },
+          ]}
+        />
+      )}
 
       {!orders.length ? (
         <Panel>
