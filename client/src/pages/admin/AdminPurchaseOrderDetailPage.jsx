@@ -561,9 +561,6 @@ export function AdminPurchaseOrderDetailPage() {
                     <th scope="col" className={t.headCell()}>
                       Product
                     </th>
-                    <th scope="col" className={t.headCell()}>
-                      Linked inventory
-                    </th>
                     <th scope="col" className={t.headCell('right')}>
                       Ordered
                     </th>
@@ -583,33 +580,44 @@ export function AdminPurchaseOrderDetailPage() {
                     const short = item.qtyOrdered - item.qtyReceived;
                     return (
                       <tr key={item.sku} className={t.row}>
-                        <td className={t.cell()}>
-                          <p className="text-sm text-ink-900">{item.name}</p>
-                          <p className="font-mono text-xs text-ink-400">{item.sku}</p>
-                        </td>
+                        {/* One column, not two.
+
+                            `item.name` and `item.inventory.name` are the same
+                            product name — so Product wrapped it over three lines
+                            in 120px while Linked inventory truncated the same
+                            words in 266px. What that second column actually adds
+                            is the stock figure and the link, and both belong
+                            beside the name they describe. */}
                         <td className={t.cell()}>
                           {item.inventory ? (
                             <Link
                               to={`/admin/inventory/${item.inventory.id}`}
-                              className="inline-flex items-center gap-1.5 text-sm text-ink-700 hover:text-brand"
+                              className="group inline-flex items-center gap-1.5 text-sm font-medium text-ink-900 hover:text-brand"
                             >
+                              <span className="min-w-0">{item.name}</span>
                               <Link2
-                                className="size-3.5 shrink-0 text-ink-300"
+                                className="size-3.5 shrink-0 text-ink-300 group-hover:text-brand"
                                 strokeWidth={2.25}
                                 aria-hidden="true"
                               />
-                              <span className="truncate">{item.inventory.name}</span>
-                              <span className="tnum shrink-0 text-xs text-ink-400">
-                                ({formatCount(item.inventory.stock)} in stock)
-                              </span>
                             </Link>
                           ) : (
-                            // A line with no catalogue product behind it will
-                            // not move stock when it is received, and saying so
-                            // here is cheaper than the operator finding out
-                            // after the delivery.
-                            <span className="text-xs text-ink-300">Not linked</span>
+                            <p className="text-sm font-medium text-ink-900">{item.name}</p>
                           )}
+                          <p className="flex flex-wrap items-center gap-x-2 text-xs text-ink-400">
+                            <span className="font-mono">{item.sku}</span>
+                            {item.inventory ? (
+                              <span className="tnum">
+                                {formatCount(item.inventory.stock)} in stock
+                              </span>
+                            ) : (
+                              // A line with no catalogue product behind it will
+                              // not move stock when it is received, and saying so
+                              // here is cheaper than the operator finding out
+                              // after the delivery.
+                              <span className="text-warn">Not linked — will not move stock</span>
+                            )}
+                          </p>
                         </td>
                         <td className={cn(t.cell('right'), 'tnum text-ink-700')}>
                           {formatCount(item.qtyOrdered)}

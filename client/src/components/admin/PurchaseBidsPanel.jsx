@@ -19,7 +19,6 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Skeleton from '@/components/ui/Skeleton';
 import ActionMenu from '@/components/ui/ActionMenu';
-import { useTableClasses } from '@/components/admin/DataTable';
 import { toast } from '@/store/toastStore';
 import { apiUrl } from '@/lib/api';
 import { pressable } from '@/lib/motion';
@@ -75,8 +74,182 @@ const DELIVERY_LABELS = {
   delivered: 'delivered',
 };
 
+/**
+ * One supplier's answer.
+ *
+ * **A card, not a table row** — and the reason is what this panel is for. A
+ * table compares uniform rows of the same few values; this compares *offers*,
+ * and an offer is a bundle of facts that belong together: who, at what price,
+ * how soon, how much of the order they can actually fill, and what paperwork
+ * they have raised. Squeezed into six fixed columns those facts were 19px wider
+ * than the panel — so the whole comparison scrolled sideways — and Status was
+ * carrying four different kinds of note in 141px.
+ *
+ * Cards also let the **money be the size it deserves**. The total is the number
+ * an operator is comparing, and in a table cell it was 13px of tabular text
+ * indistinguishable from the lead time beside it.
+ *
+ * The list is short by nature — a handful of suppliers carry any one component
+ * type — which is the same argument the Businesses screen makes for cards over
+ * a table at low row counts.
+ */
+function BidCard({ bid, order, lineCount, canAct, onNegotiate, onConfirm, onRemove, removing }) {
+  const answered = ['quoted', 'negotiating'].includes(bid.status);
+  const priced = answered || bid.status === 'confirmed';
+  const settled = ['declined', 'lost'].includes(bid.status);
+
+  // Computed once and used both to decide whether the notes row exists and to
+  // render each note, so the wrapper can never appear around nothing.
+  const showsShortfall = answered && !bid.complete;
+  const showsProforma = Boolean(bid.proforma);
+  const showsDelivery = Boolean(bid.delivery) && bid.status === 'confirmed';
+  const showsDecline = bid.status === 'declined' && Boolean(bid.declineReason);
+
+  return (
+    <li
+      className={cn(
+        'rounded-lg border bg-surface p-3.5',
+        // The leading answer gets the only coloured edge on the list. Everything
+        // else is quiet, which is what makes it findable at a glance.
+        bid.isBest ? 'border-ok/40' : 'border-line',
+        settled && 'opacity-60',
+      )}
+    >
+      <div className="flex items-start gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="truncate font-display text-md font-semibold text-ink-900">
+              {bid.supplier.name}
+            </span>
+            {/* The server's ranking, not ours. Only ever set on a complete answer. */}
+            {bid.isBest && (
+              <Badge tone="ok" size="sm" icon={Trophy}>
+                best
+              </Badge>
+            )}
+            <Badge tone={BID_TONES[bid.status]} size="sm">
+              {BID_LABELS[bid.status]}
+            </Badge>
+          </div>
+
+          {bid.supplier.email && (
+            <a
+              href={`mailto:${bid.supplier.email}`}
+              onClick={(event) => event.stopPropagation()}
+              className="mt-0.5 block truncate text-xs text-ink-400 hover:text-brand hover:underline"
+            >
+              {bid.supplier.email}
+            </a>
+          )}
+        </div>
+
+        {/* The figure being compared, at the size that says so. */}
+        <div className="shrink-0 text-right">
+          {priced ? (
+            <>
+              <p className="tnum font-display text-lg font-bold leading-none text-ink-900">
+                {money(bid.total)}
+              </p>
+              {bid.leadTimeDays != null && (
+                <p className="mt-1 text-xs text-ink-400">{bid.leadTimeDays} day lead time</p>
+              )}
+            </>
+          ) : (
+            <p className="text-sm text-ink-300">No price yet</p>
+          )}
+        </div>
+
+        {canAct && (
+          <ActionMenu
+            align="right"
+            label={`Actions for ${bid.supplier.name}`}
+            items={[
+              {
+                key: 'negotiate',
+                label: 'Negotiate…',
+                icon: MessageSquare,
+                hidden: !answered,
+                onSelect: onNegotiate,
+              },
+              {
+                key: 'confirm',
+                label: 'Confirm this supplier',
+                icon: Check,
+                hidden: !answered,
+                onSelect: onConfirm,
+              },
+              {
+                key: 'remove',
+                label: 'Remove from order',
+                icon: Trash2,
+                danger: true,
+                disabled: removing,
+                hidden: answered || bid.status === 'declined',
+                onSelect: onRemove,
+              },
+            ]}
+          />
+        )}
+      </div>
+
+      {/* The notes that were fighting for room inside a 141px Status cell. Each
+          is a different kind of fact and only ever one or two apply at once.
+
+          **Each condition below is spelled out identically to the one guarding
+          its row.** They started as looser tests — `bid.delivery` rather than
+          `showsDelivery` — and a losing bid carries a default `delivery` object
+          from the schema, so the wrapper rendered its top border and padding
+          around content that was then filtered out: an empty ruled strip under
+          every supplier who was not chosen. */}
+      {(showsShortfall || showsProforma || showsDelivery || showsDecline) && (
+        <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-line pt-2.5 text-xs">
+          {/* An incomplete answer is called out rather than ranked — the whole
+              reason the comparison can be trusted. */}
+          {showsShortfall && (
+            <span className="flex items-center gap-1 font-medium text-warn">
+              <AlertCircle className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
+              Can supply {formatCount(bid.quotedLines)} of {formatCount(lineCount)} lines
+            </span>
+          )}
+
+          {showsProforma && (
+            <a
+              href={apiUrl(
+                `/admin/purchase-orders/${order.id}/bids/${bid.supplier.id}/proforma`,
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cn(
+                pressable,
+                'flex items-center gap-1 font-medium text-ink-700 hover:text-brand hover:underline',
+              )}
+            >
+              <FileText className="size-3.5 shrink-0 text-ink-400" strokeWidth={2.25} aria-hidden="true" />
+              Proforma {bid.proforma.number || `rev ${bid.proforma.revision}`}
+              <span className="tnum text-ink-400">· {money(bid.proforma.total)}</span>
+            </a>
+          )}
+
+          {showsDelivery && (
+            <span className="flex items-center gap-1 text-ink-500">
+              <Truck className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
+              {DELIVERY_LABELS[bid.delivery.status] ?? bid.delivery.status}
+              {bid.delivery.trackingNumber && (
+                <span className="font-mono text-ink-400">· {bid.delivery.trackingNumber}</span>
+              )}
+            </span>
+          )}
+
+          {showsDecline && (
+            <span className="min-w-0 flex-1 truncate text-ink-400">“{bid.declineReason}”</span>
+          )}
+        </div>
+      )}
+    </li>
+  );
+}
+
 export function PurchaseBidsPanel({ order }) {
-  const t = useTableClasses();
   const { data, isLoading } = useAdminPoBids(order.id);
   const {
     invitePoSuppliers,
@@ -176,182 +349,26 @@ export function PurchaseBidsPanel({ order }) {
             }
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-160 text-left">
-              <thead>
-                <tr className={t.headRow}>
-                  <th scope="col" className={t.headCell()}>
-                    Supplier
-                  </th>
-                  <th scope="col" className={t.headCell()}>
-                    Status
-                  </th>
-                  <th scope="col" className={cn(t.headCell('right'), 'w-28')}>
-                    Total
-                  </th>
-                  <th scope="col" className={cn(t.headCell('right'), 'w-24')}>
-                    Lead time
-                  </th>
-                  <th scope="col" className={cn(t.headCell(), 'w-28')}>
-                    Proforma
-                  </th>
-                  <th scope="col" className={cn(t.headCell('right'), 'w-12')}>
-                    <span className="sr-only">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {bids.map((bid) => {
-                  const answered = ['quoted', 'negotiating'].includes(bid.status);
-
-                  return (
-                    <tr
-                      key={bid.id}
-                      className={cn(
-                        t.row,
-                        ['declined', 'lost'].includes(bid.status) && 'opacity-60',
-                      )}
-                    >
-                      <td className={t.cell()}>
-                        <span className="flex items-center gap-1.5">
-                          <span className="truncate text-sm font-medium text-ink-900">
-                            {bid.supplier.name}
-                          </span>
-                          {/* The server's ranking, not ours. Only ever set on a
-                              complete answer. */}
-                          {bid.isBest && (
-                            <Badge tone="ok" size="sm" icon={Trophy}>
-                              best
-                            </Badge>
-                          )}
-                        </span>
-                        {bid.supplier.email && (
-                          <span className="block truncate text-xs text-ink-400">
-                            {bid.supplier.email}
-                          </span>
-                        )}
-                      </td>
-
-                      <td className={t.cell()}>
-                        <Badge tone={BID_TONES[bid.status]} size="sm">
-                          {BID_LABELS[bid.status]}
-                        </Badge>
-                        {/* An incomplete answer is called out rather than
-                            ranked — the whole reason the comparison can be
-                            trusted. */}
-                        {answered && !bid.complete && (
-                          <span className="mt-0.5 block text-xs text-warn">
-                            {formatCount(bid.quotedLines)} of {formatCount(order.items.length)} lines
-                          </span>
-                        )}
-                        {bid.status === 'declined' && bid.declineReason && (
-                          <span className="mt-0.5 block truncate text-xs text-ink-400">
-                            {bid.declineReason}
-                          </span>
-                        )}
-                        {bid.delivery && bid.status === 'confirmed' && (
-                          <span className="mt-0.5 flex items-center gap-1 text-xs text-ink-500">
-                            <Truck className="size-3 shrink-0" strokeWidth={2.5} aria-hidden="true" />
-                            {DELIVERY_LABELS[bid.delivery.status] ?? bid.delivery.status}
-                            {bid.delivery.trackingNumber && ` · ${bid.delivery.trackingNumber}`}
-                          </span>
-                        )}
-                      </td>
-
-                      <td className={cn(t.cell('right'), 'tnum text-sm')}>
-                        {answered || bid.status === 'confirmed' ? (
-                          <span className="font-semibold text-ink-900">{money(bid.total)}</span>
-                        ) : (
-                          <span className="text-ink-300">—</span>
-                        )}
-                      </td>
-
-                      <td className={cn(t.cell('right'), 'tnum text-sm text-ink-500')}>
-                        {bid.leadTimeDays != null ? (
-                          `${bid.leadTimeDays}d`
-                        ) : (
-                          <span className="text-ink-300">—</span>
-                        )}
-                      </td>
-
-                      <td className={t.cell()}>
-                        {bid.proforma ? (
-                          <a
-                            href={apiUrl(
-                              `/admin/purchase-orders/${order.id}/bids/${bid.supplier.id}/proforma`,
-                            )}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(event) => event.stopPropagation()}
-                            className={cn(pressable, 'flex flex-col hover:underline')}
-                          >
-                            <span className="flex items-center gap-1 text-xs font-medium text-ink-900">
-                              <FileText
-                                className="size-3 shrink-0 text-ink-400"
-                                strokeWidth={2.5}
-                                aria-hidden="true"
-                              />
-                              {bid.proforma.number || `rev ${bid.proforma.revision}`}
-                            </span>
-                            <span className="tnum text-xs text-ink-500">
-                              {money(bid.proforma.total)}
-                            </span>
-                          </a>
-                        ) : (
-                          <span className="text-xs text-ink-300">—</span>
-                        )}
-                      </td>
-
-                      {/* A row menu, not a row of buttons.
-
-                          Two full-width buttons per row pushed this table past
-                          its column and the actions — the primary thing an
-                          operator comes here to do — were what scrolled out of
-                          sight. `ActionMenu` is portalled, so unlike the buttons
-                          it cannot be clipped by the scroll wrapper. */}
-                      <td className={cn(t.cell('right'), 'whitespace-nowrap')}>
-                        {open && (
-                          <ActionMenu
-                            align="right"
-                            label={`Actions for ${bid.supplier.name}`}
-                            items={[
-                              {
-                                key: 'negotiate',
-                                label: 'Negotiate…',
-                                icon: MessageSquare,
-                                hidden: !answered,
-                                onSelect: () => setNegotiating(bid),
-                              },
-                              {
-                                key: 'confirm',
-                                label: 'Confirm this supplier',
-                                icon: Check,
-                                hidden: !answered,
-                                onSelect: () => setConfirming(bid),
-                              },
-                              {
-                                key: 'remove',
-                                label: 'Remove from order',
-                                icon: Trash2,
-                                danger: true,
-                                hidden: answered || bid.status === 'declined',
-                                onSelect: () =>
-                                  removePoSupplier.mutate(
-                                    { id: order.id, supplierId: bid.supplier.id },
-                                    { onError: (err) => setError(err.message) },
-                                  ),
-                              },
-                            ]}
-                          />
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <ul className="space-y-2 p-3 sm:p-4">
+            {bids.map((bid) => (
+              <BidCard
+                key={bid.id}
+                bid={bid}
+                order={order}
+                lineCount={order.items.length}
+                canAct={open}
+                removing={removePoSupplier.isPending}
+                onNegotiate={() => setNegotiating(bid)}
+                onConfirm={() => setConfirming(bid)}
+                onRemove={() =>
+                  removePoSupplier.mutate(
+                    { id: order.id, supplierId: bid.supplier.id },
+                    { onError: (err) => setError(err.message) },
+                  )
+                }
+              />
+            ))}
+          </ul>
         )}
 
         {/* The negotiation history, under the table rather than inside a row:
