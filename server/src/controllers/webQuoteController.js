@@ -1,6 +1,7 @@
 import { asyncHandler } from '../utils/ApiError.js';
 import ApiError from '../utils/ApiError.js';
-import ContactMessage from '../models/ContactMessage.js';
+import { db } from '../db/models.js';
+import '../models/ContactMessage.js';
 import { likeRegex } from '../utils/regex.js';
 import { displayNameOf } from '../utils/displayName.js';
 
@@ -58,14 +59,14 @@ async function listWebQuotes({ status, q, user } = {}) {
   }
 
   const [rows, counts] = await Promise.all([
-    ContactMessage.find(query)
+    db().ContactMessage.find(query)
       .sort({ createdAt: -1 })
       .limit(200)
       .populate('user', 'contactName businessName email')
       .lean(),
     // Counts over the whole collection, not the filtered set: a pill showing
     // the count of what the current filter already excludes is useless.
-    ContactMessage.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
+    db().ContactMessage.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
   ]);
 
   return {
@@ -82,7 +83,7 @@ async function listWebQuotes({ status, q, user } = {}) {
  * two places is how the two start disagreeing.
  */
 async function setWebQuoteStatus(id, status) {
-  const row = await ContactMessage.findByIdAndUpdate(
+  const row = await db().ContactMessage.findByIdAndUpdate(
     id,
     { $set: { status } },
     { new: true },

@@ -2,8 +2,9 @@ import { randomBytes } from 'node:crypto';
 import { asyncHandler } from '../utils/ApiError.js';
 import * as adminService from '../services/adminService.js';
 import auditService from '../services/auditService.js';
-import User from '../models/User.js';
-import Invoice from '../models/Invoice.js';
+import { db } from '../db/models.js';
+import '../models/User.js';
+import '../models/Invoice.js';
 
 /**
  * **Audit hooks live in the controller, not the service** (§7.5, phase 11b).
@@ -78,7 +79,7 @@ const updateUser = asyncHandler(async (req, res) => {
  * rather than the general activity feed.
  */
 const setContactConsent = asyncHandler(async (req, res) => {
-  const before = await User.findById(req.params.id)
+  const before = await db().User.findById(req.params.id)
     .select('contactConsent marketingConsent')
     .lean();
   const user = await adminService.setContactConsent(req.params.id, req.body, req.user._id);
@@ -105,7 +106,7 @@ const setContactConsent = asyncHandler(async (req, res) => {
 });
 
 const setTier = asyncHandler(async (req, res) => {
-  const before = await User.findById(req.params.id).select('tier').lean();
+  const before = await db().User.findById(req.params.id).select('tier').lean();
   const user = await adminService.setTier(req.params.id, req.body);
 
   await auditService.record({
@@ -196,7 +197,7 @@ const setUserStatus = asyncHandler(async (req, res) => {
 const setCredit = asyncHandler(async (req, res) => {
   // A lean read of the two fields rather than `getUser`, which also fetches ten
   // orders and ten invoices this does not need.
-  const before = await User.findById(req.params.id).select('creditLimit terms').lean();
+  const before = await db().User.findById(req.params.id).select('creditLimit terms').lean();
   const user = await adminService.setCredit(req.params.id, req.body);
 
   await auditService.record({
@@ -439,7 +440,7 @@ const emailInvoice = asyncHandler(async (req, res) => {
 });
 
 const updateInvoice = asyncHandler(async (req, res) => {
-  const before = await Invoice.findOne({ number: req.params.number })
+  const before = await db().Invoice.findOne({ number: req.params.number })
     .select('dueDate poNumber note')
     .lean();
   const result = await adminService.updateInvoice(req.params.number, req.body);

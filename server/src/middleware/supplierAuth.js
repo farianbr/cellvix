@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 
-import Supplier from '../models/Supplier.js';
+import { db } from '../db/models.js';
+import '../models/Supplier.js';
 import ApiError from '../utils/ApiError.js';
 import env from '../config/env.js';
 import { SUPPLIER_COOKIE, clearSupplierSession } from '../services/supplierPortalService.js';
@@ -35,7 +36,11 @@ async function authenticateSupplier(req, res, next) {
       return next();
     }
 
-    const supplier = await Supplier.findById(payload.sub);
+    // `db()`, not the raw model: `Supplier` is per-business, so the imported
+    // model is bound to the default connection — the control database — where
+    // no supplier exists. Reading it there mints a session at sign-in and then
+    // fails to resolve it on every request after.
+    const supplier = await db().Supplier.findById(payload.sub);
     // A supplier that was deactivated keeps a valid signature until it expires,
     // so activity is re-checked here rather than only at sign-in — otherwise
     // ending a supplier relationship leaves them reading requests for quote for

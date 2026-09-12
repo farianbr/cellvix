@@ -1,7 +1,10 @@
 import { asyncHandler } from '../utils/ApiError.js';
-import Role, { PERMISSION_AREAS } from '../models/Role.js';
+import { PERMISSION_AREAS } from '../models/Role.js';
+import { db } from '../db/models.js';
+import '../models/Role.js';
+import '../models/AuditLog.js';
 import Business from '../models/Business.js';
-import AuditLog from '../models/AuditLog.js';
+
 
 /**
  * My Profile (§6.15, phase 12) — the screen behind the top bar's user chip.
@@ -14,7 +17,7 @@ const me = asyncHandler(async (req, res) => {
   const user = req.user;
 
   const [role, business, recent] = await Promise.all([
-    user.staffRole ? Role.findById(user.staffRole).lean() : null,
+    user.staffRole ? db().Role.findById(user.staffRole).lean() : null,
     user.business ? Business.findById(user.business).select('name code').lean() : null,
     // The actor's own recent activity, from the audit trail phase 11b built.
     // Scoped to this user by id, so it can never show somebody else's actions.
@@ -24,7 +27,7 @@ const me = asyncHandler(async (req, res) => {
     // person did — never what a platform operator did while stepping into the
     // business. Those rows belong on the owner's activity screen, labelled as
     // support, not folded silently into somebody's own history.
-    AuditLog.find({ kind: 'activity', actor: user._id, actorKind: 'user' })
+    db().AuditLog.find({ kind: 'activity', actor: user._id, actorKind: 'user' })
       .sort({ createdAt: -1 })
       .limit(10)
       .lean(),

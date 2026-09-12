@@ -1,9 +1,10 @@
 import { asyncHandler } from '../utils/ApiError.js';
-import Appointment, {
+import {
   APPOINTMENT_KINDS,
   APPOINTMENT_STATUSES,
 } from '../models/Appointment.js';
-import User from '../models/User.js';
+import { db } from '../db/models.js';
+import '../models/User.js';
 
 /**
  * The scheduling board (§6.15 category 4 — **UI only, §6b U1–U2**, phase 11e).
@@ -30,12 +31,12 @@ const list = asyncHandler(async (req, res) => {
   }
 
   const [scheduled, unscheduled, staff] = await Promise.all([
-    Appointment.find(filter).sort({ startAt: 1 }).lean(),
+    db().Appointment.find(filter).sort({ startAt: 1 }).lean(),
     // The tray beside the board: everything with no date yet.
-    Appointment.find({ startAt: null, status: { $ne: 'cancelled' } }).sort({ createdAt: -1 }).lean(),
+    db().Appointment.find({ startAt: null, status: { $ne: 'cancelled' } }).sort({ createdAt: -1 }).lean(),
     // Who the board can be filtered by. Read live rather than hard-coded so the
     // filter is right the moment a staff account is added.
-    User.find({ role: { $in: ['admin', 'staff'] } }).select('contactName businessName email').lean(),
+    db().User.find({ role: { $in: ['admin', 'staff'] } }).select('contactName businessName email').lean(),
   ]);
 
   const shape = (row) => ({

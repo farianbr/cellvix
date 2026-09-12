@@ -1,7 +1,8 @@
 import { asyncHandler } from '../utils/ApiError.js';
 import * as authService from '../services/authService.js';
 import auditService from '../services/auditService.js';
-import Role, { PERMISSION_AREAS } from '../models/Role.js';
+import { PERMISSION_AREAS } from '../models/Role.js';
+import { db } from '../db/models.js';
 
 /**
  * The session shape, plus the resolved permission map for Cellvix staff.
@@ -24,7 +25,7 @@ async function sessionUser(user) {
   }
 
   if (user.role === 'staff' && user.staffRole) {
-    const role = await Role.findById(user.staffRole).lean();
+    const role = await db().Role.findById(user.staffRole).lean();
     shape.permissions = role
       ? PERMISSION_AREAS.reduce((out, a) => ({ ...out, [a]: role.areas?.[a] ?? 'none' }), {})
       : null;

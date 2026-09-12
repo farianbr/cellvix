@@ -1,5 +1,6 @@
 import { asyncHandler } from '../utils/ApiError.js';
-import ContactMessage from '../models/ContactMessage.js';
+import { db } from '../db/models.js';
+import '../models/ContactMessage.js';
 
 /**
  * Accepts a contact enquiry.
@@ -9,7 +10,7 @@ import ContactMessage from '../models/ContactMessage.js';
  * TODO(email): notify the sales desk once a provider is chosen (PROGRESS.md Q7).
  */
 const submit = asyncHandler(async (req, res) => {
-  await ContactMessage.create({ ...req.body, user: req.user?._id ?? null });
+  await db().ContactMessage.create({ ...req.body, user: req.user?._id ?? null });
 
   res.status(201).json({
     message: 'Thanks — the sales desk has your message and will reply within one business day.',

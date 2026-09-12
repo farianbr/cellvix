@@ -19,8 +19,11 @@ import Business from '../models/Business.js';
  * 2. **`X-Business` header.** Development and internal tooling. Trusted because
  *    it is *not* an authorisation — it selects which business to serve, and
  *    every permission check still runs inside it.
- * 3. **Custom domain**, then **subdomain** — how production actually routes.
- * 4. **`?business=` query** — the admin panel's switcher.
+ * 3. **`?business=` query** — the admin panel's switcher. Above the host
+ *    because a selection somebody made outranks one inferred from where the
+ *    request arrived, and because `openBusinessDb` runs before the query string
+ *    would otherwise be read.
+ * 4. **Custom domain**, then **subdomain** — how production actually routes.
  * 5. **The single business**, when the installation has exactly one.
  *
  * **There is no "default tenant" fallback.** §4.2 is explicit, and the reason is
@@ -109,18 +112,40 @@ async function resolveBusiness(req, _res, next) {
       return next();
     }
 
-    // 3. The host, which is how production routes.
-    const fromHost = await businessForHost(req.get('host'));
-    if (fromHost) {
-      req.businessScope = fromHost;
-      return next();
-    }
-
-    // 4. The admin switcher. Left for `resolveBusinessScope` to apply, since it
-    //    also enforces that a staff member cannot widen their own scope.
+    /**
+     * 3. The admin switcher — **above the host, because it is more explicit.**
+     *
+     * A host is inferred from where the request happened to arrive; a
+     * `?business=` is a selection somebody made. When they disagree the stated
+     * answer has to win, and the ordering this comment block claims — most
+     * explicit first — already said so.
+     *
+     * **This must be applied here rather than deferred to
+     * `resolveBusinessScope`.** That middleware runs after `openBusinessDb`,
+     * which is the point of no return: the database is already open and the
+     * rest of the request is inside its context. Leaving the switcher until
+     * then produced a request whose *connection* was one business and whose
+     * *filter* was another — a list that came back empty beside status pills
+     * counting the other business's rows. That is exactly what happened on any
+     * deployment whose hostname matches a business slug: `cellvix.onrender.com`
+     * resolved Cellvix by subdomain at step 4 below, and switching the panel to
+     * CellShoppe changed the filter without ever changing the database.
+     *
+     * Widening is still not decided here. `resolveBusinessScope` runs later
+     * with `req.user` available and remains the only place that enforces a
+     * staff member cannot leave their own business; this only chooses which
+     * database to open, and every permission check still runs inside it.
+     */
     const requested = String(req.query.business ?? '').trim();
     if (requested && requested !== 'all') {
       req.businessScope = requested;
+      return next();
+    }
+
+    // 4. The host, which is how production routes.
+    const fromHost = await businessForHost(req.get('host'));
+    if (fromHost) {
+      req.businessScope = fromHost;
       return next();
     }
 
