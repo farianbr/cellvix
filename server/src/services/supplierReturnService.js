@@ -3,10 +3,11 @@ import mongoose from 'mongoose';
 import SupplierReturn, {
   SUPPLIER_RETURN_OPEN_STATUSES,
 } from '../models/SupplierReturn.js';
-import Supplier from '../models/Supplier.js';
-import PurchaseOrder from '../models/PurchaseOrder.js';
-import Product from '../models/Product.js';
-import Settings from '../models/Settings.js';
+import { db } from '../db/models.js';
+import '../models/Supplier.js';
+import '../models/PurchaseOrder.js';
+import '../models/Product.js';
+import '../models/Settings.js';
 import ApiError from '../utils/ApiError.js';
 import { likeRegex } from '../utils/regex.js';
 import { applyStockMovement } from './purchaseService.js';
@@ -151,7 +152,7 @@ function shape(row, slaDays) {
 // ---- read -------------------------------------------------------------------
 
 async function listReturns({ q, status, supplier, from, to } = {}) {
-  const settings = await Settings.load();
+  const settings = await db().Settings.load();
   const slaDays = settings?.operations?.rmaSlaDays ?? 14;
 
   const query = {};
@@ -212,7 +213,7 @@ async function listReturns({ q, status, supplier, from, to } = {}) {
 }
 
 async function getReturn(id) {
-  const settings = await Settings.load();
+  const settings = await db().Settings.load();
   const slaDays = settings?.operations?.rmaSlaDays ?? 14;
 
   const query = isObjectId(id) ? { _id: id } : { returnNumber: String(id) };
@@ -236,12 +237,12 @@ async function getReturn(id) {
  * cost later would change the expected credit every time they moved a price.
  */
 async function createReturn(body, createdBy) {
-  const supplier = await Supplier.findById(body.supplier).select('name').lean();
+  const supplier = await db().Supplier.findById(body.supplier).select('name').lean();
   if (!supplier) throw ApiError.badRequest('That supplier does not exist.', 'SUPPLIER_NOT_FOUND');
 
   let po = null;
   if (body.purchaseOrder) {
-    po = await PurchaseOrder.findById(body.purchaseOrder).select('poNumber items supplier').lean();
+    po = await db().PurchaseOrder.findById(body.purchaseOrder).select('poNumber items supplier').lean();
     if (!po) throw ApiError.badRequest('That purchase order does not exist.', 'PO_NOT_FOUND');
     if (String(po.supplier) !== String(supplier._id)) {
       throw ApiError.badRequest(
@@ -255,7 +256,7 @@ async function createReturn(body, createdBy) {
     (po?.items ?? []).map((item) => [String(item.product), item.unitCost ?? 0]),
   );
 
-  const products = await Product.find({ _id: { $in: body.items.map((line) => line.product) } })
+  const products = await db().Product.find({ _id: { $in: body.items.map((line) => line.product) } })
     .select('sku name cost')
     .lean();
   const byId = new Map(products.map((product) => [String(product._id), product]));

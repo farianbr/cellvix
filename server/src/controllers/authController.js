@@ -135,7 +135,28 @@ const logout = asyncHandler(async (req, res) => {
  * on every anonymous page load, which no client-side catch can suppress.
  */
 const me = asyncHandler(async (req, res) => {
-  res.json({ user: await sessionUser(req.user), features: staffFeatures(req) });
+  res.json({
+    user: await sessionUser(req.user),
+    features: staffFeatures(req),
+    /**
+     * An active support session, when there is one (SAAS_PLATFORM §4.5).
+     *
+     * Reported here rather than on a route of its own because every screen
+     * already asks this question on first paint, and the banner has to be able
+     * to appear on **any** of them — an operator who navigates deep into a
+     * panel must not lose the one control that gets them out. `null` for
+     * everybody else, which is the overwhelming majority of requests.
+     */
+    impersonation: req.impersonation
+      ? {
+          business: req.impersonation.business,
+          businessName: req.impersonation.grant.businessName,
+          operator: req.impersonation.superAdmin.name,
+          reason: req.impersonation.grant.reason,
+          expiresAt: req.impersonation.grant.expiresAt,
+        }
+      : null,
+  });
 });
 
 /**

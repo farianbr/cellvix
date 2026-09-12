@@ -14,7 +14,22 @@ import mongoose from 'mongoose';
  * only from the super-admin console.
  */
 
-const TENANT_STATUSES = ['active', 'suspended', 'cancelled'];
+/**
+ * What the platform will still do for this account (SAAS_PLATFORM §6 phase 19).
+ *
+ * **Ordered by how much is still permitted**, and each one is enforced in
+ * `middleware/tenantStatus.js` rather than merely displayed:
+ *
+ * - `active` — everything.
+ * - `past_due` — **reads always**, writes refused. An unpaid invoice is a
+ *   billing problem, not a reason to make somebody's records unreachable; they
+ *   must still be able to look up a customer while they sort the payment out.
+ * - `suspended` — the panel opens read-only and the storefront is off. The
+ *   business has stopped trading but has not left.
+ * - `cancelled` — nothing but billing. The account is over; the data is kept
+ *   through the retention window so it can be restored or exported, not used.
+ */
+const TENANT_STATUSES = ['active', 'past_due', 'suspended', 'cancelled'];
 
 const tenantSchema = new mongoose.Schema(
   {

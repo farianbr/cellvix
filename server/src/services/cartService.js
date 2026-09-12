@@ -1,16 +1,17 @@
-import Cart from '../models/Cart.js';
-import Product from '../models/Product.js';
+import { db } from '../db/models.js';
+import '../models/Cart.js';
+import '../models/Product.js';
 import ApiError from '../utils/ApiError.js';
 import { canSeePricing } from '../middleware/auth.js';
-import Offer from '../models/Offer.js';
+import '../models/Offer.js';
 import { offerStatus } from './offerService.js';
 import { OfferRejection, priceCart, resolveCode } from './pricingService.js';
 import { formatDate } from '../../../shared/dates.js';
 
 /** A user has exactly one active cart. Saved carts are separate documents. */
 async function getOrCreateCart(userId) {
-  let cart = await Cart.findOne({ user: userId, savedForLater: false });
-  if (!cart) cart = await Cart.create({ user: userId, items: [] });
+  let cart = await db().Cart.findOne({ user: userId, savedForLater: false });
+  if (!cart) cart = await db().Cart.create({ user: userId, items: [] });
   return cart;
 }
 
@@ -100,7 +101,7 @@ async function serialize(cart, user) {
 
 /** The pending / unapproved shape: lines and quantities, no money anywhere. */
 async function serializeUnpriced(cart) {
-  const products = await Product.find({
+  const products = await db().Product.find({
     _id: { $in: cart.items.map((item) => item.product) },
   }).lean();
   const byId = new Map(products.map((product) => [product._id.toString(), product]));
@@ -148,7 +149,7 @@ async function serializeUnpriced(cart) {
 }
 
 async function requireProduct(productId) {
-  const product = await Product.findById(productId);
+  const product = await db().Product.findById(productId);
   if (!product || !product.isActive) {
     throw ApiError.notFound('That part is no longer listed.', 'PRODUCT_NOT_FOUND');
   }
@@ -216,7 +217,7 @@ async function mergeGuestCart(userId, guestItems) {
   if (!guestItems?.length) return getOrCreateCart(userId);
 
   const cart = await getOrCreateCart(userId);
-  const products = await Product.find({
+  const products = await db().Product.find({
     _id: { $in: guestItems.map((item) => item.productId) },
     isActive: true,
   });
@@ -245,7 +246,7 @@ async function saveForLater(userId, name) {
     throw ApiError.badRequest('There is nothing in your cart to save.', 'CART_EMPTY');
   }
 
-  await Cart.create({
+  await db().Cart.create({
     user: userId,
     items: cart.items,
     bundles: cart.bundles,
@@ -261,7 +262,7 @@ async function saveForLater(userId, name) {
 }
 
 async function listSaved(userId) {
-  const carts = await Cart.find({ user: userId, savedForLater: true }).sort({ createdAt: -1 }).lean();
+  const carts = await db().Cart.find({ user: userId, savedForLater: true }).sort({ createdAt: -1 }).lean();
   return carts.map((cart) => ({
     id: cart._id.toString(),
     name: cart.name,
@@ -274,7 +275,7 @@ async function listSaved(userId) {
 
 /** Merges a saved cart back into the active one. The saved copy is consumed. */
 async function restoreSaved(userId, savedCartId) {
-  const saved = await Cart.findOne({ _id: savedCartId, user: userId, savedForLater: true });
+  const saved = await db().Cart.findOne({ _id: savedCartId, user: userId, savedForLater: true });
   if (!saved) throw ApiError.notFound('Saved cart not found.', 'SAVED_CART_NOT_FOUND');
 
   const cart = await getOrCreateCart(userId);
@@ -307,7 +308,7 @@ async function restoreSaved(userId, savedCartId) {
 }
 
 async function deleteSaved(userId, savedCartId) {
-  const result = await Cart.deleteOne({ _id: savedCartId, user: userId, savedForLater: true });
+  const result = await db().Cart.deleteOne({ _id: savedCartId, user: userId, savedForLater: true });
   if (result.deletedCount === 0) {
     throw ApiError.notFound('Saved cart not found.', 'SAVED_CART_NOT_FOUND');
   }
@@ -323,7 +324,7 @@ async function deleteSaved(userId, savedCartId) {
 async function bulkAdd(userId, lines) {
   const skus = lines.map((line) => line.sku.trim().toUpperCase());
 
-  const products = await Product.find({
+  const products = await db().Product.find({
     sku: { $in: skus },
     isActive: true,
   });
@@ -405,7 +406,7 @@ async function removeBundle(userId, offerId) {
 
 async function findLiveCombo(slugOrId) {
   const query = /^[0-9a-fA-F]{24}$/.test(slugOrId) ? { _id: slugOrId } : { slug: slugOrId };
-  const offer = await Offer.findOne(query).lean();
+  const offer = await db().Offer.findOne(query).lean();
 
   if (!offer || offer.kind !== 'combo') {
     throw ApiError.notFound('That bundle does not exist.', 'OFFER_NOT_FOUND');

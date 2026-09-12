@@ -3,8 +3,9 @@ import mongoose from 'mongoose';
 import SupplierService, {
   CYCLE_DAYS,
 } from '../models/SupplierService.js';
-import Supplier from '../models/Supplier.js';
-import ExpenseCategory from '../models/ExpenseCategory.js';
+import { db } from '../db/models.js';
+import '../models/Supplier.js';
+import '../models/ExpenseCategory.js';
 import ApiError from '../utils/ApiError.js';
 import { likeRegex } from '../utils/regex.js';
 import * as purchaseService from './purchaseService.js';
@@ -200,10 +201,10 @@ async function getService(id) {
 // ---- write ------------------------------------------------------------------
 
 async function createService(body, createdBy) {
-  const supplier = await Supplier.findById(body.supplier).select('name').lean();
+  const supplier = await db().Supplier.findById(body.supplier).select('name').lean();
   if (!supplier) throw ApiError.badRequest('That supplier does not exist.', 'SUPPLIER_NOT_FOUND');
 
-  const category = await ExpenseCategory.findById(body.category).select('_id').lean();
+  const category = await db().ExpenseCategory.findById(body.category).select('_id').lean();
   if (!category) throw ApiError.badRequest('Pick an expense category.', 'CATEGORY_NOT_FOUND');
 
   const startedAt = toDate(body.startedAt, new Date());
@@ -234,14 +235,14 @@ async function updateService(id, body) {
   if (!row) throw ApiError.notFound('Not found.', 'SUPPLIER_SERVICE_NOT_FOUND');
 
   if (body.supplier && String(body.supplier) !== String(row.supplier)) {
-    const supplier = await Supplier.findById(body.supplier).select('name').lean();
+    const supplier = await db().Supplier.findById(body.supplier).select('name').lean();
     if (!supplier) throw ApiError.badRequest('That supplier does not exist.', 'SUPPLIER_NOT_FOUND');
     row.supplier = supplier._id;
     row.supplierName = supplier.name;
   }
 
   if (body.category) {
-    const category = await ExpenseCategory.findById(body.category).select('_id').lean();
+    const category = await db().ExpenseCategory.findById(body.category).select('_id').lean();
     if (!category) throw ApiError.badRequest('Pick an expense category.', 'CATEGORY_NOT_FOUND');
     row.category = category._id;
   }

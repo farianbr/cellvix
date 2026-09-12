@@ -1,14 +1,15 @@
 import mongoose from 'mongoose';
-import User from '../models/User.js';
-import Product from '../models/Product.js';
-import Order from '../models/Order.js';
-import Invoice from '../models/Invoice.js';
-import CreditTransaction from '../models/CreditTransaction.js';
-import Rma, { RMA_OPEN_STATUSES } from '../models/Rma.js';
-import Ticket, { TICKET_OPEN_STATUSES } from '../models/Ticket.js';
-import Quote from '../models/Quote.js';
-import ContactMessage from '../models/ContactMessage.js';
-import Taxonomy from '../models/Taxonomy.js';
+import { db } from '../db/models.js';
+import '../models/User.js';
+import '../models/Product.js';
+import '../models/Order.js';
+import '../models/Invoice.js';
+import '../models/CreditTransaction.js';
+import { RMA_OPEN_STATUSES } from '../models/Rma.js';
+import { TICKET_OPEN_STATUSES } from '../models/Ticket.js';
+import '../models/Quote.js';
+import '../models/ContactMessage.js';
+import '../models/Taxonomy.js';
 import ApiError from '../utils/ApiError.js';
 import env from '../config/env.js';
 import creditService from './creditService.js';
@@ -183,35 +184,35 @@ async function stats({ from, to } = {}) {
     recentInvoices,
     recentActivity,
   ] = await Promise.all([
-    User.countDocuments({ status: 'pending' }),
-    User.countDocuments({ status: 'approved', role: 'buyer' }),
-    User.countDocuments({ role: 'buyer' }),
+    db().User.countDocuments({ status: 'pending' }),
+    db().User.countDocuments({ status: 'approved', role: 'buyer' }),
+    db().User.countDocuments({ role: 'buyer' }),
 
-    Order.countDocuments({ status: { $in: ORDER_OPEN_STATUSES } }),
-    Order.countDocuments({ status: { $in: ORDER_UNFULFILLED_STATUSES } }),
+    db().Order.countDocuments({ status: { $in: ORDER_OPEN_STATUSES } }),
+    db().Order.countDocuments({ status: { $in: ORDER_UNFULFILLED_STATUSES } }),
 
     // Order value in range. Kept for `revenue.last30Days`, which the old shape
     // promised and other screens may still read.
-    Order.aggregate([
+    db().Order.aggregate([
       { $match: { createdAt: inRange, status: { $ne: 'cancelled' } } },
       { $group: { _id: null, total: { $sum: '$total' }, count: { $sum: 1 } } },
     ]),
 
     // Invoiced: by invoice date.
-    Invoice.aggregate([
+    db().Invoice.aggregate([
       { $match: { issuedAt: inRange } },
       { $group: { _id: null, total: { $sum: '$amount' }, count: { $sum: 1 } } },
     ]),
 
     // Collected: by payment date, which is a different question and usually a
     // different number.
-    Invoice.aggregate([
+    db().Invoice.aggregate([
       { $unwind: '$payments' },
       { $match: { 'payments.at': inRange } },
       { $group: { _id: null, total: { $sum: '$payments.amount' }, count: { $sum: 1 } } },
     ]),
 
-    Invoice.aggregate([
+    db().Invoice.aggregate([
       { $unwind: '$payments' },
       { $match: { 'payments.at': { $gte: priorStart, $lt: start } } },
       { $group: { _id: null, total: { $sum: '$payments.amount' } } },
@@ -219,19 +220,19 @@ async function stats({ from, to } = {}) {
 
     // Refunds get their own tile and never push revenue negative (§9.2).
     //
-    // Sourced from the credit ledger, not from `Order.refundedTotal`: an order
+    // Sourced from the credit ledger, not from `db().Order.refundedTotal`: an order
     // carries a running total with no date of its own, so dating it by
     // `updatedAt` would move a June refund into August the moment somebody
     // edited that order's status. Every refund posts a ledger row with its own
     // timestamp, and that is the honest date.
-    CreditTransaction.aggregate([
+    db().CreditTransaction.aggregate([
       { $match: { type: 'refund', createdAt: inRange } },
       { $group: { _id: null, total: { $sum: '$amount' }, count: { $sum: 1 } } },
     ]),
 
     // Receivables are a position, not a flow — always "as of now", never
     // filtered by the range, or the number stops meaning what it says.
-    Invoice.aggregate([
+    db().Invoice.aggregate([
       { $match: { status: { $ne: 'paid' } } },
       {
         $group: {
@@ -249,7 +250,7 @@ async function stats({ from, to } = {}) {
         },
       },
     ]),
-    Invoice.countDocuments({ status: { $ne: 'paid' }, dueDate: { $lt: now } }),
+    db().Invoice.countDocuments({ status: { $ne: 'paid' }, dueDate: { $lt: now } }),
 
     // "Low" means BELOW THIS PRODUCT'S OWN REORDER POINT, falling back to the
     // flat threshold only where none is set. That is the definition the
@@ -263,7 +264,7 @@ async function stats({ from, to } = {}) {
     // query cannot express.
     // An aggregation rather than a query: the comparison is against a sibling
     // field, and Mongoose cannot cast a `$cond` inside a query-level `$expr`.
-    Product.aggregate([
+    db().Product.aggregate([
       { $match: { isActive: true, stock: { $gt: 0 } } },
       {
         $match: {
@@ -283,15 +284,15 @@ async function stats({ from, to } = {}) {
       },
       { $count: 'count' },
     ]),
-    Product.countDocuments({ isActive: true, stock: { $lte: 0 } }),
-    Product.countDocuments({ isActive: true }),
+    db().Product.countDocuments({ isActive: true, stock: { $lte: 0 } }),
+    db().Product.countDocuments({ isActive: true }),
 
-    Product.aggregate([
+    db().Product.aggregate([
       { $match: { isActive: true } },
       { $group: { _id: null, value: { $sum: { $multiply: ['$stock', '$price'] } } } },
     ]),
 
-    Order.aggregate([
+    db().Order.aggregate([
       { $match: { createdAt: inRange, status: { $ne: 'cancelled' } } },
       {
         $group: {
@@ -318,7 +319,7 @@ async function stats({ from, to } = {}) {
     ]),
 
     // Top clients by invoiced value in range.
-    Invoice.aggregate([
+    db().Invoice.aggregate([
       { $match: { issuedAt: inRange } },
       { $group: { _id: '$user', total: { $sum: '$amount' }, invoices: { $sum: 1 } } },
       { $sort: { total: -1 } },
@@ -364,14 +365,14 @@ async function stats({ from, to } = {}) {
 
     // `contactName` too: `displayNameOf` needs it, and without it every order
     // row would fall through to the business name.
-    Order.find({})
+    db().Order.find({})
       .sort({ createdAt: -1 })
       .limit(6)
       .populate('user', 'businessName contactName email')
       .lean(),
-    User.find({ status: 'pending' }).sort({ createdAt: 1 }).limit(5).lean(),
+    db().User.find({ status: 'pending' }).sort({ createdAt: 1 }).limit(5).lean(),
 
-    Product.find({ isActive: true, stock: { $lt: LOW_STOCK_THRESHOLD } })
+    db().Product.find({ isActive: true, stock: { $lt: LOW_STOCK_THRESHOLD } })
       .sort({ stock: 1 })
       .limit(6)
       .select('name sku stock price')
@@ -380,13 +381,13 @@ async function stats({ from, to } = {}) {
     // Returns still needing attention. Deliberately unranged like the other
     // badge counters — a badge that moved when you changed the dashboard's
     // dates would be nonsense.
-    Rma.countDocuments({ status: { $in: RMA_OPEN_STATUSES } }),
-    Ticket.countDocuments({ status: { $in: TICKET_OPEN_STATUSES } }),
+    db().Rma.countDocuments({ status: { $in: RMA_OPEN_STATUSES } }),
+    db().Ticket.countDocuments({ status: { $in: TICKET_OPEN_STATUSES } }),
 
     // Newest invoices, unranged like the other "recent" lists: the panel
     // answers "what was billed lately", which a date filter would silently
     // empty on a range with no billing in it.
-    Invoice.find({})
+    db().Invoice.find({})
       .sort({ issuedAt: -1 })
       .limit(6)
       .populate('user', 'businessName contactName')
@@ -574,7 +575,7 @@ async function listUsers({ status, q } = {}) {
   }
 
   // Pending first — the approvals queue is the point of this screen.
-  const users = await User.find(query).sort({ status: 1, createdAt: -1 }).limit(200).lean();
+  const users = await db().User.find(query).sort({ status: 1, createdAt: -1 }).limit(200).lean();
 
   const ids = users.map((user) => user._id);
 
@@ -593,12 +594,12 @@ async function listUsers({ status, q } = {}) {
   const now = new Date();
 
   const [counts, invoiceRows, overdueRows, orderRows] = await Promise.all([
-    User.aggregate([
+    db().User.aggregate([
       { $match: { role: 'buyer' } },
       { $group: { _id: '$status', count: { $sum: 1 } } },
     ]),
 
-    Invoice.aggregate([
+    db().Invoice.aggregate([
       { $match: { user: { $in: ids } } },
       {
         $group: {
@@ -610,7 +611,7 @@ async function listUsers({ status, q } = {}) {
     ]),
 
     /**
-     * Genuinely **overdue** money, which is not the same as `User.balance`.
+     * Genuinely **overdue** money, which is not the same as `db().User.balance`.
      *
      * `balance` is what the account currently owes on its line of credit —
      * an invoice raised yesterday on Net 30 is owed but perfectly in order.
@@ -618,7 +619,7 @@ async function listUsers({ status, q } = {}) {
      * which is the figure an operator chases, and it matches the definition
      * `listInvoices` already uses for its `overdue` filter.
      */
-    Invoice.aggregate([
+    db().Invoice.aggregate([
       { $match: { user: { $in: ids }, status: { $ne: 'paid' }, dueDate: { $lt: now } } },
       {
         $group: {
@@ -628,7 +629,7 @@ async function listUsers({ status, q } = {}) {
         },
       },
     ]),
-    Order.aggregate([
+    db().Order.aggregate([
       { $match: { user: { $in: ids }, status: { $ne: 'cancelled' } } },
       {
         $group: {
@@ -678,7 +679,7 @@ async function listUsers({ status, q } = {}) {
 }
 
 async function getUser(id) {
-  const user = await User.findById(id).lean();
+  const user = await db().User.findById(id).lean();
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
 
   /**
@@ -701,10 +702,10 @@ async function getUser(id) {
     webQuotes,
     openRmas,
   ] = await Promise.all([
-    Order.find({ user: id }).sort({ createdAt: -1 }).limit(10).lean(),
-    Invoice.find({ user: id }).sort({ issuedAt: -1 }).limit(10).lean(),
+    db().Order.find({ user: id }).sort({ createdAt: -1 }).limit(10).lean(),
+    db().Invoice.find({ user: id }).sort({ issuedAt: -1 }).limit(10).lean(),
 
-    Invoice.aggregate([
+    db().Invoice.aggregate([
       { $match: { user: new mongoose.Types.ObjectId(String(id)) } },
       {
         $group: {
@@ -716,22 +717,22 @@ async function getUser(id) {
       },
     ]),
 
-    Order.countDocuments({ user: id }),
-    Ticket.countDocuments({ user: id, status: { $in: TICKET_OPEN_STATUSES } }),
+    db().Order.countDocuments({ user: id }),
+    db().Ticket.countDocuments({ user: id, status: { $in: TICKET_OPEN_STATUSES } }),
     // Open = still awaiting a decision. `accepted` and `converted` have had
     // their answer, and `expired` / `rejected` are closed, so a tile counting
     // them would never fall back to zero.
-    Quote.countDocuments({ user: id, status: { $in: ['draft', 'sent'] } }),
+    db().Quote.countDocuments({ user: id, status: { $in: ['draft', 'sent'] } }),
     // Website enquiries from this account. Counted here rather than on the tab,
     // because the tab only fetches when it is open and the badge has to be
     // right before anybody clicks it.
-    ContactMessage.countDocuments({ user: id }),
+    db().ContactMessage.countDocuments({ user: id }),
 
     // Returns still needing somebody's attention, for the profile's Returns
     // tab. Open rather than total, matching every other count on the strip:
     // the number's job is to say how much work is here, and a resolved return
     // is not work.
-    Rma.countDocuments({ user: id, status: { $in: RMA_OPEN_STATUSES } }),
+    db().Rma.countDocuments({ user: id, status: { $in: RMA_OPEN_STATUSES } }),
   ]);
 
   const billed = totals[0] ?? { invoiced: 0, collected: 0, invoiceCount: 0 };
@@ -796,12 +797,12 @@ async function getUser(id) {
 async function createUser(data, adminId) {
   const email = String(data.email).toLowerCase().trim();
 
-  const existing = await User.findOne({ email });
+  const existing = await db().User.findOne({ email });
   if (existing) {
     throw ApiError.conflict('An account with that email already exists.', 'EMAIL_IN_USE');
   }
 
-  const user = new User({
+  const user = new (db().User)({
     businessName: data.businessName,
     contactName: data.contactName,
     email,
@@ -899,7 +900,7 @@ async function createUser(data, adminId) {
  * which is how an operator removes a tax ID they entered by mistake.
  */
 async function updateUser(id, data) {
-  const user = await User.findById(id);
+  const user = await db().User.findById(id);
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
   if (user.role === 'admin') {
     throw ApiError.badRequest('Admin accounts are not edited here.', 'NOT_A_CUSTOMER');
@@ -908,7 +909,7 @@ async function updateUser(id, data) {
   if (data.email) {
     const email = String(data.email).toLowerCase().trim();
     if (email !== user.email) {
-      const clash = await User.findOne({ email, _id: { $ne: user._id } });
+      const clash = await db().User.findOne({ email, _id: { $ne: user._id } });
       if (clash) {
         throw ApiError.conflict('An account with that email already exists.', 'EMAIL_IN_USE');
       }
@@ -961,7 +962,7 @@ async function updateUser(id, data) {
  * the marketing screen's explicit re-subscribe, which records who did it.
  */
 async function setContactConsent(id, { sms, whatsapp, email, call }, adminId) {
-  const user = await User.findById(id);
+  const user = await db().User.findById(id);
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
 
   const channels = {
@@ -1000,7 +1001,7 @@ async function setContactConsent(id, { sms, whatsapp, email, call }, adminId) {
  * granted one here would be a second discount engine outside that rule.
  */
 async function setTier(id, { tier }) {
-  const user = await User.findById(id);
+  const user = await db().User.findById(id);
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
 
   user.tier = tier;
@@ -1010,7 +1011,7 @@ async function setTier(id, { tier }) {
 
 /** Staff-only notes on an account. Append-only; see the model for why. */
 async function addInternalNote(id, { body }, staff) {
-  const user = await User.findById(id);
+  const user = await db().User.findById(id);
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
 
   user.internalNotes.push({
@@ -1027,7 +1028,7 @@ async function addInternalNote(id, { body }, staff) {
 }
 
 async function deleteInternalNote(id, noteId) {
-  const user = await User.findById(id);
+  const user = await db().User.findById(id);
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
 
   const note = user.internalNotes.id(noteId);
@@ -1060,7 +1061,7 @@ function listInternalNotes(user) {
  * approving and deciding terms are one decision, not two.
  */
 async function approveUser(id, adminId, { creditLimit, terms, accountRep }) {
-  const user = await User.findById(id);
+  const user = await db().User.findById(id);
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
   if (user.role === 'admin') throw ApiError.badRequest('Admin accounts are not approved this way.');
 
@@ -1083,7 +1084,7 @@ async function approveUser(id, adminId, { creditLimit, terms, accountRep }) {
 }
 
 async function rejectUser(id, { reason }) {
-  const user = await User.findById(id);
+  const user = await db().User.findById(id);
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
 
   user.status = 'rejected';
@@ -1095,7 +1096,7 @@ async function rejectUser(id, { reason }) {
 }
 
 async function setUserStatus(id, { status }) {
-  const user = await User.findById(id);
+  const user = await db().User.findById(id);
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
   if (user.role === 'admin') {
     throw ApiError.badRequest('You cannot change an admin account this way.', 'FORBIDDEN_TARGET');
@@ -1121,7 +1122,7 @@ async function setUserStatus(id, { status }) {
 async function allocateStoreCredit(id, { amountDollars, note }, adminId) {
   const amount = Math.round(Number(amountDollars) * 100);
   const posted = await storeCredit.allocate(id, { amount, note }, adminId);
-  const user = await User.findById(id).lean();
+  const user = await db().User.findById(id).lean();
   return { ...posted, user: shapeUser(user) };
 }
 
@@ -1136,7 +1137,7 @@ async function refundOrder(orderNumber, { amountDollars, note }, adminId) {
 }
 
 async function setCredit(id, { creditLimit, terms }) {
-  const user = await User.findById(id);
+  const user = await db().User.findById(id);
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
 
   user.creditLimit = creditLimit;
@@ -1204,13 +1205,13 @@ async function listProducts({ q, stock, page = 1, limit = 40, all = false } = {}
   const pageSize = all ? 0 : Math.min(100, Number(limit) || 40);
 
   const [products, total] = await Promise.all([
-    Product.find(query)
+    db().Product.find(query)
       .sort({ updatedAt: -1 })
       .skip(all ? 0 : (pageNumber - 1) * pageSize)
       // `.limit(0)` is Mongo's "no limit", which is what an export wants.
       .limit(pageSize)
       .lean(),
-    Product.countDocuments(query),
+    db().Product.countDocuments(query),
   ]);
 
   return {
@@ -1231,7 +1232,7 @@ function slugify(value) {
 /** Denormalised taxonomy names have to be looked up, not trusted from the client. */
 async function resolveTaxonomyNames(data) {
   const slugs = [data.deviceTypeSlug, data.brandSlug, data.seriesSlug, data.modelSlug].filter(Boolean);
-  const nodes = await Taxonomy.find({ slug: { $in: slugs } }).lean();
+  const nodes = await db().Taxonomy.find({ slug: { $in: slugs } }).lean();
   const bySlug = new Map(nodes.map((node) => [node.slug, node]));
 
   return {
@@ -1243,11 +1244,11 @@ async function resolveTaxonomyNames(data) {
 }
 
 async function createProduct(data) {
-  const existing = await Product.findOne({ sku: data.sku.toUpperCase() });
+  const existing = await db().Product.findOne({ sku: data.sku.toUpperCase() });
   if (existing) throw ApiError.conflict('That SKU already exists.', 'DUPLICATE_SKU');
 
   const names = await resolveTaxonomyNames(data);
-  const product = await Product.create({
+  const product = await db().Product.create({
     ...data,
     ...names,
     sku: data.sku.toUpperCase(),
@@ -1262,10 +1263,10 @@ async function createProduct(data) {
 }
 
 async function updateProduct(id, data) {
-  const product = await Product.findById(id);
+  const product = await db().Product.findById(id);
   if (!product) throw ApiError.notFound('Product not found.', 'PRODUCT_NOT_FOUND');
 
-  const duplicate = await Product.findOne({ sku: data.sku.toUpperCase(), _id: { $ne: id } });
+  const duplicate = await db().Product.findOne({ sku: data.sku.toUpperCase(), _id: { $ne: id } });
   if (duplicate) throw ApiError.conflict('That SKU already exists.', 'DUPLICATE_SKU');
 
   const names = await resolveTaxonomyNames(data);
@@ -1284,7 +1285,7 @@ async function updateProduct(id, data) {
  * while keeping every past order readable.
  */
 async function deactivateProduct(id) {
-  const product = await Product.findById(id);
+  const product = await db().Product.findById(id);
   if (!product) throw ApiError.notFound('Product not found.', 'PRODUCT_NOT_FOUND');
 
   product.isActive = !product.isActive;
@@ -1307,7 +1308,7 @@ async function deactivateProduct(id) {
  * set of rules about when one may be raised.
  */
 async function createOrder(body) {
-  const user = await User.findById(body.user).lean();
+  const user = await db().User.findById(body.user).lean();
   if (!user) throw ApiError.badRequest('Pick a client.', 'USER_NOT_FOUND');
 
   const items = await orderBuilder.buildOrderItems(body.items);
@@ -1347,7 +1348,7 @@ async function listOrders({ status, q, business } = {}) {
     query.$or = [{ orderNumber: rx }, { poNumber: rx }, { 'items.sku': rx }];
   }
 
-  const orders = await Order.find(query)
+  const orders = await db().Order.find(query)
     .sort({ createdAt: -1 })
     .limit(200)
     // `contactName` is required for `displayNameOf` — without it every row
@@ -1355,7 +1356,7 @@ async function listOrders({ status, q, business } = {}) {
     .populate('user', 'businessName contactName email')
     .lean();
 
-  const counts = await Order.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]);
+  const counts = await db().Order.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]);
 
   return {
     orders: orders.map((order) => ({
@@ -1379,12 +1380,12 @@ async function listOrders({ status, q, business } = {}) {
  * second request; the buyer is populated for the same reason.
  */
 async function getOrder(orderNumber) {
-  const order = await Order.findOne({ orderNumber })
+  const order = await db().Order.findOne({ orderNumber })
     .populate('user', 'businessName contactName email phone')
     .lean();
   if (!order) throw ApiError.notFound('Order not found.', 'ORDER_NOT_FOUND');
 
-  const invoice = await Invoice.findOne({ order: order._id }).select('number status').lean();
+  const invoice = await db().Invoice.findOne({ order: order._id }).select('number status').lean();
 
   return {
     order: {
@@ -1409,7 +1410,7 @@ async function getOrder(orderNumber) {
  * exactly when the buyer expects one to appear.
  */
 async function updateOrderStatus(orderNumber, { status, note, tracking }) {
-  const order = await Order.findOne({ orderNumber });
+  const order = await db().Order.findOne({ orderNumber });
   if (!order) throw ApiError.notFound('Order not found.', 'ORDER_NOT_FOUND');
 
   if (order.status === 'delivered' && status !== 'delivered') {
@@ -1661,7 +1662,7 @@ function isItemised(body) {
  *   owing more than it.
  */
 async function createInvoice(body) {
-  const user = await User.findById(body.user).lean();
+  const user = await db().User.findById(body.user).lean();
   if (!user) throw ApiError.badRequest('Pick a client.', 'USER_NOT_FOUND');
 
   const issuedAt = body.issuedAt ? new Date(`${body.issuedAt}T00:00:00`) : new Date();
@@ -1687,7 +1688,7 @@ async function createInvoice(body) {
     throw ApiError.badRequest('An invoice needs an amount.', 'INVOICE_EMPTY');
   }
 
-  const invoice = await Invoice.create({
+  const invoice = await db().Invoice.create({
     // A charge raised by hand is money owed, not money received, so it starts
     // life as a `due` record in the `CVX-` series and is renumbered into `INV-`
     // when it settles.
@@ -1782,13 +1783,13 @@ async function listInvoices({ status, q, from, to, business } = {}) {
     const rx = likeRegex(q);
     // An invoice number is the obvious search, but staff more often have the
     // business in front of them, so both resolve.
-    const users = await User.find({ $or: [{ businessName: rx }, { email: rx }] })
+    const users = await db().User.find({ $or: [{ businessName: rx }, { email: rx }] })
       .select('_id')
       .lean();
     query.$or = [{ number: rx }, { user: { $in: users.map((user) => user._id) } }];
   }
 
-  const invoices = await Invoice.find(query)
+  const invoices = await db().Invoice.find(query)
     .sort({ issuedAt: -1 })
     .limit(200)
     .populate('order', 'orderNumber')
@@ -1798,8 +1799,8 @@ async function listInvoices({ status, q, from, to, business } = {}) {
   // Counts come from the whole collection, not the filtered set — a pill that
   // showed "Overdue 0" because you are already filtered to Paid is useless.
   const [statusRows, overdueCount] = await Promise.all([
-    Invoice.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
-    Invoice.countDocuments({ status: { $ne: 'paid' }, dueDate: { $lt: now } }),
+    db().Invoice.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
+    db().Invoice.countDocuments({ status: { $ne: 'paid' }, dueDate: { $lt: now } }),
   ]);
 
   const counts = Object.fromEntries(statusRows.map((row) => [row._id, row.count]));
@@ -1820,7 +1821,7 @@ async function listInvoices({ status, q, from, to, business } = {}) {
 }
 
 async function getInvoice(number) {
-  const invoice = await Invoice.findOne({ number })
+  const invoice = await db().Invoice.findOne({ number })
     .populate('order', 'orderNumber items total status')
     .populate('user', 'businessName contactName email phone')
     // The chain behind a repair invoice — its ticket, and the quote that ticket
@@ -1846,7 +1847,7 @@ async function getInvoice(number) {
  * money total.
  */
 async function recordPayment(number, { amountDollars, at, method, reference }) {
-  const invoice = await Invoice.findOne({ number });
+  const invoice = await db().Invoice.findOne({ number });
   if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');
 
   const amount = Math.round(Number(amountDollars) * 100);
@@ -1880,7 +1881,7 @@ async function recordPayment(number, { amountDollars, at, method, reference }) {
  * `void`. An invoice that vanishes takes its own audit trail with it.
  */
 async function voidInvoice(number, { reason } = {}) {
-  const invoice = await Invoice.findOne({ number });
+  const invoice = await db().Invoice.findOne({ number });
   if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');
   if (invoice.status === 'paid' && invoice.amountPaid >= invoice.amount) {
     throw ApiError.badRequest('This invoice is already settled.', 'ALREADY_SETTLED');
@@ -1940,14 +1941,14 @@ async function voidInvoice(number, { reason } = {}) {
  * together or they drift apart.
  */
 async function reverseInvoicePayment(number, index, { reason } = {}) {
-  const invoice = await Invoice.findOne({ number });
+  const invoice = await db().Invoice.findOne({ number });
   if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');
 
   await invoicePaymentService.reversePayment(invoice, Number(index), { reason });
   return getInvoice(invoice.number);
 }
 async function emailInvoice(number) {
-  const invoice = await Invoice.findOne({ number }).populate('user').lean();
+  const invoice = await db().Invoice.findOne({ number }).populate('user').lean();
   if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');
 
   const to = invoice.user?.email;
@@ -1984,7 +1985,7 @@ async function emailInvoice(number) {
  * which leaves both documents in the record where an audit can see them.
  */
 async function updateInvoice(number, data) {
-  const invoice = await Invoice.findOne({ number });
+  const invoice = await db().Invoice.findOne({ number });
   if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');
 
   if (data.dueDate !== undefined) invoice.dueDate = new Date(`${data.dueDate}T00:00:00`);
@@ -2011,7 +2012,7 @@ async function updateInvoice(number, data) {
  * releases the line of credit it reserved, because the debt goes with it.
  */
 async function deleteInvoice(number) {
-  const invoice = await Invoice.findOne({ number });
+  const invoice = await db().Invoice.findOne({ number });
   if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');
 
   if ((invoice.amountPaid ?? 0) > 0) {
@@ -2046,7 +2047,7 @@ async function deleteInvoice(number) {
  * movements are the record.
  */
 async function userActivity(id) {
-  const user = await User.findById(id).select('_id').lean();
+  const user = await db().User.findById(id).select('_id').lean();
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
 
   // The feed itself lives in `activityService`, because the buyer's own
@@ -2074,7 +2075,7 @@ async function userActivity(id) {
  * and says so.
  */
 async function bulkUpdateOrderStatus({ orderNumbers, status, note }) {
-  const orders = await Order.find({ orderNumber: { $in: orderNumbers } });
+  const orders = await db().Order.find({ orderNumber: { $in: orderNumbers } });
   const byNumber = new Map(orders.map((order) => [order.orderNumber, order]));
 
   const updated = [];
@@ -2140,10 +2141,10 @@ async function bulkUpdateOrderStatus({ orderNumbers, status, note }) {
  * before the first one can be trusted.
  */
 async function accountStatement(id, { nonce } = {}) {
-  const user = await User.findById(id).lean();
+  const user = await db().User.findById(id).lean();
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
 
-  const invoices = await Invoice.find({ user: id })
+  const invoices = await db().Invoice.find({ user: id })
     .sort({ issuedAt: 1 })
     .populate('order', 'orderNumber')
     .lean();
@@ -2184,7 +2185,7 @@ async function accountStatement(id, { nonce } = {}) {
  * quietly turning one into the other is how the two stop reconciling.
  */
 async function recordCreditPayment(id, { amountDollars, method, reference } = {}) {
-  const user = await User.findById(id);
+  const user = await db().User.findById(id);
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
 
   const amount = Math.round(Number(amountDollars ?? 0) * 100);
@@ -2193,7 +2194,7 @@ async function recordCreditPayment(id, { amountDollars, method, reference } = {}
   }
 
   // Only invoices that still owe something, oldest first.
-  const invoices = await Invoice.find({ user: id }).sort({ issuedAt: 1 });
+  const invoices = await db().Invoice.find({ user: id }).sort({ issuedAt: 1 });
   const owing = invoices.filter((invoice) => invoice.amount - (invoice.amountPaid ?? 0) > 0);
 
   const outstanding = owing.reduce(
@@ -2238,10 +2239,10 @@ async function recordCreditPayment(id, { amountDollars, method, reference } = {}
 }
 
 async function invoiceDocument(number, { nonce } = {}) {
-  const invoice = await Invoice.findOne({ number }).populate('order').lean();
+  const invoice = await db().Invoice.findOne({ number }).populate('order').lean();
   if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');
 
-  const user = await User.findById(invoice.user).lean();
+  const user = await db().User.findById(invoice.user).lean();
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
 
   return renderInvoiceHtml({

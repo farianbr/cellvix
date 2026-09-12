@@ -7,9 +7,13 @@
  * the API layer reads it synchronously, and `useBusiness()` subscribes so the
  * shell re-renders when it changes.
  *
- * **`null` means all businesses**, which is the admin's default. It is deliberately
- * the same value as "nothing chosen", so no code has to distinguish an
- * unanswered question from a deliberate "show me everything".
+ * **`null` means "not chosen yet", not "all businesses"** (SAAS_PLATFORM §4.1).
+ *
+ * It used to mean both, because an admin's default view spanned every business.
+ * That view is gone: under database-per-business a request resolves to exactly
+ * one database, so there is nothing for an unscoped admin query to read. The
+ * switcher now lands on the default business when this is empty, and `null`
+ * survives only as the state before that has happened.
  *
  * Persisted in `sessionStorage` for the same reason the date range is: the
  * business you are working in is a working context that should survive a

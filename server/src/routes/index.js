@@ -32,6 +32,7 @@ import * as searchController from '../controllers/searchController.js';
 import * as profileController from '../controllers/profileController.js';
 import * as exportController from '../controllers/exportController.js';
 import * as notificationController from '../controllers/notificationController.js';
+import * as supportController from '../controllers/supportController.js';
 
 import * as supplierPortalController from '../controllers/supplierPortalController.js';
 import * as superAdminController from '../controllers/superAdminController.js';
@@ -121,9 +122,14 @@ import {
   tenantSchema,
   tenantSlotsSchema,
   superAdminBusinessSchema,
+  impersonationSchema,
+  tenantOwnerSchema,
+  supportMessageSchema,
   businessAssignSchema,
   businessFeatureSchema,
   planSchema,
+  planFeatureSchema,
+  businessStatusSchema,
   supplierLoginSchema,
   supplierForgotSchema,
   supplierResetSchema,
@@ -181,7 +187,22 @@ const authLimiter = rateLimit({
   message: { error: { code: 'RATE_LIMITED', message: 'Too many attempts. Try again shortly.' } },
 });
 
-router.get('/health', (_req, res) => res.json({ ok: true, at: new Date().toISOString() }));
+/**
+ * Liveness, plus which business this request resolved to.
+ *
+ * The business is reported because it is the one thing a caller cannot
+ * otherwise discover without a session: under database-per-business every
+ * request reads one database, and a tool that needs to name it explicitly — the
+ * smoke suite on a single local host, a deployment check — has nowhere else to
+ * ask. It exposes an id and a name, never records.
+ */
+router.get('/health', (req, res) =>
+  res.json({
+    ok: true,
+    at: new Date().toISOString(),
+    business: req.businessScope ?? null,
+  }),
+);
 
 // --- auth ------------------------------------------------------------------
 router.post('/auth/register', authLimiter, validate(registerSchema), authController.register);
@@ -335,6 +356,15 @@ const adminOnly = [requireAuth, requireAdmin, resolveBusinessScope];
 // so gating it by area would blank the counters for a role that can still see
 // the pages behind them. It returns counts, never records.
 router.get('/admin/stats', ...admin, adminController.stats);
+
+// The tenant's own half of the support conversation with us. Not permissioned
+// and deliberately not feature-gated: reaching the platform is not a capability
+// a tenant buys, and a business whose account is in trouble must still be able
+// to say so. The tenant is resolved from `req.businessScope` server-side —
+// nothing here accepts a tenant id from the client.
+router.get('/admin/support', ...admin, supportController.myThread);
+router.get('/admin/support/unread', ...admin, supportController.unread);
+router.post('/admin/support', ...admin, validate(supportMessageSchema), supportController.postMessage);
 
 router.get('/admin/users', ...admin, requirePermission('clients', 'view'), adminController.listUsers);
 // Opening a client account is a `full` action, not a `view` one — a hidden
@@ -515,8 +545,44 @@ router.get('/superadmin/businesses/:id/features', requireSuperAdmin, superAdminC
 // A `locked` key is refused rather than silently ignored (§3.2 rule 4).
 router.patch('/superadmin/businesses/:id/features', requireSuperAdmin, validate(businessFeatureSchema), superAdminController.setBusinessFeature);
 
+// The tenant's own administrator. Sets no password — the owner receives an
+// invitation and chooses their own, so no credential passes through an
+// operator's hands. Rate-limited: it sends mail to an address somebody typed.
+router.post('/superadmin/tenants/:id/owner', requireSuperAdmin, authLimiter, validate(tenantOwnerSchema), superAdminController.createOwner);
+router.post('/superadmin/owners/:id/invite', requireSuperAdmin, authLimiter, superAdminController.resendOwnerInvite);
+
+// Stepping into a business (§4.5, invariant 9). Time-boxed, reason required,
+// and written into the target business's own audit trail on the way in and the
+// way out. `leave` is deliberately unguarded: a console session can expire
+// while an operator is inside a business, and they must still be able to get
+// out — the impersonation cookie is the authority there, and leaving with
+// nothing open is a no-op rather than an error.
+router.post('/superadmin/businesses/:id/impersonate', requireSuperAdmin, validate(impersonationSchema), superAdminController.enterBusiness);
+router.post('/superadmin/impersonation/leave', superAdminController.leaveBusiness);
+router.get('/superadmin/impersonation', requireSuperAdmin, superAdminController.listImpersonations);
+router.post('/superadmin/impersonation/:id/revoke', requireSuperAdmin, superAdminController.revokeImpersonation);
+
+// Support conversations. One thread per tenant, held in the control plane so it
+// survives a business being deleted and stays reachable while the account is
+// suspended — which is exactly when a tenant most needs to reach us.
+router.get('/superadmin/support', requireSuperAdmin, superAdminController.listThreads);
+router.get('/superadmin/support/:id', requireSuperAdmin, superAdminController.getThread);
+router.post('/superadmin/support/:id/reply', requireSuperAdmin, validate(supportMessageSchema), superAdminController.replyToThread);
+router.post('/superadmin/support/:id/resolve', requireSuperAdmin, superAdminController.resolveThread);
+
+// A business's own trading status, and its lifecycle. Deletion is SOFT and
+// holds the tenant's slot through a retention window (`Tenant.slots` states the
+// rule; `Business.deletedAt` is what makes it true), so a tenant cannot
+// delete-and-recreate its way to a free business.
+router.patch('/superadmin/businesses/:id/status', requireSuperAdmin, validate(businessStatusSchema), superAdminController.setBusinessStatus);
+router.delete('/superadmin/businesses/:id', requireSuperAdmin, superAdminController.deleteBusiness);
+router.post('/superadmin/businesses/:id/restore', requireSuperAdmin, superAdminController.restoreBusiness);
+
 router.get('/superadmin/plans', requireSuperAdmin, superAdminController.listPlans);
 router.post('/superadmin/plans', requireSuperAdmin, validate(planSchema), superAdminController.createPlan);
+router.patch('/superadmin/plans/:id', requireSuperAdmin, validate(planSchema), superAdminController.updatePlan);
+// `enabled: null` clears the default rather than switching the feature off.
+router.patch('/superadmin/plans/:id/features', requireSuperAdmin, validate(planFeatureSchema), superAdminController.setPlanFeature);
 
 // --- the supplier portal (supplier process flow, §6.8a) ---------------------
 //

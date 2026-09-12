@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 import { connectDb, disconnectDb } from '../config/db.js';
-import ExpenseCategory from '../models/ExpenseCategory.js';
+import { db } from '../db/models.js';
+import '../models/ExpenseCategory.js';
 
 /**
  * The Canadian starter set of expense categories (ERP rework §6.9).
@@ -36,11 +37,11 @@ const EXPENSE_CATEGORIES = [
 async function seedExpenseCategories({ quiet = false } = {}) {
   const log = quiet ? () => {} : (...args) => console.log(...args);
 
-  const existing = await ExpenseCategory.find({}).select('slug').lean();
+  const existing = await db().ExpenseCategory.find({}).select('slug').lean();
   const have = new Set(existing.map((category) => category.slug));
 
   const missing = EXPENSE_CATEGORIES.filter((category) => !have.has(category.slug));
-  if (missing.length) await ExpenseCategory.insertMany(missing);
+  if (missing.length) await db().ExpenseCategory.insertMany(missing);
 
   log(`  expense categories: ${missing.length} added, ${have.size} already present`);
   return { added: missing.length, existing: have.size };

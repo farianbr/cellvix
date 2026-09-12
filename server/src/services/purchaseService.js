@@ -1,11 +1,12 @@
 import mongoose from 'mongoose';
 
-import Supplier from '../models/Supplier.js';
-import PurchaseOrder from '../models/PurchaseOrder.js';
-import Expense from '../models/Expense.js';
-import ExpenseCategory from '../models/ExpenseCategory.js';
-import StockMovement from '../models/StockMovement.js';
-import Product from '../models/Product.js';
+import { db } from '../db/models.js';
+import '../models/Supplier.js';
+import '../models/PurchaseOrder.js';
+import '../models/Expense.js';
+import '../models/ExpenseCategory.js';
+import '../models/StockMovement.js';
+import '../models/Product.js';
 import ApiError from '../utils/ApiError.js';
 import { likeRegex } from '../utils/regex.js';
 import * as supplierPortalService from './supplierPortalService.js';
@@ -20,7 +21,7 @@ import * as supplierPortalService from './supplierPortalService.js';
  *   1. **Money is recomputed here, never accepted.** A client sends quantities
  *      and a negotiated unit cost; every subtotal, tax line and total is
  *      derived server-side, the same way `pricingService` owns a sale.
- *   2. **Stock only moves through `applyStockMovement`.** `Product.stock` has
+ *   2. **Stock only moves through `applyStockMovement`.** `db().Product.stock` has
  *      no history of its own, so a write that skips the ledger is a quantity
  *      nobody can ever explain. This is `storeCreditService`'s rule, applied to
  *      inventory.
@@ -74,7 +75,7 @@ function isObjectId(value) {
 // ---- the stock ledger -------------------------------------------------------
 
 /**
- * The one place `Product.stock` changes.
+ * The one place `db().Product.stock` changes.
  *
  * Increments the product and writes the movement that explains it, returning
  * the quantity the change produced. `qtyAfter` is read back from the updated
@@ -96,7 +97,7 @@ async function applyStockMovement({
   createdBy,
   business,
 }) {
-  const doc = await Product.findById(product).select('_id stock name sku');
+  const doc = await db().Product.findById(product).select('_id stock name sku');
   if (!doc) throw ApiError.notFound('Product not found.', 'PRODUCT_NOT_FOUND');
 
   if (qtyChange < 0 && doc.stock + qtyChange < 0) {
@@ -106,13 +107,13 @@ async function applyStockMovement({
     );
   }
 
-  const updated = await Product.findByIdAndUpdate(
+  const updated = await db().Product.findByIdAndUpdate(
     doc._id,
     { $inc: { stock: qtyChange } },
     { new: true, select: 'stock' },
   );
 
-  await StockMovement.create({
+  await db().StockMovement.create({
     product: doc._id,
     business: business ?? undefined,
     type,
@@ -186,17 +187,17 @@ async function listSuppliers({ q, status } = {}) {
   }
 
   const [suppliers, total, active, lastOrders, spend] = await Promise.all([
-    Supplier.find(query).sort({ name: 1 }).limit(300).lean(),
+    db().Supplier.find(query).sort({ name: 1 }).limit(300).lean(),
 
     // Counts come from the whole collection, not the filtered set — the same
     // rule the invoice pills follow, for the same reason.
-    Supplier.countDocuments({}),
-    Supplier.countDocuments({ isActive: true }),
+    db().Supplier.countDocuments({}),
+    db().Supplier.countDocuments({ isActive: true }),
 
     // Newest order date per supplier. Drafts and cancellations are excluded on
     // the same grounds the spend chart excludes them: a draft is a plan, and
     // "last ordered Aug 16" is a claim that something was actually sent.
-    PurchaseOrder.aggregate([
+    db().PurchaseOrder.aggregate([
       { $match: { status: { $nin: ['draft', 'cancelled'] } } },
       { $group: { _id: '$supplier', lastOrderAt: { $max: '$orderDate' } } },
     ]),
@@ -205,7 +206,7 @@ async function listSuppliers({ q, status } = {}) {
     // rather than from the suppliers' denormalised counters: those are
     // per-supplier running totals, and adding them up would double-count
     // anything a future backfill touches twice.
-    PurchaseOrder.aggregate([
+    db().PurchaseOrder.aggregate([
       { $match: { status: { $nin: ['draft', 'cancelled'] } } },
       { $group: { _id: null, orders: { $sum: 1 }, spent: { $sum: '$total' } } },
     ]),
@@ -227,16 +228,16 @@ async function listSuppliers({ q, status } = {}) {
 async function getSupplier(id) {
   if (!isObjectId(id)) throw ApiError.notFound('Supplier not found.', 'SUPPLIER_NOT_FOUND');
 
-  const supplier = await Supplier.findById(id).lean();
+  const supplier = await db().Supplier.findById(id).lean();
   if (!supplier) throw ApiError.notFound('Supplier not found.', 'SUPPLIER_NOT_FOUND');
 
   const [orders, products, spendRows] = await Promise.all([
-    PurchaseOrder.find({ supplier: id })
+    db().PurchaseOrder.find({ supplier: id })
       .sort({ orderDate: -1 })
       .limit(50)
       .populate('supplier', 'name email')
       .lean(),
-    Product.find({ supplier: id })
+    db().Product.find({ supplier: id })
       .sort({ name: 1 })
       .limit(100)
       .select('name sku price cost stock minStock')
@@ -244,7 +245,7 @@ async function getSupplier(id) {
     // Spend by month, from sent, partial and received POs only — a draft is a
     // plan, not money, and charting it would overstate what this supplier has
     // actually cost.
-    PurchaseOrder.aggregate([
+    db().PurchaseOrder.aggregate([
       {
         $match: {
           supplier: new mongoose.Types.ObjectId(String(id)),
@@ -324,7 +325,7 @@ function withConsentStamp(body, source = 'admin') {
  * supplier is already written by then. The same rule registration follows.
  */
 async function createSupplier(body) {
-  const supplier = await Supplier.create({
+  const supplier = await db().Supplier.create({
     ...withConsentStamp(body),
     code: body.code || undefined,
   });
@@ -341,14 +342,14 @@ async function createSupplier(body) {
     }
   }
 
-  const saved = await Supplier.findById(supplier._id).lean();
+  const saved = await db().Supplier.findById(supplier._id).lean();
   return { supplier: shapeSupplier(saved), portalInvited, portalError };
 }
 
 async function updateSupplier(id, body) {
   if (!isObjectId(id)) throw ApiError.notFound('Supplier not found.', 'SUPPLIER_NOT_FOUND');
 
-  const supplier = await Supplier.findByIdAndUpdate(id, withConsentStamp(body), {
+  const supplier = await db().Supplier.findByIdAndUpdate(id, withConsentStamp(body), {
     new: true,
     runValidators: true,
   });
@@ -364,7 +365,7 @@ async function updateSupplier(id, body) {
 async function toggleSupplier(id) {
   if (!isObjectId(id)) throw ApiError.notFound('Supplier not found.', 'SUPPLIER_NOT_FOUND');
 
-  const supplier = await Supplier.findById(id);
+  const supplier = await db().Supplier.findById(id);
   if (!supplier) throw ApiError.notFound('Supplier not found.', 'SUPPLIER_NOT_FOUND');
 
   supplier.isActive = !supplier.isActive;
@@ -386,7 +387,7 @@ async function refreshSupplierTotals(supplierId) {
   // each of them remember to check.
   if (!supplierId || !isObjectId(supplierId)) return;
 
-  const [row] = await PurchaseOrder.aggregate([
+  const [row] = await db().PurchaseOrder.aggregate([
     {
       $match: {
         supplier: new mongoose.Types.ObjectId(String(supplierId)),
@@ -396,7 +397,7 @@ async function refreshSupplierTotals(supplierId) {
     { $group: { _id: null, total: { $sum: '$total' }, count: { $sum: 1 } } },
   ]);
 
-  await Supplier.findByIdAndUpdate(supplierId, {
+  await db().Supplier.findByIdAndUpdate(supplierId, {
     ordersCount: row?.count ?? 0,
     totalSpent: row?.total ?? 0,
   });
@@ -544,24 +545,24 @@ async function listPurchaseOrders({ q, status, supplier, from, to } = {}) {
     const rx = likeRegex(q);
     // Staff have either the PO in front of them or the supplier's name, so
     // both resolve — the same courtesy the invoice search extends.
-    const suppliers = await Supplier.find({ $or: [{ name: rx }, { code: rx }] })
+    const suppliers = await db().Supplier.find({ $or: [{ name: rx }, { code: rx }] })
       .select('_id')
       .lean();
     query.$or = [{ poNumber: rx }, { supplier: { $in: suppliers.map((s) => s._id) } }];
   }
 
-  const orders = await PurchaseOrder.find(query)
+  const orders = await db().PurchaseOrder.find(query)
     .sort({ orderDate: -1 })
     .limit(200)
     .populate('supplier', 'name email')
     .lean();
 
   const [statusRows, pendingRow] = await Promise.all([
-    PurchaseOrder.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
+    db().PurchaseOrder.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
     // Pending value is money committed and not yet landed — the number an
     // operator uses to answer "what is on the water". A cancelled PO is not
     // committed and a received one has arrived, so neither counts.
-    PurchaseOrder.aggregate([
+    db().PurchaseOrder.aggregate([
       { $match: { status: { $in: ['draft', 'sent', 'partial'] } } },
       { $group: { _id: null, total: { $sum: '$total' } } },
     ]),
@@ -579,7 +580,7 @@ async function listPurchaseOrders({ q, status, supplier, from, to } = {}) {
 
 async function getPurchaseOrder(id) {
   const query = isObjectId(id) ? { _id: id } : { poNumber: String(id) };
-  const po = await PurchaseOrder.findOne(query)
+  const po = await db().PurchaseOrder.findOne(query)
     .populate('supplier', 'name email phone paymentTerms')
     .lean();
   if (!po) throw ApiError.notFound('Purchase order not found.', 'PO_NOT_FOUND');
@@ -591,7 +592,7 @@ async function getPurchaseOrder(id) {
   const productIds = (po.items ?? []).map((item) => item.product).filter(Boolean);
 
   const [movements, linked] = await Promise.all([
-    StockMovement.find({
+    db().StockMovement.find({
       'reference.kind': 'purchase_order',
       'reference.id': po._id,
     })
@@ -600,7 +601,7 @@ async function getPurchaseOrder(id) {
       .lean(),
 
     productIds.length
-      ? Product.find({ _id: { $in: productIds } }).select('name sku stock').lean()
+      ? db().Product.find({ _id: { $in: productIds } }).select('name sku stock').lean()
       : [],
   ]);
 
@@ -657,7 +658,7 @@ async function getPurchaseOrder(id) {
  */
 async function createPurchaseOrder(body, createdBy) {
   const ids = body.items.map((item) => item.product).filter(isObjectId);
-  const products = await Product.find({ _id: { $in: ids } })
+  const products = await db().Product.find({ _id: { $in: ids } })
     .select('name sku partType')
     .lean();
   const byId = new Map(products.map((product) => [product._id.toString(), product]));
@@ -689,8 +690,8 @@ async function createPurchaseOrder(body, createdBy) {
     ? body.componentTypes
     : [...new Set(products.map((product) => product.partType).filter(Boolean))];
 
-  const po = new PurchaseOrder({
-    poNumber: await nextNumber(PurchaseOrder, 'poNumber', 'PO'),
+  const po = new (db().PurchaseOrder)({
+    poNumber: await nextNumber(db().PurchaseOrder, 'poNumber', 'PO'),
     title: body.title,
     status: 'draft',
     componentTypes,
@@ -717,7 +718,7 @@ async function buildBids(supplierIds) {
   const ids = [...new Set((supplierIds ?? []).map(String))].filter(isObjectId);
   if (!ids.length) return [];
 
-  const suppliers = await Supplier.find({ _id: { $in: ids }, isActive: true })
+  const suppliers = await db().Supplier.find({ _id: { $in: ids }, isActive: true })
     .select('name')
     .lean();
 
@@ -732,7 +733,7 @@ async function buildBids(supplierIds) {
  *  from a document this one no longer matches. */
 async function updatePurchaseOrder(id, body) {
   const query = isObjectId(id) ? { _id: id } : { poNumber: String(id) };
-  const po = await PurchaseOrder.findOne(query);
+  const po = await db().PurchaseOrder.findOne(query);
   if (!po) throw ApiError.notFound('Purchase order not found.', 'PO_NOT_FOUND');
 
   if (po.status !== 'draft') {
@@ -743,7 +744,7 @@ async function updatePurchaseOrder(id, body) {
   }
 
   const ids = body.items.map((item) => item.product).filter(isObjectId);
-  const products = await Product.find({ _id: { $in: ids } })
+  const products = await db().Product.find({ _id: { $in: ids } })
     .select('name sku partType')
     .lean();
   const byId = new Map(products.map((product) => [product._id.toString(), product]));
@@ -804,7 +805,7 @@ async function updatePurchaseOrder(id, body) {
  */
 async function setPurchaseOrderStatus(id, { status, note }) {
   const query = isObjectId(id) ? { _id: id } : { poNumber: String(id) };
-  const po = await PurchaseOrder.findOne(query);
+  const po = await db().PurchaseOrder.findOne(query);
   if (!po) throw ApiError.notFound('Purchase order not found.', 'PO_NOT_FOUND');
 
   if (status === 'sent') {
@@ -849,7 +850,7 @@ async function setPurchaseOrderStatus(id, { status, note }) {
  */
 async function receivePurchaseOrder(id, { lines, note }, receivedBy) {
   const query = isObjectId(id) ? { _id: id } : { poNumber: String(id) };
-  const po = await PurchaseOrder.findOne(query);
+  const po = await db().PurchaseOrder.findOne(query);
   if (!po) throw ApiError.notFound('Purchase order not found.', 'PO_NOT_FOUND');
 
   if (po.status === 'draft') {
@@ -913,7 +914,7 @@ async function receivePurchaseOrder(id, { lines, note }, receivedBy) {
     // catalogue's cost follows it. `price` is untouched — what Cellvix pays and
     // what a client pays are two decisions, and only one of them belongs to the
     // supplier.
-    await Product.findByIdAndUpdate(item.product, { cost: item.unitCost });
+    await db().Product.findByIdAndUpdate(item.product, { cost: item.unitCost });
   }
 
   if (received.length) {
@@ -941,7 +942,7 @@ async function receivePurchaseOrder(id, { lines, note }, receivedBy) {
  */
 async function recordPurchasePayment(id, { method, reference, paidAt, category }, createdBy) {
   const query = isObjectId(id) ? { _id: id } : { poNumber: String(id) };
-  const po = await PurchaseOrder.findOne(query).populate('supplier', 'name');
+  const po = await db().PurchaseOrder.findOne(query).populate('supplier', 'name');
   if (!po) throw ApiError.notFound('Purchase order not found.', 'PO_NOT_FOUND');
 
   if (po.status === 'draft') {
@@ -961,8 +962,8 @@ async function recordPurchasePayment(id, { method, reference, paidAt, category }
 
   const when = toDate(paidAt, new Date());
 
-  const expense = await Expense.create({
-    number: await nextNumber(Expense, 'number', 'EXP'),
+  const expense = await db().Expense.create({
+    number: await nextNumber(db().Expense, 'number', 'EXP'),
     date: when,
     description: `Purchase Order ${po.poNumber} — ${po.supplier?.name ?? 'supplier'}`,
     category: categoryDoc._id,
@@ -985,7 +986,7 @@ async function recordPurchasePayment(id, { method, reference, paidAt, category }
   });
   await po.save();
 
-  const populated = await Expense.findById(expense._id)
+  const populated = await db().Expense.findById(expense._id)
     .populate('category', 'name colorToken')
     .populate('purchaseOrder', 'poNumber')
     .lean();
@@ -1003,14 +1004,14 @@ async function recordPurchasePayment(id, { method, reference, paidAt, category }
  */
 async function resolvePurchaseCategory(category) {
   if (category && isObjectId(category)) {
-    const chosen = await ExpenseCategory.findById(category).lean();
+    const chosen = await db().ExpenseCategory.findById(category).lean();
     if (chosen) return chosen;
   }
 
-  const stock = await ExpenseCategory.findOne({ slug: 'inventory-purchases' }).lean();
+  const stock = await db().ExpenseCategory.findOne({ slug: 'inventory-purchases' }).lean();
   if (stock) return stock;
 
-  const first = await ExpenseCategory.findOne({ isActive: true }).sort({ order: 1 }).lean();
+  const first = await db().ExpenseCategory.findOne({ isActive: true }).sort({ order: 1 }).lean();
   if (first) return first;
 
   throw ApiError.badRequest(
@@ -1070,7 +1071,7 @@ async function listExpenses({ q, category, status, from, to } = {}) {
     query.$or = [{ description: rx }, { payee: rx }, { reference: rx }, { number: rx }];
   }
 
-  const expenses = await Expense.find(query)
+  const expenses = await db().Expense.find(query)
     .sort({ date: -1 })
     .limit(300)
     .populate('category', 'name colorToken')
@@ -1083,7 +1084,7 @@ async function listExpenses({ q, category, status, from, to } = {}) {
   // screen — a total that ignored the date filter would contradict the rows
   // beneath it. The status counts are the exception and come from the whole
   // collection, for the pill rule (§6.5).
-  const statusRows = await Expense.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]);
+  const statusRows = await db().Expense.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]);
 
   const counts = Object.fromEntries(statusRows.map((row) => [row._id, row.count]));
   counts.all = statusRows.reduce((sum, row) => sum + row.count, 0);
@@ -1103,17 +1104,17 @@ async function listExpenses({ q, category, status, from, to } = {}) {
 }
 
 async function createExpense(body, createdBy) {
-  const category = await ExpenseCategory.findById(body.category).lean();
+  const category = await db().ExpenseCategory.findById(body.category).lean();
   if (!category) throw ApiError.badRequest('Pick a category.', 'CATEGORY_NOT_FOUND');
 
-  const expense = await Expense.create({
+  const expense = await db().Expense.create({
     ...body,
-    number: await nextNumber(Expense, 'number', 'EXP'),
+    number: await nextNumber(db().Expense, 'number', 'EXP'),
     date: toDate(body.date, new Date()),
     createdBy,
   });
 
-  const populated = await Expense.findById(expense._id)
+  const populated = await db().Expense.findById(expense._id)
     .populate('category', 'name colorToken')
     .lean();
 
@@ -1128,7 +1129,7 @@ async function createExpense(body, createdBy) {
 async function updateExpense(id, body) {
   if (!isObjectId(id)) throw ApiError.notFound('Expense not found.', 'EXPENSE_NOT_FOUND');
 
-  const expense = await Expense.findById(id);
+  const expense = await db().Expense.findById(id);
   if (!expense) throw ApiError.notFound('Expense not found.', 'EXPENSE_NOT_FOUND');
 
   if (expense.purchaseOrder) {
@@ -1138,13 +1139,13 @@ async function updateExpense(id, body) {
     );
   }
 
-  const category = await ExpenseCategory.findById(body.category).lean();
+  const category = await db().ExpenseCategory.findById(body.category).lean();
   if (!category) throw ApiError.badRequest('Pick a category.', 'CATEGORY_NOT_FOUND');
 
   Object.assign(expense, body, { date: toDate(body.date, expense.date) });
   await expense.save();
 
-  const populated = await Expense.findById(expense._id)
+  const populated = await db().Expense.findById(expense._id)
     .populate('category', 'name colorToken')
     .lean();
 
@@ -1154,7 +1155,7 @@ async function updateExpense(id, body) {
 async function deleteExpense(id) {
   if (!isObjectId(id)) throw ApiError.notFound('Expense not found.', 'EXPENSE_NOT_FOUND');
 
-  const expense = await Expense.findById(id);
+  const expense = await db().Expense.findById(id);
   if (!expense) throw ApiError.notFound('Expense not found.', 'EXPENSE_NOT_FOUND');
 
   if (expense.purchaseOrder) {
@@ -1195,8 +1196,8 @@ function shapeCategory(category, usage = 0) {
  *  refused **before** the operator clicks it, rather than after. */
 async function listExpenseCategories() {
   const [categories, usageRows] = await Promise.all([
-    ExpenseCategory.find({}).sort({ order: 1, name: 1 }).lean(),
-    Expense.aggregate([{ $group: { _id: '$category', count: { $sum: 1 } } }]),
+    db().ExpenseCategory.find({}).sort({ order: 1, name: 1 }).lean(),
+    db().Expense.aggregate([{ $group: { _id: '$category', count: { $sum: 1 } } }]),
   ]);
 
   const usage = new Map(usageRows.map((row) => [String(row._id), row.count]));
@@ -1209,21 +1210,21 @@ async function listExpenseCategories() {
 
 async function createExpenseCategory(body) {
   const slug = slugify(body.name);
-  const clash = await ExpenseCategory.findOne({ slug }).lean();
+  const clash = await db().ExpenseCategory.findOne({ slug }).lean();
   if (clash) throw ApiError.conflict('A category by that name already exists.', 'CATEGORY_EXISTS');
 
-  const category = await ExpenseCategory.create({ ...body, slug });
+  const category = await db().ExpenseCategory.create({ ...body, slug });
   return { category: shapeCategory(category.toObject()) };
 }
 
 async function updateExpenseCategory(id, body) {
   if (!isObjectId(id)) throw ApiError.notFound('Category not found.', 'CATEGORY_NOT_FOUND');
 
-  const category = await ExpenseCategory.findById(id);
+  const category = await db().ExpenseCategory.findById(id);
   if (!category) throw ApiError.notFound('Category not found.', 'CATEGORY_NOT_FOUND');
 
   const slug = slugify(body.name);
-  const clash = await ExpenseCategory.findOne({ slug, _id: { $ne: category._id } }).lean();
+  const clash = await db().ExpenseCategory.findOne({ slug, _id: { $ne: category._id } }).lean();
   if (clash) throw ApiError.conflict('A category by that name already exists.', 'CATEGORY_EXISTS');
 
   Object.assign(category, body, { slug });
@@ -1240,10 +1241,10 @@ async function updateExpenseCategory(id, body) {
 async function deleteExpenseCategory(id) {
   if (!isObjectId(id)) throw ApiError.notFound('Category not found.', 'CATEGORY_NOT_FOUND');
 
-  const category = await ExpenseCategory.findById(id);
+  const category = await db().ExpenseCategory.findById(id);
   if (!category) throw ApiError.notFound('Category not found.', 'CATEGORY_NOT_FOUND');
 
-  const usage = await Expense.countDocuments({ category: category._id });
+  const usage = await db().Expense.countDocuments({ category: category._id });
   if (usage > 0) {
     category.isActive = false;
     await category.save();
@@ -1315,7 +1316,7 @@ async function listInventory({ q, stock, brand, grade } = {}) {
     query.$or = [{ name: rx }, { sku: rx }, { barcode: rx }];
   }
 
-  const products = await Product.find(query)
+  const products = await db().Product.find(query)
     .sort({ name: 1 })
     .limit(500)
     .populate('supplier', 'name')
@@ -1339,7 +1340,7 @@ async function listInventory({ q, stock, brand, grade } = {}) {
   // as low stock put three phantom rows between this screen's total and the
   // sidebar badge's, and a badge that reconciles with nothing is a badge the
   // operator learns to ignore.
-  const all = await Product.find({}).select('stock minStock price cost isActive').lean();
+  const all = await db().Product.find({}).select('stock minStock price cost isActive').lean();
   const sellable = all.filter((product) => product.isActive !== false);
   const classify = (product) => {
     const threshold = product.minStock > 0 ? product.minStock : LOW_STOCK_FALLBACK;
@@ -1375,12 +1376,12 @@ async function listInventory({ q, stock, brand, grade } = {}) {
 async function getInventoryItem(id) {
   if (!isObjectId(id)) throw ApiError.notFound('Product not found.', 'PRODUCT_NOT_FOUND');
 
-  const product = await Product.findById(id).populate('supplier', 'name email phone').lean();
+  const product = await db().Product.findById(id).populate('supplier', 'name email phone').lean();
   if (!product) throw ApiError.notFound('Product not found.', 'PRODUCT_NOT_FOUND');
 
   const [movements, purchaseOrders] = await Promise.all([
-    StockMovement.find({ product: id }).sort({ createdAt: -1 }).limit(50).lean(),
-    PurchaseOrder.find({ 'items.product': id })
+    db().StockMovement.find({ product: id }).sort({ createdAt: -1 }).limit(50).lean(),
+    db().PurchaseOrder.find({ 'items.product': id })
       .sort({ orderDate: -1 })
       .limit(20)
       .populate('supplier', 'name')
@@ -1439,7 +1440,7 @@ async function updateInventoryOps(id, body) {
     supplier: body.supplier && isObjectId(body.supplier) ? body.supplier : null,
   };
 
-  const product = await Product.findByIdAndUpdate(id, patch, { new: true })
+  const product = await db().Product.findByIdAndUpdate(id, patch, { new: true })
     .populate('supplier', 'name')
     .lean();
   if (!product) throw ApiError.notFound('Product not found.', 'PRODUCT_NOT_FOUND');
@@ -1460,7 +1461,7 @@ async function adjustStock(id, { qtyChange, type, note }, createdBy) {
     createdBy,
   });
 
-  const product = await Product.findById(id).populate('supplier', 'name').lean();
+  const product = await db().Product.findById(id).populate('supplier', 'name').lean();
   return { product: shapeInventoryRow(product), qtyAfter };
 }
 
@@ -1474,7 +1475,7 @@ async function listStockMovements({ product, type, from, to } = {}) {
     if (to) query.createdAt.$lte = endOfDay(to);
   }
 
-  const movements = await StockMovement.find(query)
+  const movements = await db().StockMovement.find(query)
     .sort({ createdAt: -1 })
     .limit(300)
     .populate('product', 'name sku')

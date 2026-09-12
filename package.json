@@ -28,7 +28,8 @@
     "shoot": "node scripts/shoot.mjs",
     "smoke": "node scripts/smoke.mjs",
     "smoke:clean": "node scripts/smoke-teardown.mjs",
-    "a11y": "node scripts/a11y.mjs"
+    "a11y": "node scripts/a11y.mjs",
+    "migrate": "npm run migrate --workspace server --"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",

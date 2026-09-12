@@ -246,6 +246,40 @@
   --transition-duration-snap: 200ms;
   --transition-duration-panel: 260ms;
   --transition-duration-exit: 140ms;
+
+  /* --- the platform console ---------------------------------------------
+     A SEPARATE identity, deliberately (SAAS_PLATFORM §0.1).
+
+     Everything above this belongs to Cellvix — tenant #1's wholesale business.
+     The operator console sits ABOVE every tenant and must not wear any one
+     tenant's colours: an operator who cannot tell at a glance whether they are
+     in the platform or inside a customer's shop is one keystroke from
+     reconfiguring the wrong thing, and a console painted in Cellvix red
+     silently asserts that the platform IS Cellvix. It is not, and the platform
+     has no name yet.
+
+     Cool graphite and a single indigo accent, on the reasoning Apple applies
+     to system chrome: structural surfaces stay quiet and near-neutral so the
+     content carries the colour, and exactly one accent hue means a highlighted
+     row is unambiguous. Nothing here is a gradient — the brand gradient is
+     Cellvix's signature and reusing it would undo the separation. */
+  --color-plat-bg: #0b0b0f;
+  --color-plat-surface: #141419;
+  --color-plat-raised: #1c1c23;
+  --color-plat-line: #2a2a33;
+  --color-plat-line-soft: #22222a;
+
+  --color-plat-text: #f5f5f7;
+  --color-plat-muted: #a1a1aa;
+  --color-plat-dim: #71717a;
+
+  --color-plat-accent: #6366f1;
+  --color-plat-accent-soft: #818cf8;
+  --color-plat-accent-dim: #4338ca;
+
+  --color-plat-ok: #34d399;
+  --color-plat-warn: #fbbf24;
+  --color-plat-danger: #f87171;
 }
 
 /* ==========================================================================

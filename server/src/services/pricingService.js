@@ -1,8 +1,9 @@
-import Offer from '../models/Offer.js';
-import Order from '../models/Order.js';
-import Product from '../models/Product.js';
+import { db } from '../db/models.js';
+import '../models/Offer.js';
+import '../models/Order.js';
+import '../models/Product.js';
 import ApiError from '../utils/ApiError.js';
-import Settings, { DEFAULT_SHIPPING_METHODS } from '../models/Settings.js';
+import { DEFAULT_SHIPPING_METHODS } from '../models/Settings.js';
 import { offerStatus } from './offerService.js';
 import { TAX_RATE } from '../../../shared/schemas/checkout.js';
 
@@ -64,7 +65,7 @@ function isEligible(offer, user) {
  */
 async function alreadyRedeemed(offer, user) {
   if (offer.redemption !== 'single') return false;
-  const existing = await Order.exists({
+  const existing = await db().Order.exists({
     user: user._id,
     'promo.offer': offer._id,
     status: { $ne: 'cancelled' },
@@ -83,7 +84,7 @@ async function resolveCode(code, user) {
   const trimmed = String(code ?? '').trim().toUpperCase();
   if (!trimmed) throw new OfferRejection('OFFER_NOT_FOUND', 'Enter a promo code.');
 
-  const offer = await Offer.findOne({ code: trimmed }).lean();
+  const offer = await db().Offer.findOne({ code: trimmed }).lean();
 
   if (!offer || offer.kind !== 'deal' || !isEligible(offer, user)) {
     throw new OfferRejection('OFFER_NOT_FOUND', `“${trimmed}” is not a valid promo code.`);
@@ -114,7 +115,7 @@ async function resolveCode(code, user) {
 /** Live, codeless deals this account qualifies for — the automatic candidates. */
 async function automaticCandidates(user) {
   const now = new Date();
-  const offers = await Offer.find({
+  const offers = await db().Offer.find({
     kind: 'deal',
     isActive: true,
     $or: [{ code: '' }, { code: null }, { code: { $exists: false } }],
@@ -229,7 +230,7 @@ function shapeApplied(offer, result, { automatic }) {
 async function priceCart(cart, user, { deliveryCode = 'ground' } = {}) {
   // ---- individual lines ---------------------------------------------------
   const productIds = cart.items.map((item) => item.product);
-  const products = await Product.find({ _id: { $in: productIds } }).lean();
+  const products = await db().Product.find({ _id: { $in: productIds } }).lean();
   const byId = new Map(products.map((product) => [product._id.toString(), product]));
 
   const items = [];
@@ -283,11 +284,11 @@ async function priceCart(cart, user, { deliveryCode = 'ground' } = {}) {
   // `deliveryMethod` against a fixed enum, but the money is an operator's to
   // change without a deploy. `shippingFor` falls back to the seeded bands, so
   // this is a rate lookup rather than a new source of truth.
-  const settings = await Settings.load();
+  const settings = await db().Settings.load();
   const shippingBands = settings.financial?.shippingMethods?.length
     ? settings.financial.shippingMethods
     : DEFAULT_SHIPPING_METHODS;
-  const method = Settings.shippingFor(settings, deliveryCode);
+  const method = db().Settings.shippingFor(settings, deliveryCode);
   const afterBundles = subtotal - bundleDiscount;
   const baseShipping = method.freeOver && afterBundles >= method.freeOver ? 0 : method.cost;
 
@@ -405,11 +406,11 @@ async function priceCart(cart, user, { deliveryCode = 'ground' } = {}) {
 async function expandBundles(cart, _user) {
   if (!cart.bundles?.length) return [];
 
-  const offers = await Offer.find({ _id: { $in: cart.bundles.map((b) => b.offer) } }).lean();
+  const offers = await db().Offer.find({ _id: { $in: cart.bundles.map((b) => b.offer) } }).lean();
   const byId = new Map(offers.map((offer) => [offer._id.toString(), offer]));
 
   const skus = offers.flatMap((offer) => (offer.items ?? []).map((item) => item.sku));
-  const products = await Product.find({ sku: { $in: skus } }).lean();
+  const products = await db().Product.find({ sku: { $in: skus } }).lean();
   const bySku = new Map(products.map((product) => [product.sku, product]));
 
   const now = new Date();

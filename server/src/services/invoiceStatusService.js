@@ -7,10 +7,11 @@ import InvoiceStatusRule, {
   triggerDate,
   ensureBuiltInRules,
 } from '../models/InvoiceStatusRule.js';
-import Invoice from '../models/Invoice.js';
-import User from '../models/User.js';
-import MessageLog from '../models/MessageLog.js';
-import Settings from '../models/Settings.js';
+import { db } from '../db/models.js';
+import '../models/Invoice.js';
+import '../models/User.js';
+import '../models/MessageLog.js';
+import '../models/Settings.js';
 import ApiError from '../utils/ApiError.js';
 import { sendMail, mailerConfigured } from './mailer.js';
 import { channelStatus } from './marketingService.js';
@@ -154,7 +155,7 @@ async function candidatesFor(rule, now) {
   const statusFilter =
     rule.trigger === 'invoice_paid' ? { status: 'paid' } : { status: { $ne: 'paid' } };
 
-  const invoices = await Invoice.find(statusFilter).lean();
+  const invoices = await db().Invoice.find(statusFilter).lean();
   const due = [];
 
   for (const invoice of invoices) {
@@ -195,7 +196,7 @@ async function run({ dryRun = false, now = new Date() } = {}) {
   // returns `disabled` with the reason rather than an empty result set: "the
   // run did nothing" and "the run is switched off" are indistinguishable
   // otherwise, and the second has an obvious fix the first does not.
-  const settings = await Settings.load();
+  const settings = await db().Settings.load();
   if (settings?.communications?.invoiceReminders !== true) {
     return {
       dryRun,
@@ -238,7 +239,7 @@ async function run({ dryRun = false, now = new Date() } = {}) {
         continue;
       }
 
-      const user = await User.findById(invoice.user).lean();
+      const user = await db().User.findById(invoice.user).lean();
 
       const outstanding = Math.max((invoice.amount ?? 0) - (invoice.amountPaid ?? 0), 0);
       const context = { invoice, user, money: formatCents(outstanding) };
@@ -291,7 +292,7 @@ async function run({ dryRun = false, now = new Date() } = {}) {
 
       // Every attempt is in the message history, so the invoice's contact
       // record is complete whether or not it went out.
-      await MessageLog.create({
+      await db().MessageLog.create({
         channel: rule.channel,
         direction: 'outbound',
         user: invoice.user,

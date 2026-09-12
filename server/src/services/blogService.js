@@ -1,4 +1,5 @@
-import BlogPost from '../models/BlogPost.js';
+import { db } from '../db/models.js';
+import '../models/BlogPost.js';
 import ApiError from '../utils/ApiError.js';
 import { likeRegex } from '../utils/regex.js';
 
@@ -63,13 +64,13 @@ async function listPublished({ category, tag, q, page = 1, limit = PAGE_SIZE } =
   const pageSize = Math.min(24, Number(limit) || PAGE_SIZE);
 
   const [posts, total, categories, featured] = await Promise.all([
-    BlogPost.find(query)
+    db().BlogPost.find(query)
       .sort({ publishedAt: -1 })
       .skip((pageNumber - 1) * pageSize)
       .limit(pageSize)
       .lean(),
-    BlogPost.countDocuments(query),
-    BlogPost.aggregate([
+    db().BlogPost.countDocuments(query),
+    db().BlogPost.aggregate([
       { $match: { status: 'published', publishedAt: { $lte: new Date() } } },
       { $group: { _id: '$category', count: { $sum: 1 } } },
       { $sort: { _id: 1 } },
@@ -77,7 +78,7 @@ async function listPublished({ category, tag, q, page = 1, limit = PAGE_SIZE } =
     // The lead card is only meaningful on an unfiltered first page; anywhere
     // else it would repeat a post the grid below is already showing.
     pageNumber === 1 && !category && !tag && !q
-      ? BlogPost.findOne({ status: 'published', isFeatured: true, publishedAt: { $lte: new Date() } })
+      ? db().BlogPost.findOne({ status: 'published', isFeatured: true, publishedAt: { $lte: new Date() } })
           .sort({ publishedAt: -1 })
           .lean()
       : null,
@@ -94,14 +95,14 @@ async function listPublished({ category, tag, q, page = 1, limit = PAGE_SIZE } =
 }
 
 async function getBySlug(slug) {
-  const post = await BlogPost.findOne({
+  const post = await db().BlogPost.findOne({
     slug,
     status: 'published',
     publishedAt: { $lte: new Date() },
   }).lean();
   if (!post) throw ApiError.notFound('That article does not exist.', 'POST_NOT_FOUND');
 
-  const related = await BlogPost.find({
+  const related = await db().BlogPost.find({
     _id: { $ne: post._id },
     status: 'published',
     publishedAt: { $lte: new Date() },
@@ -125,8 +126,8 @@ async function listAll({ status, q } = {}) {
   }
 
   const [posts, counts] = await Promise.all([
-    BlogPost.find(query).sort({ updatedAt: -1 }).limit(200).lean(),
-    BlogPost.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
+    db().BlogPost.find(query).sort({ updatedAt: -1 }).limit(200).lean(),
+    db().BlogPost.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
   ]);
 
   return {
@@ -136,7 +137,7 @@ async function listAll({ status, q } = {}) {
 }
 
 async function getById(id) {
-  const post = await BlogPost.findById(id).lean();
+  const post = await db().BlogPost.findById(id).lean();
   if (!post) throw ApiError.notFound('Post not found.', 'POST_NOT_FOUND');
   return serializeDetail(post);
 }
@@ -146,7 +147,7 @@ async function uniqueSlug(title, excludeId = null) {
   const base = slugify(title) || 'post';
   for (let suffix = 0; suffix < 50; suffix += 1) {
     const candidate = suffix === 0 ? base : `${base}-${suffix + 1}`;
-    const clash = await BlogPost.findOne({
+    const clash = await db().BlogPost.findOne({
       slug: candidate,
       ...(excludeId ? { _id: { $ne: excludeId } } : {}),
     })
@@ -183,7 +184,7 @@ function resolvePublishedAt(data, existing) {
 }
 
 async function createPost(data) {
-  const post = await BlogPost.create({
+  const post = await db().BlogPost.create({
     ...shapeWrite(data),
     slug: await uniqueSlug(data.title),
     publishedAt: resolvePublishedAt(data, null),
@@ -192,7 +193,7 @@ async function createPost(data) {
 }
 
 async function updatePost(id, data) {
-  const post = await BlogPost.findById(id);
+  const post = await db().BlogPost.findById(id);
   if (!post) throw ApiError.notFound('Post not found.', 'POST_NOT_FOUND');
 
   const renamed = post.title !== data.title;
@@ -208,7 +209,7 @@ async function updatePost(id, data) {
 }
 
 async function deletePost(id) {
-  const post = await BlogPost.findByIdAndDelete(id).lean();
+  const post = await db().BlogPost.findByIdAndDelete(id).lean();
   if (!post) throw ApiError.notFound('Post not found.', 'POST_NOT_FOUND');
   return serialize(post);
 }

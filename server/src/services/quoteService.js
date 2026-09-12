@@ -1,12 +1,9 @@
 import mongoose from 'mongoose';
 import { displayNameOf } from '../utils/displayName.js';
 
-import Ticket from '../models/Ticket.js';
+import '../models/Ticket.js';
 import { nextTicketNumber, priceTicket } from './ticketService.js';
-import Quote from '../models/Quote.js';
-import Product from '../models/Product.js';
-import User from '../models/User.js';
-import Settings from '../models/Settings.js';
+import { db } from '../db/models.js';
 import ApiError from '../utils/ApiError.js';
 import { likeRegex } from '../utils/regex.js';
 import notificationService from './notificationService.js';
@@ -40,7 +37,7 @@ import { formatDate } from '../../../shared/dates.js';
 async function nextQuoteNumber() {
   const year = new Date().getFullYear();
   const prefix = `QT-${year}-`;
-  const last = await Quote.findOne({ quoteNumber: new RegExp(`^${prefix}`) })
+  const last = await db().Quote.findOne({ quoteNumber: new RegExp(`^${prefix}`) })
     .sort({ quoteNumber: -1 })
     .select('quoteNumber')
     .lean();
@@ -224,7 +221,7 @@ async function listQuotes({ q, status, user, from, to, business } = {}) {
     const rx = likeRegex(q);
     // `contactName` as well as `businessName`: an account is identified by the
     // person, so searching only the company missed every private customer.
-    const matches = await User.find({
+    const matches = await db().User.find({
       $or: [{ businessName: rx }, { contactName: rx }, { email: rx }],
     })
       .select('_id')
@@ -235,7 +232,7 @@ async function listQuotes({ q, status, user, from, to, business } = {}) {
     query.$or = [{ quoteNumber: rx }, { user: { $in: matches.map((row) => row._id) } }];
   }
 
-  const quotes = await Quote.find(query)
+  const quotes = await db().Quote.find(query)
     .sort({ createdAt: -1 })
     .limit(200)
     .populate('user', 'businessName contactName email')
@@ -245,8 +242,8 @@ async function listQuotes({ q, status, user, from, to, business } = {}) {
   // Counts come from the whole collection, not the filtered set — a pill
   // reading "Expired 0" because you are filtered to Accepted is useless.
   const [statusRows, expiredCount] = await Promise.all([
-    Quote.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
-    Quote.countDocuments({ status: { $in: ['draft', 'sent'] }, validUntil: { $lt: now } }),
+    db().Quote.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
+    db().Quote.countDocuments({ status: { $in: ['draft', 'sent'] }, validUntil: { $lt: now } }),
   ]);
 
   const counts = Object.fromEntries(statusRows.map((row) => [row._id, row.count]));
@@ -271,7 +268,7 @@ async function listQuotes({ q, status, user, from, to, business } = {}) {
 
 async function getQuote(id) {
   const query = isObjectId(id) ? { _id: id } : { quoteNumber: String(id) };
-  const quote = await Quote.findOne(query)
+  const quote = await db().Quote.findOne(query)
     .populate('user', 'businessName contactName email phone addresses terms')
     .populate('convertedOrder', 'orderNumber')
     // Two hops, because the chain is three long: this quote's ticket, and that
@@ -304,7 +301,7 @@ async function priceDrift(quote) {
   const ids = (quote.items ?? []).map((item) => item.product).filter(Boolean);
   if (!ids.length) return { lines: [], hasDrift: false, quotedTotal: 0, liveTotal: 0 };
 
-  const products = await Product.find({ _id: { $in: ids } })
+  const products = await db().Product.find({ _id: { $in: ids } })
     .select('price cost stock isActive name sku')
     .lean();
   const byId = new Map(products.map((product) => [product._id.toString(), product]));
@@ -347,7 +344,7 @@ async function priceDrift(quote) {
 
 async function buildItems(rawItems) {
   const ids = rawItems.map((item) => item.product).filter(isObjectId);
-  const products = await Product.find({ _id: { $in: ids } })
+  const products = await db().Product.find({ _id: { $in: ids } })
     .select('sku name price cost')
     .lean();
   const byId = new Map(products.map((product) => [product._id.toString(), product]));
@@ -376,13 +373,13 @@ async function buildItems(rawItems) {
 }
 
 async function createQuote(body, createdBy) {
-  const user = await User.findById(body.user).lean();
+  const user = await db().User.findById(body.user).lean();
   if (!user) throw ApiError.badRequest('Pick a client.', 'USER_NOT_FOUND');
 
-  const settings = await Settings.load();
-  const rate = Settings.rateFor(settings, provinceFor(user));
+  const settings = await db().Settings.load();
+  const rate = db().Settings.rateFor(settings, provinceFor(user));
 
-  const quote = new Quote({
+  const quote = new (db().Quote)({
     quoteNumber: await nextQuoteNumber(),
     user: user._id,
     source: 'admin',
@@ -404,7 +401,7 @@ async function createQuote(body, createdBy) {
 /** Edits stop once a quote has been accepted — the client agreed to a number. */
 async function updateQuote(id, body) {
   const query = isObjectId(id) ? { _id: id } : { quoteNumber: String(id) };
-  const quote = await Quote.findOne(query);
+  const quote = await db().Quote.findOne(query);
   if (!quote) throw ApiError.notFound('Quote not found.', 'QUOTE_NOT_FOUND');
 
   if (!['draft', 'sent'].includes(quote.status)) {
@@ -414,11 +411,11 @@ async function updateQuote(id, body) {
     );
   }
 
-  const user = await User.findById(body.user ?? quote.user).lean();
+  const user = await db().User.findById(body.user ?? quote.user).lean();
   if (!user) throw ApiError.badRequest('Pick a client.', 'USER_NOT_FOUND');
 
-  const settings = await Settings.load();
-  const rate = Settings.rateFor(settings, provinceFor(user));
+  const settings = await db().Settings.load();
+  const rate = db().Settings.rateFor(settings, provinceFor(user));
 
   quote.user = user._id;
   quote.items = await buildItems(body.items);
@@ -450,7 +447,7 @@ const ALLOWED_TRANSITIONS = {
 
 async function setQuoteStatus(id, { status, note }) {
   const query = isObjectId(id) ? { _id: id } : { quoteNumber: String(id) };
-  const quote = await Quote.findOne(query);
+  const quote = await db().Quote.findOne(query);
   if (!quote) throw ApiError.notFound('Quote not found.', 'QUOTE_NOT_FOUND');
 
   const allowed = ALLOWED_TRANSITIONS[quote.status] ?? [];
@@ -519,7 +516,7 @@ function formatCad(cents) {
  */
 async function convertQuote(id, { acknowledgeDrift = false, deliveryCode } = {}, adminId) {
   const query = isObjectId(id) ? { _id: id } : { quoteNumber: String(id) };
-  const quote = await Quote.findOne(query).populate('user');
+  const quote = await db().Quote.findOne(query).populate('user');
   if (!quote) throw ApiError.notFound('Quote not found.', 'QUOTE_NOT_FOUND');
 
   if (quote.status === 'converted') {
@@ -623,7 +620,7 @@ async function convertQuote(id, { acknowledgeDrift = false, deliveryCode } = {},
 
 async function deleteQuote(id) {
   const query = isObjectId(id) ? { _id: id } : { quoteNumber: String(id) };
-  const quote = await Quote.findOne(query);
+  const quote = await db().Quote.findOne(query);
   if (!quote) throw ApiError.notFound('Quote not found.', 'QUOTE_NOT_FOUND');
 
   if (quote.status === 'converted') {
@@ -658,7 +655,7 @@ async function deleteQuote(id) {
  */
 async function convertQuoteToTicket(id, { priority = 'normal', source = 'counter' } = {}, actor) {
   const query = isObjectId(id) ? { _id: id } : { quoteNumber: String(id) };
-  const quote = await Quote.findOne(query).populate('user');
+  const quote = await db().Quote.findOne(query).populate('user');
   if (!quote) throw ApiError.notFound('Quote not found.', 'QUOTE_NOT_FOUND');
 
   if (quote.convertedTicket) {
@@ -697,7 +694,7 @@ async function convertQuoteToTicket(id, { priority = 'normal', source = 'counter
   const devicesForPricing = [{ services: [], parts }];
   const priced = priceTicket(devicesForPricing, { taxRate });
 
-  const ticket = await Ticket.create({
+  const ticket = await db().Ticket.create({
     ticketNumber: await nextTicketNumber(),
     // Both ends of the edge, set together. `quote.convertedTicket` below is
     // the same link forwards; a ticket that could not name its own quote left

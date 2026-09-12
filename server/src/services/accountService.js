@@ -1,8 +1,9 @@
-import Order from '../models/Order.js';
-import Invoice from '../models/Invoice.js';
-import Product from '../models/Product.js';
-import Cart from '../models/Cart.js';
-import User from '../models/User.js';
+import { db } from '../db/models.js';
+import '../models/Order.js';
+import '../models/Invoice.js';
+import '../models/Product.js';
+import '../models/Cart.js';
+import '../models/User.js';
 import ApiError from '../utils/ApiError.js';
 import storeCredit from './storeCreditService.js';
 import payment from './payment.js';
@@ -20,13 +21,13 @@ import * as referralService from './referralService.js';
  */
 async function summary(user) {
   const [recentOrders, invoices, reorderRows, savedCarts] = await Promise.all([
-    Order.find({ user: user._id }).sort({ createdAt: -1 }).limit(5).lean(),
+    db().Order.find({ user: user._id }).sort({ createdAt: -1 }).limit(5).lean(),
 
-    Invoice.find({ user: user._id }).sort({ issuedAt: -1 }).lean(),
+    db().Invoice.find({ user: user._id }).sort({ issuedAt: -1 }).lean(),
 
     // Most-ordered SKUs across this account's history — the "quick reorder"
     // shortcut is only useful if it reflects what they actually buy.
-    Order.aggregate([
+    db().Order.aggregate([
       { $match: { user: user._id } },
       { $unwind: '$items' },
       {
@@ -41,10 +42,10 @@ async function summary(user) {
       { $limit: 6 },
     ]),
 
-    Cart.find({ user: user._id, savedForLater: true }).sort({ createdAt: -1 }).limit(5).lean(),
+    db().Cart.find({ user: user._id, savedForLater: true }).sort({ createdAt: -1 }).limit(5).lean(),
   ]);
 
-  const reorderProducts = await Product.find({
+  const reorderProducts = await db().Product.find({
     _id: { $in: reorderRows.map((row) => row._id).filter(Boolean) },
     isActive: true,
   }).lean();
@@ -84,9 +85,9 @@ async function summary(user) {
     },
 
     stats: {
-      orderCount: await Order.countDocuments({ user: user._id }),
+      orderCount: await db().Order.countDocuments({ user: user._id }),
       lifetimeSpend: invoices.reduce((sum, invoice) => sum + invoice.amount, 0),
-      openOrders: await Order.countDocuments({
+      openOrders: await db().Order.countDocuments({
         user: user._id,
         status: { $in: ['placed', 'processing', 'shipped', 'out_for_delivery'] },
       }),
@@ -226,7 +227,7 @@ async function removePaymentMethod(user, methodId) {
 }
 
 async function changePassword(user, { currentPassword, newPassword }) {
-  const withHash = await User.findById(user._id).select('+passwordHash');
+  const withHash = await db().User.findById(user._id).select('+passwordHash');
   const ok = await withHash.verifyPassword(currentPassword);
   if (!ok) {
     throw ApiError.badRequest('That is not your current password.', 'INVALID_PASSWORD', {
@@ -276,7 +277,7 @@ function serializeInvoice(invoice) {
  * the same split.
  */
 async function listInvoices(userId) {
-  const invoices = await Invoice.find({ user: userId })
+  const invoices = await db().Invoice.find({ user: userId })
     .sort({ issuedAt: -1 })
     .populate('order', 'orderNumber')
     .lean();
@@ -307,7 +308,7 @@ async function listInvoices(userId) {
 }
 
 async function getInvoice(userId, number) {
-  const invoice = await Invoice.findOne({ number, user: userId })
+  const invoice = await db().Invoice.findOne({ number, user: userId })
     .populate('order')
     .lean();
   if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');
@@ -323,7 +324,7 @@ async function getInvoice(userId, number) {
  * order was placed, rendered fresh so a later payment shows on it.
  */
 async function invoiceDocument(user, number, { nonce, origin } = {}) {
-  const invoice = await Invoice.findOne({ number, user: user._id }).populate('order').lean();
+  const invoice = await db().Invoice.findOne({ number, user: user._id }).populate('order').lean();
   if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');
 
   return renderInvoiceHtml({ invoice, order: invoice.order, user, nonce, origin });
@@ -344,7 +345,7 @@ async function invoiceDocument(user, number, { nonce, origin } = {}) {
  * invoice shows it as a payment.
  */
 async function lineOfCreditActivity(user) {
-  const invoices = await Invoice.find({ user: user._id, terms: { $ne: 'prepaid' } })
+  const invoices = await db().Invoice.find({ user: user._id, terms: { $ne: 'prepaid' } })
     .sort({ issuedAt: -1 })
     .populate('order', 'orderNumber')
     .lean();
@@ -546,7 +547,7 @@ async function payInvoice(user, number, { useStoreCredit, poNumber } = {}) {
 /**
  * Pays the whole line of credit off in one action.
  *
- * `User.balance` is a single rolled-up number with nothing linking it to the
+ * `db().User.balance` is a single rolled-up number with nothing linking it to the
  * records that produced it, so "pay the balance" means settling the amounts
  * behind it: every `due` record on terms, **oldest first**, which is the order
  * a wholesale account expects and the order that clears the oldest ageing first.
@@ -556,7 +557,7 @@ async function payInvoice(user, number, { useStoreCredit, poNumber } = {}) {
  * their card statement, not seven.
  */
 async function payOffCredit(user, { useStoreCredit, poNumber } = {}) {
-  const invoices = await Invoice.find({
+  const invoices = await db().Invoice.find({
     user: user._id,
     kind: 'due',
     terms: { $ne: 'prepaid' },

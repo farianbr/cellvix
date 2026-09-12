@@ -1,4 +1,5 @@
-import AuditLog, { diff } from '../models/AuditLog.js';
+import { diff } from '../models/AuditLog.js';
+import { db } from '../db/models.js';
 import { likeRegex } from '../utils/regex.js';
 
 /**
@@ -21,10 +22,39 @@ import { likeRegex } from '../utils/regex.js';
  *
  * Denormalised onto the row: an audit entry must still read correctly after the
  * account is renamed or deleted, so it cannot depend on a join that can vanish.
+ *
+ * **A platform operator is checked first, and is never recorded as staff.**
+ * `req.impersonation` is set only by an impersonation token (SAAS_PLATFORM
+ * §4.5), and when it is present the acting party is a `SuperAdmin` from another
+ * collection entirely — not the business's own staff. Recording it as `user`
+ * would tell the owner one of their own people did it, which is the single
+ * thing an impersonation log exists to prevent. `actorRole` says so in words
+ * too, because the activity screen shows that column and a blank there reads as
+ * an ordinary row.
+ *
+ * This is the only place any of the three populations is turned into an audit
+ * actor, which is why the check lives here rather than at the call sites: there
+ * are dozens of those, and one that forgot would produce a row that is quietly
+ * wrong about who was present.
  */
 function actorFrom(req) {
+  const impersonation = req?.impersonation;
+  if (impersonation?.superAdmin) {
+    const operator = impersonation.superAdmin;
+    return {
+      actorKind: 'superadmin',
+      actor: operator._id ?? null,
+      actorEmail: operator.email ?? '',
+      actorName: operator.name ?? '',
+      actorRole: 'Platform support',
+      ip: req?.ip ?? '',
+      userAgent: (req?.get?.('user-agent') ?? '').slice(0, 300),
+    };
+  }
+
   const user = req?.user;
   return {
+    actorKind: 'user',
     actor: user?._id ?? null,
     actorEmail: user?.email ?? '',
     actorName: user?.contactName ?? user?.businessName ?? '',
@@ -50,7 +80,7 @@ async function record({
   description = '',
 }) {
   try {
-    await AuditLog.create({
+    await db().AuditLog.create({
       kind,
       action,
       entity: { kind: entity.kind, id: String(entity.id ?? ''), label: entity.label ?? '' },
@@ -101,7 +131,7 @@ async function recordSecurity({ req, action, entity, description, subject = null
   const base = actorFrom(req);
 
   try {
-    await AuditLog.create({
+    await db().AuditLog.create({
       kind: 'security',
       action,
       entity: entity ?? { kind: 'session', id: '' },
@@ -113,6 +143,10 @@ async function recordSecurity({ req, action, entity, description, subject = null
       ...(base.actor || !subject
         ? {}
         : {
+            // A subject only ever fills in for an unauthenticated event, and
+            // those are always a `User` signing in — so `actorKind` goes back
+            // to `user` rather than inheriting whatever `base` carried.
+            actorKind: 'user',
             actor: subject._id ?? null,
             actorEmail: subject.email ?? '',
             actorName: subject.contactName ?? subject.businessName ?? '',
@@ -154,12 +188,12 @@ async function list({ kind = 'activity', q, action, entity, page = 1, limit = 50
   const current = Math.max(Number(page) || 1, 1);
 
   const [rows, total] = await Promise.all([
-    AuditLog.find(filter)
+    db().AuditLog.find(filter)
       .sort({ createdAt: -1 })
       .skip((current - 1) * perPage)
       .limit(perPage)
       .lean(),
-    AuditLog.countDocuments(filter),
+    db().AuditLog.countDocuments(filter),
   ]);
 
   return {
@@ -167,6 +201,9 @@ async function list({ kind = 'activity', q, action, entity, page = 1, limit = 50
       id: row._id.toString(),
       kind: row.kind,
       action: row.action,
+      // Rows written before `actorKind` existed carry none; they were all staff
+      // actions, because nothing else could write one at the time.
+      actorKind: row.actorKind ?? 'user',
       actor: row.actor ? row.actor.toString() : null,
       actorEmail: row.actorEmail,
       actorName: row.actorName,
@@ -183,7 +220,7 @@ async function list({ kind = 'activity', q, action, entity, page = 1, limit = 50
     pages: Math.max(Math.ceil(total / perPage), 1),
     // The action filter's options, from what is actually in the log rather than
     // from a constant that drifts as new actions are added.
-    actions: await AuditLog.distinct('action', { kind }),
+    actions: await db().AuditLog.distinct('action', { kind }),
   };
 }
 

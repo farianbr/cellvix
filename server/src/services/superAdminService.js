@@ -1,3 +1,5 @@
+import crypto from 'node:crypto';
+
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -5,8 +7,11 @@ import SuperAdmin from '../models/SuperAdmin.js';
 import Tenant from '../models/Tenant.js';
 import Plan from '../models/Plan.js';
 import Business from '../models/Business.js';
+import User from '../models/User.js';
 import ApiError from '../utils/ApiError.js';
 import env from '../config/env.js';
+import { hashResetToken } from './authService.js';
+import { sendPasswordResetEmail } from './welcomeMail.js';
 import { FEATURES, resolveFeatures } from '../../../shared/schemas/features.js';
 
 /**
@@ -35,6 +40,16 @@ const SUPERADMIN_COOKIE = `${env.COOKIE_NAME}_superadmin`;
 /** Deliberately shorter than the 30-day supplier session: this account can
  *  reconfigure every tenant, so a forgotten browser is a bigger problem. */
 const SESSION_DAYS = 7;
+
+/**
+ * How long an owner's invitation stays usable.
+ *
+ * Seven days rather than the hour a password reset gets. A reset is somebody
+ * standing at the screen having just clicked the link; an invitation is sent to
+ * a person who may not be at work today, and one that expires over a weekend
+ * turns every new tenant into a support request.
+ */
+const INVITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 const SIGN_IN_FAILED = [
   'That email and password do not match a super-admin account.',
@@ -110,9 +125,53 @@ function slugify(value) {
 async function listTenants() {
   const [tenants, businesses, plans] = await Promise.all([
     Tenant.find({}).sort({ name: 1 }).lean(),
-    Business.find({}).select('name code businessType status tenant isDefault').lean(),
+    Business.find({})
+      .select('name code businessType status tenant isDefault deletedAt purgeAfter')
+      .lean(),
     Plan.find({}).select('name slug').lean(),
   ]);
+
+  /**
+   * Each business's administrators — names and addresses only.
+   *
+   * **This is the one place the console reads a `User`, and the limit is
+   * deliberate.** It answers "can anybody actually sign in to this tenant",
+   * which is a question about provisioning rather than about their records: an
+   * account nobody can reach is a support call waiting to happen, and the
+   * console is where it gets fixed. It returns no customer, no order and no
+   * figure — `role: 'admin'` is the whole filter, so a tenant's *customers*
+   * remain as invisible here as they were before.
+   */
+  /**
+   * Owners belong to the **tenant**, not to a business.
+   *
+   * This used to filter `business: { $in: … }` and read from each business's
+   * own database — which was right while an admin lived beside the shop's
+   * records, and became wrong the moment admins moved to the control plane so
+   * one login could reach every business a tenant owns. The console then showed
+   * "No owner — nobody can sign in" on a tenant whose owner was signed in at the
+   * time, because it was looking in the database the account had left.
+   */
+  const admins = await User.find({
+    role: 'admin',
+    tenant: { $in: tenants.map((row) => row._id) },
+  })
+    .select('contactName email tenant lastLoginAt')
+    .lean();
+
+  const adminsByTenant = new Map();
+  for (const admin of admins) {
+    const key = String(admin.tenant);
+    if (!adminsByTenant.has(key)) adminsByTenant.set(key, []);
+    adminsByTenant.get(key).push({
+      id: admin._id.toString(),
+      contactName: admin.contactName ?? '',
+      email: admin.email,
+      // Whether they have ever actually got in. An invitation that was never
+      // opened looks exactly like a working account until somebody asks.
+      lastLoginAt: admin.lastLoginAt ?? null,
+    });
+  }
 
   const planName = new Map(plans.map((plan) => [String(plan._id), plan.name]));
   const byTenant = new Map();
@@ -126,12 +185,22 @@ async function listTenants() {
       businessType: business.businessType,
       status: business.status,
       isDefault: Boolean(business.isDefault),
+      deletedAt: business.deletedAt ?? null,
+      purgeAfter: business.purgeAfter ?? null,
+      // Whether it can still be brought back, rather than making the console
+      // re-derive that from two dates and reach a different answer.
+      restorable: Boolean(
+        business.deletedAt && business.purgeAfter && business.purgeAfter > new Date(),
+      ),
     });
   }
 
   return {
     tenants: tenants.map((tenant) => {
       const owned = byTenant.get(String(tenant._id)) ?? [];
+      // Businesses still holding a slot: live ones, plus deleted ones whose
+      // retention window has not closed.
+      const holding = owned.filter((business) => !business.deletedAt || business.restorable);
       return {
         id: tenant._id.toString(),
         name: tenant.name,
@@ -140,10 +209,20 @@ async function listTenants() {
         contactName: tenant.contactName ?? null,
         contactEmail: tenant.contactEmail ?? null,
         slots: tenant.slots ?? 0,
-        // What is left to spend. A tenant with no free slot cannot create a
-        // business, and the console should say so before the button is pressed.
-        slotsUsed: owned.length,
-        slotsFree: Math.max(0, (tenant.slots ?? 0) - owned.length),
+        /**
+         * What is left to spend. A tenant with no free slot cannot create a
+         * business, and the console should say so before the button is pressed.
+         *
+         * **Counted the same way `slotFilter` counts**, which is not simply
+         * `owned.length`: a business deleted inside its retention window still
+         * holds its slot, and one past that window no longer does. Deriving it
+         * differently here would let the console offer a button the server then
+         * refuses.
+         */
+        // The tenant's owner accounts. One login reaches every business it owns.
+        admins: adminsByTenant.get(String(tenant._id)) ?? [],
+        slotsUsed: holding.length,
+        slotsFree: Math.max(0, (tenant.slots ?? 0) - holding.length),
         plan: tenant.plan ? { id: String(tenant.plan), name: planName.get(String(tenant.plan)) ?? '—' } : null,
         businesses: owned,
         createdAt: tenant.createdAt,
@@ -220,7 +299,7 @@ async function setSlots(id, { slots }) {
   const tenant = await Tenant.findById(id);
   if (!tenant) throw ApiError.notFound('Tenant not found.', 'TENANT_NOT_FOUND');
 
-  const used = await Business.countDocuments({ tenant: tenant._id });
+  const used = await Business.countDocuments(slotFilter(tenant._id));
   if (slots < used) {
     throw ApiError.badRequest(
       `${tenant.name} already runs ${used} business(es) — grant at least that many slots, or remove a business first.`,
@@ -246,7 +325,7 @@ async function createBusiness(tenantId, body) {
   const tenant = await Tenant.findById(tenantId);
   if (!tenant) throw ApiError.notFound('Tenant not found.', 'TENANT_NOT_FOUND');
 
-  const used = await Business.countDocuments({ tenant: tenant._id });
+  const used = await Business.countDocuments(slotFilter(tenant._id));
   if (used >= (tenant.slots ?? 0)) {
     throw ApiError.badRequest(
       `${tenant.name} has used all ${tenant.slots ?? 0} of its slots. Grant another before adding a business.`,
@@ -306,6 +385,284 @@ async function assignBusiness(businessId, { tenant: tenantId }) {
   await business.save();
 
   return { business: business.toPublic() };
+}
+
+// ---- business lifecycle -----------------------------------------------------
+
+/**
+ * How long a deleted business holds its slot and keeps its records.
+ *
+ * Thirty days. Long enough that "we deleted the wrong one" is recoverable, short
+ * enough that a tenant is not paying for a slot they will never use again.
+ */
+const RETENTION_DAYS = 30;
+
+/**
+ * What counts against a tenant's slots.
+ *
+ * **A deleted business inside its retention window still counts.** That is the
+ * whole point of the window: the slot does not come back the moment somebody
+ * presses delete, or delete-and-recreate would be a way to run more businesses
+ * than were paid for. Everything that spends a slot counts through this one
+ * function so the arithmetic cannot disagree between the places that ask.
+ */
+function slotFilter(tenantId) {
+  return {
+    tenant: tenantId,
+    $or: [{ deletedAt: null }, { purgeAfter: { $gt: new Date() } }],
+  };
+}
+
+/**
+ * Suspend, reactivate, or put a business into maintenance.
+ *
+ * Distinct from the tenant's subscription status, which is about the *account*.
+ * This is about one shop — a tenant in good standing may still have a business
+ * that has stopped trading.
+ */
+async function setBusinessStatus(businessId, { status }) {
+  const business = await Business.findById(businessId);
+  if (!business) throw ApiError.notFound('Business not found.', 'BUSINESS_NOT_FOUND');
+
+  if (business.deletedAt) {
+    throw ApiError.badRequest(
+      'That business is deleted. Restore it before changing its status.',
+      'BUSINESS_DELETED',
+    );
+  }
+
+  business.status = status;
+  await business.save();
+  return { business: business.toPublic() };
+}
+
+/**
+ * Delete a business — soft, with a retention window.
+ *
+ * **The default business is refused**, for the reason `accessService` already
+ * gives: it is where an unattributed record lands, so the field cannot go empty.
+ */
+async function deleteBusiness(businessId) {
+  const business = await Business.findById(businessId);
+  if (!business) throw ApiError.notFound('Business not found.', 'BUSINESS_NOT_FOUND');
+
+  if (business.isDefault) {
+    throw ApiError.badRequest(
+      'The default business cannot be deleted. Make another business the default first.',
+      'BUSINESS_IS_DEFAULT',
+    );
+  }
+
+  if (business.deletedAt) return { business: business.toPublic(), alreadyDeleted: true };
+
+  business.deletedAt = new Date();
+  business.purgeAfter = new Date(Date.now() + RETENTION_DAYS * 24 * 60 * 60 * 1000);
+  // Deleted implies not trading. Set explicitly rather than inferred, so a
+  // restore has a status to come back to that is not a guess.
+  business.status = 'inactive';
+  await business.save();
+
+  return { business: business.toPublic(), retentionDays: RETENTION_DAYS };
+}
+
+/**
+ * Undo a deletion, while the window is still open.
+ *
+ * Refused once the window has closed rather than silently succeeding: past that
+ * point the slot has gone back and the records are purgeable, so "restored"
+ * would be a claim nothing can stand behind.
+ */
+async function restoreBusiness(businessId) {
+  const business = await Business.findById(businessId);
+  if (!business) throw ApiError.notFound('Business not found.', 'BUSINESS_NOT_FOUND');
+  if (!business.deletedAt) return { business: business.toPublic() };
+
+  if (business.purgeAfter && business.purgeAfter.getTime() < Date.now()) {
+    throw ApiError.badRequest(
+      'That business is past its retention window and can no longer be restored.',
+      'RETENTION_EXPIRED',
+    );
+  }
+
+  // The tenant must still have room for it — the slot was held, but a slot
+  // count can be lowered while a business sits deleted.
+  if (business.tenant) {
+    const tenant = await Tenant.findById(business.tenant).lean();
+    const used = await Business.countDocuments({
+      ...slotFilter(business.tenant),
+      _id: { $ne: business._id },
+    });
+    if (tenant && used >= (tenant.slots ?? 0)) {
+      throw ApiError.badRequest(
+        `${tenant.name} has no free slot to restore this into. Grant another first.`,
+        'NO_SLOTS_LEFT',
+      );
+    }
+  }
+
+  business.deletedAt = null;
+  business.purgeAfter = null;
+  await business.save();
+
+  return { business: business.toPublic() };
+}
+
+// ---- owner provisioning -----------------------------------------------------
+
+/**
+ * Create the tenant's own administrator (SAAS_PLATFORM §4.5, §6 phase 16).
+ *
+ * **Creating a tenant used to leave no way in.** The console could set up an
+ * account, grant it slots and configure its features, and then nobody could
+ * sign in to the thing that had been built — an owner had to be inserted by
+ * hand. This is that missing step.
+ *
+ * **No password is ever set here, and none is sent.** The operator supplies a
+ * name and an address; the owner receives a reset link and chooses their own
+ * secret. A console that minted passwords would mean every tenant's first
+ * credential existed in an operator's sent mail, and "the platform team knows
+ * how to get into your account" is not a thing a customer should have to take
+ * on trust.
+ *
+ * **An owner is a `User` with `role: 'admin'`, scoped to one business.** Not a
+ * new population: they are the tenant's administrator inside their own business
+ * exactly as Cellvix's admin is inside Cellvix, which is what makes the whole
+ * panel work for them without a second permission model.
+ */
+async function createOwner(tenantId, body, { origin } = {}) {
+  const tenant = await Tenant.findById(tenantId);
+  if (!tenant) throw ApiError.notFound('Tenant not found.', 'TENANT_NOT_FOUND');
+
+  const email = String(body.email ?? '').toLowerCase().trim();
+  const existing = await User.findOne({ email });
+  if (existing) {
+    throw ApiError.badRequest('That email already has an account.', 'EMAIL_IN_USE');
+  }
+
+  /**
+   * Which business the owner administers.
+   *
+   * The one named, or the tenant's only business when it has exactly one.
+   * **Refused when the tenant has several and none was named** rather than
+   * guessing: picking the first would scope somebody to a business nobody
+   * chose, and under per-business databases that is the difference between an
+   * owner who can see their records and one who cannot.
+   */
+  const owned = await Business.find({ tenant: tenant._id }).select('name').lean();
+  if (!owned.length) {
+    throw ApiError.badRequest(
+      `${tenant.name} has no business yet. Add one before creating its owner.`,
+      'TENANT_HAS_NO_BUSINESS',
+    );
+  }
+
+  const businessId = body.business || (owned.length === 1 ? String(owned[0]._id) : null);
+  if (!businessId) {
+    throw ApiError.badRequest(
+      `${tenant.name} runs ${owned.length} businesses — say which one this owner administers.`,
+      'BUSINESS_REQUIRED',
+    );
+  }
+
+  const business = owned.find((row) => String(row._id) === String(businessId));
+  if (!business) {
+    throw ApiError.badRequest(
+      'That business does not belong to this tenant.',
+      'BUSINESS_NOT_IN_TENANT',
+    );
+  }
+
+  const user = new User({
+    // The model requires it, and the tenant's name is the truthful answer:
+    // this person administers that account's business.
+    businessName: tenant.name,
+    contactName: body.contactName,
+    email,
+    phone: body.phone,
+    role: 'admin',
+    /**
+     * Scoped to the **tenant**, not to one of its businesses.
+     *
+     * An owner administers the account, so one login reaches every business the
+     * account owns and the header switcher moves between them. Pinning them to
+     * a single business — which this did — meant a tenant with two shops needed
+     * two owner accounts and could not switch at all.
+     */
+    tenant: tenant._id,
+    business: null,
+    // An owner does not enter the buyer approval queue, exactly as staff do not.
+    status: 'approved',
+  });
+
+  /**
+   * A random password nobody is told, immediately superseded by the reset link.
+   *
+   * `passwordHash` is required, so the account needs *something* — and a known
+   * placeholder would be a working credential on every tenant the platform ever
+   * creates. Random bytes that are never printed mean the reset link is the
+   * only way in, which is the intent.
+   */
+  await user.setPassword(crypto.randomBytes(32).toString('base64url'));
+
+  const token = crypto.randomBytes(32).toString('base64url');
+  user.resetTokenHash = hashResetToken(token);
+  // Deliberately longer than a normal reset: this is an invitation that may sit
+  // in an inbox over a weekend, not somebody who just clicked "forgot".
+  user.resetTokenAt = new Date(Date.now() + INVITE_TTL_MS);
+  await user.save();
+
+  await Business.updateOne({ _id: businessId }, { $addToSet: { staff: user._id } });
+
+  /**
+   * Mail failure does not fail the account.
+   *
+   * The owner exists either way, and an operator who sees an error after the
+   * user was created cannot tell whether to try again — which is how duplicate
+   * accounts get made. The response says whether the invitation went out, so
+   * the console can offer to resend rather than to re-create.
+   */
+  let invited = true;
+  try {
+    await sendPasswordResetEmail({
+      user,
+      token,
+      origin: origin || env.publicOrigin,
+      expiresMinutes: Math.round(INVITE_TTL_MS / 60000),
+    });
+  } catch (error) {
+    invited = false;
+    console.error(`  Owner invite: could not email ${email} — ${error.message}`);
+  }
+
+  return {
+    owner: {
+      id: user._id.toString(),
+      contactName: user.contactName,
+      email: user.email,
+      business: { id: businessId, name: business.name },
+    },
+    invited,
+  };
+}
+
+/** Send a fresh invitation, for one that expired or never arrived. */
+async function resendOwnerInvite(userId, { origin } = {}) {
+  const user = await User.findById(userId);
+  if (!user) throw ApiError.notFound('No such account.', 'USER_NOT_FOUND');
+
+  const token = crypto.randomBytes(32).toString('base64url');
+  user.resetTokenHash = hashResetToken(token);
+  user.resetTokenAt = new Date(Date.now() + INVITE_TTL_MS);
+  await user.save();
+
+  await sendPasswordResetEmail({
+    user,
+    token,
+    origin: origin || env.publicOrigin,
+    expiresMinutes: Math.round(INVITE_TTL_MS / 60000),
+  });
+
+  return { ok: true };
 }
 
 // ---- features ---------------------------------------------------------------
@@ -435,18 +792,123 @@ async function createPlan(body) {
   return { plan: plan.toPublic() };
 }
 
+/**
+ * Edit a plan.
+ *
+ * **Changing a plan changes what its subscribers get**, immediately and without
+ * a migration — `resolveFeatures` reads `featureDefaults` on every request. That
+ * is the intended behaviour and the reason the console shows a subscriber count
+ * before the save: raising a price is a billing conversation, but switching a
+ * feature default off is something several tenants notice at once.
+ */
+async function updatePlan(id, body) {
+  const plan = await Plan.findById(id);
+  if (!plan) throw ApiError.notFound('Plan not found.', 'PLAN_NOT_FOUND');
+
+  if (body.slug && slugify(body.slug) !== plan.slug) {
+    const slug = slugify(body.slug);
+    const clash = await Plan.findOne({ slug, _id: { $ne: plan._id } }).lean();
+    if (clash) throw ApiError.badRequest(`A plan already uses "${slug}".`, 'PLAN_SLUG_TAKEN');
+    plan.slug = slug;
+  }
+
+  for (const field of ['name', 'description']) {
+    if (body[field] !== undefined) plan[field] = body[field];
+  }
+  if (body.priceCents !== undefined) plan.priceCents = body.priceCents;
+  if (body.includedSlots !== undefined) plan.includedSlots = body.includedSlots;
+  if (body.isActive !== undefined) plan.isActive = body.isActive;
+
+  await plan.save();
+  return { plan: plan.toPublic() };
+}
+
+/**
+ * Set or clear one of a plan's feature defaults.
+ *
+ * `null` clears the key so it falls back to the business type's default — a
+ * different act from switching it off, exactly as it is on a business override.
+ *
+ * A `locked` key is refused rather than ignored: `resolveFeatures` forces those
+ * on whatever any layer says (§3.2 rule 4), so storing one would be a setting
+ * that does nothing, and a console appearing to accept a change it did not make
+ * is worse than one that says no.
+ */
+async function setPlanFeature(id, { key, enabled }) {
+  const plan = await Plan.findById(id);
+  if (!plan) throw ApiError.notFound('Plan not found.', 'PLAN_NOT_FOUND');
+
+  const feature = FEATURES.find((row) => row.key === key);
+  if (!feature) throw ApiError.badRequest('No such feature.', 'FEATURE_UNKNOWN');
+  if (feature.locked) {
+    throw ApiError.badRequest(
+      `${feature.label} runs for every business and cannot be switched off.`,
+      'FEATURE_LOCKED',
+    );
+  }
+
+  // Replaced wholesale and marked modified, for the reason `featureOverrides`
+  // is: Mongoose cannot see a mutation inside a `Mixed` value.
+  const next = { ...(plan.featureDefaults ?? {}) };
+  if (enabled === null) delete next[key];
+  else next[key] = Boolean(enabled);
+
+  plan.featureDefaults = next;
+  plan.markModified('featureDefaults');
+  await plan.save();
+
+  return { plan: plan.toPublic() };
+}
+
+/** Plans with what each one costs the platform to honour — its subscriber count. */
+async function listPlansWithUsage() {
+  const plans = await Plan.find({}).sort({ priceCents: 1, name: 1 });
+  const tenants = await Tenant.find({ plan: { $ne: null } }).select('plan').lean();
+
+  const counts = new Map();
+  for (const tenant of tenants) {
+    const key = String(tenant.plan);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+
+  return {
+    plans: plans.map((plan) => ({
+      ...plan.toPublic(),
+      // Shown before an edit is saved: a feature default switched off is
+      // something this many tenants notice at once.
+      tenantCount: counts.get(plan._id.toString()) ?? 0,
+    })),
+    features: FEATURES.map((feature) => ({
+      key: feature.key,
+      label: feature.label,
+      description: feature.description,
+      area: feature.area,
+      locked: Boolean(feature.locked),
+    })),
+  };
+}
+
 export {
   SUPERADMIN_COOKIE,
   assignBusiness,
   clearSuperAdminSession,
   createBusiness,
+  RETENTION_DAYS,
+  createOwner,
   createPlan,
   createTenant,
   getBusinessFeatures,
+  deleteBusiness,
   listPlans,
+  listPlansWithUsage,
   listTenants,
   login,
   logout,
+  resendOwnerInvite,
+  restoreBusiness,
+  setBusinessStatus,
+  setPlanFeature,
+  updatePlan,
   setBusinessFeature,
   setSlots,
   updateTenant,

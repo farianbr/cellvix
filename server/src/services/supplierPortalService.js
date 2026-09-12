@@ -2,7 +2,8 @@ import crypto from 'node:crypto';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-import Supplier from '../models/Supplier.js';
+import { db } from '../db/models.js';
+import '../models/Supplier.js';
 import ApiError from '../utils/ApiError.js';
 import env from '../config/env.js';
 import { generatePassword } from './welcomeMail.js';
@@ -95,7 +96,7 @@ function shapePortalSupplier(supplier) {
  * "saved, but the email did not send" rather than a lie in either direction.
  */
 async function invitePortal(supplierId) {
-  const supplier = await Supplier.findById(supplierId).select('+passwordHash');
+  const supplier = await db().Supplier.findById(supplierId).select('+passwordHash');
   if (!supplier) throw ApiError.notFound('Supplier not found.', 'SUPPLIER_NOT_FOUND');
 
   if (!supplier.email) {
@@ -138,7 +139,7 @@ async function invitePortal(supplierId) {
  * answers with the same line.
  */
 async function login({ email, password }, res) {
-  const supplier = await Supplier.findOne({
+  const supplier = await db().Supplier.findOne({
     email: String(email ?? '').toLowerCase().trim(),
   }).select('+passwordHash');
 
@@ -168,7 +169,7 @@ function logout(res) {
 
 /** A supplier changing their own password. Requires the current one. */
 async function changePassword(supplierId, { currentPassword, password }) {
-  const supplier = await Supplier.findById(supplierId).select('+passwordHash');
+  const supplier = await db().Supplier.findById(supplierId).select('+passwordHash');
   if (!supplier) throw ApiError.notFound('Supplier not found.', 'SUPPLIER_NOT_FOUND');
 
   const ok = await bcrypt.compare(String(currentPassword ?? ''), supplier.passwordHash ?? '');
@@ -189,7 +190,7 @@ async function changePassword(supplierId, { currentPassword, password }) {
  * businesses supply Cellvix.
  */
 async function requestReset(email) {
-  const supplier = await Supplier.findOne({
+  const supplier = await db().Supplier.findOne({
     email: String(email ?? '').toLowerCase().trim(),
     isActive: true,
   });
@@ -212,7 +213,7 @@ async function requestReset(email) {
 
 /** Redeem a reset token. Single-use: the token is cleared on success. */
 async function resetPassword({ token, password }) {
-  const supplier = await Supplier.findOne({ portalTokenHash: hashToken(String(token ?? '')) })
+  const supplier = await db().Supplier.findOne({ portalTokenHash: hashToken(String(token ?? '')) })
     .select('+portalTokenHash +portalTokenAt +passwordHash');
 
   if (!supplier || !supplier.portalTokenAt || supplier.portalTokenAt.getTime() < Date.now()) {

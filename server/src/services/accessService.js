@@ -1,6 +1,17 @@
 import mongoose from 'mongoose';
 
-import Role, { PERMISSION_AREAS, PERMISSION_LEVELS } from '../models/Role.js';
+import { PERMISSION_AREAS, PERMISSION_LEVELS } from '../models/Role.js';
+/**
+ * `Role` is a PER-BUSINESS collection, so it is read off the request's own
+ * connection rather than imported — each business holds its own roles, and a
+ * module-level import would bind them all to the default database.
+ *
+ * The rest of this file keeps its direct imports on purpose: `Business` is
+ * control-plane (the registry routes it there whatever connection is ambient),
+ * and `User` is resolved the same way. This service decides *which* database to
+ * open, so it cannot resolve everything through the one it is choosing.
+ */
+import { db } from '../db/models.js';
 import Business from '../models/Business.js';
 import User from '../models/User.js';
 import ApiError from '../utils/ApiError.js';
@@ -85,7 +96,7 @@ const BUILT_IN_ROLES = [
 async function ensureBuiltInRoles() {
   const created = [];
   for (const role of BUILT_IN_ROLES) {
-    const existing = await Role.findOne({ slug: role.slug });
+    const existing = await db().Role.findOne({ slug: role.slug });
     if (existing) {
       // The system role is the one exception: its map is not the operator's to
       // drift, so it is held at full access on every boot.
@@ -95,7 +106,7 @@ async function ensureBuiltInRoles() {
       }
       continue;
     }
-    created.push(await Role.create(role));
+    created.push(await db().Role.create(role));
   }
   return created;
 }
@@ -118,6 +129,10 @@ async function ensureDefaultBusiness() {
   return Business.create({
     name: 'Cellvix',
     code: await nextBusinessCode(),
+    // The subdomain this business answers on (SAAS_PLATFORM §4.2). Tenant #1's
+    // product business; the platform itself has no name yet (§0.1), so this
+    // names the business rather than the installation.
+    slug: 'cellvix',
     // Tenant #1's product business — the parts wholesaler. The type is what
     // decides which sections its panel renders (SAAS_PLATFORM §1.1), so it is
     // set explicitly here rather than left to the schema default.
@@ -143,7 +158,17 @@ async function nextBusinessCode() {
 }
 
 async function listBusinesses({ search, status } = {}) {
-  const filter = {};
+  /**
+   * A deleted business is gone from the tenant's point of view.
+   *
+   * Soft deletion keeps the records and the slot (SAAS_PLATFORM §4.3.1), but
+   * that is the platform's concern — the business's own staff should not find
+   * it still sitting in their switcher, and a header that offers a business
+   * nobody can trade in is worse than one that simply no longer lists it. The
+   * super-admin console reads `Business` directly and still sees it, which is
+   * where a restore is performed.
+   */
+  const filter = { deletedAt: null };
   if (status && status !== 'all') filter.status = status;
   if (search) {
     const rx = likeRegex(search);
@@ -261,7 +286,7 @@ async function deleteBusiness(id) {
 // ---- roles ------------------------------------------------------------------
 
 async function listRoles() {
-  const roles = await Role.find().sort({ isSystem: -1, isBuiltIn: -1, name: 1 });
+  const roles = await db().Role.find().sort({ isSystem: -1, isBuiltIn: -1, name: 1 });
 
   const counts = await User.aggregate([
     { $match: { role: 'staff', staffRole: { $ne: null } } },
@@ -302,16 +327,16 @@ async function createRole({ name, areas }) {
   const slug = slugify(name);
   if (!slug) throw ApiError.badRequest('Enter a role name.');
 
-  const clash = await Role.findOne({ slug });
+  const clash = await db().Role.findOne({ slug });
   if (clash) throw ApiError.badRequest('A role with that name already exists.', 'ROLE_EXISTS');
 
-  const role = await Role.create({ name: name.trim(), slug, areas: normaliseAreas(areas) });
+  const role = await db().Role.create({ name: name.trim(), slug, areas: normaliseAreas(areas) });
   return role.toPublic();
 }
 
 async function updateRole(id, { name, areas }) {
   if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('Role not found.');
-  const role = await Role.findById(id);
+  const role = await db().Role.findById(id);
   if (!role) throw ApiError.notFound('Role not found.');
 
   // The Admin role always wins and is never editable (§7.6). Enforced here and
@@ -323,7 +348,7 @@ async function updateRole(id, { name, areas }) {
 
   if (name && name.trim() !== role.name) {
     const slug = slugify(name);
-    const clash = await Role.findOne({ slug, _id: { $ne: id } });
+    const clash = await db().Role.findOne({ slug, _id: { $ne: id } });
     if (clash) throw ApiError.badRequest('A role with that name already exists.', 'ROLE_EXISTS');
     role.name = name.trim();
     role.slug = slug;
@@ -337,7 +362,7 @@ async function updateRole(id, { name, areas }) {
 
 async function deleteRole(id) {
   if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('Role not found.');
-  const role = await Role.findById(id);
+  const role = await db().Role.findById(id);
   if (!role) throw ApiError.notFound('Role not found.');
 
   if (role.isSystem) {
@@ -428,7 +453,7 @@ async function assertRoleAndBusiness({ accountType, staffRole, business }) {
     if (!staffRole || !mongoose.isValidObjectId(staffRole)) {
       throw ApiError.badRequest('Choose a role for this staff member.', 'STAFF_ROLE_REQUIRED');
     }
-    const role = await Role.findById(staffRole);
+    const role = await db().Role.findById(staffRole);
     if (!role) throw ApiError.notFound('Role not found.');
     if (role.isSystem) {
       // Handing out the system role would be a second admin by the back door,
@@ -593,7 +618,7 @@ async function deleteStaff(id, actorId) {
  */
 async function getRoleSnapshot(id) {
   if (!mongoose.isValidObjectId(id)) return null;
-  const role = await Role.findById(id);
+  const role = await db().Role.findById(id);
   return role ? role.toPublic() : null;
 }
 

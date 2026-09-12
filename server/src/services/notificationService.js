@@ -1,9 +1,10 @@
-import Notification from '../models/Notification.js';
-import Invoice from '../models/Invoice.js';
-import Product from '../models/Product.js';
-import PurchaseOrder from '../models/PurchaseOrder.js';
-import Role from '../models/Role.js';
-import User from '../models/User.js';
+import { db } from '../db/models.js';
+import '../models/Notification.js';
+import '../models/Invoice.js';
+import '../models/Product.js';
+import '../models/PurchaseOrder.js';
+import '../models/Role.js';
+import '../models/User.js';
 
 /**
  * The notification bell (ERP rework §7.3, §6.15, phase 12c).
@@ -89,7 +90,7 @@ async function emit({ type, severity = 'info', title, detail = '', entity, href 
       return;
     }
 
-    await Notification.create({
+    await db().Notification.create({
       type,
       severity,
       title,
@@ -117,7 +118,7 @@ async function allowedAreas(user) {
   if (user?.role === 'admin') return new Set(['clients', 'sales', 'purchase']);
   if (user?.role !== 'staff' || !user.staffRole) return new Set();
 
-  const role = await Role.findById(user.staffRole);
+  const role = await db().Role.findById(user.staffRole);
   if (!role) return new Set();
 
   return new Set(['clients', 'sales', 'purchase'].filter((area) => role.allows(area, 'view')));
@@ -148,7 +149,7 @@ async function derivedFor(areas, now) {
       // Oldest first: an account that has been waiting a fortnight is the one
       // that needs answering, and the `PER_CONDITION` cap would otherwise drop
       // exactly those in favour of the ones that just arrived.
-      User.find({ role: 'buyer', status: 'pending' })
+      db().User.find({ role: 'buyer', status: 'pending' })
         .sort({ createdAt: 1 })
         .limit(PER_CONDITION)
         .lean()
@@ -198,7 +199,7 @@ async function derivedFor(areas, now) {
       // rule phase 4 settled: an invoice is overdue because its due date passed
       // and it is not paid, not because a nightly job got around to stamping
       // it. Reading the stored status would under-report by up to a day.
-      Invoice.find({
+      db().Invoice.find({
         status: { $in: ['unpaid', 'partial'] },
         dueDate: { $lt: now },
       })
@@ -234,7 +235,7 @@ async function derivedFor(areas, now) {
       // Out of stock and low stock are one query, split after: `$expr` against
       // `minStock` cannot use an index, so running it twice would double the
       // cost of opening the bell for no benefit.
-      Product.find({
+      db().Product.find({
         isActive: true,
         $or: [{ stock: { $lte: 0 } }, { $expr: { $lte: ['$stock', '$minStock'] } }],
       })
@@ -279,7 +280,7 @@ async function derivedFor(areas, now) {
             })
             .slice(0, PER_CONDITION * 2),
         ),
-      PurchaseOrder.find({
+      db().PurchaseOrder.find({
         status: { $in: ['sent', 'partial'] },
         expectedDate: { $lt: now },
       })
@@ -337,7 +338,7 @@ async function list(user) {
   const userId = user?._id;
 
   const [stored, derived] = await Promise.all([
-    Notification.find({
+    db().Notification.find({
       area: { $in: [...areas] },
       // Cleared is per-account, so this filters by *this* caller only — the row
       // stays in everybody else's bell.
@@ -430,7 +431,7 @@ async function markRead(user, ids) {
     filter.area = { $in: [...areas] };
   }
 
-  const result = await Notification.updateMany(filter, { $addToSet: { readBy: user._id } });
+  const result = await db().Notification.updateMany(filter, { $addToSet: { readBy: user._id } });
   return { updated: result.modifiedCount ?? 0 };
 }
 
@@ -451,7 +452,7 @@ async function clearAll(user) {
   const areas = await allowedAreas(user);
   if (areas.size === 0) return { cleared: 0 };
 
-  const result = await Notification.updateMany(
+  const result = await db().Notification.updateMany(
     { area: { $in: [...areas] }, clearedBy: { $ne: user._id } },
     { $addToSet: { clearedBy: user._id, readBy: user._id } },
   );

@@ -1,9 +1,10 @@
 import crypto from 'node:crypto';
 
-import User from '../models/User.js';
-import Invoice from '../models/Invoice.js';
-import CreditTransaction from '../models/CreditTransaction.js';
-import Settings from '../models/Settings.js';
+import { db } from '../db/models.js';
+import '../models/User.js';
+import '../models/Invoice.js';
+import '../models/CreditTransaction.js';
+import '../models/Settings.js';
 import ApiError from '../utils/ApiError.js';
 import { likeRegex } from '../utils/regex.js';
 import storeCreditService from './storeCreditService.js';
@@ -124,7 +125,7 @@ async function ensureReferralCode(user) {
   for (let attempt = 0; attempt < 8; attempt += 1) {
     const code = buildCode(user);
     // eslint-disable-next-line no-await-in-loop
-    const taken = await User.exists({ referralCode: code });
+    const taken = await db().User.exists({ referralCode: code });
     if (taken) continue;
 
     user.referralCode = code;
@@ -156,7 +157,7 @@ async function resolveReferralCode(code) {
   const trimmed = String(code ?? '').trim().toUpperCase();
   if (!trimmed) return null;
 
-  const referrer = await User.findOne({ referralCode: trimmed })
+  const referrer = await db().User.findOne({ referralCode: trimmed })
     .select('_id businessName status')
     .lean();
 
@@ -180,7 +181,7 @@ async function resolveReferralCode(code) {
 
 /** The rate in force right now, as a percentage (5 means 5%). */
 async function currentPercent() {
-  const settings = await Settings.load();
+  const settings = await db().Settings.load();
   return settings?.financial?.referralPercent ?? 5;
 }
 
@@ -190,7 +191,7 @@ async function setPercent(percent) {
     throw ApiError.badRequest('Enter a rate between 0 and 100.', 'INVALID_PERCENT');
   }
 
-  await Settings.updateOne(
+  await db().Settings.updateOne(
     { key: 'singleton' },
     { $set: { 'financial.referralPercent': value } },
     { upsert: true },
@@ -223,12 +224,12 @@ async function accrueForPayment(invoice, paymentIndex) {
     if (payment.method === 'void') return null;
     if (!(payment.amount > 0)) return null;
 
-    const buyer = await User.findById(invoice.user).select('referredBy businessName').lean();
+    const buyer = await db().User.findById(invoice.user).select('referredBy businessName').lean();
     if (!buyer?.referredBy) return null;
 
     // One level only (§6.13): commission is paid to the direct referrer, and
     // this function never looks at `referrer.referredBy`.
-    const referrer = await User.findById(buyer.referredBy).select('_id status').lean();
+    const referrer = await db().User.findById(buyer.referredBy).select('_id status').lean();
     if (!referrer) return null;
     if (referrer.status !== 'approved') return null;
 
@@ -236,7 +237,7 @@ async function accrueForPayment(invoice, paymentIndex) {
     if (String(referrer._id) === String(invoice.user)) return null;
 
     // Idempotence: this exact instalment may only ever earn once.
-    const existing = await CreditTransaction.findOne({
+    const existing = await db().CreditTransaction.findOne({
       type: 'referral',
       'referral.invoiceNumber': invoice.number,
       'referral.paymentIndex': paymentIndex,
@@ -292,14 +293,14 @@ async function reverseForInvoice(invoiceNumber, paymentIndex = null) {
     // reversed in turn.
     filter.amount = { $gt: 0 };
 
-    const accruals = await CreditTransaction.find(filter).lean();
+    const accruals = await db().CreditTransaction.find(filter).lean();
     if (accruals.length === 0) return { reversed: 0 };
 
     let reversed = 0;
 
     for (const accrual of accruals) {
       // eslint-disable-next-line no-await-in-loop
-      const already = await CreditTransaction.exists({
+      const already = await db().CreditTransaction.exists({
         type: 'referral',
         'referral.reverses': accrual._id,
       });
@@ -341,7 +342,7 @@ async function reverseForInvoice(invoiceNumber, paymentIndex = null) {
  * caller passes the order's `_id`.
  */
 async function reverseForOrder(orderId) {
-  const invoice = await Invoice.findOne({ order: orderId }).select('number').lean();
+  const invoice = await db().Invoice.findOne({ order: orderId }).select('number').lean();
   if (!invoice) return { reversed: 0 };
   return reverseForInvoice(invoice.number);
 }
@@ -356,13 +357,13 @@ async function reverseForOrder(orderId) {
  * cannot answer "how much has this pairing earned". Summing the rows can.
  */
 async function listReferrals({ search, from, to } = {}) {
-  const referred = await User.find({ referredBy: { $ne: null } })
+  const referred = await db().User.find({ referredBy: { $ne: null } })
     .select('businessName contactName email status createdAt referredBy')
     .sort({ createdAt: -1 })
     .lean();
 
   const referrerIds = [...new Set(referred.map((row) => String(row.referredBy)))];
-  const referrers = await User.find({ _id: { $in: referrerIds } })
+  const referrers = await db().User.find({ _id: { $in: referrerIds } })
     .select('businessName referralCode status')
     .lean();
   const byId = new Map(referrers.map((row) => [String(row._id), row]));
@@ -380,7 +381,7 @@ async function listReferrals({ search, from, to } = {}) {
       ledgerFilter.createdAt.$lte = end;
     }
   }
-  const ledger = await CreditTransaction.find(ledgerFilter).lean();
+  const ledger = await db().CreditTransaction.find(ledgerFilter).lean();
 
   // Accruals and reversals are tracked separately as well as netted.
   //
@@ -505,7 +506,7 @@ async function referralsFor(user) {
   let { referralCode } = user;
 
   if (!referralCode && user.status === 'approved') {
-    const doc = await User.findById(user._id);
+    const doc = await db().User.findById(user._id);
     if (doc) {
       referralCode = await ensureReferralCode(doc);
       await doc.save();
@@ -513,11 +514,11 @@ async function referralsFor(user) {
   }
 
   const [referred, rows, percent] = await Promise.all([
-    User.find({ referredBy: user._id })
+    db().User.find({ referredBy: user._id })
       .select('businessName status createdAt')
       .sort({ createdAt: -1 })
       .lean(),
-    CreditTransaction.find({ user: user._id, type: 'referral' })
+    db().CreditTransaction.find({ user: user._id, type: 'referral' })
       .sort({ createdAt: -1 })
       .lean(),
     currentPercent(),

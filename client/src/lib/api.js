@@ -42,7 +42,20 @@ function buildUrl(path, params) {
    * resolve the union on every request and the sidebar would never change,
    * however many admin lists switched correctly underneath it.
    */
-  const scopedPath = path.startsWith('/admin') || path === '/auth/me';
+  /**
+   * **Every path, not only `/admin`** (SAAS_PLATFORM §4.2).
+   *
+   * The storefront used to send no business at all, which is why a checkout
+   * order was written with none and vanished from an admin list scoped to one.
+   * In production the host resolves the business server-side and this parameter
+   * is redundant; in development everything runs on one `localhost`, where
+   * there is no host to read — so the selected business travels with the
+   * request instead.
+   *
+   * `/superadmin` is the exception: the console is a platform application that
+   * sits above every business, and scoping it to one would be meaningless.
+   */
+  const scopedPath = !path.startsWith('/superadmin');
   const business = scopedPath ? getBusiness() : null;
   const scoped = business && !(params && 'business' in params) ? { ...params, business } : params;
 

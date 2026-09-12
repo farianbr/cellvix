@@ -1,7 +1,8 @@
 import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
-import User from '../models/User.js';
-import Supplier from '../models/Supplier.js';
+import { controlModels, db } from '../db/models.js';
+import '../models/User.js';
+import '../models/Supplier.js';
 import ApiError from '../utils/ApiError.js';
 import env from '../config/env.js';
 import referralService from './referralService.js';
@@ -37,7 +38,7 @@ function clearSession(res) {
 }
 
 async function register(data, { ip } = {}) {
-  const existing = await User.findOne({ email: data.email });
+  const existing = await db().User.findOne({ email: data.email });
   if (existing) {
     throw ApiError.conflict(
       'An account already exists for that email. Try signing in instead.',
@@ -53,7 +54,7 @@ async function register(data, { ip } = {}) {
     ? await referralService.resolveReferralCode(data.referralCode)
     : null;
 
-  const user = new User({
+  const user = new (db().User)({
     businessName: data.businessName,
     contactName: data.contactName,
     email: data.email,
@@ -142,7 +143,7 @@ async function register(data, { ip } = {}) {
 async function applyAsSupplier(data) {
   const email = String(data.email).toLowerCase().trim();
 
-  const existing = await Supplier.findOne({ email });
+  const existing = await db().Supplier.findOne({ email });
 
   // Already trading with us. Answer as though it was recorded — the purchasing
   // team knows them, and telling an anonymous form which businesses are already
@@ -172,7 +173,7 @@ async function applyAsSupplier(data) {
 
   const supplier = existing
     ? Object.assign(existing, fields)
-    : new Supplier({ ...fields, paymentTerms: 'net30' });
+    : new (db().Supplier)({ ...fields, paymentTerms: 'net30' });
 
   await supplier.save();
 
@@ -212,14 +213,29 @@ async function applyAsSupplier(data) {
 async function findForAudit(email) {
   if (!email) return null;
   try {
-    return await User.findOne({ email: String(email).toLowerCase().trim() }).lean();
+    return await db().User.findOne({ email: String(email).toLowerCase().trim() }).lean();
   } catch {
     return null;
   }
 }
 
 async function login({ email, password }) {
-  const user = await User.findOne({ email }).select('+passwordHash');
+  /**
+   * A tenant admin, then this business's own accounts.
+   *
+   * Admins live in the control plane so one login reaches every business the
+   * tenant owns (`User.tenant`); staff and buyers live in the business's own
+   * database. Signing in has to look in both, because the person typing an
+   * address has no way to say which they are — and being told "that email and
+   * password do not match" when the account plainly exists is the worst
+   * possible answer.
+   */
+  const user =
+    (await controlModels()
+      .User.findOne({ email, role: 'admin' })
+      .select('+passwordHash')) ??
+    (await db().User.findOne({ email }).select('+passwordHash'));
+
   if (!user) {
     throw ApiError.unauthorized('That email and password do not match.', 'INVALID_CREDENTIALS');
   }
@@ -277,7 +293,7 @@ function hashResetToken(token) {
  * form, and excluding them would leak which addresses are staff.
  */
 async function forgotPassword({ email }, { origin } = {}) {
-  const user = await User.findOne({ email });
+  const user = await db().User.findOne({ email });
   // No account: return quietly, having done nothing. Deliberately not an error.
   if (!user) return;
 
@@ -311,7 +327,7 @@ async function forgotPassword({ email }, { origin } = {}) {
  * constant-work — there is no partial match to time.
  */
 async function resetPassword({ token, password }) {
-  const user = await User.findOne({ resetTokenHash: hashResetToken(token) }).select(
+  const user = await db().User.findOne({ resetTokenHash: hashResetToken(token) }).select(
     '+resetTokenHash +resetTokenAt',
   );
 
@@ -338,4 +354,4 @@ async function resetPassword({ token, password }) {
   return user;
 }
 
-export { issueSession, clearSession, register, applyAsSupplier, findForAudit, login, forgotPassword, resetPassword };
+export { issueSession, clearSession, register, applyAsSupplier, findForAudit, login, forgotPassword, resetPassword, hashResetToken, RESET_TTL_MS };

@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
 
-import Taxonomy from '../models/Taxonomy.js';
-import Product from '../models/Product.js';
+import { db } from '../db/models.js';
+import '../models/Taxonomy.js';
+import '../models/Product.js';
 import ApiError from '../utils/ApiError.js';
 import { likeRegex } from '../utils/regex.js';
 import { invalidateTree } from './taxonomyService.js';
@@ -94,16 +95,16 @@ async function list({ search, kind, parent, includeInactive, page = 1, limit = 5
   const current = Math.max(Number(page) || 1, 1);
 
   const [nodes, total, counts, stats] = await Promise.all([
-    Taxonomy.find(filter)
+    db().Taxonomy.find(filter)
       .sort({ kind: 1, order: 1, name: 1 })
       .skip((current - 1) * perPage)
       .limit(perPage)
       .lean(),
-    Taxonomy.countDocuments(filter),
+    db().Taxonomy.countDocuments(filter),
     liveCounts(),
     // The KPI row counts the whole collection, never the filtered page: an
     // operator filtering to one brand still needs to know the totals.
-    Taxonomy.aggregate([
+    db().Taxonomy.aggregate([
       {
         $group: {
           _id: null,
@@ -136,7 +137,7 @@ async function list({ search, kind, parent, includeInactive, page = 1, limit = 5
 /**
  * How many live products sit under each taxonomy slug.
  *
- * Counted from `Product.path` rather than read off `Taxonomy.productCount`,
+ * Counted from `db().Product.path` rather than read off `db().Taxonomy.productCount`,
  * which the seed writes and nothing else maintains. The delete rule depends on
  * this being true right now, not true at the last seed.
  */
@@ -144,7 +145,7 @@ async function liveCounts() {
   // `Product` carries flat `*Slug` fields, not a nested `path` — the nested
   // shape is `Taxonomy`'s. One product contributes to all four of its ancestors,
   // so a brand's count is every part under every model it makes.
-  const rows = await Product.aggregate([
+  const rows = await db().Product.aggregate([
     { $match: { isActive: true } },
     {
       $project: {
@@ -163,7 +164,7 @@ async function liveCounts() {
 async function get(id) {
   if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('Not found.', 'TAXONOMY_NOT_FOUND');
 
-  const node = await Taxonomy.findById(id).lean();
+  const node = await db().Taxonomy.findById(id).lean();
   if (!node) throw ApiError.notFound('Not found.', 'TAXONOMY_NOT_FOUND');
 
   return { node: shape(node, await liveCounts()) };
@@ -181,7 +182,7 @@ async function get(id) {
 async function update(id, input) {
   if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('Not found.', 'TAXONOMY_NOT_FOUND');
 
-  const node = await Taxonomy.findById(id);
+  const node = await db().Taxonomy.findById(id);
   if (!node) throw ApiError.notFound('Not found.', 'TAXONOMY_NOT_FOUND');
 
   if (input.name !== undefined) node.name = input.name.trim();
@@ -195,7 +196,7 @@ async function update(id, input) {
   // amount of ranking fixes, and the operator is the only one who knows which
   // one is right.
   if (node.aliases.length) {
-    const clash = await Taxonomy.findOne({
+    const clash = await db().Taxonomy.findOne({
       _id: { $ne: node._id },
       aliases: { $in: node.aliases },
     })
@@ -227,10 +228,10 @@ async function update(id, input) {
 async function remove(id) {
   if (!mongoose.isValidObjectId(id)) throw ApiError.notFound('Not found.', 'TAXONOMY_NOT_FOUND');
 
-  const node = await Taxonomy.findById(id);
+  const node = await db().Taxonomy.findById(id);
   if (!node) throw ApiError.notFound('Not found.', 'TAXONOMY_NOT_FOUND');
 
-  const children = await Taxonomy.countDocuments({ parent: node._id });
+  const children = await db().Taxonomy.countDocuments({ parent: node._id });
   if (children) {
     throw ApiError.badRequest(
       `${node.name} has ${children} ${children === 1 ? 'entry' : 'entries'} under it. Remove or move those first.`,

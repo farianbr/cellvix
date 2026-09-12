@@ -1,4 +1,5 @@
-import Settings from '../models/Settings.js';
+import { db } from '../db/models.js';
+import '../models/Settings.js';
 
 /**
  * How long a part is covered for, and whether a given line still is.
@@ -131,7 +132,7 @@ function coverFor({ settings, grade, tier, order, at = new Date() }) {
  * in; the RMA screens do not, so the default fetch keeps them simple.
  */
 async function coverForOrder(order, tier, { settings, at } = {}) {
-  const resolved = settings ?? (await Settings.load());
+  const resolved = settings ?? (await db().Settings.load());
 
   return (order?.items ?? []).map((item) => ({
     sku: item.sku,

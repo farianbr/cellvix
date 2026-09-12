@@ -1,6 +1,7 @@
-import Offer from '../models/Offer.js';
-import Order from '../models/Order.js';
-import Product from '../models/Product.js';
+import { db } from '../db/models.js';
+import '../models/Offer.js';
+import '../models/Order.js';
+import '../models/Product.js';
 import ApiError from '../utils/ApiError.js';
 import { likeRegex } from '../utils/regex.js';
 import { canSeePricing } from '../middleware/auth.js';
@@ -80,7 +81,7 @@ async function attachComboProducts(offers, user) {
   if (!combos.length) return offers;
 
   const skus = [...new Set(combos.flatMap((offer) => offer.items.map((item) => item.sku)))];
-  const products = await Product.find({ sku: { $in: skus }, isActive: true }).lean();
+  const products = await db().Product.find({ sku: { $in: skus }, isActive: true }).lean();
   const bySku = new Map(products.map((product) => [product.sku, product]));
   const showPricing = canSeePricing(user);
 
@@ -129,7 +130,7 @@ function stripAudience(offer) {
 
 /** Offer ids this account has already redeemed on an order that still stands. */
 async function redeemedOfferIds(user) {
-  const ids = await Order.distinct('promo.offer', {
+  const ids = await db().Order.distinct('promo.offer', {
     user: user._id,
     status: { $ne: 'cancelled' },
   });
@@ -149,7 +150,7 @@ async function redeemedOfferIds(user) {
 async function listLive(user) {
   const now = new Date();
 
-  const docs = await Offer.find({
+  const docs = await db().Offer.find({
     isActive: true,
     $and: [
       { $or: [{ startsAt: null }, { startsAt: { $exists: false } }, { startsAt: { $lte: now } }] },
@@ -191,7 +192,7 @@ async function listLive(user) {
 
 async function getBySlug(slug, user) {
   const now = new Date();
-  const doc = await Offer.findOne({ slug }).lean();
+  const doc = await db().Offer.findOne({ slug }).lean();
   if (!doc) throw ApiError.notFound('That offer does not exist.', 'OFFER_NOT_FOUND');
 
   const shaped = baseShape(doc, now);
@@ -213,7 +214,7 @@ async function listAll({ status, q } = {}) {
     query.$or = [{ title: rx }, { subtitle: rx }, { code: rx }];
   }
 
-  const docs = await Offer.find(query).sort({ order: 1, createdAt: -1 }).limit(200).lean();
+  const docs = await db().Offer.find(query).sort({ order: 1, createdAt: -1 }).limit(200).lean();
   let offers = docs.map((doc) => baseShape(doc, now));
 
   const counts = offers.reduce((accumulator, offer) => {
@@ -233,7 +234,7 @@ async function uniqueSlug(title, excludeId = null) {
   const base = slugify(title) || 'offer';
   for (let suffix = 0; suffix < 50; suffix += 1) {
     const candidate = suffix === 0 ? base : `${base}-${suffix + 1}`;
-    const clash = await Offer.findOne({
+    const clash = await db().Offer.findOne({
       slug: candidate,
       ...(excludeId ? { _id: { $ne: excludeId } } : {}),
     })
@@ -254,7 +255,7 @@ async function uniqueSlug(title, excludeId = null) {
 async function assertSkusExist(items) {
   if (!items?.length) return;
   const skus = items.map((item) => item.sku.trim().toUpperCase());
-  const found = await Product.find({ sku: { $in: skus } }).select('sku').lean();
+  const found = await db().Product.find({ sku: { $in: skus } }).select('sku').lean();
   const known = new Set(found.map((product) => product.sku));
   const missing = skus.filter((sku) => !known.has(sku));
   if (missing.length) {
@@ -312,12 +313,12 @@ async function createOffer(data) {
   const write = shapeWrite(data);
   await assertSkusExist(write.items);
 
-  const offer = await Offer.create({ ...write, slug: await uniqueSlug(data.title) });
+  const offer = await db().Offer.create({ ...write, slug: await uniqueSlug(data.title) });
   return baseShape(offer.toObject(), new Date());
 }
 
 async function updateOffer(id, data) {
-  const offer = await Offer.findById(id);
+  const offer = await db().Offer.findById(id);
   if (!offer) throw ApiError.notFound('Offer not found.', 'OFFER_NOT_FOUND');
 
   const write = shapeWrite(data);
@@ -329,7 +330,7 @@ async function updateOffer(id, data) {
 }
 
 async function deleteOffer(id) {
-  const offer = await Offer.findByIdAndDelete(id).lean();
+  const offer = await db().Offer.findByIdAndDelete(id).lean();
   if (!offer) throw ApiError.notFound('Offer not found.', 'OFFER_NOT_FOUND');
   return baseShape(offer, new Date());
 }

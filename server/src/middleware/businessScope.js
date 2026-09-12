@@ -39,6 +39,18 @@
 function resolveBusinessScope(req, _res, next) {
   const user = req.user;
 
+  /**
+   * A support session is pinned to the business its grant names.
+   *
+   * **This is a containment boundary, not a convenience.** A platform operator
+   * who could edit `?business=` would reach every business on the installation
+   * from a grant issued for one — and the audit trail would record the actions
+   * in the business they entered, not the one they actually touched. The pin is
+   * set by `authenticateImpersonation`, which runs first; honouring it here is
+   * the half that makes it stick.
+   */
+  if (req.businessScopePinned) return next();
+
   // Staff are pinned to their own business, whatever the query says.
   if (user?.role === 'staff' && user.business) {
     req.businessScope = String(user.business);
@@ -46,7 +58,30 @@ function resolveBusinessScope(req, _res, next) {
   }
 
   const requested = String(req.query.business ?? '').trim();
-  req.businessScope = requested && requested !== 'all' ? requested : null;
+
+  if (requested && requested !== 'all') {
+    req.businessScope = requested;
+    return next();
+  }
+
+  /**
+   * Nothing asked for — keep whatever `resolveBusiness` worked out.
+   *
+   * **This used to null the scope**, which was correct while `?business=` was
+   * the only source: absent meant "all businesses". Now the host resolves a
+   * business before authentication (§4.2), so overwriting here would throw away
+   * the storefront's business on every request that happens not to carry a
+   * query string — which is all of them.
+   *
+   * `all` still clears it, because that is a deliberate request for the
+   * unscoped view rather than an absent answer.
+   */
+  if (requested === 'all') {
+    req.businessScope = null;
+    return next();
+  }
+
+  req.businessScope = req.businessScope ?? null;
   return next();
 }
 

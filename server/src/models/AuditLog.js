@@ -61,11 +61,39 @@ const auditLogSchema = new mongoose.Schema(
     kind: { type: String, enum: ['activity', 'security'], required: true, index: true },
 
     /**
+     * Which population the actor belongs to.
+     *
+     * **An actor is not always a `User`.** A platform operator stepping into a
+     * business for support is a `SuperAdmin`, and the whole point of logging
+     * that is that the business's owner can see it happened — so the row has to
+     * be able to say *what kind of account* acted, not merely which id.
+     * Without this the two are indistinguishable, and an impersonation would
+     * read as though a member of the owner's own staff did it, which is worse
+     * than not logging it at all.
+     *
+     * `system` covers what no person did: a scheduled job, a status rule
+     * firing, a webhook. Those genuinely have no actor, and calling them
+     * `user` would be a lie in the other direction.
+     */
+    actorKind: {
+      type: String,
+      enum: ['user', 'superadmin', 'system'],
+      default: 'user',
+      index: true,
+    },
+
+    /**
      * Who did it. Null for an unauthenticated event — a failed sign-in on an
      * address that does not exist has no actor, and inventing one would be a
      * lie about who was there.
+     *
+     * **No `ref`, deliberately.** It pointed at `User`, which is exactly what
+     * made a super-admin actor unrepresentable. `actorKind` names the
+     * collection instead; a populate that could resolve to one of three
+     * collections is not something Mongoose can express, and the denormalised
+     * fields below mean nothing needs to resolve it anyway.
      */
-    actor: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null, index: true },
+    actor: { type: mongoose.Schema.Types.ObjectId, default: null, index: true },
     // Denormalised so a row still reads correctly after the account is renamed
     // or removed. An audit row must not depend on a join that can disappear.
     actorEmail: { type: String, default: '' },

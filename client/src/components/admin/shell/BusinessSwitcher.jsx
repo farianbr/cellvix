@@ -50,6 +50,24 @@ export function BusinessSwitcher() {
 
   const active = businesses.find((business) => business.id === selected);
 
+  /**
+   * Land in a real business when nothing is chosen.
+   *
+   * With "All businesses" gone, `null` is no longer a view — it is an
+   * unanswered question, and an admin arriving with an empty
+   * `sessionStorage` would otherwise see a switcher labelled after nothing.
+   * The default business is the right landing place for the same reason it is
+   * everywhere else: it is where an unattributed record lands.
+   *
+   * Set during render rather than in an effect because `lib/api.js` reads this
+   * store synchronously on the very next request; an effect would let one
+   * round of unscoped queries go out first.
+   */
+  if (!active) {
+    const fallback = businesses.find((business) => business.isDefault) ?? businesses[0];
+    if (fallback && fallback.id !== selected) setBusiness(fallback.id);
+  }
+
   function choose(id) {
     setBusiness(id);
     setOpen(false);
@@ -119,16 +137,18 @@ export function BusinessSwitcher() {
           aria-label="Business"
           className="absolute right-0 top-full z-50 mt-1.5 w-[260px] max-w-[calc(100vw-2rem)] overflow-hidden rounded-lg border border-line bg-surface py-1 shadow-card"
         >
-          <Option
-            icon={Layers}
-            label="All businesses"
-            hint="Everything, across every shop"
-            selected={!selected}
-            onSelect={() => choose(null)}
-          />
+          {/*
+            **There is no "All businesses" any more** (SAAS_PLATFORM §4.1).
 
-          <div className="my-1 border-t border-line" aria-hidden="true" />
+            An admin always works inside exactly one business. Under
+            database-per-business a request resolves to one database, so a view
+            spanning all of them cannot be a query — it would have to be N
+            queries merged in the client, and a P&L summing two unrelated
+            businesses is a number nobody asked for.
 
+            The option was removed rather than disabled: a control that is
+            visibly there and refuses to work invites somebody to ask why.
+          */}
           {businesses.map((business) => (
             <Option
               key={business.id}

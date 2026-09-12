@@ -1,5 +1,6 @@
-import Supplier from '../models/Supplier.js';
-import PurchaseOrder, { DELIVERY_STATUSES } from '../models/PurchaseOrder.js';
+import { db } from '../db/models.js';
+import '../models/Supplier.js';
+import { DELIVERY_STATUSES } from '../models/PurchaseOrder.js';
 import ApiError from '../utils/ApiError.js';
 import * as notificationService from './notificationService.js';
 import * as supplierMail from './supplierMail.js';
@@ -285,7 +286,7 @@ async function suppliersForComponentTypes(componentTypes = []) {
 
   if (!types.length) return { suppliers: [], componentTypes: [] };
 
-  const suppliers = await Supplier.find({
+  const suppliers = await db().Supplier.find({
     isActive: true,
     componentTypes: { $in: types },
   })
@@ -323,7 +324,7 @@ async function suppliersForComponentTypes(componentTypes = []) {
 // ---- admin: invite, send, negotiate, confirm --------------------------------
 
 async function loadPo(id, { populate = true } = {}) {
-  const query = PurchaseOrder.findById(id);
+  const query = db().PurchaseOrder.findById(id);
   if (populate) query.populate('bids.supplier', 'name email componentTypes contactConsent preferredChannel');
   const po = await query;
   if (!po) throw ApiError.notFound('Purchase order not found.', 'PO_NOT_FOUND');
@@ -353,7 +354,7 @@ async function inviteSuppliers(id, { supplierIds = [] } = {}) {
 
   if (!wanted.length) return { added: 0, po: await getBidBoard(po._id) };
 
-  const suppliers = await Supplier.find({ _id: { $in: wanted }, isActive: true })
+  const suppliers = await db().Supplier.find({ _id: { $in: wanted }, isActive: true })
     .select('name email')
     .lean();
 
@@ -435,7 +436,7 @@ async function sendPurchaseOrder(id, { note } = {}) {
 
   await po.save();
 
-  const suppliers = await Supplier.find({ _id: { $in: po.bids.map((bid) => bid.supplier) } })
+  const suppliers = await db().Supplier.find({ _id: { $in: po.bids.map((bid) => bid.supplier) } })
     .select('name email')
     .lean();
   const results = await Promise.all(
@@ -485,7 +486,7 @@ async function negotiate(id, supplierId, { askedTotal, askedLines, note } = {}, 
   }
 
   const round = (bid.negotiations?.length ?? 0) + 1;
-  const supplier = await Supplier.findById(supplierId).lean();
+  const supplier = await db().Supplier.findById(supplierId).lean();
 
   const channels = await notifySupplier(supplier, {
     subject: `We would like to revisit ${po.poNumber}`,
@@ -667,7 +668,7 @@ async function confirmSupplier(id, { supplierId, expectedDate, note } = {}) {
 
 /** Every order this supplier was asked to price. Their own bid, never another's. */
 async function listForSupplier(supplierId) {
-  const orders = await PurchaseOrder.find({
+  const orders = await db().PurchaseOrder.find({
     'bids.supplier': supplierId,
     status: { $ne: 'draft' },
   })
@@ -682,7 +683,7 @@ async function listForSupplier(supplierId) {
 
 /** One order, as its supplier sees it. Marks it viewed on first open. */
 async function getForSupplier(id, supplierId) {
-  const po = await PurchaseOrder.findOne({
+  const po = await db().PurchaseOrder.findOne({
     _id: id,
     'bids.supplier': supplierId,
     status: { $ne: 'draft' },
@@ -708,7 +709,7 @@ async function getForSupplier(id, supplierId) {
  * quote should not be met with a validation wall.
  */
 async function submitBid(id, supplierId, body) {
-  const po = await PurchaseOrder.findOne({
+  const po = await db().PurchaseOrder.findOne({
     _id: id,
     'bids.supplier': supplierId,
     status: { $ne: 'draft' },
@@ -784,7 +785,7 @@ function assertBiddable(po) {
 
 /** "We cannot supply this." A recorded no is worth far more than silence. */
 async function declineBid(id, supplierId, { reason } = {}) {
-  const po = await PurchaseOrder.findOne({
+  const po = await db().PurchaseOrder.findOne({
     _id: id,
     'bids.supplier': supplierId,
     status: { $ne: 'draft' },
@@ -821,7 +822,7 @@ async function declineBid(id, supplierId, { reason } = {}) {
  * was negotiated away has to stay readable.
  */
 async function submitProforma(id, supplierId, body) {
-  const po = await PurchaseOrder.findOne({
+  const po = await db().PurchaseOrder.findOne({
     _id: id,
     'bids.supplier': supplierId,
     status: { $ne: 'draft' },
@@ -919,7 +920,7 @@ async function submitProforma(id, supplierId, body) {
  * `purchaseService.receivePurchaseOrder` stays the only path into the ledger.
  */
 async function setDeliveryStatus(id, supplierId, body) {
-  const po = await PurchaseOrder.findOne({ _id: id, 'bids.supplier': supplierId });
+  const po = await db().PurchaseOrder.findOne({ _id: id, 'bids.supplier': supplierId });
   if (!po) throw ApiError.notFound('Order not found.', 'PO_NOT_FOUND');
 
   const bid = findBid(po, supplierId);
@@ -993,7 +994,7 @@ async function notifyAdminsByMail(payload) {
  * supplier's bid.
  */
 async function proformaDocument(id, supplierId, { nonce = null } = {}) {
-  const po = await PurchaseOrder.findById(id).lean();
+  const po = await db().PurchaseOrder.findById(id).lean();
   if (!po) throw ApiError.notFound('Purchase order not found.', 'PO_NOT_FOUND');
 
   const bid = findBid(po, supplierId);
@@ -1001,7 +1002,7 @@ async function proformaDocument(id, supplierId, { nonce = null } = {}) {
     throw ApiError.notFound('No proforma invoice on this order.', 'PROFORMA_NOT_FOUND');
   }
 
-  const supplier = await Supplier.findById(bid.supplier).select('name email phone address').lean();
+  const supplier = await db().Supplier.findById(bid.supplier).select('name email phone address').lean();
   const html = renderProformaHtml({ po, bid, supplier, nonce });
   if (!html) throw ApiError.notFound('No proforma invoice on this order.', 'PROFORMA_NOT_FOUND');
 
@@ -1012,7 +1013,7 @@ async function proformaDocument(id, supplierId, { nonce = null } = {}) {
 
 /** Everything the PO detail page's supplier panel renders. */
 async function getBidBoard(id) {
-  const po = await PurchaseOrder.findById(id)
+  const po = await db().PurchaseOrder.findById(id)
     .populate('bids.supplier', 'name email componentTypes')
     .lean();
   if (!po) throw ApiError.notFound('Purchase order not found.', 'PO_NOT_FOUND');

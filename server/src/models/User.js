@@ -84,6 +84,33 @@ const userSchema = new mongoose.Schema(
      * tenant operates, and it is what scopes a staff member's view.
      */
     business: { type: mongoose.Schema.Types.ObjectId, ref: 'Business', default: null },
+
+    /**
+     * Which tenant this account administers, for an **admin** (SAAS_PLATFORM §1).
+     *
+     * ## Where an account lives, and why
+     *
+     * **An account that belongs to the tenant lives with the tenant; an account
+     * that belongs to a business lives with the business.** That one rule
+     * decides which database holds a `User`:
+     *
+     * - `admin` — the person who runs the *account*. Lives in the control
+     *   plane, carries `tenant`, and reaches every business that tenant owns
+     *   through the header switcher. One login, N businesses.
+     * - `staff` — hired by one shop to work in one shop. Lives in that
+     *   business's own database and carries `business`. A staff member of one
+     *   business is invisible to another, which is the isolation the split
+     *   exists for.
+     * - `buyer` — a customer of one business. Lives in that business's
+     *   database. Somebody buying from two businesses genuinely is two
+     *   relationships and therefore two accounts.
+     *
+     * The first version of the split put admins in the business database too,
+     * which meant a tenant running two shops needed two admin logins and could
+     * not switch between them — the switcher was there and could not work,
+     * because the account on the other side did not exist.
+     */
+    tenant: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', default: null, index: true },
     status: {
       type: String,
       enum: ['pending', 'approved', 'rejected', 'suspended'],

@@ -1,13 +1,14 @@
-import User from '../models/User.js';
-import Order from '../models/Order.js';
-import Invoice from '../models/Invoice.js';
-import Product from '../models/Product.js';
-import Quote from '../models/Quote.js';
-import Rma from '../models/Rma.js';
-import Supplier from '../models/Supplier.js';
-import PurchaseOrder from '../models/PurchaseOrder.js';
+import { db } from '../db/models.js';
+import '../models/User.js';
+import '../models/Order.js';
+import '../models/Invoice.js';
+import '../models/Product.js';
+import '../models/Quote.js';
+import '../models/Rma.js';
+import '../models/Supplier.js';
+import '../models/PurchaseOrder.js';
 import Business from '../models/Business.js';
-import Role from '../models/Role.js';
+import '../models/Role.js';
 import { likeRegex } from '../utils/regex.js';
 
 /**
@@ -55,7 +56,7 @@ async function allowedGroups(user) {
   if (user?.role === 'admin') return new Set(Object.keys(GROUP_AREA));
   if (user?.role !== 'staff' || !user.staffRole) return new Set();
 
-  const role = await Role.findById(user.staffRole);
+  const role = await db().Role.findById(user.staffRole);
   if (!role) return new Set();
 
   return new Set(
@@ -86,7 +87,7 @@ async function search(term, user) {
 
   if (allowed.has('clients')) {
     runners.push(
-      User.find({ role: 'buyer', $or: [{ businessName: rx }, { email: rx }, { contactName: rx }] })
+      db().User.find({ role: 'buyer', $or: [{ businessName: rx }, { email: rx }, { contactName: rx }] })
         .select('businessName contactName email status')
         .limit(PER_GROUP)
         .lean()
@@ -107,7 +108,7 @@ async function search(term, user) {
 
   if (allowed.has('orders')) {
     runners.push(
-      Order.find({ $or: [{ orderNumber: rx }, { 'shippingAddress.company': rx }] })
+      db().Order.find({ $or: [{ orderNumber: rx }, { 'shippingAddress.company': rx }] })
         .select('orderNumber status total createdAt')
         .sort({ createdAt: -1 })
         .limit(PER_GROUP)
@@ -128,7 +129,7 @@ async function search(term, user) {
 
   if (allowed.has('invoices')) {
     runners.push(
-      Invoice.find({ number: rx })
+      db().Invoice.find({ number: rx })
         .select('number status amount')
         .sort({ issuedAt: -1 })
         .limit(PER_GROUP)
@@ -149,7 +150,7 @@ async function search(term, user) {
 
   if (allowed.has('quotes')) {
     runners.push(
-      Quote.find({ quoteNumber: rx })
+      db().Quote.find({ quoteNumber: rx })
         .select('quoteNumber status')
         .sort({ createdAt: -1 })
         .limit(PER_GROUP)
@@ -170,7 +171,7 @@ async function search(term, user) {
 
   if (allowed.has('rmas')) {
     runners.push(
-      Rma.find({ rmaNumber: rx })
+      db().Rma.find({ rmaNumber: rx })
         .select('rmaNumber status')
         .sort({ createdAt: -1 })
         .limit(PER_GROUP)
@@ -191,7 +192,7 @@ async function search(term, user) {
 
   if (allowed.has('products')) {
     runners.push(
-      Product.find({ $or: [{ name: rx }, { sku: rx }, { searchTerms: rx }] })
+      db().Product.find({ $or: [{ name: rx }, { sku: rx }, { searchTerms: rx }] })
         .select('name sku stock')
         .limit(PER_GROUP)
         .lean()
@@ -211,7 +212,7 @@ async function search(term, user) {
 
   if (allowed.has('suppliers')) {
     runners.push(
-      Supplier.find({ $or: [{ name: rx }, { code: rx }, { email: rx }] })
+      db().Supplier.find({ $or: [{ name: rx }, { code: rx }, { email: rx }] })
         .select('name code')
         .limit(PER_GROUP)
         .lean()
@@ -231,7 +232,7 @@ async function search(term, user) {
 
   if (allowed.has('purchaseOrders')) {
     runners.push(
-      PurchaseOrder.find({ poNumber: rx })
+      db().PurchaseOrder.find({ poNumber: rx })
         .select('poNumber status')
         .sort({ createdAt: -1 })
         .limit(PER_GROUP)

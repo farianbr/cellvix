@@ -32,6 +32,15 @@ export function AuthProvider({ children }) {
   // else. A courtesy that shapes the nav; `requireFeature` decides for real.
   const features = data?.features ?? null;
 
+  /**
+   * An active platform-support session, or null (SAAS_PLATFORM §4.5).
+   *
+   * Rides on `/auth/me` so it is available on every screen from first paint —
+   * the banner has to be able to render anywhere, and the way out of a business
+   * must not depend on which page the operator happens to be standing on.
+   */
+  const impersonation = data?.impersonation ?? null;
+
   const refresh = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['auth', 'me'] });
     // Pricing is embedded in every product response, so the catalogue has to be
@@ -83,18 +92,28 @@ export function AuthProvider({ children }) {
       // an administrator has granted a role — access is granted, never
       // inherited (§7.6). The server decides for real; this only shapes the UI.
       isStaff: user?.role === 'staff',
-      canUseAdmin: user?.role === 'admin' || (user?.role === 'staff' && Boolean(user?.staffRole)),
+      // A support session reaches the panel with no `user` at all — the grant
+      // is the authorisation, exactly as it is server-side in `requireStaff`.
+      // Without this the operator would enter a business and land on a sign-in
+      // screen, holding a valid grant the client refused to believe in.
+      canUseAdmin:
+        Boolean(impersonation) ||
+        user?.role === 'admin' ||
+        (user?.role === 'staff' && Boolean(user?.staffRole)),
       // Area permissions, or null for an admin — who bypasses the map entirely.
       permissions: user?.permissions ?? null,
       // What this BUSINESS has switched on, which is a different question from
       // what this ACCOUNT may do with it (SAAS_PLATFORM §4.4).
       features,
+      // Null for everybody but a platform operator inside a support session.
+      impersonation,
+      isImpersonating: Boolean(impersonation),
       signIn,
       signUp,
       signOut,
       refresh,
     }),
-    [user, features, isLoading, signIn, signUp, signOut, refresh],
+    [user, features, impersonation, isLoading, signIn, signUp, signOut, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

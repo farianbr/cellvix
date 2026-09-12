@@ -38,6 +38,7 @@ const SupplierProfilePage = lazy(() => import('@/pages/supplier/SupplierProfileP
 const SuperAdminLayout = lazy(() => import('@/components/superadmin/SuperAdminLayout'));
 const SuperAdminTenantsPage = lazy(() => import('@/pages/superadmin/SuperAdminTenantsPage'));
 const SuperAdminPlansPage = lazy(() => import('@/pages/superadmin/SuperAdminPlansPage'));
+const SuperAdminSupportPage = lazy(() => import('@/pages/superadmin/SuperAdminSupportPage'));
 
 const AccountLayout = lazy(() => import('@/components/account/AccountLayout'));
 const AccountOverviewPage = lazy(() => import('@/pages/account/AccountOverviewPage'));
@@ -109,6 +110,7 @@ const AdminShippingSettingsPage = lazy(() => import('@/pages/admin/AdminShipping
 const AdminPaymentMethodsPage = lazy(() => import('@/pages/admin/AdminPaymentMethodsPage'));
 const AdminInventorySettingsPage = lazy(() => import('@/pages/admin/AdminInventorySettingsPage'));
 const AdminActivityLogPage = lazy(() => import('@/pages/admin/AdminActivityLogPage'));
+const AdminSupportPage = lazy(() => import('@/pages/admin/AdminSupportPage'));
 const AdminSecurityLogPage = lazy(() => import('@/pages/admin/AdminSecurityLogPage'));
 const AdminApiKeysPage = lazy(() => import('@/pages/admin/AdminApiKeysPage'));
 const AdminThirdPartyPage = lazy(() => import('@/pages/admin/AdminThirdPartyPage'));
@@ -237,6 +239,9 @@ export function App() {
         <Route path="settings/payment-methods" element={<AdminPaymentMethodsPage />} />
         <Route path="settings/inventory" element={<AdminInventorySettingsPage />} />
         <Route path="settings/activity-log" element={<AdminActivityLogPage />} />
+        {/* The tenant's line to the platform. No feature gate: reaching us is
+            not a capability a tenant buys (SAAS_PLATFORM §4.5). */}
+        <Route path="support" element={<AdminSupportPage />} />
         <Route path="settings/security-log" element={<AdminSecurityLogPage />} />
         <Route path="settings/api-keys" element={<AdminApiKeysPage />} />
         <Route path="settings/third-party" element={<AdminThirdPartyPage />} />
@@ -302,6 +307,7 @@ export function App() {
       >
         <Route index element={<SuperAdminTenantsPage />} />
         <Route path="plans" element={<SuperAdminPlansPage />} />
+        <Route path="support" element={<SuperAdminSupportPage />} />
         <Route path="*" element={<Navigate to="/superadmin" replace />} />
       </Route>
 

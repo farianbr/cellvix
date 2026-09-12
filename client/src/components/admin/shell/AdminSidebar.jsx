@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import { NavLink, useLocation } from 'react-router';
 import { ChevronDown, LogOut, Search, X } from 'lucide-react';
 import cn from '@/lib/cn';
@@ -8,6 +8,8 @@ import { adminIcon } from './adminIcons';
 import { visibleNav } from '@/lib/permissions';
 import { useAuth } from '@/hooks/useAuth';
 import { pressable } from '@/lib/motion';
+import { getBusiness, subscribeBusiness } from '@/store/businessStore';
+import { useAdminBusinesses } from '@/hooks/useAdmin';
 
 /**
  * The ERP sidebar (§4). Three shapes, one component:
@@ -21,7 +23,30 @@ import { pressable } from '@/lib/motion';
  * rather than as generic admin chrome.
  */
 
+/**
+ * The business being worked in, not a hard-coded name.
+ *
+ * **This said "Cellvix" whatever business was selected**, so a tenant switched
+ * to CellShoppe saw the wholesaler's name at the top of their own repair shop's
+ * panel. One tenant may own several businesses (SAAS_PLATFORM §1), and the
+ * corner of the screen that names where you are is the last place that should
+ * be guessing — it is the same wayfinding question the switcher answers, asked
+ * in the place the eye lands first.
+ *
+ * Falls back to the platform's own name while the business list is still
+ * loading, rather than flashing a wrong one.
+ */
+function useActiveBusiness() {
+  const selected = useSyncExternalStore(subscribeBusiness, getBusiness, getBusiness);
+  const { data } = useAdminBusinesses();
+  return (data?.businesses ?? []).find((business) => business.id === selected) ?? null;
+}
+
 function BrandBlock({ compact }) {
+  const business = useActiveBusiness();
+  const name = business?.name ?? 'Operations';
+  const initial = (name.trim()[0] ?? 'O').toUpperCase();
+
   return (
     <div
       className={cn(
@@ -30,12 +55,12 @@ function BrandBlock({ compact }) {
       )}
     >
       <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-brand-gradient-compact font-display text-lg font-bold text-white">
-        C
+        {initial}
       </span>
       {!compact && (
         <span className="min-w-0">
-          <span className="block font-display text-lg font-bold leading-none text-white">
-            Cellvix
+          <span className="block truncate font-display text-lg font-bold leading-none text-white">
+            {name}
           </span>
           <span className="eyebrow mt-1 block text-ink-200">Operations</span>
         </span>

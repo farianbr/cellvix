@@ -86,6 +86,39 @@ const businessSchema = new mongoose.Schema(
       index: true,
     },
 
+    /**
+     * How a request finds this business before anybody signs in
+     * (SAAS_PLATFORM §4.2).
+     *
+     * `slug` becomes the subdomain — `northline.<platform>` — and `domain` is a
+     * custom one the business has pointed at us. **A custom domain wins**: a
+     * business that bought a domain means it more than it means the handle we
+     * gave them.
+     *
+     * Both are optional, and both are unique through a **partial** index rather
+     * than a sparse one.
+     *
+     * `sparse` skips documents where the field is *absent* — but these carry
+     * `default: null`, so the field is present holding null and every such
+     * document is indexed. The second business then collides with the first on
+     * `{ domain: null }`, which is exactly what happened the first time this
+     * seed ran. A partial index filtered to string values indexes only the
+     * businesses that actually have one.
+     */
+    slug: {
+      type: String,
+      lowercase: true,
+      trim: true,
+      default: null,
+    },
+
+    domain: {
+      type: String,
+      lowercase: true,
+      trim: true,
+      default: null,
+    },
+
     status: { type: String, enum: BUSINESS_STATUSES, default: 'active', index: true },
     colorToken: { type: String, enum: BUSINESS_COLOR_TOKENS, default: 'brand' },
 
@@ -152,6 +185,25 @@ const businessSchema = new mongoose.Schema(
     /** When a slot was spent to create this. Null for businesses that predate slots. */
     slotGrantedAt: Date,
 
+    /**
+     * Soft deletion, and the retention window `Tenant.slots` already documents.
+     *
+     * **A deleted business keeps its slot consumed until the window closes.**
+     * Returning the slot immediately would let a tenant delete-and-recreate its
+     * way to a free business, and would also mean a restore could land with no
+     * slot to hold it. `Tenant.slots` states that rule; this is the field that
+     * makes it true.
+     *
+     * **Soft, never hard.** The records are still there — orders, invoices, a
+     * credit ledger — and a business is deleted by somebody who wants it out of
+     * their way, not by somebody asking us to destroy their accounting history.
+     * Purging after the window is a separate, deliberate act.
+     */
+    deletedAt: { type: Date, default: null, index: true },
+
+    /** When the slot comes back and the records may be purged. */
+    purgeAfter: { type: Date, default: null },
+
     notes: String,
   },
   { timestamps: true },
@@ -159,11 +211,30 @@ const businessSchema = new mongoose.Schema(
 
 businessSchema.index({ status: 1, name: 1 });
 
+/**
+ * Unique only among businesses that actually have one (SAAS_PLATFORM §4.2).
+ *
+ * `partialFilterExpression` on the type is what makes this work where `sparse`
+ * did not: these fields default to `null`, so they are always present and a
+ * sparse index would still index every one of them — two businesses without a
+ * domain would then collide on `{ domain: null }`.
+ */
+businessSchema.index(
+  { slug: 1 },
+  { unique: true, partialFilterExpression: { slug: { $type: 'string' } } },
+);
+businessSchema.index(
+  { domain: 1 },
+  { unique: true, partialFilterExpression: { domain: { $type: 'string' } } },
+);
+
 businessSchema.methods.toPublic = function toPublic() {
   return {
     id: this._id.toString(),
     name: this.name,
     code: this.code,
+    slug: this.slug ?? null,
+    domain: this.domain ?? null,
     businessType: this.businessType,
     status: this.status,
     colorToken: this.colorToken,

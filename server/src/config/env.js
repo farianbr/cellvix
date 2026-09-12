@@ -23,6 +23,20 @@ const schema = z.object({
   JWT_EXPIRES_IN: z.string().default('7d'),
   COOKIE_NAME: z.string().default('cellvix_session'),
 
+  /**
+   * The prefix every platform database name is built from (SAAS_PLATFORM §0.1).
+   *
+   * **The platform has no name yet, and it is not "Cellvix"** — Cellvix is
+   * tenant #1's product business. Every database name is derived from this one
+   * constant precisely so that naming the platform later is a config change
+   * rather than a migration: `<prefix>_control` holds tenants, plans and super
+   * admins, and `<prefix>_biz_<code>` holds one business's records.
+   *
+   * Defaults to the current database's name so nothing moves until the flip is
+   * deliberately made.
+   */
+  DB_PREFIX: z.string().trim().min(1).default('cellvix'),
+
   // Encrypts provider credentials at rest (§6.15, phase 11c). Optional: with it
   // unset, `utils/secrets.js` derives a key from JWT_SECRET through scrypt, so
   // an existing deployment keeps working without a config change.

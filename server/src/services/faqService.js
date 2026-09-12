@@ -1,4 +1,5 @@
-import Faq from '../models/Faq.js';
+import { db } from '../db/models.js';
+import '../models/Faq.js';
 import ApiError from '../utils/ApiError.js';
 import { likeRegex } from '../utils/regex.js';
 import { FAQ_CATEGORIES } from '../../../shared/schemas/content.js';
@@ -33,7 +34,7 @@ async function listGeneral({ q } = {}) {
     query.$or = [{ question: rx }, { answer: rx }];
   }
 
-  const faqs = await Faq.find(query).sort({ order: 1, createdAt: 1 }).limit(300).lean();
+  const faqs = await db().Faq.find(query).sort({ order: 1, createdAt: 1 }).limit(300).lean();
   const shaped = faqs.map(serialize);
 
   const groups = FAQ_CATEGORIES.map((category) => ({
@@ -60,7 +61,7 @@ async function listGeneral({ q } = {}) {
 async function listForProduct(product, { limit = 8 } = {}) {
   if (!product) return [];
 
-  const faqs = await Faq.find({
+  const faqs = await db().Faq.find({
     scope: 'product',
     isPublished: true,
     partType: { $in: ['', product.partType] },
@@ -105,8 +106,8 @@ async function listAll({ scope, q } = {}) {
   }
 
   const [faqs, counts] = await Promise.all([
-    Faq.find(query).sort({ scope: 1, order: 1, createdAt: 1 }).limit(400).lean(),
-    Faq.aggregate([{ $group: { _id: '$scope', count: { $sum: 1 } } }]),
+    db().Faq.find(query).sort({ scope: 1, order: 1, createdAt: 1 }).limit(400).lean(),
+    db().Faq.aggregate([{ $group: { _id: '$scope', count: { $sum: 1 } } }]),
   ]);
 
   return {
@@ -131,12 +132,12 @@ function shapeWrite(data) {
 }
 
 async function createFaq(data) {
-  const faq = await Faq.create(shapeWrite(data));
+  const faq = await db().Faq.create(shapeWrite(data));
   return serialize(faq.toObject());
 }
 
 async function updateFaq(id, data) {
-  const faq = await Faq.findById(id);
+  const faq = await db().Faq.findById(id);
   if (!faq) throw ApiError.notFound('FAQ entry not found.', 'FAQ_NOT_FOUND');
   Object.assign(faq, shapeWrite(data));
   await faq.save();
@@ -144,7 +145,7 @@ async function updateFaq(id, data) {
 }
 
 async function deleteFaq(id) {
-  const faq = await Faq.findByIdAndDelete(id).lean();
+  const faq = await db().Faq.findByIdAndDelete(id).lean();
   if (!faq) throw ApiError.notFound('FAQ entry not found.', 'FAQ_NOT_FOUND');
   return serialize(faq);
 }

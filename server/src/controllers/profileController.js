@@ -18,7 +18,13 @@ const me = asyncHandler(async (req, res) => {
     user.business ? Business.findById(user.business).select('name code').lean() : null,
     // The actor's own recent activity, from the audit trail phase 11b built.
     // Scoped to this user by id, so it can never show somebody else's actions.
-    AuditLog.find({ kind: 'activity', actor: user._id })
+    //
+    // `actorKind` is pinned to `user` as well as the id: ids come from three
+    // separate collections now, and "my recent activity" must mean what this
+    // person did — never what a platform operator did while stepping into the
+    // business. Those rows belong on the owner's activity screen, labelled as
+    // support, not folded silently into somebody's own history.
+    AuditLog.find({ kind: 'activity', actor: user._id, actorKind: 'user' })
       .sort({ createdAt: -1 })
       .limit(10)
       .lean(),

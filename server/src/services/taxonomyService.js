@@ -1,5 +1,6 @@
-import Taxonomy from '../models/Taxonomy.js';
-import Product from '../models/Product.js';
+import { db } from '../db/models.js';
+import '../models/Taxonomy.js';
+import '../models/Product.js';
 import { HAS_PICTURE } from '../../../shared/partPhotos.js';
 
 /**
@@ -37,7 +38,7 @@ let prunedAt = 0;
 async function getTree({ force = false } = {}) {
   if (!force && cache && Date.now() - cachedAt < TTL_MS) return cache;
 
-  const nodes = await Taxonomy.find({}).sort({ order: 1, name: 1 }).lean();
+  const nodes = await db().Taxonomy.find({}).sort({ order: 1, name: 1 }).lean();
 
   const byId = new Map();
   for (const node of nodes) {
@@ -109,7 +110,7 @@ async function getTreeForPartType(partType) {
   // `HAS_PICTURE` because the grid applies it: without it a buyer ticking a
   // component type would be offered brands and models whose products the grid
   // then hides, which is the dead end this pruning exists to prevent.
-  const groups = await Product.aggregate([
+  const groups = await db().Product.aggregate([
     { $match: { partType: { $in: types }, isActive: true, ...HAS_PICTURE } },
     {
       $group: {
@@ -185,7 +186,7 @@ async function getComponentTypes() {
   // without it, a component type whose every product is pictureless would be
   // offered as step 1 of the wizard and lead straight to an empty grid — and
   // the counts beside the live types would overstate by the hidden rows.
-  const rows = await Product.aggregate([
+  const rows = await db().Product.aggregate([
     { $match: { isActive: true, ...HAS_PICTURE } },
     {
       $group: {

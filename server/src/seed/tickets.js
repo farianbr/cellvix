@@ -1,7 +1,8 @@
 import mongoose from 'mongoose';
 import { connectDb, disconnectDb } from '../config/db.js';
-import Ticket from '../models/Ticket.js';
-import User from '../models/User.js';
+import { db } from '../db/models.js';
+import '../models/Ticket.js';
+import '../models/User.js';
 
 /**
  * Demo repair tickets (Sales § Ticket).
@@ -185,11 +186,11 @@ async function seedTickets({ quiet = false } = {}) {
   // Assign against whoever is actually on this database rather than a name
   // baked into the file — a technician id that points at nothing would show as
   // a blank column and break the filter.
-  const staff = await User.find({ role: { $in: ['staff', 'admin'] } })
+  const staff = await db().User.find({ role: { $in: ['staff', 'admin'] } })
     .select('_id')
     .lean();
 
-  const existing = await Ticket.find({ ticketNumber: new RegExp(`^TKT-${year}-`) })
+  const existing = await db().Ticket.find({ ticketNumber: new RegExp(`^TKT-${year}-`) })
     .select('ticketNumber')
     .lean();
 
@@ -204,7 +205,7 @@ async function seedTickets({ quiet = false } = {}) {
 
   // Nothing to do if a previous run already put a full set in — matched by the
   // customer/device pair, since the numbers are assigned fresh each time.
-  const already = await Ticket.find({
+  const already = await db().Ticket.find({
     customerName: { $in: DEMO_TICKETS.map((t) => t.customerName) },
   })
     .select('customerName deviceModel')
@@ -258,7 +259,7 @@ async function seedTickets({ quiet = false } = {}) {
 
   // `timestamps` would otherwise stamp today over the ages above, and every
   // ticket would read 0d.
-  await Ticket.insertMany(rows, { timestamps: false });
+  await db().Ticket.insertMany(rows, { timestamps: false });
 
   log(`  tickets: ${rows.length} added, ${seen.size} already present`);
   return { added: rows.length, existing: seen.size };

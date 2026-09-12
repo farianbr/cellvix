@@ -1,12 +1,13 @@
-import Invoice from '../models/Invoice.js';
-import User from '../models/User.js';
+import { db } from '../db/models.js';
+import '../models/Invoice.js';
+import '../models/User.js';
 
 /**
  * The line of credit, derived from the invoices behind it.
  *
  * ## Why this exists
  *
- * `User.balance` was a stored counter incremented when an order drew on credit
+ * `db().User.balance` was a stored counter incremented when an order drew on credit
  * and decremented when a payment arrived — six separate `$inc` sites across
  * three services. Every one of them had to fire exactly once, in the right
  * direction, for the number to stay true. In practice it drifted: an account
@@ -43,7 +44,7 @@ function drawnMatch(userId) {
  * has a design for.
  */
 async function balanceOf(userId) {
-  const [row] = await Invoice.aggregate([
+  const [row] = await db().Invoice.aggregate([
     { $match: drawnMatch(userId) },
     {
       $group: {
@@ -66,7 +67,7 @@ async function balanceOf(userId) {
 async function balancesFor(userIds = []) {
   if (!userIds.length) return new Map();
 
-  const rows = await Invoice.aggregate([
+  const rows = await db().Invoice.aggregate([
     { $match: { user: { $in: userIds }, terms: { $ne: 'prepaid' } } },
     {
       $group: {
@@ -91,7 +92,7 @@ function availableOf(user, balance) {
 }
 
 /**
- * Writes the derived figure back onto `User.balance`.
+ * Writes the derived figure back onto `db().User.balance`.
  *
  * The column is kept **as a cache, never as the truth** — reports, exports and
  * the seed still read it, and rewriting all of those at once is a bigger change
@@ -101,7 +102,7 @@ function availableOf(user, balance) {
  */
 async function syncBalance(userId) {
   const balance = await balanceOf(userId);
-  await User.updateOne({ _id: userId }, { $set: { balance } });
+  await db().User.updateOne({ _id: userId }, { $set: { balance } });
   return balance;
 }
 

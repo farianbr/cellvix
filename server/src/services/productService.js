@@ -1,5 +1,6 @@
-import Product from '../models/Product.js';
-import Taxonomy from '../models/Taxonomy.js';
+import { db } from '../db/models.js';
+import '../models/Product.js';
+import '../models/Taxonomy.js';
 import { canSeePricing } from '../middleware/auth.js';
 import { listForProduct as listFaqsForProduct } from './faqService.js';
 import { likeRegex } from '../utils/regex.js';
@@ -194,12 +195,12 @@ async function buildFacets(params) {
   const full = buildQuery(params);
 
   const [grades, partTypes, availability, priceRange] = await Promise.all([
-    Product.aggregate([
+    db().Product.aggregate([
       { $match: withoutGrade },
       { $group: { _id: '$grade', count: { $sum: 1 } } },
       { $sort: { _id: 1 } },
     ]),
-    Product.aggregate([
+    db().Product.aggregate([
       { $match: withoutPartType },
       {
         $group: {
@@ -210,11 +211,11 @@ async function buildFacets(params) {
       },
       { $sort: { label: 1 } },
     ]),
-    Product.aggregate([
+    db().Product.aggregate([
       { $match: buildQuery({ ...params, inStockOnly: false }) },
       { $group: { _id: null, inStock: { $sum: { $cond: [{ $gt: ['$stock', 0] }, 1, 0] } }, total: { $sum: 1 } } },
     ]),
-    Product.aggregate([
+    db().Product.aggregate([
       { $match: full },
       { $group: { _id: null, min: { $min: '$price' }, max: { $max: '$price' } } },
     ]),
@@ -251,12 +252,12 @@ async function listProducts(params, user) {
   const sort = SORTS[params.sort] ?? SORTS.relevance;
 
   const [items, total, facets] = await Promise.all([
-    Product.find(query)
+    db().Product.find(query)
       .sort(sort)
       .skip((page - 1) * limit)
       .limit(limit)
       .lean(),
-    Product.countDocuments(query),
+    db().Product.countDocuments(query),
     buildFacets(params),
   ]);
 
@@ -273,14 +274,14 @@ async function listProducts(params, user) {
 }
 
 async function getProductBySlug(slug, user) {
-  const product = await Product.findOne({ slug, isActive: true }).lean();
+  const product = await db().Product.findOne({ slug, isActive: true }).lean();
   if (!product) return null;
 
   // FAQs ride along with the product rather than in a second round trip: the
   // section is on every product page, so a separate request would only ever
   // arrive late and shift the layout under the reader.
   const [related, faqs] = await Promise.all([
-    Product.find({
+    db().Product.find({
       _id: { $ne: product._id },
       modelSlug: product.modelSlug,
       isActive: true,
@@ -321,7 +322,7 @@ async function searchProducts(term, user, { limit = 6 } = {}) {
    *
    * Matched against the lowercased term because aliases are stored lowercase.
    */
-  const aliasMatches = await Taxonomy.find({
+  const aliasMatches = await db().Taxonomy.find({
     kind: 'model',
     isActive: { $ne: false },
     aliases: q.trim().toLowerCase(),
@@ -347,13 +348,13 @@ async function searchProducts(term, user, { limit = 6 } = {}) {
   };
 
   const [products, total, nameModels, partTypes] = await Promise.all([
-    Product.find(query).sort({ stock: -1 }).limit(limit).lean(),
-    Product.countDocuments(query),
-    Taxonomy.find({ kind: 'model', name: rx, isActive: { $ne: false } })
+    db().Product.find(query).sort({ stock: -1 }).limit(limit).lean(),
+    db().Product.countDocuments(query),
+    db().Taxonomy.find({ kind: 'model', name: rx, isActive: { $ne: false } })
       .sort({ productCount: -1 })
       .limit(6)
       .lean(),
-    Product.aggregate([
+    db().Product.aggregate([
       { $match: query },
       { $group: { _id: '$partType', label: { $first: '$partTypeLabel' }, count: { $sum: 1 } } },
       { $sort: { count: -1 } },

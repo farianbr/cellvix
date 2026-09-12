@@ -128,6 +128,18 @@ export function AuditLogScreen({ kind, page: meta, notice }) {
             <span className="block truncate font-medium text-ink-900">
               {row.actorName || row.actorEmail}
             </span>
+            {/*
+              A platform operator is called out, not left to look like staff.
+              This row is the owner's only evidence that somebody outside their
+              business acted inside it (SAAS_PLATFORM §4.5), so it has to be
+              legible at a glance — an email nobody recognises, sitting in a
+              column of colleagues, is not.
+            */}
+            {row.actorKind === 'superadmin' && (
+              <Badge tone="warn" size="sm" className="mt-0.5">
+                Platform support
+              </Badge>
+            )}
             {row.actorName && (
               <span className="block truncate text-xs text-ink-500">{row.actorEmail}</span>
             )}

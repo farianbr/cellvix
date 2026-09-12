@@ -6,6 +6,7 @@ import Breadcrumbs from '@/components/admin/Breadcrumbs';
 import { useAuth, useSignOut } from '@/hooks/useAuth';
 import { useAdminStats } from '@/hooks/useAdmin';
 import SignOutConfirm from '@/components/account/SignOutConfirm';
+import ImpersonationBanner from '@/components/admin/ImpersonationBanner';
 import AdminSidebar from './AdminSidebar';
 import AdminTopBar from './AdminTopBar';
 import CommandPalette from './CommandPalette';
@@ -21,7 +22,7 @@ import { RecordLabelProvider } from './recordLabel';
  * screen full of failed requests.
  */
 export function AdminShell() {
-  const { user, isLoading, canUseAdmin, isStaff } = useAuth();
+  const { user, isLoading, canUseAdmin, isStaff, impersonation } = useAuth();
   const signOut = useSignOut();
   const { data: stats } = useAdminStats();
   const location = useLocation();
@@ -130,7 +131,16 @@ export function AdminShell() {
         for the latter — it would clip the Business Overview to a single page —
         so both are unwound under `print:` (ERP rework §6.11).
       */}
-      <div className="flex h-dvh overflow-hidden bg-surface-2 print:block print:h-auto print:overflow-visible print:bg-white">
+      {/*
+        A support session's banner spans the whole application above the
+        sidebar, and sits outside the scrolling `<main>` so it cannot be
+        scrolled away from. It renders nothing for everybody else, which is
+        every session but a platform operator's (SAAS_PLATFORM §4.5).
+      */}
+      <div className="flex h-dvh flex-col overflow-hidden bg-surface-2 print:block print:h-auto print:overflow-visible print:bg-white">
+        <ImpersonationBanner impersonation={impersonation} />
+
+        <div className="flex min-h-0 flex-1 print:block">
         <AdminSidebar
           user={user}
           badges={badges}
@@ -170,6 +180,7 @@ export function AdminShell() {
               </Suspense>
             </div>
           </main>
+        </div>
         </div>
 
         <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />

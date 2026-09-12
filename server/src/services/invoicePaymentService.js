@@ -1,9 +1,10 @@
-import Invoice from '../models/Invoice.js';
-import User from '../models/User.js';
+import { db } from '../db/models.js';
+import '../models/Invoice.js';
+import '../models/User.js';
 import ApiError from '../utils/ApiError.js';
 import orderBuilder from './orderBuilder.js';
 import creditService from './creditService.js';
-import CreditTransaction from '../models/CreditTransaction.js';
+import '../models/CreditTransaction.js';
 import * as referralService from './referralService.js';
 
 /**
@@ -16,7 +17,7 @@ import * as referralService from './referralService.js';
  *
  *   1. the payment row is written and the header recomputed from the rows;
  *   2. the **line of credit is repaid** — an amount owed on terms that is paid
- *      has to come off `User.balance`, or the account stays at its limit
+ *      has to come off `db().User.balance`, or the account stays at its limit
  *      forever;
  *   3. a `due` record that reaches zero **becomes an invoice** — renumbered out
  *      of the `CVX-` series into `INV-`.
@@ -159,7 +160,7 @@ async function recordPayment(invoice, options) {
     // re-pointed is a reconciliation problem, never a reason to reject a
     // payment that genuinely happened.
     try {
-      await CreditTransaction.updateMany(
+      await db().CreditTransaction.updateMany(
         { type: 'referral', 'referral.invoiceNumber': result.previousNumber },
         { $set: { 'referral.invoiceNumber': invoice.number } },
       );
@@ -189,7 +190,7 @@ async function recordPayment(invoice, options) {
  * endpoint does not confirm that a number exists.
  */
 async function payableFor(userId, number) {
-  const invoice = await Invoice.findOne({ number, user: userId });
+  const invoice = await db().Invoice.findOne({ number, user: userId });
   if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');
 
   if (invoice.kind === 'receipt') {

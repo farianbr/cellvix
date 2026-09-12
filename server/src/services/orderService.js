@@ -1,18 +1,20 @@
 import mongoose from 'mongoose';
 import creditService from './creditService.js';
-import Order from '../models/Order.js';
-import Invoice from '../models/Invoice.js';
-import Product from '../models/Product.js';
-import Cart from '../models/Cart.js';
-import User from '../models/User.js';
+import { db } from '../db/models.js';
+import '../models/Order.js';
+import '../models/Invoice.js';
+import '../models/Product.js';
+import '../models/Cart.js';
+import '../models/User.js';
 import ApiError from '../utils/ApiError.js';
 import payment from './payment.js';
-import Offer from '../models/Offer.js';
+import '../models/Offer.js';
 import { priceCart, assertBundlesOrderable } from './pricingService.js';
 import storeCredit from './storeCreditService.js';
 import { sendInvoiceEmail } from './notifications.js';
 import notificationService from './notificationService.js';
-import Settings from '../models/Settings.js';
+import '../models/Settings.js';
+import Business from '../models/Business.js';
 
 const TERMS_DAYS = { prepaid: 0, net15: 15, net30: 30, net60: 60 };
 
@@ -20,7 +22,7 @@ const TERMS_DAYS = { prepaid: 0, net15: 15, net30: 30, net60: 60 };
 async function nextOrderNumber() {
   const year = new Date().getFullYear();
   const prefix = `CVX-${year}-`;
-  const last = await Order.findOne({ orderNumber: new RegExp(`^${prefix}`) })
+  const last = await db().Order.findOne({ orderNumber: new RegExp(`^${prefix}`) })
     .sort({ orderNumber: -1 })
     .select('orderNumber')
     .lean();
@@ -47,12 +49,12 @@ import { displayNameOf } from '../utils/displayName.js';
  * the checkout page's running total is a preview, this is the number that binds.
  */
 async function quote(userId, deliveryCode = 'ground') {
-  const cart = await Cart.findOne({ user: userId, savedForLater: false });
+  const cart = await db().Cart.findOne({ user: userId, savedForLater: false });
   if (!cart || (cart.items.length === 0 && (cart.bundles?.length ?? 0) === 0)) {
     throw ApiError.badRequest('Your cart is empty.', 'CART_EMPTY');
   }
 
-  const user = await User.findById(userId).lean();
+  const user = await db().User.findById(userId).lean();
   const priced = await priceCart(cart, user, { deliveryCode });
 
   if (priced.items.length === 0 && priced.bundles.length === 0) {
@@ -134,7 +136,7 @@ async function createOrder(user, input) {
   const lines = [...priced.items, ...flattenBundles(priced.bundles)];
 
   // Re-check availability at the moment of purchase, not at add-to-cart.
-  const products = await Product.find({
+  const products = await db().Product.find({
     _id: { $in: lines.map((item) => item.product) },
   }).lean();
   const stockById = new Map(products.map((product) => [product._id.toString(), product.stock]));
@@ -195,7 +197,7 @@ async function createOrder(user, input) {
       : { status: 'paid', reference: `store_credit_${orderNumber}`, processedAt: new Date() };
 
   // Decrement in one bulk write so a partial failure does not half-apply.
-  await Product.bulkWrite(
+  await db().Product.bulkWrite(
     [...demand.entries()].map(([id, qty]) => ({
       updateOne: { filter: { _id: id }, update: { $inc: { stock: -qty } } },
     })),
@@ -205,8 +207,28 @@ async function createOrder(user, input) {
     ? input.shippingAddress
     : (input.billingAddress ?? input.shippingAddress);
 
-  const order = await Order.create({
+  /**
+   * Which business the sale belongs to.
+   *
+   * **A storefront order carried no business at all**, which made it invisible
+   * to an admin panel scoped to one — the order existed, the customer was
+   * charged, and the operator's list was empty. Every seeded order had one and
+   * only checkout did not, so nothing surfaced it until the panel stopped
+   * running in "all businesses" mode.
+   *
+   * The default business is the right answer *today*: the storefront serves one
+   * business, and `Business.isDefault` is defined as where an unattributed
+   * record lands. When a subdomain or custom domain names the business before
+   * the request reaches here (SAAS_PLATFORM §4.2), this reads that instead —
+   * which is why it resolves through a variable rather than being hard-coded.
+   */
+  const storefrontBusiness = await Business.findOne({ isDefault: true, deletedAt: null })
+    .select('_id')
+    .lean();
+
+  const order = await db().Order.create({
     orderNumber,
+    business: storefrontBusiness?._id ?? null,
     user: user._id,
     items: lines,
     subtotal: priced.subtotal,
@@ -272,7 +294,7 @@ async function createOrder(user, input) {
   // at that point. Partly settled counts as due: the rest is still owed.
   const fullySettled = settled >= priced.total;
 
-  const invoice = await Invoice.create({
+  const invoice = await db().Invoice.create({
     number: await nextInvoiceNumber(fullySettled ? 'INV' : 'CVX'),
     kind: fullySettled ? 'invoice' : 'due',
     settledAt: fullySettled ? new Date() : undefined,
@@ -316,7 +338,7 @@ async function createOrder(user, input) {
   // history rather than this counter — the counter exists for `usageLimit`,
   // which is a cap on how many times an offer may be given away in total.
   if (priced.promo) {
-    await Offer.updateOne({ _id: priced.promo.offerId }, { $inc: { usageCount: 1 } });
+    await db().Offer.updateOne({ _id: priced.promo.offerId }, { $inc: { usageCount: 1 } });
   }
 
   // Buying on terms draws against the LINE OF CREDIT — and only for the part
@@ -336,9 +358,9 @@ async function createOrder(user, input) {
   const memory = {};
   if (input.deliveryNotes) memory['fieldMemory.deliveryNotes'] = input.deliveryNotes;
   if (input.poNumber) memory['fieldMemory.poNumber'] = input.poNumber;
-  if (Object.keys(memory).length) await User.updateOne({ _id: user._id }, { $set: memory });
+  if (Object.keys(memory).length) await db().User.updateOne({ _id: user._id }, { $set: memory });
 
-  await Cart.updateOne(
+  await db().Cart.updateOne(
     { user: user._id, savedForLater: false },
     { $set: { items: [], bundles: [], promoCode: '' } },
   );
@@ -352,7 +374,7 @@ async function createOrder(user, input) {
   // real path rather than a stored boolean. The read is inside the fire-and-
   // forget too: a settings lookup must not delay the response either.
   void (async () => {
-    const settings = await Settings.load();
+    const settings = await db().Settings.load();
     if (settings?.communications?.invoiceOnOrder === false) return;
     await sendInvoiceEmail({ invoice, order, user });
   })().catch(() => {});
@@ -421,12 +443,12 @@ function serializeOrder(order) {
 }
 
 async function listOrders(userId, { limit = 50 } = {}) {
-  const orders = await Order.find({ user: userId }).sort({ createdAt: -1 }).limit(limit).lean();
+  const orders = await db().Order.find({ user: userId }).sort({ createdAt: -1 }).limit(limit).lean();
   return orders.map(serializeOrder);
 }
 
 async function getOrder(userId, orderNumber) {
-  const order = await Order.findOne({ orderNumber, user: userId }).lean();
+  const order = await db().Order.findOne({ orderNumber, user: userId }).lean();
   if (!order) throw ApiError.notFound('Order not found.', 'ORDER_NOT_FOUND');
   return serializeOrder(order);
 }

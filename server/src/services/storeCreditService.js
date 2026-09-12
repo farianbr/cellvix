@@ -1,9 +1,10 @@
-import CreditTransaction from '../models/CreditTransaction.js';
-import User from '../models/User.js';
-import Order from '../models/Order.js';
+import { db } from '../db/models.js';
+import '../models/CreditTransaction.js';
+import '../models/User.js';
+import '../models/Order.js';
 import ApiError from '../utils/ApiError.js';
 import payment from './payment.js';
-import Invoice from '../models/Invoice.js';
+import '../models/Invoice.js';
 import { nextInvoiceNumber } from './orderBuilder.js';
 
 /**
@@ -44,7 +45,7 @@ async function post({
   const filter = { _id: userId };
   if (amount < 0) filter.storeCredit = { $gte: -amount };
 
-  const updated = await User.findOneAndUpdate(
+  const updated = await db().User.findOneAndUpdate(
     filter,
     { $inc: { storeCredit: amount } },
     { new: true },
@@ -52,7 +53,7 @@ async function post({
 
   if (!updated) {
     // Either the account is gone or the spend would overdraw it.
-    const exists = await User.exists({ _id: userId });
+    const exists = await db().User.exists({ _id: userId });
     if (!exists) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
     throw ApiError.badRequest(
       'That is more store credit than this account holds.',
@@ -60,7 +61,7 @@ async function post({
     );
   }
 
-  const entry = await CreditTransaction.create({
+  const entry = await db().CreditTransaction.create({
     user: userId,
     amount,
     balanceAfter: updated.storeCredit,
@@ -126,7 +127,7 @@ async function issueReceipt(entry) {
     const reversal = entry.amount < 0;
     const label = RECEIPT_LABELS[entry.type] ?? 'Store credit movement';
 
-    return await Invoice.create({
+    return await db().Invoice.create({
       number: await nextInvoiceNumber('RCT'),
       kind: 'receipt',
       user: entry.user,
@@ -174,7 +175,7 @@ function serialize(entry) {
 }
 
 async function balanceOf(userId) {
-  const user = await User.findById(userId).select('storeCredit').lean();
+  const user = await db().User.findById(userId).select('storeCredit').lean();
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
   return user.storeCredit ?? 0;
 }
@@ -183,7 +184,7 @@ async function balanceOf(userId) {
 async function statement(userId, { limit = 50 } = {}) {
   const [balance, entries] = await Promise.all([
     balanceOf(userId),
-    CreditTransaction.find({ user: userId }).sort({ createdAt: -1 }).limit(limit).lean(),
+    db().CreditTransaction.find({ user: userId }).sort({ createdAt: -1 }).limit(limit).lean(),
   ]);
 
   const added = entries.filter((row) => row.amount > 0).reduce((sum, row) => sum + row.amount, 0);
@@ -232,7 +233,7 @@ async function creditReferral({ referrerId, amount, note, referral }) {
     // Spend-style guards would block a reversal against an already-spent
     // balance, so this goes through the ledger without the `$gte` filter that
     // `post` applies to negative amounts.
-    const updated = await User.findOneAndUpdate(
+    const updated = await db().User.findOneAndUpdate(
       { _id: referrerId },
       { $inc: { storeCredit: amount } },
       { new: true },
@@ -247,7 +248,7 @@ async function creditReferral({ referrerId, amount, note, referral }) {
       await updated.save();
     }
 
-    const entry = await CreditTransaction.create({
+    const entry = await db().CreditTransaction.create({
       user: referrerId,
       amount,
       balanceAfter: updated.storeCredit,
@@ -299,7 +300,7 @@ async function recharge(user, { amount, poNumber }) {
  * Partial refunds are allowed up to what is left unrefunded on the order.
  */
 async function refundOrder(orderNumber, { amount, note }, adminId) {
-  const order = await Order.findOne({ orderNumber });
+  const order = await db().Order.findOne({ orderNumber });
   if (!order) throw ApiError.notFound('Order not found.', 'ORDER_NOT_FOUND');
 
   const alreadyRefunded = order.refundedTotal ?? 0;

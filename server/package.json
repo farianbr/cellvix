@@ -17,7 +17,8 @@
     "backfill:competitors": "node src/seed/backfill-competitors.js",
     "backfill:business": "node src/seed/backfill-business.js",
     "backfill:invoice-kind": "node src/seed/backfill-invoice-kind.js",
-    "backfill:lineage": "node src/seed/backfill-lineage.js"
+    "backfill:lineage": "node src/seed/backfill-lineage.js",
+    "migrate": "node src/seed/migrate.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

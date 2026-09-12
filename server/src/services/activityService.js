@@ -1,6 +1,7 @@
-import Order from '../models/Order.js';
-import Invoice from '../models/Invoice.js';
-import CreditTransaction from '../models/CreditTransaction.js';
+import { db } from '../db/models.js';
+import '../models/Order.js';
+import '../models/Invoice.js';
+import '../models/CreditTransaction.js';
 
 /**
  * One account's history, newest first.
@@ -71,9 +72,9 @@ const ACTIVITY_FILTERS = ['all', ...Object.keys(ACTIVITY_GROUPS)];
  */
 async function activityFeed(userId, { limit = 80, perSource = 40, forBuyer = false } = {}) {
   const [orders, invoices, credits] = await Promise.all([
-    Order.find({ user: userId }).sort({ createdAt: -1 }).limit(perSource).lean(),
-    Invoice.find({ user: userId }).sort({ issuedAt: -1 }).limit(perSource).lean(),
-    CreditTransaction.find({ user: userId }).sort({ createdAt: -1 }).limit(perSource).lean(),
+    db().Order.find({ user: userId }).sort({ createdAt: -1 }).limit(perSource).lean(),
+    db().Invoice.find({ user: userId }).sort({ issuedAt: -1 }).limit(perSource).lean(),
+    db().CreditTransaction.find({ user: userId }).sort({ createdAt: -1 }).limit(perSource).lean(),
   ]);
 
   const events = [];

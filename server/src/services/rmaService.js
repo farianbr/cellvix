@@ -1,10 +1,21 @@
 import mongoose from 'mongoose';
 
-import Rma, { RMA_STATUSES, RMA_OPEN_STATUSES } from '../models/Rma.js';
+import { RMA_STATUSES, RMA_OPEN_STATUSES } from '../models/Rma.js';
 import { displayNameOf } from '../utils/displayName.js';
-import Order from '../models/Order.js';
-import User from '../models/User.js';
-import Settings from '../models/Settings.js';
+/**
+ * Models come from the request's business, not from a module-level import
+ * (SAAS_PLATFORM §4.1).
+ *
+ * `db()` reads the connection out of async-local context, which
+ * `middleware/businessDb.js` opened for this request — so `db().Rma` is the
+ * `Rma` collection of *this* business's database. Importing the model directly
+ * would bind it to the default connection and quietly serve the wrong business
+ * once the split is on.
+ *
+ * The constants above are plain arrays and stay imported: they describe the
+ * schema rather than reaching a database.
+ */
+import { db } from '../db/models.js';
 import ApiError from '../utils/ApiError.js';
 import { likeRegex } from '../utils/regex.js';
 import storeCredit from './storeCreditService.js';
@@ -69,7 +80,7 @@ function endOfDay(value) {
 async function nextRmaNumber() {
   const year = new Date().getFullYear();
   const prefix = `RMA-${year}-`;
-  const last = await Rma.findOne({ rmaNumber: new RegExp(`^${prefix}`) })
+  const last = await db().Rma.findOne({ rmaNumber: new RegExp(`^${prefix}`) })
     .sort({ rmaNumber: -1 })
     .select('rmaNumber')
     .lean();
@@ -174,7 +185,7 @@ function proposedRefund(rma) {
 // ---- read -------------------------------------------------------------------
 
 async function listRmas({ q, status, from, to, user, business } = {}) {
-  const settings = await Settings.load();
+  const settings = await db().Settings.load();
   const slaDays = settings?.operations?.rmaSlaDays ?? 14;
 
   const query = {};
@@ -202,7 +213,7 @@ async function listRmas({ q, status, from, to, user, business } = {}) {
 
   if (q) {
     const rx = likeRegex(q);
-    const users = await User.find({ $or: [{ businessName: rx }, { email: rx }] })
+    const users = await db().User.find({ $or: [{ businessName: rx }, { email: rx }] })
       .select('_id')
       .lean();
     query.$or = [
@@ -212,7 +223,7 @@ async function listRmas({ q, status, from, to, user, business } = {}) {
     ];
   }
 
-  const rmas = await Rma.find(query)
+  const rmas = await db().Rma.find(query)
     .sort({ createdAt: -1 })
     .limit(200)
     .populate('user', 'businessName contactName email')
@@ -226,8 +237,8 @@ async function listRmas({ q, status, from, to, user, business } = {}) {
   if (status === 'overdue') shaped = shaped.filter((rma) => rma.overSla);
 
   const [statusRows, openRows] = await Promise.all([
-    Rma.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
-    Rma.find({ status: { $in: RMA_OPEN_STATUSES } }).select('createdAt status updatedAt').lean(),
+    db().Rma.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
+    db().Rma.find({ status: { $in: RMA_OPEN_STATUSES } }).select('createdAt status updatedAt').lean(),
   ]);
 
   const counts = Object.fromEntries(statusRows.map((row) => [row._id, row.count]));
@@ -247,11 +258,11 @@ async function listRmas({ q, status, from, to, user, business } = {}) {
 }
 
 async function getRma(id) {
-  const settings = await Settings.load();
+  const settings = await db().Settings.load();
   const slaDays = settings?.operations?.rmaSlaDays ?? 14;
 
   const query = isObjectId(id) ? { _id: id } : { rmaNumber: String(id) };
-  const rma = await Rma.findOne(query)
+  const rma = await db().Rma.findOne(query)
     .populate('user', 'businessName contactName email phone storeCredit tier')
     // `timeline` and `items` are needed for the warranty answer below: cover
     // runs from the delivery entry, and the grade is snapshotted on the line.
@@ -312,14 +323,14 @@ async function getRma(id) {
  * catalogue that has since moved.
  */
 async function createRma(body, createdBy) {
-  const order = await Order.findOne({ orderNumber: body.orderNumber }).lean();
+  const order = await db().Order.findOne({ orderNumber: body.orderNumber }).lean();
   if (!order) throw ApiError.badRequest('That order number does not exist.', 'ORDER_NOT_FOUND');
 
   const bySku = new Map((order.items ?? []).map((item) => [item.sku, item]));
 
   // What has already been claimed on this order, so two RMAs cannot between
   // them return more than was sold.
-  const existing = await Rma.find({ order: order._id, status: { $ne: 'rejected' } })
+  const existing = await db().Rma.find({ order: order._id, status: { $ne: 'rejected' } })
     .select('items')
     .lean();
 
@@ -359,7 +370,7 @@ async function createRma(body, createdBy) {
     };
   });
 
-  const rma = await Rma.create({
+  const rma = await db().Rma.create({
     rmaNumber: await nextRmaNumber(),
     user: order.user,
     order: order._id,
@@ -396,7 +407,7 @@ async function createRma(body, createdBy) {
  */
 async function setRmaStatus(id, { status, note }) {
   const query = isObjectId(id) ? { _id: id } : { rmaNumber: String(id) };
-  const rma = await Rma.findOne(query);
+  const rma = await db().Rma.findOne(query);
   if (!rma) throw ApiError.notFound('RMA not found.', 'RMA_NOT_FOUND');
 
   if (status === 'resolved') {
@@ -424,7 +435,7 @@ async function setRmaStatus(id, { status, note }) {
 /** Inspection findings — the per-item condition and disposition. */
 async function inspectRma(id, { items, inspectionNotes }) {
   const query = isObjectId(id) ? { _id: id } : { rmaNumber: String(id) };
-  const rma = await Rma.findOne(query);
+  const rma = await db().Rma.findOne(query);
   if (!rma) throw ApiError.notFound('RMA not found.', 'RMA_NOT_FOUND');
 
   if (['resolved', 'rejected'].includes(rma.status)) {
@@ -465,7 +476,7 @@ async function inspectRma(id, { items, inspectionNotes }) {
  */
 async function resolveRma(id, { resolution, amountDollars, note }, adminId) {
   const query = isObjectId(id) ? { _id: id } : { rmaNumber: String(id) };
-  const rma = await Rma.findOne(query);
+  const rma = await db().Rma.findOne(query);
   if (!rma) throw ApiError.notFound('RMA not found.', 'RMA_NOT_FOUND');
 
   if (['resolved', 'rejected'].includes(rma.status)) {

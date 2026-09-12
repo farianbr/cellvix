@@ -1,9 +1,10 @@
 import mongoose from 'mongoose';
 import { connectDb, disconnectDb } from '../config/db.js';
-import Product from '../models/Product.js';
-import BlogPost from '../models/BlogPost.js';
-import Faq from '../models/Faq.js';
-import Offer from '../models/Offer.js';
+import { db } from '../db/models.js';
+import '../models/Product.js';
+import '../models/BlogPost.js';
+import '../models/Faq.js';
+import '../models/Offer.js';
 import { BLOG_POSTS, GENERAL_FAQS, PRODUCT_FAQS, buildOffers } from './content.data.js';
 
 /**
@@ -23,25 +24,25 @@ const readMinutes = (body) =>
 async function seedContent({ quiet = false } = {}) {
   const log = quiet ? () => {} : (...args) => console.log(...args);
 
-  const products = await Product.find({ isActive: true }).lean();
+  const products = await db().Product.find({ isActive: true }).lean();
   if (products.length === 0) {
     throw new Error('No products in this database — run `npm run seed` first.');
   }
 
-  await Promise.all([BlogPost.deleteMany({}), Faq.deleteMany({}), Offer.deleteMany({})]);
+  await Promise.all([db().BlogPost.deleteMany({}), db().Faq.deleteMany({}), db().Offer.deleteMany({})]);
 
-  const posts = await BlogPost.insertMany(
+  const posts = await db().BlogPost.insertMany(
     BLOG_POSTS.map((post) => ({ ...post, readMinutes: readMinutes(post.body) })),
   );
   log(`  blog posts: ${posts.length}`);
 
-  const faqs = await Faq.insertMany([
+  const faqs = await db().Faq.insertMany([
     ...GENERAL_FAQS.map((faq) => ({ ...faq, scope: 'general', isPublished: true })),
     ...PRODUCT_FAQS.map((faq) => ({ ...faq, scope: 'product', isPublished: true })),
   ]);
   log(`  faqs: ${faqs.length}`);
 
-  const offers = await Offer.insertMany(buildOffers(products));
+  const offers = await db().Offer.insertMany(buildOffers(products));
   log(`  offers: ${offers.length}`);
 
   return { posts: posts.length, faqs: faqs.length, offers: offers.length };

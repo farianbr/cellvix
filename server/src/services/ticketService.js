@@ -1,11 +1,7 @@
 import mongoose from 'mongoose';
 
-import Ticket, {
-  TICKET_STATUSES,
-  TICKET_OPEN_STATUSES,
-} from '../models/Ticket.js';
-import User from '../models/User.js';
-import Invoice from '../models/Invoice.js';
+import { TICKET_STATUSES, TICKET_OPEN_STATUSES } from '../models/Ticket.js';
+import { db } from '../db/models.js';
 // Side-effect import, no binding: `getTicket` populates `quote`, and mongoose
 // resolves a `ref` by model name at call time. Without this the populate throws
 // "Schema hasn't been registered for model Quote" in any process that has not
@@ -14,7 +10,6 @@ import Invoice from '../models/Invoice.js';
 import '../models/Quote.js';
 import orderBuilder from './orderBuilder.js';
 import creditService from './creditService.js';
-import Settings from '../models/Settings.js';
 import ApiError from '../utils/ApiError.js';
 import { likeRegex } from '../utils/regex.js';
 
@@ -72,7 +67,7 @@ function endOfDay(value) {
 async function nextTicketNumber() {
   const year = new Date().getFullYear();
   const prefix = `TKT-${year}-`;
-  const last = await Ticket.findOne({ ticketNumber: new RegExp(`^${prefix}`) })
+  const last = await db().Ticket.findOne({ ticketNumber: new RegExp(`^${prefix}`) })
     .sort({ ticketNumber: -1 })
     .select('ticketNumber')
     .lean();
@@ -237,7 +232,7 @@ function shapeTicket(ticket, slaDays) {
  * filter, it is an empty dropdown.
  */
 async function listTechnicians() {
-  const staff = await User.find({ role: { $in: ['staff', 'admin'] }, lockedAt: null })
+  const staff = await db().User.find({ role: { $in: ['staff', 'admin'] }, lockedAt: null })
     .select('contactName businessName email')
     .sort({ contactName: 1 })
     .lean();
@@ -270,7 +265,7 @@ async function listTickets({
   page,
   business,
 } = {}) {
-  const settings = await Settings.load();
+  const settings = await db().Settings.load();
   const slaDays = settings?.operations?.ticketSlaDays ?? 7;
 
   const query = {};
@@ -321,13 +316,13 @@ async function listTickets({
   const currentPage = Math.max(Number(page) || 1, 1);
 
   const [rows, total] = await Promise.all([
-    Ticket.find(query)
+    db().Ticket.find(query)
       .sort({ createdAt: -1 })
       .skip((currentPage - 1) * perPage)
       .limit(perPage)
       .populate('technician', 'contactName businessName email')
       .lean(),
-    Ticket.countDocuments(query),
+    db().Ticket.countDocuments(query),
   ]);
 
   let shaped = rows.map((ticket) => shapeTicket(ticket, slaDays));
@@ -337,8 +332,8 @@ async function listTickets({
   if (status === 'overdue') shaped = shaped.filter((ticket) => ticket.overSla);
 
   const [statusRows, openRows] = await Promise.all([
-    Ticket.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
-    Ticket.find({ status: { $in: TICKET_OPEN_STATUSES } })
+    db().Ticket.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
+    db().Ticket.find({ status: { $in: TICKET_OPEN_STATUSES } })
       .select('createdAt status updatedAt closedAt')
       .lean(),
   ]);
@@ -364,11 +359,11 @@ async function listTickets({
 }
 
 async function getTicket(id) {
-  const settings = await Settings.load();
+  const settings = await db().Settings.load();
   const slaDays = settings?.operations?.ticketSlaDays ?? 7;
 
   const query = isObjectId(id) ? { _id: id } : { ticketNumber: String(id) };
-  const ticket = await Ticket.findOne(query)
+  const ticket = await db().Ticket.findOne(query)
     .populate('technician', 'contactName businessName email')
     // The lineage strip names its neighbours, so it needs their numbers rather
     // than their ids — an operator navigates by QT-101018, not by an ObjectId.
@@ -388,7 +383,7 @@ async function resolveTechnician(technicianId) {
   if (technicianId === undefined) return undefined;
   if (!technicianId) return null;
 
-  const staff = await User.findById(technicianId).select('_id').lean();
+  const staff = await db().User.findById(technicianId).select('_id').lean();
   if (!staff) throw ApiError.badRequest('That technician does not exist.', 'TECHNICIAN_NOT_FOUND');
 
   return staff._id;
@@ -465,7 +460,7 @@ function shapeDevicesIn(devices = []) {
 
 async function createTicket(body, createdBy) {
   const technician = await resolveTechnician(body.technician);
-  const settings = await Settings.load();
+  const settings = await db().Settings.load();
   const status = body.status ?? 'diagnosis';
 
   const devices = shapeDevicesIn(body.devices);
@@ -479,7 +474,7 @@ async function createTicket(body, createdBy) {
   // array at all, so those columns are the only record of what came in.
   const lead = devices[0];
 
-  const ticket = await Ticket.create({
+  const ticket = await db().Ticket.create({
     ticketNumber: await nextTicketNumber(),
 
     customerName: body.customerName,
@@ -546,7 +541,7 @@ async function setTicketStatus(id, body, actor) {
     throw ApiError.badRequest('That is not a ticket status.', 'TICKET_STATUS_INVALID');
   }
 
-  const ticket = await Ticket.findById(id);
+  const ticket = await db().Ticket.findById(id);
   if (!ticket) throw ApiError.notFound('Ticket not found.', 'TICKET_NOT_FOUND');
 
   const wasClosed = CLOSED_STATUSES.includes(ticket.status);
@@ -559,7 +554,7 @@ async function setTicketStatus(id, body, actor) {
   ticket.timeline.push({ status: body.status, at: new Date(), note: body.note, by: actor });
   await ticket.save();
 
-  const settings = await Settings.load();
+  const settings = await db().Settings.load();
   return { ticket: shapeTicket(ticket.toObject(), settings?.operations?.ticketSlaDays ?? 7) };
 }
 
@@ -570,7 +565,7 @@ async function setTicketStatus(id, body, actor) {
  * `setTicketStatus`, which is the only path that keeps the timeline honest.
  */
 async function updateTicket(id, body) {
-  const ticket = await Ticket.findById(id);
+  const ticket = await db().Ticket.findById(id);
   if (!ticket) throw ApiError.notFound('Ticket not found.', 'TICKET_NOT_FOUND');
 
   const assignable = [
@@ -598,12 +593,12 @@ async function updateTicket(id, body) {
 
   await ticket.save();
 
-  const settings = await Settings.load();
+  const settings = await db().Settings.load();
   return { ticket: shapeTicket(ticket.toObject(), settings?.operations?.ticketSlaDays ?? 7) };
 }
 
 async function deleteTicket(id) {
-  const ticket = await Ticket.findByIdAndDelete(id).lean();
+  const ticket = await db().Ticket.findByIdAndDelete(id).lean();
   if (!ticket) throw ApiError.notFound('Ticket not found.', 'TICKET_NOT_FOUND');
   return { deleted: true, ticketNumber: ticket.ticketNumber };
 }
@@ -625,7 +620,7 @@ async function recordDeposit(id, { amountDollars, method = 'cash', note } = {}, 
   }
 
   const query = isObjectId(id) ? { _id: id } : { ticketNumber: String(id) };
-  const ticket = await Ticket.findOne(query);
+  const ticket = await db().Ticket.findOne(query);
   if (!ticket) throw ApiError.notFound('Ticket not found.', 'TICKET_NOT_FOUND');
 
   if (ticket.invoice) {
@@ -640,14 +635,14 @@ async function recordDeposit(id, { amountDollars, method = 'cash', note } = {}, 
   ticket.deposits.push({ amount, method, note: note || undefined, by: actor?._id ?? null });
   await ticket.save();
 
-  const settings = await Settings.load();
+  const settings = await db().Settings.load();
   return { ticket: shapeTicket(ticket.toObject(), settings?.operations?.ticketSlaDays ?? 7) };
 }
 
 /** Remove a deposit that was recorded in error. */
 async function removeDeposit(id, depositId) {
   const query = isObjectId(id) ? { _id: id } : { ticketNumber: String(id) };
-  const ticket = await Ticket.findOne(query);
+  const ticket = await db().Ticket.findOne(query);
   if (!ticket) throw ApiError.notFound('Ticket not found.', 'TICKET_NOT_FOUND');
 
   if (ticket.invoice) {
@@ -664,7 +659,7 @@ async function removeDeposit(id, depositId) {
   }
 
   await ticket.save();
-  const settings = await Settings.load();
+  const settings = await db().Settings.load();
   return { ticket: shapeTicket(ticket.toObject(), settings?.operations?.ticketSlaDays ?? 7) };
 }
 
@@ -687,7 +682,7 @@ async function removeDeposit(id, depositId) {
  */
 async function convertToInvoice(id, { terms = 'prepaid' } = {}, actor) {
   const query = isObjectId(id) ? { _id: id } : { ticketNumber: String(id) };
-  const ticket = await Ticket.findOne(query).populate('user');
+  const ticket = await db().Ticket.findOne(query).populate('user');
   if (!ticket) throw ApiError.notFound('Ticket not found.', 'TICKET_NOT_FOUND');
 
   if (ticket.invoice) {
@@ -735,7 +730,7 @@ async function convertToInvoice(id, { terms = 'prepaid' } = {}, actor) {
   const dueDate = new Date(issuedAt);
   dueDate.setDate(dueDate.getDate() + (orderBuilder.TERMS_DAYS[terms] ?? 0));
 
-  const invoice = await Invoice.create({
+  const invoice = await db().Invoice.create({
     number: await orderBuilder.nextInvoiceNumber('CVX'),
     kind: 'due',
     // The other half of `ticket.invoice`, set below. `reference` says "Repair
@@ -797,7 +792,7 @@ async function convertToInvoice(id, { terms = 'prepaid' } = {}, actor) {
   // Terms draw on the line of credit, so the balance has to move with them.
   if (terms !== 'prepaid') await creditService.syncBalance(ticket.user._id);
 
-  const settings = await Settings.load();
+  const settings = await db().Settings.load();
   return {
     ticket: shapeTicket(ticket.toObject(), settings?.operations?.ticketSlaDays ?? 7),
     invoice: { id: invoice._id.toString(), number: invoice.number },

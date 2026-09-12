@@ -1,9 +1,10 @@
 import { connectDb, disconnectDb } from '../config/db.js';
-import Quote from '../models/Quote.js';
-import Order from '../models/Order.js';
-import User from '../models/User.js';
-import Product from '../models/Product.js';
-import Settings from '../models/Settings.js';
+import { db } from '../db/models.js';
+import '../models/Quote.js';
+import '../models/Order.js';
+import '../models/User.js';
+import '../models/Product.js';
+import '../models/Settings.js';
 import { buildQuotes } from './sales.data.js';
 
 /**
@@ -52,9 +53,9 @@ async function run() {
   await connectDb();
 
   const [buyers, products, settings] = await Promise.all([
-    User.find({ role: 'buyer', status: 'approved' }).select('_id businessName').lean(),
-    Product.find({ isActive: true }).select('_id sku name price cost').limit(200).lean(),
-    Settings.load(),
+    db().User.find({ role: 'buyer', status: 'approved' }).select('_id businessName').lean(),
+    db().Product.find({ isActive: true }).select('_id sku name price cost').limit(200).lean(),
+    db().Settings.load(),
   ]);
 
   if (!buyers.length) {
@@ -70,13 +71,13 @@ async function run() {
   // collide on `quoteNumber`'s unique index.
   const year = new Date().getFullYear();
   const prefix = `QT-${year}-`;
-  const last = await Quote.findOne({ quoteNumber: new RegExp(`^${prefix}`) })
+  const last = await db().Quote.findOne({ quoteNumber: new RegExp(`^${prefix}`) })
     .sort({ quoteNumber: -1 })
     .select('quoteNumber')
     .lean();
   const startAt = last ? Number(last.quoteNumber.slice(prefix.length)) + 1 : 1;
 
-  const rate = Settings.rateFor(settings, 'ON');
+  const rate = db().Settings.rateFor(settings, 'ON');
   const built = buildQuotes({ products, users: buyers, rate, year });
 
   // Renumber onto the end of the existing sequence.
@@ -86,7 +87,7 @@ async function run() {
   }));
 
   // Give one of them the `converted` state, pointed at a real order.
-  const order = await Order.findOne({ status: { $ne: 'cancelled' } })
+  const order = await db().Order.findOne({ status: { $ne: 'cancelled' } })
     .sort({ createdAt: -1 })
     .select('_id orderNumber createdAt user')
     .lean();
@@ -117,7 +118,7 @@ async function run() {
     );
   }
 
-  const inserted = await Quote.insertMany(rows);
+  const inserted = await db().Quote.insertMany(rows);
 
   const byStatus = inserted.reduce((out, row) => {
     out[row.status] = (out[row.status] ?? 0) + 1;
@@ -126,7 +127,7 @@ async function run() {
 
   console.log(`Added ${inserted.length} quotes (${inserted[0].quoteNumber} … ${inserted[inserted.length - 1].quoteNumber})`);
   console.log(`  by status: ${Object.entries(byStatus).map(([k, v]) => `${k} ${v}`).join(' · ')}`);
-  console.log(`  total quotes in database: ${await Quote.countDocuments({})}`);
+  console.log(`  total quotes in database: ${await db().Quote.countDocuments({})}`);
   if (!order) {
     console.log('  note: no order to point at, so nothing is in the `converted` state.');
   }

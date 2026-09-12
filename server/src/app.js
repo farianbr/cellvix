@@ -12,8 +12,12 @@ import routes from './routes/index.js';
 import { authenticate } from './middleware/auth.js';
 import { authenticateSupplier } from './middleware/supplierAuth.js';
 import { authenticateSuperAdmin } from './middleware/superAdminAuth.js';
+import { authenticateImpersonation } from './middleware/impersonationAuth.js';
 import { attachFeatures } from './middleware/feature.js';
 import { resolveBusinessScope } from './middleware/businessScope.js';
+import { resolveBusiness } from './middleware/resolveBusiness.js';
+import { enforceTenantStatus } from './middleware/tenantStatus.js';
+import { openBusinessDb } from './middleware/businessDb.js';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -44,6 +48,40 @@ function createApp() {
   app.use(cookieParser());
   if (!env.isProd) app.use(morgan('dev'));
 
+  /**
+   * Which business this request is for — **before anybody is authenticated**
+   * (SAAS_PLATFORM §4.2).
+   *
+   * This is the ordering phase 2 exists to establish. A buyer signs in at the
+   * storefront before any business is known, so authentication cannot be what
+   * resolves it; the host (or an explicit header) decides first, and the session
+   * is then read inside that business. Until this ran first, the storefront
+   * carried no business at all and `businessScope` was an admin-only concept.
+   *
+   * It only ever *sets* `req.businessScope`. `resolveBusinessScope` still runs
+   * further down and remains the one place that decides a staff member cannot
+   * widen their own scope.
+   */
+  app.use(resolveBusiness);
+
+  /**
+   * Open that business's database — **before anybody is authenticated**
+   * (SAAS_PLATFORM §4.1, §4.2).
+   *
+   * This sat after the whole authentication stack until the flip proved it
+   * could not: `authenticate` resolves a `User`, `User` is a per-business
+   * collection, and with the context opened later it read the default
+   * connection instead. Every sign-in failed with `INVALID_CREDENTIALS`
+   * against an account that plainly existed — the account was simply in
+   * another database.
+   *
+   * So the order is: work out which business, open its database, then read the
+   * session from it. The three authentication middlewares below all run inside
+   * that context; the supplier and super-admin ones resolve control-plane
+   * collections, which the model registry routes regardless of what is ambient.
+   */
+  app.use(openBusinessDb);
+
   // Every route can read req.user; individual routes decide whether it is required.
   app.use(authenticate);
 
@@ -73,6 +111,19 @@ function createApp() {
   app.use(authenticateSuperAdmin);
 
   /**
+   * A support session — a fourth cookie, and the only one that crosses from the
+   * platform into a tenant's data (SAAS_PLATFORM §4.5).
+   *
+   * **Mounted after the console's session and before business scope**, and both
+   * halves of that are load-bearing. After, because entering a business is an
+   * act performed on the console session and the two coexist — leaving must
+   * return the operator to a console they are still signed in to. Before,
+   * because this pins `req.businessScope` to the business the grant names, and
+   * `resolveBusinessScope` must not then overwrite it from the query string.
+   */
+  app.use(authenticateImpersonation);
+
+  /**
    * Which business this request is about, then what that business can do.
    *
    * **The order is load-bearing and this is why they are mounted together.**
@@ -88,6 +139,19 @@ function createApp() {
    */
   app.use(resolveBusinessScope);
   app.use(attachFeatures);
+
+  /**
+   * What the tenant behind that business is still entitled to (§6 phase 19).
+   *
+   * **After scope, because it reads the business to find the tenant.** Mounted
+   * here rather than per-route for the reason the feature gate is not: this is
+   * a property of the whole account, so a route that forgot it would be a hole
+   * in a billing rule rather than a missing decoration.
+   *
+   * Note that only requests carrying a business are covered — the storefront
+   * sends no scope today, which the middleware's own header explains.
+   */
+  app.use(enforceTenantStatus);
 
   app.use('/api', routes);
 

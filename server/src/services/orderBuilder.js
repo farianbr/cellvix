@@ -1,7 +1,8 @@
-import Order from '../models/Order.js';
-import Invoice from '../models/Invoice.js';
-import Product from '../models/Product.js';
-import Settings from '../models/Settings.js';
+import { db } from '../db/models.js';
+import '../models/Order.js';
+import '../models/Invoice.js';
+import '../models/Product.js';
+import '../models/Settings.js';
 import ApiError from '../utils/ApiError.js';
 import notificationService from './notificationService.js';
 import { displayNameOf } from '../utils/displayName.js';
@@ -41,7 +42,7 @@ const TERMS_DAYS = { prepaid: 0, net15: 15, net30: 30, net60: 60 };
 async function nextOrderNumber() {
   const year = new Date().getFullYear();
   const prefix = `CVX-${year}-`;
-  const last = await Order.findOne({ orderNumber: new RegExp(`^${prefix}`) })
+  const last = await db().Order.findOne({ orderNumber: new RegExp(`^${prefix}`) })
     .sort({ orderNumber: -1 })
     .select('orderNumber')
     .lean();
@@ -62,7 +63,7 @@ async function nextOrderNumber() {
 async function nextInvoiceNumber(series = 'INV') {
   const year = new Date().getFullYear();
   const prefix = `${series}-${year}-`;
-  const last = await Invoice.findOne({ number: new RegExp(`^${prefix}`) })
+  const last = await db().Invoice.findOne({ number: new RegExp(`^${prefix}`) })
     .sort({ number: -1 })
     .select('number')
     .lean();
@@ -89,7 +90,7 @@ function provinceFor(user) {
  */
 async function buildOrderItems(rawItems) {
   const ids = rawItems.map((item) => item.product).filter(Boolean);
-  const products = await Product.find({ _id: { $in: ids } })
+  const products = await db().Product.find({ _id: { $in: ids } })
     .select('sku name slug price cost stock grade partType partTypeLabel brandSlug images')
     .lean();
   const byId = new Map(products.map((product) => [product._id.toString(), product]));
@@ -138,7 +139,7 @@ async function createInvoiceFor(order, terms) {
   const dueDate = new Date();
   dueDate.setDate(dueDate.getDate() + (TERMS_DAYS[terms] ?? 0));
 
-  return Invoice.create({
+  return db().Invoice.create({
     number: await nextInvoiceNumber('CVX'),
     kind: 'due',
     order: order._id,
@@ -213,7 +214,7 @@ async function raiseOrder({
     demand.set(id, (demand.get(id) ?? 0) + item.qty);
   }
 
-  const live = await Product.find({ _id: { $in: [...demand.keys()] } })
+  const live = await db().Product.find({ _id: { $in: [...demand.keys()] } })
     .select('sku name stock')
     .lean();
 
@@ -227,8 +228,8 @@ async function raiseOrder({
     }
   }
 
-  const settings = await Settings.load();
-  const rate = Settings.rateFor(settings, provinceFor(user));
+  const settings = await db().Settings.load();
+  const rate = db().Settings.rateFor(settings, provinceFor(user));
 
   const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
   const tax = Math.round((subtotal + shipping) * rate);
@@ -249,7 +250,7 @@ async function raiseOrder({
     phone: address.phone,
   };
 
-  const order = await Order.create({
+  const order = await db().Order.create({
     orderNumber,
     user: user._id,
     // The shop that fulfils this order. Null on a storefront checkout, which
@@ -277,7 +278,7 @@ async function raiseOrder({
 
   // One bulk write so a partial failure cannot half-apply, exactly as order
   // placement does it.
-  await Product.bulkWrite(
+  await db().Product.bulkWrite(
     [...demand.entries()].map(([id, qty]) => ({
       updateOne: { filter: { _id: id }, update: { $inc: { stock: -qty } } },
     })),

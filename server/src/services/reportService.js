@@ -1,12 +1,13 @@
-import Order from '../models/Order.js';
-import Invoice from '../models/Invoice.js';
-import Product from '../models/Product.js';
-import Expense from '../models/Expense.js';
-import PurchaseOrder from '../models/PurchaseOrder.js';
-import StockMovement from '../models/StockMovement.js';
-import Supplier from '../models/Supplier.js';
-import CreditTransaction from '../models/CreditTransaction.js';
-import Settings from '../models/Settings.js';
+import { db } from '../db/models.js';
+import '../models/Order.js';
+import '../models/Invoice.js';
+import '../models/Product.js';
+import '../models/Expense.js';
+import '../models/PurchaseOrder.js';
+import '../models/StockMovement.js';
+import '../models/Supplier.js';
+import '../models/CreditTransaction.js';
+import '../models/Settings.js';
 import ApiError from '../utils/ApiError.js';
 
 /**
@@ -99,7 +100,7 @@ function salesQuery(start, end) {
  * Invoiced — by invoice date. Never mixed with collected.
  */
 async function invoicedIn(start, end) {
-  const [row] = await Invoice.aggregate([
+  const [row] = await db().Invoice.aggregate([
     { $match: { issuedAt: { $gte: start, $lte: end } } },
     { $group: { _id: null, total: { $sum: '$amount' }, count: { $sum: 1 } } },
   ]);
@@ -112,7 +113,7 @@ async function invoicedIn(start, end) {
  * May's `collected`, and unwinding the payments array is the only way to say so.
  */
 async function collectedIn(start, end) {
-  const rows = await Invoice.aggregate([
+  const rows = await db().Invoice.aggregate([
     { $unwind: '$payments' },
     { $match: { 'payments.at': { $gte: start, $lte: end } } },
     {
@@ -134,7 +135,7 @@ async function collectedIn(start, end) {
 
 /** Expenses in the range, with the category breakdown every tab wants. */
 async function expensesIn(start, end) {
-  const expenses = await Expense.find({ date: { $gte: start, $lte: end } })
+  const expenses = await db().Expense.find({ date: { $gte: start, $lte: end } })
     .sort({ date: -1 })
     .populate('category', 'name colorToken')
     .populate('purchaseOrder', 'poNumber')
@@ -173,7 +174,7 @@ async function expensesIn(start, end) {
 }
 
 /**
- * Refunds, from the `CreditTransaction` ledger rather than `Order.refundedTotal`.
+ * Refunds, from the `CreditTransaction` ledger rather than `db().Order.refundedTotal`.
  *
  * The same dating bug phase 3 found and fixed: an order carries a *running*
  * refund total with no date of its own, so dating it by `updatedAt` moves a
@@ -183,7 +184,7 @@ async function refundsIn(start, end) {
   // A refund posts a POSITIVE row (credit added to the buyer), so this total is
   // already the money going out — no sign flip, and it is reported on its own
   // line rather than pushed into a revenue figure (§9.2).
-  const [row] = await CreditTransaction.aggregate([
+  const [row] = await db().CreditTransaction.aggregate([
     { $match: { type: 'refund', createdAt: { $gte: start, $lte: end } } },
     { $group: { _id: null, total: { $sum: '$amount' }, count: { $sum: 1 } } },
   ]);
@@ -193,7 +194,7 @@ async function refundsIn(start, end) {
 /** Inventory is a position, not a flow — "as of today", whatever the range. */
 async function inventoryPosition(settings) {
   const fallback = settings?.operations?.lowStockThreshold ?? 50;
-  const products = await Product.find({})
+  const products = await db().Product.find({})
     .select('name sku stock minStock price cost partTypeLabel brandName')
     .lean();
 
@@ -229,7 +230,7 @@ async function inventoryPosition(settings) {
 /** Outstanding receivables — also a position. Overdue is derived, never stored. */
 async function receivables() {
   const now = new Date();
-  const invoices = await Invoice.find({ status: { $ne: 'paid' } })
+  const invoices = await db().Invoice.find({ status: { $ne: 'paid' } })
     .sort({ dueDate: 1 })
     .populate('user', 'businessName')
     .lean();
@@ -258,7 +259,7 @@ async function receivables() {
     };
   });
 
-  const total = await Invoice.estimatedDocumentCount();
+  const total = await db().Invoice.estimatedDocumentCount();
 
   return {
     outstanding,
@@ -279,7 +280,7 @@ async function summary(start, end, settings) {
     invoicedIn(start, end),
     collectedIn(start, end),
     expensesIn(start, end),
-    Order.find(salesQuery(start, end)).select('items tax total').lean(),
+    db().Order.find(salesQuery(start, end)).select('items tax total').lean(),
     inventoryPosition(settings),
     receivables(),
     refundsIn(start, end),
@@ -332,7 +333,7 @@ async function summary(start, end, settings) {
  */
 async function profitAndLoss(start, end) {
   const [orders, expenseData, collected] = await Promise.all([
-    Order.find(salesQuery(start, end)).select('items tax shipping discount total').lean(),
+    db().Order.find(salesQuery(start, end)).select('items tax shipping discount total').lean(),
     expensesIn(start, end),
     collectedIn(start, end),
   ]);
@@ -413,7 +414,7 @@ async function profitAndLoss(start, end) {
  */
 async function sales(start, end) {
   const [invoices, collected, ar] = await Promise.all([
-    Invoice.find({ issuedAt: { $gte: start, $lte: end } })
+    db().Invoice.find({ issuedAt: { $gte: start, $lte: end } })
       .sort({ issuedAt: -1 })
       .populate('user', 'businessName')
       .populate('order', 'orderNumber')
@@ -507,7 +508,7 @@ async function expenseTab(start, end) {
 async function inventoryTab(start, end, settings) {
   const [position, movements] = await Promise.all([
     inventoryPosition(settings),
-    StockMovement.find({ createdAt: { $gte: start, $lte: end } })
+    db().StockMovement.find({ createdAt: { $gte: start, $lte: end } })
       .sort({ createdAt: -1 })
       .limit(300)
       .populate('product', 'name sku')
@@ -568,7 +569,7 @@ async function inventoryTab(start, end, settings) {
  */
 async function taxTab(start, end, settings) {
   const [orders, expenseData] = await Promise.all([
-    Order.find(salesQuery(start, end))
+    db().Order.find(salesQuery(start, end))
       .select('orderNumber createdAt subtotal discount shipping tax total user shippingAddress')
       .populate('user', 'businessName')
       .lean(),
@@ -640,7 +641,7 @@ async function taxTab(start, end, settings) {
         // apply. They differ when a rate changed mid-range, and seeing both is
         // how an operator finds out.
         avgRate: row.taxable > 0 ? row.tax / row.taxable : 0,
-        settingsRate: Settings.rateFor(settings, row.province),
+        settingsRate: db().Settings.rateFor(settings, row.province),
       }))
       .sort((a, b) => b.tax - a.tax),
   };
@@ -656,7 +657,7 @@ async function taxTab(start, end, settings) {
  */
 async function staffTab(start, end) {
   const [orders, invoiced] = await Promise.all([
-    Order.countDocuments(salesQuery(start, end)),
+    db().Order.countDocuments(salesQuery(start, end)),
     invoicedIn(start, end),
   ]);
 
@@ -686,10 +687,10 @@ async function staffTab(start, end) {
  */
 async function supplierPrices() {
   const [orders, suppliers] = await Promise.all([
-    PurchaseOrder.find({ status: { $nin: ['draft', 'cancelled'] } })
+    db().PurchaseOrder.find({ status: { $nin: ['draft', 'cancelled'] } })
       .select('supplier orderDate items')
       .lean(),
-    Supplier.find({}).select('name').lean(),
+    db().Supplier.find({}).select('name').lean(),
   ]);
 
   const names = new Map(suppliers.map((supplier) => [supplier._id.toString(), supplier.name]));
@@ -757,7 +758,7 @@ async function business(start, end, settings, { brand } = {}) {
     invoicedIn(start, end),
     collectedIn(start, end),
     expensesIn(start, end),
-    Order.find(salesQuery(start, end)).select('items tax total status createdAt').lean(),
+    db().Order.find(salesQuery(start, end)).select('items tax total status createdAt').lean(),
     refundsIn(start, end),
   ]);
 
@@ -771,7 +772,7 @@ async function business(start, end, settings, { brand } = {}) {
   // description happens to contain the word.
   let filtered = orders;
   if (brand) {
-    const inBrand = await Product.find({ brandSlug: String(brand) }).select('_id').lean();
+    const inBrand = await db().Product.find({ brandSlug: String(brand) }).select('_id').lean();
     const ids = new Set(inBrand.map((product) => product._id.toString()));
 
     filtered = orders.map((order) => ({
@@ -801,7 +802,7 @@ async function business(start, end, settings, { brand } = {}) {
   // Units bought — stock actually received from purchase orders in the period,
   // which is what the ledger records. A PO raised and not delivered is not
   // stock bought.
-  const received = await StockMovement.find({
+  const received = await db().StockMovement.find({
     type: 'purchase',
     createdAt: { $gte: start, $lte: end },
   })
@@ -889,7 +890,7 @@ async function report(tab, query = {}) {
   if (!handler) throw ApiError.notFound(`No report named "${tab}".`, 'REPORT_NOT_FOUND');
 
   const { start, end } = resolveRange(query);
-  const settings = await Settings.load();
+  const settings = await db().Settings.load();
 
   // One signature for every handler — `(start, end, settings, query)` — so the
   // dispatcher never has to know which tab wants what.

@@ -1,9 +1,10 @@
 import bcrypt from 'bcryptjs';
 
 import { connectDb, disconnectDb } from '../config/db.js';
-import Supplier from '../models/Supplier.js';
-import Product from '../models/Product.js';
-import PurchaseOrder from '../models/PurchaseOrder.js';
+import { db } from '../db/models.js';
+import '../models/Supplier.js';
+import '../models/Product.js';
+import '../models/PurchaseOrder.js';
 import * as purchaseBidService from '../services/purchaseBidService.js';
 import { SUPPLIER_COMPONENT_TYPES, buildBidOrders } from './purchase-bids.data.js';
 
@@ -56,8 +57,8 @@ async function seedPurchaseBids({ quiet = false } = {}) {
   const log = quiet ? () => {} : (...args) => console.log(...args);
 
   const [suppliers, products] = await Promise.all([
-    Supplier.find({}).select('_id code name email isActive componentTypes passwordHash').lean(),
-    Product.find({ isActive: true }).select('_id sku name price grade partType').lean(),
+    db().Supplier.find({}).select('_id code name email isActive componentTypes passwordHash').lean(),
+    db().Product.find({ isActive: true }).select('_id sku name price grade partType').lean(),
   ]);
 
   if (!suppliers.length) {
@@ -79,7 +80,7 @@ async function seedPurchaseBids({ quiet = false } = {}) {
     // ours to overwrite.
     if (supplier.componentTypes?.length) continue;
 
-    await Supplier.updateOne({ _id: supplier._id }, { componentTypes: tags });
+    await db().Supplier.updateOne({ _id: supplier._id }, { componentTypes: tags });
     tagged += 1;
   }
   log(`  tagged ${tagged} supplier(s) with component types`);
@@ -99,21 +100,21 @@ async function seedPurchaseBids({ quiet = false } = {}) {
     if (!supplier.isActive || !supplier.email) continue;
     if (supplier.passwordHash) continue; // already has a login
 
-    await Supplier.updateOne({ _id: supplier._id }, { passwordHash, portalInviteAt: new Date() });
+    await db().Supplier.updateOne({ _id: supplier._id }, { passwordHash, portalInviteAt: new Date() });
     credentialed += 1;
   }
   log(`  gave ${credentialed} supplier(s) portal access (password: ${DEMO_PASSWORD})`);
 
   // ---- 3. the orders --------------------------------------------------------
 
-  const fresh = await Supplier.find({}).select('_id code name email').lean();
+  const fresh = await db().Supplier.find({}).select('_id code name email').lean();
   const suppliersByCode = new Map(fresh.filter((s) => s.code).map((s) => [s.code, s]));
 
   // Continue the sequence rather than restarting it, so a second run does not
   // collide on `poNumber`'s unique index — the rule `seed:quotes` follows.
   const year = new Date().getFullYear();
   const prefix = `PO-${year}-`;
-  const last = await PurchaseOrder.findOne({ poNumber: new RegExp(`^${prefix}`) })
+  const last = await db().PurchaseOrder.findOne({ poNumber: new RegExp(`^${prefix}`) })
     .sort({ poNumber: -1 })
     .select('poNumber')
     .lean();
@@ -126,7 +127,7 @@ async function seedPurchaseBids({ quiet = false } = {}) {
     );
   }
 
-  const inserted = await PurchaseOrder.insertMany(built.map((row) => row.doc));
+  const inserted = await db().PurchaseOrder.insertMany(built.map((row) => row.doc));
   log(
     `  added ${inserted.length} purchase orders (${inserted[0].poNumber} … ${inserted.at(-1).poNumber})`,
   );
@@ -173,15 +174,15 @@ async function run() {
   console.log('Seeding supplier bidding demo data…');
   const result = await seedPurchaseBids();
 
-  const counts = await PurchaseOrder.aggregate([
+  const counts = await db().PurchaseOrder.aggregate([
     { $group: { _id: '$status', count: { $sum: 1 } } },
   ]);
   console.log(`  by status: ${counts.map((row) => `${row._id} ${row.count}`).join(' · ')}`);
-  console.log(`  total purchase orders in database: ${await PurchaseOrder.countDocuments({})}`);
+  console.log(`  total purchase orders in database: ${await db().PurchaseOrder.countDocuments({})}`);
   console.log('');
   console.log('Supplier portal: http://localhost:5173/supplier');
 
-  const logins = await Supplier.find({ isActive: true, passwordHash: { $exists: true } })
+  const logins = await db().Supplier.find({ isActive: true, passwordHash: { $exists: true } })
     .select('name email')
     .lean();
   for (const supplier of logins) {

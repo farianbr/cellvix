@@ -1,11 +1,12 @@
 import crypto from 'node:crypto';
 
-import MessageLog, { MESSAGE_CHANNELS } from '../models/MessageLog.js';
-import MessageTemplate from '../models/MessageTemplate.js';
-import Campaign from '../models/Campaign.js';
-import User from '../models/User.js';
-import Order from '../models/Order.js';
-import Settings from '../models/Settings.js';
+import { MESSAGE_CHANNELS } from '../models/MessageLog.js';
+import { db } from '../db/models.js';
+import '../models/MessageTemplate.js';
+import '../models/Campaign.js';
+import '../models/User.js';
+import '../models/Order.js';
+import '../models/Settings.js';
 import ApiError from '../utils/ApiError.js';
 import { likeRegex } from '../utils/regex.js';
 import { sendMail, mailerConfigured } from './mailer.js';
@@ -217,12 +218,12 @@ async function listMessages({ channel, user, search, status, page = 1, limit = 2
   const current = Math.max(Number(page) || 1, 1);
 
   const [rows, total] = await Promise.all([
-    MessageLog.find(filter)
+    db().MessageLog.find(filter)
       .sort({ createdAt: -1 })
       .skip((current - 1) * perPage)
       .limit(perPage)
       .lean(),
-    MessageLog.countDocuments(filter),
+    db().MessageLog.countDocuments(filter),
   ]);
 
   return {
@@ -248,16 +249,16 @@ async function sendMessage(
 ) {
   const status = await channelStatus(channel);
 
-  const account = await User.findById(userId).lean();
+  const account = await db().User.findById(userId).lean();
   if (!account) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
 
   let text = body;
   if (templateId) {
-    const template = await MessageTemplate.findById(templateId).lean();
+    const template = await db().MessageTemplate.findById(templateId).lean();
     if (!template) throw ApiError.notFound('Template not found.', 'TEMPLATE_NOT_FOUND');
     // A template fills an empty box; typed text always wins, so picking a
     // template and then editing it does not lose the edit.
-    if (!text?.trim()) text = MessageTemplate.render(template.body, account);
+    if (!text?.trim()) text = db().MessageTemplate.render(template.body, account);
   }
 
   if (!text?.trim() && channel !== 'call') {
@@ -359,7 +360,7 @@ async function sendMessage(
     row.unconfiguredReason = status.reason;
   }
 
-  const saved = await MessageLog.create(row);
+  const saved = await db().MessageLog.create(row);
 
   return {
     message: serializeMessage(saved),
@@ -374,23 +375,23 @@ async function sendMessage(
 async function listTemplates({ channel } = {}) {
   const filter = {};
   if (channel) filter.channel = channel;
-  const rows = await MessageTemplate.find(filter).sort({ channel: 1, name: 1 }).lean();
+  const rows = await db().MessageTemplate.find(filter).sort({ channel: 1, name: 1 }).lean();
   return { templates: rows.map(serializeTemplate) };
 }
 
 async function createTemplate(data, staff) {
-  const row = await MessageTemplate.create({ ...data, createdBy: staff?._id });
+  const row = await db().MessageTemplate.create({ ...data, createdBy: staff?._id });
   return { template: serializeTemplate(row) };
 }
 
 async function updateTemplate(id, data) {
-  const row = await MessageTemplate.findByIdAndUpdate(id, data, { new: true });
+  const row = await db().MessageTemplate.findByIdAndUpdate(id, data, { new: true });
   if (!row) throw ApiError.notFound('Template not found.', 'TEMPLATE_NOT_FOUND');
   return { template: serializeTemplate(row) };
 }
 
 async function deleteTemplate(id) {
-  const row = await MessageTemplate.findByIdAndDelete(id);
+  const row = await db().MessageTemplate.findByIdAndDelete(id);
   if (!row) throw ApiError.notFound('Template not found.', 'TEMPLATE_NOT_FOUND');
   return { ok: true };
 }
@@ -508,12 +509,12 @@ async function resolveAudience(filter = 'approved') {
   else if (filter === 'with_orders') base.status = 'approved';
   else throw ApiError.badRequest('Unknown audience.', 'UNKNOWN_AUDIENCE');
 
-  let candidates = await User.find(base)
+  let candidates = await db().User.find(base)
     .select('email businessName contactName marketingConsent contactConsent unsubscribedAt')
     .lean();
 
   if (filter === 'with_orders') {
-    const ids = await Order.distinct('user', {});
+    const ids = await db().Order.distinct('user', {});
     const placed = new Set(ids.map(String));
     candidates = candidates.filter((row) => placed.has(String(row._id)));
   }
@@ -536,12 +537,12 @@ async function listCampaigns({ status, search, page = 1, limit = 25 } = {}) {
   const current = Math.max(Number(page) || 1, 1);
 
   const [rows, total] = await Promise.all([
-    Campaign.find(filter)
+    db().Campaign.find(filter)
       .sort({ createdAt: -1 })
       .skip((current - 1) * perPage)
       .limit(perPage)
       .lean(),
-    Campaign.countDocuments(filter),
+    db().Campaign.countDocuments(filter),
   ]);
 
   return {
@@ -553,7 +554,7 @@ async function listCampaigns({ status, search, page = 1, limit = 25 } = {}) {
 }
 
 async function getCampaign(id) {
-  const row = await Campaign.findById(id).lean();
+  const row = await db().Campaign.findById(id).lean();
   if (!row) throw ApiError.notFound('Campaign not found.', 'CAMPAIGN_NOT_FOUND');
 
   // The recipient count is recomputed on read rather than trusted from the
@@ -569,7 +570,7 @@ async function getCampaign(id) {
 
 async function createCampaign(data, staff) {
   const { eligible } = await resolveAudience(data.audience?.filter ?? 'approved');
-  const row = await Campaign.create({
+  const row = await db().Campaign.create({
     ...data,
     audience: { filter: data.audience?.filter ?? 'approved', count: eligible.length },
     status: 'draft',
@@ -585,7 +586,7 @@ async function createCampaign(data, staff) {
  * history that the recipients already hold a copy of.
  */
 async function updateCampaign(id, data) {
-  const row = await Campaign.findById(id);
+  const row = await db().Campaign.findById(id);
   if (!row) throw ApiError.notFound('Campaign not found.', 'CAMPAIGN_NOT_FOUND');
   if (row.status === 'sent' || row.status === 'sending') {
     throw ApiError.badRequest(
@@ -607,7 +608,7 @@ async function updateCampaign(id, data) {
 }
 
 async function deleteCampaign(id) {
-  const row = await Campaign.findById(id);
+  const row = await db().Campaign.findById(id);
   if (!row) throw ApiError.notFound('Campaign not found.', 'CAMPAIGN_NOT_FOUND');
   if (row.status === 'sent') {
     throw ApiError.badRequest(
@@ -633,7 +634,7 @@ async function deleteCampaign(id) {
  * what happened, which is why `sent` is incremented rather than assumed.
  */
 async function sendCampaign(id, staff) {
-  const row = await Campaign.findById(id);
+  const row = await db().Campaign.findById(id);
   if (!row) throw ApiError.notFound('Campaign not found.', 'CAMPAIGN_NOT_FOUND');
   if (row.status === 'sent' || row.status === 'sending') {
     throw ApiError.badRequest('This campaign has already been sent.', 'CAMPAIGN_ALREADY_SENT');
@@ -655,14 +656,14 @@ async function sendCampaign(id, staff) {
   let failed = 0;
 
   for (const account of eligible) {
-    const body = MessageTemplate.render(row.body, account);
+    const body = db().MessageTemplate.render(row.body, account);
     let status = 'failed';
     let reason;
 
     try {
       const result = await sendMail({
         to: account.email,
-        subject: MessageTemplate.render(row.subject, account),
+        subject: db().MessageTemplate.render(row.subject, account),
         html: decorate(body, account),
         text: body,
       });
@@ -680,7 +681,7 @@ async function sendCampaign(id, staff) {
     else if (status === 'queued_unconfigured') queued += 1;
     else failed += 1;
 
-    await MessageLog.create({
+    await db().MessageLog.create({
       channel: 'email',
       direction: 'outbound',
       user: account._id,
@@ -727,14 +728,14 @@ async function listUnsubscribes({ search, page = 1, limit = 25 } = {}) {
   const current = Math.max(Number(page) || 1, 1);
 
   const [rows, total, consenting] = await Promise.all([
-    User.find(filter)
+    db().User.find(filter)
       .select('businessName contactName email unsubscribedAt marketingConsent contactConsent')
       .sort({ unsubscribedAt: -1 })
       .skip((current - 1) * perPage)
       .limit(perPage)
       .lean(),
-    User.countDocuments(filter),
-    User.countDocuments({ role: 'buyer', unsubscribedAt: null, 'marketingConsent.granted': true }),
+    db().User.countDocuments(filter),
+    db().User.countDocuments({ role: 'buyer', unsubscribedAt: null, 'marketingConsent.granted': true }),
   ]);
 
   return {
@@ -779,7 +780,7 @@ async function unsubscribe(userId, token) {
     throw ApiError.badRequest('That unsubscribe link is not valid.', 'INVALID_UNSUBSCRIBE_TOKEN');
   }
 
-  const account = await User.findById(userId).select('businessName email unsubscribedAt');
+  const account = await db().User.findById(userId).select('businessName email unsubscribedAt');
   if (!account) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
 
   if (!account.unsubscribedAt) {
@@ -804,7 +805,7 @@ async function unsubscribe(userId, token) {
  * trail. The screen says as much before the operator confirms.
  */
 async function resubscribe(userId) {
-  const account = await User.findById(userId);
+  const account = await db().User.findById(userId);
   if (!account) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
 
   account.unsubscribedAt = undefined;
@@ -819,11 +820,11 @@ async function resubscribe(userId) {
 /** Counts and channel states for the marketing screens' header tiles. */
 async function summary() {
   const [byChannel, campaigns, unsubscribed, consenting, settings] = await Promise.all([
-    MessageLog.aggregate([{ $group: { _id: '$channel', count: { $sum: 1 } } }]),
-    Campaign.countDocuments({}),
-    User.countDocuments({ role: 'buyer', unsubscribedAt: { $ne: null } }),
-    User.countDocuments({ role: 'buyer', unsubscribedAt: null, 'marketingConsent.granted': true }),
-    Settings.load(),
+    db().MessageLog.aggregate([{ $group: { _id: '$channel', count: { $sum: 1 } } }]),
+    db().Campaign.countDocuments({}),
+    db().User.countDocuments({ role: 'buyer', unsubscribedAt: { $ne: null } }),
+    db().User.countDocuments({ role: 'buyer', unsubscribedAt: null, 'marketingConsent.granted': true }),
+    db().Settings.load(),
   ]);
 
   return {
