@@ -4,7 +4,7 @@ import { create } from 'zustand';
 const DESKTOP = '(min-width: 1024px)';
 
 /**
- * Overlay coordination. Only one of these should be open at a time — opening any
+ * Overlay coordination. Only one of these should be open at a time - opening any
  * of them closes the others, so the header never stacks a mega menu behind an
  * account popup.
  */
@@ -26,7 +26,7 @@ export const useUiStore = create((set) => ({
   searchFocusToken: 0,
 
   // The mobile header's search row folds away once the page has scrolled past
-  // BOTTOM_NAV_REVEAL_AT — a full row of chrome over a grid the buyer is
+  // BOTTOM_NAV_REVEAL_AT - a full row of chrome over a grid the buyer is
   // reading. This flag is what the bottom bar's search button raises to unfold
   // it again; the header drops it back on its own when the page returns to the
   // top, so the default behaviour is never left latched on.
@@ -67,7 +67,7 @@ export const useUiStore = create((set) => ({
     set({ cartFlyoutOpen: true, megaMenuOpen: false, accountPopupOpen: false, accountMenuOpen: false }),
   closeCart: () => set({ cartFlyoutOpen: false }),
   // The cart is a dropdown anchored under its own trigger, so that button has
-  // to close it again — the scrim never covers the header.
+  // to close it again - the scrim never covers the header.
   toggleCart: () =>
     set((s) => ({
       cartFlyoutOpen: !s.cartFlyoutOpen,
@@ -123,7 +123,7 @@ export const useUiStore = create((set) => ({
    * that eventually is not. `useSignOut` raises this flag; a single dialog at
    * the app root renders it and calls back on confirm.
    *
-   * Every panel that could be covering the dialog closes with it — the account
+   * Every panel that could be covering the dialog closes with it - the account
    * menu in particular, since that is where the button usually is.
    */
   askSignOut: () =>

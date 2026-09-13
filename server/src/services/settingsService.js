@@ -14,7 +14,7 @@ import ApiError from '../utils/ApiError.js';
  * they were built, from `Settings` with seeded defaults. §10's sequencing note
  * is explicit about why: hard-coding a rate and "moving it to Settings later"
  * is how a system ends up with two sources of truth for the tax rate. So this
- * file builds no new source of truth — it is the **editor** for one that has
+ * file builds no new source of truth - it is the **editor** for one that has
  * been live all along.
  *
  * Three rules hold it together:
@@ -29,7 +29,7 @@ import ApiError from '../utils/ApiError.js';
  *
  * **3. `referralPercent` is not writable here.** It lives in
  * `financial.referralPercent` and is set only by `referralService.setPercent`,
- * behind an admin-only route — it multiplies every future payout, and §6.13 put
+ * behind an admin-only route - it multiplies every future payout, and §6.13 put
  * it under Marketing → Referrals rather than in Settings for exactly that
  * reason. A `financial` write must not become a second door onto it.
  */
@@ -50,7 +50,7 @@ const TAX_KINDS = new Set(['GST', 'HST', 'GST+PST', 'GST+QST']);
  * would have an operator switch one on, assume customers are being emailed, and
  * find out otherwise from a customer.
  *
- * A toggle flips to `true` here the moment its send path lands — one edit, and
+ * A toggle flips to `true` here the moment its send path lands - one edit, and
  * the screen stops marking it.
  */
 const COMMUNICATIONS_WIRED = {
@@ -72,7 +72,7 @@ const COMMUNICATIONS_WIRED = {
  * Reads the whole singleton, shaped for the client.
  *
  * `Settings.load()` upserts on first read, so this never has to branch on "not
- * configured yet" — every caller gets a fully-defaulted document.
+ * configured yet" - every caller gets a fully-defaulted document.
  *
  * `warrantyByGrade` is stored as a Map, which does not survive `.lean()` as a
  * plain object identically across driver versions, so it is normalised here
@@ -97,7 +97,7 @@ async function get() {
           : Object.entries(doc.financial?.warrantyByGrade ?? {}),
       ),
       /**
-       * Same Map normalisation as the grade table above — plus a default for
+       * Same Map normalisation as the grade table above - plus a default for
        * documents that predate the field.
        *
        * A schema `default` only runs when a document is created, and this
@@ -145,7 +145,7 @@ async function get() {
     },
     // Which toggles actually gate a live path today (§6b rule 4, applied to a
     // settings screen). Sent so the screen can mark the rest plainly instead of
-    // presenting eleven switches that all look equally functional — a toggle
+    // presenting eleven switches that all look equally functional - a toggle
     // that changes nothing is worse than a missing one, because somebody will
     // switch it on and believe the emails are going out.
     communicationsWired: COMMUNICATIONS_WIRED,
@@ -180,7 +180,7 @@ async function updateBusiness(input) {
 }
 
 /**
- * Sale Settings (§6.15, category 2) — regional defaults, invoice due days,
+ * Sale Settings (§6.15, category 2) - regional defaults, invoice due days,
  * the per-province tax table and warranty by product grade.
  *
  * **The tax table is validated hard.** It is the single input that decides what
@@ -208,7 +208,7 @@ async function updateSale(input) {
 
   // Warranty is **merged**, not replaced. `$set` on a Map overwrites the whole
   // thing, so a payload naming three grades would silently delete the other
-  // two — and a grade with no warranty length is not the same as a grade with
+  // two - and a grade with no warranty length is not the same as a grade with
   // a zero-day one. RMA reads these to decide whether a return is in warranty,
   // so a quietly missing grade is a wrong answer rather than a missing screen.
   const current = await Settings.load();
@@ -226,7 +226,7 @@ async function updateSale(input) {
    * **The stored value falls back to the defaults, not to `{}`.** A document
    * that predates the field has an empty Map, so merging onto `{}` and then
    * `$set`ting the result would let a payload naming one tier delete the other
-   * three — the exact whole-Map overwrite this merge exists to prevent, just
+   * three - the exact whole-Map overwrite this merge exists to prevent, just
    * arriving one save later. Merging onto the same defaults the read path
    * serves keeps the two halves telling the same story.
    */
@@ -254,13 +254,13 @@ async function updateSale(input) {
 }
 
 /**
- * Shipping Rates (§6.15 — the slot CellShoppe gives *Services*).
+ * Shipping Rates (§6.15 - the slot CellShoppe gives *Services*).
  *
  * The codes are not editable and no band can be added or removed: checkout
  * validates `deliveryMethod` against a fixed enum in
  * `shared/schemas/checkout.js`, so a fourth band invented here would be
  * unselectable, and deleting one would break every order that already names it.
- * What is editable is the part an operator actually needs to change — the
+ * What is editable is the part an operator actually needs to change - the
  * label, the description, the price and the free-shipping threshold.
  */
 async function updateShipping(input) {
@@ -288,7 +288,7 @@ async function updateShipping(input) {
       detail: patchRow.detail ?? '',
       cost: patchRow.cost,
       etaDays: patchRow.etaDays,
-      // An empty threshold means "never free", stored as null rather than 0 —
+      // An empty threshold means "never free", stored as null rather than 0
       // 0 would mean every order ships free.
       freeOver: patchRow.freeOver ?? null,
     };
@@ -316,7 +316,7 @@ async function updatePaymentMethods(input) {
 
   if (input.methods.length === 0) {
     throw ApiError.badRequest(
-      'Keep at least one payment method — every expense and payment has to name one.',
+      'Keep at least one payment method - every expense and payment has to name one.',
       'NO_PAYMENT_METHODS',
     );
   }
@@ -328,7 +328,7 @@ async function updatePaymentMethods(input) {
  * Inventory Settings (§6.15, category 2).
  *
  * Pre-fills the New Product form and nothing else. Changing a default never
- * reprices the catalogue — a per-product value always wins — and the screen
+ * reprices the catalogue - a per-product value always wins - and the screen
  * says so, because "did I just change every price" is the first thing an
  * operator will wonder.
  */
@@ -342,7 +342,7 @@ async function updateInventory(input) {
 /**
  * Email Settings (§6.15, category 5).
  *
- * Toggles and the reminder schedule. Nothing here sends anything — it decides
+ * Toggles and the reminder schedule. Nothing here sends anything - it decides
  * what the paths that do send are allowed to do.
  */
 async function updateCommunications(input) {
@@ -373,4 +373,13 @@ export default {
   updateCommunications,
 };
 
-export { COMMUNICATIONS_WIRED, get, updateBusiness, updateSale, updateShipping, updatePaymentMethods, updateInventory, updateCommunications };
+export {
+  COMMUNICATIONS_WIRED,
+  get,
+  updateBusiness,
+  updateSale,
+  updateShipping,
+  updatePaymentMethods,
+  updateInventory,
+  updateCommunications,
+};

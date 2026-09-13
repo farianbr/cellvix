@@ -12,12 +12,12 @@ import { pressable } from '@/lib/motion';
 /**
  * The `+ Create` dropdown, shortcut `C` (ERP rework §7.2).
  *
- * **Grouped, not flat** — the screenshot settles it: money coming in on one
+ * **Grouped, not flat** - the screenshot settles it: money coming in on one
  * side, money going out on the other, which is how the operator already thinks
  * about which record they are about to make.
  *
  * **Entries the role cannot create are hidden** (§7.2, wired in phase 12b).
- * Each carries the area and level its screen actually requires — creating is a
+ * Each carries the area and level its screen actually requires - creating is a
  * `full` action everywhere, so `view` is not enough to see the entry. The
  * underlying route still checks: a hidden menu item is a courtesy, never a
  * permission (§7.6).
@@ -27,7 +27,7 @@ import { pressable } from '@/lib/motion';
  *
  * **Every entry opens a form, not a list.** `+ Create > Quote` used to land on
  * the quotes list and leave the operator to find the button they had just
- * pressed the equivalent of — which is the menu asking them to do the thing
+ * pressed the equivalent of - which is the menu asking them to do the thing
  * twice. It cannot open a modal on a page that has not mounted, so it navigates
  * with `?new=1` and the page reads that through `useCreateParam`, which strips
  * the flag on arrival so the URL stops describing a modal the moment it closes.
@@ -57,7 +57,10 @@ const GROUPS = [
     label: 'Expense',
     items: [
       { key: 'supplier', label: 'Supplier', to: '/admin/suppliers', icon: 'Truck', area: 'purchase', feature: 'purchase.suppliers' },
-      { key: 'po', label: 'Purchase Order', to: '/admin/purchase-orders', icon: 'ClipboardList', area: 'purchase', feature: 'purchase.orders' },
+      // `page: true` - a purchase order is raised on its own screen, not in a
+      // modal over the list. Without it this navigated to the list with a
+      // `?new=1` nothing reads, so the menu item silently did nothing.
+      { key: 'po', label: 'Purchase Order', to: '/admin/purchase-orders/create', page: true, icon: 'ClipboardList', area: 'purchase', feature: 'purchase.orders' },
       { key: 'expense', label: 'Expense', to: '/admin/expenses', icon: 'Receipt', area: 'purchase', feature: 'purchase.expenses' },
       { key: 'product', label: 'Product', to: '/admin/inventory', icon: 'Boxes', area: 'purchase', feature: 'purchase.inventory' },
     ],
@@ -76,7 +79,7 @@ export function CreateMenu() {
    *
    * **Two filters, and only one of them an admin bypasses.** A permission is
    * what this account may do, and an admin bypasses the map entirely (§7.6). A
-   * feature is what the business has at all — nobody bypasses that, because an
+   * feature is what the business has at all - nobody bypasses that, because an
    * admin creating a record in a section the business does not run would hit
    * the same 404 as anyone else (§4.4).
    */
@@ -91,11 +94,11 @@ export function CreateMenu() {
     })).filter((group) => group.items.length > 0);
   }, [permissions, features, isAdmin]);
 
-  // A role that can create nothing gets no button at all — a `+ Create` that
+  // A role that can create nothing gets no button at all - a `+ Create` that
   // opens an empty panel is worse than its absence.
   const hasAnything = visibleGroups.length > 0;
 
-  // `C` opens the menu, unless the user is typing — a shortcut that fires
+  // `C` opens the menu, unless the user is typing - a shortcut that fires
   // inside a search box eats the letter.
   useEffect(() => {
     function onKeyDown(event) {
@@ -154,7 +157,12 @@ export function CreateMenu() {
                     role="menuitem"
                     onClick={() => {
                       setOpen(false);
-                      navigate(`${item.to}?new=1`);
+                      // Most record types open a modal over their list, so the
+                      // menu navigates and leaves `?new=1` for `useCreateParam`
+                      // to consume. A type with its own create screen is
+                      // navigated to directly - appending the sentinel there
+                      // would put a flag in the URL that nothing reads.
+                      navigate(item.page ? item.to : `${item.to}?new=1`);
                     }}
                     className={cn(pressable, 'flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-sm text-ink-700 hover:bg-surface-2 hover:text-ink-900')}
                   >

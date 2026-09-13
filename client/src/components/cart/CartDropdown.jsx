@@ -45,7 +45,7 @@ export function CartDropdown() {
         <>
           {/* Scrim starts at the header's real height (--header-h, measured in
               Header) so the cart button stays lit and can toggle the panel
-              shut — and so the gap above the panel reads as deliberate. */}
+              shut - and so the gap above the panel reads as deliberate. */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

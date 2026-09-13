@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-/** Debounces a fast-changing value — used by the live search field. */
+/** Debounces a fast-changing value - used by the live search field. */
 export function useDebouncedValue(value, delay = 220) {
   const [debounced, setDebounced] = useState(value);
 

@@ -7,7 +7,7 @@ import { formatDate } from '../../../shared/dates.js';
  *
  * One page listing every invoice raised against an account and every payment
  * received, in date order, ending in what is still owed. It answers the
- * question a customer asks on the phone — "what do I owe you, and for what?" —
+ * question a customer asks on the phone - "what do I owe you, and for what?"
  * which no single invoice can, because the answer spans all of them.
  *
  * **Deliberately not built on `invoiceDocument`.** That renderer describes one
@@ -55,7 +55,7 @@ function escapeHtml(value) {
  * explanation.
  *
  * A reversal carries a negative amount and is already in `payments`, so it
- * appears as its own debit line and needs no special case — the running total
+ * appears as its own debit line and needs no special case - the running total
  * follows it for free.
  */
 function buildRows(invoices) {
@@ -162,9 +162,9 @@ export function renderStatementHtml({ user, invoices = [], nonce }) {
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Account statement — ${escapeHtml(name)}</title>
+<title>Account statement - ${escapeHtml(name)}</title>
 <style>
-  /* Print rules only. Nothing the layout depends on lives here — see the note
+  /* Print rules only. Nothing the layout depends on lives here - see the note
      at the top of this file. */
   @page { margin: 14mm; }
   @media print {

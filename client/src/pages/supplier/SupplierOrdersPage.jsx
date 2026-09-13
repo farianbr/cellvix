@@ -17,14 +17,14 @@ import cn from '@/lib/cn';
  * Every purchase order this supplier was asked to price.
  *
  * **The admin panel's list, in the portal.** `DataTable`, `FilterStrip`,
- * `PageHeader` and `Pagination` are already generic and are reused as-is — a
+ * `PageHeader` and `Pagination` are already generic and are reused as-is - a
  * supplier's list of orders is the same kind of screen as a buyer's list of
  * orders, and forking the table to make it "simpler" would mean two tables to
  * keep sorted, paged and responsive.
  *
  * **Nothing here names another supplier.** Every row comes from
  * `purchaseBidService.shapeForSupplier`, which returns this supplier's own bid
- * and nothing else — no rank, no gap to the leader (§6.8a rule 2). That is
+ * and nothing else - no rank, no gap to the leader (§6.8a rule 2). That is
  * enforced by the serializer rather than by this screen remembering to omit it.
  */
 
@@ -152,7 +152,7 @@ export function SupplierOrdersPage() {
         ['quoted', 'negotiating', 'confirmed'].includes(order.myBid.status) ? (
           <span className="text-sm font-semibold text-ink-900">{money(order.myBid.total)}</span>
         ) : (
-          <span className="text-ink-300">—</span>
+          <span className="text-ink-300">-</span>
         ),
     },
     {
@@ -166,7 +166,7 @@ export function SupplierOrdersPage() {
             {date(order.closesAt)}
           </span>
         ) : (
-          <span className="text-xs text-ink-300">—</span>
+          <span className="text-xs text-ink-300">-</span>
         ),
     },
   ];

@@ -39,7 +39,7 @@ import { pressable } from '@/lib/motion';
  * One repair, from drop-off to invoice.
  *
  * **The screen the panel was missing.** Tickets had a list and a form but no
- * detail view, so the only way to read a job was to open the edit form — which
+ * detail view, so the only way to read a job was to open the edit form - which
  * shows every field as an input and answers none of the questions an operator
  * actually arrives with: where is this up to, what did we quote, what has been
  * paid, and what happens next.
@@ -47,7 +47,7 @@ import { pressable } from '@/lib/motion';
  * The order of the page is the order of those questions. Stage first, because
  * it is the one thing that changes daily and the one thing a customer rings
  * about. Then the money already taken, then the fault and the work, then the
- * history. The lifecycle strip at the foot is the map — it says where this
+ * history. The lifecycle strip at the foot is the map - it says where this
  * ticket sits in a process that outlives any one screen.
  */
 
@@ -74,7 +74,7 @@ const DEPOSIT_METHODS = [
 ];
 
 const TERMS = [
-  { value: 'prepaid', label: 'Prepaid — due on issue' },
+  { value: 'prepaid', label: 'Prepaid - due on issue' },
   { value: 'net15', label: 'Net 15' },
   { value: 'net30', label: 'Net 30' },
   { value: 'net60', label: 'Net 60' },
@@ -85,13 +85,13 @@ const TERMS = [
  *
  * Rendered by the shared `ProcessStrip`, **not a local component**. This page
  * used to draw its own row of brand-tinted pills with an ASCII arrow between
- * them — the same idea as the quote's and the invoice's life cycle, in a
+ * them - the same idea as the quote's and the invoice's life cycle, in a
  * different shape, so the one pattern looked like three patterns and only this
  * one lacked the tick-versus-clock distinction that tells a finished stage from
  * a live one. Quote is the standard; this now follows it.
  *
  * **Four stations, not nine.** The real ladder in `TICKET_STATUSES` has nine
- * rungs and most are shades of the same station — `ready_to_repair` and
+ * rungs and most are shades of the same station - `ready_to_repair` and
  * `waiting_for_parts` are both "in repair" as far as anyone outside the bench
  * is concerned. `Move stage` above is where the exact rung lives; this is the
  * shape of the process, which is what somebody scanning wants.
@@ -110,7 +110,7 @@ const LIFECYCLE = [
 /**
  * Which of the four stations a ticket's nine-rung status sits at.
  *
- * A cancelled ticket keeps the station it died at — `timeline` is the only
+ * A cancelled ticket keeps the station it died at - `timeline` is the only
  * record of how far it got, so the last status before the cancellation is
  * where the strip stops. Without that a cancelled ticket showed as stopped at
  * Diagnosis whether it was cancelled at the counter or on the bench.
@@ -182,7 +182,7 @@ export function AdminTicketDetailPage() {
 
   return (
     // The record measure, centred. `.record-page` carries the whole treatment
-    // (see the container tokens in index.css) — this page used to hard-code its
+    // (see the container tokens in index.css) - this page used to hard-code its
     // own 1120px, which is exactly the per-page invented number that token
     // exists to prevent.
     <div className="record-page">
@@ -226,7 +226,7 @@ export function AdminTicketDetailPage() {
         }
       />
 
-      {/* Where this job came from and where it went — the whole chain, above
+      {/* Where this job came from and where it went - the whole chain, above
           the record, because "am I looking at the right one?" is the first
           question an operator arrives with. It replaces the single "created
           from quote" banner this page used to carry, which only ever showed
@@ -238,7 +238,7 @@ export function AdminTicketDetailPage() {
         invoice={ticket.invoice}
         // A ticket that has not been invoiced still has that step ahead of it,
         // so the station is drawn in waiting. A ticket raised at the counter
-        // with no quote behind it is not shown a quote station at all — that
+        // with no quote behind it is not shown a quote station at all - that
         // step did not happen and never will.
         pending={invoiced ? undefined : 'invoice'}
         className="mb-4"
@@ -369,7 +369,7 @@ export function AdminTicketDetailPage() {
           )
         }
         title={`Cancel ${ticket.ticketNumber}?`}
-        body="The job stops here and the ticket closes. Its history is kept, and any deposit taken stays recorded against it — refund that separately."
+        body="The job stops here and the ticket closes. Its history is kept, and any deposit taken stays recorded against it - refund that separately."
         tone="danger"
         confirmLabel="Cancel ticket"
         loading={setTicketStatus.isPending}
@@ -385,8 +385,8 @@ export function AdminTicketDetailPage() {
  * The **next** status is preselected, because advancing one rung is what
  * happens nine times in ten and pre-picking it turns the common case into one
  * click. Every other status stays available: a repair genuinely goes backwards
- * — a device on the bench returns to `waiting_for_parts` when a part turns out
- * to be wrong — and a control that only moved forward would make an operator
+ * - a device on the bench returns to `waiting_for_parts` when a part turns out
+ * to be wrong - and a control that only moved forward would make an operator
  * lie about where the job is.
  */
 function StageCard({ ticket, disabled, isPending, error, onMove }) {
@@ -443,7 +443,7 @@ function StageCard({ ticket, disabled, isPending, error, onMove }) {
  * Money taken before the invoice exists.
  *
  * A repair is quoted, the customer pays something at the counter, and the
- * invoice is not raised until the work is done — so the payment has nowhere to
+ * invoice is not raised until the work is done - so the payment has nowhere to
  * live. The hint says what happens to it, because "deposit" alone does not
  * explain why it is being recorded on a ticket rather than against a bill.
  */
@@ -502,7 +502,7 @@ function DepositCard({ ticket, invoiced, isPending, error, onRecord, onRemove })
         ) : (
           <>
             <p className="mb-3 text-sm text-ink-500">
-              Customer paid before the invoice exists? Record it here — it carries over as a payment
+              Customer paid before the invoice exists? Record it here - it carries over as a payment
               when this ticket becomes an invoice.
             </p>
 
@@ -719,7 +719,7 @@ function Lifecycle({ ticket, invoiced, className }) {
       stoppedTone={cancelled ? 'danger' : undefined}
       caption={
         cancelled
-          ? 'Cancelled — the job stopped here. Any deposit taken stays recorded against it.'
+          ? 'Cancelled - the job stopped here. Any deposit taken stays recorded against it.'
           : 'The stage follows the Move stage control above; invoicing settles it.'
       }
       className={className}
@@ -731,7 +731,7 @@ function Lifecycle({ ticket, invoiced, className }) {
  * Raising the invoice.
  *
  * Only the terms are asked. Everything billed comes off the ticket, because
- * that is where the job was priced — a form that let the operator restate the
+ * that is where the job was priced - a form that let the operator restate the
  * lines here would be a second place for them to differ. The summary states
  * what will be carried so the conversion is not a leap of faith.
  */

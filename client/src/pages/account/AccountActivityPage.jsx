@@ -13,7 +13,7 @@ import { useActivityHistory } from '@/hooks/useAccount';
 /**
  * The filterable kinds, matching `ACTIVITY_GROUPS` in
  * `server/src/services/activityService.js`. Grouped the way a buyer thinks
- * about them rather than the way they are stored — "Orders" means both placing
+ * about them rather than the way they are stored - "Orders" means both placing
  * an order and every status step after it, because a filter for orders that
  * hid half the order events would be a worse filter than none.
  */
@@ -43,7 +43,7 @@ const PER_PAGE = [
  * **Filtering and paging are server-side.** The feed is a merge of three
  * collections assembled by `activityService`, so filtering a page's worth of
  * rows in the browser would filter whatever happened to be on that page rather
- * than the account's history — a kind filter would appear to lose events that
+ * than the account's history - a kind filter would appear to lose events that
  * are simply on page 2. The server filters the whole window and then pages what
  * matched, so the counts and the pages agree.
  */
@@ -119,7 +119,7 @@ export function AccountActivityPage() {
             above two boxes reads as two filters that happen to sit together.
             The em dash between them is what says it is one.
 
-            Native date inputs — the platform picker is keyboard-accessible,
+            Native date inputs - the platform picker is keyboard-accessible,
             localised and understood, and this is a range filter on a dashboard,
             not a booking flow that would justify a custom calendar. They are
             sized to their own content: a date input renders a fixed-width mask
@@ -138,7 +138,7 @@ export function AccountActivityPage() {
             containerClassName="w-[148px]"
           />
           <span className="text-ink-300" aria-hidden="true">
-            —
+
           </span>
           <Input
             type="date"
@@ -153,7 +153,7 @@ export function AccountActivityPage() {
 
         {/* Pushed right only once the row is wide enough to hold everything on
             one line. Below that it follows the range as the next item on a
-            wrapped line — `ml-auto` at every width would strand it alone on the
+            wrapped line - `ml-auto` at every width would strand it alone on the
             right of a line of its own, with the gap still held open above. The
             account sidebar means that happens around 1200px, not at `lg`. */}
         <div className="flex items-center gap-2 xl:ml-auto">

@@ -13,7 +13,7 @@ import mongoose from 'mongoose';
  * else** (invariant 5). An RMA is not an exception to that rule; it is the case
  * the rule was written for. Restocking an accepted return writes a
  * `StockMovement` of type `return` through `purchaseService.applyStockMovement`,
- * for the same reason — one ledger, one writer.
+ * for the same reason - one ledger, one writer.
  */
 const RMA_STATUSES = [
   'requested',
@@ -88,7 +88,7 @@ const rmaSchema = new mongoose.Schema(
     resolution: { type: String, enum: RMA_RESOLUTIONS, default: 'pending' },
 
     // Integer cents. Written only by the refund path, which routes through
-    // `storeCreditService` — this field is a record of what happened, never the
+    // `storeCreditService` - this field is a record of what happened, never the
     // instruction that made it happen.
     refundAmount: { type: Number, default: 0 },
     creditTransaction: { type: mongoose.Schema.Types.ObjectId, ref: 'CreditTransaction' },

@@ -13,7 +13,7 @@ import SelectMenu from '@/components/ui/SelectMenu';
 import { date, dateShort } from '@/lib/format';
 
 /**
- * The scheduling board (§6.15 category 4 — **UI only, §6b U1**, phase 11e).
+ * The scheduling board (§6.15 category 4 - **UI only, §6b U1**, phase 11e).
  *
  * Ships as interface: the weekly board, staff filter, status legend,
  * unscheduled tray and week navigation, reading from `Appointment`, which is
@@ -23,7 +23,7 @@ import { date, dateShort } from '@/lib/format';
  * **What Cellvix schedules is a reading, not a settled fact** (§12 Q1). A
  * wholesaler has no repair calendar, but it has pickups, deliveries and RMA
  * drop-offs, and the same board serves them. That is what the status legend and
- * the tray are built around — worth re-confirming before this is wired, because
+ * the tray are built around - worth re-confirming before this is wired, because
  * changing it changes the model.
  */
 const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/settings/calendar'], icon: adminIcon('CalendarDays') };
@@ -87,12 +87,12 @@ export function AdminCalendarPage() {
       />
 
       {/* §6b rule 2: a persistent notice naming what is inactive and what
-          unblocks it — not a tooltip, not a disabled button's title. */}
+          unblocks it - not a tooltip, not a disabled button's title. */}
       <p className="mb-5 flex items-start gap-2.5 rounded-lg border border-warn/25 bg-warn-50 px-3.5 py-3 text-sm leading-relaxed text-ink-700">
         <AlertCircle className="mt-0.5 size-4 shrink-0 text-warn" strokeWidth={2} aria-hidden="true" />
         <span>
           <strong className="font-semibold">This board is not wired up yet.</strong> It reads real
-          appointments and there are none — nothing on this screen creates, moves or cancels
+          appointments and there are none - nothing on this screen creates, moves or cancels
           anything. It is built around pickups, deliveries and RMA drop-offs; that reading is
           confirmed as the intent, and the scheduling itself lands in a later phase.
         </span>
@@ -114,7 +114,7 @@ export function AdminCalendarPage() {
           </button>
 
           <span className="font-display text-md font-semibold text-ink-900">
-            {dateShort(weekStart)} — {date(days[6].date)}
+            {dateShort(weekStart)} - {date(days[6].date)}
           </span>
 
           <button
@@ -155,7 +155,7 @@ export function AdminCalendarPage() {
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_280px] xl:items-start">
         {/* The board scrolls inside itself rather than pushing the page sideways
-            — seven columns cannot fit a phone, and the page must not scroll. */}
+ - seven columns cannot fit a phone, and the page must not scroll. */}
         <div className="-mx-3 overflow-x-auto px-3 sm:mx-0 sm:px-0">
           <div className="grid min-w-[760px] grid-cols-7 gap-2">
             {days.map(({ label, date }) => {
@@ -183,7 +183,7 @@ export function AdminCalendarPage() {
                   </p>
 
                   {forDay.length === 0 ? (
-                    <p className="text-xs text-ink-300">—</p>
+                    <p className="text-xs text-ink-300">-</p>
                   ) : (
                     <ul className="space-y-1.5">
                       {forDay.map((row) => (

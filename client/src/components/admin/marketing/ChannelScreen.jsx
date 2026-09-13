@@ -31,14 +31,14 @@ import { dateTime } from '@/lib/format';
 import cn from '@/lib/cn';
 
 /**
- * The two-column channel screen — compose on the left, history on the right
+ * The two-column channel screen - compose on the left, history on the right
  * (§6.13). SMS, WhatsApp and Calls are the same screen with a different channel
  * and a different verb, so it is built once.
  *
  * **What makes this honest rather than a stub.** Composing on an unconfigured
  * channel is not blocked: the message is written to contact history, which is
  * the thing the operator actually needs from day one. What is refused is
- * *pretending* — the notice above the form says sending is off, and after a
+ * *pretending* - the notice above the form says sending is off, and after a
  * save the screen reports what the server said happened rather than a
  * confirmation of its own (§6b rules 1 and 4).
  *
@@ -160,7 +160,7 @@ export function ChannelScreen({
         // The contact name rides in the label rather than a second line: two
         // businesses can share a first name, and the picker has to be
         // unambiguous at a glance.
-        label: user.contactName ? `${user.businessName} — ${user.contactName}` : user.businessName,
+        label: user.contactName ? `${user.businessName} - ${user.contactName}` : user.businessName,
       })),
     [userData],
   );
@@ -205,12 +205,12 @@ export function ChannelScreen({
 
       <div className="flex flex-col gap-4">
         <ChannelNotice status={status} />
-        {/* The hint is the counterpart of the notice — one or the other, never
-            both — so it keys on the same field. */}
+        {/* The hint is the counterpart of the notice - one or the other, never
+            both - so it keys on the same field. */}
         {(status?.delivers ?? status?.configured) && hint && <ChannelHint>{hint}</ChannelHint>}
 
         {/* Compose beside history on a laptop; stacked below that, compose
-            first — the form is what the operator came for. */}
+            first - the form is what the operator came for. */}
         <div className="grid gap-4 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
           <Panel title={submitLabel}>
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3.5">
@@ -295,7 +295,7 @@ export function ChannelScreen({
               {showRecording && (
                 <Input
                   label="Recording URL"
-                  hint="Optional. A link to the recording — Cellvix stores no audio itself."
+                  hint="Optional. A link to the recording - Cellvix stores no audio itself."
                   placeholder="https://…"
                   error={errors.recordingUrl?.message}
                   {...register('recordingUrl')}

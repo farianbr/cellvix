@@ -1,4 +1,5 @@
 import { Link, useParams } from 'react-router';
+import useDocumentTitle from '@/hooks/useDocumentTitle';
 import cn from '@/lib/cn';
 import { useTableClasses, CountLine } from '@/components/admin/DataTable';
 import { ArrowLeft } from 'lucide-react';
@@ -19,7 +20,7 @@ import { pressable } from '@/lib/motion';
  * visible, since an order hit navigated straight into "not built yet".
  *
  * **Read-only.** Status changes and refunds are driven from the Orders list,
- * which holds those dialogs and the rules behind them — the partial-refund
+ * which holds those dialogs and the rules behind them - the partial-refund
  * ceiling, the bulk-action skip reasons. A second set of controls here would be
  * a second place for them to drift.
  */
@@ -78,6 +79,12 @@ export function AdminOrderDetailPage() {
   const { orderNumber } = useParams();
   const { data, isLoading, error } = useAdminOrder(orderNumber);
 
+  // This record names the tab, so several open at once stay tellable apart.
+  // Called BEFORE the loading and error returns below: a hook placed after an
+  // early return runs on some renders and not others, which is the one thing
+  // React's hook ordering forbids.
+  useDocumentTitle(data?.order?.orderNumber);
+
   if (isLoading) return <p className="text-sm text-ink-500">Loading order…</p>;
 
   if (error) {
@@ -101,7 +108,7 @@ export function AdminOrderDetailPage() {
 
   return (
     // Header inside the measure, so it is not wider than the record it
-    // titles. `.record-page` is the shared treatment — see index.css.
+    // titles. `.record-page` is the shared treatment - see index.css.
     <div className="record-page">
       <PageHeader
         icon={ADMIN_PAGE.icon}
@@ -173,7 +180,7 @@ export function AdminOrderDetailPage() {
                       <span className="flex flex-wrap items-center gap-1.5">
                         <span className="font-mono text-xs text-ink-400">{item.sku}</span>
                         {/* A bundle member is priced as part of a unit, so its
-                            line total does not add up on its own — saying which
+                            line total does not add up on its own - saying which
                             offer it came from is what makes that legible. */}
                         {item.bundle?.title && <Badge tone="brand">{item.bundle.title}</Badge>}
                       </span>
@@ -265,13 +272,13 @@ export function AdminOrderDetailPage() {
                     {order.invoiceNumber}
                   </Link>
                 ) : (
-                  <span className="text-ink-400">—</span>
+                  <span className="text-ink-400">-</span>
                 )}
               </dd>
             </div>
             <div className="flex justify-between gap-3">
               <dt className="text-ink-500">Delivery</dt>
-              <dd className="text-ink-900">{order.deliveryMethod?.label ?? '—'}</dd>
+              <dd className="text-ink-900">{order.deliveryMethod?.label ?? '-'}</dd>
             </div>
             {order.poNumber && (
               <div className="flex justify-between gap-3">
@@ -291,7 +298,7 @@ export function AdminOrderDetailPage() {
 
         <Panel
           title="Timeline"
-          description="Append-only — it is what the buyer's tracking page renders."
+          description="Append-only - it is what the buyer's tracking page renders."
         >
           <ol className="space-y-2.5">
             {(order.timeline ?? []).map((entry, index) => (

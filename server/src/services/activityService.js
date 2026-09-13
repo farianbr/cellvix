@@ -10,8 +10,8 @@ import '../models/CreditTransaction.js';
  * covers staff actions, and orders, invoices, payments and credit movements are
  * the record of what happened to the account itself.
  *
- * It serves two screens — the Activity tab on the admin client profile and the
- * buyer's own overview — and it is one function rather than two so those two
+ * It serves two screens - the Activity tab on the admin client profile and the
+ * buyer's own overview - and it is one function rather than two so those two
  * cannot tell different stories about the same account. The only thing that
  * varies is the wording: an admin is reading about somebody else's account
  * ("Invoice INV-… issued"), a buyer about their own ("We issued invoice INV-…"
@@ -47,7 +47,7 @@ function creditTitle(credit, forBuyer) {
 /**
  * The kinds a row can carry, grouped the way a buyer thinks about them rather
  * than the way they are stored. `order` covers both placing an order and every
- * status step after it, because "show me my orders" means both — splitting them
+ * status step after it, because "show me my orders" means both - splitting them
  * into two filters would make a filter for "order" that hides half the orders.
  *
  * Exported so the client's filter menu and the server's validation are built
@@ -108,7 +108,7 @@ async function activityFeed(userId, { limit = 80, perSource = 40, forBuyer = fal
   for (const invoice of invoices) {
     const kind = invoice.kind ?? 'invoice';
 
-    // A `due` record is not an invoice and must not be announced as one — that
+    // A `due` record is not an invoice and must not be announced as one - that
     // is the whole distinction the `kind` field exists to draw.
     const issuedTitle =
       kind === 'receipt'
@@ -169,7 +169,7 @@ async function activityFeed(userId, { limit = 80, perSource = 40, forBuyer = fal
  *
  * **Why the paging happens here and not in Mongo.** The feed is a merge of
  * three collections, and a single event can be a sub-document (an order's
- * timeline step, an invoice's payment row) rather than a document — so there is
+ * timeline step, an invoice's payment row) rather than a document - so there is
  * no one collection to `.skip()` on and no way to ask the database for "page 3
  * of the merged list". The merge has to happen first, which means the whole
  * window is assembled and then sliced.
@@ -177,7 +177,7 @@ async function activityFeed(userId, { limit = 80, perSource = 40, forBuyer = fal
  * That is only safe because the window is bounded: `perSource` is raised to
  * `WINDOW` here rather than left at the 40 the summary uses, so a filtered view
  * still has enough rows behind it to fill several pages, and `total` is the
- * count of what matched inside that window. This is an account's own history —
+ * count of what matched inside that window. This is an account's own history
  * hundreds of rows at the top end, not millions. If an account ever outgrows
  * the window, the fix is a real `Activity` collection written at the point each
  * event happens, not a bigger number here.
@@ -225,7 +225,7 @@ async function pagedActivityFeed(
     total: matched.length,
     page: pageNumber,
     pages,
-    // What the window held before filtering — the count the "N of M" line reads
+    // What the window held before filtering - the count the "N of M" line reads
     // against, so a filtered view can say what it is filtering out of.
     unfiltered: activity.length,
   };

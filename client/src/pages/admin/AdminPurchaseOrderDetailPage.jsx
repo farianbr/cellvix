@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import useDocumentTitle from '@/hooks/useDocumentTitle';
 import { Link, useParams } from 'react-router';
 import { useForm } from 'react-hook-form';
 import {
@@ -43,7 +44,7 @@ import { pressable } from '@/lib/motion';
 import cn from '@/lib/cn';
 
 /**
- * One purchase order — lines, receiving, landed cost and the stage actions
+ * One purchase order - lines, receiving, landed cost and the stage actions
  * (ERP rework §6.8).
  *
  * The two automation steps live here and both are server-side: receiving a line
@@ -98,8 +99,8 @@ const PO_LIFECYCLE = [
 /**
  * Which station is live.
  *
- * Payment and delivery are not sequential in practice — an order can be paid
- * before it ships or after it lands — so this reports the furthest point
+ * Payment and delivery are not sequential in practice - an order can be paid
+ * before it ships or after it lands - so this reports the furthest point
  * reached rather than walking the list. A received order shows `Received` even
  * if nobody ever recorded the payment, because that is true.
  */
@@ -123,7 +124,7 @@ function cycleStage(order) {
   return 'sent';
 }
 
-/** `YYYY-MM-DD` in local time — `toISOString()` would shift the day westward. */
+/** `YYYY-MM-DD` in local time - `toISOString()` would shift the day westward. */
 function todayIso() {
   const now = new Date();
   return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
@@ -134,7 +135,7 @@ function todayIso() {
  *
  * The quantities are what arrived **in this delivery**, defaulted to whatever
  * is still outstanding. The server adds them to what has already arrived,
- * refuses an over-receipt line by line, and re-derives the status — so this
+ * refuses an over-receipt line by line, and re-derives the status - so this
  * form never sends a running total and never sends a status.
  */
 function ReceiveForm({ order, onSubmit, onCancel, isPending, error, result }) {
@@ -169,7 +170,7 @@ function ReceiveForm({ order, onSubmit, onCancel, isPending, error, result }) {
               <ul className="mt-1 space-y-0.5">
                 {result.received.map((row) => (
                   <li key={row.sku} className="tnum">
-                    {row.sku} — {row.qty} received, {row.qtyAfter} on hand
+                    {row.sku} - {row.qty} received, {row.qtyAfter} on hand
                   </li>
                 ))}
               </ul>
@@ -182,7 +183,7 @@ function ReceiveForm({ order, onSubmit, onCancel, isPending, error, result }) {
               <ul className="mt-1 space-y-0.5">
                 {result.skipped.map((row) => (
                   <li key={row.sku}>
-                    <span className="font-mono">{row.sku}</span> — {row.reason}
+                    <span className="font-mono">{row.sku}</span> - {row.reason}
                   </li>
                 ))}
               </ul>
@@ -222,7 +223,7 @@ function ReceiveForm({ order, onSubmit, onCancel, isPending, error, result }) {
 
       <p className="rounded-md bg-surface-2 px-3 py-2.5 text-xs leading-relaxed text-ink-500">
         Enter what arrived in this delivery, not a running total. Stock and the order status are both
-        recalculated on the server, and each line is checked on its own — one line that cannot be
+        recalculated on the server, and each line is checked on its own - one line that cannot be
         received will not fail the rest.
       </p>
 
@@ -239,7 +240,7 @@ function ReceiveForm({ order, onSubmit, onCancel, isPending, error, result }) {
 }
 
 /**
- * Record the payment — which creates the expense.
+ * Record the payment - which creates the expense.
  *
  * The amount is not on this form: it is `order.total`, read from the order on
  * the server. A payment form that let an operator type a different number would
@@ -262,7 +263,7 @@ function PaymentForm({ order, categories, onSubmit, onCancel, isPending, error }
         <p className="mt-0.5 text-sm text-ink-500">{order.supplier.name}</p>
         <p className="tnum mt-1.5 text-sm">
           <span className="font-semibold text-ink-900">{money(order.total)}</span>
-          <span className="text-ink-500"> — the amount this will record</span>
+          <span className="text-ink-500"> - the amount this will record</span>
         </p>
       </div>
 
@@ -289,7 +290,7 @@ function PaymentForm({ order, categories, onSubmit, onCancel, isPending, error }
 
       <p className="rounded-md bg-surface-2 px-3 py-2.5 text-xs leading-relaxed text-ink-500">
         Recording this creates an expense for {money(order.total)}, linked to this order. It can only
-        be recorded once — the expense is owned by the purchase order, so the two can never
+        be recorded once - the expense is owned by the purchase order, so the two can never
         double-count.
       </p>
 
@@ -322,6 +323,9 @@ export function AdminPurchaseOrderDetailPage() {
     useAdminMutations();
 
   const order = data?.order;
+
+  // This record names the tab, so several open at once stay tellable apart.
+  useDocumentTitle(order?.poNumber);
   const movements = data?.movements ?? [];
   const categories = (categoryData?.categories ?? []).filter((category) => category.isActive);
 
@@ -369,7 +373,7 @@ export function AdminPurchaseOrderDetailPage() {
     !['draft', 'cancelled'].includes(order.status) && order.payment.status !== 'paid';
 
   return (
-    // The record measure, centred — one record is a reading screen, and a
+    // The record measure, centred - one record is a reading screen, and a
     // list is what earns the shell's full width. The `.record-page` class carries
     // the whole treatment; see the container tokens in index.css.
     <div className="record-page">
@@ -378,7 +382,7 @@ export function AdminPurchaseOrderDetailPage() {
         title={order.poNumber}
         description={
           // Who it is with, and when. Before a supplier is confirmed there is
-          // nobody it is with — saying "—" there would read as missing data
+          // nobody it is with - saying "-" there would read as missing data
           // rather than as the honest answer, which is that we are still asking.
           order.supplier.id
             ? `${order.supplier.name} · ordered ${date(order.orderDate)}`
@@ -418,7 +422,7 @@ export function AdminPurchaseOrderDetailPage() {
         </p>
       )}
 
-      {/* Where this order has got to — the shared strip, not a local row of
+      {/* Where this order has got to - the shared strip, not a local row of
           pills. It leads the record because "where is this one?" is the first
           question an operator arrives with, and the actions below it are what
           they came to do about it. */}
@@ -428,7 +432,7 @@ export function AdminPurchaseOrderDetailPage() {
         title="This order"
         caption={
           order.status === 'cancelled'
-            ? 'Cancelled — nothing further can be recorded against it.'
+            ? 'Cancelled - nothing further can be recorded against it.'
             : 'Send it out, compare the prices, confirm one supplier, then pay and receive.'
         }
         // A cancelled order stopped where it stood rather than passing through,
@@ -450,7 +454,7 @@ export function AdminPurchaseOrderDetailPage() {
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div className="flex flex-wrap items-end gap-2">
               {/* Sending lives in the Suppliers panel, which is the only place
-                  that knows who the order is going to — a second Send here
+                  that knows who the order is going to - a second Send here
                   would either skip the mail or duplicate the picker. This
                   points at it rather than repeating it. */}
               {order.status === 'draft' && (
@@ -530,7 +534,7 @@ export function AdminPurchaseOrderDetailPage() {
       {/* `minmax(0,1fr)`, never a bare `1fr`.
 
           A `1fr` track refuses to shrink below its content's intrinsic width,
-          and this column holds the Lines table — so a wide table pushed the
+          and this column holds the Lines table - so a wide table pushed the
           summary column off the right edge of the viewport and clipped it. The
           `minmax(0,…)` lets the track shrink and the table scroll inside its own
           `overflow-x-auto` instead, which is the rule Instructions 3.1 states
@@ -583,7 +587,7 @@ export function AdminPurchaseOrderDetailPage() {
                         {/* One column, not two.
 
                             `item.name` and `item.inventory.name` are the same
-                            product name — so Product wrapped it over three lines
+                            product name - so Product wrapped it over three lines
                             in 120px while Linked inventory truncated the same
                             words in 266px. What that second column actually adds
                             is the stock figure and the link, and both belong
@@ -615,7 +619,7 @@ export function AdminPurchaseOrderDetailPage() {
                               // not move stock when it is received, and saying so
                               // here is cheaper than the operator finding out
                               // after the delivery.
-                              <span className="text-warn">Not linked — will not move stock</span>
+                              <span className="text-warn">Not linked - will not move stock</span>
                             )}
                           </p>
                         </td>
@@ -661,7 +665,7 @@ export function AdminPurchaseOrderDetailPage() {
                   <dt>Total</dt>
                   <dd>{money(order.total)}</dd>
                 </div>
-                {/* Landed cost per unit — what a received part actually cost
+                {/* Landed cost per unit - what a received part actually cost
                     once tax and freight are spread over it. */}
                 {qtyReceived > 0 && (
                   <div className="tnum flex justify-between pt-1 text-xs text-ink-400">
@@ -713,7 +717,7 @@ export function AdminPurchaseOrderDetailPage() {
 
               A tile row is right for a LIST, where the numbers describe a set
               somebody is about to filter. On one record they described that one
-              record — and two of the four repeated the status badge and the
+              record - and two of the four repeated the status badge and the
               stage strip, so the page opened by saying where the order was
               three times before showing a single line of it. */}
           <Panel icon={Wallet} title="Summary">
@@ -755,7 +759,7 @@ export function AdminPurchaseOrderDetailPage() {
               <div className="flex items-baseline justify-between gap-3">
                 <dt className="text-ink-500">Expected</dt>
                 <dd className={cn('text-right', order.overdue ? 'font-medium text-danger' : 'text-ink-700')}>
-                  {order.expectedDate ? date(order.expectedDate) : '—'}
+                  {order.expectedDate ? date(order.expectedDate) : '-'}
                 </dd>
               </div>
               <div className="flex items-baseline justify-between gap-3">

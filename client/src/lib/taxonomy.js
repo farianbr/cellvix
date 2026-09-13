@@ -34,7 +34,7 @@ export function optionsFor(tree, path, level) {
   return parent?.children ?? [];
 }
 
-/** The chain of chosen nodes, shallowest first — used for breadcrumbs and chips. */
+/** The chain of chosen nodes, shallowest first - used for breadcrumbs and chips. */
 export function pathNodes(tree, path) {
   const out = [];
   let nodes = tree ?? [];

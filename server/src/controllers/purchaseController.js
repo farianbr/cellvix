@@ -2,11 +2,12 @@ import { randomBytes } from 'node:crypto';
 import { asyncHandler } from '../utils/ApiError.js';
 import * as purchaseService from '../services/purchaseService.js';
 import * as purchaseBidService from '../services/purchaseBidService.js';
+import * as reorderService from '../services/reorderService.js';
 import auditService from '../services/auditService.js';
 import * as supplierPortalService from '../services/supplierPortalService.js';
 
 /**
- * Purchase — suppliers, purchase orders, expenses, categories and inventory
+ * Purchase - suppliers, purchase orders, expenses, categories and inventory
  * (ERP rework §6.7–6.10).
  *
  * Thin, like every other controller here: the service owns the rules, so the
@@ -32,7 +33,7 @@ const updateSupplier = asyncHandler(async (req, res) => {
   res.json(await purchaseService.updateSupplier(req.params.id, req.body));
 });
 
-/** Deactivates rather than deletes — purchase orders reference a supplier. */
+/** Deactivates rather than deletes - purchase orders reference a supplier. */
 const toggleSupplier = asyncHandler(async (req, res) => {
   res.json(await purchaseService.toggleSupplier(req.params.id));
 });
@@ -40,7 +41,7 @@ const toggleSupplier = asyncHandler(async (req, res) => {
 /**
  * Send this supplier their portal link and a fresh password.
  *
- * The manual counterpart of the invite a new supplier gets automatically — for
+ * The manual counterpart of the invite a new supplier gets automatically - for
  * the address that bounced, the contact who left, the supplier onboarded before
  * the portal existed. **Always a new password**: the stored value is a bcrypt
  * hash, so the old one cannot be read back out, and keeping a plaintext copy so
@@ -90,7 +91,7 @@ const setPurchaseOrderStatus = asyncHandler(async (req, res) => {
 });
 
 /**
- * Receiving. Partial by design — the response names what moved and what did
+ * Receiving. Partial by design - the response names what moved and what did
  * not, with a reason per skip, and the UI shows the skips rather than
  * reporting a clean success.
  */
@@ -103,7 +104,7 @@ const receivePurchaseOrder = asyncHandler(async (req, res) => {
     req,
     action: 'purchase_order.receive',
     entity: { kind: 'purchaseOrder', id: req.params.id, label: po?.poNumber ?? '' },
-    // What actually moved, from the service's own answer — `received` and
+    // What actually moved, from the service's own answer - `received` and
     // `skipped` are named in the response precisely because a partial receive
     // is normal, and the log should record which it was.
     after: {
@@ -201,7 +202,7 @@ const updateInventoryOps = asyncHandler(async (req, res) => {
 });
 
 /**
- * Every stock change goes through the ledger — this one included.
+ * Every stock change goes through the ledger - this one included.
  *
  * A manual adjustment is the one stock movement with no document behind it, so
  * it is also the one that most needs an actor on record: "why is this 40 and
@@ -226,6 +227,11 @@ const adjustStock = asyncHandler(async (req, res) => {
   res.status(201).json(result);
 });
 
+/** Everything at or below its reorder point, with the counts the bell shows. */
+const reorderQueue = asyncHandler(async (req, res) => {
+  res.json(await reorderService.getReorderQueue());
+});
+
 const listStockMovements = asyncHandler(async (req, res) => {
   res.json(await purchaseService.listStockMovements(req.query));
 });
@@ -235,13 +241,13 @@ const listStockMovements = asyncHandler(async (req, res) => {
 /**
  * The supplier picker.
  *
- * Answers nothing when no component type is given — see the service. A GET
+ * Answers nothing when no component type is given - see the service. A GET
  * because it is a lookup: the clerk ticks component types and the list of
  * suppliers who carry them appears, with no request body involved.
  */
 const suppliersForComponentTypes = asyncHandler(async (req, res) => {
   // `?componentTypes=battery,screen-assembly`, and a repeated
-  // `?componentTypes=a&componentTypes=b` still arrives as an array — the same
+  // `?componentTypes=a&componentTypes=b` still arrives as an array - the same
   // two shapes `taxonomyController` normalises for `partType`.
   const raw = req.query.componentTypes ?? req.query.componentType;
   const types = Array.isArray(raw)
@@ -312,6 +318,54 @@ const confirmSupplier = asyncHandler(async (req, res) => {
 });
 
 /**
+ * Accept a supplier's proforma, rewriting the order's lines to match it.
+ *
+ * Audited as a money-moving change (§7.6): it rewrites what we will pay and
+ * what receiving expects to count, so "who agreed to these quantities" has to
+ * stay answerable. `diff` is logged rather than just the totals - the useful
+ * question afterwards is always *which line moved*.
+ */
+const acceptProforma = asyncHandler(async (req, res) => {
+  const result = await purchaseBidService.acceptProforma(req.params.id, {
+    supplierId: req.params.supplierId,
+    acceptedBy: req.user._id,
+  });
+
+  await auditService.record({
+    req,
+    action: 'purchase_order.proforma.accept',
+    entity: { kind: 'purchaseOrder', id: req.params.id, label: result.po?.poNumber ?? '' },
+    after: {
+      supplier: req.params.supplierId,
+      changed: result.diff?.changed ?? 0,
+      total: result.diff?.total ?? null,
+      lines: (result.diff?.rows ?? []).filter((row) => row.change !== 'same'),
+    },
+    description: `Accepted a proforma invoice against ${result.po?.poNumber ?? req.params.id}.`,
+  });
+
+  res.json(result);
+});
+
+/** Send a proforma back for a new one. The note reaches the supplier verbatim. */
+const requestProformaRevision = asyncHandler(async (req, res) => {
+  const result = await purchaseBidService.requestProformaRevision(req.params.id, {
+    supplierId: req.params.supplierId,
+    note: req.body?.note,
+  });
+
+  await auditService.record({
+    req,
+    action: 'purchase_order.proforma.revision',
+    entity: { kind: 'purchaseOrder', id: req.params.id, label: result.po?.poNumber ?? '' },
+    after: { supplier: req.params.supplierId, note: req.body?.note ?? '' },
+    description: `Asked for a revised proforma on ${result.po?.poNumber ?? req.params.id}.`,
+  });
+
+  res.json(result);
+});
+
+/**
  * A supplier's proforma invoice, rendered for print-to-PDF.
  *
  * Same CSP shape as the invoice document: the page carries one inline script
@@ -338,4 +392,4 @@ const proformaDocument = asyncHandler(async (req, res) => {
   res.type('html').send(html);
 });
 
-export { listSuppliers, getSupplier, createSupplier, updateSupplier, toggleSupplier, invitePortal, listPurchaseOrders, getPurchaseOrder, createPurchaseOrder, updatePurchaseOrder, setPurchaseOrderStatus, receivePurchaseOrder, recordPurchasePayment, listExpenses, createExpense, updateExpense, deleteExpense, listExpenseCategories, createExpenseCategory, updateExpenseCategory, deleteExpenseCategory, listInventory, getInventoryItem, updateInventoryOps, adjustStock, listStockMovements, suppliersForComponentTypes, getBidBoard, inviteSuppliers, removeSupplierFromPo, sendPurchaseOrder, negotiate, confirmSupplier, proformaDocument };
+export { listSuppliers, getSupplier, createSupplier, updateSupplier, toggleSupplier, invitePortal, listPurchaseOrders, getPurchaseOrder, createPurchaseOrder, updatePurchaseOrder, setPurchaseOrderStatus, receivePurchaseOrder, recordPurchasePayment, listExpenses, createExpense, updateExpense, deleteExpense, listExpenseCategories, createExpenseCategory, updateExpenseCategory, deleteExpenseCategory, listInventory, getInventoryItem, updateInventoryOps, adjustStock, listStockMovements, reorderQueue, suppliersForComponentTypes, getBidBoard, inviteSuppliers, removeSupplierFromPo, sendPurchaseOrder, negotiate, confirmSupplier, acceptProforma, requestProformaRevision, proformaDocument };

@@ -7,19 +7,19 @@ import cn from '@/lib/cn';
 import { money } from '@/lib/format';
 
 /**
- * The payment sheet — every Pay button in the app opens this one.
+ * The payment sheet - every Pay button in the app opens this one.
  *
  * **The card fields are a facade, and deliberately an honest one.** The gateway
  * is a mock (`server/src/services/payment.js`), nothing typed here is sent, and
  * the repo stores no card number anywhere by design. A payment step with no
  * form at all does not demonstrate a payment flow to anyone reviewing the
- * build, so the form exists — and says plainly, on the sheet, that it is a test
+ * build, so the form exists - and says plainly, on the sheet, that it is a test
  * gateway. Dressing a mock up as real without saying so is how somebody ends up
  * typing an actual card number into it.
  *
  * What IS real: the amount, the store-credit split, the decline path, and every
  * ledger row the server writes on success. When a live gateway swaps in, this
- * component keeps its shape — `payment.js` is the single seam, exactly as its
+ * component keeps its shape - `payment.js` is the single seam, exactly as its
  * own header promises.
  *
  * The amount is passed in for display only. The server derives what to charge
@@ -27,7 +27,7 @@ import { money } from '@/lib/format';
  * a tampered `amount` prop changes the label and nothing else.
  */
 
-/** `4242 4242 4242 4242` — grouped as it is typed, like a real card field. */
+/** `4242 4242 4242 4242` - grouped as it is typed, like a real card field. */
 function groupCardNumber(value) {
   const digits = value.replace(/\D/g, '').slice(0, 16);
   return digits.replace(/(.{4})/g, '$1 ').trim();
@@ -56,7 +56,7 @@ function CardField({ label, className, ...props }) {
 export function PaymentModal({
   open,
   onClose,
-  /** Integer cents. Display only — the server decides what is actually charged. */
+  /** Integer cents. Display only - the server decides what is actually charged. */
   amount,
   title = 'Pay invoice',
   description,
@@ -88,7 +88,7 @@ export function PaymentModal({
 
   // The same arithmetic the server does, shown so the buyer can see the split
   // before they commit. The server recomputes it and its answer is the one that
-  // counts — this is a preview, not an instruction.
+  // counts - this is a preview, not an instruction.
   const split = useMemo(() => {
     const credit = useStoreCredit ? Math.min(storeCredit, amount) : 0;
     return { credit, card: Math.max(0, amount - credit) };
@@ -170,7 +170,7 @@ export function PaymentModal({
               Card details
             </legend>
 
-            {/* One bordered group with hairline dividers — the Stripe Elements
+            {/* One bordered group with hairline dividers - the Stripe Elements
                 shape, which reads as a single control rather than four. */}
             <div className="overflow-hidden rounded-md border border-line-strong bg-surface focus-within:border-brand">
               <CardField
@@ -231,7 +231,7 @@ export function PaymentModal({
         <p className="flex items-start gap-2 rounded-md bg-surface-2 p-3 text-xs leading-relaxed text-ink-400">
           <ShieldCheck className="mt-px size-4 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
           <span>
-            Test gateway — no card details are sent or stored. Use{' '}
+            Test gateway - no card details are sent or stored. Use{' '}
             <span className="tnum font-semibold text-ink-500">4242 4242 4242 4242</span>, or a PO
             number starting <span className="font-semibold text-ink-500">DECLINE</span> to see the
             failure path.

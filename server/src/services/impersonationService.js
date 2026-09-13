@@ -16,14 +16,14 @@ import auditService from './auditService.js';
  * **A fourth cookie.** The console's own session stays exactly where it is:
  * entering a business does not consume or replace it, so an operator can leave
  * and still be signed in to the console. That is the whole reason this is
- * separate rather than a mode on the existing token — a single cookie that
+ * separate rather than a mode on the existing token - a single cookie that
  * changed meaning would make "am I inside somebody's business" a question the
  * browser answers differently depending on which tab you are looking at.
  *
  * **Three things are re-read on every request, never trusted from the token:**
  * the grant still exists, it has not been revoked, and it has not expired.
  * A JWT's own `exp` cannot be shortened after it is issued, so revocation would
- * otherwise take up to an hour to bite — which is not revocation.
+ * otherwise take up to an hour to bite - which is not revocation.
  *
  * **Entry and exit are both written into the business's own `AuditLog`.**
  * Invariant 9 requires the trail to live where the owner reads it, not only
@@ -91,7 +91,7 @@ async function enter(superAdmin, businessId, { reason, minutes } = {}, req, res)
    * One live grant per operator per business.
    *
    * Re-entering while already inside would mint a second token and a second
-   * pair of audit rows, and the exit would close only one of them — leaving a
+   * pair of audit rows, and the exit would close only one of them - leaving a
    * row that reads as an operator who never left. Reusing the open grant is
    * both truthful and what the operator meant.
    */
@@ -121,7 +121,7 @@ async function enter(superAdmin, businessId, { reason, minutes } = {}, req, res)
   });
 
   // The tenant's own copy. Written with the operator as the actor, which is
-  // what `actorFrom` produces once `req.impersonation` is set — here it is set
+  // what `actorFrom` produces once `req.impersonation` is set - here it is set
   // by hand because the entry request is made on the console's session, before
   // any impersonation token exists.
   await auditService.record({
@@ -140,7 +140,7 @@ async function enter(superAdmin, businessId, { reason, minutes } = {}, req, res)
  * Close a grant.
  *
  * Idempotent: leaving twice, or leaving something already revoked, is not an
- * error. The operator's intent — "I am out" — is satisfied either way, and
+ * error. The operator's intent - "I am out" - is satisfied either way, and
  * failing the second call would leave a cookie nobody can clear.
  */
 async function leave(grantId, res, { reason = 'left', req } = {}) {
@@ -204,7 +204,7 @@ async function resolve(token) {
   }
 }
 
-/** Every grant, newest first — the console's support history. */
+/** Every grant, newest first - the console's support history. */
 async function list({ business, live } = {}) {
   const filter = {};
   if (business) filter.business = business;
@@ -223,7 +223,7 @@ async function revoke(grantId, req) {
   if (!grant) throw ApiError.notFound('No such grant.', 'GRANT_NOT_FOUND');
 
   // `leave` clears a cookie on the response, which is the revoking operator's
-  // own — not the revoked operator's. Passing a throwaway keeps the two apart:
+  // own - not the revoked operator's. Passing a throwaway keeps the two apart:
   // the revoked session dies because the grant is closed, not because a cookie
   // was removed from a browser this request never touches.
   await leave(grantId, { clearCookie: () => {} }, { reason: 'revoked', req });

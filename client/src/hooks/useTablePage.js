@@ -11,7 +11,7 @@ import { useSearchParams } from 'react-router';
  * than no figure at all. If a list outgrows its cap this moves server-side, and
  * the tiles have to get their own aggregate first.
  *
- * **The page lives in the URL** so a view is a link — "the third page of unpaid
+ * **The page lives in the URL** so a view is a link - "the third page of unpaid
  * invoices" is something an operator can send someone.
  *
  * Two guards that a hand-rolled version keeps getting wrong:
@@ -30,8 +30,8 @@ export const DEFAULT_PER_PAGE = 10;
 /**
  * The row-count choices, one definition.
  *
- * This was forked — the customers screen offered 25/50/100 and the tickets
- * screen 10/25/50/100 — so the same control had a different first option
+ * This was forked - the customers screen offered 25/50/100 and the tickets
+ * screen 10/25/50/100 - so the same control had a different first option
  * depending on which list you were on.
  */
 export const PER_PAGE_OPTIONS = [10, 25, 50, 100].map((n) => ({
@@ -51,7 +51,7 @@ export function useTablePage(rows = []) {
   const pageRows = rows.slice((page - 1) * size, page * size);
 
   /**
-   * Write a filter parameter. Everything but `page` returns to page 1 — see the
+   * Write a filter parameter. Everything but `page` returns to page 1 - see the
    * note above. An empty value or `'all'` drops the key rather than writing a
    * parameter that means "the default".
    */
@@ -68,7 +68,7 @@ export function useTablePage(rows = []) {
   }
 
   return {
-    /** The rows to render — never more than `perPage` of them. */
+    /** The rows to render - never more than `perPage` of them. */
     pageRows,
     page,
     totalPages,

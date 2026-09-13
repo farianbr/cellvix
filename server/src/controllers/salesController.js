@@ -77,7 +77,7 @@ const inspectRma = asyncHandler(async (req, res) => {
 /**
  * Refund routes through `storeCreditService`; restock through the ledger.
  *
- * Named in §7.6 as money-moving, so it is always audited with actor and IP —
+ * Named in §7.6 as money-moving, so it is always audited with actor and IP
  * this is the one RMA step that both refunds a customer and returns stock.
  */
 const resolveRma = asyncHandler(async (req, res) => {

@@ -8,7 +8,7 @@ import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { pressable } from '@/lib/motion';
 
 /**
- * Settings — Summary and the seven category landings (§6.15, phase 11).
+ * Settings - Summary and the seven category landings (§6.15, phase 11).
  *
  * **One screen, two readings.** `/admin/settings` is the map of everything;
  * `/admin/settings?cat=financial` is the same grid filtered to one category
@@ -20,7 +20,7 @@ import { pressable } from '@/lib/motion';
  * is unusable, and this is what keeps every page two clicks from anywhere.
  *
  * Cards are built from `ADMIN_ROUTES` rather than a list kept here, so a new
- * settings page appears on this screen the moment it is routed — there is no
+ * settings page appears on this screen the moment it is routed - there is no
  * second register to forget to update.
  */
 const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/settings'], icon: adminIcon('LayoutGrid') };
@@ -41,7 +41,7 @@ function pagesByCategory() {
 /**
  * One page's card.
  *
- * A card for a screen that has not been built yet still links — the stub tells
+ * A card for a screen that has not been built yet still links - the stub tells
  * an operator which phase it lands in, which is more useful than a dead tile
  * that says nothing. It carries a quiet `Soon` chip so the map does not
  * over-promise.
@@ -104,7 +104,7 @@ function CategoryPanel({ category, pages, heading }) {
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {pages.map((page) => (
-          // A page from an earlier phase is built by definition — it shipped
+          // A page from an earlier phase is built by definition - it shipped
           // with that phase. Phase 11 lands across several passes, so its
           // routes say so explicitly rather than being inferred from a number
           // that is the same for a real screen and a stub.
@@ -131,7 +131,7 @@ export function AdminSettingsPage() {
         description={category ? 'Settings for this area.' : ADMIN_PAGE.description}
       />
 
-      {/* The tab row exists only on a category landing — on the summary every
+      {/* The tab row exists only on a category landing - on the summary every
           category is already a heading below, so a tab row would just be the
           page's own contents restated above it. */}
       {category && (

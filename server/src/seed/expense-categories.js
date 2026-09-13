@@ -9,7 +9,7 @@ import '../models/ExpenseCategory.js';
  * **Upsert, never wipe.** Every expense points at a category by id, so
  * deleting and re-inserting this list would re-key the whole collection and
  * silently re-bucket the P&L. Existing rows are left exactly as the operator
- * edited them — a category they renamed or deactivated stays that way — and
+ * edited them - a category they renamed or deactivated stays that way - and
  * only genuinely missing slugs are added. That makes this safe to run on a
  * database with real expenses in it, and safe to run twice.
  *
@@ -18,7 +18,7 @@ import '../models/ExpenseCategory.js';
  * did not pick a category.
  *
  * All of them are editable and deletable from `/admin/settings/expense-categories`
- * — this is a starting point, not a fixed vocabulary.
+ * - this is a starting point, not a fixed vocabulary.
  */
 const EXPENSE_CATEGORIES = [
   { name: 'Inventory Purchases', slug: 'inventory-purchases', colorToken: 'brand', gstApplicable: true, order: 10 },

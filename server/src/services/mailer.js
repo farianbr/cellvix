@@ -6,7 +6,7 @@ import env from '../config/env.js';
  * Mail is a side effect of placing an order, and a side effect must never be
  * able to fail the order: a dead SMTP host, a bad credential or a missing
  * dependency has to end in a logged failure, not a rejected checkout. Every
- * path through `sendMail` resolves — callers read `delivered` to know what
+ * path through `sendMail` resolves - callers read `delivered` to know what
  * happened, and none of them may throw on a false.
  */
 
@@ -27,7 +27,7 @@ async function getTransport() {
        * plain `smtp://` URL makes nodemailer default to `secure: false` and
        * open in cleartext expecting a STARTTLS upgrade that a 465 listener
        * never offers, so the socket hangs until it times out. Port 587 is the
-       * opposite — cleartext first, then STARTTLS — and must stay
+       * opposite - cleartext first, then STARTTLS - and must stay
        * `secure: false`. Deriving it from the port means either form of URL
        * works and neither has to be remembered.
        */
@@ -71,18 +71,18 @@ async function mailerConfigured() {
 }
 
 /**
- * Sends a message. Never throws — a caller reads the result instead.
+ * Sends a message. Never throws - a caller reads the result instead.
  *
  * @returns {Promise<{ delivered: boolean, via: 'smtp' | null, error?: string }>}
  *   `via` is `'smtp'` only on a real delivery. A `false` `delivered` carries
- *   `error` saying why, and the message is gone — there is no local copy.
+ *   `error` saying why, and the message is gone - there is no local copy.
  */
 async function sendMail({ to, subject, html, text, from = env.MAIL_FROM }) {
   const transport = await getTransport();
 
   if (!transport) {
     const error = 'No SMTP transport is configured.';
-    console.error(`  Mail: "${subject}" for ${to} not sent — ${error}`);
+    console.error(`  Mail: "${subject}" for ${to} not sent - ${error}`);
     return { delivered: false, via: null, error };
   }
 
@@ -90,7 +90,7 @@ async function sendMail({ to, subject, html, text, from = env.MAIL_FROM }) {
     await transport.sendMail({ from, to, subject, html, text });
     return { delivered: true, via: 'smtp' };
   } catch (error) {
-    console.error(`  Mail: send to ${to} failed — ${error.message}`);
+    console.error(`  Mail: send to ${to} failed - ${error.message}`);
     return { delivered: false, via: null, error: error.message };
   }
 }

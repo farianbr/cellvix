@@ -5,15 +5,15 @@ import useFilterStore, { toQueryParams } from '@/store/filterStore';
 /**
  * Applies a taxonomy path from anywhere in the app.
  *
- * The filter UIs write to the store and the grid re-renders over AJAX — which
+ * The filter UIs write to the store and the grid re-renders over AJAX - which
  * works perfectly while the grid is on screen. It is the ONLY thing that used
  * to happen, though, so picking a category from the header on /about, /blog or
  * /checkout wrote state nobody was subscribed to and the click did nothing at
  * all. The store is only the whole answer on the Shop page; everywhere else the
  * filter has to bring the user to the grid it filters.
  *
- * So: set the store either way — that is what the grid reads and what keeps the
- * sidebar, mega menu and wizard in step — and navigate to the Shop page only
+ * So: set the store either way - that is what the grid reads and what keeps the
+ * sidebar, mega menu and wizard in step - and navigate to the Shop page only
  * when we are not already on it. Staying put on `/` preserves the no-reload
  * behaviour the filter architecture is built around.
  *

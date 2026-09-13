@@ -2,19 +2,19 @@ import ApiError from '../utils/ApiError.js';
 import { IMPERSONATION_COOKIE, resolve } from '../services/impersonationService.js';
 
 /**
- * The impersonation session — a fourth cookie (SAAS_PLATFORM §4.5).
+ * The impersonation session - a fourth cookie (SAAS_PLATFORM §4.5).
  *
  * **`req.impersonation` is set; `req.user` is never touched.** That is the
  * decision this whole file rests on. Synthesising a `User` would have made
- * every existing guard pass for free — `requireAdmin`, `requireStaff`,
- * `requirePermission` — and the only thing standing between a platform operator
+ * every existing guard pass for free - `requireAdmin`, `requireStaff`,
+ * `requirePermission` - and the only thing standing between a platform operator
  * and any tenant route would be that nobody had thought about it. Instead the
  * guards learn about impersonation one at a time, in `auth.js`, where the
  * decision is visible next to the rule it bends.
  *
  * The cost is real and worth naming: a route that should admit an operator and
  * was never updated will refuse them. That failure is a support ticket. The
- * opposite failure — a route that admits an operator nobody intended to admit —
+ * opposite failure - a route that admits an operator nobody intended to admit
  * is a breach, and it is silent.
  *
  * **The grant is re-read from the database on every request**, not trusted from

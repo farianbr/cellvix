@@ -18,7 +18,7 @@ import { useAdminBusinesses } from '@/hooks/useAdmin';
  *   768–1023 64px icon rail, group icons only, tooltips on hover
  *   1024+   full tree, one group expanded at a time
  *
- * `--color-ink-deep` is the background at every width (§2b) — the warm
+ * `--color-ink-deep` is the background at every width (§2b) - the warm
  * near-black already defined for exactly this, so the panel reads as Cellvix
  * rather than as generic admin chrome.
  */
@@ -30,7 +30,7 @@ import { useAdminBusinesses } from '@/hooks/useAdmin';
  * to CellShoppe saw the wholesaler's name at the top of their own repair shop's
  * panel. One tenant may own several businesses (SAAS_PLATFORM §1), and the
  * corner of the screen that names where you are is the last place that should
- * be guessing — it is the same wayfinding question the switcher answers, asked
+ * be guessing - it is the same wayfinding question the switcher answers, asked
  * in the place the eye lands first.
  *
  * Falls back to the platform's own name while the business list is still
@@ -102,14 +102,14 @@ function navRowClass(isActive, extra) {
  *
  * **A bare number is unreadable twice over**, and both halves were broken here.
  * A sighted operator saw "Inventory 189" with no way to tell whether 189 was a
- * total, an alert or an unread count — and landing on the page showed 420 rows,
+ * total, an alert or an unread count - and landing on the page showed 420 rows,
  * so the number could not even be checked. A screen reader announced
  * "Inventory 189" with no noun at all.
  *
  * `label` fixes both: it names what is being counted, in the words the operator
  * would use. It becomes the accessible name ("189 out of stock or running low")
  * and the native `title`, so the answer is available on hover, on focus and to
- * assistive tech — never hover alone, which no keyboard user can reach.
+ * assistive tech - never hover alone, which no keyboard user can reach.
  *
  * The number stays visually quiet. It is a wayfinding hint, not an alarm: the
  * dashboard's "things to do today" is where work is actually triaged, and a
@@ -119,7 +119,7 @@ function Badge({ count, label, description: full }) {
   if (!count) return null;
 
   const shown = count > 99 ? '99+' : String(count);
-  // Two callers, two shapes. A child row passes `label` — the bare noun — and
+  // Two callers, two shapes. A child row passes `label` - the bare noun - and
   // the count is prefixed here: "3 waiting for approval". A collapsed group
   // passes `description`, already a complete sentence enumerating its parts,
   // because its own total ("109") is a sum of unlike things and prefixing it
@@ -131,7 +131,7 @@ function Badge({ count, label, description: full }) {
       className="tnum ml-auto min-w-[20px] shrink-0 rounded-full bg-white/15 px-1.5 py-0.5 text-center text-2xs font-semibold leading-none text-white"
       title={description}
     >
-      {/* The digits are decorative to a screen reader — the sentence beside
+      {/* The digits are decorative to a screen reader - the sentence beside
           them is the real content, so the glyphs are hidden and the phrase is
           announced instead. Without this the reader hears "189" twice. */}
       <span aria-hidden="true">{shown}</span>
@@ -145,7 +145,7 @@ function NavTree({ badges, onNavigate }) {
   const { permissions, features } = useAuth();
 
   // A group the role cannot reach, or the business does not have, is not
-  // rendered. The server refuses both anyway — with a 403 and a 404
+  // rendered. The server refuses both anyway - with a 403 and a 404
   // respectively; hiding them stops an operator clicking into a wall (§7.6).
   const nav = useMemo(
     () => visibleNav(ADMIN_NAV, permissions, features),
@@ -171,7 +171,7 @@ function NavTree({ badges, onNavigate }) {
                   to={item.to}
                   end
                   // The destination goes with the click so the shell can tell
-                  // "go there" from "I am already there" — the second is a
+                  // "go there" from "I am already there" - the second is a
                   // no-op in the router and has to be handled by hand.
                   onClick={() => onNavigate?.(item.to)}
                   className={({ isActive }) => navRowClass(isActive)}
@@ -187,7 +187,7 @@ function NavTree({ badges, onNavigate }) {
           /**
            * The collapsed group's roll-up.
            *
-           * The number alone is close to meaningless — "Sales 14" adds pending
+           * The number alone is close to meaningless - "Sales 14" adds pending
            * customers to open tickets to overdue invoices, four different kinds
            * of work summed into one figure that matches nothing on any screen.
            * It stays, because a collapsed group does need to say "there is
@@ -234,14 +234,14 @@ function NavTree({ badges, onNavigate }) {
                 
                     Adding 109 low-stock products to 4 returns to 1 overdue
                     invoice produces a number in no unit at all, and past a
-                    hundred it rendered as "99+" — a cap on a quantity that was
+                    hundred it rendered as "99+" - a cap on a quantity that was
                     already meaningless. What a collapsed group actually needs
                     to say is "there is something in here", which is a boolean,
                     so it is drawn as one.
                 
                     The real counts are one click away on the children, and the
                     breakdown is on this dot as its accessible name, so nothing
-                    is hidden — only the false precision is gone. */}
+                    is hidden - only the false precision is gone. */}
                 {!isOpen && groupBadge > 0 && (
                   <span
                     className="ml-auto flex size-4 shrink-0 items-center justify-center"
@@ -339,8 +339,8 @@ function IconRail({ badges, onNavigate }) {
                 // The label carries the reason for the dot, because the dot
                 // itself is decorative and a rail row is otherwise announced
                 // as a bare section name with an unexplained mark on it.
-                aria-label={parts ? `${item.label} — ${parts}` : item.label}
-                title={parts ? `${item.label} — ${parts}` : item.label}
+                aria-label={parts ? `${item.label} - ${parts}` : item.label}
+                title={parts ? `${item.label} - ${parts}` : item.label}
                 onClick={() => onNavigate?.(to)}
                 className={cn(
                   pressable,
@@ -431,8 +431,8 @@ export function AdminSidebar({
   /**
    * One handler for every nav row.
    *
-   * Navigating to the route you are already on is a no-op in the router — no
-   * render, no scroll, nothing — so a reader at the bottom of a long page who
+   * Navigating to the route you are already on is a no-op in the router - no
+   * render, no scroll, nothing - so a reader at the bottom of a long page who
    * clicks the section they are in gets no response at all. The one useful
    * reading of that click is "back to the top", which is what this does.
    */
@@ -443,7 +443,7 @@ export function AdminSidebar({
 
   return (
     <>
-      {/* 1024+ — the full tree. */}
+      {/* 1024+ - the full tree. */}
       <aside className="hidden h-dvh w-[220px] shrink-0 flex-col bg-ink-deep lg:flex xl:w-[250px] print:hidden">
         <BrandBlock />
         <QuickSearch onOpenSearch={onOpenSearch} />
@@ -451,14 +451,14 @@ export function AdminSidebar({
         <UserFooter user={user} onSignOut={onSignOut} />
       </aside>
 
-      {/* 768–1023 — the icon rail. */}
+      {/* 768–1023 - the icon rail. */}
       <aside className="hidden h-dvh w-16 shrink-0 flex-col items-center bg-ink-deep md:flex lg:hidden print:hidden">
         <BrandBlock compact />
         <IconRail badges={badges} onNavigate={handleNavigate} />
         <UserFooter user={user} onSignOut={onSignOut} compact />
       </aside>
 
-      {/* <768 — off-canvas drawer. */}
+      {/* <768 - off-canvas drawer. */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
           <button

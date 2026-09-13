@@ -49,7 +49,7 @@ const PRINCIPLES = [
   {
     icon: ClipboardCheck,
     title: 'Every part is tested',
-    body: 'Nothing leaves the warehouse without being powered on and checked. Pulls are graded honestly — a Grade B is sold as a Grade B.',
+    body: 'Nothing leaves the warehouse without being powered on and checked. Pulls are graded honestly - a Grade B is sold as a Grade B.',
   },
   {
     icon: BadgeCheck,
@@ -64,7 +64,7 @@ const PRINCIPLES = [
   {
     icon: Wrench,
     title: 'Built for repair shops',
-    body: 'Wholesale pricing, credit terms and a quick order pad — because you are ordering forty lines on a Tuesday, not browsing.',
+    body: 'Wholesale pricing, credit terms and a quick order pad - because you are ordering forty lines on a Tuesday, not browsing.',
   },
   {
     icon: ShieldCheck,
@@ -87,7 +87,7 @@ const TIMELINE = [
   {
     step: 'Today',
     title: 'A wholesale catalogue you can order from in two minutes',
-    body: 'Four-level filtering, live stock, credit terms and same-day dispatch — for verified businesses only.',
+    body: 'Four-level filtering, live stock, credit terms and same-day dispatch - for verified businesses only.',
   },
 ];
 
@@ -121,7 +121,7 @@ function BenchScene() {
       role="img"
       aria-label="A repair bench: a rack of graded parts trays, a phone under test with probes on it, and a laptop and tablet waiting on the bench"
     >
-      {/* Pegboard — the texture of a bench, faint enough to sit behind. */}
+      {/* Pegboard - the texture of a bench, faint enough to sit behind. */}
       <g fill="var(--color-ink-200)" opacity="0.28">
         {Array.from({ length: 6 }).map((_, row) =>
           Array.from({ length: 32 }).map((__, column) => (
@@ -164,7 +164,7 @@ function BenchScene() {
         <path d="M303 241h26" opacity="0.7" />
       </g>
 
-      {/* Graded trays. The accented ones carry the brand — three touches, not a
+      {/* Graded trays. The accented ones carry the brand - three touches, not a
           wash: this is an accent palette, never a ground. */}
       {rack.map((tray) => (
         <rect
@@ -295,7 +295,7 @@ function Hero() {
         <div>
           <p className="text-lg leading-relaxed text-ink-400">
             Cellvix is a Canadian wholesale supplier of replacement parts for phones, tablets,
-            laptops, wearables and consoles. We sell to repair businesses only — which is why every
+            laptops, wearables and consoles. We sell to repair businesses only - which is why every
             price, grade and stock figure on this site is one you can build a quote around.
           </p>
           <p className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-ink-500">
@@ -381,7 +381,7 @@ function Principles() {
         centered
       />
 
-      {/* Three across, then two wider — an even five-up row would leave a gap
+      {/* Three across, then two wider - an even five-up row would leave a gap
           where the fifth card should be. */}
       <div className="mt-12 grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
         {PRINCIPLES.map(({ icon: Icon, title, body }, index) => (
@@ -417,7 +417,7 @@ function Story() {
         lede="Cellvix started as a fix for the part of a repair business nobody photographs: sourcing."
       />
 
-      {/* Reveal renders AS the <li> — wrapping list items in a motion <div>
+      {/* Reveal renders AS the <li> - wrapping list items in a motion <div>
           puts a non-<li> directly inside the <ol> and breaks the list for
           screen readers. */}
       <ol className="mt-12 space-y-0">
@@ -484,7 +484,7 @@ function Warehouse() {
   const checks = [
     { icon: PackageCheck, text: 'Powered on and function-tested before packing' },
     { icon: Boxes, text: 'Anti-static packaging on every screen and board' },
-    { icon: MapPin, text: 'Canadian stock — no customs delays' },
+    { icon: MapPin, text: 'Canadian stock - no customs delays' },
   ];
 
   return (
@@ -500,7 +500,7 @@ function Warehouse() {
           </h2>
           <p className="mt-6 text-lg leading-relaxed text-ink-400">
             Everything ships from {BUSINESS_INFO.address.city}. Orders placed before 2 PM ET go out
-            the same day, and every line is picked against the same grading sheet — so the Grade A
+            the same day, and every line is picked against the same grading sheet - so the Grade A
             pull you ordered last month is the Grade A pull that arrives this month.
           </p>
 
@@ -533,7 +533,7 @@ function LatestPosts() {
   const { data, isLoading } = useBlogPosts();
   const posts = (data?.posts ?? []).slice(0, 3);
 
-  // An empty blog is a legitimate state on a fresh database — render nothing
+  // An empty blog is a legitimate state on a fresh database - render nothing
   // rather than an empty heading.
   if (!isLoading && posts.length === 0) return null;
 
@@ -608,7 +608,7 @@ function ClosingCta() {
           </h2>
           <p className="mt-5 max-w-xl text-lg leading-relaxed text-white/75">
             Wholesale pricing, credit terms and same-day dispatch. Accounts are verified by our team
-            — usually within one business day.
+ - usually within one business day.
           </p>
         </div>
 
@@ -636,7 +636,7 @@ function ClosingCta() {
  * About Us (brief §9): storytelling-forward, scroll-triggered reveals, milestone
  * counters.
  *
- * The page is built as a stack of rounded slabs rather than one flat column —
+ * The page is built as a stack of rounded slabs rather than one flat column
  * each section owns its ground, and the two that carry weight (the statement
  * with the counters, and the closing CTA) invert to dark. The gradient appears
  * exactly once, on the CTA, per PROJECT_INSTRUCTIONS.md §2.2: the dark

@@ -331,7 +331,7 @@ const TAXONOMY = [
  * shop can never show. An admin adds the ninth from the panel, alongside the
  * photo that earns it a place.
  *
- * The list used to be per-device-type and ran to twenty-odd entries — keyboards,
+ * The list used to be per-device-type and ran to twenty-odd entries - keyboards,
  * trackpads, optical drives, logic boards. None of those had a photograph, so
  * every one of them seeded products the storefront then filtered out.
  */
@@ -351,7 +351,7 @@ const COMPONENT_TYPES = [
  *
  * Every device type gets the same eight. The photography is phone-only, so the
  * picture filter is what actually decides which of these reach the storefront
- * for a given brand — this table just stops the generator inventing types that
+ * for a given brand - this table just stops the generator inventing types that
  * have no photo anywhere.
  */
 const PART_TYPES = {

@@ -26,7 +26,7 @@ const BLOG_STATUSES = ['draft', 'published'];
 const blogPostSchema = z.object({
   title: z.string().trim().min(4, 'Give the post a title.').max(160),
   excerpt: z.string().trim().min(10, 'Write a one-line summary.').max(320),
-  // Plain text with a tiny markup vocabulary — see client/src/lib/richText.jsx.
+  // Plain text with a tiny markup vocabulary - see client/src/lib/richText.jsx.
   // Never HTML: the renderer builds React nodes, so there is nothing to inject.
   body: z.string().trim().min(40, 'The post needs a body.').max(40_000),
   category: z.enum(BLOG_CATEGORIES.map((c) => c.value)),
@@ -51,8 +51,8 @@ const FAQ_CATEGORIES = [
 ];
 
 const FAQ_SCOPES = [
-  { value: 'general', label: 'General — FAQ page' },
-  { value: 'product', label: 'Product — product detail pages' },
+  { value: 'general', label: 'General - FAQ page' },
+  { value: 'product', label: 'Product - product detail pages' },
 ];
 
 /**
@@ -74,8 +74,8 @@ const faqSchema = z.object({
 // --- offers ------------------------------------------------------------------
 
 const OFFER_KINDS = [
-  { value: 'deal', label: 'Deal — a discount across a slice of the catalogue' },
-  { value: 'combo', label: 'Combo — a fixed bundle of SKUs at a bundle price' },
+  { value: 'deal', label: 'Deal - a discount across a slice of the catalogue' },
+  { value: 'combo', label: 'Combo - a fixed bundle of SKUs at a bundle price' },
 ];
 
 const DISCOUNT_TYPES = [
@@ -138,7 +138,7 @@ const offerSchema = z
   })
   .superRefine((value, ctx) => {
     // A combo with no SKUs is an empty page section, and a combo with no bundle
-    // price has no offer in it — both are worth refusing at the boundary rather
+    // price has no offer in it - both are worth refusing at the boundary rather
     // than rendering as a broken card.
     if (value.kind === 'combo') {
       if (value.items.length < 2) {
@@ -158,7 +158,7 @@ const offerSchema = z
     }
 
     // An account-restricted offer with nobody on the list is a dead offer that
-    // looks live in the admin table — refuse it where it is still cheap to fix.
+    // looks live in the admin table - refuse it where it is still cheap to fix.
     if (value.eligibility === 'accounts' && value.allowedUsers.length === 0) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
@@ -174,7 +174,7 @@ const offerSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['redemption'],
-        message: 'Single-use needs a promo code — an automatic offer cannot be redeemed once.',
+        message: 'Single-use needs a promo code - an automatic offer cannot be redeemed once.',
       });
     }
 

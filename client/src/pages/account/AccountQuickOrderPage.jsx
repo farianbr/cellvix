@@ -58,7 +58,7 @@ export function AccountQuickOrderPage() {
 
   /**
    * Parses a pasted block. Accepts `SKU,QTY`, `SKU<tab>QTY` or `SKU QTY`,
-   * one per line — which covers a column copied from Excel, Sheets or a CSV.
+   * one per line - which covers a column copied from Excel, Sheets or a CSV.
    */
   function submitPasted() {
     const lines = pasted
@@ -181,7 +181,7 @@ export function AccountQuickOrderPage() {
       {/* ---- paste box ---------------------------------------------------- */}
       <Panel
         title="Paste a list"
-        description="One SKU per line. Quantity after a comma, tab or space — otherwise 1."
+        description="One SKU per line. Quantity after a comma, tab or space - otherwise 1."
       >
         <textarea
           value={pasted}
@@ -270,7 +270,7 @@ export function AccountQuickOrderPage() {
       />
 
       {/* Restoring merges the saved lines into the active cart and CONSUMES the
-          saved copy — quantities add on top of anything already in the cart, so
+          saved copy - quantities add on top of anything already in the cart, so
           the saved list is not left behind to restore a second time. */}
       <ConfirmDialog
         open={Boolean(restoringCart)}

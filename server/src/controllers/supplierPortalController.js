@@ -7,7 +7,7 @@ import * as purchaseBidService from '../services/purchaseBidService.js';
  * The supplier portal (supplier process flow, §6.8a).
  *
  * Every handler below reads `req.supplier`, which only
- * `middleware/supplierAuth.js` sets — never `req.user`. That is what keeps a
+ * `middleware/supplierAuth.js` sets - never `req.user`. That is what keeps a
  * signed-in buyer or admin from reaching a supplier's requests by holding the
  * wrong cookie, and a supplier from reaching anything else.
  */
@@ -22,7 +22,7 @@ const logout = asyncHandler(async (req, res) => {
   res.json(supplierPortalService.logout(res));
 });
 
-/** Who am I. `null` rather than a 401 — the portal shell asks on every load. */
+/** Who am I. `null` rather than a 401 - the portal shell asks on every load. */
 const me = asyncHandler(async (req, res) => {
   res.json({
     supplier: req.supplier ? supplierPortalService.shapePortalSupplier(req.supplier) : null,
@@ -71,7 +71,7 @@ const setDeliveryStatus = asyncHandler(async (req, res) => {
  * The supplier's own proforma invoice, as a printable sheet.
  *
  * `req.supplier._id` is the session's, never a parameter, so a supplier can
- * only ever render their own — the same guarantee the JSON serializer gives.
+ * only ever render their own - the same guarantee the JSON serializer gives.
  */
 const proformaDocument = asyncHandler(async (req, res) => {
   const nonce = randomBytes(16).toString('base64');

@@ -6,7 +6,7 @@ import { buildCompetitors } from './generate.js';
  * Backfills the `competitors` benchmark prices onto products that predate the
  * field (PROGRESS.md, Session 23).
  *
- * `npm run seed` would do it, but it wipes the whole database — the wrong tool
+ * `npm run seed` would do it, but it wipes the whole database - the wrong tool
  * once there are real accounts, orders and carts in there. This touches ONE
  * field on ONE collection and nothing else, the same way `seed:content` is the
  * safe tool for the editorial collections.
@@ -29,7 +29,7 @@ async function backfillCompetitors({ force = false, quiet = false } = {}) {
   const products = await Product.find(query).select('_id sku price competitors').lean();
 
   if (products.length === 0) {
-    log('  every product already carries benchmarks — nothing to do.');
+    log('  every product already carries benchmarks - nothing to do.');
     return { matched: 0, updated: 0 };
   }
 

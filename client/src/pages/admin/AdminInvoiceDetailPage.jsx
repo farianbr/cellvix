@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import useDocumentTitle from '@/hooks/useDocumentTitle';
 import { Link, useNavigate, useParams } from 'react-router';
 import { useForm } from 'react-hook-form';
 import {
@@ -47,7 +48,7 @@ import { pressable } from '@/lib/motion';
  * the Invoices list already held the payment and void dialogs and a second set
  * of controls would be a second place for those rules to drift. In practice it
  * sent an operator who had opened an invoice to *look* at it back to a list to
- * act on it — and the rules never lived in the dialogs anyway, they live in
+ * act on it - and the rules never lived in the dialogs anyway, they live in
  * `invoicePaymentService`, which both paths call. So the controls are here,
  * against the document they describe, and the server still owns every rule.
  */
@@ -78,7 +79,7 @@ const PAYMENT_METHODS = [
  * its own row of pills meant the same idea looked different on three screens.
  * One rail, one vocabulary, one place at the foot of the page.
  *
- * `overdue` is not a fourth stage — it is an unpaid invoice past its date, so
+ * `overdue` is not a fourth stage - it is an unpaid invoice past its date, so
  * it sits at `unpaid` on the track and the header badge carries the lateness.
  */
 const INVOICE_LIFECYCLE = [
@@ -92,6 +93,12 @@ export function AdminInvoiceDetailPage() {
   const { number } = useParams();
   const navigate = useNavigate();
   const { data, isLoading, error } = useAdminInvoice(number);
+
+  // This record names the tab, so several open at once stay tellable apart.
+  // Called BEFORE the loading and error returns below: a hook placed after an
+  // early return runs on some renders and not others, which is the one thing
+  // React's hook ordering forbids.
+  useDocumentTitle(data?.invoice?.number);
 
   /**
    * Every edit this invoice has taken, from the audit log rather than a second
@@ -113,7 +120,7 @@ export function AdminInvoiceDetailPage() {
   const [editing, setEditing] = useState(false);
   const [voiding, setVoiding] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  // Emailing goes out to a real customer, so it is confirmed first — the
+  // Emailing goes out to a real customer, so it is confirmed first - the
   // outcome then arrives as a toast rather than a banner this page has to find
   // room for. What the transport actually said is reported verbatim: a send
   // that did not happen must not read as one (§6b rule 4).
@@ -185,7 +192,7 @@ export function AdminInvoiceDetailPage() {
             </Button>
 
             {/* Everything past the two an operator reaches for daily. Print and
-                PDF are the same rendered document — one goes to a printer, the
+                PDF are the same rendered document - one goes to a printer, the
                 other to a file. */}
             <ActionMenu
               label="More invoice actions"
@@ -246,7 +253,7 @@ export function AdminInvoiceDetailPage() {
         {/* The chain this invoice ends, when it ends one. An invoice raised
             from a repair is the last of three records for one job, and until
             now it said so only through a `reference` string reading "Repair
-            TK-…" — a sentence, not something an operator could follow. An
+            TK-…" - a sentence, not something an operator could follow. An
             invoice behind an *order* has no such chain and draws nothing. */}
         {invoice.ticket && (
           <WorkflowLineage
@@ -261,7 +268,7 @@ export function AdminInvoiceDetailPage() {
          * Payment information, leading the page.
          *
          * The two figures an operator opens an invoice to check are what it is
-         * for and what has arrived — so they are the first thing on the screen,
+         * for and what has arrived - so they are the first thing on the screen,
          * at a size that can be read across a desk, with the history that
          * produced them directly underneath.
          */}
@@ -300,7 +307,7 @@ export function AdminInvoiceDetailPage() {
             {/* Plain tiles, like the one beside them.
 
                 These carried a tinted border AND a tinted ground AND a coloured
-                value — three signals for one fact, on a row of three tiles where
+                value - three signals for one fact, on a row of three tiles where
                 two were shouting and one was not. A figure does not need a
                 coloured box to be found when it is already set at 22px in a row
                 of three.
@@ -340,11 +347,11 @@ export function AdminInvoiceDetailPage() {
                 Nothing recorded against this invoice yet.
               </p>
             ) : (
-              /* A table, not a list of lines. Payments are a ledger — the same
-                 four facts on every row — and a ledger is read down its columns.
+              /* A table, not a list of lines. Payments are a ledger - the same
+                 four facts on every row - and a ledger is read down its columns.
                  The list forced the eye to re-find the amount on each line. */
               <div className="overflow-x-auto rounded-md border border-line">
-                {/* Carries the density toggle — these rows follow the same
+                {/* Carries the density toggle - these rows follow the same
                     density as every list table. */}
                 <div className="border-b border-line px-3 py-2">
                   <CountLine
@@ -357,7 +364,7 @@ export function AdminInvoiceDetailPage() {
                   <thead>
                     {/* Header type comes from the shared helpers, so this reads
                         as the same component as every other admin table. The
-                        column widths stay — the table is `table-fixed` and the
+                        column widths stay - the table is `table-fixed` and the
                         proportions are deliberate. */}
                     <tr className={t.headRow}>
                       <th scope="col" className={cn(t.headCell(), 'w-[26%]')}>
@@ -372,7 +379,10 @@ export function AdminInvoiceDetailPage() {
                       <th scope="col" className={cn(t.headCell(), 'w-[28%]')}>
                         Reference
                       </th>
-                      <th scope="col" className={cn(t.headCell('right'), 'w-[10%]')}>
+                      {/* `relative` contains the `sr-only` label, which is
+                          absolutely positioned and would otherwise anchor to
+                          the document and stretch the page. */}
+                      <th scope="col" className={cn(t.headCell('right'), 'relative w-[10%]')}>
                         <span className="sr-only">Reverse</span>
                       </th>
                     </tr>
@@ -399,7 +409,7 @@ export function AdminInvoiceDetailPage() {
                               // Three different facts, three different weights:
                               // money in is plain, a reversal is red because it
                               // takes money back, and a void is grey because it
-                              // was never money at all — it is forgiveness.
+                              // was never money at all - it is forgiveness.
                               reversal ? 'text-danger' : forgiven ? 'text-ink-400' : 'text-ink-900',
                               reversed && 'line-through opacity-60',
                             )}
@@ -419,12 +429,12 @@ export function AdminInvoiceDetailPage() {
                           </td>
 
                           <td className={cn(t.cell(), 'truncate font-mono text-xs text-ink-400')}>
-                            {payment.reference || '—'}
+                            {payment.reference || '-'}
                           </td>
 
                           <td className={t.cell('right')}>
                             {/* Only a real, un-reversed payment can be reversed.
-                                A void and a reversal are already corrections —
+                                A void and a reversal are already corrections
                                 offering to undo them would be a second way to
                                 reach the same state. */}
                             {!reversal && !reversed && !forgiven && (
@@ -478,7 +488,7 @@ export function AdminInvoiceDetailPage() {
             </div>
 
             {/* The company, where it exists, is a detail about the account
-                rather than its name (§0) — so it is a row here, not the title. */}
+                rather than its name (§0) - so it is a row here, not the title. */}
             {invoice.businessName && invoice.businessName !== account && (
               <div className="flex justify-between gap-3">
                 <dt className="text-ink-500">Business</dt>
@@ -497,7 +507,7 @@ export function AdminInvoiceDetailPage() {
                     {invoice.orderNumber}
                   </Link>
                 ) : (
-                  <span className="text-ink-400">—</span>
+                  <span className="text-ink-400">-</span>
                 )}
               </dd>
             </div>
@@ -515,7 +525,7 @@ export function AdminInvoiceDetailPage() {
             <div className="flex justify-between gap-3">
               <dt className="text-ink-500">Due</dt>
               <dd className="tnum text-ink-900">
-                {invoice.dueDate ? date(invoice.dueDate) : '—'}
+                {invoice.dueDate ? date(invoice.dueDate) : '-'}
               </dd>
             </div>
           </dl>
@@ -559,8 +569,8 @@ export function AdminInvoiceDetailPage() {
         {/**
          * The life cycle, last on the page.
          *
-         * It is a summary of everything above it — where the record ended up
-         * after the payments, edits and voids the rest of the screen details —
+         * It is a summary of everything above it - where the record ended up
+         * after the payments, edits and voids the rest of the screen details
          * so it reads as a conclusion rather than a heading. Quote and purchase
          * order do the same, which is the whole point: one placement, one
          * component, one thing to learn.
@@ -573,7 +583,7 @@ export function AdminInvoiceDetailPage() {
           stoppedTone={invoice.status === 'void' ? 'warn' : undefined}
           caption={
             invoice.status === 'void'
-              ? 'Voided — the balance was forgiven and the invoice goes no further.'
+              ? 'Voided - the balance was forgiven and the invoice goes no further.'
               : 'Status follows the payments recorded above; there is nothing to set by hand.'
           }
         />
@@ -637,7 +647,7 @@ export function AdminInvoiceDetailPage() {
           )
         }
         title={`Email ${invoice.number}?`}
-        body={`The invoice document goes to ${invoice.email ?? account} — the same page the print view renders.`}
+        body={`The invoice document goes to ${invoice.email ?? account} - the same page the print view renders.`}
         tone="info"
         confirmLabel="Send invoice"
         loading={emailInvoice.isPending}
@@ -704,7 +714,7 @@ export function AdminInvoiceDetailPage() {
         }
         title={`Delete ${invoice.number}?`}
         body="The invoice is removed and the balance it reserved is released back to the account's line of credit."
-        consequence="This cannot be undone. An invoice with a payment against it is a void, not a delete — the customer holds a receipt for it."
+        consequence="This cannot be undone. An invoice with a payment against it is a void, not a delete - the customer holds a receipt for it."
         tone="danger"
         confirmLabel="Delete invoice"
         loading={deleteInvoice.isPending}
@@ -786,7 +796,7 @@ function RecordPaymentModal({ open, invoice, onClose, onSubmit, isPending, error
 /**
  * Editing an invoice: the clerical fields only.
  *
- * The amount is absent because it is derived from what was billed — see
+ * The amount is absent because it is derived from what was billed - see
  * `invoiceUpdateSchema`. Changing what was billed is a void plus a new
  * invoice, which leaves both documents where an audit can see them.
  */
@@ -814,7 +824,7 @@ function EditInvoiceModal({ open, invoice, onClose, onSubmit, isPending, error }
         )}
 
         <p className="rounded-md bg-surface-2 px-3 py-2.5 text-sm leading-relaxed text-ink-500">
-          The amount is not editable here — it is what was billed. To change what
+          The amount is not editable here - it is what was billed. To change what
           this invoice charges for, void it and raise a new one, so both
           documents stay in the record.
         </p>

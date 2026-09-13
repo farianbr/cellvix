@@ -2,12 +2,14 @@ import { useState } from 'react';
 import {
   AlertCircle,
   Check,
+  ChevronDown,
   FileText,
   MessageSquare,
   Send,
   Trash2,
   Trophy,
   Truck,
+  Undo2,
   UserPlus,
 } from 'lucide-react';
 import { money, date, count as formatCount } from '@/lib/format';
@@ -19,6 +21,7 @@ import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import Skeleton from '@/components/ui/Skeleton';
 import ActionMenu from '@/components/ui/ActionMenu';
+import { useTableClasses } from '@/components/admin/DataTable';
 import { toast } from '@/store/toastStore';
 import { apiUrl } from '@/lib/api';
 import { pressable } from '@/lib/motion';
@@ -34,7 +37,7 @@ import {
  * (§6.8a).
  *
  * **The comparison is the point of this panel.** One row per supplier, sorted
- * so the answer that should win is at the top — and `isBest` is the server's
+ * so the answer that should win is at the top - and `isBest` is the server's
  * ranking, not this component's, because "cheapest complete bid" is a rule and
  * a rule belongs in one place. An incomplete bid is marked as such rather than
  * ranked: a supplier who cannot fill every line has a smaller total for a
@@ -77,23 +80,37 @@ const DELIVERY_LABELS = {
 /**
  * One supplier's answer.
  *
- * **A card, not a table row** — and the reason is what this panel is for. A
+ * **A card, not a table row** - and the reason is what this panel is for. A
  * table compares uniform rows of the same few values; this compares *offers*,
  * and an offer is a bundle of facts that belong together: who, at what price,
  * how soon, how much of the order they can actually fill, and what paperwork
  * they have raised. Squeezed into six fixed columns those facts were 19px wider
- * than the panel — so the whole comparison scrolled sideways — and Status was
+ * than the panel - so the whole comparison scrolled sideways - and Status was
  * carrying four different kinds of note in 141px.
  *
  * Cards also let the **money be the size it deserves**. The total is the number
  * an operator is comparing, and in a table cell it was 13px of tabular text
  * indistinguishable from the lead time beside it.
  *
- * The list is short by nature — a handful of suppliers carry any one component
- * type — which is the same argument the Businesses screen makes for cards over
+ * The list is short by nature - a handful of suppliers carry any one component
+ * type - which is the same argument the Businesses screen makes for cards over
  * a table at low row counts.
  */
-function BidCard({ bid, order, lineCount, canAct, onNegotiate, onConfirm, onRemove, removing }) {
+function BidCard({
+  bid,
+  order,
+  lineCount,
+  canAct,
+  onNegotiate,
+  onConfirm,
+  onRemove,
+  removing,
+  proformaOpen,
+  onToggleProforma,
+  proformaBusy,
+  onAcceptProforma,
+  onRequestRevision,
+}) {
   const answered = ['quoted', 'negotiating'].includes(bid.status);
   const priced = answered || bid.status === 'confirmed';
   const settled = ['declined', 'lost'].includes(bid.status);
@@ -196,38 +213,66 @@ function BidCard({ bid, order, lineCount, canAct, onNegotiate, onConfirm, onRemo
           is a different kind of fact and only ever one or two apply at once.
 
           **Each condition below is spelled out identically to the one guarding
-          its row.** They started as looser tests — `bid.delivery` rather than
-          `showsDelivery` — and a losing bid carries a default `delivery` object
+          its row.** They started as looser tests - `bid.delivery` rather than
+          `showsDelivery` - and a losing bid carries a default `delivery` object
           from the schema, so the wrapper rendered its top border and padding
           around content that was then filtered out: an empty ruled strip under
           every supplier who was not chosen. */}
       {(showsShortfall || showsProforma || showsDelivery || showsDecline) && (
         <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-line pt-2.5 text-xs">
-          {/* An incomplete answer is called out rather than ranked — the whole
+          {/* An incomplete answer is called out rather than ranked - the whole
               reason the comparison can be trusted. */}
           {showsShortfall && (
             <span className="flex items-center gap-1 font-medium text-warn">
               <AlertCircle className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
-              Can supply {formatCount(bid.quotedLines)} of {formatCount(lineCount)} lines
+              {/* Two different shortfalls, named apart. A supplier who cannot
+                  touch a line at all and one who can send 30 of 40 both make a
+                  bid incomplete, but only the first is a gap somebody has to
+                  fill from another supplier. */}
+              {bid.quotedLines < lineCount
+                ? `Can supply ${formatCount(bid.quotedLines)} of ${formatCount(lineCount)} lines`
+                : `Short on ${formatCount(bid.shortLines ?? 0)} line${(bid.shortLines ?? 0) === 1 ? '' : 's'}`}
             </span>
           )}
 
           {showsProforma && (
-            <a
-              href={apiUrl(
-                `/admin/purchase-orders/${order.id}/bids/${bid.supplier.id}/proforma`,
-              )}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={onToggleProforma}
+              aria-expanded={proformaOpen}
               className={cn(
                 pressable,
-                'flex items-center gap-1 font-medium text-ink-700 hover:text-brand hover:underline',
+                'flex items-center gap-1 font-medium text-ink-700 hover:text-brand',
               )}
             >
               <FileText className="size-3.5 shrink-0 text-ink-400" strokeWidth={2.25} aria-hidden="true" />
               Proforma {bid.proforma.number || `rev ${bid.proforma.revision}`}
               <span className="tnum text-ink-400">· {money(bid.proforma.total)}</span>
-            </a>
+              <ChevronDown
+                className={cn(
+                  'size-3.5 shrink-0 text-ink-400 transition-transform',
+                  proformaOpen && 'rotate-180',
+                )}
+                strokeWidth={2.25}
+                aria-hidden="true"
+              />
+            </button>
+          )}
+
+          {/* Where the PI has got to with us. A pending one is work waiting on
+              somebody here, which is worth saying next to the link rather than
+              only inside the panel nobody has opened. */}
+          {showsProforma && bid.proforma.review === 'accepted' && (
+            <span className="flex items-center gap-1 text-ok">
+              <Check className="size-3.5 shrink-0" strokeWidth={2.5} aria-hidden="true" />
+              Accepted
+            </span>
+          )}
+          {showsProforma && bid.proforma.review === 'revision_requested' && (
+            <span className="flex items-center gap-1 text-warn">
+              <Undo2 className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
+              Revision asked for
+            </span>
           )}
 
           {showsDelivery && (
@@ -245,7 +290,244 @@ function BidCard({ bid, order, lineCount, canAct, onNegotiate, onConfirm, onRemo
           )}
         </div>
       )}
+
+      {showsProforma && proformaOpen && (
+        <ProformaDetail
+          bid={bid}
+          order={order}
+          canAct={canAct}
+          busy={proformaBusy}
+          onAccept={onAcceptProforma}
+          onRequestRevision={onRequestRevision}
+        />
+      )}
     </li>
+  );
+}
+
+/**
+ * One proforma, opened out - what the supplier is invoicing and what accepting
+ * it would change.
+ *
+ * **The comparison is the point, not the list.** A PI shown on its own is a
+ * table of numbers an operator has to hold against the order in their head;
+ * shown as a diff it answers the only question they actually have - *is this
+ * what we asked for?* Lines that match are quiet, lines that moved carry the
+ * before and after, and the count of what changed is stated above the table so
+ * "nothing moved" is readable without reading every row.
+ *
+ * A PI raised before line detail existed has no `lines`, so the table falls
+ * back to the order's own - the document is still the same total, it simply
+ * cannot show its own arithmetic, and an empty table would read as a broken
+ * screen rather than an old record.
+ */
+function ProformaDetail({ bid, order, canAct, busy, onAccept, onRequestRevision }) {
+  const t = useTableClasses();
+  const pi = bid.proforma;
+  const diff = bid.proformaDiff;
+  const accepted = pi.review === 'accepted';
+
+  // The rows to draw: the diff while a decision is still open, the PI's own
+  // lines once it is accepted and the order already matches them.
+  const rows = diff?.rows ?? null;
+  const fallback = pi.lines?.length ? pi.lines : null;
+
+  return (
+    <div className="mt-3 border-t border-line pt-3">
+      <div className="mb-2.5 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <p className="text-sm font-semibold text-ink-900">
+          Proforma {pi.number || `rev ${pi.revision}`}
+          {pi.revision > 1 && pi.number && (
+            <span className="ml-1.5 font-normal text-ink-400">rev {pi.revision}</span>
+          )}
+        </p>
+        <p className="text-xs text-ink-400">
+          {pi.issuedAt && <>Issued {date(pi.issuedAt)}</>}
+          {pi.validUntil && <> · valid to {date(pi.validUntil)}</>}
+        </p>
+      </div>
+
+      {/* What accepting would do, said before the table rather than left to be
+          inferred from it. */}
+      {!accepted && diff && (
+        <p
+          className={cn(
+            'mb-2.5 text-xs',
+            diff.changed > 0 ? 'font-medium text-warn' : 'text-ink-500',
+          )}
+        >
+          {diff.changed > 0
+            ? `Accepting changes ${diff.changed} line${diff.changed === 1 ? '' : 's'} on this order.`
+            : 'This matches the order line for line.'}
+        </p>
+      )}
+
+      {accepted && (
+        <p className="mb-2.5 flex items-center gap-1.5 text-xs text-ok">
+          <Check className="size-3.5 shrink-0" strokeWidth={2.5} aria-hidden="true" />
+          Accepted {date(pi.acceptedAt)} - the order matches this document.
+        </p>
+      )}
+
+      {pi.review === 'revision_requested' && (
+        <p className="mb-2.5 rounded-md bg-warn-50 px-2.5 py-2 text-xs leading-relaxed text-ink-600">
+          <span className="font-medium text-warn">Revision asked for</span>
+          {pi.revisionRequestedAt && <> on {date(pi.revisionRequestedAt)}</>}
+          {pi.revisionNote && <> - “{pi.revisionNote}”</>}
+        </p>
+      )}
+
+      <div className="overflow-x-auto rounded-md border border-line">
+        <table className={t.table}>
+          <thead>
+            <tr>
+              <th scope="col" className={t.headCell()}>Item</th>
+              <th scope="col" className={cn(t.headCell('right'), 'tnum')}>Qty</th>
+              <th scope="col" className={cn(t.headCell('right'), 'tnum')}>Unit cost</th>
+              <th scope="col" className={cn(t.headCell('right'), 'tnum')}>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {(rows ?? fallback ?? []).map((row) => {
+              const isDiff = Boolean(rows);
+              const sku = row.sku;
+              const qty = isDiff ? row.toQty : row.qty;
+              const cost = isDiff ? row.toCost : row.unitCost;
+              const dropped = isDiff && row.change === 'removed';
+              const moved = isDiff && row.change !== 'same' && !dropped;
+
+              return (
+                <tr key={sku} className={cn(t.row, dropped && 'opacity-60')}>
+                  <td className={t.cell()}>
+                    <span className="block text-sm text-ink-900">{row.name}</span>
+                    <span className="block font-mono text-2xs text-ink-400">{sku}</span>
+                  </td>
+
+                  <td className={cn(t.cell('right'), 'tnum text-sm')}>
+                    {dropped ? (
+                      <span className="text-danger">not supplied</span>
+                    ) : (
+                      <>
+                        {/* The old number first and struck through, so the row
+                            reads as a change rather than as a fact. */}
+                        {isDiff && ['qty', 'both'].includes(row.change) && (
+                          <span className="mr-1.5 text-ink-300 line-through">{row.fromQty}</span>
+                        )}
+                        <span className={cn(moved && ['qty', 'both'].includes(row.change) && 'font-semibold text-warn')}>
+                          {qty}
+                        </span>
+                      </>
+                    )}
+                  </td>
+
+                  <td className={cn(t.cell('right'), 'tnum text-sm')}>
+                    {isDiff && ['cost', 'both'].includes(row.change) && (
+                      <span className="mr-1.5 text-ink-300 line-through">{money(row.fromCost)}</span>
+                    )}
+                    <span className={cn(moved && ['cost', 'both'].includes(row.change) && 'font-semibold text-warn')}>
+                      {money(cost)}
+                    </span>
+                  </td>
+
+                  <td className={cn(t.cell('right'), 'tnum text-sm text-ink-900')}>
+                    {dropped ? '-' : money(cost * qty)}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+
+          <tfoot>
+            <tr className="border-t border-line">
+              <td className={cn(t.cell(), 'text-xs text-ink-500')} colSpan={3}>
+                Subtotal
+              </td>
+              <td className={cn(t.cell('right'), 'tnum text-sm text-ink-900')}>
+                {money(diff?.subtotal ?? pi.subtotal)}
+              </td>
+            </tr>
+            {(pi.shipping ?? 0) > 0 && (
+              <tr>
+                <td className={cn(t.cell(), 'text-xs text-ink-500')} colSpan={3}>Shipping</td>
+                <td className={cn(t.cell('right'), 'tnum text-sm text-ink-900')}>{money(pi.shipping)}</td>
+              </tr>
+            )}
+            {(pi.tax ?? 0) > 0 && (
+              <tr>
+                <td className={cn(t.cell(), 'text-xs text-ink-500')} colSpan={3}>Tax</td>
+                <td className={cn(t.cell('right'), 'tnum text-sm text-ink-900')}>{money(pi.tax)}</td>
+              </tr>
+            )}
+            <tr className="border-t border-line">
+              <td className={cn(t.cell(), 'text-xs font-semibold text-ink-700')} colSpan={3}>
+                Total
+              </td>
+              <td className={cn(t.cell('right'), 'tnum font-display text-md font-bold text-ink-900')}>
+                {money(diff?.total ?? pi.total)}
+              </td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      {(pi.paymentTerms || pi.bankDetails || pi.note) && (
+        <dl className="mt-3 space-y-1.5 text-xs">
+          {pi.paymentTerms && (
+            <div className="flex gap-2">
+              <dt className="shrink-0 text-ink-400">Payment terms</dt>
+              <dd className="min-w-0 text-ink-700">{pi.paymentTerms}</dd>
+            </div>
+          )}
+          {pi.bankDetails && (
+            <div className="flex gap-2">
+              <dt className="shrink-0 text-ink-400">Bank details</dt>
+              <dd className="min-w-0 whitespace-pre-line text-ink-700">{pi.bankDetails}</dd>
+            </div>
+          )}
+          {pi.note && (
+            <div className="flex gap-2">
+              <dt className="shrink-0 text-ink-400">Note</dt>
+              <dd className="min-w-0 text-ink-700">{pi.note}</dd>
+            </div>
+          )}
+        </dl>
+      )}
+
+      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <a
+          href={apiUrl(`/admin/purchase-orders/${order.id}/bids/${bid.supplier.id}/proforma`)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            pressable,
+            'inline-flex h-9 items-center gap-1.5 rounded-md border border-line bg-surface px-3 text-sm font-medium text-ink-600 hover:border-ink-300 hover:bg-surface-2',
+          )}
+        >
+          <FileText className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
+          Open document
+        </a>
+
+        {/* Only while a decision is still open. An accepted PI has nothing left
+            to decide, and an order already confirmed or received is past the
+            point where rewriting its lines would be honest. */}
+        {canAct && !accepted && (
+          <>
+            <Button size="sm" icon={Check} loading={busy} onClick={onAccept}>
+              Confirm this proforma
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              icon={Undo2}
+              disabled={busy}
+              onClick={onRequestRevision}
+            >
+              Send for revision
+            </Button>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -257,11 +539,18 @@ export function PurchaseBidsPanel({ order }) {
     sendPurchaseOrder,
     negotiatePoBid,
     confirmPoSupplier,
+    acceptProforma,
+    requestProformaRevision,
   } = useAdminMutations();
 
   const [adding, setAdding] = useState(false);
   const [negotiating, setNegotiating] = useState(null);
   const [confirming, setConfirming] = useState(null);
+  // Which supplier's proforma is open. One at a time: two diff tables side by
+  // side invite comparing the wrong pair of columns, and the comparison that
+  // matters is against the order, not against each other.
+  const [expanded, setExpanded] = useState(null);
+  const [revising, setRevising] = useState(null);
   const [error, setError] = useState(null);
 
   const board = data;
@@ -292,7 +581,7 @@ export function PurchaseBidsPanel({ order }) {
             'Sent',
             result.mailed === result.total
               ? `All ${formatCount(result.total)} supplier(s) were emailed.`
-              : `${formatCount(result.mailed)} of ${formatCount(result.total)} were emailed — check the addresses on the rest.`,
+              : `${formatCount(result.mailed)} of ${formatCount(result.total)} were emailed - check the addresses on the rest.`,
           ),
         onError: (err) => setError(err.message),
       },
@@ -358,6 +647,29 @@ export function PurchaseBidsPanel({ order }) {
                 lineCount={order.items.length}
                 canAct={open}
                 removing={removePoSupplier.isPending}
+                proformaOpen={expanded === bid.id}
+                onToggleProforma={() =>
+                  setExpanded((current) => (current === bid.id ? null : bid.id))
+                }
+                proformaBusy={acceptProforma.isPending}
+                onAcceptProforma={() =>
+                  acceptProforma.mutate(
+                    { id: order.id, supplierId: bid.supplier.id },
+                    {
+                      onSuccess: (result) => {
+                        const changed = result?.diff?.changed ?? 0;
+                        toast.ok(
+                          'Proforma confirmed',
+                          changed
+                            ? `The order now matches it - ${changed} line${changed === 1 ? '' : 's'} updated.`
+                            : 'The order already matched it line for line.',
+                        );
+                      },
+                      onError: (err) => setError(err.message),
+                    },
+                  )
+                }
+                onRequestRevision={() => setRevising(bid)}
                 onNegotiate={() => setNegotiating(bid)}
                 onConfirm={() => setConfirming(bid)}
                 onRemove={() =>
@@ -433,7 +745,94 @@ export function PurchaseBidsPanel({ order }) {
         onClose={() => setConfirming(null)}
         confirm={confirmPoSupplier}
       />
+
+      <RevisionModal
+        bid={revising}
+        order={order}
+        onClose={() => setRevising(null)}
+        request={requestProformaRevision}
+      />
     </>
+  );
+}
+
+/**
+ * Send a proforma back, with a reason.
+ *
+ * **The reason is required**, because the supplier sees it verbatim and
+ * "please revise" with no note is a round trip that teaches them nothing
+ * they will guess, usually at the wrong line. The server enforces the same
+ * rule; this just says so before the request is made.
+ */
+function RevisionModal({ bid, order, onClose, request }) {
+  const [note, setNote] = useState('');
+  const [error, setError] = useState(null);
+
+  if (!bid) return null;
+
+  function submit(event) {
+    event.preventDefault();
+    setError(null);
+
+    const reason = note.trim();
+    if (!reason) {
+      setError('Say what needs changing - the supplier sees this.');
+      return;
+    }
+
+    request.mutate(
+      { id: order.id, supplierId: bid.supplier.id, note: reason },
+      {
+        onSuccess: () => {
+          toast.ok('Sent back for revision', `${bid.supplier.name} has been asked to reissue it.`);
+          setNote('');
+          onClose();
+        },
+        onError: (err) => setError(err.message),
+      },
+    );
+  }
+
+  return (
+    <Modal
+      open={Boolean(bid)}
+      onClose={onClose}
+      title={`Send ${bid.supplier.name}'s proforma back?`}
+      size="sm"
+      align="top"
+    >
+      {error && (
+        <p className="mb-3 flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
+          <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
+          {error}
+        </p>
+      )}
+
+      <form onSubmit={submit}>
+        <p className="mb-3 text-sm leading-relaxed text-ink-500">
+          They keep the proforma they sent and issue a new revision against it. Nothing on the
+          order changes until you confirm one.
+        </p>
+
+        <Textarea
+          label="What needs changing"
+          rows={4}
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
+          hint="The supplier reads this exactly as written."
+          autoFocus
+        />
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Button type="submit" icon={Undo2} loading={request.isPending}>
+            Send for revision
+          </Button>
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 }
 
@@ -441,9 +840,9 @@ export function PurchaseBidsPanel({ order }) {
  * Pick who to ask.
  *
  * **Tag-suggested and pre-ticked, with a free search underneath.** The suggested
- * set is every active supplier carrying one of the order's component types —
+ * set is every active supplier carrying one of the order's component types
  * which is the question a purchasing clerk actually has ("who sells batteries")
- * — and the search is there because the answer is a default, not a rule.
+ * - and the search is there because the answer is a default, not a rule.
  */
 function AddSuppliersModal({ open, onClose, order, existing, invite }) {
   const [picked, setPicked] = useState([]);
@@ -540,8 +939,8 @@ function AddSuppliersModal({ open, onClose, order, existing, invite }) {
                       </span>
                       <span className="block truncate text-xs text-ink-400">
                         {supplier.matched.join(', ')}
-                        {/* A supplier with no portal login can still be asked —
-                            the mail carries the lines — but the screen should
+                        {/* A supplier with no portal login can still be asked
+                            the mail carries the lines - but the screen should
                             say so rather than let a clerk expect a price that
                             has nowhere to be typed. */}
                         {!supplier.hasPortal && ' · no portal access'}
@@ -621,7 +1020,7 @@ function NegotiateModal({ bid, order, onClose, negotiate }) {
         inputMode="decimal"
         suffix="$"
         placeholder="0.00"
-        hint="Optional — a number gives them something specific to answer."
+        hint="Optional - a number gives them something specific to answer."
         value={target}
         onChange={(event) => setTarget(event.target.value)}
       />
@@ -629,7 +1028,7 @@ function NegotiateModal({ bid, order, onClose, negotiate }) {
       <Textarea
         label="Message"
         rows={3}
-        placeholder="Volume is firm at these quantities — is there any movement on the unit price?"
+        placeholder="Volume is firm at these quantities - is there any movement on the unit price?"
         containerClassName="mt-3"
         value={note}
         onChange={(event) => setNote(event.target.value)}
@@ -710,7 +1109,7 @@ function ConfirmModal({ bid, order, onClose, confirm }) {
         <p className="mt-3 flex items-start gap-2 rounded-md bg-warn-50 px-3 py-2.5 text-sm text-warn">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           They cannot supply {formatCount(missing)} of the {formatCount(order.items.length)} lines.
-          Those lines will be removed from this order — raise a second one for them.
+          Those lines will be removed from this order - raise a second one for them.
         </p>
       )}
 

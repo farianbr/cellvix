@@ -3,11 +3,11 @@ import taxonomyAdminService from '../services/taxonomyAdminService.js';
 import auditService from '../services/auditService.js';
 
 /**
- * The taxonomy editor (§6.15 — CellShoppe's *Device & Models*, phase 11d).
+ * The taxonomy editor (§6.15 - CellShoppe's *Device & Models*, phase 11d).
  *
  * Edits and deactivations are audited: the taxonomy decides what the storefront
  * can be filtered by, so "why did this brand disappear from the mega menu" needs
- * an answer. Structure — `kind`, `slug`, `parent` — is deliberately not editable
+ * an answer. Structure - `kind`, `slug`, `parent` - is deliberately not editable
  * at all, so there is nothing to log for it.
  */
 

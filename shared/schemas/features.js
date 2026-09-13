@@ -9,25 +9,25 @@
  * `default`, because §1.1's table *is* that column: a parts wholesaler should
  * never be shown a Ticket queue, and a repair shop should never be shown
  * Returns. `both` is **derived** as the union (`defaultFor` below), never
- * stored — a third hand-maintained column drifts the first time a key is added
+ * stored - a third hand-maintained column drifts the first time a key is added
  * to one of the other two and not to it, and the failure is silent.
  *
  * ## Rules this file exists to hold
  *
  * 1. **Off means invisible, not broken.** A disabled feature loses its nav
  *    entry, its `+ Create` entry, its command-palette entries and its
- *    notification sources. Server-side, its routes answer **404 — not 403**,
+ *    notification sources. Server-side, its routes answer **404 - not 403**,
  *    because a tenant without a feature should not learn it exists.
  * 2. **A flag never hides data that already exists.** Turning `sales.quotes`
  *    off stops new quotes and removes the screen; it does not delete `Quote`
  *    documents and it does not remove quotes from an invoice's history.
  * 3. **Money and ledger features are not flaggable.** `pricingService`,
  *    `storeCreditService`, the `CreditTransaction` ledger and `AuditLog` run
- *    for every tenant always — a tenant that can switch off its own audit trail
+ *    for every tenant always - a tenant that can switch off its own audit trail
  *    is a tenant that cannot be audited. Those carry `locked: true`.
  * 4. **Introducing this layer is a no-op for the running product.** Cellvix is
  *    a `product` business, and its resolved set must be byte-identical to
- *    today's nav — including `sales.tickets`, which Cellvix has built and which
+ *    today's nav - including `sales.tickets`, which Cellvix has built and which
  *    therefore ships on as a per-business override even though the product
  *    default is off. The type's default is the starting point for a *new*
  *    business, not a retroactive edit to a running one. `CELLVIX_OVERRIDES`
@@ -65,7 +65,7 @@ const FEATURES = [
   {
     key: 'sales.orders',
     label: 'Orders',
-    description: 'Goods sold and fulfilled — the product pipeline.',
+    description: 'Goods sold and fulfilled - the product pipeline.',
     area: 'sales',
     nav: 'orders',
     // A service business sells work, not goods. It runs Quote → Ticket →
@@ -75,7 +75,7 @@ const FEATURES = [
   {
     key: 'sales.tickets',
     label: 'Tickets',
-    description: 'Work to be done — the service pipeline.',
+    description: 'Work to be done - the service pipeline.',
     area: 'sales',
     nav: 'tickets',
     defaults: { product: false, service: true },
@@ -133,7 +133,7 @@ const FEATURES = [
     description: 'Stock on order, supplier bidding, receiving and payment.',
     area: 'purchase',
     nav: 'pos',
-    // Supplier bidding is part of this, not a section of its own — the `RFQ`
+    // Supplier bidding is part of this, not a section of its own - the `RFQ`
     // key that used to sit beside it went away with the record on 2026-09-11.
     // A service business buying supplies asks one supplier or five; that is a
     // way of using a purchase order, not a feature to switch off.
@@ -145,7 +145,7 @@ const FEATURES = [
     description: 'Stock going back out to a supplier, and the credit claimed.',
     area: 'purchase',
     nav: 'supplier-returns',
-    // Off for Cellvix today — the business does not return stock to suppliers,
+    // Off for Cellvix today - the business does not return stock to suppliers,
     // and the nav row carries `hidden: true` for that reason. The default here
     // is what a NEW business of each type would start with.
     defaults: { product: true, service: false },
@@ -260,7 +260,7 @@ const FEATURES = [
     nav: 'blog',
     // **Follows the storefront.** A blog post is published TO the public site,
     // so a service business with no storefront has nowhere to put one and
-    // nothing to rank — which is why SEO switches off with it (§1.1). A repair
+    // nothing to rank - which is why SEO switches off with it (§1.1). A repair
     // shop that starts selling accessories turns the storefront on and gets
     // both back as an override; it is not migrated to another type.
     defaults: { product: true, service: false },
@@ -361,7 +361,7 @@ function defaultsForType(businessType) {
  *
  * **Every entry here is a service-shaped feature Cellvix has built anyway**, and
  * that is exactly what an override is for. Cellvix is a `product` business, so
- * the type defaults switch these off — but the ticket queue, the quote list and
+ * the type defaults switch these off - but the ticket queue, the quote list and
  * the scheduling settings are built, seeded and in use, and §3.2 rule 6 says
  * introducing flags must not change one pixel of the running product. The
  * type's default describes what a *new* product business starts with; it is not
@@ -378,7 +378,7 @@ function defaultsForType(businessType) {
  */
 const CELLVIX_OVERRIDES = {
   'sales.tickets': true,
-  // Cellvix quotes wholesale orders before they are placed — a product business
+  // Cellvix quotes wholesale orders before they are placed - a product business
   // doing something the service column assumes, which is what an override is.
   'sales.quotes': true,
   // The scheduling settings screen ships in the panel today.
@@ -399,7 +399,7 @@ const CELLVIX_BUSINESS_TYPE = 'product';
  * business-type defaults → plan defaults → per-business overrides → effective
  * ```
  *
- * Later wins, and an override always beats the type — a product business that
+ * Later wins, and an override always beats the type - a product business that
  * starts doing repairs gets `sales.tickets` switched on and keeps its type.
  * Nobody is migrated between types to gain a section.
  *
@@ -440,7 +440,7 @@ function resolveFeatures({
  * What Cellvix actually runs with today.
  *
  * The one call every current caller makes. It must stay byte-identical to
- * today's nav — `features.test` in the smoke suite is what proves it.
+ * today's nav - `features.test` in the smoke suite is what proves it.
  */
 function cellvixFeatures() {
   return resolveFeatures({
@@ -452,7 +452,7 @@ function cellvixFeatures() {
 /** Is this feature on in a resolved set? An unknown key is **on**, never off. */
 function featureEnabled(features, key) {
   // An unknown key means a caller named a feature this registry does not
-  // define — a typo, or a screen gated on a key nobody added. Answering "off"
+  // define - a typo, or a screen gated on a key nobody added. Answering "off"
   // would hide a working screen and look exactly like a deliberate setting.
   // Answering "on" leaves the screen up and leaves the mistake visible.
   if (!FEATURE_BY_KEY.has(key)) return true;

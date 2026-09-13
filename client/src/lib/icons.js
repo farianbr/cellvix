@@ -28,7 +28,7 @@ import {
 /**
  * Explicit registry for icon names that arrive as strings from the API
  * (Taxonomy.icon). A `import * as Icons from 'lucide-react'` lookup would work
- * too — and would pull all ~1500 icons into the bundle. Add a device type here
+ * too - and would pull all ~1500 icons into the bundle. Add a device type here
  * when the taxonomy gains one.
  */
 const REGISTRY = {
@@ -51,7 +51,7 @@ export function iconFor(name) {
  * A component type is the one taxonomy level with an honest picture available:
  * a battery, a fan and a keyboard all look like something, and a buyer scanning
  * twenty-five of them reads a glyph faster than a word. Brands and models have
- * no such picture — an invented mark there would be a logo we do not own — so
+ * no such picture - an invented mark there would be a logo we do not own - so
  * only this level gets icons.
  *
  * Listed explicitly rather than resolved dynamically, for the same bundle

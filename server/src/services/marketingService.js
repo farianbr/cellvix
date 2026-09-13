@@ -15,7 +15,7 @@ import env from '../config/env.js';
 import { BUSINESS_INFO } from '../../../shared/business.js';
 
 /**
- * Marketing — the four communication channels (ERP rework §6.13, phase 9).
+ * Marketing - the four communication channels (ERP rework §6.13, phase 9).
  *
  * Three rules hold this file together.
  *
@@ -25,7 +25,7 @@ import { BUSINESS_INFO } from '../../../shared/business.js';
  * reason it is unconfigured, and the response says so plainly. Nothing here
  * ever returns a success the operator could read as "delivered". Email is the
  * exception whenever `SMTP_URL` is configured, and reports a failure when it
- * is not — there is no local outbox standing in for a delivery.
+ * is not - there is no local outbox standing in for a delivery.
  *
  * **2. Consent is applied at send, never at compose.** `resolveAudience` runs
  * when a campaign is sent, not when it is drafted, so an account that
@@ -35,7 +35,7 @@ import { BUSINESS_INFO } from '../../../shared/business.js';
  *
  * **3. Every commercial email carries identification and a working
  * unsubscribe.** CASL requires both. They are appended by `decorate()` inside
- * the send loop rather than being the campaign author's responsibility — a
+ * the send loop rather than being the campaign author's responsibility - a
  * compliance requirement that depends on somebody remembering is not one.
  */
 
@@ -57,7 +57,7 @@ const CHANNEL_PROVIDERS = {
   // These two now resolve through `credentialService`, which checks the env
   // vars **and** the credentials saved on the API Keys screen (§6.15). Before
   // phase 11c a key typed into that screen would have been stored and never
-  // read — a setting that changes nothing is worse than no setting.
+  // read - a setting that changes nothing is worse than no setting.
   sms: {
     label: 'SMS',
     configured: () => credentialService.isConfigured('twilio'),
@@ -90,7 +90,7 @@ const CHANNEL_PROVIDERS = {
 };
 
 /**
- * What a channel can do right now — drives the persistent notice on each screen.
+ * What a channel can do right now - drives the persistent notice on each screen.
  *
  * Async since phase 11c: a channel's readiness now depends on credentials in
  * the database as well as the environment, and reading those is a query.
@@ -108,7 +108,7 @@ async function channelStatus(channel) {
    * `configured` means credentials are present. `delivers` means a message
    * actually leaves the building. For email they coincide. For SMS and WhatsApp
    * they do not: an admin can now save Twilio keys on the API Keys screen, but
-   * nothing in this codebase transmits through them yet — that is phase 13
+   * nothing in this codebase transmits through them yet - that is phase 13
    * (§6b U3–U4).
    *
    * The screens' inactive notice keys on `delivers`, so saving keys does not
@@ -238,7 +238,7 @@ async function listMessages({ channel, user, search, status, page = 1, limit = 2
  * Composes on one channel.
  *
  * The status is decided here from the provider's real state, never from the
- * request — a client cannot ask for a message to be marked sent. On an
+ * request - a client cannot ask for a message to be marked sent. On an
  * unconfigured channel the row is still written and the caller gets back the
  * reason, which is what the screen shows instead of a confirmation (§6b rule 1).
  */
@@ -291,7 +291,7 @@ async function sendMessage(
       //
       // The two reasons are NOT the same and must not share a message: an
       // account that opted out made a decision that has to be respected, while
-      // one that simply has no consent on file has decided nothing — it
+      // one that simply has no consent on file has decided nothing - it
       // predates the consent field, or was created by an import. Telling an
       // operator that somebody "unsubscribed" when they never did sends them
       // to apologise for something that did not happen.
@@ -324,7 +324,7 @@ async function sendMessage(
      * SMS and WhatsApp now carry the same consent gate email has.
      *
      * They had none, because before per-channel consent there was nothing to
-     * check that was not simply the email flag — and refusing an SMS on the
+     * check that was not simply the email flag - and refusing an SMS on the
      * grounds of email consent would have been wrong. Now that a customer can
      * say "email yes, SMS no", that answer has to be honoured on the channel it
      * was given about, and it is checked **before** the message is written:
@@ -345,7 +345,7 @@ async function sendMessage(
     }
 
     // **Credentials are stored but no client sends them yet**
-    // — that is phase 13's job (§6b U3–U4), and this file has no Twilio or
+    // - that is phase 13's job (§6b U3–U4), and this file has no Twilio or
     // WhatsApp SDK in it.
     //
     // So having keys changes what the row *says*, never whether it sent. The
@@ -403,11 +403,11 @@ async function deleteTemplate(id) {
  *
  * Three gates, in the order they outrank each other:
  *
- *   1. `unsubscribedAt` — the customer's own withdrawal. A later withdrawal
+ *   1. `unsubscribedAt` - the customer's own withdrawal. A later withdrawal
  *      always beats an earlier opt-in, whatever order the fields were written.
- *   2. `marketingConsent.granted` — the master switch every campaign query
+ *   2. `marketingConsent.granted` - the master switch every campaign query
  *      already checks, and the one an admin moves.
- *   3. `contactConsent[channel]` — what they agreed to be reached **on**.
+ *   3. `contactConsent[channel]` - what they agreed to be reached **on**.
  *
  * **A missing channel record is not a refusal.** Accounts that predate the
  * channel field have never been asked, and treating "not recorded" as "no"
@@ -433,7 +433,7 @@ function isSuppressed(account, channel) {
  * An HMAC of the account id rather than the id itself: a bare id in a URL is an
  * enumeration hole that would let anyone unsubscribe anyone. Keyed on
  * `JWT_SECRET` because that is the secret this deployment already has. It
- * carries no expiry on purpose — an unsubscribe link that stops working is a
+ * carries no expiry on purpose - an unsubscribe link that stops working is a
  * CASL problem, not a security improvement.
  */
 function unsubscribeToken(userId) {
@@ -446,7 +446,7 @@ function unsubscribeToken(userId) {
 
 function unsubscribeUrl(account) {
   const id = String(account._id);
-  // `publicOrigin`, not `CLIENT_ORIGIN` — the latter is a comma-separated CORS
+  // `publicOrigin`, not `CLIENT_ORIGIN` - the latter is a comma-separated CORS
   // list, and a link in an email needs the one real address (see config/env.js,
   // and `notifications.js` which builds invoice links the same way).
   return `${env.publicOrigin}/unsubscribe?u=${id}&t=${unsubscribeToken(id)}`;
@@ -457,7 +457,7 @@ function unsubscribeUrl(account) {
  * them, and how to stop receiving it.
  *
  * Applied here rather than in the composer so no campaign can ship without it.
- * The body is escaped on the way in — admin-authored copy is never trusted as
+ * The body is escaped on the way in - admin-authored copy is never trusted as
  * markup, on the server any more than on the client (Instructions §9).
  */
 function decorate(body, account) {
@@ -483,7 +483,7 @@ function decorate(body, account) {
     '<hr style="border:none;border-top:1px solid #E5E5E5;margin:24px 0">',
     // CASL: sender identification and a working unsubscribe on every
     // commercial message. Not optional, and not the author's job to remember.
-    `<p style="font-size:12px;color:#6B6B6B;margin:0 0 8px">${escape(BUSINESS_INFO.name)}${address ? ` — ${escape(address)}` : ''}</p>`,
+    `<p style="font-size:12px;color:#6B6B6B;margin:0 0 8px">${escape(BUSINESS_INFO.name)}${address ? ` - ${escape(address)}` : ''}</p>`,
     '<p style="font-size:12px;color:#6B6B6B;margin:0">You are receiving this because you hold a wholesale account with us. ',
     `<a href="${unsubscribeUrl(account)}" style="color:#CF3429">Unsubscribe</a>.</p>`,
     '</div>',
@@ -497,7 +497,7 @@ function decorate(body, account) {
  * consent removes from it. `skipped` is the difference, reported so that a send
  * of 12 against an audience of 40 is explained rather than looking broken.
  *
- * Staff and admin accounts are never in an audience — they are Cellvix, not
+ * Staff and admin accounts are never in an audience - they are Cellvix, not
  * customers.
  */
 async function resolveAudience(filter = 'approved') {
@@ -701,7 +701,7 @@ async function sendCampaign(id, staff) {
   row.status = failed === eligible.length ? 'failed' : 'sent';
   row.sentAt = new Date();
   // `sent` counts accepted messages only. Failures and unsendable channels are
-  // reported separately rather than inflating it — §6b rule 4 governs numbers
+  // reported separately rather than inflating it - §6b rule 4 governs numbers
   // as much as words.
   row.stats.sent = sent;
   row.stats.delivered = sent;
@@ -758,7 +758,7 @@ async function listUnsubscribes({ search, page = 1, limit = 25 } = {}) {
 /**
  * The public unsubscribe endpoint, reached from the link in every campaign.
  *
- * No session required — somebody unsubscribing is very often not signed in, and
+ * No session required - somebody unsubscribing is very often not signed in, and
  * CASL requires the mechanism to work in no more than two clicks. The HMAC
  * stands in for authentication: it proves the link came from us without letting
  * anybody unsubscribe an account by guessing an id.
@@ -800,7 +800,7 @@ async function unsubscribe(userId, token) {
  * An admin putting an account back on the list.
  *
  * This records a **new** consent with source `admin` rather than clearing the
- * unsubscribe and leaving the old consent standing — re-subscribing somebody is
+ * unsubscribe and leaving the old consent standing - re-subscribing somebody is
  * a claim that they asked for it, and that claim needs its own date and its own
  * trail. The screen says as much before the operator confirms.
  */

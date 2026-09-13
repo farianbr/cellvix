@@ -6,11 +6,11 @@ import Button from '@/components/ui/Button';
 import { useFilterStore } from '@/store/filterStore';
 
 /**
- * 404 — a recovery moment, not a dead end (brief §9).
+ * 404 - a recovery moment, not a dead end (brief §9).
  *
  * Deliberately the thinnest page in the app. A 404 is read for about two
  * seconds by someone who is already annoyed, so it offers exactly two ways
- * out — search the catalogue, or go home — and nothing else. The category
+ * out - search the catalogue, or go home - and nothing else. The category
  * chips and the three cross-link cards that used to sit below the fold were
  * removed for that reason: they were a second menu on a page whose whole job
  * is to hand you back to the first one.
@@ -40,15 +40,15 @@ export function NotFoundPage() {
   return (
     <div className="mx-auto flex max-w-[640px] flex-col items-center px-5 py-12 text-center sm:px-6 lg:py-20">
       {/* The numerals and the broken-device scene are one composite image, not
-          two elements the layout has to keep in step — they were drawn as a
+          two elements the layout has to keep in step - they were drawn as a
           single illustration and they read as one. Two crops of it ship: a wide
           arrangement from 640 up, and a stacked one below that, because the
           side-by-side version scales the numerals down to nothing on a phone.
           `picture` picks between them on a media query, so only the one that
           will actually be shown is ever fetched.
 
-          The whole thing is decorative — the `sr-only` heading below carries
-          the meaning — so it is `alt=""` and hidden from the accessibility
+          The whole thing is decorative - the `sr-only` heading below carries
+          the meaning - so it is `alt=""` and hidden from the accessibility
           tree rather than described twice. */}
       <h1 className="w-full">
         <picture>
@@ -81,7 +81,7 @@ export function NotFoundPage() {
             className="pointer-events-none mx-auto h-auto w-[260px] max-w-full select-none sm:w-[460px] lg:w-[560px]"
           />
         </picture>
-        <span className="sr-only">404 — this page came apart</span>
+        <span className="sr-only">404 - this page came apart</span>
       </h1>
 
       {/* Styled as the heading it visually is, but marked up as a paragraph:

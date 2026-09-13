@@ -15,7 +15,7 @@ const contactSchema = z.object({
   phone: z.string().trim().max(40).optional(),
   topic: z.enum(['account', 'order', 'stock', 'warranty', 'other']).default('other'),
   orderNumber: z.string().trim().max(40).optional(),
-  message: z.string().trim().min(10, 'Tell us a little more — at least 10 characters.').max(2000),
+  message: z.string().trim().min(10, 'Tell us a little more - at least 10 characters.').max(2000),
 });
 
 export { CONTACT_TOPICS, contactSchema };

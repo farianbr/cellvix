@@ -8,7 +8,7 @@ import '../models/CreditTransaction.js';
 import * as referralService from './referralService.js';
 
 /**
- * Invoice payment — the only place a payment is recorded against an invoice.
+ * Invoice payment - the only place a payment is recorded against an invoice.
  *
  * It exists for the same reason `storeCreditService` and `pricingService` do:
  * three things must happen together every time money lands on an invoice, and
@@ -16,10 +16,10 @@ import * as referralService from './referralService.js';
  * them.
  *
  *   1. the payment row is written and the header recomputed from the rows;
- *   2. the **line of credit is repaid** — an amount owed on terms that is paid
+ *   2. the **line of credit is repaid** - an amount owed on terms that is paid
  *      has to come off `db().User.balance`, or the account stays at its limit
  *      forever;
- *   3. a `due` record that reaches zero **becomes an invoice** — renumbered out
+ *   3. a `due` record that reaches zero **becomes an invoice** - renumbered out
  *      of the `CVX-` series into `INV-`.
  *
  * Step 2 did not exist anywhere before this file. `orderService` and
@@ -57,7 +57,7 @@ function recompute(invoice) {
   return invoice;
 }
 
-/** What is still owed. Never negative — overpayment is refused before it lands. */
+/** What is still owed. Never negative - overpayment is refused before it lands. */
 function outstandingOf(invoice) {
   return Math.max(0, invoice.amount - (invoice.amountPaid ?? 0));
 }
@@ -66,14 +66,14 @@ function outstandingOf(invoice) {
  * Records one payment against one invoice.
  *
  * `amount` is integer cents and is decided by the caller from the invoice's own
- * balance — never sent by a client (§5.3).
+ * balance - never sent by a client (§5.3).
  *
  * `settle: false` is for a void, which zeroes the balance without money having
  * arrived: it must not repay the line of credit (nothing was paid), must not
  * promote the record to an invoice (nothing was invoiced), and must not earn
  * anybody commission. The caller handles the reversal.
  *
- * Returns `{ invoice, promoted, previousNumber }` — `promoted` tells the caller
+ * Returns `{ invoice, promoted, previousNumber }` - `promoted` tells the caller
  * a `due` record just became an invoice, and `previousNumber` is what it was
  * called before, which the referral reversal needs to find accruals booked
  * against the old number.
@@ -107,7 +107,7 @@ async function applyPayment(invoice, { amount, method, reference, at, settle = t
   // in the first place: a prepaid invoice never incremented `balance`, so
   // decrementing it here would push the account into credit it never used.
   //
-  // The balance is **re-derived**, not decremented — see `creditService`. A
+  // The balance is **re-derived**, not decremented - see `creditService`. A
   // counter nudged from six call sites drifts the moment one of them is missed,
   // and it had: an account owing $2.26 was carrying $2,950.96. Recomputing from
   // the invoices means paying one restores exactly the headroom it took, which
@@ -145,7 +145,7 @@ async function applyPayment(invoice, { amount, method, reference, at, settle = t
  * (`referralService.accrueForPayment`), and a settling payment **renumbers the
  * invoice**. Accruing after the rename would book the commission against a
  * number that no earlier accrual on the same invoice shares, and a later
- * reversal — which searches by number — would find only half of them.
+ * reversal - which searches by number - would find only half of them.
  *
  * So: any accruals already standing against the old number are re-pointed at
  * the new one first, then this payment accrues against the new number. Every
@@ -166,12 +166,12 @@ async function recordPayment(invoice, options) {
       );
     } catch (error) {
       console.error(
-        `  Invoice ${invoice.number}: re-pointing referral rows from ${result.previousNumber} failed — ${error.message}`,
+        `  Invoice ${invoice.number}: re-pointing referral rows from ${result.previousNumber} failed - ${error.message}`,
       );
     }
   }
 
-  // Referral commission accrues on payment, never on the order (§6.13) — an
+  // Referral commission accrues on payment, never on the order (§6.13) - an
   // unpaid invoice has earned nobody anything. Keyed on this payment's index,
   // so an invoice settled in instalments earns once per instalment and a
   // replayed request cannot pay twice. `accrueForPayment` swallows its own
@@ -185,8 +185,8 @@ async function recordPayment(invoice, options) {
  * Loads a payable record for one buyer, or refuses.
  *
  * Scoped to `user` rather than found by number alone: an invoice number is
- * guessable, and a buyer must never be able to pay — or even read the balance
- * of — somebody else's invoice. A miss is a 404 rather than a 403, so the
+ * guessable, and a buyer must never be able to pay - or even read the balance
+ * of - somebody else's invoice. A miss is a 404 rather than a 403, so the
  * endpoint does not confirm that a number exists.
  */
 async function payableFor(userId, number) {
@@ -209,7 +209,7 @@ async function payableFor(userId, number) {
  *
  * **The row stays.** A payment that is deleted leaves a customer holding a
  * receipt for something the system says never happened, and an audit with a
- * gap where money moved. So a reversal is an entry of its own — the original
+ * gap where money moved. So a reversal is an entry of its own - the original
  * payment and the fact that it was reversed are both true, and both are on
  * the record.
  *
@@ -217,7 +217,7 @@ async function payableFor(userId, number) {
  * which is what makes `recompute` fall out correctly: the paid total is the sum
  * of the rows, so subtracting is enough and no field has to be corrected by
  * hand. Everything the original payment did is undone in the same order it was
- * done — the credit line is re-drawn, and the commission it earned is reversed.
+ * done - the credit line is re-drawn, and the commission it earned is reversed.
  */
 async function reversePayment(invoice, index, { reason } = {}) {
   const original = invoice.payments?.[index];
@@ -254,7 +254,7 @@ async function reversePayment(invoice, index, { reason } = {}) {
   }
 
   // Commission was booked on money that has now been taken back, so it is
-  // reversed too — commission on money that came back is money leaking out.
+  // reversed too - commission on money that came back is money leaking out.
   await referralService.reverseForInvoice(invoice.number);
 
   return invoice;

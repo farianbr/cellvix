@@ -6,8 +6,8 @@ const VALUES = ['comfortable', 'compact'];
 /**
  * Row density for every admin table, remembered across sessions.
  *
- * The design wants comfortable — generous rows, no full-width rules, the row
- * itself as the hover target — because that is what separates a product surface
+ * The design wants comfortable - generous rows, no full-width rules, the row
+ * itself as the hover target - because that is what separates a product surface
  * from a spreadsheet. Operators running an ERP all day want the opposite: as
  * many rows on screen as will fit, because their job is scanning fifty orders,
  * not admiring eight.
@@ -19,7 +19,7 @@ const VALUES = ['comfortable', 'compact'];
  * Stored in localStorage rather than on the user record: it is a per-device
  * viewing preference, like a window size, and an operator on a laptop and a
  * wall-mounted warehouse screen wants a different answer on each. It also must
- * not need a round trip — a table that renders at one density and then reflows
+ * not need a round trip - a table that renders at one density and then reflows
  * to another once a request lands is worse than either density alone.
  */
 export function useTableDensity() {
@@ -43,13 +43,13 @@ export function useTableDensity() {
   }, [density]);
 
   // Every table on the page shares one preference, so a change in one has to
-  // reach the others. A custom event is enough — this is same-tab, and the
+  // reach the others. A custom event is enough - this is same-tab, and the
   // `storage` event does not fire in the tab that wrote the value.
   useEffect(() => {
     function onChange(event) {
       // Ignored unless it is a density we recognise. The event is on `window`,
       // so a stray dispatch of the same name must not be able to put this into
-      // a state no `DENSITY` entry answers to — every table on the page would
+      // a state no `DENSITY` entry answers to - every table on the page would
       // then fall back to its default and look like it reset itself.
       if (VALUES.includes(event.detail)) setDensity(event.detail);
     }
@@ -60,13 +60,13 @@ export function useTableDensity() {
   /**
    * Set the density explicitly.
    *
-   * **Not a flip, and the dispatch is not inside a state updater** — both of
+   * **Not a flip, and the dispatch is not inside a state updater** - both of
    * those were the bug that made the first click do nothing.
    *
    * The updater passed to `setState` has to be pure: React may invoke it more
    * than once for a single update (it does exactly that under StrictMode), so
    * a `dispatchEvent` inside it fires an unpredictable number of times, and
-   * each firing re-enters `setDensity` on every mounted instance — including
+   * each firing re-enters `setDensity` on every mounted instance - including
    * the one currently computing its own next value. The result is an update
    * ordering that depends on how many tables happen to be on the page.
    *
@@ -77,7 +77,7 @@ export function useTableDensity() {
    * the value already on screen and look inert.
    *
    * Now the caller says which density it wants, the state is set from that
-   * literal, and the broadcast happens after — plain, unconditional, and
+   * literal, and the broadcast happens after - plain, unconditional, and
    * outside React's update cycle entirely.
    */
   const setDensityValue = useCallback((next) => {

@@ -2,8 +2,8 @@
  * Stock photography for a part, chosen by brand + component type.
  *
  * Cellvix has not shot the catalogue (PROGRESS.md open question #6). What it
- * has is one representative photo per brand-and-component-type pair — an iPhone
- * screen, a Pixel charging port — which stands in for every model of that pair.
+ * has is one representative photo per brand-and-component-type pair - an iPhone
+ * screen, a Pixel charging port - which stands in for every model of that pair.
  *
  * This map is SHARED rather than client-only because the catalogue hides
  * products that have no picture, and that decision is made server-side so the
@@ -12,8 +12,8 @@
  * never disagree about which products are visible.
  *
  * The files live in client/public, so they are served from our own origin and
- * there is no CDN in the path. Their names carry the mapping — "iPhone
- * Screen.png" is the screen photo for every iPhone — so adding a photo is
+ * there is no CDN in the path. Their names carry the mapping - "iPhone
+ * Screen.png" is the screen photo for every iPhone - so adding a photo is
  * dropping a file in that folder and adding one line to PHOTOS below.
  */
 
@@ -77,7 +77,7 @@ function photoFile(brandSlug, partType) {
 /**
  * The stock photo path for a product, or null when there is none.
  *
- * Returns an encoded path — the filenames contain spaces, and an unencoded
+ * Returns an encoded path - the filenames contain spaces, and an unencoded
  * space in a `src` is a broken image in some browsers.
  */
 function partPhoto(product) {
@@ -120,7 +120,7 @@ function photographedPairs() {
  * The Mongo clause that keeps pictureless products out of the storefront.
  *
  * Lives here rather than in productService because the taxonomy service needs
- * the identical rule — a component-type list counted without it would offer a
+ * the identical rule - a component-type list counted without it would offer a
  * type whose every product the grid then hides. Importing productService from
  * taxonomyService would close a require cycle; the map both of them already
  * depend on is the honest place for it.

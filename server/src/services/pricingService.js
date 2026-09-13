@@ -29,7 +29,7 @@ import { TAX_RATE } from '../../../shared/schemas/checkout.js';
  *      single-use code is refused once the account has an order carrying it.
  *      A counter would drift the first time an order was cancelled.
  *   5. **Eligibility is a hard gate.** An account-restricted offer is invisible
- *      to everyone else — the code comes back "not recognised", not "not for
+ *      to everyone else - the code comes back "not recognised", not "not for
  *      you", because listing who an offer belongs to is not the buyer's
  *      business.
  */
@@ -77,7 +77,7 @@ async function alreadyRedeemed(offer, user) {
  * Turns a typed code into an offer, or explains why not.
  *
  * Every rejection that would reveal something about another account's offers
- * answers with the same `OFFER_NOT_FOUND` — an account-restricted code must not
+ * answers with the same `OFFER_NOT_FOUND` - an account-restricted code must not
  * be distinguishable from a code that never existed.
  */
 async function resolveCode(code, user) {
@@ -112,7 +112,7 @@ async function resolveCode(code, user) {
   return offer;
 }
 
-/** Live, codeless deals this account qualifies for — the automatic candidates. */
+/** Live, codeless deals this account qualifies for - the automatic candidates. */
 async function automaticCandidates(user) {
   const now = new Date();
   const offers = await db().Offer.find({
@@ -134,7 +134,7 @@ async function automaticCandidates(user) {
 /**
  * What one offer is worth against a set of lines.
  *
- * Returns `null` when the offer does not bite — nothing qualifies, the minimum
+ * Returns `null` when the offer does not bite - nothing qualifies, the minimum
  * is not met, or the arithmetic comes out at zero. A caller getting `null` for a
  * typed code must tell the buyer why, which is what `explain` carries.
  */
@@ -167,7 +167,7 @@ function evaluate(offer, { lines, itemsSubtotal, orderSubtotal, shippingCost }) 
       ? Math.round((eligibleSubtotal * offer.discountPercent) / 100)
       : offer.discountAmount;
 
-  // Never discount more than the qualifying lines are worth — a $40-off code on
+  // Never discount more than the qualifying lines are worth - a $40-off code on
   // a $12 line must not turn into a credit.
   const discount = Math.min(raw, eligibleSubtotal);
 
@@ -179,7 +179,7 @@ function evaluate(offer, { lines, itemsSubtotal, orderSubtotal, shippingCost }) 
 function explainRejection(offer, result) {
   switch (result.explain) {
     case 'MIN_QTY':
-      return `“${offer.code}” needs ${result.need} qualifying units — your cart has ${result.have}.`;
+      return `“${offer.code}” needs ${result.need} qualifying units - your cart has ${result.have}.`;
     case 'MIN_SPEND':
       return `“${offer.code}” applies to orders over ${formatCents(result.need)}.`;
     case 'SHIPPING_ALREADY_FREE':
@@ -225,7 +225,7 @@ function shapeApplied(offer, result, { automatic }) {
  * `subtotal` is always the LIST value of everything in the cart. Savings are
  * reported separately as `bundleDiscount` and `promoDiscount` rather than folded
  * into line prices, so an order and its invoice can show what a part costs and
- * what was taken off it — which is what a business buyer reconciles against.
+ * what was taken off it - which is what a business buyer reconciles against.
  */
 async function priceCart(cart, user, { deliveryCode = 'ground' } = {}) {
   // ---- individual lines ---------------------------------------------------
@@ -248,14 +248,14 @@ async function priceCart(cart, user, { deliveryCode = 'ground' } = {}) {
       partType: product.partType,
       partTypeLabel: product.partTypeLabel,
       // Carried so the storefront can pick the brand's stock photo for this
-      // part type — see client/src/lib/partPhoto.js.
+      // part type - see client/src/lib/partPhoto.js.
       brandSlug: product.brandSlug ?? null,
       modelName: product.modelName,
       qty: cartItem.qty,
       unitPrice: product.price,
       lineTotal: product.price * cartItem.qty,
       // Carried so a placed order can snapshot what the part cost at the time
-      // (§9.4). Undefined rather than zero when the catalogue has no cost —
+      // (§9.4). Undefined rather than zero when the catalogue has no cost
       // a zero would report as a 100% margin.
       unitCost: product.cost > 0 ? product.cost : undefined,
       stock: product.stock,
@@ -312,7 +312,7 @@ async function priceCart(cart, user, { deliveryCode = 'ground' } = {}) {
       if (result.discount > 0 || result.freeShipping) {
         promo = shapeApplied(offer, result, { automatic: false });
       } else {
-        // The code is real and this account may use it — it just does not bite
+        // The code is real and this account may use it - it just does not bite
         // on this cart. Say which, and leave it attached so it starts working
         // the moment the cart qualifies.
         promoNotice = { code: 'OFFER_NOT_APPLICABLE', message: explainRejection(offer, result) };
@@ -366,7 +366,7 @@ async function priceCart(cart, user, { deliveryCode = 'ground' } = {}) {
     total,
     deliveryMethod: {
       code: method.code,
-      label: `${method.label} — ${method.detail}`,
+      label: `${method.label} - ${method.detail}`,
       cost: shipping,
       etaDays: method.etaDays,
     },
@@ -376,7 +376,7 @@ async function priceCart(cart, user, { deliveryCode = 'ground' } = {}) {
      * The checkout picker used to render `DELIVERY_METHODS` from the shared
      * constant, which was fine while the costs lived there too. Now that an
      * operator can edit them (§6.15), a picker reading the constant would show
-     * a stale price beside a correct total — worse than either being wrong on
+     * a stale price beside a correct total - worse than either being wrong on
      * its own. Sending the bands the quote actually priced against means the
      * two cannot disagree.
      *
@@ -447,7 +447,7 @@ async function expandBundles(cart, _user) {
         qty,
         unitPrice: product.price,
         lineTotal: product.price * qty,
-        // Same snapshot as a loose line — a bundled part still has a cost, and
+        // Same snapshot as a loose line - a bundled part still has a cost, and
         // the margin on a combo is the number most worth knowing.
         unitCost: product.cost > 0 ? product.cost : undefined,
         inStock: product.stock > 0,

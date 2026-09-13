@@ -19,7 +19,7 @@ import ApiError from '../utils/ApiError.js';
  *   1. **Two named metrics, never one word.** `invoiced` is the value of
  *      invoices issued in the range, by invoice date. `collected` is payments
  *      received in the range, by payment date. They are different numbers and
- *      every tile says which it is — "Revenue" meaning one on one screen and
+ *      every tile says which it is - "Revenue" meaning one on one screen and
  *      the other on the next is how a report loses an operator's trust.
  *   2. **Refunds are their own line**, never a negative folded into revenue.
  *   3. **A signed figure renders once.** A loss is `Net profit −$350.70`, not a
@@ -40,7 +40,7 @@ import ApiError from '../utils/ApiError.js';
 
 /**
  * Inclusive whole days in `YYYY-MM-DD`. `to` is pushed to end-of-day here, on
- * the server, so a range of "today to today" is a real twenty-four hours —
+ * the server, so a range of "today to today" is a real twenty-four hours
  * exactly as `adminService.resolveRange` does it, because two different
  * definitions of a range across two screens is its own kind of bug.
  */
@@ -97,7 +97,7 @@ function salesQuery(start, end) {
 }
 
 /**
- * Invoiced — by invoice date. Never mixed with collected.
+ * Invoiced - by invoice date. Never mixed with collected.
  */
 async function invoicedIn(start, end) {
   const [row] = await db().Invoice.aggregate([
@@ -108,7 +108,7 @@ async function invoicedIn(start, end) {
 }
 
 /**
- * Collected — by payment date, which lives on the payment row rather than the
+ * Collected - by payment date, which lives on the payment row rather than the
  * invoice. An invoice issued in March and paid in May is March's `invoiced` and
  * May's `collected`, and unwinding the payments array is the only way to say so.
  */
@@ -182,7 +182,7 @@ async function expensesIn(start, end) {
  */
 async function refundsIn(start, end) {
   // A refund posts a POSITIVE row (credit added to the buyer), so this total is
-  // already the money going out — no sign flip, and it is reported on its own
+  // already the money going out - no sign flip, and it is reported on its own
   // line rather than pushed into a revenue figure (§9.2).
   const [row] = await db().CreditTransaction.aggregate([
     { $match: { type: 'refund', createdAt: { $gte: start, $lte: end } } },
@@ -191,7 +191,7 @@ async function refundsIn(start, end) {
   return { total: row?.total ?? 0, count: row?.count ?? 0 };
 }
 
-/** Inventory is a position, not a flow — "as of today", whatever the range. */
+/** Inventory is a position, not a flow - "as of today", whatever the range. */
 async function inventoryPosition(settings) {
   const fallback = settings?.operations?.lowStockThreshold ?? 50;
   const products = await db().Product.find({})
@@ -227,7 +227,7 @@ async function inventoryPosition(settings) {
   };
 }
 
-/** Outstanding receivables — also a position. Overdue is derived, never stored. */
+/** Outstanding receivables - also a position. Overdue is derived, never stored. */
 async function receivables() {
   const now = new Date();
   const invoices = await db().Invoice.find({ status: { $ne: 'paid' } })
@@ -251,7 +251,7 @@ async function receivables() {
 
     return {
       number: invoice.number,
-      businessName: invoice.user?.businessName ?? '—',
+      businessName: invoice.user?.businessName ?? '-',
       amount: invoice.amount,
       balance,
       dueDate: invoice.dueDate,
@@ -273,7 +273,7 @@ async function receivables() {
 // ---- tabs -------------------------------------------------------------------
 
 /**
- * `?tab=summary` — the seven headline figures plus the four panels.
+ * `?tab=summary` - the seven headline figures plus the four panels.
  */
 async function summary(start, end, settings) {
   const [invoiced, collected, expenseData, orders, inventory, ar, refunds] = await Promise.all([
@@ -307,7 +307,7 @@ async function summary(start, end, settings) {
       uncostedRevenue: cogs.uncostedRevenue,
     },
     refunds,
-    // Staff attribution arrives in phase 8 — there is no staff concept to
+    // Staff attribution arrives in phase 8 - there is no staff concept to
     // report on yet, and inventing one would be a lie the operator acts on.
     staff: { available: false, rows: [] },
     receivables: ar,
@@ -329,7 +329,7 @@ async function summary(start, end, settings) {
 }
 
 /**
- * `?tab=pl` — the P&L statement, in accounting order.
+ * `?tab=pl` - the P&L statement, in accounting order.
  */
 async function profitAndLoss(start, end) {
   const [orders, expenseData, collected] = await Promise.all([
@@ -349,7 +349,7 @@ async function profitAndLoss(start, end) {
   const netRevenue = cogs.revenue - discounts + shippingRevenue;
   const grossProfit = netRevenue - cogs.cost;
 
-  // Per-category margin. `partTypeLabel` is the wholesale read of a category —
+  // Per-category margin. `partTypeLabel` is the wholesale read of a category
   // it is what the storefront filters on and what an operator thinks in.
   const byCategory = new Map();
   for (const order of orders) {
@@ -409,7 +409,7 @@ async function profitAndLoss(start, end) {
 }
 
 /**
- * `?tab=sales` — invoiced by invoice date, collected by payment date, kept
+ * `?tab=sales` - invoiced by invoice date, collected by payment date, kept
  * visibly apart with the caption that says which is which.
  */
 async function sales(start, end) {
@@ -441,7 +441,7 @@ async function sales(start, end) {
     return {
       number: invoice.number,
       orderNumber: invoice.order?.orderNumber ?? null,
-      businessName: invoice.user?.businessName ?? '—',
+      businessName: invoice.user?.businessName ?? '-',
       issuedAt: invoice.issuedAt,
       dueDate: invoice.dueDate,
       terms: invoice.terms,
@@ -469,7 +469,7 @@ async function sales(start, end) {
   };
 }
 
-/** `?tab=expense` — total spent, entries, GST/HST paid, and the breakdowns. */
+/** `?tab=expense` - total spent, entries, GST/HST paid, and the breakdowns. */
 async function expenseTab(start, end) {
   const data = await expensesIn(start, end);
 
@@ -482,7 +482,7 @@ async function expenseTab(start, end) {
       number: expense.number,
       date: expense.date,
       description: expense.description,
-      category: expense.category?.name ?? '—',
+      category: expense.category?.name ?? '-',
       payee: expense.payee ?? null,
       method: expense.method ?? null,
       status: expense.status,
@@ -499,7 +499,7 @@ async function expenseTab(start, end) {
 }
 
 /**
- * `?tab=inventory` — the position, plus what moved during the range.
+ * `?tab=inventory` - the position, plus what moved during the range.
  *
  * The tiles are "as of today" and the movement panel is the period. Both are
  * labelled, because a stock figure sitting under a date range otherwise reads
@@ -532,7 +532,7 @@ async function inventoryTab(start, end, settings) {
           id: product._id.toString(),
           name: product.name,
           sku: product.sku,
-          category: product.partTypeLabel ?? '—',
+          category: product.partTypeLabel ?? '-',
           stock: product.stock,
           minStock: product.minStock ?? 0,
           cost: product.cost ?? 0,
@@ -543,7 +543,7 @@ async function inventoryTab(start, end, settings) {
       .sort((a, b) => b.value - a.value),
     movements: movements.map((movement) => ({
       id: movement._id.toString(),
-      product: movement.product?.name ?? '—',
+      product: movement.product?.name ?? '-',
       sku: movement.product?.sku ?? null,
       type: movement.type,
       qtyChange: movement.qtyChange,
@@ -555,15 +555,15 @@ async function inventoryTab(start, end, settings) {
 }
 
 /**
- * `?tab=tax` — the GST/HST register, per province.
+ * `?tab=tax` - the GST/HST register, per province.
  *
  * **The divergence from CellShoppe that matters** (§6.12): a flat 5% is wrong
  * for a business shipping across Canada, so the register carries the rate that
  * actually applied and By Province is a primary output. Rates come from
  * `Settings`, never from code.
  *
- * The rate on a historical order is **derived from the order itself** — its own
- * tax over its own taxable base — rather than looked up in today's Settings. A
+ * The rate on a historical order is **derived from the order itself** - its own
+ * tax over its own taxable base - rather than looked up in today's Settings. A
  * rate change must not retroactively restate what was charged last quarter. The
  * Settings rate is what a province *should* charge, and the two are shown apart.
  */
@@ -584,7 +584,7 @@ async function taxTab(start, end, settings) {
   let gross = 0;
 
   const register = orders.map((order) => {
-    const province = order.shippingAddress?.region ?? '—';
+    const province = order.shippingAddress?.region ?? '-';
     const taxable = (order.subtotal ?? 0) - (order.discount ?? 0) + (order.shipping ?? 0);
     // The rate actually charged, recovered from the order's own numbers.
     const rate = taxable > 0 ? (order.tax ?? 0) / taxable : 0;
@@ -604,7 +604,7 @@ async function taxTab(start, end, settings) {
     return {
       orderNumber: order.orderNumber,
       date: order.createdAt,
-      businessName: order.user?.businessName ?? '—',
+      businessName: order.user?.businessName ?? '-',
       province,
       subtotal: order.subtotal ?? 0,
       shipping: order.shipping ?? 0,
@@ -648,7 +648,7 @@ async function taxTab(start, end, settings) {
 }
 
 /**
- * `?tab=staff` — UI only until phase 8 (§6b, invariant 17).
+ * `?tab=staff` - UI only until phase 8 (§6b, invariant 17).
  *
  * There is no staff concept to report on: `Role`, staff accounts and the
  * attribution that would make this meaningful all arrive in phase 8. The tab
@@ -676,11 +676,11 @@ async function staffTab(start, end) {
 }
 
 /**
- * `?tab=supplier-prices` — what each supplier charged per item.
+ * `?tab=supplier-prices` - what each supplier charged per item.
  *
  * Sourced entirely from purchase-order lines, so there is no separate price
  * list to keep honest. One row per item/supplier pair, and the cheapest
- * supplier for each item is flagged — that flag is the whole point of the tab.
+ * supplier for each item is flagged - that flag is the whole point of the tab.
  *
  * Drafts are excluded: a price nobody has committed to is a quote, not
  * evidence of what a supplier charges.
@@ -704,7 +704,7 @@ async function supplierPrices() {
         sku: item.sku,
         name: item.name,
         supplierId,
-        supplier: names.get(supplierId) ?? '—',
+        supplier: names.get(supplierId) ?? '-',
         lowest: item.unitCost,
         highest: item.unitCost,
         totalCost: 0,
@@ -748,7 +748,7 @@ async function supplierPrices() {
 }
 
 /**
- * `/admin/reports/business` — the printable period report (§6.11).
+ * `/admin/reports/business` - the printable period report (§6.11).
  *
  * `brand` narrows it to one brand, which is the wholesale read of CellShoppe's
  * "device model" filter.
@@ -767,7 +767,7 @@ async function business(start, end, settings, { brand } = {}) {
   // every other brand on it.
   //
   // An order line does not denormalise `brandSlug`, so the brand is resolved
-  // through the product ids rather than guessed from the line's name — a
+  // through the product ids rather than guessed from the line's name - a
   // substring match on a part name would silently sweep in every product whose
   // description happens to contain the word.
   let filtered = orders;
@@ -784,7 +784,7 @@ async function business(start, end, settings, { brand } = {}) {
   const cogs = costOfGoods(filtered);
   const taxCollected = filtered.reduce((sum, order) => sum + (order.tax ?? 0), 0);
 
-  // Units sold — shipped in the period, by part type.
+  // Units sold - shipped in the period, by part type.
   const soldByCategory = new Map();
   let unitsSold = 0;
   for (const order of filtered) {
@@ -799,7 +799,7 @@ async function business(start, end, settings, { brand } = {}) {
     }
   }
 
-  // Units bought — stock actually received from purchase orders in the period,
+  // Units bought - stock actually received from purchase orders in the period,
   // which is what the ledger records. A PO raised and not delivered is not
   // stock bought.
   const received = await db().StockMovement.find({
@@ -823,7 +823,7 @@ async function business(start, end, settings, { brand } = {}) {
     boughtByItem.set(label, row);
   }
 
-  // Sales by brand and model — the wholesale read of "repairs by model".
+  // Sales by brand and model - the wholesale read of "repairs by model".
   const byBrand = new Map();
   for (const order of filtered) {
     for (const item of order.items ?? []) {
@@ -892,7 +892,7 @@ async function report(tab, query = {}) {
   const { start, end } = resolveRange(query);
   const settings = await db().Settings.load();
 
-  // One signature for every handler — `(start, end, settings, query)` — so the
+  // One signature for every handler - `(start, end, settings, query)` - so the
   // dispatcher never has to know which tab wants what.
   const data = await handler(start, end, settings, query);
 

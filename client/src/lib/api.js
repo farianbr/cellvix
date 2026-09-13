@@ -3,7 +3,7 @@
  *
  * Every error the server raises arrives as `{ error: { code, message } }`
  * (PROJECT_INSTRUCTIONS.md §5.1). This normalises that into an ApiError so callers
- * can branch on `err.code` — never on message text.
+ * can branch on `err.code` - never on message text.
  */
 
 import { getBusiness } from '@/store/businessStore';
@@ -28,12 +28,12 @@ function buildUrl(path, params) {
    *
    * Injected here rather than at each call site because there are well over a
    * hundred of them, and one that forgot would silently show another shop's
-   * data — the kind of bug nobody notices until the figures are wrong. The
+   * data - the kind of bug nobody notices until the figures are wrong. The
    * server decides what to do with it: most admin lists scope by it, a few
    * (the catalogue, settings) deliberately do not.
    *
    * Only `/admin` paths **and `/auth/me`**, and never when a caller passed its
-   * own `business` — the customer profile asks for one account's records across
+   * own `business` - the customer profile asks for one account's records across
    * all businesses, and the switcher must not narrow that.
    *
    * `/auth/me` is on the list because the **feature set** comes back with the
@@ -49,7 +49,7 @@ function buildUrl(path, params) {
    * order was written with none and vanished from an admin list scoped to one.
    * In production the host resolves the business server-side and this parameter
    * is redundant; in development everything runs on one `localhost`, where
-   * there is no host to read — so the selected business travels with the
+   * there is no host to read - so the selected business travels with the
    * request instead.
    *
    * `/superadmin` is the exception: the console is a platform application that
@@ -80,7 +80,7 @@ async function request(path, { method = 'GET', body, params, signal } = {}) {
   try {
     response = await fetch(buildUrl(path, params), {
       method,
-      // The session is an httpOnly cookie — it must ride along on every call.
+      // The session is an httpOnly cookie - it must ride along on every call.
       credentials: 'include',
       headers: body ? { 'Content-Type': 'application/json' } : undefined,
       body: body ? JSON.stringify(body) : undefined,
@@ -120,7 +120,7 @@ async function request(path, { method = 'GET', body, params, signal } = {}) {
 
 /**
  * The absolute URL of an API path, for the places a browser has to fetch it
- * rather than this wrapper — a link the user opens in a new tab, an <img src>.
+ * rather than this wrapper - a link the user opens in a new tab, an <img src>.
  */
 export const apiUrl = (path) => `${BASE}${path}`;
 

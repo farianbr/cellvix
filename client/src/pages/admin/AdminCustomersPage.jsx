@@ -56,8 +56,8 @@ import cn from '@/lib/cn';
 const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/clients'], icon: adminIcon('Users') };
 
 /**
- * Status pills. `?status=pending` is the Approvals view — the dashboard links
- * straight here, and the old `/admin/approvals` URL redirects to it — so the
+ * Status pills. `?status=pending` is the Approvals view - the dashboard links
+ * straight here, and the old `/admin/approvals` URL redirects to it - so the
  * filter lives in the URL rather than in local state.
  */
 const PILLS = [
@@ -74,15 +74,15 @@ const TIER_TONE = { standard: 'neutral', silver: 'info', gold: 'warn', platinum:
 /** Rows per page. Matches the Tickets list, so the control reads the same everywhere. */
 
 const CREATE_STATUS = [
-  { value: 'approved', label: 'Approved — can see prices and order' },
-  { value: 'pending', label: 'Pending — awaiting approval' },
+  { value: 'approved', label: 'Approved - can see prices and order' },
+  { value: 'pending', label: 'Pending - awaiting approval' },
 ];
 
 /**
  * Opening a client account from this side of the panel (§7.2).
  *
  * It defaults to **approved**, because the admin filling this in *is* the
- * approval — asking them to create a pending account and then approve it a
+ * approval - asking them to create a pending account and then approve it a
  * moment later is a step that decides nothing. Pending stays available for an
  * account entered ahead of its paperwork.
  *
@@ -93,7 +93,7 @@ const CREATE_STATUS = [
 /**
  * Opening a client account by hand.
  *
- * The four fields that make an account — who they are, how to reach them — are
+ * The four fields that make an account - who they are, how to reach them - are
  * the whole form until an admin asks for more: address and business details sit
  * in collapsed sections, because they are genuinely optional and a wall of
  * skippable inputs is what stops a form being finished.
@@ -159,7 +159,7 @@ function ClientForm({ onSubmit, onCancel, isPending, error }) {
           // sent at all, it has to be complete, so an empty street line means
           // no address rather than a partial one the server has to reject.
           address: values.address.line1 ? values.address : undefined,
-          // Absent rather than four falses when nothing was ticked — see the
+          // Absent rather than four falses when nothing was ticked - see the
           // note in `createUser`. Ticking nothing means nobody asked, which is
           // not the same fact as the customer declining every channel.
           contactConsent: Object.values(values.contactConsent).some(Boolean)
@@ -183,7 +183,7 @@ function ClientForm({ onSubmit, onCancel, isPending, error }) {
           is (§0) and plenty of customers are not a company at all. */}
       <FormSection title="Personal information" icon={UserRound} collapsible={false}>
         <div className="space-y-3">
-          {/* Two fields, one stored value — `contactName` is what the model,
+          {/* Two fields, one stored value - `contactName` is what the model,
               the welcome mail and the approvals queue read, so the halves are
               composed on submit rather than split in the model. The same call
               as `PhoneField` and its dial code. */}
@@ -230,7 +230,7 @@ function ClientForm({ onSubmit, onCancel, isPending, error }) {
                 value={field.value}
                 onChange={field.onChange}
                 onBlur={field.onBlur}
-                hint="Country code (default +1) + number — needed for WhatsApp."
+                hint="Country code (default +1) + number - needed for WhatsApp."
                 error={errors.phone?.message}
               />
             )}
@@ -316,7 +316,7 @@ function ClientForm({ onSubmit, onCancel, isPending, error }) {
         />
         <p className="mt-3 text-xs leading-snug text-ink-400">
           Only tick a channel the customer actually agreed to. Leave them all clear if nobody has
-          asked yet — the profile shows that as unrecorded rather than as a refusal.
+          asked yet - the profile shows that as unrecorded rather than as a refusal.
         </p>
       </FormSection>
 
@@ -385,7 +385,7 @@ export function AdminCustomersPage() {
    * Paging is done here rather than on the server, because `listUsers` already
    * answers with the whole filtered set (capped at 200) and every figure on this
    * screen is summed from it. Asking the server for one page would mean the KPI
-   * row silently described only the page in view — a "Total customers" tile that
+   * row silently described only the page in view - a "Total customers" tile that
    * changes when you turn the page is worse than no tile.
    *
    * If the account list ever outgrows that cap, this moves server-side and the
@@ -418,7 +418,7 @@ export function AdminCustomersPage() {
    *
    * **A pending account is never swept into `approved` by this.** Approval sets
    * a credit limit and payment terms per business, and `setUserStatus` writes
-   * neither — reinstating a batch that happened to include a pending
+   * neither - reinstating a batch that happened to include a pending
    * registration would put an unvetted account on the catalogue with a $0 limit
    * and no terms, which is the approval gate failing open. Those rows are left
    * alone and reported, rather than silently dropped.
@@ -441,7 +441,7 @@ export function AdminCustomersPage() {
 
     if (skipped > 0) {
       window.alert(
-        `${eligible.length} updated. ${skipped} pending ${skipped === 1 ? 'account was' : 'accounts were'} left alone — ` +
+        `${eligible.length} updated. ${skipped} pending ${skipped === 1 ? 'account was' : 'accounts were'} left alone - ` +
           'approving sets a credit limit and terms, so it is done one account at a time from the approvals queue.',
       );
     }
@@ -450,7 +450,7 @@ export function AdminCustomersPage() {
   const totalAccounts = Object.values(counts).reduce((sum, value) => sum + value, 0);
   const outstanding = users.reduce((sum, user) => sum + user.balance, 0);
   // Late money, summed from the same per-account figure the Overdue column
-  // shows — the tile and the column can never disagree about what is late.
+  // shows - the tile and the column can never disagree about what is late.
   const overdue = users.reduce((sum, user) => sum + (user.overdue ?? 0), 0);
   const storeCredit = users.reduce((sum, user) => sum + (user.storeCredit ?? 0), 0);
 
@@ -460,7 +460,7 @@ export function AdminCustomersPage() {
    * Ordered as the eye scans: **who** they are, **what they cost us** (terms and
    * what is owed), **what they are worth** (lifetime value and invoice count),
    * **when we last heard from them**, then the actions. Money columns are
-   * right-aligned so the digits line up down the page — the one thing that makes
+   * right-aligned so the digits line up down the page - the one thing that makes
    * a column of figures comparable at a glance.
    *
    * `priority` folds the tail away rather than dropping it (DataTable §4): at
@@ -487,7 +487,7 @@ export function AdminCustomersPage() {
             </Badge>
             {/* The tier badge moved here when the Tag column went. Standard is
                 the default and every account has it, so showing it forty times
-                would be a column of the same word — only a tier somebody
+                would be a column of the same word - only a tier somebody
                 deliberately set is worth the ink. */}
             {user.tier && user.tier !== 'standard' && (
               <Badge tone={TIER_TONE[user.tier] ?? 'neutral'} size="sm">
@@ -526,7 +526,7 @@ export function AdminCustomersPage() {
     },
     {
       /**
-       * Renamed from "Outstanding" — and pointed at a different number.
+       * Renamed from "Outstanding" - and pointed at a different number.
        *
        * The old column showed `balance`, which is everything owed on the line
        * of credit; an invoice raised yesterday on Net 30 sits in it and is not
@@ -556,7 +556,7 @@ export function AdminCustomersPage() {
             <span className="block whitespace-nowrap text-2xs text-ink-400">owed, on time</span>
           </>
         ) : (
-          <span className="text-xs text-ink-300">—</span>
+          <span className="text-xs text-ink-300">-</span>
         ),
     },
     {
@@ -570,7 +570,7 @@ export function AdminCustomersPage() {
         user.invoiceCount > 0 ? (
           <span className="text-sm text-ink-900">{formatCount(user.invoiceCount)}</span>
         ) : (
-          <span className="text-xs text-ink-300">—</span>
+          <span className="text-xs text-ink-300">-</span>
         ),
     },
     {
@@ -588,7 +588,7 @@ export function AdminCustomersPage() {
             {money(user.lifetimeValue)}
           </span>
         ) : (
-          <span className="text-xs text-ink-300">—</span>
+          <span className="text-xs text-ink-300">-</span>
         ),
     },
     {
@@ -644,9 +644,9 @@ export function AdminCustomersPage() {
         action={
           <>
             {/* Review sits **beside** New customer rather than in the filter
-                strip. It is the most time-sensitive thing on this screen —
+                strip. It is the most time-sensitive thing on this screen
                 accounts waiting on approval cannot see a price or place an
-                order — and down in the toolbar it read as one more filter
+                order - and down in the toolbar it read as one more filter
                 chip. Still absent when the queue is empty: a button that
                 always says "Review 0" stops being read at all. */}
             {(counts.pending ?? 0) > 0 && (
@@ -687,7 +687,7 @@ export function AdminCustomersPage() {
           },
           {
             key: 'balance',
-            // Named to match the column, which shows the same figure — a tile
+            // Named to match the column, which shows the same figure - a tile
             // and a column that disagree about what to call one number read as
             // two different numbers.
             label: 'Due amount',
@@ -777,7 +777,7 @@ export function AdminCustomersPage() {
         {/* Shown even at one page, where it is a single disabled "1".
             Hidden entirely, the foot of the table changed shape depending on
             how many rows came back, and there was nothing to tell an operator
-            whether they were looking at all of them — a lone page 1 answers
+            whether they were looking at all of them - a lone page 1 answers
             that. It still goes when there is nothing to page through at all. */}
         {users.length > 0 && (
           <div className="border-t border-line p-3">
@@ -794,7 +794,7 @@ export function AdminCustomersPage() {
           `setUserStatus` is the one account-wide action that is real here,
           reversible and already audited. Approving in bulk is not offered: it
           sets a credit limit and terms per account, which is a decision made one
-          business at a time — a batch approve would either invent one limit for
+          business at a time - a batch approve would either invent one limit for
           everybody or quietly approve on none. */}
       <BulkBar count={selected.length} noun="selected" onClear={() => setSelected([])}>
         <Button

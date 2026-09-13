@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import useDocumentTitle from '@/hooks/useDocumentTitle';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { Building2, LayoutGrid, LifeBuoy, LogOut, Layers } from 'lucide-react';
 
@@ -15,7 +16,7 @@ import SuperAdminLoginPage from '@/pages/superadmin/SuperAdminLoginPage';
  *
  * **This wears none of Cellvix's brand.** Cellvix is tenant #1; the console sits
  * above every tenant, and painting it in one tenant's colours quietly asserts
- * that the platform *is* that tenant. It is not, and it has no name yet — so the
+ * that the platform *is* that tenant. It is not, and it has no name yet - so the
  * console reads PLATFORM in cool graphite with one indigo accent, and an
  * operator can tell in peripheral vision whether they are in the platform or
  * inside a customer's shop. That distinction is the whole reason the palette is
@@ -24,8 +25,8 @@ import SuperAdminLoginPage from '@/pages/superadmin/SuperAdminLoginPage';
  * ## Why a sidebar rather than a top bar
  *
  * The console has three destinations and will gain more. A persistent rail
- * answers "where am I, where can I go" without the operator having to look — the
- * wayfinding rule — and leaves the horizontal band free for the thing being
+ * answers "where am I, where can I go" without the operator having to look - the
+ * wayfinding rule - and leaves the horizontal band free for the thing being
  * worked on. A row of tabs across the top starts to wrap at the fourth item.
  *
  * ## Materials
@@ -97,6 +98,9 @@ function NavItem({ item }) {
 }
 
 export function SuperAdminLayout() {
+  // The browser tab, per route. One call per surface rather than one per
+  // page: the titles live in the route table beside the breadcrumbs.
+  useDocumentTitle();
   const navigate = useNavigate();
   const { admin, isLoading } = useSuperAdminSession();
   const { signOut } = useSuperAdminMutations();
@@ -152,7 +156,7 @@ export function SuperAdminLayout() {
         </nav>
 
         {/* The operator's own identity, at the foot of the rail where a system
-            account lives on every desktop platform — familiar placement beats a
+            account lives on every desktop platform - familiar placement beats a
             novel one. */}
         <div className="border-t border-plat-line-soft p-3">
           <div className="flex items-center gap-3 rounded-lg px-2 py-2">

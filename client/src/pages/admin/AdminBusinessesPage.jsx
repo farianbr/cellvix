@@ -32,7 +32,7 @@ import cn from '@/lib/cn';
 import { pressable } from '@/lib/motion';
 
 /**
- * Businesses — the businesses this tenant operates (SAAS_PLATFORM §1.1).
+ * Businesses - the businesses this tenant operates (SAAS_PLATFORM §1.1).
  *
  * **This screen was Outlets.** An outlet was a physical shop inside one
  * business; a business is the thing that owns records and carries a **type**,
@@ -40,14 +40,14 @@ import { pressable } from '@/lib/motion';
  * `product` business, CellShoppe the `service` one.
  *
  * **Each business carries a colour identity** so the operator builds muscle
- * memory across the list and the switcher — drawn from the design system's
+ * memory across the list and the switcher - drawn from the design system's
  * tokens, never arbitrary hex (§2b).
  */
 const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/businesses'], icon: adminIcon('Store') };
 
 /**
  * `Button` renders a real `<button>`, so anything that navigates is a styled
- * `<Link>` — the same shape `AdminClientProfilePage` uses. A button that
+ * `<Link>` - the same shape `AdminClientProfilePage` uses. A button that
  * navigates is not reachable by middle-click or "open in new tab".
  */
 const LINK_BTN =
@@ -250,8 +250,8 @@ export function AdminBusinessesPage() {
       ),
     },
     { key: 'code', header: 'Code', render: (row) => <span className="font-mono text-xs">{row.code}</span> },
-    { key: 'city', header: 'City', render: (row) => row.address?.city ?? '—' },
-    { key: 'manager', header: 'Manager', render: (row) => row.manager || '—' },
+    { key: 'city', header: 'City', render: (row) => row.address?.city ?? '-' },
+    { key: 'manager', header: 'Manager', render: (row) => row.manager || '-' },
     { key: 'staffCount', header: 'Staff', align: 'right', render: (row) => row.staffCount },
     {
       key: 'status',
@@ -271,7 +271,7 @@ export function AdminBusinessesPage() {
       setConfirming(null);
     } catch (err) {
       // The server refuses a default business or one with staff still on it.
-      // Surfacing the real sentence beats a generic failure — it names the
+      // Surfacing the real sentence beats a generic failure - it names the
       // thing the operator has to do first.
       setError(err.message);
     }

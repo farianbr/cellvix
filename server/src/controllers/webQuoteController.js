@@ -6,7 +6,7 @@ import { likeRegex } from '../utils/regex.js';
 import { displayNameOf } from '../utils/displayName.js';
 
 /**
- * Web quotes — enquiries the storefront's contact form sent in.
+ * Web quotes - enquiries the storefront's contact form sent in.
  *
  * **They are `ContactMessage` rows, not a new record type.** Somebody asking
  * "what would it cost to fix this" through the website has not created a quote:
@@ -16,8 +16,8 @@ import { displayNameOf } from '../utils/displayName.js';
  * and nothing to convert.
  *
  * So this is the inbox, and `Convert` is the bridge: it opens the real quote
- * form seeded with the enquirer's details. What was previously invisible —
- * contact messages had no admin screen at all — becomes a queue that can be
+ * form seeded with the enquirer's details. What was previously invisible
+ * contact messages had no admin screen at all - becomes a queue that can be
  * worked and closed.
  */
 
@@ -50,7 +50,7 @@ async function listWebQuotes({ status, q, user } = {}) {
   const query = {};
 
   if (status && status !== 'all') query.status = String(status);
-  // The customer profile's Web Quotes tab — only enquiries from that account.
+  // The customer profile's Web Quotes tab - only enquiries from that account.
   if (user) query.user = user;
 
   if (q) {
@@ -78,7 +78,7 @@ async function listWebQuotes({ status, q, user } = {}) {
 /**
  * Moving an enquiry through the queue.
  *
- * Three states only — `new`, `read`, `closed`. An enquiry that became a real
+ * Three states only - `new`, `read`, `closed`. An enquiry that became a real
  * quote is closed here and lives on as that quote; duplicating its progress in
  * two places is how the two start disagreeing.
  */

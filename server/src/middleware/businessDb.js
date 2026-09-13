@@ -6,7 +6,7 @@ import { runInBusiness } from '../db/context.js';
  * Open the business's database for the rest of this request (SAAS_PLATFORM §4.1).
  *
  * **Everything downstream runs inside `runInBusiness`**, so every service the
- * request reaches — however many `await`s deep — reads the same connection from
+ * request reaches - however many `await`s deep - reads the same connection from
  * async-local context without being handed one. That is the whole point of the
  * seam: 586 service functions keep their signatures.
  *
@@ -45,7 +45,7 @@ async function openBusinessDb(req, _res, next) {
      * `next()` inside the context, not after it.
      *
      * Calling `next()` outside and then opening the context would put the
-     * context around nothing — Express would have already moved on. Wrapping it
+     * context around nothing - Express would have already moved on. Wrapping it
      * is what makes every downstream handler and service inherit the
      * connection.
      */
@@ -58,12 +58,12 @@ async function openBusinessDb(req, _res, next) {
      * A lookup failure must not take the product down.
      *
      * With the split off, `dbFor(null)` is the default connection and the
-     * request works exactly as it did before this middleware existed — so
+     * request works exactly as it did before this middleware existed - so
      * carrying on is strictly better than a 500. Once the split is on this
      * becomes a real failure and will need to refuse instead; that change
      * belongs with the flip, not before it.
      */
-    console.error(`  Business DB: could not resolve — ${error.message}`);
+    console.error(`  Business DB: could not resolve - ${error.message}`);
     return next();
   }
 }

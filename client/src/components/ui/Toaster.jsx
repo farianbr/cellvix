@@ -11,7 +11,7 @@ import { pressable, spring, toast as toastMotion } from '@/lib/motion';
  * top of every screen, and a message that lands over it covers the search and
  * the notification bell at exactly the moment somebody might reach for them.
  *
- * `aria-live="polite"` rather than `assertive` — a confirmation is worth
+ * `aria-live="polite"` rather than `assertive` - a confirmation is worth
  * announcing, not worth interrupting whatever a screen reader is mid-sentence
  * on. Errors are the exception and carry `role="alert"` individually.
  */
@@ -41,8 +41,8 @@ export function Toaster() {
           return (
             <motion.div
               key={toast.id}
-              // `layout` on a SPRING, not a tween. Toasts arrive in bursts —
-              // three saves in a row — and each arrival re-positions every
+              // `layout` on a SPRING, not a tween. Toasts arrive in bursts
+              // three saves in a row - and each arrival re-positions every
               // toast below it. A tween restarts from zero when it is
               // interrupted mid-flight, so the stack visibly stutters as it
               // reflows; a spring keeps its velocity through the re-target and
@@ -55,7 +55,7 @@ export function Toaster() {
               exit="exit"
               role={toast.tone === 'danger' ? 'alert' : undefined}
               className={cn(
-                // Shadowed, not bordered — §2 allows one. A toast floats over
+                // Shadowed, not bordered - §2 allows one. A toast floats over
                 // arbitrary page content, so the shadow is the half that has to
                 // stay: it is what separates the surface from whatever is
                 // underneath it, which a hairline cannot do over a photograph.

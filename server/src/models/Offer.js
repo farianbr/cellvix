@@ -2,8 +2,8 @@ import mongoose from 'mongoose';
 
 /**
  * A running promotion. Two kinds:
- *   deal  — a discount over a slice of the catalogue, described by `target`
- *   combo — a fixed list of SKUs sold together at `bundlePrice`
+ *   deal - a discount over a slice of the catalogue, described by `target`
+ *   combo - a fixed list of SKUs sold together at `bundlePrice`
  *
  * Whether an offer is live is DERIVED from `startsAt`/`endsAt` at read time,
  * never stored: a stored flag would need a cron job to stay honest

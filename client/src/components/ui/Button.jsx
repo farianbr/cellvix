@@ -7,7 +7,7 @@ const VARIANTS = {
    * The gradient's primary home. Keep it on CTAs, not on surfaces.
    *
    * A DISABLED primary drops the gradient for a flat grey. Faded to 45% the
-   * ramp becomes a muddy smear rather than a brand mark — and a control that
+   * ramp becomes a muddy smear rather than a brand mark - and a control that
    * cannot be pressed has no business wearing the treatment reserved for the
    * one action a page most wants taken. The settings screens show this most:
    * their save button is disabled until something changes, so the unmodified
@@ -39,7 +39,7 @@ const SIZES = {
 const SPINNER_SIZE = { xs: 'xs', sm: 'xs', md: 'sm', lg: 'sm' };
 
 /**
- * The one button in the system. Anything that looks like a button uses this —
+ * The one button in the system. Anything that looks like a button uses this
  * do not hand-roll a styled <button> elsewhere.
  *
  * Two details here are the difference between a button that feels responsive
@@ -47,7 +47,7 @@ const SPINNER_SIZE = { xs: 'xs', sm: 'xs', md: 'sm', lg: 'sm' };
  *
  * `active:scale-[0.97]` gives the press a physical answer. It is the single
  * cheapest thing that makes an interface feel like it is listening, and it has
- * to be on the transform transition — not on `all`, which would drag every
+ * to be on the transform transition - not on `all`, which would drag every
  * colour change onto the press timing.
  *
  * The loading state keeps the label in place and cross-fades a spinner over
@@ -87,7 +87,7 @@ export const Button = forwardRef(function Button(
          * 60%, not 45%, and `primary` opts out of it entirely.
          *
          * Every other variant needs SOME fade, because their disabled colours
-         * are otherwise identical to their enabled ones — a `danger` button
+         * are otherwise identical to their enabled ones - a `danger` button
          * that looks completely live but does nothing is the worst case, since
          * the action it names is destructive. So the fade stays for them.
          *

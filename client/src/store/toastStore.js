@@ -5,13 +5,13 @@ import { create } from 'zustand';
  *
  * **Why a store and not a local `useState` notice.** Every screen that wrote
  * its own inline "sent" banner had to find somewhere to put it, keep it from
- * shifting the layout underneath, and remember to clear it — and the result was
+ * shifting the layout underneath, and remember to clear it - and the result was
  * a confirmation that looked different on every page and pushed content down
  * the moment it appeared. A toast is the same message with none of that: it
  * announces, it is not part of the layout, and it goes away on its own.
  *
  * **A toast is for something that already happened.** It never asks a question
- * and never carries the only copy of information the operator needs — anything
+ * and never carries the only copy of information the operator needs - anything
  * they must act on belongs on the page, not in a message that disappears after
  * four seconds. A failure that needs a decision is a dialog; a failure that is
  * merely news is a toast with `tone: 'danger'`, which does not auto-dismiss.

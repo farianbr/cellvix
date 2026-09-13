@@ -8,7 +8,7 @@ import Reveal from '@/components/motion/Reveal';
  * column: each section owns its own ground, so a run of light panels can be
  * broken by a dark one without any section needing a background of its own.
  *
- * Tones: `light` is the default; `dark` is solid `ink-deep` — the logo black
+ * Tones: `light` is the default; `dark` is solid `ink-deep` - the logo black
  * warmed ~12% toward the brand red, so the inverted band reads as Cellvix and
  * not as a generic black box. It is deliberately NOT a second gradient: a page
  * gets one gradient block and that is the CTA (PROJECT_INSTRUCTIONS.md §2.2).
@@ -32,7 +32,7 @@ export function Slab({ tone = 'light', className, innerClassName, children, ...p
       )}
       {...props}
     >
-      {/* A 3px rule of the gradient across the top edge — the "thin top rule"
+      {/* A 3px rule of the gradient across the top edge - the "thin top rule"
           §2.2 allows. It is what ties the inverted slab to the brand without
           filling anything. */}
       {tone === 'dark' && (
@@ -100,7 +100,7 @@ export function SectionHeader({
 
 /**
  * The small pill that opens a centred section: a counter, a dot, then a label.
- * `count` is optional — without one the pill is just the label.
+ * `count` is optional - without one the pill is just the label.
  */
 export function EyebrowPill({ count, children, dark = false, className }) {
   return (
@@ -118,7 +118,7 @@ export function EyebrowPill({ count, children, dark = false, className }) {
   );
 }
 
-/** Icon in a rounded tile — the marker the editorial cards use. */
+/** Icon in a rounded tile - the marker the editorial cards use. */
 export function IconTile({ icon: Icon, className, solid = true }) {
   return (
     <span

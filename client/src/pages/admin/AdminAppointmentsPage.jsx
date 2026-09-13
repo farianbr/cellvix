@@ -10,14 +10,14 @@ import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminAppointments } from '@/hooks/useAdmin';
 
 /**
- * The booking grid (§6.15 category 4 — **UI only, §6b U2**, phase 11e).
+ * The booking grid (§6.15 category 4 - **UI only, §6b U2**, phase 11e).
  *
  * A time grid for one day, reading from `Appointment`, which ships empty.
  *
  * **`Book Appointment` is disabled rather than wired**, and there is no write
  * route behind it (§6b rule 4: nothing fakes success). A button that opened a
  * dialog and saved would be storing bookings against slot rules and conflict
- * checks nobody has specified — the shape of which is exactly what is still
+ * checks nobody has specified - the shape of which is exactly what is still
  * open. So the control is present, visibly inert, and the notice says why.
  */
 const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/settings/appointments'], icon: adminIcon('CalendarClock') };
@@ -65,7 +65,7 @@ export function AdminAppointmentsPage() {
       {/* The measure wraps the notice as well as the panels.
 
           It sat outside the capped container, so a full-bleed banner ran the
-          shell's whole width above content that stopped at the form measure —
+          shell's whole width above content that stopped at the form measure
           the page disagreed with itself about where its own edge was, and the
           notice read as belonging to the shell rather than to this screen. */}
       <div className="max-w-form">
@@ -75,7 +75,7 @@ export function AdminAppointmentsPage() {
           <strong className="font-semibold">Booking is not wired up yet.</strong> The grid reads real
           appointments and there are none. <em>Book appointment</em> is deliberately inert rather
           than opening a dialog that would save against slot rules and conflict checks that have not
-          been decided — building those on a guess is what this is waiting to avoid.
+          been decided - building those on a guess is what this is waiting to avoid.
         </span>
       </p>
 

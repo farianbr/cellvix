@@ -19,7 +19,7 @@ const FACET_PREVIEW = 8;
  * Walks the tree down the currently selected path.
  *
  * Returns the trail of selected nodes and the choices sitting at the bottom of
- * it — the roots when nothing is picked, otherwise the deepest selection's
+ * it - the roots when nothing is picked, otherwise the deepest selection's
  * children. Tolerates a slug that no longer exists in the tree (a stale deep
  * link) by stopping where it loses the thread.
  */
@@ -47,13 +47,13 @@ function drillDown(tree, path) {
  * gave a 264px rail a horizontal structure it had no room for: by the model
  * level the labels were indented into a 120px gutter and truncating.
  *
- * Amazon's department rail is the shape that fits — one level at a time. What
+ * Amazon's department rail is the shape that fits - one level at a time. What
  * is chosen is a breadcrumb at the top, what is choosable is a flat list of
  * plain links below it, and every crumb goes back up. Nothing indents past one
  * step, so the deepest level reads at the same width as the shallowest.
  *
  * It still writes through the same store actions as the mega menu and the
- * wizard, and `setPathLevel` still cascades — so going back up a crumb clears
+ * wizard, and `setPathLevel` still cascades - so going back up a crumb clears
  * every level under it in the same tick.
  */
 function CategoryTree({ tree, path, onSelect }) {
@@ -149,12 +149,12 @@ function CategoryTree({ tree, path, onSelect }) {
  *
  * Part types run past twenty options on a broad result set, which pushed grade
  * and availability under the fold on a laptop. Everything past `FACET_PREVIEW`
- * folds behind a "See more" — the same tradeoff Amazon makes — with anything
+ * folds behind a "See more" - the same tradeoff Amazon makes - with anything
  * already ticked kept visible so a live filter is never hidden.
  *
  * **The rows do not move when you tick one.** This used to re-sort ticked
  * options to the top on every render, so the row you clicked jumped out from
- * under the cursor and the one below took its place — which is how a second
+ * under the cursor and the one below took its place - which is how a second
  * click lands on the wrong filter. The list keeps the server's order.
  *
  * The guarantee the sort was there for is kept a cheaper way: the preview is
@@ -266,7 +266,7 @@ export function SidebarFilter({ facets, className }) {
       <div className="px-2 pb-4 pt-1">
         {/* Component type leads, matching the wizard's order (Component Type >
             Device Type > Brand > Series > Model). Multi-select on all three
-            surfaces now — a buyer sourcing a repair kit ticks screen AND
+            surfaces now - a buyer sourcing a repair kit ticks screen AND
             battery, and the wizard and mega menu take the same ticks.
 
             `toggleComponentType`, not `toggleFacet`, so the label is recorded

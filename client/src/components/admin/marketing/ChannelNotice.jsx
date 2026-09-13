@@ -17,13 +17,13 @@ import cn from '@/lib/cn';
 export function ChannelNotice({ status, className }) {
   if (!status) return null;
 
-  // A channel that genuinely delivers says nothing — a banner that is always
+  // A channel that genuinely delivers says nothing - a banner that is always
   // there stops being read, which is exactly when the real one gets ignored.
   //
   // Keys on `delivers`, not `configured`: since phase 11c an admin can save
   // Twilio credentials without anything being able to send through them yet
   // (§6b U3–U4), and hiding the notice at that point would have the screen
-  // imply a delivery it does not do. The notice's text changes instead — the
+  // imply a delivery it does not do. The notice's text changes instead - the
   // server sends a different `reason` once credentials are present.
   if (status.delivers ?? status.configured) return null;
 
@@ -46,7 +46,7 @@ export function ChannelNotice({ status, className }) {
 
 /**
  * The quieter sibling, for a screen that is working as intended but whose
- * behaviour is worth stating once — the Calls screen logs rather than dials,
+ * behaviour is worth stating once - the Calls screen logs rather than dials,
  * and that is a design decision, not a missing provider.
  */
 export function ChannelHint({ children, className }) {

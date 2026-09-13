@@ -76,7 +76,7 @@ export function Pagination({ page, pages, onChange, className, hideWhenSingle = 
                * `ring-brand-gradient` paints the ramp as the background and
                * masks a surface-coloured layer over the middle, because
                * `border-image` squares off the corners of a rounded element.
-               * That means the ring is PADDING, not a border — so the digit
+               * That means the ring is PADDING, not a border - so the digit
                * needs its own centred box inside it rather than being centred
                * by the button.
                */
@@ -88,8 +88,8 @@ export function Pagination({ page, pages, onChange, className, hideWhenSingle = 
             {/* The digit gets its own box because the ring is padding, not a
                 border, so the button's own centring is offset by the ring
                 width. No radius of its own: the outer `rounded-md` already
-                clips the masked surface layer, and 8px — the inner corner a 2px
-                ring inside a 10px outer would want — is not on the scale. */}
+                clips the masked surface layer, and 8px - the inner corner a 2px
+                ring inside a 10px outer would want - is not on the scale. */}
             {item === page ? (
               <span className="flex size-full items-center justify-center">{item}</span>
             ) : (

@@ -11,8 +11,8 @@ import { ease, pressable } from '@/lib/motion';
 /**
  * The dial codes offered: every country, from the one shared list.
  *
- * This was a hand-picked seven — Canada, the US and five places suppliers were
- * expected to call from — on the reasoning that a 200-row list makes the common
+ * This was a hand-picked seven - Canada, the US and five places suppliers were
+ * expected to call from - on the reasoning that a 200-row list makes the common
  * case slower. That holds only while the list is a plain `<select>` you scroll.
  * With a search box the common case is `+1`, already selected, and the long tail
  * costs one keystroke instead of being impossible: a customer in Lagos or Lima
@@ -28,7 +28,7 @@ export const DIAL_CODES = COUNTRIES.map((entry) => ({
 
 const DEFAULT_CODE = DEFAULT_DIAL;
 
-/** Height of one country row — px-3 py-2 around a 13px line. */
+/** Height of one country row - px-3 py-2 around a 13px line. */
 const OPTION_H = 36;
 
 /**
@@ -45,7 +45,7 @@ const VISIBLE_WITHOUT_SEARCH = 40;
  * Formats the national part as it is typed.
  *
  * NANP (`+1`) is the only plan formatted, because it is the only one whose
- * grouping is fixed at 3-3-4 — every other code here groups differently by
+ * grouping is fixed at 3-3-4 - every other code here groups differently by
  * region, and guessing wrong is worse than not guessing. So the rest are
  * digits-only with a length cap, which still stops letters and stray
  * punctuation reaching the server.
@@ -100,7 +100,7 @@ export function splitPhone(value) {
 /**
  * The country-code picker: a searchable listbox, not a native `<select>`.
  *
- * A native popup was fine for seven rows and is unusable for two hundred — the
+ * A native popup was fine for seven rows and is unusable for two hundred - the
  * platform gives no way to type past the first letter, so finding Switzerland
  * meant scrolling through everything above it. The search box is the whole
  * reason the full list is affordable, and it matches on **both** the name and
@@ -126,7 +126,7 @@ function CountryCodeMenu({ dial, onSelect, disabled }) {
 
   /**
    * The rows to draw. Capped, because mounting all ~240 at once is what made
-   * opening the menu feel slow — every one is a flex row with its own text
+   * opening the menu feel slow - every one is a flex row with its own text
    * nodes, and only eight are ever on screen.
    *
    * The cap applies to the **unsearched** list only, and it is not a limit on
@@ -137,7 +137,7 @@ function CountryCodeMenu({ dial, onSelect, disabled }) {
   const matches = useMemo(() => {
     const needle = search.trim().toLowerCase();
     if (!needle) return COUNTRIES.slice(0, VISIBLE_WITHOUT_SEARCH);
-    // A leading `+` is noise for matching — `+44` and `44` are the same query.
+    // A leading `+` is noise for matching - `+44` and `44` are the same query.
     const bare = needle.replace(/^\+/, '');
     return COUNTRIES.filter(
       (entry) =>
@@ -160,7 +160,7 @@ function CountryCodeMenu({ dial, onSelect, disabled }) {
 
   useOnClickOutside([containerRef, panelRef], () => setOpen(false), open);
 
-  // Opening focuses the search box, so the list is typeable straight away —
+  // Opening focuses the search box, so the list is typeable straight away
   // that is the point of it. The highlight starts at the top of the matches.
   useEffect(() => {
     if (!open) return;
@@ -172,7 +172,7 @@ function CountryCodeMenu({ dial, onSelect, disabled }) {
   }, [open]);
 
   /**
-   * Keep the arrow-highlighted row in view — **without** `scrollIntoView`.
+   * Keep the arrow-highlighted row in view - **without** `scrollIntoView`.
    *
    * `scrollIntoView` scrolls every scrollable ancestor, not just the list, so
    * opening the menu yanked the page underneath it: the panel is portalled to
@@ -181,8 +181,8 @@ function CountryCodeMenu({ dial, onSelect, disabled }) {
    * the top and nothing needs moving at all.
    *
    * Setting `scrollTop` on the list touches that one element and nothing else.
-   * The guard makes the common case free: while the row is already visible —
-   * which it is for every keystroke that does not walk off an edge — this
+   * The guard makes the common case free: while the row is already visible
+   * which it is for every keystroke that does not walk off an edge - this
    * writes nothing.
    */
   useEffect(() => {
@@ -355,7 +355,7 @@ function CountryCodeMenu({ dial, onSelect, disabled }) {
 
               {/* Outside the listbox, not a row in it: a `<li>` here would be
                   an option the arrow keys could land on and `commit` could not
-                  resolve. It says the short list is deliberate — without it the
+                  resolve. It says the short list is deliberate - without it the
                   menu looks like it simply does not have your country. */}
               {capped && (
                 <p className="border-t border-line px-3 py-2 text-xs text-ink-400">
@@ -380,7 +380,7 @@ function CountryCodeMenu({ dial, onSelect, disabled }) {
  * value, exactly as it would for a plain `Input`.
  *
  * The two halves share one bordered shell so they read as one field rather than
- * as a select that happens to sit beside a text box — the divider is an inner
+ * as a select that happens to sit beside a text box - the divider is an inner
  * border, and focus rings the whole shell.
  */
 export const PhoneField = forwardRef(function PhoneField(
@@ -410,7 +410,7 @@ export const PhoneField = forwardRef(function PhoneField(
    * The chosen code, remembered while the number is still empty.
    *
    * `value` is one composed string and `composePhone` returns `''` when there
-   * is no number yet — there is no `+44 ` to store — so a code picked before
+   * is no number yet - there is no `+44 ` to store - so a code picked before
    * the digits were typed round-tripped straight back to `+1`. Somebody
    * choosing their country first, which is the natural order, watched the
    * field undo their choice.

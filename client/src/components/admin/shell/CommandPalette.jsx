@@ -14,13 +14,13 @@ import { useAuth } from '@/hooks/useAuth';
  * Ctrl+K / ⌘K jump-to (ERP rework §7.1).
  *
  * **Screens and records**, since phase 12. Screens are matched locally against
- * the nav tree — instant, and available with no network at all. Records come
+ * the nav tree - instant, and available with no network at all. Records come
  * from `GET /admin/search`, which is **permission-filtered server-side**: a
  * role that cannot open Purchase never sees a supplier here, because a search
  * hit leaks a record's existence and name before anybody clicks it.
  *
  * **One flat list, grouped visually.** Arrow keys move through everything in
- * order regardless of which heading a row sits under — a cursor that had to
+ * order regardless of which heading a row sits under - a cursor that had to
  * skip headings, or reset between groups, is the kind of thing that makes a
  * palette feel wrong without anybody being able to say why.
  *
@@ -58,12 +58,12 @@ function buildIndex(permissions, features) {
   }
 
   // Which top-level sections survived the filters. A route belonging to a
-  // section that did not is not offered — `ADMIN_ROUTES` also describes screens
+  // section that did not is not offered - `ADMIN_ROUTES` also describes screens
   // that have a nav row, so without this the loop below would put a hidden
   // section straight back in and quietly undo the filter above it.
   const visibleSections = new Set(visible.map((group) => group.key));
 
-  // Screens with a route but no nav row of their own — Approvals, My Profile —
+  // Screens with a route but no nav row of their own - Approvals, My Profile
   // are reachable targets too, and someone will type their name.
   for (const [path, meta] of Object.entries(ADMIN_ROUTES)) {
     if (path.includes(':')) continue;
@@ -211,7 +211,7 @@ export function CommandPalette({ open, onClose }) {
 
     // **Only screens are remembered.** A recent list of record URLs would fill
     // with one-off invoices nobody revisits, and would keep showing a row for
-    // a record that has since been deleted — `readRecents` resolves against the
+    // a record that has since been deleted - `readRecents` resolves against the
     // nav index, so a stale record path would simply vanish and leave the list
     // shorter than it looks.
     if (row.kind !== 'record') {
@@ -329,7 +329,7 @@ export function CommandPalette({ open, onClose }) {
 
         <p className="border-t border-line bg-surface-2 px-3.5 py-2 text-xs leading-snug text-ink-400">
           Searches screens, clients, orders, invoices, quotes, RMAs, inventory, suppliers, purchase
-          orders and businesses — limited to what your role can open.
+          orders and businesses - limited to what your role can open.
         </p>
       </div>
     </div>

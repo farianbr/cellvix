@@ -90,7 +90,7 @@ export function SupplierDeliveriesPage() {
       render: (row) =>
         row.delivery.carrier || row.delivery.trackingNumber ? (
           <>
-            <span className="block text-sm text-ink-700">{row.delivery.carrier || '—'}</span>
+            <span className="block text-sm text-ink-700">{row.delivery.carrier || '-'}</span>
             {row.delivery.trackingNumber && (
               <span className="block truncate font-mono text-2xs text-ink-400">
                 {row.delivery.trackingNumber}
@@ -98,7 +98,7 @@ export function SupplierDeliveriesPage() {
             )}
           </>
         ) : (
-          <span className="text-ink-300">—</span>
+          <span className="text-ink-300">-</span>
         ),
     },
     {
@@ -112,7 +112,7 @@ export function SupplierDeliveriesPage() {
         ) : row.leadTimeDays != null ? (
           <span className="text-sm text-ink-400">{row.leadTimeDays}d lead time</span>
         ) : (
-          <span className="text-xs text-ink-300">—</span>
+          <span className="text-xs text-ink-300">-</span>
         ),
     },
     {

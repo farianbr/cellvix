@@ -16,7 +16,7 @@ import { ease, pressable } from '@/lib/motion';
  * The desktop mega menu (brief §4.1).
  *
  * Critically: these are LIVE FILTERS, not links. Clicking a category writes to
- * the shared filter store and closes the panel — on the Shop page the grid
+ * the shared filter store and closes the panel - on the Shop page the grid
  * updates in place and the route never changes.
  *
  * Off the Shop page the store has no grid subscribed to it, so `useApplyFilterPath`
@@ -33,7 +33,7 @@ export function MegaMenu() {
   const [hoveredType, setHoveredType] = useState(null);
 
   // The component type is a FACET, not a level of the tree, so it cannot go
-  // through `setPath` — it has its own store action. That action leaves the
+  // through `setPath` - it has its own store action. That action leaves the
   // chosen category path alone: the two are independent filters over one query,
   // and a buyer who has drilled to a model and then ticks a component wants
   // that model's component, not a trip back to the top of the tree.
@@ -59,7 +59,7 @@ export function MegaMenu() {
   const activeType = tree?.find((t) => t.slug === hoveredType) ?? tree?.[0] ?? null;
 
   // The mega menu is anchored to the header rather than portalled, so it does
-  // not go through Overlay — it needs its own Escape handler. Every overlay in
+  // not go through Overlay - it needs its own Escape handler. Every overlay in
   // the app closes on Escape; this one was the exception.
   useEffect(() => {
     if (!open) return undefined;
@@ -115,7 +115,7 @@ export function MegaMenu() {
                 {/* First, and across the full width, because it is the first
                     step of the wizard and it cuts ACROSS the tree below: a
                     battery exists for phones, tablets and watches alike, so it
-                    cannot be a column beside them. Flat `bg-brand` when active —
+                    cannot be a column beside them. Flat `bg-brand` when active
                     the gradient is reserved for the promo block on this panel,
                     and two gradients on one surface is two signatures. */}
                 <div className="border-b border-line bg-surface-2 px-5 py-3">
@@ -332,7 +332,7 @@ export function MegaMenu() {
                           <li>· 90-day warranty on new and OEM</li>
                         </ul>
 
-                        {/* A route, not a filter — the offers page is its own
+                        {/* A route, not a filter - the offers page is its own
                             surface, so this one closes the menu and navigates. */}
                         <Link
                           to="/offers"

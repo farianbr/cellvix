@@ -12,7 +12,7 @@ import { likeRegex } from '../utils/regex.js';
 import * as supplierPortalService from './supplierPortalService.js';
 
 /**
- * Purchase — suppliers, purchase orders, expenses and the stock ledger
+ * Purchase - suppliers, purchase orders, expenses and the stock ledger
  * (ERP rework §6.7–6.10, phase 5).
  *
  * Three rules hold this file together, and every function below is an
@@ -27,7 +27,7 @@ import * as supplierPortalService from './supplierPortalService.js';
  *      inventory.
  *   3. **A derived status is never stored as a decision.** A purchase order is
  *      `partial` or `received` because of what has arrived, recomputed on every
- *      receipt — exactly as an invoice's status is recomputed from its payments.
+ *      receipt - exactly as an invoice's status is recomputed from its payments.
  */
 
 const LOW_STOCK_FALLBACK = 50;
@@ -35,7 +35,7 @@ const LOW_STOCK_FALLBACK = 50;
 // ---- numbering --------------------------------------------------------------
 
 /**
- * `PO-2026-00001`, `EXP-2026-00001` — sequential per year, matching the
+ * `PO-2026-00001`, `EXP-2026-00001` - sequential per year, matching the
  * `CVX-`/`INV-` convention already in `orderService` (§8).
  *
  * Same last-row-wins approach as order numbering: a race would need two rows
@@ -84,7 +84,7 @@ function isObjectId(value) {
  *
  * Stock is never taken below zero: a negative quantity on hand is not a real
  * position, and an adjustment that would go there is refused rather than
- * silently floored — the operator meant something specific and should be told
+ * silently floored - the operator meant something specific and should be told
  * which part of it could not happen.
  */
 async function applyStockMovement({
@@ -102,7 +102,7 @@ async function applyStockMovement({
 
   if (qtyChange < 0 && doc.stock + qtyChange < 0) {
     throw ApiError.badRequest(
-      `${doc.sku} has ${doc.stock} on hand — that adjustment would take it below zero.`,
+      `${doc.sku} has ${doc.stock} on hand - that adjustment would take it below zero.`,
       'STOCK_BELOW_ZERO',
     );
   }
@@ -132,10 +132,10 @@ async function applyStockMovement({
 
 /**
  * `lastOrderAt` is passed in rather than read off the document, because unlike
- * `ordersCount` and `totalSpent` it is not denormalised onto `Supplier` — it
+ * `ordersCount` and `totalSpent` it is not denormalised onto `Supplier` - it
  * comes from an aggregation over the purchase orders (see `listSuppliers`).
  * Callers that have no reason to run that aggregation omit it and the field is
- * `null`, which the list renders as "Never" — the same thing it renders for a
+ * `null`, which the list renders as "Never" - the same thing it renders for a
  * supplier that genuinely has never been ordered from.
  */
 function shapeSupplier(supplier, lastOrderAt = null) {
@@ -149,6 +149,9 @@ function shapeSupplier(supplier, lastOrderAt = null) {
     website: supplier.website ?? null,
     address: supplier.address ?? null,
     paymentTerms: supplier.paymentTerms,
+    // The agreements they must sign before they can quote. Empty means none is
+    // required, which is a real answer rather than a missing one.
+    agreementTemplates: (supplier.agreementTemplates ?? []).map((id) => id.toString()),
     notes: supplier.notes ?? null,
     isActive: supplier.isActive,
     // `at` rides along because it is the half of a consent record that makes it
@@ -166,7 +169,7 @@ function shapeSupplier(supplier, lastOrderAt = null) {
     componentTypes: supplier.componentTypes ?? [],
     // Portal state, never the credential itself. `portalInviteAt` is what the
     // Suppliers screen reads to decide between "Send portal link" and "Resend"
-    // — a supplier who has never been invited cannot answer a request, and the
+    // - a supplier who has never been invited cannot answer a request, and the
     // button should say which of the two it is doing.
     portalInviteAt: supplier.portalInviteAt ?? null,
     portalLastLoginAt: supplier.portalLastLoginAt ?? null,
@@ -189,7 +192,7 @@ async function listSuppliers({ q, status } = {}) {
   const [suppliers, total, active, lastOrders, spend] = await Promise.all([
     db().Supplier.find(query).sort({ name: 1 }).limit(300).lean(),
 
-    // Counts come from the whole collection, not the filtered set — the same
+    // Counts come from the whole collection, not the filtered set - the same
     // rule the invoice pills follow, for the same reason.
     db().Supplier.countDocuments({}),
     db().Supplier.countDocuments({ isActive: true }),
@@ -242,7 +245,7 @@ async function getSupplier(id) {
       .limit(100)
       .select('name sku price cost stock minStock')
       .lean(),
-    // Spend by month, from sent, partial and received POs only — a draft is a
+    // Spend by month, from sent, partial and received POs only - a draft is a
     // plan, not money, and charting it would overstate what this supplier has
     // actually cost.
     db().PurchaseOrder.aggregate([
@@ -265,7 +268,7 @@ async function getSupplier(id) {
   ]);
 
   // The profile's Last Order tile. Derived from the orders already loaded above
-  // rather than by re-running the list's aggregation — same rule it follows
+  // rather than by re-running the list's aggregation - same rule it follows
   // (drafts and cancellations are not an order having been placed), one fewer
   // round trip.
   const lastOrderAt =
@@ -313,7 +316,7 @@ function withConsentStamp(body, source = 'admin') {
  *
  * **The invitation is part of adding a supplier, not a second step somebody has
  * to remember** (§6.8a). A supplier who was never sent their link cannot answer
- * a request for quote, and nothing on the Suppliers screen would say why — so
+ * a request for quote, and nothing on the Suppliers screen would say why - so
  * the credential is minted and emailed on create, and `portalInvited` in the
  * response tells the screen whether it actually went.
  *
@@ -321,13 +324,16 @@ function withConsentStamp(body, source = 'admin') {
  * arrives inactive by design and must not be handed a login before anybody has
  * reviewed it. Activating them and pressing **Resend portal link** is the path.
  *
- * The mail never fails the create — `invitePortal` resolves either way, and the
+ * The mail never fails the create - `invitePortal` resolves either way, and the
  * supplier is already written by then. The same rule registration follows.
  */
 async function createSupplier(body) {
   const supplier = await db().Supplier.create({
     ...withConsentStamp(body),
     code: body.code || undefined,
+    // Blank entries are dropped: a picker can send '' for an empty row, and an
+    // empty string fails the ObjectId cast.
+    agreementTemplates: (body.agreementTemplates ?? []).filter(Boolean),
   });
 
   let portalInvited = false;
@@ -349,16 +355,25 @@ async function createSupplier(body) {
 async function updateSupplier(id, body) {
   if (!isObjectId(id)) throw ApiError.notFound('Supplier not found.', 'SUPPLIER_NOT_FOUND');
 
-  const supplier = await db().Supplier.findByIdAndUpdate(id, withConsentStamp(body), {
-    new: true,
-    runValidators: true,
-  });
+  const supplier = await db().Supplier.findByIdAndUpdate(
+    id,
+    {
+      ...withConsentStamp(body),
+      // An omitted field means the caller did not touch it and the current list
+      // stands; an empty array means "no agreement required", which is a
+      // deliberate answer and must be able to clear the list.
+      ...(body.agreementTemplates === undefined
+        ? {}
+        : { agreementTemplates: body.agreementTemplates.filter(Boolean) }),
+    },
+    { new: true, runValidators: true },
+  );
   if (!supplier) throw ApiError.notFound('Supplier not found.', 'SUPPLIER_NOT_FOUND');
   return { supplier: shapeSupplier(supplier.toObject()) };
 }
 
 /**
- * Deactivate rather than delete — purchase orders reference a supplier by id,
+ * Deactivate rather than delete - purchase orders reference a supplier by id,
  * exactly as orders reference a product, and a deleted row would leave a PO
  * whose origin nobody can name. Toggles, so the card's icon button can undo it.
  */
@@ -406,7 +421,7 @@ async function refreshSupplierTotals(supplierId) {
 // ---- purchase orders --------------------------------------------------------
 
 /**
- * Overdue is **derived, never stored** — a purchase order becomes late by the
+ * Overdue is **derived, never stored** - a purchase order becomes late by the
  * passage of time, the same way an invoice becomes overdue (§6.5). A received
  * or cancelled PO is never late, however far past its expected date it sits.
  */
@@ -423,16 +438,16 @@ function shapePurchaseOrder(po) {
     poNumber: po.poNumber,
     title: po.title ?? null,
     // The CONFIRMED supplier, which is null until one is picked. A PO out for
-    // pricing genuinely has nobody it is with, and `—` is the honest answer
+    // pricing genuinely has nobody it is with, and `-` is the honest answer
     // rather than a name borrowed from whoever happens to be bidding.
     supplier: po.supplier?.name
       ? { id: po.supplier._id.toString(), name: po.supplier.name, email: po.supplier.email ?? null }
-      : { id: po.supplier?.toString() ?? null, name: '—', email: null },
+      : { id: po.supplier?.toString() ?? null, name: '-', email: null },
     componentTypes: po.componentTypes ?? [],
     bidCount: (po.bids ?? []).length,
     // How many suppliers actually priced it. Counted on `quotedAt` rather than
     // on status, because confirming moves the winner to `confirmed` and the
-    // rest to `lost` — a decided order counted by status reported that nobody
+    // rest to `lost` - a decided order counted by status reported that nobody
     // had answered. See the fuller note in `purchaseBidService.getBidBoard`.
     quoteCount: (po.bids ?? []).filter((bid) => bid.quotedAt).length,
     confirmedBid: po.confirmedBid?.toString() ?? null,
@@ -492,9 +507,9 @@ function recomputeTotals(po) {
  * Status from receiving, not from a client.
  *
  * **Only the receiving half of the life cycle is derived.** Everything up to
- * and including `confirmed` is a decision somebody made — a draft is being
+ * and including `confirmed` is a decision somebody made - a draft is being
  * written, a sent order is out with suppliers, a negotiating one is mid
- * conversation, a confirmed one is placed — and none of those can be read off
+ * conversation, a confirmed one is placed - and none of those can be read off
  * the quantities, because all four have received nothing. Deriving them would
  * mean `received <= 0` stamping every one of them back to `sent`, which is how
  * a negotiation in progress silently loses its stage.
@@ -544,7 +559,7 @@ async function listPurchaseOrders({ q, status, supplier, from, to } = {}) {
   if (q) {
     const rx = likeRegex(q);
     // Staff have either the PO in front of them or the supplier's name, so
-    // both resolve — the same courtesy the invoice search extends.
+    // both resolve - the same courtesy the invoice search extends.
     const suppliers = await db().Supplier.find({ $or: [{ name: rx }, { code: rx }] })
       .select('_id')
       .lean();
@@ -559,7 +574,7 @@ async function listPurchaseOrders({ q, status, supplier, from, to } = {}) {
 
   const [statusRows, pendingRow] = await Promise.all([
     db().PurchaseOrder.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
-    // Pending value is money committed and not yet landed — the number an
+    // Pending value is money committed and not yet landed - the number an
     // operator uses to answer "what is on the water". A cancelled PO is not
     // committed and a received one has arrived, so neither counts.
     db().PurchaseOrder.aggregate([
@@ -619,7 +634,7 @@ async function getPurchaseOrder(id) {
       ...order,
       items: order.items.map((item) => ({
         ...item,
-        // `null` when the line was never linked to a catalogue product — a real
+        // `null` when the line was never linked to a catalogue product - a real
         // state, and the one the client renders as "not linked".
         inventory: item.product ? (stockByProduct.get(item.product) ?? null) : null,
       })),
@@ -645,13 +660,13 @@ async function getPurchaseOrder(id) {
  * Create a purchase order.
  *
  * Line names and SKUs are snapshotted from the catalogue at creation, the way
- * an order line is — a PO raised in March must still read correctly when the
+ * an order line is - a PO raised in March must still read correctly when the
  * product is renamed in June.
  */
 /**
  * Raise a purchase order.
  *
- * **No supplier is named yet** — the order is raised to ask several of them
+ * **No supplier is named yet** - the order is raised to ask several of them
  * what it costs, and `confirmSupplier` picks the one it is placed with. The
  * suppliers ticked at this stage become `bids` in the `invited` state; nothing
  * reaches them until the order is sent.
@@ -729,7 +744,7 @@ async function buildBids(supplierIds) {
   }));
 }
 
-/** Edits stop at `draft` — once a PO has been sent, the supplier is working
+/** Edits stop at `draft` - once a PO has been sent, the supplier is working
  *  from a document this one no longer matches. */
 async function updatePurchaseOrder(id, body) {
   const query = isObjectId(id) ? { _id: id } : { poNumber: String(id) };
@@ -738,7 +753,7 @@ async function updatePurchaseOrder(id, body) {
 
   if (po.status !== 'draft') {
     throw ApiError.badRequest(
-      `${po.poNumber} has already been sent — cancel it and raise a new one rather than editing it.`,
+      `${po.poNumber} has already been sent - cancel it and raise a new one rather than editing it.`,
       'PO_NOT_EDITABLE',
     );
   }
@@ -795,7 +810,7 @@ async function updatePurchaseOrder(id, body) {
  *
  * **Sending is no longer reachable here.** It lives in
  * `purchaseBidService.sendPurchaseOrder`, which also mails every supplier the
- * order is being put to — two routes that both set `sent` would mean one of
+ * order is being put to - two routes that both set `sent` would mean one of
  * them silently skipping the mail, and an order nobody was told about looks
  * identical to one they ignored.
  *
@@ -820,7 +835,7 @@ async function setPurchaseOrderStatus(id, { status, note }) {
     const received = po.items.reduce((sum, item) => sum + (item.qtyReceived ?? 0), 0);
     if (received > 0) {
       throw ApiError.badRequest(
-        `${po.poNumber} has already taken delivery of ${received} unit(s) — that stock is on the shelf, and cancelling would leave it unexplained.`,
+        `${po.poNumber} has already taken delivery of ${received} unit(s) - that stock is on the shelf, and cancelling would leave it unexplained.`,
         'PO_PARTIALLY_RECEIVED',
       );
     }
@@ -886,7 +901,7 @@ async function receivePurchaseOrder(id, { lines, note }, receivedBy) {
       // puts a quantity on the shelf that no document accounts for.
       skipped.push({
         sku: line.sku,
-        reason: `Only ${outstanding} outstanding — receiving ${line.qty} would exceed the order.`,
+        reason: `Only ${outstanding} outstanding - receiving ${line.qty} would exceed the order.`,
       });
       continue;
     }
@@ -911,7 +926,7 @@ async function receivePurchaseOrder(id, { lines, note }, receivedBy) {
     received.push({ sku: line.sku, name: item.name, qty: line.qty, qtyAfter });
 
     // A receipt is the moment the true cost of this part is known, so the
-    // catalogue's cost follows it. `price` is untouched — what Cellvix pays and
+    // catalogue's cost follows it. `price` is untouched - what Cellvix pays and
     // what a client pays are two decisions, and only one of them belongs to the
     // supplier.
     await db().Product.findByIdAndUpdate(item.product, { cost: item.unitCost });
@@ -931,14 +946,14 @@ async function receivePurchaseOrder(id, { lines, note }, receivedBy) {
 }
 
 /**
- * Record a PO payment — which creates the `Expense` row (§6.8).
+ * Record a PO payment - which creates the `Expense` row (§6.8).
  *
  * Written once and only once: a PO already carrying `payment.expense` is
  * refused, because the alternative is an operator double-clicking their way
  * into a P&L that counts the same money twice.
  *
  * The expense amount is `po.total`, read from the order and never from the
- * request — the same rule that stops a client sending a price.
+ * request - the same rule that stops a client sending a price.
  */
 async function recordPurchasePayment(id, { method, reference, paidAt, category }, createdBy) {
   const query = isObjectId(id) ? { _id: id } : { poNumber: String(id) };
@@ -953,7 +968,7 @@ async function recordPurchasePayment(id, { method, reference, paidAt, category }
   }
   if (po.payment?.expense) {
     throw ApiError.badRequest(
-      `${po.poNumber} is already recorded as paid — see the expense it created.`,
+      `${po.poNumber} is already recorded as paid - see the expense it created.`,
       'PO_ALREADY_PAID',
     );
   }
@@ -965,7 +980,7 @@ async function recordPurchasePayment(id, { method, reference, paidAt, category }
   const expense = await db().Expense.create({
     number: await nextNumber(db().Expense, 'number', 'EXP'),
     date: when,
-    description: `Purchase Order ${po.poNumber} — ${po.supplier?.name ?? 'supplier'}`,
+    description: `Purchase Order ${po.poNumber} - ${po.supplier?.name ?? 'supplier'}`,
     category: categoryDoc._id,
     payee: po.supplier?.name,
     method,
@@ -982,7 +997,7 @@ async function recordPurchasePayment(id, { method, reference, paidAt, category }
   po.timeline.push({
     status: po.status,
     at: new Date(),
-    note: `Payment recorded — ${expense.number}.`,
+    note: `Payment recorded - ${expense.number}.`,
   });
   await po.save();
 
@@ -999,7 +1014,7 @@ async function recordPurchasePayment(id, { method, reference, paidAt, category }
  *
  * The operator's choice wins; otherwise the seeded stock category, and failing
  * that the first active one. A PO payment with nowhere to file it is refused
- * rather than filed nowhere — an expense with no category is invisible to
+ * rather than filed nowhere - an expense with no category is invisible to
  * every report that groups by one.
  */
 async function resolvePurchaseCategory(category) {
@@ -1015,7 +1030,7 @@ async function resolvePurchaseCategory(category) {
   if (first) return first;
 
   throw ApiError.badRequest(
-    'No expense category exists to file this against — add one first.',
+    'No expense category exists to file this against - add one first.',
     'NO_EXPENSE_CATEGORY',
   );
 }
@@ -1034,7 +1049,7 @@ function shapeExpense(expense) {
           name: expense.category.name,
           colorToken: expense.category.colorToken ?? 'ink',
         }
-      : { id: expense.category?.toString() ?? null, name: '—', colorToken: 'ink' },
+      : { id: expense.category?.toString() ?? null, name: '-', colorToken: 'ink' },
     payee: expense.payee ?? null,
     method: expense.method ?? null,
     status: expense.status,
@@ -1081,7 +1096,7 @@ async function listExpenses({ q, category, status, from, to } = {}) {
   const shaped = expenses.map(shapeExpense);
 
   // The KPI row describes the **filtered** set, because that is what is on
-  // screen — a total that ignored the date filter would contradict the rows
+  // screen - a total that ignored the date filter would contradict the rows
   // beneath it. The status counts are the exception and come from the whole
   // collection, for the pill rule (§6.5).
   const statusRows = await db().Expense.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]);
@@ -1123,7 +1138,7 @@ async function createExpense(body, createdBy) {
 
 /**
  * A PO-generated expense is owned by its purchase order and cannot be edited
- * here — the two would drift, and the P&L would be reading a number the PO no
+ * here - the two would drift, and the P&L would be reading a number the PO no
  * longer agrees with.
  */
 async function updateExpense(id, body) {
@@ -1134,7 +1149,7 @@ async function updateExpense(id, body) {
 
   if (expense.purchaseOrder) {
     throw ApiError.badRequest(
-      'This expense belongs to a purchase order — edit it there.',
+      'This expense belongs to a purchase order - edit it there.',
       'EXPENSE_FROM_PO',
     );
   }
@@ -1160,7 +1175,7 @@ async function deleteExpense(id) {
 
   if (expense.purchaseOrder) {
     throw ApiError.badRequest(
-      'This expense belongs to a purchase order — delete it there, or it comes back the moment the PO is read.',
+      'This expense belongs to a purchase order - delete it there, or it comes back the moment the PO is read.',
       'EXPENSE_FROM_PO',
     );
   }
@@ -1233,7 +1248,7 @@ async function updateExpenseCategory(id, body) {
 }
 
 /**
- * A category in use is deactivated, never deleted (§6.9) — deleting one would
+ * A category in use is deactivated, never deleted (§6.9) - deleting one would
  * silently re-bucket every historical expense that pointed at it, and the P&L
  * would change shape for a reason nobody could find later. The response says
  * which of the two happened rather than reporting a delete either way.
@@ -1264,7 +1279,7 @@ async function deleteExpenseCategory(id) {
 /**
  * A row on the Inventory screen (§6.10).
  *
- * Exact quantities, reorder points and costs — all of which are admin-only. The
+ * Exact quantities, reorder points and costs - all of which are admin-only. The
  * storefront's binary in stock / out of stock is produced by
  * `productService.serialize`, which is an allowlist and is untouched by
  * anything here.
@@ -1336,7 +1351,7 @@ async function listInventory({ q, stock, brand, grade } = {}) {
   // Out of stock tells the operator nothing (the invoice-pill rule, §6.5).
   //
   // `isActive` is carried so the stock pills can exclude hidden products. A
-  // product that is not listed cannot be sold, so it is not work — counting it
+  // product that is not listed cannot be sold, so it is not work - counting it
   // as low stock put three phantom rows between this screen's total and the
   // sidebar badge's, and a badge that reconciles with nothing is a badge the
   // operator learns to ignore.
@@ -1416,7 +1431,7 @@ async function getInventoryItem(id) {
       return {
         id: po._id.toString(),
         poNumber: po.poNumber,
-        supplier: po.supplier?.name ?? '—',
+        supplier: po.supplier?.name ?? '-',
         orderDate: po.orderDate,
         status: po.status,
         qtyOrdered: line?.qtyOrdered ?? 0,

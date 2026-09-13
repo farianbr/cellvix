@@ -48,7 +48,7 @@ const SOCIAL = [
  * The footer.
  *
  * One rounded slab that sits IN the page rather than a full-bleed band ruled off
- * the bottom of it — the old version was four equal columns of grey links and
+ * the bottom of it - the old version was four equal columns of grey links and
  * read as a sitemap dump. The weight is redistributed: a statement and the
  * contact details carry the left, the navigation is three tight columns in the
  * middle, and the two things a buyer actually wants from a footer (talk to
@@ -62,11 +62,11 @@ export function Footer() {
     <footer className="mt-14 px-3 pb-3 sm:px-4 sm:pb-4 lg:px-6 lg:pb-6">
       {/* Two boxes, not one: a rounded panel that holds the content and clips
           the wordmark, and the fine print sitting outside it on the page's own
-          surface. The wordmark is cropped BY that panel's rounded bottom edge —
+          surface. The wordmark is cropped BY that panel's rounded bottom edge
           it is a texture the footer ends on, not a logo to be read, and letting
           it run out of the box is what stops it reading as a fifth column. */}
       <div className="mx-auto max-w-[1400px] overflow-hidden rounded-xl bg-surface-2 ring-1 ring-line">
-        {/* The gradient as a hairline rule — accent, not fill. */}
+        {/* The gradient as a hairline rule - accent, not fill. */}
         <div className="rule-brand-gradient h-1" aria-hidden="true" />
 
         <div className="px-5 pt-8 sm:px-7 lg:px-10 lg:pt-12">
@@ -135,7 +135,7 @@ export function Footer() {
             {/* ---- navigation --------------------------------------------
                 Two columns on a phone, not one. Stacked, three short link lists
                 ran the footer to most of a screen's height and left a column of
-                dead space beside every 13px link — the lists are far narrower
+                dead space beside every 13px link - the lists are far narrower
                 than the viewport, so the width was there and unused.
 
                 Two rather than three: at 320px a third column would put
@@ -151,7 +151,7 @@ export function Footer() {
                     // The third list starts a second row of the two-column phone
                     // layout on its own, so it takes the whole row and lays its
                     // links out in two as well. Left in one column it was a
-                    // half-width list against a half-width blank — the exact
+                    // half-width list against a half-width blank - the exact
                     // dead space the two-column change is here to remove.
                     index === 2 && 'col-span-2 sm:col-span-1',
                   )}
@@ -215,25 +215,25 @@ export function Footer() {
         {/* ---- the wordmark ------------------------------------------------
             The real mark, not type set to look like it. This is the CELLV*X
             wordmark lifted out of the client's lockup and flattened to its
-            black-and-leaf colourway — the letters carry the logo's own grunge
+            black-and-leaf colourway - the letters carry the logo's own grunge
             texture, which no font can stand in for, and the maple leaf is the
             brand's, not a red `o`. The tagline and domain that ride along in
             the full lockup are dropped: at this size they would shout three
             things where the footer wants one quiet one.
 
             The asset is trimmed to its ink, so `w-full` puts the C and the X
-            flush against both edges of the panel — which is why this block has
+            flush against both edges of the panel - which is why this block has
             no side padding.
 
             The crop: the wrapper's aspect ratio is the image's own width over
             70% of its height, and the image is pinned to the wrapper's top at
             full width. So exactly the top 70% shows and the bottom 30% is cut
-            — the word runs out of the panel rather than sitting in it, which
+ - the word runs out of the panel rather than sitting in it, which
             is what stops it reading as a fifth column. Nothing under it on
             purpose; the panel's rounded bottom edge does the rest of the
             clipping.
 
-            Decorative — the header carries the accessible name. */}
+            Decorative - the header carries the accessible name. */}
         <div className="pt-8 lg:pt-10">
           <div className="relative aspect-2456/305 w-full overflow-hidden">
             <img
@@ -250,7 +250,7 @@ export function Footer() {
       </div>
 
       {/* ---- the fine print ------------------------------------------------
-          Outside the panel, on the page's own surface — the panel ends on the
+          Outside the panel, on the page's own surface - the panel ends on the
           cropped wordmark, and a rule under it would undo the crop. */}
       <div className="mx-auto flex max-w-[1400px] flex-col gap-2 px-2 pt-4 text-sm text-ink-400 sm:flex-row sm:items-center sm:justify-between sm:px-4 lg:px-6">
         <p className="flex flex-wrap items-center gap-x-4 gap-y-1">

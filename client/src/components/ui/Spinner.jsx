@@ -13,7 +13,7 @@ const SIZES = {
  * It replaces `<Loader2 className="animate-spin" />`, which is Tailwind's
  * default one-second linear rotation. Two things were wrong with that. A full
  * second per revolution is slow enough to read as the app struggling, and
- * spinner speed measurably changes how long a wait *feels* — the same load
+ * spinner speed measurably changes how long a wait *feels* - the same load
  * behind a faster spinner is perceived as quicker. And a single solid arc
  * rotating at a constant rate has no life in it; it looks like a loading GIF
  * from 2009.
@@ -23,8 +23,8 @@ const SIZES = {
  * matters because without it the arc appears to be orbiting nothing, and the
  * eye keeps looking for the missing circle.
  *
- * `currentColor` throughout, so it inherits from whatever it sits in — a
- * button, a table cell, a brand-gradient CTA — with no variant prop.
+ * `currentColor` throughout, so it inherits from whatever it sits in - a
+ * button, a table cell, a brand-gradient CTA - with no variant prop.
  *
  * CSS animation rather than a Motion component on purpose: this runs while the
  * app is busy fetching, and CSS animations run off the main thread. A

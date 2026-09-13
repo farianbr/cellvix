@@ -23,7 +23,7 @@ import {
 } from '@/hooks/useSuperAdmin';
 
 /**
- * Support sessions — who has been inside a tenant's business, and who is inside
+ * Support sessions - who has been inside a tenant's business, and who is inside
  * one right now (SAAS_PLATFORM §4.5, invariant 9).
  *
  * **This screen exists to be read by us, about us.** Every other console screen
@@ -71,7 +71,7 @@ function GrantRow({ grant, onRevoke, isRevoking }) {
 
         <p className="mt-0.5 text-xs text-plat-dim">
           {dateTime(grant.startedAt)}
-          {grant.endedAt ? ` — left ${dateTime(grant.endedAt)}` : ` — until ${dateTime(grant.expiresAt)}`}
+          {grant.endedAt ? ` - left ${dateTime(grant.endedAt)}` : ` - until ${dateTime(grant.expiresAt)}`}
           {grant.ip ? ` · ${grant.ip}` : ''}
         </p>
       </div>
@@ -94,7 +94,7 @@ function GrantRow({ grant, onRevoke, isRevoking }) {
 /**
  * One tenant's conversation, opened from the list.
  *
- * Fetched only when opened — a list that carried every message of every thread
+ * Fetched only when opened - a list that carried every message of every thread
  * would be most of the collection on one request, and the preview is enough to
  * decide which one to read.
  */
@@ -198,7 +198,7 @@ export function SuperAdminSupportPage() {
       >
         {/* A thread exists only once somebody has written, so a tenant we have
             never spoken to has no row here. Starting one from the tenant list is
-            the way in — said here rather than left as a dead end. */}
+            the way in - said here rather than left as a dead end. */}
         {!threads.length ? (
           <p className="text-sm text-plat-muted">
             No conversations yet. Open a tenant from the Tenants screen and send them a message to

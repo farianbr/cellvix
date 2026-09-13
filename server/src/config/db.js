@@ -6,7 +6,7 @@ let shuttingDown = false;
 /**
  * Connects to MongoDB.
  *
- * `MONGODB_URI` is required and validated in `env.js` — there is deliberately no
+ * `MONGODB_URI` is required and validated in `env.js` - there is deliberately no
  * in-memory fallback (PROJECT_INSTRUCTIONS.md §8). One that re-seeds on every
  * boot mints new ObjectIds for every user and product, so a live session cookie
  * still passes `jwt.verify` but no longer resolves to a user: every signed-in
@@ -26,7 +26,7 @@ async function connectDb() {
   });
   mongoose.connection.on('disconnected', () => {
     // A deliberate shutdown fires this too; only an unexpected drop is news.
-    if (!shuttingDown) console.warn('  MongoDB disconnected — mongoose will keep retrying.');
+    if (!shuttingDown) console.warn('  MongoDB disconnected - mongoose will keep retrying.');
   });
   mongoose.connection.on('reconnected', () => {
     console.log('  MongoDB reconnected.');

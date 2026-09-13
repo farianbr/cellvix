@@ -17,8 +17,8 @@ import { pressable } from '@/lib/motion';
  * Billing, in two panels.
  *
  * The split is the point. An invoice is now raised only against money that
- * actually arrived, so a record is either an **amount due** — payable, ageing
- * towards its due date — or an **invoice**, which is settled by definition.
+ * actually arrived, so a record is either an **amount due** - payable, ageing
+ * towards its due date - or an **invoice**, which is settled by definition.
  * That makes a status column redundant: which panel a row is in already says
  * everything a status badge used to, and a table of invoices every one of which
  * reads "paid" is a column of noise.
@@ -28,7 +28,7 @@ import { pressable } from '@/lib/motion';
  * "I have paid it" are one click apart.
  */
 
-/** The printable copy — the same document that was emailed when the order was placed. */
+/** The printable copy - the same document that was emailed when the order was placed. */
 function InvoiceDocumentLink({ number, className }) {
   return (
     <a
@@ -86,7 +86,7 @@ export function AccountInvoicesPage() {
     if (!needle) return settled;
 
     return settled.filter(
-      // Invoice number, the order it bills, or the amount as it is printed —
+      // Invoice number, the order it bills, or the amount as it is printed
       // "2,110" finds the invoice a buyer is holding a statement line for.
       (invoice) =>
         invoice.number.toLowerCase().includes(needle) ||
@@ -132,7 +132,7 @@ export function AccountInvoicesPage() {
 
   return (
     <div className="space-y-4">
-      {/* Two up on a phone — three stacked tiles pushed the list itself below
+      {/* Two up on a phone - three stacked tiles pushed the list itself below
           the fold on every screen under 640px. */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-3">
         <StatTile
@@ -167,7 +167,7 @@ export function AccountInvoicesPage() {
           title="Amounts due"
           description="Paid in full, an amount becomes an invoice you can file."
           action={
-            // Only worth offering when there is more than one thing to clear —
+            // Only worth offering when there is more than one thing to clear
             // with a single amount this button and its row's Pay button do the
             // same thing, and two buttons for one action is a choice nobody
             // asked for.
@@ -310,7 +310,7 @@ export function AccountInvoicesPage() {
                             {invoice.orderNumber}
                           </Link>
                         ) : (
-                          <span className="text-sm text-ink-300">—</span>
+                          <span className="text-sm text-ink-300">-</span>
                         )}
                       </td>
 
@@ -319,7 +319,7 @@ export function AccountInvoicesPage() {
                       </td>
 
                       <td className="px-4 py-3 text-sm text-ink-500">
-                        {invoice.settledAt ? date(invoice.settledAt) : '—'}
+                        {invoice.settledAt ? date(invoice.settledAt) : '-'}
                       </td>
 
                       <td className="tnum px-4 py-3 text-sm font-medium text-ink-900">
@@ -403,7 +403,7 @@ export function AccountInvoicesPage() {
       />
 
       {/* A single charge for the whole balance is worth a beat before it
-          happens — the row-level Pay button is not, because its amount is right
+          happens - the row-level Pay button is not, because its amount is right
           there next to it. */}
       <ConfirmDialog
         open={confirmPayAll}
@@ -411,7 +411,7 @@ export function AccountInvoicesPage() {
         title="Pay everything outstanding?"
         body={`${money(outstanding)} across ${due.length} amounts will be settled oldest first, in one charge.`}
         confirmLabel="Continue to payment"
-        // Paying a bill you owe is not a destructive act — the default danger
+        // Paying a bill you owe is not a destructive act - the default danger
         // styling would dress a routine payment up as something to fear.
         tone="info"
         onConfirm={() => {

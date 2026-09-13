@@ -47,7 +47,7 @@ import {
 import useCreateParam from '@/hooks/useCreateParam';
 import downloadExport from '@/lib/exportDownload';
 
-/** A device as the invoice form starts it — no condition grid, that is intake. */
+/** A device as the invoice form starts it - no condition grid, that is intake. */
 const emptyInvoiceDevice = () => ({
   category: '',
   brand: '',
@@ -65,7 +65,7 @@ const emptyInvoiceDevice = () => ({
  * The running total, in the order the server applies it.
  *
  * A preview, recomputed on every keystroke, and deliberately mirroring
- * `invoiceTotals()` step for step — lines, then the fee, then the discount,
+ * `invoiceTotals()` step for step - lines, then the fee, then the discount,
  * then tax on what is left. Two different orders of operation between the form
  * and the server is how an operator quotes one number and the customer receives
  * another.
@@ -136,7 +136,7 @@ const METHODS = [
   { value: 'other', label: 'Other' },
 ];
 
-/** `YYYY-MM-DD` in local time — `toISOString()` would shift the day westward. */
+/** `YYYY-MM-DD` in local time - `toISOString()` would shift the day westward. */
 function todayIso() {
   const now = new Date();
   return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
@@ -190,7 +190,7 @@ function PaymentForm({ invoice, onSubmit, onCancel, isPending, error }) {
       </div>
 
       <p className="rounded-md bg-surface-2 px-3 py-2.5 text-xs leading-relaxed text-ink-500">
-        The invoice status is recalculated from its payments — record the amount received, not the
+        The invoice status is recalculated from its payments - record the amount received, not the
         new balance.
       </p>
 
@@ -214,7 +214,7 @@ function VoidForm({ invoice, onSubmit, onCancel, isPending, error }) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <p className="rounded-md bg-warn-50 px-3 py-2.5 text-sm leading-relaxed text-warn">
         Voiding writes off the {money(invoice.balance)} still outstanding on {invoice.number}. The
-        invoice stays on the account with the reason attached — it is not deleted.
+        invoice stays on the account with the reason attached - it is not deleted.
       </p>
 
       {error && (
@@ -243,13 +243,13 @@ function VoidForm({ invoice, onSubmit, onCancel, isPending, error }) {
 }
 
 /**
- * A standalone invoice — one raised against an account for something no order
+ * A standalone invoice - one raised against an account for something no order
  * covers: a restocking fee, a repair, an agreed adjustment (§7.2).
  *
  * **Two documents share this form, and the operator picks which by what they
  * type.** Leave the devices alone and it is a flat charge: one amount, a
  * reference saying what for. Add a device and it becomes an itemised repair
- * invoice — services, parts, tax and a computed total. The server decides the
+ * invoice - services, parts, tax and a computed total. The server decides the
  * same way (`isItemised`), so the form and the API cannot disagree about which
  * kind of document was just raised.
  *
@@ -426,7 +426,7 @@ function InvoiceForm({ clients, technicians = [], defaultUser, onSubmit, onCance
       <Section
         icon={Smartphone}
         title="Devices and services"
-        hint={itemised ? undefined : '(optional — for a repair invoice)'}
+        hint={itemised ? undefined : '(optional - for a repair invoice)'}
       >
         {devices.fields.length === 0 ? (
           <p className="text-sm text-ink-500">
@@ -493,7 +493,7 @@ function InvoiceForm({ clients, technicians = [], defaultUser, onSubmit, onCance
 
       {itemised && (
         <>
-          <Section icon={Car} title="Travel" hint="(internal — not on the invoice)">
+          <Section icon={Car} title="Travel" hint="(internal - not on the invoice)">
             <p className="mb-3 rounded-md bg-surface-2 px-3 py-2.5 text-xs leading-relaxed text-ink-500">
               Mileage is recorded for the business and is <strong>not</strong> added to what the
               customer owes. The extended service area fee, if charged, is.
@@ -541,7 +541,7 @@ function InvoiceForm({ clients, technicians = [], defaultUser, onSubmit, onCance
                 control={control}
                 name="province"
                 label="Province"
-                options={[{ value: '', label: '— pick province —' }, ...PROVINCES]}
+                options={[{ value: '', label: ' - pick province - ' }, ...PROVINCES]}
                 // Picking a province fills the rate in; the rate stays editable
                 // because zero is a real answer for an exempt customer.
                 onValueChange={(value) => setValue('taxPercent', TAX_RATES[value] ?? 0)}
@@ -576,7 +576,7 @@ function InvoiceForm({ clients, technicians = [], defaultUser, onSubmit, onCance
             </dl>
 
             <p className="mt-2 text-2xs text-ink-400">
-              Recalculated by the server when this is raised — this figure is a preview.
+              Recalculated by the server when this is raised - this figure is a preview.
             </p>
           </Section>
         </>
@@ -584,7 +584,7 @@ function InvoiceForm({ clients, technicians = [], defaultUser, onSubmit, onCance
 
       {terms !== 'prepaid' && (
         <p className="rounded-md bg-surface-2 px-3 py-2.5 text-sm text-ink-500">
-          On terms, this draws on the customer's line of credit until it is paid — the same as an
+          On terms, this draws on the customer's line of credit until it is paid - the same as an
           invoice raised by an order.
         </p>
       )}
@@ -628,7 +628,7 @@ export function AdminInvoicesPage() {
   const status = searchParams.get('status') ?? 'all';
 
   const { data, isLoading } = useAdminInvoices({ status, q: query || undefined });
-  // Any client can be invoiced — unlike an order, this does not need approval:
+  // Any client can be invoiced - unlike an order, this does not need approval:
   // a pending account can still owe money for a repair.
   const { data: clientData } = useAdminUsers({});
   const { recordInvoicePayment, voidInvoice, createInvoice } = useAdminMutations();
@@ -636,7 +636,7 @@ export function AdminInvoicesPage() {
   const clients = clientData?.users ?? [];
 
   // The tickets list already returns the technicians, and it is not admin-only
-  // the way `useAdminStaff` is — a staff account with invoice permission has to
+  // the way `useAdminStaff` is - a staff account with invoice permission has to
   // be able to assign one. Same source the ticket form uses, for the same
   // reason: a second endpoint whose only caller is this screen earns nothing.
   const { data: ticketData } = useAdminTickets({ status: 'all', limit: 1 });
@@ -703,7 +703,7 @@ export function AdminInvoicesPage() {
             {date(invoice.dueDate)}
           </span>
         ) : (
-          <span className="text-xs text-ink-300">—</span>
+          <span className="text-xs text-ink-300">-</span>
         ),
     },
     {
@@ -967,7 +967,7 @@ export function AdminInvoicesPage() {
               createInvoice.mutate(values, {
                 onSuccess: (payload) => {
                   setCreating(false);
-                  // Straight to the invoice — the next thing an operator does is
+                  // Straight to the invoice - the next thing an operator does is
                   // send it or record what has already been paid against it.
                   if (payload?.invoice?.number) {
                     navigate(`/admin/invoices/${payload.invoice.number}`);

@@ -10,7 +10,7 @@ import { pressable } from '@/lib/motion';
  * A combo in the cart, as ONE line.
  *
  * The member parts are listed but not individually editable, because the bundle
- * is priced as a unit — letting a buyer drop one part would leave a "bundle"
+ * is priced as a unit - letting a buyer drop one part would leave a "bundle"
  * that no longer matches what is being charged for it. The stepper moves whole
  * bundles; the trash removes the whole thing.
  *

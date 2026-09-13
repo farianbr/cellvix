@@ -48,11 +48,11 @@ const TABS = [
 ];
 
 /**
- * Value proposition panel beside the forms — the "side visual panel" of §8.1.
+ * Value proposition panel beside the forms - the "side visual panel" of §8.1.
  *
  * The three blocks are spread down the panel rather than pushed to its two
  * ends. `justify-between` on a heading and a list left a hole in the middle
- * whose size was whatever the dialog's fixed height happened to leave over —
+ * whose size was whatever the dialog's fixed height happened to leave over
  * on a tall viewport it was most of the panel. The figures in the middle are
  * what fills it: they are the answer to "why this supplier", which a list of
  * feature lines states but does not evidence.
@@ -68,13 +68,13 @@ function SidePanel() {
   // every tab, and the frame's leftover height shows as dialog below it rather
   // than as a taller red block.
   return (
-    // The brand panel — the dialog's one editorial block, in the gradient.
+    // The brand panel - the dialog's one editorial block, in the gradient.
     //
     // This is the first surface a business sees before it has an account, so it
     // is the place the brand should be loudest.
     //
     // The PANEL ramp, not the standard one. White needs 4.5:1 as body copy and
-    // the standard ramp ends at #e8564a, where white manages 3.58 — fine on a
+    // the standard ramp ends at #e8564a, where white manages 3.58 - fine on a
     // button whose label is bold and short, not fine on a tall block of
     // paragraphs. This ramp stops at #9d251d, where white clears 7.7:1 and even
     // white/70 clears 4.5, so the secondary lines can still fade.
@@ -117,7 +117,7 @@ function SidePanel() {
 
       {/* Three lines, not four, and each one short enough to hold one line at
           this width. The panel no longer sits in a fixed-height frame, so its
-          own content is what sets the dialog's height — a fourth wrapped bullet
+          own content is what sets the dialog's height - a fourth wrapped bullet
           bought two more rows of red beside a five-field sign-in form and
           nothing else. */}
       <ul className="space-y-2.5 text-sm text-white/85">
@@ -139,7 +139,7 @@ function SidePanel() {
 /**
  * Requesting a reset link.
  *
- * **Always reports success**, whether or not the address is registered — the
+ * **Always reports success**, whether or not the address is registered - the
  * endpoint answers 204 either way for the same reason, and a form that said
  * "no such account" would turn this into a way to ask which businesses buy
  * from Cellvix. So the confirmation is worded as what was done ("if that
@@ -241,7 +241,7 @@ function SignInTab({ onDone }) {
     setPendingNotice(false);
     try {
       const user = await signIn(values);
-      // A pending account signs in successfully on purpose — we tell them where
+      // A pending account signs in successfully on purpose - we tell them where
       // they stand instead of failing the credentials (brief §8.2).
       if (user.status === 'pending') {
         setPendingNotice(true);
@@ -267,7 +267,7 @@ function SignInTab({ onDone }) {
           <h3 className="text-xl">Your account is still under review</h3>
           <p className="mx-auto mt-2 max-w-sm text-md leading-relaxed text-ink-500">
             You are signed in, but wholesale pricing and ordering stay locked until our team verifies
-            your business. We will email you the moment it is approved — usually within one business
+            your business. We will email you the moment it is approved - usually within one business
             day.
           </p>
         </div>
@@ -329,7 +329,7 @@ function SignInTab({ onDone }) {
  *
  * At the top, not beside the submit button at the bottom. Picking "I want to
  * buy parts" or "Forgot password?" swaps out the entire tab and left no visible
- * way back — the supplier form had a Back button, but it sat at the end of a
+ * way back - the supplier form had a Back button, but it sat at the end of a
  * scrolling form next to Send application, which is not where anyone looks for
  * an escape from a choice they just made by accident.
  *
@@ -594,7 +594,7 @@ function SupplierApplyForm({ onBack }) {
  *
  * The contact's name is asked as two fields and stored as one: `contactName` is
  * what the model, the welcome mail, the approvals queue and every admin screen
- * read, so the halves are composed on submit rather than split in the model —
+ * read, so the halves are composed on submit rather than split in the model
  * the same call as `phone` and its dial code. So the resolver runs over this
  * shape, and `onSubmit` builds the payload `registerSchema` describes.
  *
@@ -619,7 +619,7 @@ function SignUpTab({ onSwitch }) {
    * followed one does not have to be told a code over the phone and type it
    * correctly. It stays an ordinary editable field: attribution is set once at
    * registration and cannot be added later, so the person signing up has to be
-   * able to see and correct what the link put there — which is also why its
+   * able to see and correct what the link put there - which is also why its
    * section starts open when a code is present.
    *
    * Read once on mount rather than on every render, so a re-render cannot
@@ -637,7 +637,7 @@ function SignUpTab({ onSwitch }) {
   } = useForm({
     resolver: zodResolver(signUpFormSchema),
     // Land the cursor on the first field that failed, rather than leaving the
-    // buyer to hunt for the red one — which matters most here, where half the
+    // buyer to hunt for the red one - which matters most here, where half the
     // form can be collapsed out of sight.
     shouldFocusError: true,
     defaultValues: {
@@ -674,7 +674,7 @@ function SignUpTab({ onSwitch }) {
           <h3 className="text-xl">Thanks for signing up</h3>
           <p className="mx-auto mt-2 max-w-sm text-md leading-relaxed text-ink-500">
             Your account is pending admin approval. We will email you once your business is
-            verified — usually within one business day.
+            verified - usually within one business day.
           </p>
         </div>
         <Button variant="outline" onClick={() => onSwitch('signin')}>
@@ -708,12 +708,12 @@ function SignUpTab({ onSwitch }) {
 
           "Business" is gone from every label here. The visitor already chose "I
           want to buy parts" a screen ago and the panel beside them says
-          wholesale — repeating it on four labels was the form restating its own
+          wholesale - repeating it on four labels was the form restating its own
           context instead of naming its fields. `businessName` stays the field
           name: it is what the model, the API and every admin screen call it.
 
           The required identity sits in an open section and everything optional
-          behind a collapsed one — progressive disclosure, which is what keeps a
+          behind a collapsed one - progressive disclosure, which is what keeps a
           form with nine possible fields reading as a form with four. Fields are
           the default 44px: the 38px `size="sm"` used here before was under the
           minimum touch target, and the fix for a tall dialog is fewer fields on
@@ -722,7 +722,7 @@ function SignUpTab({ onSwitch }) {
         <div className="space-y-3">
           {/* Two fields, one stored value.  is what the model, the
               welcome mail and the approvals queue all read, so the halves are
-              composed on submit rather than split in the model — the same call
+              composed on submit rather than split in the model - the same call
               as  and its dial code. */}
           <div className="grid gap-3 sm:grid-cols-2">
             <Input
@@ -787,7 +787,7 @@ function SignUpTab({ onSwitch }) {
             {/* Referral code (§6.13). Beside the password rather than inside the
                 optional company block: somebody who was referred was told a
                 code by a person, and a code they cannot find is a referrer who
-                silently loses their commission — it is only worth asking for
+                silently loses their commission - it is only worth asking for
                 where it will actually be seen.
 
                 Set once and never editable afterwards: a referrer that can be
@@ -809,7 +809,7 @@ function SignUpTab({ onSwitch }) {
 
       {/* Everything optional, collapsed. The company name lives here now: the
           account is identified by the person, and a sole trader may not have a
-          registered company name at all — so requiring one to sign up was
+          registered company name at all - so requiring one to sign up was
           turning an optional detail into a barrier. It can be added later from
           Account & security. */}
       <FormSection
@@ -940,7 +940,7 @@ export function AccountPopup() {
     // Width is the sum of what the two columns need, not a round number: a
     // 480px form column, a 268px panel, and the gaps and insets between and
     // around them. It was 900px, which left ~90px of unused white between the
-    // capped form and the panel — visible as a blank gutter down the middle of
+    // capped form and the panel - visible as a blank gutter down the middle of
     // the dialog.
     // Sized to its content rather than to a breakpoint: a form column wide
     // enough for a two-up field row without the inputs going stubby, beside a
@@ -951,7 +951,7 @@ export function AccountPopup() {
       onClose={close}
       size="lg"
       className="max-w-[832px]"
-      // The dialog draws its own close button, beside the tabs — see below.
+      // The dialog draws its own close button, beside the tabs - see below.
       // Modal's floating one sits top-right over the content, which is fine on
       // desktop where it lands on the red panel, and wrong below `md` where the
       // panel is hidden and it floats over the form with nothing behind it.
@@ -961,7 +961,7 @@ export function AccountPopup() {
        * body, and it is what keeps the red panel still.
        *
        * With the body scrolling, expanding "Company details" grew the grid past
-       * the frame and the **whole dialog** scrolled — banner included, so the
+       * the frame and the **whole dialog** scrolled - banner included, so the
        * panel slid up out of view and the tab row went with it. The scroll
        * belongs to the form column alone (it already has `overflow-y-auto` and
        * `min-h-0`); the grid must therefore be the thing that cannot overflow,
@@ -971,7 +971,7 @@ export function AccountPopup() {
       bodyClassName="p-0 md:p-0 overflow-hidden md:overflow-hidden"
     >
       {/* **The content sets the height.** The frame used to be pinned to the
-          tallest tab (760px), so Sign In — which needs barely half of that —
+          tallest tab (760px), so Sign In - which needs barely half of that
           opened as a mostly empty box with the form marooned at the top. Each
           tab is its own size now, and the dialog is only as tall as what it is
           actually showing.
@@ -979,7 +979,7 @@ export function AccountPopup() {
           The banner is the exception: it keeps the height it had, so it does
           not change shape as the form beside it grows and shrinks. `items-start`
           on its own cell (below) already stopped it stretching; `md:min-h` here
-          is what stops the SHORT tabs from squashing it — the frame will not go
+          is what stops the SHORT tabs from squashing it - the frame will not go
           under the panel's own height, so Sign In and Sign Up show the same red
           block.
 
@@ -988,7 +988,7 @@ export function AccountPopup() {
           on the scrolling child is what lets it scroll rather than stretch. */}
       {/* `grid-rows-[minmax(0,1fr)]` is what makes the form column scroll
           rather than overflow. A grid row defaults to `auto`, which sizes to
-          its tallest child and ignores the container's `max-h` — so the column
+          its tallest child and ignores the container's `max-h` - so the column
           grew to its full content height, pushed past the frame and took the
           banner with it. Pinning the row to a shrinkable `1fr` gives the
           column a real height to scroll inside; `min-h-0` on the column itself
@@ -996,7 +996,7 @@ export function AccountPopup() {
       <div className="grid max-h-[82vh] grid-rows-[minmax(0,1fr)] gap-6 md:max-h-[86vh] md:min-h-[560px] md:grid-cols-[minmax(0,516px)_minmax(0,268px)] md:justify-center md:gap-7">
         {/* The column keeps its 480px cap at every width. It was released at
             `md` (`md:max-w-none`), so the form stretched to whatever the grid
-            column happened to be — around 600px — and a single email or
+            column happened to be - around 600px - and a single email or
             password input ran the width of the dialog. A text field that wide
             is harder to read, not more generous, and it made a short form look
             sprawling. Capped, the two-up rows stay comfortable and the lone
@@ -1033,7 +1033,7 @@ export function AccountPopup() {
             </div>
 
             {/* Hidden at `md` and up, where the dialog's own top-right corner is
-                the red panel and a close button there is conventional — that one
+                the red panel and a close button there is conventional - that one
                 is drawn by the grid cell below. */}
             <button
               type="button"
@@ -1053,7 +1053,7 @@ export function AccountPopup() {
         {/* The panel keeps its own height and sits at the top; any slack in the
             frame falls **below** it as empty dialog rather than stretching it.
             Stretched, its four blocks spread out to fill whatever the tallest
-            tab needed and the panel visibly changed shape between tabs — the
+            tab needed and the panel visibly changed shape between tabs - the
             one element on this dialog that should look identical on all three.
 
             `items-start` on this cell rather than the grid, so only the panel
@@ -1065,12 +1065,12 @@ export function AccountPopup() {
 
           {/* The desktop close, over the red panel where it has a dark ground to
               sit on and reads as the dialog's corner. Below `md` the panel is
-              hidden and this goes with it — the tab row carries the close there
+              hidden and this goes with it - the tab row carries the close there
               instead.
 
               Offsets are measured from THIS wrapper, which already carries
               `pr-5 pt-5` of its own. `right-8 top-8` therefore put the button
-              20px further in and 20px further down than intended — squarely on
+              20px further in and 20px further down than intended - squarely on
               top of the panel's eyebrow, so the X and the words "CELLVIX
               WHOLESALE PORTAL" overlapped. The panel's inner padding is 6, so
               matching it here lands the button in the panel's own corner. */}

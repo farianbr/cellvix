@@ -6,8 +6,8 @@ import cn from '@/lib/cn';
  * descriptions, long FAQ answers).
  *
  * It returns React nodes. It never returns HTML and there is no
- * `dangerouslySetInnerHTML` anywhere near it, so an author — or anyone who ever
- * gets hold of an admin session — cannot inject script into a public page. That
+ * `dangerouslySetInnerHTML` anywhere near it, so an author - or anyone who ever
+ * gets hold of an admin session - cannot inject script into a public page. That
  * is the whole reason this exists instead of a markdown library.
  *
  * Vocabulary, one construct per line:
@@ -54,7 +54,7 @@ export function renderInline(text, keyPrefix = 'i') {
     });
 }
 
-/** Authored text with the inline markers removed — for slugs and TOC labels. */
+/** Authored text with the inline markers removed - for slugs and TOC labels. */
 export function stripInline(text) {
   return String(text ?? '')
     .replace(/\*\*([^*]+)\*\*/g, '$1')
@@ -73,7 +73,7 @@ function slugify(text) {
  * Stamps a stable, unique id onto every heading block, in document order.
  *
  * Both `extractHeadings` and `RichText` run it over the same parsed blocks, so
- * a table of contents and the headings it points at cannot disagree — the ids
+ * a table of contents and the headings it points at cannot disagree - the ids
  * are derived from the body, not stored alongside it. Duplicate titles get a
  * numeric suffix rather than silently sharing an anchor.
  */
@@ -185,6 +185,13 @@ function toBlocks(source) {
  * and offer descriptions, where the same vocabulary appears at body size inside
  * a card and must not open up a magazine's worth of vertical rhythm.
  *
+ * `tone="document"` is for contract text - agreement clauses and preambles.
+ * **Smaller than body copy, deliberately**: printed terms are set below the
+ * running text of whatever they are attached to, and a clause rendered at the
+ * article's 18px reads as the point of the page rather than as the fine print
+ * it is. It also has to sit inside a numbered list of nine without turning one
+ * document into five screens.
+ *
  * `headingIds` gives every heading an anchor, matching `extractHeadings`. It is
  * opt-in because two bodies rendered on one page would otherwise mint the same
  * ids twice; only the article view, which renders exactly one, turns it on.
@@ -193,6 +200,7 @@ export function RichText({ children, tone = 'prose', headingIds = false, classNa
   const parsed = toBlocks(children);
   const blocks = headingIds ? withHeadingIds(parsed) : parsed;
   const compact = tone === 'compact';
+  const isDocument = tone === 'document';
 
   // A jumped-to heading has to clear the sticky header and the reading-progress
   // rule sitting under it.
@@ -210,7 +218,7 @@ export function RichText({ children, tone = 'prose', headingIds = false, classNa
                 key={key}
                 id={block.id}
                 className={cn(
-                  compact ? 'mt-4 text-lg' : 'mt-9 text-xl sm:text-2xl',
+                  isDocument ? 'mt-3 text-sm' : compact ? 'mt-4 text-lg' : 'mt-9 text-xl sm:text-2xl',
                   block.id && anchor,
                 )}
               >
@@ -224,7 +232,7 @@ export function RichText({ children, tone = 'prose', headingIds = false, classNa
                 key={key}
                 id={block.id}
                 className={cn(
-                  compact ? 'mt-3.5 text-md' : 'mt-7 text-lg sm:text-lg',
+                  isDocument ? 'mt-3 text-xs' : compact ? 'mt-3.5 text-md' : 'mt-7 text-lg sm:text-lg',
                   block.id && anchor,
                 )}
               >
@@ -234,7 +242,7 @@ export function RichText({ children, tone = 'prose', headingIds = false, classNa
 
           case 'ul':
             return (
-              <ul key={key} className={compact ? 'mt-2 space-y-1.5' : 'mt-4 space-y-2'}>
+              <ul key={key} className={compact || isDocument ? 'mt-2 space-y-1.5' : 'mt-4 space-y-2'}>
                 {block.items.map((item, itemIndex) => (
                   <li
                     key={`${key}-${itemIndex}`}
@@ -252,7 +260,7 @@ export function RichText({ children, tone = 'prose', headingIds = false, classNa
 
           case 'ol':
             return (
-              <ol key={key} className={compact ? 'mt-2 space-y-1.5' : 'mt-4 space-y-2.5'}>
+              <ol key={key} className={compact || isDocument ? 'mt-2 space-y-1.5' : 'mt-4 space-y-2.5'}>
                 {block.items.map((item, itemIndex) => (
                   <li
                     key={`${key}-${itemIndex}`}
@@ -294,9 +302,11 @@ export function RichText({ children, tone = 'prose', headingIds = false, classNa
               <p
                 key={key}
                 className={
-                  compact
-                    ? 'mt-2 text-md leading-relaxed text-ink-500 first:mt-0'
-                    : 'mt-4 text-lg leading-[1.75] text-ink-500 first:mt-0'
+                  isDocument
+                    ? 'mt-2 text-xs leading-relaxed text-ink-600 first:mt-0'
+                    : compact
+                      ? 'mt-2 text-md leading-relaxed text-ink-500 first:mt-0'
+                      : 'mt-4 text-lg leading-[1.75] text-ink-500 first:mt-0'
                 }
               >
                 {renderInline(block.lines.join(' '), key)}

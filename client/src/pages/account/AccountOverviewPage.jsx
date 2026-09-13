@@ -22,7 +22,7 @@ import { useCart } from '@/hooks/useCart';
 import useUiStore from '@/store/uiStore';
 import { pressable } from '@/lib/motion';
 
-/** Credit utilisation meter — the one place the gradient earns a progress fill. */
+/** Credit utilisation meter - the one place the gradient earns a progress fill. */
 function CreditMeter({ credit }) {
   const tone = credit.utilisation >= 85 ? 'danger' : credit.utilisation >= 60 ? 'warn' : 'ok';
 
@@ -225,7 +225,7 @@ export function AccountOverviewPage() {
           and an amount, and squeezing that into a sidebar truncates the title,
           which is the part that says what happened.
 
-          Rendered only once the feed arrives — an empty-state panel that
+          Rendered only once the feed arrives - an empty-state panel that
           appears and is then replaced by six rows is worse than a panel that
           appears once, with content. */}
       {activity && activity.length > 0 && (

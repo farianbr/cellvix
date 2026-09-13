@@ -12,7 +12,7 @@ import { StepIndicator, StepConnector } from '@/components/ui/StepIndicator';
  * and a full text breakdown underneath for the buyer who needs to tell a customer
  * exactly when something shipped. Neither replaces the other.
  *
- * Uses the same StepIndicator as the tab wizard and checkout — that consistency
+ * Uses the same StepIndicator as the tab wizard and checkout - that consistency
  * is the point of brief §10.5.
  */
 export function OrderStepper({ order, className }) {
@@ -45,7 +45,7 @@ export function OrderStepper({ order, className }) {
       {/* ---- vertical stepper below sm ----------------------------------
           Five fixed-width steps and four connectors need ~420px. A 320px phone
           got a clipped track with the last status off the edge, so the small
-          screen runs the same steps down the page instead — where there is
+          screen runs the same steps down the page instead - where there is
           room for the timestamp beside each one. */}
       <ol className="sm:hidden" aria-label="Order progress">
         {ORDER_STATUSES.map((step, index) => {
@@ -75,7 +75,7 @@ export function OrderStepper({ order, className }) {
       </ol>
 
       {/* ---- horizontal stepper from sm ---------------------------------
-          Connectors live BETWEEN list items, never inside them — drawing one on
+          Connectors live BETWEEN list items, never inside them - drawing one on
           each side of every indicator double-renders the segment and leaves a
           visible seam in the middle of each run. */}
       <ol className="hidden items-start sm:flex" aria-label="Order progress">

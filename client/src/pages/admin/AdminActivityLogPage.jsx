@@ -3,7 +3,7 @@ import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 
 /**
- * Activity Log (§6.15, category 6) — every admin mutation: who, what, when and
+ * Activity Log (§6.15, category 6) - every admin mutation: who, what, when and
  * from where.
  *
  * Readable with `settings: view`. Its rows describe changes to records, which

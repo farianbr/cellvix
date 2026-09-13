@@ -5,7 +5,7 @@ import searchService from '../services/searchService.js';
  * Global search (§7.1, phase 12).
  *
  * Permission filtering happens **inside the service, per request**, from
- * `req.user` — not from anything the caller sends. A `groups` parameter that
+ * `req.user` - not from anything the caller sends. A `groups` parameter that
  * let the client pick which record types to search would be a way to ask for
  * the ones its role cannot see.
  */

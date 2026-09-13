@@ -18,8 +18,8 @@ const get = asyncHandler(async (req, res) => {
 /**
  * Every settings write is audited (§7.5, phase 11b).
  *
- * These change what the whole system charges and promises — a tax rate, a
- * shipping price, a warranty length — so a change with no actor on it is a
+ * These change what the whole system charges and promises - a tax rate, a
+ * shipping price, a warranty length - so a change with no actor on it is a
  * number nobody can account for. One helper because all six writes are the
  * same shape: snapshot, write, log the diff between them.
  *

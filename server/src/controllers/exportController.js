@@ -9,7 +9,7 @@ import exportService from '../services/exportService.js';
  * **Every export calls the same service function the screen called, with the
  * same query.** §7.4: "an export that ignores active filters is a bug, not a
  * shortcut." Re-querying with a second implementation would agree with the list
- * right up until one of them changed — so `req.query` goes through untouched
+ * right up until one of them changed - so `req.query` goes through untouched
  * and the rows that come back are the rows that get formatted.
  *
  * That also means each export inherits its list's permission guard from the
@@ -19,7 +19,7 @@ import exportService from '../services/exportService.js';
  * spreadsheet cannot be summed, which defeats the point of exporting it.
  *
  * **One inherited limitation, stated rather than hidden.** `listUsers` and
- * `listOrders` cap at 200 rows and `listExpenses` at 300 — ceilings the screens
+ * `listOrders` cap at 200 rows and `listExpenses` at 300 - ceilings the screens
  * were built with, well above today's data. An export inherits them, so at that
  * volume it would return a truncated file that looks complete. Inventory has
  * already been given an explicit `all` flag because the catalogue is past its
@@ -94,7 +94,7 @@ const invoices = asyncHandler(async (req, res) => {
       { label: 'Order', get: (row) => row.orderNumber },
       { label: 'Business', get: (row) => row.businessName },
       // The list derives `overdue` rather than storing it, and the export shows
-      // what the screen shows — not the raw stored status.
+      // what the screen shows - not the raw stored status.
       { label: 'Status', get: (row) => row.status },
       { label: 'Issued', get: (row) => asDate(row.issuedAt) },
       { label: 'Due', get: (row) => asDate(row.dueDate) },
@@ -109,7 +109,7 @@ const invoices = asyncHandler(async (req, res) => {
 const inventory = asyncHandler(async (req, res) => {
   // The screen paginates at 40 and the service caps a page at 100; an export of
   // the first hundred of four hundred parts is not an export, it is a quiet
-  // data loss. `all` lifts the cap — the filters themselves go through
+  // data loss. `all` lifts the cap - the filters themselves go through
   // untouched.
   const { products } = await adminService.listProducts({ ...req.query, all: true });
 
@@ -147,7 +147,7 @@ const expenses = asyncHandler(async (req, res) => {
     columns: [
       { label: 'Date', get: (row) => asDate(row.date) },
       { label: 'Description', get: (row) => row.description },
-      // `category` is the populated object, not an id — the name is what
+      // `category` is the populated object, not an id - the name is what
       // belongs in a spreadsheet.
       { label: 'Category', get: (row) => row.category?.name ?? '' },
       { label: 'Payee', get: (row) => row.payee },

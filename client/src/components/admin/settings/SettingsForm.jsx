@@ -13,7 +13,7 @@ import cn from '@/lib/cn';
  * ends up subtly different from the other four.
  *
  * **The confirmation matters more here than on most forms.** A settings screen
- * has no navigation on success — you save and stay looking at the same fields,
+ * has no navigation on success - you save and stay looking at the same fields,
  * so without an explicit acknowledgement there is nothing at all to distinguish
  * a save that worked from a click that missed.
  *

@@ -6,7 +6,7 @@ import { pressableSurface } from '@/lib/motion';
 /**
  * The KPI tile row every admin screen opens with (ERP rework §4, convention 7).
  *
- * Tiles used to carry three colour signals each — a tone-keyed left border, a
+ * Tiles used to carry three colour signals each - a tone-keyed left border, a
  * tinted icon chip AND a tone-keyed value colour. On a seven-tile dashboard row
  * that produced a band of green, red and four blues across the top of the
  * screen, and none of it meant anything: "collected" is not more urgent than
@@ -18,7 +18,7 @@ import { pressableSurface } from '@/lib/motion';
  * the number is the loudest thing on it, which is correct, because the number
  * is what the operator came to read. `tone` still exists as a prop and still
  * has exactly one job: `danger` colours the VALUE, because a figure that is
- * actually wrong — overdue, negative, out of stock — has to be able to
+ * actually wrong - overdue, negative, out of stock - has to be able to
  * interrupt a scan. Every other tone renders identically to neutral.
  *
  * The icon lost its coloured chip for the same reason and is now a plain
@@ -61,7 +61,7 @@ function Delta({ delta, goodWhen = 'up' }) {
  * arrow appears on hover rather than sitting there permanently: seven arrows
  * in a row is noise, and the pointer already says the tile is live.
  *
- * `to` is optional on purpose — the P&L rows on Reports are read, not
+ * `to` is optional on purpose - the P&L rows on Reports are read, not
  * navigated, and they keep the plain `div` with no focus ring to tab through.
  */
 export function KpiTile({
@@ -88,7 +88,7 @@ export function KpiTile({
         )}
         {/* The label owns the row; the period rides along beside it, quieter.
             It belongs HERE and not in the hint below because it qualifies the
-            heading — "Collected, for this month" — rather than adding a second
+            heading - "Collected, for this month" - rather than adding a second
             fact. In the hint it competed with the thing the hint is for. */}
         <p className="eyebrow truncate text-ink-400">{label}</p>
         {meta && (
@@ -125,7 +125,7 @@ export function KpiTile({
     </>
   );
 
-  // Bordered, not shadowed — PROJECT_INSTRUCTIONS §2 is explicit that a surface
+  // Bordered, not shadowed - PROJECT_INSTRUCTIONS §2 is explicit that a surface
   // gets one or the other and never both.
   const shell = cn('rounded-lg border border-line bg-surface p-4', className);
 
@@ -152,12 +152,12 @@ export function KpiTile({
  * Seven columns was the previous ceiling and it was too many: at 1440px each
  * tile got ~150px, which is narrower than the labels, so every heading
  * truncated to "COLLEC…", "OUTSTA…", "INVENTO…". A label the operator cannot
- * read is not a label. The grid tops out at five across and wraps instead —
+ * read is not a label. The grid tops out at five across and wraps instead
  * two rows of readable tiles beat one row of ellipses.
  *
  * The column count is chosen per tile count so the rows come out BALANCED.
  * Seven tiles in a five-column grid leaves a row of five and a row of two, and
- * that stranded pair reads as a mistake — the eye expects a grid to be either
+ * that stranded pair reads as a mistake - the eye expects a grid to be either
  * full or deliberately ragged, and 5+2 looks like neither. Seven splits 4+3,
  * which is even enough that the second row reads as part of the same block.
  */

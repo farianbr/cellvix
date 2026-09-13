@@ -3,7 +3,7 @@ import cn from '@/lib/cn';
 /**
  * Status pill.
  *
- * Each tone used to carry three separate colour signals at once — a tinted
+ * Each tone used to carry three separate colour signals at once - a tinted
  * background, a coloured border AND coloured text. Three signals for one piece
  * of meaning is what turns a table into a rainbow: eight badges down a status
  * column, each ringed and filled and tinted, and the eye can no longer tell
@@ -18,7 +18,7 @@ import cn from '@/lib/cn';
  * `danger` is the deliberate exception and keeps coloured text. It is the only
  * tone that means "something is wrong", and if every tone is quiet then the one
  * that must interrupt has to be louder than the rest. That is the whole point
- * of a reserved signal — it only works while it is rare.
+ * of a reserved signal - it only works while it is rare.
  */
 const TONES = {
   neutral: 'bg-surface-3 text-ink-500',
@@ -33,7 +33,7 @@ const TONES = {
 /**
  * A 5px dot in the tone's own colour, shown for the tones whose text has gone
  * neutral. It restores the at-a-glance hue an operator scans a status column
- * by, at a fraction of the visual weight the old coloured text carried — the
+ * by, at a fraction of the visual weight the old coloured text carried - the
  * colour is present but it is no longer competing with the label for the same
  * pixels.
  */
@@ -43,7 +43,7 @@ const DOTS = {
   info: 'bg-info',
   // `brand` belongs here for the same reason the rest do: its label is dark ink
   // on a pale tint, so without the dot it is the one pill in a status column
-  // carrying no hue at all — `Out for delivery` sat in an orders table looking
+  // carrying no hue at all - `Out for delivery` sat in an orders table looking
   // like a category the design had forgotten to colour. Flat `bg-brand`, not a
   // gradient: at 5px a ramp has no room to read as depth.
   brand: 'bg-brand',

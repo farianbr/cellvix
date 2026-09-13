@@ -9,18 +9,18 @@ const EDGE = 12;
  * Positions a floating panel against the control that opened it.
  *
  * A dropdown drawn as an absolutely-positioned child of its trigger is clipped
- * by any ancestor that scrolls or hides its overflow — a `Panel`, a modal body,
+ * by any ancestor that scrolls or hides its overflow - a `Panel`, a modal body,
  * a table wrapper. Every one of those is somewhere a select already lives, so
  * the panel is rendered in a portal and given fixed coordinates instead.
  *
- * Returns [style, placement]. `placement` is "top" or "bottom" — the side the
+ * Returns [style, placement]. `placement` is "top" or "bottom" - the side the
  * panel actually landed on, so the caller can set a matching transform-origin.
  *
  * The returned style also decides:
  *   - which side to open on: below unless the space there is too small and
  *     there is more of it above;
  *   - how tall the panel may be, from the room actually left on that side;
- *   - how wide, from the room left on the side it is aligned to — which is what
+ *   - how wide, from the room left on the side it is aligned to - which is what
  *     keeps a panel wider than its trigger from running off the screen without
  *     having to measure the panel first.
  *
@@ -28,7 +28,7 @@ const EDGE = 12;
  * @param {boolean} open
  * `rowHeight` (with the panel's own vertical padding) snaps the height to a
  * whole number of rows. Without it a scrolling panel ends on a half-drawn row,
- * which does not read as "there is more below" — it reads as clipped.
+ * which does not read as "there is more below" - it reads as clipped.
  *
  * @param {{
  *   align?: 'left' | 'right',
@@ -55,7 +55,7 @@ export function useAnchoredPosition(triggerRef, open, options = {}) {
     const below = window.innerHeight - rect.bottom - GUTTER - EDGE;
     const above = rect.top - GUTTER - EDGE;
 
-    // Flip only when below is genuinely cramped AND above is roomier — a panel
+    // Flip only when below is genuinely cramped AND above is roomier - a panel
     // that flips at the first opportunity feels unstable while typing.
     const flip = below < 180 && above > below;
     let room = Math.max(140, Math.min(maxHeight, flip ? above : below));
@@ -98,7 +98,7 @@ export function useAnchoredPosition(triggerRef, open, options = {}) {
     };
   }, [open, measure]);
 
-  // The trigger can move without anything scrolling — a row above it collapsing,
+  // The trigger can move without anything scrolling - a row above it collapsing,
   // a font loading. Cheap enough to watch while the panel is open.
   useEffect(() => {
     if (!open || typeof ResizeObserver === 'undefined') return undefined;

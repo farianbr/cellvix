@@ -18,14 +18,14 @@ import { pressable } from '@/lib/motion';
  * one list, newest first.
  *
  * Assembled server-side by `services/activityService.js`, which also feeds the
- * Activity tab on the admin client profile — so a buyer and their account rep
+ * Activity tab on the admin client profile - so a buyer and their account rep
  * read the same history rather than two views that can disagree.
  *
  * Every row is `{ kind, at, title, detail, amount, reference, href }`. The
  * component's only job is to give each kind an icon and decide how the amount
  * reads: a credit movement is signed, because +$40 and −$40 are different
  * events and a bare "$40" hides which one happened. Everything else is a plain
- * figure — an order total is not a direction.
+ * figure - an order total is not a direction.
  */
 
 const ICONS = {
@@ -78,7 +78,7 @@ function ActivityRow({ event }) {
 
   const shared = 'flex w-full items-center gap-3 px-4 py-2.5 text-left sm:px-5';
 
-  // Not every event has somewhere to go — a status change on an order does, a
+  // Not every event has somewhere to go - a status change on an order does, a
   // credit adjustment does not always. A row without a destination stays a
   // plain row rather than becoming a link to nowhere.
   return event.href ? (

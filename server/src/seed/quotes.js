@@ -10,13 +10,13 @@ import { buildQuotes } from './sales.data.js';
 /**
  * Demo quotes, added to a database that already has real data.
  *
- * **Additive, like `seed:content` — it never wipes.** `npm run seed` rebuilds
+ * **Additive, like `seed:content` - it never wipes.** `npm run seed` rebuilds
  * the whole database from scratch, which is the wrong tool for "give me some
  * quotes to look at" on an instance that already holds accounts and orders
  * somebody is using. This adds rows and leaves everything else alone.
  *
  * Quote numbers continue from whatever is already there rather than restarting
- * at 1, so running it twice does not collide on the unique index — and it
+ * at 1, so running it twice does not collide on the unique index - and it
  * refuses to run at all against a database with no approved buyer or no
  * catalogue, because a quote is priced *for an account* and a quote with no
  * lines teaches the screen nothing.
@@ -31,7 +31,7 @@ import { buildQuotes } from './sales.data.js';
  * The one state `buildQuotes` cannot produce on its own.
  *
  * `converted` means a real order came out of the quote, so it needs an order to
- * point at — the builder runs before orders exist in the full seed, and a
+ * point at - the builder runs before orders exist in the full seed, and a
  * `convertedOrder` pointing at nothing would render a broken link on the row
  * the client's screenshots show. It is added here, where orders are already in
  * the database.
@@ -60,7 +60,7 @@ async function run() {
 
   if (!buyers.length) {
     throw new Error(
-      'No approved buyer to quote for. A quote is priced for an account — approve one first.',
+      'No approved buyer to quote for. A quote is priced for an account - approve one first.',
     );
   }
   if (!products.length) {
@@ -97,7 +97,7 @@ async function run() {
      * The converted row is **added**, not promoted from the accepted one.
      *
      * Converting the accepted quote in place left the `accepted` filter with
-     * nothing in it — the builder produces exactly one of each state, so
+     * nothing in it - the builder produces exactly one of each state, so
      * borrowing one empties a pill. It is cloned instead, and belongs to the
      * account that actually placed the order, because a quote converted into
      * somebody else's order is nonsense.

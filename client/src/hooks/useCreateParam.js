@@ -5,7 +5,7 @@ import { useSearchParams } from 'react-router';
  * Opens a page's create modal from the URL (`?new=1`).
  *
  * The `+ Create` menu (§7.2) names a record type, and the operator expects the
- * form for it — not the list it lives on with the create button somewhere on
+ * form for it - not the list it lives on with the create button somewhere on
  * screen for them to find. The menu cannot open a modal on a page that has not
  * mounted yet, so it navigates and leaves a flag, and the page reads it here.
  *
@@ -16,7 +16,7 @@ import { useSearchParams } from 'react-router';
  * and closing the modal does not leave an address that no longer describes what
  * is on screen.
  *
- * `initial` covers the pages whose one state slot serves both create and edit —
+ * `initial` covers the pages whose one state slot serves both create and edit
  * `AdminProductsPage` uses the sentinel `'new'` rather than `true`, and passes
  * `closed` as `null` to match what its edit modal already expects.
  *
@@ -27,7 +27,7 @@ import { useSearchParams } from 'react-router';
 export function useCreateParam(initial = true, closed = false, companions = []) {
   const [searchParams, setSearchParams] = useSearchParams();
   // Read during the initialiser rather than in the effect, so the modal is
-  // already open on the first paint — arriving to a closed form that pops open
+  // already open on the first paint - arriving to a closed form that pops open
   // a frame later reads as a glitch.
   const [creating, setCreating] = useState(() =>
     searchParams.get('new') === '1' ? initial : closed,

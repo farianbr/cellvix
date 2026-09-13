@@ -20,12 +20,12 @@ const GRADE_OPTIONS = GRADE_ORDER.map((grade) => ({
  * The two stock forms, shared by the inventory list and a product's own page.
  *
  * They live here rather than inside `AdminProductsPage` because both screens
- * open them and a copy on each is how the two eventually disagree — one gaining
+ * open them and a copy on each is how the two eventually disagree - one gaining
  * a field, or a validation rule, that the other never gets. Same reason
  * `ApproveClientForm` sits in `components/`.
  */
 /**
- * The operations fields (§6.10) — reorder point, cost, bin, default supplier
+ * The operations fields (§6.10) - reorder point, cost, bin, default supplier
  * and barcode.
  *
  * Deliberately a separate form from `ProductForm`: the catalogue form owns what
@@ -109,7 +109,7 @@ function OpsForm({ product, suppliers, onSubmit, onCancel, isPending, error }) {
 /**
  * A manual stock correction.
  *
- * Signed, and the reason is required — "why is this 40 and not 47" is a
+ * Signed, and the reason is required - "why is this 40 and not 47" is a
  * question somebody asks later, and an unexplained correction cannot answer it.
  * The change goes through the same ledger every receipt does.
  */
@@ -188,7 +188,7 @@ function AdjustForm({ product, onSubmit, onCancel, isPending, error }) {
 /**
  * Product form.
  *
- * The four taxonomy selects cascade — picking a brand narrows the series list —
+ * The four taxonomy selects cascade - picking a brand narrows the series list
  * so a product cannot be filed under a model that does not belong to its brand.
  * That mis-filing would be invisible in this form but would break the shop's
  * filter hierarchy, which reads the same four slugs.

@@ -12,8 +12,8 @@ import Button from '@/components/ui/Button';
 /**
  * Splits a stored `contactName` back into the two fields the form asks for.
  *
- * The model stores one name — it is what the welcome mail, the approvals queue
- * and every admin screen read — so the halves are a form affordance on both
+ * The model stores one name - it is what the welcome mail, the approvals queue
+ * and every admin screen read - so the halves are a form affordance on both
  * sides: composed on submit, split on load. Everything after the first space is
  * the last name, which keeps `van der Berg` and `Diaz Ramirez` intact rather
  * than dropping whatever did not fit in two slots.
@@ -31,8 +31,8 @@ function splitName(full) {
  *
  * **Status, credit limit and terms are deliberately absent**, and the note at
  * the foot says where they live. Each is set by an endpoint that does more than
- * write the field — approving stamps who approved it and mints a referral code,
- * rejecting requires a reason, the credit limit is the line of credit — so a
+ * write the field - approving stamps who approved it and mints a referral code,
+ * rejecting requires a reason, the credit limit is the line of credit - so a
  * form that also wrote them would be a second, quieter version of those
  * decisions. `clientUpdateSchema` strips them server-side regardless, so this
  * is the UI agreeing with a rule that is already enforced.
@@ -49,7 +49,7 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
    * Consent is held apart from the rest of the form because it is written by a
    * different endpoint.
    *
-   * `PATCH /admin/users/:id/consent` stamps who recorded the answer and when —
+   * `PATCH /admin/users/:id/consent` stamps who recorded the answer and when
    * `clientUpdateSchema` does not carry the field at all, and folding it into
    * the profile payload would either lose that provenance or restamp it every
    * time somebody corrected a postal code. So the section is on this form,
@@ -102,7 +102,7 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
           businessType: values.businessType,
           website: values.website,
           taxId: values.taxId,
-          // A half-typed address is still not sent — the schema requires a
+          // A half-typed address is still not sent - the schema requires a
           // complete one, so an empty street line means "no address".
           address: values.address.line1 ? values.address : undefined,
           // Only when it changed: an unchanged tick must not restamp the
@@ -173,7 +173,7 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
               has no company to name. */}
           <h2 className="eyebrow mb-3 mt-5 flex items-center gap-1.5 border-b border-line pb-2 text-ink-400">
             <Building2 className="size-3.5 text-brand" strokeWidth={2.25} aria-hidden="true" />
-            Business details <span className="font-normal normal-case text-ink-300">— optional</span>
+            Business details <span className="font-normal normal-case text-ink-300"> - optional</span>
           </h2>
 
           <div className="space-y-3">
@@ -200,7 +200,7 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
         <section>
           <h2 className="eyebrow mb-3 flex items-center gap-1.5 border-b border-line pb-2 text-ink-400">
             <MapPin className="size-3.5 text-brand" strokeWidth={2.25} aria-hidden="true" />
-            Address <span className="font-normal normal-case text-ink-300">— optional</span>
+            Address <span className="font-normal normal-case text-ink-300"> - optional</span>
           </h2>
 
           <div className="space-y-3">
@@ -212,7 +212,7 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
             </AddressFields>
 
             <p className="text-xs leading-snug text-ink-400">
-              The default shipping and billing address. Leave the street blank to record no address —
+              The default shipping and billing address. Leave the street blank to record no address
               a partly filled one is not saved.
             </p>
           </div>
@@ -230,14 +230,14 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
           <ConsentChannels value={consent} onChange={setConsent} />
           <p className="mt-3 text-xs leading-snug text-ink-400">
             {user.consent?.recorded
-              ? 'Only change these when the customer has told you something different — the record is dated.'
-              : 'Nothing recorded yet — nobody has asked this customer. Leave them clear until somebody has.'}
+              ? 'Only change these when the customer has told you something different - the record is dated.'
+              : 'Nothing recorded yet - nobody has asked this customer. Leave them clear until somebody has.'}
           </p>
         </section>
       </div>
 
       <p className="rounded-md bg-surface-2 px-3 py-2.5 text-sm text-ink-500">
-        Account status, credit limit and payment terms are not edited here — they are set from the
+        Account status, credit limit and payment terms are not edited here - they are set from the
         customer&rsquo;s profile, where approving an account and deciding what credit to extend it
         stay one decision.
       </p>

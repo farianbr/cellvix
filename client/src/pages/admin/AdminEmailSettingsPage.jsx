@@ -17,7 +17,7 @@ import { useAdminSettings, useAdminMutations } from '@/hooks/useAdmin';
 /**
  * Email Settings (§6.15, category 5, phase 11e).
  *
- * **Every toggle carries a full sentence explaining what it does** — §6.15 calls
+ * **Every toggle carries a full sentence explaining what it does** - §6.15 calls
  * that worth copying exactly, and it is: "auto-send payment status updates" is
  * meaningless without knowing which emails that means and to whom.
  *
@@ -25,13 +25,13 @@ import { useAdminSettings, useAdminMutations } from '@/hooks/useAdmin';
  * look equally functional would have an operator turn one on, assume customers
  * are being emailed, and find out from a customer. The server sends
  * `communicationsWired`, so a toggle stops being marked the moment its send
- * path lands — one edit in `settingsService`, not a change here.
+ * path lands - one edit in `settingsService`, not a change here.
  */
 const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/settings/email'], icon: adminIcon('Mail') };
 
 /**
  * The toggles, in the order §6.15 lists them, with Cellvix's two additions.
- * The copy is the point — each says what it sends and to whom.
+ * The copy is the point - each says what it sends and to whom.
  */
 const TOGGLES = [
   {
@@ -44,7 +44,7 @@ const TOGGLES = [
     key: 'invoiceReminders',
     label: 'Send automatic invoice messages',
     detail:
-      'The master switch for the time-lapse messages on the Invoice Statuses screen — reminders, overdue notices and payment confirmations. Individual messages still have to be switched on there as well.',
+      'The master switch for the time-lapse messages on the Invoice Statuses screen - reminders, overdue notices and payment confirmations. Individual messages still have to be switched on there as well.',
   },
   {
     key: 'paymentStatusUpdates',
@@ -189,7 +189,7 @@ export function AdminEmailSettingsPage() {
       {/* The measure wraps the notice as well as the panels.
 
           It sat outside the capped container, so a full-bleed banner ran the
-          shell's whole width above content that stopped at the form measure —
+          shell's whole width above content that stopped at the form measure
           the page disagreed with itself about where its own edge was, and the
           notice read as belonging to the shell rather than to this screen. */}
       <div className="max-w-form">
@@ -253,7 +253,7 @@ export function AdminEmailSettingsPage() {
               error={errors.adminEmail?.message}
               {...register('adminEmail')}
             />
-            {/* Dollars on screen, cents on the wire — the convention every
+            {/* Dollars on screen, cents on the wire - the convention every
                 other money field in the panel follows. A field labelled
                 "cents" would have somebody type 500 meaning $500. */}
             <Input
@@ -298,7 +298,7 @@ export function AdminEmailSettingsPage() {
           onReset={() => {
             reset();
             // The dollars field lives outside RHF, so `reset()` does not touch
-            // it — discarding has to put the server's value back by hand.
+            // it - discarding has to put the server's value back by hand.
             setDollarsField(
               data?.communications?.notifyAboveAmount
                 ? String(data.communications.notifyAboveAmount / 100)

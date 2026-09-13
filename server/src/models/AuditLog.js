@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
  *
  * Money and stock both move through this panel and several staff now touch it,
  * so **"who changed this" has to be answerable**. Phases 8, 9 and 10 each
- * recorded the same gap — a role edit, a referral rate change and a credit
+ * recorded the same gap - a role edit, a referral rate change and a credit
  * allocation all happened with no actor on record. This closes it.
  *
  * **One collection, two screens.** `kind` separates them: `activity` is what
@@ -54,7 +54,7 @@ const auditLogSchema = new mongoose.Schema(
     /**
      * Which log this row belongs to.
      *
-     * `security` is admin-only on the read side (§6.15) — sign-in failures name
+     * `security` is admin-only on the read side (§6.15) - sign-in failures name
      * accounts and addresses, which is exactly the material that helps somebody
      * who is guessing at them.
      */
@@ -65,7 +65,7 @@ const auditLogSchema = new mongoose.Schema(
      *
      * **An actor is not always a `User`.** A platform operator stepping into a
      * business for support is a `SuperAdmin`, and the whole point of logging
-     * that is that the business's owner can see it happened — so the row has to
+     * that is that the business's owner can see it happened - so the row has to
      * be able to say *what kind of account* acted, not merely which id.
      * Without this the two are indistinguishable, and an impersonation would
      * read as though a member of the owner's own staff did it, which is worse
@@ -83,7 +83,7 @@ const auditLogSchema = new mongoose.Schema(
     },
 
     /**
-     * Who did it. Null for an unauthenticated event — a failed sign-in on an
+     * Who did it. Null for an unauthenticated event - a failed sign-in on an
      * address that does not exist has no actor, and inventing one would be a
      * lie about who was there.
      *
@@ -113,7 +113,7 @@ const auditLogSchema = new mongoose.Schema(
     },
 
     /**
-     * What changed, as the changed fields only — never whole documents.
+     * What changed, as the changed fields only - never whole documents.
      *
      * A full before/after would put password hashes, tokens and provider
      * secrets into a table two screens can read. `diff()` below builds these,
@@ -141,8 +141,8 @@ auditLogSchema.index({ 'entity.kind': 1, 'entity.id': 1, createdAt: -1 });
  *
  * The audit trail is readable by anyone with `settings: view`, so a diff that
  * faithfully recorded a password hash would be a credential store with a
- * search box. §6.15's rule for provider secrets — never returned to a client,
- * not even to an admin — would mean nothing if the audit row carried the value.
+ * search box. §6.15's rule for provider secrets - never returned to a client,
+ * not even to an admin - would mean nothing if the audit row carried the value.
  */
 const REDACTED_KEYS = new Set([
   'password',
@@ -178,7 +178,7 @@ function sameValue(a, b) {
  * The changed fields between two documents, redacted.
  *
  * Returns `null` when nothing changed, so a caller can skip writing a row that
- * would say "somebody saved this and altered nothing" — a log full of those is
+ * would say "somebody saved this and altered nothing" - a log full of those is
  * a log nobody reads.
  */
 function diff(before = {}, after = {}, { fields } = {}) {

@@ -7,7 +7,7 @@ import auditService from '../services/auditService.js';
  *
  * Thin, like every controller here. The two rules worth not routing around live
  * in the service: a status move always lands on the ticket timeline, and the
- * estimate is an estimate — nothing in this path bills anyone.
+ * estimate is an estimate - nothing in this path bills anyone.
  */
 
 const listTickets = asyncHandler(async (req, res) => {
@@ -32,7 +32,7 @@ const setTicketStatus = asyncHandler(async (req, res) => {
 
 /**
  * Deleting a ticket destroys the repair history for a device, so it is audited
- * with actor and IP — the ticket number is recorded because after this call it
+ * with actor and IP - the ticket number is recorded because after this call it
  * is the only trace left of what was removed.
  */
 const deleteTicket = asyncHandler(async (req, res) => {

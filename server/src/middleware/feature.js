@@ -11,7 +11,7 @@ import Business from '../models/Business.js';
  * who cannot edit invoices gets a 403; a business that does not have invoicing
  * should not learn the route exists.
  *
- * **404, never 403** — that is the whole rule, and it is why this cannot reuse
+ * **404, never 403** - that is the whole rule, and it is why this cannot reuse
  * the permission guard. A 403 says "this exists and you may not have it", which
  * tells a tenant what the product could do if they paid more. A 404 says
  * nothing, which is what a switched-off feature should say.
@@ -22,7 +22,7 @@ import Business from '../models/Business.js';
  *
  * ## Where the answer comes from
  *
- * The **business the request is scoped to** — `req.businessScope`, set by
+ * The **business the request is scoped to** - `req.businessScope`, set by
  * `businessScope.js` from a staff account's own business or an admin's
  * switcher. Its `businessType` picks the defaults and its `featureOverrides`
  * beat them, so switching business in the header genuinely changes which
@@ -43,12 +43,12 @@ import Business from '../models/Business.js';
  *
  * **No scope means every feature is on.** `req.businessScope` is null when an
  * admin has "All businesses" selected, and the honest answer there is the union
- * of what any business could do — narrowing to one type's defaults would hide
+ * of what any business could do - narrowing to one type's defaults would hide
  * sections from an admin who has deliberately asked to see everything. Nothing
  * is exposed by that: every record query is still scoped, and every write still
  * names its business.
  *
- * Falls back to Cellvix's set when the business cannot be read — a database
+ * Falls back to Cellvix's set when the business cannot be read - a database
  * blip should degrade to the running product's own configuration, not to an
  * empty panel that looks like a permissions failure.
  */
@@ -65,11 +65,11 @@ async function resolveFeaturesFor(req) {
     return resolveFeatures({
       businessType: business.businessType ?? 'product',
       // `.lean()` gives a plain object for a Map field, which is what
-      // `resolveFeatures` wants — but an older document may carry nothing.
+      // `resolveFeatures` wants - but an older document may carry nothing.
       overrides: business.featureOverrides ?? null,
     });
   } catch (error) {
-    console.error(`  Features: could not resolve for ${scope} — ${error.message}`);
+    console.error(`  Features: could not resolve for ${scope} - ${error.message}`);
     return cellvixFeatures();
   }
 }
@@ -78,7 +78,7 @@ async function resolveFeaturesFor(req) {
  * Attach the resolved feature set to the request.
  *
  * Mounted once, ahead of the routes, so `req.features` is present whether or
- * not a given route gates on anything — a screen that wants to *read* the set
+ * not a given route gates on anything - a screen that wants to *read* the set
  * (the read-only list in Settings, §3.3) needs it without being gated by it.
  *
  * Resolved **once per request** and cached on `req` (§3.2 rule 5), so two
@@ -101,7 +101,7 @@ async function attachFeatures(req, _res, next) {
  * router.get('/admin/tickets', ...admin, requireFeature('sales.tickets'), …)
  * ```
  *
- * Applied as routes are touched rather than in one sweep (§5.3) — a gate on a
+ * Applied as routes are touched rather than in one sweep (§5.3) - a gate on a
  * feature that is on changes nothing, so there is no value in racing to add
  * them all and some risk in doing it blind.
  */
@@ -112,7 +112,7 @@ function requireFeature(key) {
      *
      * The fallback is **awaited**, not assigned: `resolveFeaturesFor` reads a
      * document and therefore returns a promise, and a promise handed to
-     * `featureEnabled` is a truthy object whose `[key]` is `undefined` — which
+     * `featureEnabled` is a truthy object whose `[key]` is `undefined` - which
      * reads as "not disabled" and opens every gate it guards. Awaiting is the
      * difference between a fallback and a hole.
      */
@@ -126,7 +126,7 @@ function requireFeature(key) {
     }
 
     if (!featureEnabled(features, key)) {
-      // Deliberately the same shape as any other 404 — no `FEATURE_DISABLED`
+      // Deliberately the same shape as any other 404 - no `FEATURE_DISABLED`
       // code, no mention of the key. A body that named the feature would give
       // back exactly what the status code is withholding.
       return next(ApiError.notFound('Not found.', 'NOT_FOUND'));

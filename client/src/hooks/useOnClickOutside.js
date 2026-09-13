@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 
 /**
  * Calls `handler` when a pointer press lands outside every supplied ref.
- * Uses `pointerdown` so a dropdown closes on press, not on release — that is
+ * Uses `pointerdown` so a dropdown closes on press, not on release - that is
  * what makes the header widgets feel immediate.
  */
 export function useOnClickOutside(refs, handler, active = true) {

@@ -18,7 +18,7 @@ import Business from '../models/Business.js';
 
 const TERMS_DAYS = { prepaid: 0, net15: 15, net30: 30, net60: 60 };
 
-/** CVX-2026-00043 — sequential per year, readable on a packing slip. */
+/** CVX-2026-00043 - sequential per year, readable on a packing slip. */
 async function nextOrderNumber() {
   const year = new Date().getFullYear();
   const prefix = `CVX-${year}-`;
@@ -31,7 +31,7 @@ async function nextOrderNumber() {
   return `${prefix}${String(sequence).padStart(5, '0')}`;
 }
 
-// The invoice numbering lives in `orderBuilder` — it was written three times
+// The invoice numbering lives in `orderBuilder` - it was written three times
 // before that file existed, and a series that two files can advance
 // independently is a series that collides.
 import { nextInvoiceNumber } from './orderBuilder.js';
@@ -41,7 +41,7 @@ import { displayNameOf } from '../utils/displayName.js';
  * Prices the cart.
  *
  * Delegates to `pricingService.priceCart`, which is also what the cart endpoint
- * and the placed order use — so the mini-cart subtotal, the checkout total and
+ * and the placed order use - so the mini-cart subtotal, the checkout total and
  * the amount charged are one implementation, not three that agree until one of
  * them does not.
  *
@@ -68,7 +68,7 @@ async function quote(userId, deliveryCode = 'ground') {
   return {
     ...priced,
     // `unitCost` rides along on a priced line so a placed order can snapshot it
-    // (§9.4), but this response is the BUYER's checkout preview — stripping it
+    // (§9.4), but this response is the BUYER's checkout preview - stripping it
     // here keeps our margin off the customer's screen. `cartService` builds its
     // payload from an explicit allowlist and never had the problem.
     items: priced.items.map(({ unitCost, ...line }) => line),
@@ -89,7 +89,7 @@ async function quote(userId, deliveryCode = 'ground') {
 /**
  * Flattens bundles into order lines.
  *
- * An order and its invoice list SKUs, not abstractions — a warehouse picks
+ * An order and its invoice list SKUs, not abstractions - a warehouse picks
  * parts. Each line keeps its LIST price and carries a `bundle` marker; the
  * difference between list and bundle price is reported once, as
  * `bundleDiscount`, rather than being smeared across lines as fractional cents.
@@ -142,7 +142,7 @@ async function createOrder(user, input) {
   const stockById = new Map(products.map((product) => [product._id.toString(), product.stock]));
 
   // Two bundle lines can reference the same SKU, so demand is summed before it
-  // is compared — checking line by line would let a shortfall through.
+  // is compared - checking line by line would let a shortfall through.
   const demand = new Map();
   for (const line of lines) {
     const key = line.product.toString();
@@ -162,12 +162,12 @@ async function createOrder(user, input) {
   const orderNumber = await nextOrderNumber();
 
   // Store credit is spent before the gateway is asked for anything, and how
-  // much of it applies is decided here from the live balance — the client sends
+  // much of it applies is decided here from the live balance - the client sends
   // a flag, never a number (PROJECT_INSTRUCTIONS.md §5.3).
   //
   // Held credit outranks the line of credit: money the business already has with
   // us settles the order before Cellvix lends it any. So on a terms order the
-  // flag cannot decline it — the two instruments stay apart, but the order in
+  // flag cannot decline it - the two instruments stay apart, but the order in
   // which they are drawn on is ours, not the buyer's. A card is different: it is
   // the buyer's own money either way, so declining credit against a card is a
   // real choice and the flag is honoured.
@@ -211,7 +211,7 @@ async function createOrder(user, input) {
    * Which business the sale belongs to.
    *
    * **A storefront order carried no business at all**, which made it invisible
-   * to an admin panel scoped to one — the order existed, the customer was
+   * to an admin panel scoped to one - the order existed, the customer was
    * charged, and the operator's list was empty. Every seeded order had one and
    * only checkout did not, so nothing surfaced it until the panel stopped
    * running in "all businesses" mode.
@@ -219,7 +219,7 @@ async function createOrder(user, input) {
    * The default business is the right answer *today*: the storefront serves one
    * business, and `Business.isDefault` is defined as where an unattributed
    * record lands. When a subdomain or custom domain names the business before
-   * the request reaches here (SAAS_PLATFORM §4.2), this reads that instead —
+   * the request reaches here (SAAS_PLATFORM §4.2), this reads that instead
    * which is why it resolves through a variable rather than being hard-coded.
    */
   const storefrontBusiness = await Business.findOne({ isDefault: true, deletedAt: null })
@@ -288,7 +288,7 @@ async function createOrder(user, input) {
   const termsDays = TERMS_DAYS[user.terms] ?? 0;
 
   // A tax invoice is raised only against money that actually arrived. An order
-  // paid at checkout — by card, by store credit, or by both — is invoiced
+  // paid at checkout - by card, by store credit, or by both - is invoiced
   // immediately; one placed on terms is an **amount due** in the `CVX-` series
   // until it is settled, and `invoicePaymentService` renumbers it into `INV-`
   // at that point. Partly settled counts as due: the rest is still owed.
@@ -308,7 +308,7 @@ async function createOrder(user, input) {
     dueDate: new Date(Date.now() + termsDays * 86_400_000),
     terms: user.terms,
     // Credit can settle part of a terms order, which is exactly what 'partial'
-    // is for — the rest still ages towards its due date.
+    // is for - the rest still ages towards its due date.
     status: fullySettled ? 'paid' : settled > 0 ? 'partial' : 'unpaid',
     payments: [
       ...(creditApplied > 0
@@ -335,18 +335,18 @@ async function createOrder(user, input) {
   });
 
   // Redemption is counted here and only here. The single-use gate reads order
-  // history rather than this counter — the counter exists for `usageLimit`,
+  // history rather than this counter - the counter exists for `usageLimit`,
   // which is a cap on how many times an offer may be given away in total.
   if (priced.promo) {
     await db().Offer.updateOne({ _id: priced.promo.offerId }, { $inc: { usageCount: 1 } });
   }
 
-  // Buying on terms draws against the LINE OF CREDIT — and only for the part
+  // Buying on terms draws against the LINE OF CREDIT - and only for the part
   // store credit did not already settle.
   //
   // Re-derived from the account's invoices rather than incremented here: the
   // invoice this order just raised *is* what the customer owes, so the sum is
-  // the draw. See `creditService` for why the stored counter was abandoned —
+  // the draw. See `creditService` for why the stored counter was abandoned
   // six independent `$inc` sites had already drifted one account to $2,950.96
   // against $2.26 of real debt.
   if (result.status !== 'paid' && dueNow > 0) {
@@ -367,7 +367,7 @@ async function createOrder(user, input) {
 
   // The invoice goes out by email the moment the order is placed. Deliberately
   // not awaited: the order is already written, paid and stock-adjusted, so a
-  // slow or dead mail host must not hold the checkout response open — and
+  // slow or dead mail host must not hold the checkout response open - and
   // `sendInvoiceEmail` never rejects, it logs the failure and returns.
   //
   // Gated by Settings since phase 11e, so the Email Settings toggle governs a
@@ -408,7 +408,7 @@ function serializeOrder(order) {
     id: doc._id.toString(),
     orderNumber: doc.orderNumber,
     // `unitCost` is stripped here, deliberately. It is what Cellvix pays the
-    // supplier, and this serializer feeds the BUYER's order page — spreading
+    // supplier, and this serializer feeds the BUYER's order page - spreading
     // the line wholesale would put our margin on the customer's screen. The
     // reports read it from the documents directly, admin-side.
     items: doc.items.map(({ unitCost, ...item }) => ({

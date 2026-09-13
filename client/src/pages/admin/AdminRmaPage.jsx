@@ -35,7 +35,7 @@ import { pressable } from '@/lib/motion';
  * RMA / returns (ERP rework §6.3).
  *
  * **The Age column drives the day.** It carries the warning treatment past the
- * SLA, and it stops counting once an RMA closes — a return resolved in two days
+ * SLA, and it stops counting once an RMA closes - a return resolved in two days
  * should not still be shouting six months later, because a row that always
  * shouts is a row an operator learns to ignore.
  */
@@ -73,7 +73,7 @@ function statusLabel(status) {
  *
  * The SKUs are typed rather than picked from a list because the operator has a
  * packing slip in front of them, not a catalogue. The server matches each line
- * against the order's own lines and refuses anything that was not sold — or
+ * against the order's own lines and refuses anything that was not sold - or
  * more units than were.
  */
 function RmaForm({ onSubmit, onCancel, isPending, error }) {
@@ -155,7 +155,7 @@ function RmaForm({ onSubmit, onCancel, isPending, error }) {
       <Textarea label="Why is this coming back?" rows={3} {...register('reason')} />
 
       <p className="rounded-md bg-surface-2 px-3 py-2.5 text-xs leading-relaxed text-ink-500">
-        Each line is checked against the order it came from — a part that was not sold on it, or more
+        Each line is checked against the order it came from - a part that was not sold on it, or more
         units than were, is refused. Nothing is refunded or restocked until the return has been
         inspected.
       </p>
@@ -216,10 +216,10 @@ export function AdminRmaPage() {
       header: 'Customer',
       priority: 1,
       className: 'max-w-[160px] truncate',
-      // The person, not the company (§0) — a sole trader has no business name
+      // The person, not the company (§0) - a sole trader has no business name
       // and rendered as a dash.
       sortValue: (rma) => rma.user.displayName ?? '',
-      render: (rma) => rma.user.displayName ?? '—',
+      render: (rma) => rma.user.displayName ?? '-',
     },
     {
       key: 'orderNumber',
@@ -227,7 +227,7 @@ export function AdminRmaPage() {
       priority: 3,
       render: (rma) => (
         <span className="whitespace-nowrap font-mono text-xs text-ink-500">
-          {rma.orderNumber ?? '—'}
+          {rma.orderNumber ?? '-'}
         </span>
       ),
     },
@@ -262,7 +262,7 @@ export function AdminRmaPage() {
       priority: 3,
       className: 'max-w-[200px] truncate',
       render: (rma) => (
-        <span className="text-sm text-ink-500">{rma.reason ?? '—'}</span>
+        <span className="text-sm text-ink-500">{rma.reason ?? '-'}</span>
       ),
     },
     {
@@ -288,7 +288,7 @@ export function AdminRmaPage() {
       priority: 1,
       align: 'right',
       className: 'tnum',
-      // CellShoppe's hourglass treatment, kept — this is the column that drives
+      // CellShoppe's hourglass treatment, kept - this is the column that drives
       // the day. Closed rows stop ageing, so only live work carries the warning.
       render: (rma) => (
         <span

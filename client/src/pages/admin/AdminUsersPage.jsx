@@ -24,7 +24,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { date as formatDate } from '@/lib/format';
 
 /**
- * Staff accounts — who can sign in to the panel, and as what (§6.15/3, §7.6).
+ * Staff accounts - who can sign in to the panel, and as what (§6.15/3, §7.6).
  *
  * **Cellvix people only.** Customers have their own screen under Clients, and
  * mixing the two populations in one table is how an operator ends up handing a
@@ -198,7 +198,7 @@ export function AdminUsersPage() {
         <div className="flex items-center gap-2">
           <span className="font-medium text-ink-900">{row.name}</span>
           {/* The operator needs to know which row is theirs before they act on
-              it — the self-lock and self-delete rules refuse anyway, but a chip
+              it - the self-lock and self-delete rules refuse anyway, but a chip
               explains it before the error does. */}
           {String(row.id) === String(me?.id) && (
             <Badge tone="brand" size="sm">
@@ -221,7 +221,7 @@ export function AdminUsersPage() {
           <span>{row.role?.name ?? <span className="text-danger">No role</span>}</span>
         ),
     },
-    { key: 'business', header: 'Business', render: (row) => row.business?.name ?? '—' },
+    { key: 'business', header: 'Business', render: (row) => row.business?.name ?? '-' },
     {
       key: 'status',
       header: 'Status',

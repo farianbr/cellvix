@@ -1,8 +1,10 @@
 import { Suspense, useState } from 'react';
+import useDocumentTitle from '@/hooks/useDocumentTitle';
 import { Outlet, useNavigate } from 'react-router';
 import { Menu } from 'lucide-react';
 import cn from '@/lib/cn';
 import Skeleton from '@/components/ui/Skeleton';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { pressable } from '@/lib/motion';
 import {
   useSupplierSession,
@@ -18,7 +20,7 @@ import SupplierSidebar from './SupplierSidebar';
  * **The admin panel's shape.** This was ninety lines and one nav item, on the
  * reasoning that a supplier opens the portal to answer one question and leave.
  * That held while there was one screen; it stopped holding once a supplier had
- * orders to price, proformas to issue and deliveries to report — five screens
+ * orders to price, proformas to issue and deliveries to report - five screens
  * with no way to move between them is a worse answer than chrome.
  *
  * **Still outside `RootLayout`, like the admin panel.** A supplier is not a
@@ -33,10 +35,14 @@ import SupplierSidebar from './SupplierSidebar';
  * where they were headed.
  */
 export function SupplierPortalLayout() {
+  // The browser tab, per route. One call per surface rather than one per
+  // page: the titles live in the route table beside the breadcrumbs.
+  useDocumentTitle();
   const navigate = useNavigate();
   const { supplier, isLoading } = useSupplierSession();
   const { signOut } = useSupplierPortalMutations();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [confirmingSignOut, setConfirmingSignOut] = useState(false);
 
   // Drives the sidebar's counts. Loaded here rather than in each screen so the
   // badge is right on arrival, whichever screen that is.
@@ -67,8 +73,20 @@ export function SupplierPortalLayout() {
     ).length,
   };
 
+  // Ordinary rather than critical: signing out is undone by signing back in.
+  // It still asks, because losing a half-typed price to a misplaced click is a
+  // real cost (Instructions §3.0.1).
   function handleSignOut() {
-    signOut.mutate(undefined, { onSuccess: () => navigate('/supplier') });
+    setConfirmingSignOut(true);
+  }
+
+  function signOutNow() {
+    signOut.mutate(undefined, {
+      onSuccess: () => {
+        setConfirmingSignOut(false);
+        navigate('/supplier');
+      },
+    });
   }
 
   return (
@@ -115,6 +133,17 @@ export function SupplierPortalLayout() {
           team.
         </footer>
       </div>
+
+      <ConfirmDialog
+        open={confirmingSignOut}
+        onClose={() => setConfirmingSignOut(false)}
+        onConfirm={signOutNow}
+        tone="warn"
+        title="Sign out of the supplier portal?"
+        consequence="Anything you have typed and not sent will be lost."
+        confirmLabel="Sign out"
+        loading={signOut.isPending}
+      />
     </div>
   );
 }

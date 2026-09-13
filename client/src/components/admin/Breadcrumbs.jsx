@@ -7,7 +7,7 @@ import { pressable } from '@/lib/motion';
 
 /**
  * The admin breadcrumb (§4b). Built from route metadata, never parsed from the
- * URL — parsing is how `purchase-orders` reaches the screen as
+ * URL - parsing is how `purchase-orders` reaches the screen as
  * "Purchase-orders".
  *
  * `recordLabel` renames the last crumb on a detail page, so three open tabs are
@@ -22,7 +22,7 @@ export function Breadcrumbs({ recordLabel, className }) {
   const isHome = location.pathname === '/admin';
 
   // Mobile shows the last two crumbs only, prefixed with a back chevron to the
-  // parent (§4b.9) — the full trail must never wrap to a second line.
+  // parent (§4b.9) - the full trail must never wrap to a second line.
   const parent = [...trail].reverse().find((crumb) => crumb.to);
 
   return (

@@ -9,13 +9,13 @@ import Business from '../models/Business.js';
 /**
  * The control plane's starting state (SAAS_PLATFORM §6).
  *
- * **Additive — it never wipes.** `npm run seed` rebuilds the businesses, and
+ * **Additive - it never wipes.** `npm run seed` rebuilds the businesses, and
  * running this after it assigns them to tenant #1 rather than replacing
  * anything. Re-running is a no-op: every step below either finds what it needs
  * or creates it.
  *
  * Three plans, one tenant, one super admin, and the two existing businesses
- * assigned — enough for the console to demonstrate slots, plans and the feature
+ * assigned - enough for the console to demonstrate slots, plans and the feature
  * grid rather than render four empty states.
  */
 
@@ -65,7 +65,7 @@ async function seedSuperAdmin({ quiet = false } = {}) {
   /**
    * The password is public in this repo, exactly as the demo buyer's is, and
    * for the same reason: this is dummy data on a development database. It must
-   * never become how a real operator is onboarded — that path is a super admin
+   * never become how a real operator is onboarded - that path is a super admin
    * creating another from the console.
    */
   let admin = await SuperAdmin.findOne({ email: 'super@cellvix.ca' });
@@ -128,13 +128,13 @@ async function run() {
 
   console.log('');
   console.log('  Console at http://localhost:5173/superadmin');
-  console.log(`    ${result.email}  —  ${DEMO_PASSWORD}`);
+  console.log(`    ${result.email} - ${DEMO_PASSWORD}`);
 
   await disconnectDb();
 }
 
 // Only when invoked directly, so `run.js` can import the function without the
-// CLI wrapper firing — the pattern `purchase-bids.js` uses.
+// CLI wrapper firing - the pattern `purchase-bids.js` uses.
 if (process.argv[1] && process.argv[1].endsWith('superadmin.js')) {
   run().catch(async (error) => {
     console.error(`Seeding the control plane failed: ${error.message}`);

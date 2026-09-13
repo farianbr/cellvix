@@ -12,7 +12,7 @@ import Button from '@/components/ui/Button';
  * whether to approve a business and deciding what credit to extend it are the
  * same decision, made from the same information.
  *
- * **This lives in `components/` because two screens open it** — the approvals
+ * **This lives in `components/` because two screens open it** - the approvals
  * queue and the notification bell's inline `Approve` (§7.3). Forking it would
  * mean one of them eventually approves an account without setting terms, which
  * is exactly the mistake the single form exists to prevent.
@@ -20,7 +20,7 @@ import Button from '@/components/ui/Button';
 
 /** Payment terms, in the order an operator reads them. */
 export const TERMS = [
-  { value: 'prepaid', label: 'Prepaid — pay at checkout' },
+  { value: 'prepaid', label: 'Prepaid - pay at checkout' },
   { value: 'net15', label: 'Net 15' },
   { value: 'net30', label: 'Net 30' },
   { value: 'net60', label: 'Net 60' },
@@ -72,7 +72,7 @@ export function ApproveClientForm({ user, onSubmit, onCancel, isPending, error }
       {/* Who is being approved, stated before the terms are set.
 
           The operator arrives here from a card or a bell and is about to extend
-          credit to a business — the summary has to carry enough that they are
+          credit to a business - the summary has to carry enough that they are
           not approving a name they cannot place. `displayName` labels the
           account, never `businessName` directly: an account is identified by
           the person, and a sole trader has no business name to print. */}
@@ -94,7 +94,7 @@ export function ApproveClientForm({ user, onSubmit, onCancel, isPending, error }
               business name earns its place (it is the other half of who this
               is); the contact name only appears when the title is something
               else. The bell opens this knowing only the account's name, so the
-              line is joined from what is actually there — a bare "·" between
+              line is joined from what is actually there - a bare "·" between
               two blanks reads as data that failed to load. */}
           {(() => {
             const title = user.displayName ?? user.contactName ?? user.email;

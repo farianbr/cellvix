@@ -17,7 +17,7 @@ export function useSuperAdminSession() {
   const { data, isLoading } = useQuery({
     queryKey: ME,
     // Answers 200 with `admin: null` when signed out, so there is no 401 to
-    // catch — an error here is a real one and should surface.
+    // catch - an error here is a real one and should surface.
     queryFn: () => api.get('/superadmin/me'),
     staleTime: 5 * 60 * 1000,
     retry: false,
@@ -51,7 +51,7 @@ export function usePlans() {
 }
 
 /**
- * Support sessions — the history, and who is inside a business right now.
+ * Support sessions - the history, and who is inside a business right now.
  *
  * `live` narrows it to open grants. Polled rather than left stale: an operator
  * elsewhere entering or leaving a business is exactly the kind of change this
@@ -93,7 +93,7 @@ export function useSupportThread(tenantId) {
   });
 }
 
-/** One business's feature grid — every key, its answer, and where it came from. */
+/** One business's feature grid - every key, its answer, and where it came from. */
 export function useBusinessFeatures(businessId) {
   return useQuery({
     queryKey: ['superadmin', 'businesses', businessId, 'features'],
@@ -149,7 +149,7 @@ export function useSuperAdminMutations() {
 
     /**
      * `enabled: null` clears the override rather than switching the feature
-     * off — a different act, and the only way back to a plan or type default.
+     * off - a different act, and the only way back to a plan or type default.
      */
     setFeature: useMutation({
       mutationFn: ({ id, key, enabled }) =>
@@ -177,7 +177,7 @@ export function useSuperAdminMutations() {
         api.patch(`/superadmin/businesses/${id}/status`, { status }),
       onSuccess: invalidate,
     }),
-    /** Soft — the slot stays spent through the retention window. */
+    /** Soft - the slot stays spent through the retention window. */
     deleteBusiness: useMutation({
       mutationFn: ({ id }) => api.delete(`/superadmin/businesses/${id}`),
       onSuccess: invalidate,
@@ -193,7 +193,7 @@ export function useSuperAdminMutations() {
      * **The whole React Query cache is cleared on success**, not merely the
      * console's namespace. The next screen is the tenant's admin panel reading
      * through `['admin']` keys, and anything already cached there was fetched
-     * as somebody else — a stale list rendered for one frame under a support
+     * as somebody else - a stale list rendered for one frame under a support
      * session is exactly the confusion the banner exists to prevent.
      */
     enterBusiness: useMutation({
@@ -222,7 +222,7 @@ export function useSuperAdminMutations() {
       onSuccess: invalidate,
     }),
 
-    /** The tenant's own administrator. Sets no password — they are invited. */
+    /** The tenant's own administrator. Sets no password - they are invited. */
     createOwner: useMutation({
       mutationFn: ({ id, ...body }) => api.post(`/superadmin/tenants/${id}/owner`, body),
       onSuccess: invalidate,

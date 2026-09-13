@@ -67,7 +67,7 @@ function buildDefaults(user) {
     // dark pattern with a friendly face.
     useStoreCredit: true,
     // Smart field memory: last order's free-text values, offered back (brief §7).
-    // `poNumber` is not among them any more — a PO is supplier paperwork, and
+    // `poNumber` is not among them any more - a PO is supplier paperwork, and
     // the customer checkout no longer collects one.
     deliveryNotes: user?.fieldMemory?.deliveryNotes ?? '',
   };
@@ -77,7 +77,7 @@ function buildDefaults(user) {
  * Failures that end the checkout rather than being correctable in it.
  *
  * Every one of these happens after the form validated and before anything was
- * written — the charge runs first in `orderService.createOrder`, so the buyer's
+ * written - the charge runs first in `orderService.createOrder`, so the buyer's
  * cart is always intact when one of these lands.
  */
 const ORDER_FAILURE_ROUTES = new Set([
@@ -90,7 +90,7 @@ const ORDER_FAILURE_ROUTES = new Set([
  * Conversational single-page checkout (brief §7).
  *
  * One section expanded at a time; completed sections collapse to an editable
- * summary bar and NEVER lock — a buyer on Payment can reopen Contact, change it,
+ * summary bar and NEVER lock - a buyer on Payment can reopen Contact, change it,
  * and land back on Payment. The whole thing is one form, so reopening a section
  * never discards what was typed further down.
  */
@@ -107,7 +107,7 @@ export function CheckoutPage() {
   // Card fields. Deliberately NOT part of the react-hook-form values and never
   // put in the order payload: the gateway is a mock, the server takes no card
   // details, and the repo stores no PAN anywhere. They exist so the payment
-  // step looks like a payment step — the notice at the foot of it says exactly
+  // step looks like a payment step - the notice at the foot of it says exactly
   // that, because a convincing form that is not real is only honest if it
   // admits it.
   const [cardNumber, setCardNumber] = useState('');
@@ -142,7 +142,7 @@ export function CheckoutPage() {
   }, [user, reset, formState.isDirty]);
 
   // An approved buyer who lands here with an empty cart has nothing to do.
-  // Wait for `isReady` — before the cart resolves, `items` is empty for a
+  // Wait for `isReady` - before the cart resolves, `items` is empty for a
   // reason that has nothing to do with the cart actually being empty.
   useEffect(() => {
     if (isReady && items.length === 0 && bundles.length === 0) navigate('/cart', { replace: true });
@@ -153,7 +153,7 @@ export function CheckoutPage() {
    * changes.
    *
    * Recomputing it here would mean a second implementation of bundle pricing,
-   * offer eligibility and the no-stacking rule — three things that must not be
+   * offer eligibility and the no-stacking rule - three things that must not be
    * allowed to disagree with what is actually charged. The quote is the price.
    */
   const { data: quoted } = useQuery({
@@ -168,7 +168,7 @@ export function CheckoutPage() {
    * The delivery bands, priced by the server against this cart.
    *
    * Shipping rates are editable in Settings (§6.15), so `DELIVERY_METHODS` is
-   * no longer where the money lives — it still defines which codes exist, and
+   * no longer where the money lives - it still defines which codes exist, and
    * stands in only for the first paint before the quote arrives. Rendering the
    * constant's costs after that would put a stale price beside a correct total.
    */
@@ -197,7 +197,7 @@ export function CheckoutPage() {
 
   // Held credit is drawn on before the line of credit is: on account, it always
   // applies and the checkbox says so rather than pretending to be a choice. The
-  // server enforces the same order — see orderService.createOrder.
+  // server enforces the same order - see orderService.createOrder.
   const creditLocked = values.paymentMethod === 'terms' && storeCreditBalance > 0;
   const storeCreditApplied =
     creditLocked || values.useStoreCredit ? (quoted?.storeCredit?.applicable ?? 0) : 0;
@@ -217,7 +217,7 @@ export function CheckoutPage() {
 
     const index = CHECKOUT_STEPS.findIndex((step) => step.key === stepKey);
     const next = CHECKOUT_STEPS.slice(index + 1).find((step) => !completed.has(step.key));
-    // If everything below is already done, drop straight back to Review — that
+    // If everything below is already done, drop straight back to Review - that
     // is what makes an out-of-order edit feel like a detour, not a restart.
     setActiveStep(next?.key ?? 'review');
   }
@@ -266,15 +266,15 @@ export function CheckoutPage() {
     ]
       .filter(Boolean)
       .join(', '),
-    delivery: `${method.label} — ${method.detail}${shipping === 0 ? ' · Free' : ` · ${money(shipping)}`}`,
+    delivery: `${method.label} - ${method.detail}${shipping === 0 ? ' · Free' : ` · ${money(shipping)}`}`,
     payment: (() => {
       const base =
         values.paymentMethod === 'terms'
-          ? `On account — ${(user?.terms ?? 'net30').replace('net', 'Net ')}`
+          ? `On account - ${(user?.terms ?? 'net30').replace('net', 'Net ')}`
           : 'Card ending 4242';
       if (storeCreditApplied <= 0) return base;
       return dueNow === 0
-        ? `Store credit — ${money(storeCreditApplied)}`
+        ? `Store credit - ${money(storeCreditApplied)}`
         : `${base} · ${money(storeCreditApplied)} store credit`;
     })(),
     review: null,
@@ -475,7 +475,7 @@ export function CheckoutPage() {
                 containerClassName="mt-4"
                 hint={
                   user?.fieldMemory?.deliveryNotes
-                    ? 'Pre-filled from your last order — edit or clear it.'
+                    ? 'Pre-filled from your last order - edit or clear it.'
                     : 'Loading dock, buzzer code, receiving hours…'
                 }
                 {...register('deliveryNotes')}
@@ -516,7 +516,7 @@ export function CheckoutPage() {
                   <WalletCards className="mt-0.5 size-5 shrink-0 text-ink-400" strokeWidth={1.5} aria-hidden="true" />
                   <span className="min-w-0 flex-1">
                     <span className="block font-display text-md font-semibold text-ink-900">
-                      Store credit{creditLocked ? ' — applied first' : ''}
+                      Store credit{creditLocked ? ' - applied first' : ''}
                     </span>
                     <span className="tnum block text-sm text-ink-500">
                       {money(storeCreditBalance)} available
@@ -556,7 +556,7 @@ export function CheckoutPage() {
                     <span className="block font-display text-md font-semibold text-ink-900">
                       Pay by card
                     </span>
-                    {/* Was "Visa ending 4242" — a specific card this account
+                    {/* Was "Visa ending 4242" - a specific card this account
                         does not have. The test card belongs in the notice at
                         the foot of the step, not on a row claiming to describe
                         the buyer's own saved payment method. */}
@@ -570,7 +570,7 @@ export function CheckoutPage() {
                     rather than in a dialog: checkout is already a stepped form
                     and a modal on top of step four is a second layer over a
                     flow that does not need one. Same facade as the payment
-                    sheet everywhere else — nothing typed here is sent, and the
+                    sheet everywhere else - nothing typed here is sent, and the
                     notice below says so. */}
                 {values.paymentMethod === 'card' && dueNow > 0 && (
                   <div className="overflow-hidden rounded-md border border-line-strong bg-surface focus-within:border-brand">
@@ -649,7 +649,7 @@ export function CheckoutPage() {
                     <Banknote className="size-5 shrink-0 text-ink-400" strokeWidth={1.5} aria-hidden="true" />
                     <span className="min-w-0 flex-1">
                       <span className="block font-display text-md font-semibold text-ink-900">
-                        On account — {user.terms.replace('net', 'Net ')}
+                        On account - {user.terms.replace('net', 'Net ')}
                       </span>
                       <span className="tnum block text-sm text-ink-500">
                         {money(Math.max(0, (user.creditLimit ?? 0) - (user.balance ?? 0)))} credit
@@ -661,12 +661,12 @@ export function CheckoutPage() {
               </fieldset>
 
               {/* The PO number field is gone. A purchase order is a document a
-                  BUYER raises against a SUPPLIER — it belongs to Cellvix's own
+                  BUYER raises against a SUPPLIER - it belongs to Cellvix's own
                   purchasing side, where AdminPurchaseOrders already owns it, and
                   asking a customer for one put a supplier's paperwork on a
                   retail checkout. */}
               <p className="mt-4 rounded-md bg-surface-2 px-3 py-2.5 text-sm leading-relaxed text-ink-500">
-                Payments run against a test gateway in this build — no card details are sent or
+                Payments run against a test gateway in this build - no card details are sent or
                 stored, and no card is charged. Delivery notes starting{' '}
                 <span className="font-semibold text-ink-700">DECLINE</span> show the failed-payment
                 path.
@@ -686,7 +686,7 @@ export function CheckoutPage() {
               isLast
             >
               <ul className="divide-y divide-line rounded-md border border-line">
-                {/* Bundles are one line here too — reviewing an order should show
+                {/* Bundles are one line here too - reviewing an order should show
                     the same shape as the cart it came from. */}
                 {bundles.map((bundle) => (
                   <li key={bundle.offerId} className="flex items-center gap-3 p-3">

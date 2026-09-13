@@ -7,7 +7,7 @@
    Tailwind v4 finds utilities by scanning source files for literal class
    names. `lib/motion.js` composes the press-feedback classes into a string at
    runtime, so no file contains the literal `active:scale-[0.97]` and Tailwind
-   emitted no rule for it — the class reached the DOM and did nothing.
+   emitted no rule for it - the class reached the DOM and did nothing.
 
    That is the whole failure mode of a shared class-string helper: it is exactly
    the abstraction Tailwind's scanner cannot follow. Declaring the utilities
@@ -25,7 +25,7 @@
 @source inline("motion-reduce:active:scale-100");
 @source inline("motion-reduce:transition-none");
 
-/* Gagalin — the product-card watermark face.
+/* Gagalin - the product-card watermark face.
    Not a Google Font, so it cannot be added to the <link> in index.html; it has
    to be self-hosted. Drop the licensed file at client/public/fonts/Gagalin.woff2
    and uncomment this block. `--font-watermark` already lists it first, so every
@@ -44,7 +44,7 @@
 /* ==========================================================================
    Cellvix design tokens
    The single place any brand value is defined. See PROJECT_INSTRUCTIONS.md §2.
-   Never hardcode a hex in a component — use the generated utility classes.
+   Never hardcode a hex in a component - use the generated utility classes.
    ========================================================================== */
 
 @theme {
@@ -64,7 +64,7 @@
        ink-400  #5C5C66  6.6:1 · 6.3:1
        ink-500  #45454F  9.0:1 · 8.6:1
 
-     ink-200 is DECORATIVE ONLY — icon strokes, hairlines, disabled glyphs.
+     ink-200 is DECORATIVE ONLY - icon strokes, hairlines, disabled glyphs.
      Never put text in it; it is 2.6:1 and will fail the audit. */
   --color-ink-900: #0a0a0b;
   --color-ink-700: #1f1f23;
@@ -78,7 +78,7 @@
      dark section next to a warm red mark, so this is that same black mixed
      pulled toward --color-brand: still unmistakably near-black, but warm enough
      that the inverted band belongs to the palette. A SOLID fill, not a second
-     gradient block — §2.2 keeps the gradient for the CTA. White sits at ~18:1
+     gradient block - §2.2 keeps the gradient for the CTA. White sits at ~18:1
      on it, white/60 at ~6.6:1, so both clear AA comfortably. */
   --color-ink-deep: #1b0101;
 
@@ -112,7 +112,7 @@
      existed for that one element is gone from here and from index.html. */
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
-  /* The product-card watermark — the model name set large behind the part.
+  /* The product-card watermark - the model name set large behind the part.
      Gagalin is the intended face; it is not a Google Font and no licensed file
      is in the repo yet, so this falls through to Archivo's heaviest weight,
      which is the closest thing we ship. Drop `Gagalin.woff2` into
@@ -122,7 +122,7 @@
 
   /* --- type scale -------------------------------------------------------
      THIRTEEN steps, and nothing between them. Before this existed the app
-     carried 41 distinct sizes — 11, 11.5, 12, 12.5, 13, 13.5 — half-pixel
+     carried 41 distinct sizes - 11, 11.5, 12, 12.5, 13, 13.5 - half-pixel
      drift that no designer chooses and that reads, in aggregate, as
      machine-generated. Each size is paired with the line-height and tracking
      it wants: small text needs positive tracking to stay legible, display
@@ -154,7 +154,7 @@
   --text-3xl--line-height: 1.2;
   --text-3xl--letter-spacing: -0.02em;
 
-  /* Display sizes. Tracking tightens as size grows — the optical correction
+  /* Display sizes. Tracking tightens as size grows - the optical correction
      that separates a set headline from a scaled-up paragraph. */
   --text-d-sm: 34px;
   --text-d-sm--line-height: 1.12;
@@ -172,14 +172,14 @@
   /* --- page measures ----------------------------------------------------
      How wide an admin page's content is allowed to be.
 
-     Eleven screens used to cap themselves at five different widths — 680, 760,
-     820, 860 and 900 — with no rule behind any of them: each page picked a
+     Eleven screens used to cap themselves at five different widths - 680, 760,
+     820, 860 and 900 - with no rule behind any of them: each page picked a
      number that looked right on the screen its author had open, and the set
      never agreed. Two shapes cover every page, and the difference between them
      is real rather than aesthetic.
 
      `form` is a settings screen. A column of labelled fields has a comfortable
-     measure the same way prose does — past roughly 70 characters the eye loses
+     measure the same way prose does - past roughly 70 characters the eye loses
      the line, and a text input stretched to 1400px is a worse target than a
      short one, not a better one.
 
@@ -221,7 +221,7 @@
 
      "entrance" is for anything arriving or leaving: it starts fast, so the
      user sees movement at the exact moment they are watching most closely.
-     Never ease-in on a UI element — the delayed start reads as lag even at an
+     Never ease-in on a UI element - the delayed start reads as lag even at an
      identical duration.
 
      "standard" is for something already on screen that moves or morphs.
@@ -233,7 +233,7 @@
 
   /* Durations, named for what is moving. Nothing in the UI exceeds 300ms;
      past that the interface feels like it is thinking rather than responding.
-     Exits are faster than entrances — the system responding should always
+     Exits are faster than entrances - the system responding should always
      outpace the user deciding.
 
      Namespaced `--transition-duration-*`, not `--duration-*`. Tailwind v4
@@ -250,7 +250,7 @@
   /* --- the platform console ---------------------------------------------
      A SEPARATE identity, deliberately (SAAS_PLATFORM §0.1).
 
-     Everything above this belongs to Cellvix — tenant #1's wholesale business.
+     Everything above this belongs to Cellvix - tenant #1's wholesale business.
      The operator console sits ABOVE every tenant and must not wear any one
      tenant's colours: an operator who cannot tell at a glance whether they are
      in the platform or inside a customer's shop is one keystroke from
@@ -261,7 +261,7 @@
      Cool graphite and a single indigo accent, on the reasoning Apple applies
      to system chrome: structural surfaces stay quiet and near-neutral so the
      content carries the colour, and exactly one accent hue means a highlighted
-     row is unambiguous. Nothing here is a gradient — the brand gradient is
+     row is unambiguous. Nothing here is a gradient - the brand gradient is
      Cellvix's signature and reusing it would undo the separation. */
   --color-plat-bg: #0b0b0f;
   --color-plat-surface: #141419;
@@ -365,7 +365,7 @@
     font-weight: 700;
   }
 
-  /* Focus is never removed — only restyled. */
+  /* Focus is never removed - only restyled. */
   :focus-visible {
     outline: none;
     box-shadow:
@@ -405,7 +405,7 @@
   /* One record, at its measure, centred in the shell.
 
      `max-w-record` alone leaves the page hard against the nav, so every screen
-     that wanted the measure had to remember `mx-auto w-full` beside it — and
+     that wanted the measure had to remember `mx-auto w-full` beside it - and
      the ones that forgot were the ones that looked wrong. This is the whole
      treatment as one class, so a record screen takes a single thing and cannot
      take half of it.
@@ -419,9 +419,31 @@
     max-width: var(--container-record);
   }
 
-  /* The brand gradient. ACCENT ONLY — CTAs, active indicators, progress fills,
+  /* A pen, for the one surface somebody writes on.
+
+     The signature canvas is the only place in this app where a pointer draws
+     rather than points, and an arrow over it says "click something" when the
+     instruction is "sign here". An inline SVG rather than a file: it is 24px of
+     markup, it needs no build step and no network request, and a cursor that
+     404s falls back to the arrow silently - which is exactly the bug nobody
+     notices.
+
+     **The glyph has to be drawn around the hotspot, not just pointed at it.**
+     The first attempt used lucide's `pen-tool`, whose nib sits at the TOP-left
+     of its box, with the hotspot declared at 2,22 - the bottom-left. Those are
+     opposite corners, so every stroke began 20px away from the visible tip.
+     This pen is drawn nib-down into the bottom-left corner, which is where
+     `2 22` actually points. */
+  .cursor-pen {
+    cursor:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Cpath d='M2 22l1.6-5.2 12-12a2.1 2.1 0 0 1 3 3l-12 12L2 22z' fill='%23ffffff' stroke='%231f2430' stroke-width='1.6' stroke-linejoin='round'/%3E%3Cpath d='M3.6 16.8l3.6 3.6' stroke='%231f2430' stroke-width='1.6'/%3E%3Cpath d='M2 22l1.1-3.4 2.3 2.3L2 22z' fill='%231f2430'/%3E%3C/svg%3E")
+        2 22,
+      crosshair;
+  }
+
+  /* The brand gradient. ACCENT ONLY - CTAs, active indicators, progress fills,
      thin rules, at most one promo block per page. Never a page or card ground. */
-  /* Black on the left, brightening to red on the right — the direction the
+  /* Black on the left, brightening to red on the right - the direction the
      brand sheet shows. It used to run the other way (red at the top-left,
      falling into black), which put the darkest, heaviest end where the eye
      lands first and made every CTA read as a black button with a red edge
@@ -435,20 +457,20 @@
   /* The ramp for a LARGE surface carrying small text.
 
      White needs 4.5:1 to be readable as body copy, and the standard ramp ends
-     at #e8564a where white manages only 3.58 — fine on a button, whose label is
+     at #e8564a where white manages only 3.58 - fine on a button, whose label is
      bold and short, and not fine on a tall panel holding paragraphs. That is a
      property of the colour, not of the design: no amount of care with the text
      fixes a ground that bright behind 14px copy.
 
      So a text-bearing block uses this instead. Same identity, same direction,
-     stopping at #9d251d — where white clears 7.7:1 and even white/70 clears
+     stopping at #9d251d - where white clears 7.7:1 and even white/70 clears
      4.5, so the panel can still fade its secondary lines. Everything that is
      NOT a large text surface keeps the vivid ramp above. */
   .bg-brand-gradient-panel {
     background-image: linear-gradient(100deg, #1a0603 0%, #7d1e17 45%, #9d251d 100%);
   }
 
-  /* The same ramp for something small — a filter pill, a badge, a count chip.
+  /* The same ramp for something small - a filter pill, a badge, a count chip.
      It starts at the deep red rather than the near-black: across 80px the full
      gradient puts its darkest stop inside the chip, which reads as a stray
      black stripe down one side rather than as depth. Same identity, no stripe. */
@@ -461,7 +483,7 @@
     background-image: linear-gradient(90deg, #1a0603 0%, #cf3429 60%, #e8564a 100%);
   }
 
-  /* The ramp for a small ROUND element — a step indicator, a numbered pill.
+  /* The ramp for a small ROUND element - a step indicator, a numbered pill.
 
      A linear gradient is flat before its first stop and after its last, so on
      a circle those flat regions hug the left and right rims as visible arcs:
@@ -470,7 +492,7 @@
      of the shape and read as shading; at 32px they are a third of it.
 
      The stops here sit at -35% and 135%, outside the element, so the visible
-     0-100% is entirely mid-ramp — both rims land on a colour that is still
+     0-100% is entirely mid-ramp - both rims land on a colour that is still
      changing (#a82920 and #dd473c) instead of on a stop that has stopped.
      Same colours, same direction, no flat edge. */
   .bg-brand-gradient-orb {
@@ -479,14 +501,14 @@
 
   /* A gradient RING with the surface still showing through the middle.
 
-     `border-image` cannot do this on a rounded element — it squares the
-     corners off — so the ramp is painted as the background and a second,
+     `border-image` cannot do this on a rounded element - it squares the
+     corners off - so the ramp is painted as the background and a second,
      content-box layer of the surface colour is masked on top of it. The
      `padding` is what becomes the visible ring width.
 
      The COMPACT ramp, not the full one. A ring is only ever a couple of pixels
      wide, so the full ramp's near-black opening lands as a grey corner rather
-     than as depth — the same reason a small filled element uses the compact
+     than as depth - the same reason a small filled element uses the compact
      ramp. Starting at the deep red keeps the ring unmistakably red the whole
      way round.
 
@@ -522,8 +544,8 @@
      gives the page that many pixels of dead scroll below the fold. Charts carry
      exactly such a table.
 
-     This clips instead of hiding overflow — a zero-area clip path removes the
-     content from rendering entirely — and `contain: strict` stops its layout
+     This clips instead of hiding overflow - a zero-area clip path removes the
+     content from rendering entirely - and `contain: strict` stops its layout
      from reaching the page at all. It stays in the accessibility tree, which is
      the whole point. */
   .visually-hidden {
@@ -538,7 +560,7 @@
     contain: strict;
   }
 
-  /* Prices, stock counts and balances sit in columns — keep digits aligned. */
+  /* Prices, stock counts and balances sit in columns - keep digits aligned. */
   .tnum {
     font-variant-numeric: tabular-nums;
   }
@@ -586,7 +608,7 @@
 }
 
 /* The skeleton sweep. Replaces `animate-pulse`, which oscillates opacity in
-   place — a whole screen of those beats like a heartbeat and pulls the eye off
+   place - a whole screen of those beats like a heartbeat and pulls the eye off
    the content that has already arrived. A sweep has a direction, so it reads
    as progress, and it keeps overall brightness constant because the highlight
    only ever covers part of the element.
@@ -630,7 +652,7 @@
 }
 
 /* ==========================================================================
-   Reduced motion — opacity only, no transforms.
+   Reduced motion - opacity only, no transforms.
    ========================================================================== */
 
 @media (prefers-reduced-motion: reduce) {
@@ -640,7 +662,7 @@
 
   /* The blanket rule below clamps every animation to 0.01ms, which would
      freeze the skeleton mid-sweep with a bright band stuck across it. Drop the
-     gradient entirely and let the flat tint carry the meaning — "not here yet"
+     gradient entirely and let the flat tint carry the meaning - "not here yet"
      survives without any movement.
 
      The spinner is exempt: it is the only animation in the app that IS the

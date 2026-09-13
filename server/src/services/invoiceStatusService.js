@@ -38,13 +38,13 @@ const formatCents = (cents) =>
  * Checking a flag first and writing after would let both send.
  *
  * **2. The run is recorded before the send, not after.** If the mail call
- * throws, the row still stands and the invoice is not retried tomorrow —
+ * throws, the row still stands and the invoice is not retried tomorrow
  * because "we sent it twice" is a worse outcome for a customer than "we sent it
  * once and it failed", and the failure is visible in the run's own status.
  *
  * **3. Consent and suppression are respected.** These are transactional
  * messages about an invoice the customer already owes, not marketing, so CASL
- * consent is not required — but an account with no email is skipped with a
+ * consent is not required - but an account with no email is skipped with a
  * reason rather than silently.
  *
  * **4. Nothing reports a send that did not happen.** SMS and WhatsApp have no
@@ -117,7 +117,7 @@ async function update(id, input) {
   const rule = await InvoiceStatusRule.findById(id);
   if (!rule) throw ApiError.notFound('Rule not found.', 'RULE_NOT_FOUND');
 
-  // A built-in's text, timing, channel and active state are all editable — only
+  // A built-in's text, timing, channel and active state are all editable - only
   // its existence is protected (§6.15).
   rule.label = input.label?.trim() ?? rule.label;
   rule.trigger = input.trigger ?? rule.trigger;
@@ -175,7 +175,7 @@ async function candidatesFor(rule, now) {
 /**
  * Runs every active rule. Returns what it did, per rule.
  *
- * `dryRun` reports what *would* be sent without sending or recording anything —
+ * `dryRun` reports what *would* be sent without sending or recording anything
  * which is what makes this screen safe to try on a live database, and is the
  * first thing an operator will want before switching a rule on.
  *
@@ -186,7 +186,7 @@ async function candidatesFor(rule, now) {
  */
 async function run({ dryRun = false, now = new Date() } = {}) {
   // The master switch on Email Settings (§6.15 category 5, phase 11e). A rule
-  // being active is not enough — the business has to have automatic invoice
+  // being active is not enough - the business has to have automatic invoice
   // email switched on at all. Reported rather than silently returning nothing,
   // because "the run did nothing" and "the run is switched off" look identical
   // from the screen otherwise.
@@ -259,7 +259,7 @@ async function run({ dryRun = false, now = new Date() } = {}) {
       } else if (rule.channel === 'email' && !(await mailerConfigured())) {
         // A dry run has to predict the same outcome the real run produces.
         // Without this it reported "would send 3" against a server with no SMTP
-        // transport, where the real run then failed all three — and a preview
+        // transport, where the real run then failed all three - and a preview
         // that disagrees with the thing it is previewing is worse than no
         // preview.
         outcome = 'skipped';

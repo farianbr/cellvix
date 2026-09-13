@@ -7,18 +7,18 @@ import mongoose from 'mongoose';
  * apart deliberately:
  *
  *   - the **line of credit** (`User.creditLimit` / `User.balance` / `terms`) is
- *     money Cellvix lends the business — a limit it draws against and pays back
+ *     money Cellvix lends the business - a limit it draws against and pays back
  *     on invoice terms;
  *   - **store credit** (this ledger, mirrored on `User.storeCredit`) is money
- *     the business already holds with Cellvix — a refund, a prepaid top-up, or
- *     an allocation an admin made — which reduces what the next order costs.
+ *     the business already holds with Cellvix - a refund, a prepaid top-up, or
+ *     an allocation an admin made - which reduces what the next order costs.
  *
  * Every movement is a row here. `User.storeCredit` is a cache of the running
  * total so a balance read is one document rather than an aggregation, and every
  * row carries the `balanceAfter` it produced, so the two can be reconciled and a
  * statement can be printed without re-summing history.
  *
- * Nothing writes this collection directly — `services/storeCreditService.js`
+ * Nothing writes this collection directly - `services/storeCreditService.js`
  * owns it, the same way `pricingService` owns discounts.
  */
 
@@ -29,7 +29,7 @@ import mongoose from 'mongoose';
  * this is money owed under a standing arrangement and triggered automatically.
  * The two need to be told apart on a statement and in the reports.
  *
- * A reversal — the referred payment was refunded or its invoice voided — is
+ * A reversal - the referred payment was refunded or its invoice voided - is
  * also typed `referral`, with a negative amount, so a referral and its undo sit
  * on the same line of any report that groups by type.
  */
@@ -56,7 +56,7 @@ const creditTransactionSchema = new mongoose.Schema(
     // them, not for us: "Refund for CVX-2026-10042", not "adj/ref/42".
     note: { type: String, trim: true, maxlength: 240 },
 
-    // Set when the movement belongs to an order — a refund against it, or credit
+    // Set when the movement belongs to an order - a refund against it, or credit
     // spent on it.
     order: { type: mongoose.Schema.Types.ObjectId, ref: 'Order' },
     orderNumber: String,
@@ -73,7 +73,7 @@ const creditTransactionSchema = new mongoose.Schema(
     // traceable back to the money that produced it, and what lets a reversal
     // find the exact accrual to undo.
     referral: {
-      // The account whose payment earned this — the referrer is `user` above.
+      // The account whose payment earned this - the referrer is `user` above.
       from: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
       fromName: String,
       // The invoice that was paid, and which payment row within it. An invoice

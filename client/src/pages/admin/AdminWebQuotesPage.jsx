@@ -20,7 +20,7 @@ import { toast } from '@/store/toastStore';
 import { pressable } from '@/lib/motion';
 
 /**
- * Web quotes — the enquiries the storefront's contact form sends in.
+ * Web quotes - the enquiries the storefront's contact form sends in.
  *
  * **They are `ContactMessage` rows.** Somebody asking "what would it cost to
  * fix this" has not created a quote: a quote is a priced document with line
@@ -31,7 +31,7 @@ import { pressable } from '@/lib/motion';
  *
  * So this screen is the **inbox**, and `Convert` is the bridge: it opens the
  * real quote form seeded with the enquirer's details. Until this existed the
- * contact form wrote to a collection no admin screen read — messages arrived
+ * contact form wrote to a collection no admin screen read - messages arrived
  * and were never seen.
  */
 const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/web-quotes'], icon: adminIcon('Globe') };
@@ -61,7 +61,7 @@ export function AdminWebQuotesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [query, setQuery] = useState('');
   // The enquiry being read. A message is prose, and prose does not belong in a
-  // table cell — the row shows its first line and the sheet shows all of it.
+  // table cell - the row shows its first line and the sheet shows all of it.
   const [reading, setReading] = useState(null);
 
   const status = searchParams.get('status') ?? 'all';
@@ -90,7 +90,7 @@ export function AdminWebQuotesPage() {
    * Opening an enquiry only opens it.
    *
    * Status is set by hand, never as a side effect of looking. Skimming a
-   * message is not the same act as deciding the queue has dealt with it — an
+   * message is not the same act as deciding the queue has dealt with it - an
    * operator who opens an enquiry and leaves it for somebody better placed to
    * answer has not worked that row, and a status that moved itself under them
    * drops it out of the filter they were working from. Every move is a
@@ -125,7 +125,7 @@ export function AdminWebQuotesPage() {
   }
 
   /**
-   * Row actions — the queue moves without opening each enquiry.
+   * Row actions - the queue moves without opening each enquiry.
    *
    * This menu and the drawer's buttons are the only things that move an
    * enquiry: mark one read, close a duplicate, reopen something closed too
@@ -374,7 +374,7 @@ export function AdminWebQuotesPage() {
 
             <div className="flex flex-wrap justify-end gap-2 border-t border-line pt-4">
               {/* Opening no longer marks anything read, so the drawer has to
-                  carry that move itself — the operator is here, not on the row
+                  carry that move itself - the operator is here, not on the row
                   menu they came from. */}
               {reading.status === 'new' && (
                 <Button

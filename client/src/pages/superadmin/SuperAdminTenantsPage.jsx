@@ -50,7 +50,7 @@ import {
  *
  * **The three things a super admin actually does** (§4.5): create a tenant,
  * grant it slots, and toggle features per business. Everything else the console
- * could show — revenue, usage, a tenant's own records — is deliberately absent:
+ * could show - revenue, usage, a tenant's own records - is deliberately absent:
  * an operator who can read every tenant's books is a breach waiting for one
  * stolen laptop, and the server returns none of it.
  */
@@ -67,10 +67,10 @@ const STATUS_TONES = { active: 'ok', past_due: 'warn', suspended: 'warn', cancel
  * consequences, and a bare dropdown of four words says nothing about either.
  */
 const TENANT_STATUSES = [
-  { value: 'active', label: 'Active — everything works' },
-  { value: 'past_due', label: 'Past due — can read, cannot create' },
-  { value: 'suspended', label: 'Suspended — read-only' },
-  { value: 'cancelled', label: 'Cancelled — no access' },
+  { value: 'active', label: 'Active - everything works' },
+  { value: 'past_due', label: 'Past due - can read, cannot create' },
+  { value: 'suspended', label: 'Suspended - read-only' },
+  { value: 'cancelled', label: 'Cancelled - no access' },
 ];
 
 const STATUS_LABELS = {
@@ -81,9 +81,9 @@ const STATUS_LABELS = {
 };
 
 const BUSINESS_TYPES = [
-  { value: 'product', label: 'Product — sells goods' },
-  { value: 'service', label: 'Service — sells work' },
-  { value: 'both', label: 'Both — goods and work' },
+  { value: 'product', label: 'Product - sells goods' },
+  { value: 'service', label: 'Service - sells work' },
+  { value: 'both', label: 'Both - goods and work' },
 ];
 
 /**
@@ -92,7 +92,7 @@ const BUSINESS_TYPES = [
  * **`source` is what makes this honest.** A key that is on because the business
  * type says so reads differently from one somebody switched on, and a grid
  * showing only the effective value would make an override indistinguishable
- * from a default — so an operator could not tell what they had changed.
+ * from a default - so an operator could not tell what they had changed.
  *
  * A locked key renders as locked rather than being hidden: "this cannot be
  * switched off" is information, and omitting it would leave somebody hunting
@@ -138,7 +138,7 @@ function FeatureGrid({ businessId, onClose }) {
    *
    * `storefront.public` and `storefront.checkout` are separate flags because the
    * registry describes capabilities, but nobody configures a business that has a
-   * public catalogue and no way to buy from it — that combination is a mistake,
+   * public catalogue and no way to buy from it - that combination is a mistake,
    * not a mode. Surfacing them as one control is what stops it being reachable
    * by accident; the underlying keys stay separate and still appear below.
    */
@@ -168,7 +168,7 @@ function FeatureGrid({ businessId, onClose }) {
       </p>
 
       {/* The one decision an operator actually makes about a business, lifted
-          out of the grid because it is the first question — does this shop have
+          out of the grid because it is the first question - does this shop have
           a public website, or is it the back office only? */}
       {publicKey && (
         <div className="mb-4 rounded-md border border-plat-line-soft p-3">
@@ -408,7 +408,7 @@ function BusinessForm({ tenant, onSubmit, onCancel, isPending, error }) {
 /**
  * A tenant's conversation, opened from their row.
  *
- * The same component the Support screen uses — this is the entry point for a
+ * The same component the Support screen uses - this is the entry point for a
  * tenant who has never written, since a thread only appears on that screen once
  * it exists.
  */
@@ -446,7 +446,7 @@ function TenantThread({ tenantId, tenantName }) {
  *
  * **There is no password field and that is the point.** The owner receives an
  * invitation and chooses their own secret, so no credential for a customer's
- * account ever passes through an operator's hands — or sits in their sent mail.
+ * account ever passes through an operator's hands - or sits in their sent mail.
  * The form says so rather than leaving the absence to be wondered about.
  */
 function OwnerForm({ tenant, onSubmit, onCancel, isPending, error }) {
@@ -454,7 +454,7 @@ function OwnerForm({ tenant, onSubmit, onCancel, isPending, error }) {
     defaultValues: { contactName: '', email: '', phone: '' },
   });
 
-  // Only asked when the answer is ambiguous — the server refuses to guess
+  // Only asked when the answer is ambiguous - the server refuses to guess
   // between several, and there is nothing to choose when there is one.
   const needsBusiness = tenant.businesses.length > 1;
   const [business, setBusiness] = useState(tenant.businesses[0]?.id ?? '');
@@ -527,7 +527,7 @@ function OwnerForm({ tenant, onSubmit, onCancel, isPending, error }) {
  *
  * **Each option states its consequence**, because the four words on their own
  * do not distinguish "they cannot create new records" from "they cannot get in
- * at all" — and the operator picking between them is deciding whether somebody
+ * at all" - and the operator picking between them is deciding whether somebody
  * can run their business tomorrow morning.
  */
 function StatusForm({ tenant, onSubmit, onCancel, isPending, error }) {
@@ -536,7 +536,7 @@ function StatusForm({ tenant, onSubmit, onCancel, isPending, error }) {
   const consequence = {
     active: 'Everything works normally.',
     past_due:
-      'They keep full read access — a locked-out customer cannot chase the payment that settles the bill — but nothing new can be created.',
+      'They keep full read access - a locked-out customer cannot chase the payment that settles the bill - but nothing new can be created.',
     suspended: 'The panel opens read-only. Nothing can be changed.',
     cancelled: 'The account is closed. Only billing remains reachable.',
   }[status];
@@ -548,8 +548,8 @@ function StatusForm({ tenant, onSubmit, onCancel, isPending, error }) {
         /**
          * Only the fields the schema owns, not the whole row.
          *
-         * The tenant object from `listTenants` carries derived shapes — `plan`
-         * as `{ id, name }`, `businesses`, `slotsUsed` — and `tenantSchema`
+         * The tenant object from `listTenants` carries derived shapes - `plan`
+         * as `{ id, name }`, `businesses`, `slotsUsed` - and `tenantSchema`
          * expects `plan` to be a string id. Spreading the row would fail
          * validation on a field this form never touches.
          */
@@ -574,8 +574,8 @@ function StatusForm({ tenant, onSubmit, onCancel, isPending, error }) {
         {consequence}
       </p>
 
-      {/* A tenant's businesses all move together — the status is a property of
-          the account, not of one shop — so the count is worth showing before
+      {/* A tenant's businesses all move together - the status is a property of
+          the account, not of one shop - so the count is worth showing before
           the change rather than discovering afterwards. */}
       {tenant.businesses.length > 1 && status !== 'active' && (
         <p className="mt-2 text-xs text-plat-dim">
@@ -605,7 +605,7 @@ function StatusForm({ tenant, onSubmit, onCancel, isPending, error }) {
  *
  * **The reason field is the point of this form**, not a formality. It is
  * written into the tenant's own activity log where their owner reads it, so the
- * screen says so plainly before the operator types — somebody who knows the
+ * screen says so plainly before the operator types - somebody who knows the
  * sentence will be read by the customer writes a different sentence.
  *
  * The form deliberately offers no "remember me" and no long durations: a grant
@@ -639,7 +639,7 @@ function EnterForm({ business, onSubmit, onCancel, isPending, error }) {
         required
         placeholder="Investigating the invoice total they reported on ticket 4182"
         {...register('reason', {
-          required: 'Say why — the business owner sees this.',
+          required: 'Say why - the business owner sees this.',
           minLength: { value: 4, message: 'Say a little more than that.' },
         })}
         error={formState.errors.reason?.message}
@@ -707,7 +707,7 @@ function SlotsForm({ tenant, onSubmit, onCancel, isPending, error }) {
         value={slots}
         onChange={(event) => setSlots(event.target.value)}
         hint={`${tenant.name} runs ${formatCount(tenant.slotsUsed)} business${tenant.slotsUsed === 1 ? '' : 'es'} today.`}
-        error={tooFew ? `Cannot go below ${tenant.slotsUsed} — that is what is already running.` : undefined}
+        error={tooFew ? `Cannot go below ${tenant.slotsUsed} - that is what is already running.` : undefined}
       />
 
       <div className="mt-4 flex justify-end gap-2">
@@ -804,12 +804,12 @@ export function SuperAdminTenantsPage() {
                    * Owners live in the control plane scoped to the tenant, so
                    * one login reaches every business the account owns. The
                    * console previously read them per-business and therefore
-                   * showed "No owner — nobody can sign in" against a tenant
+                   * showed "No owner - nobody can sign in" against a tenant
                    * whose owner was signed in at that moment.
                    */
                   tenant.admins?.length
                     ? tenant.admins.map((admin) => admin.email).join(', ')
-                    : 'No owner — nobody can sign in',
+                    : 'No owner - nobody can sign in',
                 ]
                   .filter(Boolean)
                   .join(' · ')
@@ -818,7 +818,7 @@ export function SuperAdminTenantsPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   {/* The badge is the control. A status that can be read but
                       only changed from somewhere else is a status somebody
-                      edits in the wrong place — and this one decides whether
+                      edits in the wrong place - and this one decides whether
                       the tenant can trade tomorrow. */}
                   <button
                     type="button"
@@ -839,7 +839,7 @@ export function SuperAdminTenantsPage() {
                     Slots
                   </PlatformButton>
                   {/* The way to start a conversation with a tenant who has never
-                      written — the Support screen only lists threads that
+                      written - the Support screen only lists threads that
                       already exist. */}
                   <PlatformButton
                     variant="ghost"
@@ -850,7 +850,7 @@ export function SuperAdminTenantsPage() {
                     Message
                   </PlatformButton>
 
-                  {/* Only offered once there is a business to administer — an
+                  {/* Only offered once there is a business to administer - an
                       owner is scoped to one, and the server refuses otherwise. */}
                   {tenant.businesses.length > 0 && (
                     <PlatformButton
@@ -909,8 +909,8 @@ export function SuperAdminTenantsPage() {
                         {business.deletedAt && (
                           <span className="mt-0.5 block text-xs text-plat-danger">
                             {business.restorable
-                              ? `Deleted — restorable until ${dateTime(business.purgeAfter)}, slot still held`
-                              : 'Deleted — past its retention window'}
+                              ? `Deleted - restorable until ${dateTime(business.purgeAfter)}, slot still held`
+                              : 'Deleted - past its retention window'}
                           </span>
                         )}
                       </span>
@@ -931,7 +931,7 @@ export function SuperAdminTenantsPage() {
                       {/* Reading a tenant's records requires stepping in, and
                           stepping in is logged into their own activity log
                           (§4.5). The console itself shows no customer, invoice
-                          or order — this button is the only way to see one, and
+                          or order - this button is the only way to see one, and
                           it leaves a trail the owner reads. */}
                       {!business.deletedAt && (
                         <PlatformButton
@@ -1066,7 +1066,7 @@ export function SuperAdminTenantsPage() {
       <PlatformModal
         open={Boolean(slotsFor)}
         onClose={() => setSlotsFor(null)}
-        title={`Business slots — ${slotsFor?.name ?? ''}`}
+        title={`Business slots - ${slotsFor?.name ?? ''}`}
         size="sm"
         align="top"
       >
@@ -1094,7 +1094,7 @@ export function SuperAdminTenantsPage() {
       <PlatformModal
         open={Boolean(featuresFor)}
         onClose={() => setFeaturesFor(null)}
-        title={`Features — ${featuresFor?.name ?? ''}`}
+        title={`Features - ${featuresFor?.name ?? ''}`}
         size="lg"
         align="top"
       >
@@ -1113,14 +1113,14 @@ export function SuperAdminTenantsPage() {
         {deleteFor && (
           <>
             {/* Says what deletion actually does, because "delete" on its own
-                implies something this does not do — the records stay, and the
+                implies something this does not do - the records stay, and the
                 slot does not come back today. */}
             <p className="text-sm text-plat-muted">
               The business stops trading and disappears from the tenant's switcher. Its records
               are kept and it can be restored for 30 days.
             </p>
             <p className="mt-2 text-sm text-plat-muted">
-              The slot stays spent for those 30 days — it is not returned immediately, so
+              The slot stays spent for those 30 days - it is not returned immediately, so
               delete-and-recreate cannot be used to run an extra business.
             </p>
 
@@ -1191,7 +1191,7 @@ export function SuperAdminTenantsPage() {
                     } else {
                       toast.info(
                         'Owner created, invitation not sent',
-                        `${result.owner.email} exists — resend the invitation rather than creating another.`,
+                        `${result.owner.email} exists - resend the invitation rather than creating another.`,
                       );
                     }
                     setOwnerFor(null);
@@ -1207,7 +1207,7 @@ export function SuperAdminTenantsPage() {
       <PlatformModal
         open={Boolean(statusFor)}
         onClose={() => setStatusFor(null)}
-        title={`Status — ${statusFor?.name ?? ''}`}
+        title={`Status - ${statusFor?.name ?? ''}`}
         size="md"
         align="top"
       >

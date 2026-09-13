@@ -79,7 +79,7 @@ const remove = asyncHandler(async (req, res) => {
 /**
  * Runs the active rules now.
  *
- * `?dryRun=true` reports what would be sent without sending or recording — the
+ * `?dryRun=true` reports what would be sent without sending or recording - the
  * safe way to try this against a live database, and what an operator wants
  * before switching a rule on. A dry run is not audited, because it changes
  * nothing.
@@ -95,7 +95,7 @@ const run = asyncHandler(async (req, res) => {
       action: 'invoice_rule.run',
       entity: { kind: 'invoiceStatusRule', id: 'all', label: 'Invoice messages' },
       after: { sent, rules: result.results.length },
-      description: `Ran the invoice messages — ${sent} sent.`,
+      description: `Ran the invoice messages - ${sent} sent.`,
     });
   }
 

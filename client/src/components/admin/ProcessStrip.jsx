@@ -11,7 +11,7 @@ import {
 import cn from '@/lib/cn';
 
 /**
- * Where a record sits in a pipeline it is carried through — an invoice's
+ * Where a record sits in a pipeline it is carried through - an invoice's
  * payment states, a quote's ladder, a purchase order's automation cycle
  * (ERP rework §4, convention 12).
  *
@@ -19,39 +19,39 @@ import cn from '@/lib/cn';
  * that component, and this does not: `StepIndicator` is a *wizard* the user
  * advances through (the tab wizard, checkout, order tracking). `ProcessStrip`
  * is a *status display* of where a record sits in a pipeline the user is not
- * driving. Same visual family, different job — do not merge them.
+ * driving. Same visual family, different job - do not merge them.
  *
  * ## Stations, not a rail
  *
  * This used to draw a continuous rail with a filled portion and one live
- * marker. It read as a progress bar, which is a claim about *proportion* —
- * "40% of the way there" — and these stages are not fractions of a journey.
+ * marker. It read as a progress bar, which is a claim about *proportion*
+ * "40% of the way there" - and these stages are not fractions of a journey.
  * They are discrete states a record is in: an invoice is unpaid, or partly
  * paid, or paid.
  *
  * So each stage is now its own bordered card with a ringed glyph, and the
  * connector between them is a dashed arrow: a hand-off, not a fill. The
  * current stage carries the only solid border on the row, which makes "where
- * is this?" answerable without reading a word — the thing an operator actually
+ * is this?" answerable without reading a word - the thing an operator actually
  * does with this component.
  *
  * ## Every stage wears its own icon, and only the current one is ringed
  *
  * This used to swap the glyph by *state*: a tick for anything behind us, a
  * clock for the live one, a dot for anything ahead. That is a timeline's
- * vocabulary — it described a stage's progress and said nothing about what the
+ * vocabulary - it described a stage's progress and said nothing about what the
  * stage IS, so all seven stations of a purchase cycle looked identical apart
  * from their labels, and the row could only be read by reading it.
  *
- * Each stage now carries a glyph for its own meaning — money, a truck, a
- * stethoscope — which is constant wherever that stage appears and is what
+ * Each stage now carries a glyph for its own meaning - money, a truck, a
+ * stethoscope - which is constant wherever that stage appears and is what
  * makes the row scannable as a shape rather than as a sentence. Position is
  * carried by **the ring alone**: the current stage is the one circled and the
  * one solid card on the row, and that single difference is easier to find than
  * three shapes competing.
  *
  * Steps that name no `icon` fall back to a neutral dashed circle, so a caller
- * that has not chosen glyphs still renders — badly, but not broken.
+ * that has not chosen glyphs still renders - badly, but not broken.
  */
 
 export const PURCHASE_CYCLE = [
@@ -66,7 +66,7 @@ export const PURCHASE_CYCLE = [
 
 /**
  * A pipeline that stopped is drawn in the tone of *why* it stopped, not in the
- * brand colour — a rejected quote whose row reads as healthy progress is
+ * brand colour - a rejected quote whose row reads as healthy progress is
  * telling the operator the opposite of what happened.
  */
 const STOPPED = {
@@ -77,7 +77,7 @@ const STOPPED = {
 /**
  * A stage's own glyph.
  *
- * `CircleDashed` where a caller has not named one — a step set that predates
+ * `CircleDashed` where a caller has not named one - a step set that predates
  * icons still renders as a legible row rather than a gap, and the dashed
  * outline reads as "unnamed stage" rather than as a state of its own.
  */
@@ -94,7 +94,7 @@ export function ProcessStrip({
   /**
    * Draw the **final** stage in the completed tone when the record is on it.
    *
-   * The live stage is normally brand red — "here, still moving". On the last
+   * The live stage is normally brand red - "here, still moving". On the last
    * rung there is nowhere left to move, and colouring the finish line as an
    * alert reads as a problem: a fully paid invoice looked like it needed
    * attention. Off by default, because a pipeline whose last stage is merely
@@ -103,7 +103,7 @@ export function ProcessStrip({
   successOnLast = false,
   /** Names what the row is. Without it a bare row of pills has to be inferred. */
   title = 'Life cycle',
-  caption = 'Fully automated — manual override possible at any step.',
+  caption = 'Fully automated - manual override possible at any step.',
   className,
 }) {
   const currentIndex = steps.findIndex((step) => step.key === current);
@@ -129,7 +129,7 @@ export function ProcessStrip({
           const done = currentIndex > -1 && index < currentIndex;
           const active = index === currentIndex;
           const last = index === steps.length - 1;
-          // Arriving at the end is a good outcome, not an alert — see `successOnLast`.
+          // Arriving at the end is a good outcome, not an alert - see `successOnLast`.
           const finished = active && last && successOnLast && !stopped;
 
           return (

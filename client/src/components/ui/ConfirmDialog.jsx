@@ -12,7 +12,7 @@ import cn from '@/lib/cn';
  *
  *   `info`    a state change the admin can reverse by doing the opposite
  *             (deactivate, unpublish, mark ready). One click, plain question.
- *   `danger`  a delete, a cancellation, an approval — reversible only by hand,
+ *   `danger`  a delete, a cancellation, an approval - reversible only by hand,
  *             or not at all. One click, danger button, consequence spelled out.
  *   `critical` money leaves, credit moves, or a record is destroyed for good.
  *             The confirm button stays disabled until the admin types the
@@ -22,7 +22,7 @@ import cn from '@/lib/cn';
  * second ASK rather than a second dialog on purpose: a second dialog trains an
  * admin to click through two buttons in the same spot without reading either,
  * which is worse than one. Typing SR-1042 cannot be done by muscle memory, and
- * it forces the admin to look at WHICH record they are about to destroy — the
+ * it forces the admin to look at WHICH record they are about to destroy - the
  * failure that actually happens is deleting the right kind of thing from the
  * wrong row.
  *

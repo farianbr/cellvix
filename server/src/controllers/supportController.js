@@ -10,7 +10,7 @@ import * as supportService from '../services/supportService.js';
  * thread from the other side.
  *
  * **Nothing here takes a tenant id.** It is resolved from the business the
- * request is scoped to, server-side — a client-supplied tenant would be a way
+ * request is scoped to, server-side - a client-supplied tenant would be a way
  * to read somebody else's conversation.
  */
 
@@ -22,7 +22,7 @@ const postMessage = asyncHandler(async (req, res) => {
   res.json(await supportService.postAsTenant(req, req.body));
 });
 
-/** Just the count, for the panel's badge — the thread itself is a heavier read. */
+/** Just the count, for the panel's badge - the thread itself is a heavier read. */
 const unread = asyncHandler(async (req, res) => {
   res.json(await supportService.myUnread(req));
 });

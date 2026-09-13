@@ -19,7 +19,7 @@ import { useAdminSettings, useAdminMutations } from '@/hooks/useAdmin';
 import SelectMenu from '@/components/ui/SelectMenu';
 
 /**
- * Sale Settings (§6.15, category 2) — the regional and invoicing defaults every
+ * Sale Settings (§6.15, category 2) - the regional and invoicing defaults every
  * later screen reads.
  *
  * **Three deliberate divergences from CellShoppe**, each recorded in §6.15:
@@ -28,14 +28,14 @@ import SelectMenu from '@/components/ui/SelectMenu';
  *    is wrong the moment Cellvix ships outside Ontario, and a wholesaler ships
  *    across provinces by definition.
  * 2. "Warranty by membership tier" is **warranty by product grade**. Wholesale
- *    warranties on what the part is, not on who bought it — a new OEM screen
+ *    warranties on what the part is, not on who bought it - a new OEM screen
  *    carries a different promise from a Pull-B one regardless of the buyer.
  * 3. Currency is fixed CAD and is shown, not edited. Every amount in this system
  *    is CAD cents; a currency select would imply a conversion layer that does
  *    not exist.
  *
  * **Rates are entered as percentages and stored as fractions.** The model and
- * `Settings.rateFor` both work in fractions — 0.13, never 13 — and the schema
+ * `Settings.rateFor` both work in fractions - 0.13, never 13 - and the schema
  * refuses anything above 0.35 for exactly the reason this conversion exists: a
  * percentage typed into a fraction field overcharges by two orders of magnitude
  * without throwing anything.
@@ -54,12 +54,12 @@ const TAX_KINDS = [
  * store a string no date library can resolve.
  */
 const TIMEZONES = [
-  { value: 'America/St_Johns', label: 'Newfoundland — America/St_Johns' },
-  { value: 'America/Halifax', label: 'Atlantic — America/Halifax' },
-  { value: 'America/Toronto', label: 'Eastern — America/Toronto' },
-  { value: 'America/Winnipeg', label: 'Central — America/Winnipeg' },
-  { value: 'America/Edmonton', label: 'Mountain — America/Edmonton' },
-  { value: 'America/Vancouver', label: 'Pacific — America/Vancouver' },
+  { value: 'America/St_Johns', label: 'Newfoundland - America/St_Johns' },
+  { value: 'America/Halifax', label: 'Atlantic - America/Halifax' },
+  { value: 'America/Toronto', label: 'Eastern - America/Toronto' },
+  { value: 'America/Winnipeg', label: 'Central - America/Winnipeg' },
+  { value: 'America/Edmonton', label: 'Mountain - America/Edmonton' },
+  { value: 'America/Vancouver', label: 'Pacific - America/Vancouver' },
 ];
 
 const provinceName = (code) => PROVINCES.find((p) => p.value === code)?.label ?? code;
@@ -83,7 +83,7 @@ export function AdminSaleSettingsPage() {
     formState: { errors, isDirty, isSubmitting },
   } = useForm({
     // The form works in percentages and the API in fractions, so the resolver
-    // cannot be the shared schema directly — validation of the converted values
+    // cannot be the shared schema directly - validation of the converted values
     // happens server-side, and the fields below carry their own bounds.
     resolver: zodResolver(saleSettingsSchema.omit({ taxRatesByProvince: true })),
     defaultValues: {
@@ -191,7 +191,7 @@ export function AdminSaleSettingsPage() {
       <PlaceholderNotice>
         The tax rates and warranty lengths below are seeded with standard figures and have not been
         confirmed by the business. Tax rates decide what every future invoice charges a customer;
-        confirm them — including whether reseller exemptions apply — before relying on them.
+        confirm them - including whether reseller exemptions apply - before relying on them.
       </PlaceholderNotice>
 
       <form onSubmit={handleSubmit(onSubmit)} className="max-w-form space-y-4">
@@ -207,7 +207,7 @@ export function AdminSaleSettingsPage() {
             />
             <Input
               label="Currency"
-              value="CAD — Canadian dollar"
+              value="CAD - Canadian dollar"
               readOnly
               disabled
               hint="Fixed. Every amount in this system is stored in CAD cents."
@@ -247,13 +247,13 @@ export function AdminSaleSettingsPage() {
           title="GST/HST by province"
           description="The rate charged on an order, chosen by the shipping address. Entered as a percentage."
         >
-          {/* Carries the density toggle — this grid follows the same density as
+          {/* Carries the density toggle - this grid follows the same density as
               every list table. */}
           <div className="mb-2 border-b border-line pb-2">
             <CountLine total={PROVINCES.length} noun="provinces" />
           </div>
 
-          {/* Scrolls inside itself rather than pushing the page sideways — the
+          {/* Scrolls inside itself rather than pushing the page sideways - the
               table is 13 rows of three controls and a phone cannot fit them. */}
           <div className="-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0">
             <table className="w-full min-w-130 text-left">
@@ -364,7 +364,7 @@ export function AdminSaleSettingsPage() {
           <p className="mt-3 text-sm leading-relaxed text-ink-500">
             <strong className="font-semibold text-ink-700">A bonus, not a replacement.</strong> Cover
             is the grade&rsquo;s days plus the tier&rsquo;s, so a tier can only ever lengthen a
-            warranty — a Gold customer&rsquo;s NEW part gets 365 + 90 days, not 90. A grade with no
+            warranty - a Gold customer&rsquo;s NEW part gets 365 + 90 days, not 90. A grade with no
             warranty gets none: a bonus extends cover that exists rather than creating it.
           </p>
         </Panel>
@@ -376,7 +376,7 @@ export function AdminSaleSettingsPage() {
           error={errors.root?.message}
           onReset={() => {
             reset();
-            // The tax table lives outside RHF, so `reset()` does not touch it —
+            // The tax table lives outside RHF, so `reset()` does not touch it
             // discarding has to put the server's rates back by hand, or the
             // form would report itself clean while still showing edited rates.
             setRates(

@@ -9,7 +9,7 @@ import { likeRegex } from '../utils/regex.js';
  * own `image`, or its brand-and-component-type pair has a stock photo.
  *
  * Applied in `buildQuery`, which is the ONE place the catalogue's shape is
- * decided — the listing, the facet counts and the price bounds all build off
+ * decided - the listing, the facet counts and the price bounds all build off
  * it, so a product hidden from the grid is also absent from every count beside
  * it. `taxonomyService` applies the same clause for the same reason. Admin
  * queries do not go through here and still see everything.
@@ -31,7 +31,7 @@ const SORTS = {
  * Shapes a product for the wire.
  *
  * THE PRICE GATE LIVES HERE. For anyone who is not an approved buyer, `price` is
- * omitted from the payload entirely — not blurred, not zeroed. The client's blur
+ * omitted from the payload entirely - not blurred, not zeroed. The client's blur
  * is cosmetic; this is the actual control (PROJECT_INSTRUCTIONS.md §5.3).
  *
  * Availability leaves as a BOOLEAN and nothing else. The storefront states in
@@ -77,7 +77,7 @@ function serialize(product, user) {
 /**
  * The competitor comparison, computed HERE and never on the client.
  *
- * The card shows one sentence — "save $8.80 vs market" — and that number is
+ * The card shows one sentence - "save $8.80 vs market" - and that number is
  * arithmetic over prices. Handing the client an array and letting it do the
  * subtraction would put a second money calculation in the browser, which is the
  * thing the pricing rules exist to prevent; it would also let a rounding
@@ -93,7 +93,7 @@ function marketPosition(doc) {
     .filter((entry) => entry && Number.isFinite(entry.price) && entry.price > 0)
     // Only sellers we BEAT. A benchmark cheaper than us is a competitor doing
     // the undercutting, and listing it inside a panel headed "save X vs market"
-    // hands a buyer the cheaper shop's name — the comparison exists to show we
+    // hands a buyer the cheaper shop's name - the comparison exists to show we
     // are the better buy, so a row that says otherwise does not belong in it.
     //
     // Dropped BEFORE the average, so the figure the card claims is the average
@@ -118,7 +118,7 @@ function marketPosition(doc) {
     average,
     lowest,
     savings,
-    // Whole percent — a card has no room for a decimal, and "18%" is the claim
+    // Whole percent - a card has no room for a decimal, and "18%" is the claim
     // a buyer repeats back anyway.
     savingsPercent: Math.round((savings / average) * 100),
     // Always true now that dearer-than-us is the filter above: every row that
@@ -161,7 +161,7 @@ function buildQuery({ deviceType, brand, series, model, partType, grade, inStock
   if (inStockOnly) query.stock = { $gt: 0 };
 
   // Both the search terms and the picture rule are `$or`s, and a Mongo document
-  // holds one `$or` key — the second would silently replace the first and widen
+  // holds one `$or` key - the second would silently replace the first and widen
   // the search to the whole catalogue. `$and` keeps them as two independent
   // clauses that must both hold.
   const clauses = [HAS_PICTURE];
@@ -316,7 +316,7 @@ async function searchProducts(term, user, { limit = 6 } = {}) {
    *
    * A business buyer types `15 PM`, not "iPhone 15 Pro Max". Aliases live on the
    * taxonomy model rather than on each product, so one alias covers all forty
-   * parts that fit that phone — which means the alias has to be turned into a
+   * parts that fit that phone - which means the alias has to be turned into a
    * model slug here and then folded into the product query below. Without this
    * the alias editor would be managing a field nothing reads.
    *
@@ -342,7 +342,7 @@ async function searchProducts(term, user, { limit = 6 } = {}) {
       { modelName: rx },
       // An exact alias hit brings back every part for that model, which is the
       // whole point of typing `15pm` into a parts catalogue. `modelSlug` is the
-      // flat field on `Product` — the nested `path` shape belongs to `Taxonomy`.
+      // flat field on `Product` - the nested `path` shape belongs to `Taxonomy`.
       ...(aliasSlugs.length ? [{ modelSlug: { $in: aliasSlugs } }] : []),
     ],
   };
@@ -362,7 +362,7 @@ async function searchProducts(term, user, { limit = 6 } = {}) {
     ]),
   ]);
 
-  // Alias hits first — somebody who typed `15pm` meant that model specifically,
+  // Alias hits first - somebody who typed `15pm` meant that model specifically,
   // so it should not sit below a fuzzy name match. Deduplicated by slug.
   const models = [...aliasMatches, ...nameModels].filter(
     (node, index, all) => all.findIndex((other) => other.slug === node.slug) === index,

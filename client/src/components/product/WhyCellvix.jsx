@@ -7,7 +7,7 @@ import { pressable } from '@/lib/motion';
 /**
  * The trust block on a product page.
  *
- * Deliberately NOT a grid of six icons and six claims — that is what every
+ * Deliberately NOT a grid of six icons and six claims - that is what every
  * supplier's page says, and a wholesale buyer comparing two of them learns
  * nothing from it. This is shaped like the document a business buyer actually
  * trusts: a bench record with the part's own SKU and grade stamped on it, the
@@ -15,7 +15,7 @@ import { pressable } from '@/lib/motion';
  * numbered clauses rather than marketing tiles.
  *
  * The left column is specific to the product being looked at; the right column
- * is the same four promises everywhere, which is honest — they ARE the same
+ * is the same four promises everywhere, which is honest - they ARE the same
  * four promises. Without a product (the blog article uses it) the record
  * collapses to the house standard.
  *
@@ -34,7 +34,7 @@ const BENCH_CHECKS = [
 const CLAUSES = [
   {
     title: 'Ships from Ontario',
-    body: `Stock sits in the ${BUSINESS_INFO.address.city} warehouse. In-stock parts ordered before 3:00 PM ET leave the same business day — no customs step in the middle.`,
+    body: `Stock sits in the ${BUSINESS_INFO.address.city} warehouse. In-stock parts ordered before 3:00 PM ET leave the same business day - no customs step in the middle.`,
   },
   {
     title: 'Wholesale pricing, on terms',
@@ -42,7 +42,7 @@ const CLAUSES = [
   },
   {
     title: 'Warranty you can claim',
-    body: '30 days as standard and 90 on NEW and OEM, from delivery. A claim is an order number and a photograph to your rep — approved ones ship a replacement from stock.',
+    body: '30 days as standard and 90 on NEW and OEM, from delivery. A claim is an order number and a photograph to your rep - approved ones ship a replacement from stock.',
   },
   {
     title: 'A named person to call',

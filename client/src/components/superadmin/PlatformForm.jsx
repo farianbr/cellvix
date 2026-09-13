@@ -10,7 +10,7 @@ import { dialog, pressable } from '@/lib/motion';
  *
  * **The last piece of the separation.** The console's screens already wear the
  * platform's own identity, but every form inside them was still a Cellvix
- * component — so opening "New tenant" dropped a white sheet with red accents
+ * component - so opening "New tenant" dropped a white sheet with red accents
  * into a graphite application, and for the duration of that dialog the operator
  * was looking at the tenant's brand while configuring the platform. A modal is
  * where the most consequential actions happen, which makes it the worst place
@@ -160,8 +160,8 @@ export const PlatformInput = forwardRef(function PlatformInput(
 /**
  * A native `<select>` rather than a custom menu.
  *
- * The console's option lists are short and static — four statuses, three business
- * types — and a native control brings keyboard handling, mobile pickers and
+ * The console's option lists are short and static - four statuses, three business
+ * types - and a native control brings keyboard handling, mobile pickers and
  * accessibility for free. A custom menu earns its place when the options need
  * icons, descriptions or search; none of these do.
  */
@@ -199,7 +199,7 @@ export const PlatformSelect = forwardRef(function PlatformSelect(
         )}
       >
         {options.map((option) => (
-          // Options render in the OS menu, which paints them itself — the
+          // Options render in the OS menu, which paints them itself - the
           // explicit colours stop a dark-mode system menu showing white on
           // white.
           <option key={option.value} value={option.value} className="bg-plat-surface text-plat-text">
@@ -225,7 +225,7 @@ export function PlatformError({ children }) {
   );
 }
 
-/** A cautionary note — a consequence somebody should read before saving. */
+/** A cautionary note - a consequence somebody should read before saving. */
 export function PlatformNotice({ icon: Icon, children }) {
   return (
     <p className="mb-3 flex items-start gap-2 rounded-lg bg-plat-warn/10 px-3 py-2.5 text-[13px] leading-relaxed text-plat-text">

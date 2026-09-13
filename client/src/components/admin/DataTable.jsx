@@ -21,7 +21,7 @@ import { pressable, pressableSurface } from '@/lib/motion';
  *   2  visible from 768 up
  *   3  visible from 1024 up
  * Anything hidden at the current width folds into the expandable row rather
- * than disappearing — a column you cannot reach is a column you have lost.
+ * than disappearing - a column you cannot reach is a column you have lost.
  *
  * Sorting is client-side over the rows given. A screen that paginates
  * server-side passes `sortable: false` on its columns and sorts upstream,
@@ -34,7 +34,7 @@ import { pressable, pressableSurface } from '@/lib/motion';
  * "comfortable" is the default and is what makes a table read as a product
  * surface rather than a spreadsheet: rows tall enough to have air around their
  * content, and no full-width rule between them. The rules are the thing that
- * makes a dense table feel like a ledger — thirty hairlines stacked down the
+ * makes a dense table feel like a ledger - thirty hairlines stacked down the
  * page draw the eye across the grid instead of down the column the operator is
  * actually reading. Spacing separates rows perfectly well on its own, and the
  * hover state does the rest by making the row the operator is on the only one
@@ -65,7 +65,7 @@ const ALIGN_CLASS = { right: 'text-right', center: 'text-center', left: 'text-le
 /**
  * ## Every admin table looks the same (Instructions §3.2)
  *
- * `DataTable` is for **record lists** — a page of orders, clients, suppliers —
+ * `DataTable` is for **record lists** - a page of orders, clients, suppliers
  * and owns sorting, selection, the row menu and the responsive fold. A
  * **line-item table** is the other kind: the parts on one order, a settings
  * grid of editable rates. Those do not sort or select, often end in a totals
@@ -75,7 +75,7 @@ const ALIGN_CLASS = { right: 'text-right', center: 'text-center', left: 'text-le
  * **They must still be indistinguishable.** Which component rendered a table is
  * an implementation detail; an operator looking at two tables on one screen
  * must not be able to tell. So this hook does not merely *resemble* the table
- * below — it returns `DENSITY`'s own values, at the density the operator chose.
+ * below - it returns `DENSITY`'s own values, at the density the operator chose.
  *
  * That last part is the whole reason this is a hook and not a set of constants.
  * Density is live state, stored per browser and broadcast to every table on the
@@ -101,7 +101,7 @@ export function useTableClasses() {
   const d = DENSITY[density] ?? DENSITY.comfortable;
 
   return {
-    /** The rule under the header — the one horizontal line a table needs. */
+    /** The rule under the header - the one horizontal line a table needs. */
     headRow: 'border-b border-line',
 
     /** `eyebrow` type, muted, aligned. Identical to `DataTable`'s own header. */
@@ -113,7 +113,7 @@ export function useTableClasses() {
       ),
 
     /**
-     * A body row, carrying whatever rule the density carries — none at
+     * A body row, carrying whatever rule the density carries - none at
      * comfortable, a hairline at compact. Matching `DataTable` matters more
      * than either choice on its own: two tables on one screen disagreeing about
      * whether rows have rules is exactly what reads as broken.
@@ -130,7 +130,7 @@ export function useTableClasses() {
  * in a cell, but the **mark** is copied from it deliberately.
  *
  * `appearance-none` removes the platform tick along with the platform box, so a
- * checked row used to render as a filled brand square with nothing in it — the
+ * checked row used to render as a filled brand square with nothing in it - the
  * colour was the only signal, which reads as a highlight rather than a
  * selection, and disappears entirely for anyone who cannot separate the two
  * tones. The glyph is drawn on top: a check when selected, a dash when the
@@ -215,7 +215,7 @@ export function DataTable({
     const column = columns.find((c) => c.key === sort.key);
     if (!column) return rows;
 
-    // Numbers compare numerically, everything else by locale — a string sort
+    // Numbers compare numerically, everything else by locale - a string sort
     // over money puts $1,000 before $9.
     return [...rows].sort((a, b) => {
       const left = defaultSortValue(a, column);
@@ -271,7 +271,7 @@ export function DataTable({
          * `table-fixed` whenever the caller has declared widths.
          *
          * Auto layout sizes every column by its content, which means a column's
-         * width is decided by the longest cell that happens to be on the page —
+         * width is decided by the longest cell that happens to be on the page
          * so a `width` on a column definition was quietly ignored, the money
          * column landed somewhere different on every table, and one long
          * description could swallow the row. Fixed layout honours the declared
@@ -282,7 +282,7 @@ export function DataTable({
          *
          * `min-w` is what stops fixed layout from destroying the table on a
          * phone. Declared widths are percentages, and a percentage of 390px is
-         * not enough for the content — every column collapsed at once, names
+         * not enough for the content - every column collapsed at once, names
          * truncated to "Jordan …", and a two-button action cell overlapped the
          * column beside it. With a floor the table keeps its proportions and the
          * wrapper's `overflow-x-auto` lets the operator swipe, which is the
@@ -307,7 +307,7 @@ export function DataTable({
                       than replacing the whole selection. On a paginated list
                       the old `checked ? allKeys : []` silently discarded rows
                       picked on another page the moment the header box was
-                      touched — the operator sees a count drop with no row
+                      touched - the operator sees a count drop with no row
                       changing in front of them. */}
                   <CellCheckbox
                     checked={allSelected}
@@ -358,7 +358,7 @@ export function DataTable({
                         // *left* of a right-aligned column while every other
                         // column kept it on the right. The `th` already carries
                         // `text-right`, and an `inline-flex` button is an inline
-                        // box — so it is pushed to the right edge by that
+                        // box - so it is pushed to the right edge by that
                         // text-align on its own, with nothing to do here.
                         className={cn(
                           pressable,
@@ -381,7 +381,7 @@ export function DataTable({
               })}
 
               {/* Labelled, not blank. An unnamed trailing column reads as a
-                  rendering gap — the `···` looks like it belongs to the last
+                  rendering gap - the `···` looks like it belongs to the last
                   data column rather than being an actions cell of its own. */}
               {rowMenu && (
                 <th scope="col" className={cn('eyebrow w-20 pt-2.5 text-right text-ink-400', d.head)}>
@@ -404,8 +404,8 @@ export function DataTable({
                     className={cn(
                       d.row,
                       // A selected row is tinted; an unselected one gets its
-                      // ground only on hover, which is what makes the row —
-                      // rather than the cell under the pointer — read as the
+                      // ground only on hover, which is what makes the row
+                      // rather than the cell under the pointer - read as the
                       // unit being acted on.
                       isSelected ? 'bg-brand-50/60' : 'hover:bg-surface-2',
                       // Press feedback on a full-width row has to be far
@@ -516,7 +516,7 @@ export function DataTable({
  * It also carries the density toggle, pushed to the right. This is the one row
  * every list screen already renders directly above its table, so putting the
  * control here reaches all thirteen of them without each page having to opt in
- * — and it lands beside the rows it changes rather than in a settings screen,
+ * - and it lands beside the rows it changes rather than in a settings screen,
  * which is where a control that is adjusted while looking at data belongs.
  *
  * `density={false}` opts out, for the handful of small tables (a five-row

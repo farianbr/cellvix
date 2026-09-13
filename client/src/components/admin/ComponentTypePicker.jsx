@@ -6,14 +6,14 @@ import Input from '@/components/ui/Input';
 import { useComponentTypes } from '@/hooks/useCatalog';
 
 /**
- * Pick component types — the tags that decide which suppliers can be asked for
+ * Pick component types - the tags that decide which suppliers can be asked for
  * a price (supplier process flow, §6.8a).
  *
  * **The list comes from the catalogue, never from a constant here.**
  * `GET /api/taxonomy` already carries `componentTypes`, aggregated from live
  * products by `taxonomyService`, and it is the same list step 1 of the
  * storefront wizard offers. A hard-coded copy would be a second source of truth
- * that goes stale the first time a new part type is stocked — and a supplier
+ * that goes stale the first time a new part type is stocked - and a supplier
  * tagged against a component nothing is sold under is a supplier who can never
  * be found by the picker that matters.
  *

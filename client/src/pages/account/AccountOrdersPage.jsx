@@ -24,8 +24,8 @@ const STATUS_RANK = new Map(ORDER_STATUSES.map((status, index) => [status.value,
 STATUS_RANK.set('cancelled', -1);
 
 /**
- * The sortable columns. `get` returns the value a column sorts on — a number
- * for dates, counts and money, a lowercased string for everything else — so the
+ * The sortable columns. `get` returns the value a column sorts on - a number
+ * for dates, counts and money, a lowercased string for everything else - so the
  * comparator never has to know which column it is looking at.
  */
 const COLUMNS = [
@@ -39,7 +39,7 @@ const COLUMNS = [
     key: 'createdAt',
     label: 'Placed',
     get: (order) => new Date(order.createdAt).getTime(),
-    // Wide enough for "Aug 26, 2026" on one line — a wrapped date reads as two
+    // Wide enough for "Aug 26, 2026" on one line - a wrapped date reads as two
     // rows of data rather than one cell.
     className: 'w-[124px] whitespace-nowrap',
   },
@@ -56,7 +56,7 @@ const COLUMNS = [
     label: 'Status',
     get: (order) => STATUS_RANK.get(order.status) ?? 0,
     // Wide enough for the longest label, "Out for delivery", at the badge's
-    // letter-spaced 10px — a narrower column wrapped it out of its own pill.
+    // letter-spaced 10px - a narrower column wrapped it out of its own pill.
     className: 'w-[170px]',
   },
   {
@@ -127,7 +127,7 @@ export function AccountOrdersPage() {
     const matched = orders.filter((order) => {
       if (status !== 'all' && order.status !== status) return false;
       if (!needle) return true;
-      // Match the order number, a PO, or any SKU or part name in the order —
+      // Match the order number, a PO, or any SKU or part name in the order
       // a buyer usually remembers the part, not the order number.
       return (
         order.orderNumber.toLowerCase().includes(needle) ||
@@ -233,7 +233,10 @@ export function AccountOrdersPage() {
                   {COLUMNS.map((column) => (
                     <SortHeader key={column.key} column={column} sort={sort} onSort={toggleSort} />
                   ))}
-                  <th scope="col" className="w-10 px-4 py-2.5">
+                  {/* `relative` contains the `sr-only` label, which is
+                      absolutely positioned and would otherwise anchor to the
+                      document and stretch the page. */}
+                  <th scope="col" className="relative w-10 px-4 py-2.5">
                     <span className="sr-only">View order</span>
                   </th>
                 </tr>
@@ -262,7 +265,7 @@ export function AccountOrdersPage() {
                       {order.poNumber ? (
                         <span className="font-mono">{order.poNumber}</span>
                       ) : (
-                        <span className="text-ink-300">—</span>
+                        <span className="text-ink-300">-</span>
                       )}
                       {order.tracking?.number && (
                         <span className="tnum mt-0.5 block truncate font-mono text-2xs text-ink-400">

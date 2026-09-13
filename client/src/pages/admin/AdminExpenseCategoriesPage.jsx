@@ -22,7 +22,7 @@ import { pressable } from '@/lib/motion';
 import cn from '@/lib/cn';
 
 /**
- * Expense categories — how money out is grouped in the P&L (§6.9, §0.8).
+ * Expense categories - how money out is grouped in the P&L (§6.9, §0.8).
  *
  * Admin-managed rather than an enum, and **a category in use is deactivated,
  * never deleted**: removing one would silently re-bucket every historical
@@ -36,7 +36,7 @@ const ADMIN_PAGE = {
 };
 
 /**
- * The palette is the semantic vocabulary the rest of the panel uses (§2b) — a
+ * The palette is the semantic vocabulary the rest of the panel uses (§2b) - a
  * category picks a meaning, not an arbitrary colour.
  */
 const COLOR_TOKENS = [
@@ -88,7 +88,7 @@ function CategoryForm({ category, onSubmit, onCancel, isPending, error }) {
         label="GST/HST is normally claimable on this category"
         {...register('gstApplicable')}
       />
-      <Checkbox label="Active — offered on the expense form" {...register('isActive')} />
+      <Checkbox label="Active - offered on the expense form" {...register('isActive')} />
 
       <div className="flex justify-end gap-2">
         <Button type="button" variant="ghost" onClick={onCancel}>
@@ -261,7 +261,7 @@ export function AdminExpenseCategoriesPage() {
             <PanelEmpty
               icon={Tags}
               title="No categories yet"
-              body="Every expense is filed under a category — add the first one."
+              body="Every expense is filed under a category - add the first one."
               action={
                 <Button onClick={() => setCreating(true)} icon={Plus} size="sm">
                   Add category

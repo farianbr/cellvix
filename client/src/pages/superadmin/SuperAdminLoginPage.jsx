@@ -10,7 +10,7 @@ import { useSuperAdminMutations } from '@/hooks/useSuperAdmin';
  * Signing in to the platform console.
  *
  * **Deliberately austere, and deliberately not Cellvix.** This is not a
- * tenant's login — it reaches every tenant — so it carries no business name, no
+ * tenant's login - it reaches every tenant - so it carries no business name, no
  * storefront chrome and no "forgot password" self-service path. An account that
  * can reconfigure the platform is issued and reset by another operator, not
  * recovered by email.
@@ -53,7 +53,7 @@ export function SuperAdminLoginPage() {
         </div>
 
         <div className="rounded-xl border border-plat-line bg-plat-surface p-6">
-          {/* Tracking tightens as the size grows — the optical correction that
+          {/* Tracking tightens as the size grows - the optical correction that
               separates a set headline from a scaled-up paragraph. */}
           <h1 className="text-[22px] font-semibold leading-tight tracking-[-0.02em] text-plat-text">
             Sign in

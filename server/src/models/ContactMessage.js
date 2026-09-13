@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
  *
  * These are stored rather than emailed because no mail provider is wired yet
  * (PROGRESS.md open question #7). Persisting them means a message sent today is
- * still there when the provider lands — a form that silently discards what
+ * still there when the provider lands - a form that silently discards what
  * someone typed is worse than no form.
  */
 const contactMessageSchema = new mongoose.Schema(

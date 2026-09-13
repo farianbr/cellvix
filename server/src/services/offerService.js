@@ -93,7 +93,7 @@ async function attachComboProducts(offers, user) {
     for (const item of offer.items) {
       const product = bySku.get(item.sku);
       // A SKU deactivated since the combo was written must not silently drop
-      // out of the bundle — the whole combo stops being buyable.
+      // out of the bundle - the whole combo stops being buyable.
       if (!product) {
         complete = false;
         continue;
@@ -144,7 +144,7 @@ async function redeemedOfferIds(user) {
  *
  * Account-restricted offers are filtered out for everyone they are not for, and
  * for guests entirely. An offer nobody outside a named list may redeem should
- * not be advertised to the whole internet — and a code that comes back "not
+ * not be advertised to the whole internet - and a code that comes back "not
  * recognised" is a lot less annoying than one that was dangled and refused.
  */
 async function listLive(user) {

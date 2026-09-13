@@ -18,13 +18,13 @@ import { money, date } from '@/lib/format';
  * Referral commission (§6.13, phase 10).
  *
  * A referring business earns a percentage of what the accounts it referred
- * actually **pay** — credited as store credit, through the one service allowed
+ * actually **pay** - credited as store credit, through the one service allowed
  * to move a store-credit balance.
  *
  * **Nothing on this screen writes a commission.** The only control is the rate,
  * and it governs future accruals only. Commission is earned when a payment is
  * recorded and reversed when that money goes back, both inside the services
- * that own those events — there is no button here that could pay somebody
+ * that own those events - there is no button here that could pay somebody
  * without a payment behind it, and attribution is fixed at registration and
  * shown read-only.
  */
@@ -179,7 +179,7 @@ export function AdminReferralsPage() {
       priority: 3,
       sortValue: (row) => row.lastPayoutAt ?? '',
       render: (row) => (
-        <span className="text-ink-500">{row.lastPayoutAt ? date(row.lastPayoutAt) : '—'}</span>
+        <span className="text-ink-500">{row.lastPayoutAt ? date(row.lastPayoutAt) : '-'}</span>
       ),
     },
   ];

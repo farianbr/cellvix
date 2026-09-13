@@ -17,8 +17,8 @@ import { getBusiness, setBusiness, subscribeBusiness } from '@/store/businessSto
  * offering a choice the API will refuse.
  *
  * Switching **drops every cached admin query and refetches them**. Each was
- * fetched for the previous business, so serving them under a new business's name —
- * even for a beat — is the most misleading thing this control could do. See
+ * fetched for the previous business, so serving them under a new business's name
+ * even for a beat - is the most misleading thing this control could do. See
  * `choose()` for why both steps are needed.
  *
  * `useSyncExternalStore` rather than local state, because `lib/api.js` reads the
@@ -44,7 +44,7 @@ export function BusinessSwitcher() {
   const { data } = useAdminBusinesses(isAdmin ? { status: 'all' } : undefined);
   const businesses = data?.businesses ?? [];
 
-  // Staff are pinned. One business in the business is not a choice either — a
+  // Staff are pinned. One business in the business is not a choice either - a
   // switcher offering a single option is a control that cannot do anything.
   if (!isAdmin || businesses.length < 2) return null;
 
@@ -53,7 +53,7 @@ export function BusinessSwitcher() {
   /**
    * Land in a real business when nothing is chosen.
    *
-   * With "All businesses" gone, `null` is no longer a view — it is an
+   * With "All businesses" gone, `null` is no longer a view - it is an
    * unanswered question, and an admin arriving with an empty
    * `sessionStorage` would otherwise see a switcher labelled after nothing.
    * The default business is the right landing place for the same reason it is
@@ -77,11 +77,11 @@ export function BusinessSwitcher() {
      *
      * The business is injected in `lib/api.js` rather than being part of any
      * query key, so React Query sees identical keys across a switch and would
-     * otherwise sit still — leaving one shop's orders on screen under the
+     * otherwise sit still - leaving one shop's orders on screen under the
      * other shop's name.
      *
      * `refetchType: 'all'` is the load-bearing part: the default only refetches
-     * ACTIVE queries, and `removeQueries` first was worse still — it unmounted
+     * ACTIVE queries, and `removeQueries` first was worse still - it unmounted
      * the data so there was nothing left for a refetch to find, and exactly one
      * request went out.
      */
@@ -92,7 +92,7 @@ export function BusinessSwitcher() {
      *
      * A business carries a type, and the type decides which nav sections exist
      * (SAAS_PLATFORM §1.1). That answer arrives from `/auth/me` under
-     * `['auth', 'me']`, not under `['admin']` — so without this the records
+     * `['auth', 'me']`, not under `['admin']` - so without this the records
      * would switch and the sidebar would not, leaving a service business
      * showing Orders and Returns until the next reload.
      */
@@ -142,7 +142,7 @@ export function BusinessSwitcher() {
 
             An admin always works inside exactly one business. Under
             database-per-business a request resolves to one database, so a view
-            spanning all of them cannot be a query — it would have to be N
+            spanning all of them cannot be a query - it would have to be N
             queries merged in the client, and a P&L summing two unrelated
             businesses is a number nobody asked for.
 

@@ -1,4 +1,5 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import useDocumentTitle from '@/hooks/useDocumentTitle';
 import { Outlet, useLocation } from 'react-router';
 import { ShieldAlert } from 'lucide-react';
 import Skeleton from '@/components/ui/Skeleton';
@@ -14,7 +15,7 @@ import { RecordLabelProvider } from './recordLabel';
 
 /**
  * The ERP shell (§4). `/admin` mounts this instead of the storefront
- * `RootLayout` — the panel is a different application and should not carry the
+ * `RootLayout` - the panel is a different application and should not carry the
  * shop header, mega menu or footer.
  *
  * It is also the UI half of the route guard. `requireAdmin` enforces it
@@ -22,6 +23,9 @@ import { RecordLabelProvider } from './recordLabel';
  * screen full of failed requests.
  */
 export function AdminShell() {
+  // The browser tab, per route. One call per surface rather than one per
+  // page: the titles live in the route table beside the breadcrumbs.
+  useDocumentTitle();
   const { user, isLoading, canUseAdmin, isStaff, impersonation } = useAuth();
   const signOut = useSignOut();
   const { data: stats } = useAdminStats();
@@ -35,7 +39,7 @@ export function AdminShell() {
    * browser's own scroll handling applies to it.
    *
    * Two things follow, and neither worked before. Arriving at a new route left
-   * the reader wherever the last page happened to be scrolled to — halfway down
+   * the reader wherever the last page happened to be scrolled to - halfway down
    * a screen they had never seen. And clicking the section you are already in
    * did nothing at all, when the one thing it can usefully mean is "take me
    * back to the top of this".
@@ -105,7 +109,7 @@ export function AdminShell() {
     );
   }
 
-  // Badge counters the sidebar reads by name. These are the unranged figures —
+  // Badge counters the sidebar reads by name. These are the unranged figures
   // the dashboard asks the same endpoint for a date range, and a badge that
   // moved when you changed the dashboard's dates would be nonsense.
   //
@@ -123,12 +127,12 @@ export function AdminShell() {
 
   return (
     // The provider wraps both the trail and the business: a detail page publishes
-    // its record name, and the breadcrumb — a sibling, not a child — reads it.
+    // its record name, and the breadcrumb - a sibling, not a child - reads it.
     <RecordLabelProvider>
       {/*
         The panel is a fixed-height app on screen and a flowing document on
         paper. `h-dvh` with `overflow-hidden` is right for the former and fatal
-        for the latter — it would clip the Business Overview to a single page —
+        for the latter - it would clip the Business Overview to a single page
         so both are unwound under `print:` (ERP rework §6.11).
       */}
       {/*
@@ -164,8 +168,8 @@ export function AdminShell() {
               {/* An EMPTY fallback, deliberately.
               
                   A page-shaped skeleton here meant every navigation repainted
-                  twice — content, then a skeleton in a different shape, then
-                  the real page — which is the "jump". The chunk for a route
+                  twice - content, then a skeleton in a different shape, then
+                  the real page - which is the "jump". The chunk for a route
                   usually arrives in a few frames, and `RouteProgress` is
                   already reporting the wait at the top of the window, so the
                   honest thing to render meanwhile is nothing at all rather than
@@ -173,7 +177,7 @@ export function AdminShell() {
                   one arriving.
               
                   The skeleton still earns its place on a first paint, where the
-                  screen is genuinely empty — the screens keep their own
+                  screen is genuinely empty - the screens keep their own
                   `isLoading` skeletons for that. */}
               <Suspense fallback={null}>
                 <Outlet />
@@ -186,7 +190,7 @@ export function AdminShell() {
         <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
 
         {/* The admin shell does not sit inside RootLayout, so it mounts its own
-            copy — otherwise the sidebar's Sign out would raise a flag with
+            copy - otherwise the sidebar's Sign out would raise a flag with
             nothing listening. */}
         <SignOutConfirm />
       </div>

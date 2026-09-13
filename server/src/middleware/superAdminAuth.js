@@ -10,7 +10,7 @@ import { SUPERADMIN_COOKIE, clearSuperAdminSession } from '../services/superAdmi
  *
  * The mirror of `middleware/supplierAuth.js`, reading a **third cookie into a
  * third collection**, and the security argument is the same one a level up.
- * A token minted for the console cannot satisfy `requireAuth` — not because
+ * A token minted for the console cannot satisfy `requireAuth` - not because
  * every tenant route was audited, but because `authenticate` reads
  * `env.COOKIE_NAME` and resolves its subject in `User`, where no super admin
  * exists. The reverse holds: an admin's token carries a `User` id, and this
@@ -19,7 +19,7 @@ import { SUPERADMIN_COOKIE, clearSuperAdminSession } from '../services/superAdmi
  * `kind: 'superadmin'` is checked on the payload as well as the collection. All
  * three cookies are signed with the same `JWT_SECRET`, so without it a buyer's
  * token pasted into this cookie would resolve to whatever `SuperAdmin` document
- * happened to share that id — vanishingly unlikely, and still not a thing to
+ * happened to share that id - vanishingly unlikely, and still not a thing to
  * leave to chance.
  *
  * **`isActive` is re-checked on every request**, not only at sign-in. A

@@ -161,7 +161,7 @@ export function ThankYouPage() {
 
         <h1 className="mt-6 text-3xl sm:text-d-sm">Order confirmed</h1>
         <p className="mt-3 max-w-md text-md leading-relaxed text-ink-500">
-          Thanks — we have your order and the warehouse is on it. A confirmation is on its way to
+          Thanks - we have your order and the warehouse is on it. A confirmation is on its way to
           your inbox.
         </p>
 

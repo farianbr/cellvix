@@ -13,7 +13,7 @@ import { formatDate } from '../../../shared/dates.js';
  * a scheduled pass runs is how a customer gets the same email fourteen mornings
  * running, and the business learns about it from the customer. `InvoiceStatusRun`
  * below records every (rule, invoice) pair that has fired, with a unique index
- * doing the enforcing — a flag on the rule or a timestamp comparison would both
+ * doing the enforcing - a flag on the rule or a timestamp comparison would both
  * lose a race between two passes.
  */
 
@@ -37,7 +37,7 @@ const RULE_TRIGGERS = [
  * `invoice_paid` is **derived from the last payment row** rather than from a
  * stored `paidAt`. `Invoice` deliberately recomputes `amountPaid` and `status`
  * from `payments` (phase 4), so adding a separate paid-date field would create
- * a second thing to keep in step with the same rows — and it would be wrong the
+ * a second thing to keep in step with the same rows - and it would be wrong the
  * first time a payment was voided.
  *
  * Returns null when the trigger has not happened, which is how the pass knows
@@ -89,7 +89,7 @@ const invoiceStatusRuleSchema = new mongoose.Schema(
     },
 
     /**
-     * Days after the trigger. **Negative means before** — which is how "remind
+     * Days after the trigger. **Negative means before** - which is how "remind
      * them three days before it is due" is expressed, and the reason this is a
      * signed integer rather than a count plus a direction enum.
      */
@@ -140,7 +140,7 @@ const InvoiceStatusRule = mongoose.model('InvoiceStatusRule', invoiceStatusRuleS
  * One (rule, invoice) pair that has already fired.
  *
  * **The unique index is the "once per invoice" guarantee**, not the code around
- * it. Two passes running concurrently — a cron overlapping with a manual run —
+ * it. Two passes running concurrently - a cron overlapping with a manual run
  * both see the same unsent invoice; the second one's insert fails on the index
  * and it skips, rather than both checking a flag, both finding it unset, and
  * both sending.
@@ -151,7 +151,7 @@ const invoiceStatusRunSchema = new mongoose.Schema(
     invoice: { type: mongoose.Schema.Types.ObjectId, ref: 'Invoice', required: true },
     invoiceNumber: String,
     channel: String,
-    // `sent`, or `skipped` with the reason — a run that could not send is still
+    // `sent`, or `skipped` with the reason - a run that could not send is still
     // a run, and recording it stops the pass retrying it every day.
     status: { type: String, default: 'sent' },
     detail: String,
@@ -211,7 +211,7 @@ const BUILT_IN_RULES = [
 ];
 
 /**
- * Creates the built-ins if they are missing. Additive — never overwrites an
+ * Creates the built-ins if they are missing. Additive - never overwrites an
  * edited rule, so it is safe to run at boot on a live database.
  */
 async function ensureBuiltInRules() {

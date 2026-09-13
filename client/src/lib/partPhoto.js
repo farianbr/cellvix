@@ -11,7 +11,7 @@ export { partPhoto };
 
 /**
  * `product.image` first, then the brand stock photo. Null means the caller
- * should draw `PartIllustration` instead — which, for a catalogue product,
+ * should draw `PartIllustration` instead - which, for a catalogue product,
  * should not happen: the server does not list products without a photo.
  */
 export function productPhoto(product) {

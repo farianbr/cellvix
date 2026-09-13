@@ -52,8 +52,8 @@ const CATEGORY_OPTIONS = BLOG_CATEGORIES.map((category) => ({
 const CATEGORY_LABELS = Object.fromEntries(BLOG_CATEGORIES.map((c) => [c.value, c.label]));
 
 const STATUS_OPTIONS = [
-  { value: 'draft', label: 'Draft — not on the site' },
-  { value: 'published', label: 'Published — live on /blog' },
+  { value: 'draft', label: 'Draft - not on the site' },
+  { value: 'published', label: 'Published - live on /blog' },
 ];
 
 const BODY_HELP = `## Heading      ### Subheading      - bullet      1. numbered      > note      **bold**      \`code\``;
@@ -72,7 +72,7 @@ function toDateInput(value) {
  * The body is a plain textarea with a preview tab rather than a rich-text
  * widget: what is stored is the small markup vocabulary in `lib/richText.jsx`,
  * which renders to React nodes and never to HTML. A WYSIWYG here would produce
- * markup the renderer cannot represent — and an author who has no idea their
+ * markup the renderer cannot represent - and an author who has no idea their
  * formatting was dropped on save.
  */
 function PostForm({ post, onSubmit, onCancel, isPending, error }) {
@@ -257,8 +257,8 @@ function PostForm({ post, onSubmit, onCancel, isPending, error }) {
 /**
  * Loads the full post before rendering the form.
  *
- * The list payload deliberately omits `body` — nine articles of prose to render
- * nine cards — so editing an existing post needs one more request. Creating a
+ * The list payload deliberately omits `body` - nine articles of prose to render
+ * nine cards - so editing an existing post needs one more request. Creating a
  * new one needs none.
  */
 function PostEditor({ editingId, onSubmit, onCancel, isPending, error }) {
@@ -314,8 +314,8 @@ export function AdminBlogPage() {
    *
    * The list put the cover, three badges, the title, the excerpt and a
    * four-part metadata line into every row, which made a row 100px tall and
-   * meant six posts filled the screen. Worse, the four metadata facts —
-   * author, read time, publish date, updated date — were run together into one
+   * meant six posts filled the screen. Worse, the four metadata facts
+   * author, read time, publish date, updated date - were run together into one
    * sentence separated by middots, so comparing when two posts were published
    * meant reading two sentences and finding the third clause in each.
    *

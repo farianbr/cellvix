@@ -20,13 +20,13 @@ import mongoose from 'mongoose';
  * **Ordered by how much is still permitted**, and each one is enforced in
  * `middleware/tenantStatus.js` rather than merely displayed:
  *
- * - `active` — everything.
- * - `past_due` — **reads always**, writes refused. An unpaid invoice is a
+ * - `active` - everything.
+ * - `past_due` - **reads always**, writes refused. An unpaid invoice is a
  *   billing problem, not a reason to make somebody's records unreachable; they
  *   must still be able to look up a customer while they sort the payment out.
- * - `suspended` — the panel opens read-only and the storefront is off. The
+ * - `suspended` - the panel opens read-only and the storefront is off. The
  *   business has stopped trading but has not left.
- * - `cancelled` — nothing but billing. The account is over; the data is kept
+ * - `cancelled` - nothing but billing. The account is over; the data is kept
  *   through the retention window so it can be restored or exported, not used.
  */
 const TENANT_STATUSES = ['active', 'past_due', 'suspended', 'cancelled'];
@@ -47,7 +47,7 @@ const tenantSchema = new mongoose.Schema(
 
     status: { type: String, enum: TENANT_STATUSES, default: 'active', index: true },
 
-    /** Who to contact about the account itself — billing, renewal, suspension. */
+    /** Who to contact about the account itself - billing, renewal, suspension. */
     contactName: { type: String, trim: true },
     contactEmail: { type: String, trim: true, lowercase: true },
     phone: { type: String, trim: true },
@@ -57,7 +57,7 @@ const tenantSchema = new mongoose.Schema(
      *
      * Counted, not derived. A tenant may create a business only while it holds
      * an unused slot, and a **deleted business keeps its slot consumed through
-     * the retention window** — returning it immediately would let a tenant
+     * the retention window** - returning it immediately would let a tenant
      * delete-and-recreate its way to a free business, and would also mean a
      * restore could land with no slot to hold it.
      */

@@ -14,7 +14,7 @@ import { formatDate } from '../../../shared/dates.js';
  *
  * Styling is INLINE on purpose. Mail clients strip <style> blocks with no
  * warning, and an invoice that arrives as unstyled text is not an invoice. The
- * <style> block that is here carries print rules only — nothing the layout
+ * <style> block that is here carries print rules only - nothing the layout
  * depends on.
  */
 
@@ -22,7 +22,7 @@ import { formatDate } from '../../../shared/dates.js';
  * The masthead logo, inlined as a data URI.
  *
  * A mail client will not fetch a remote image until the reader asks it to, and
- * plenty never ask — an invoice whose letterhead is a broken-image icon is the
+ * plenty never ask - an invoice whose letterhead is a broken-image icon is the
  * one thing worse than no letterhead. Read once at boot; if the file is not
  * there the masthead falls back to the wordmark set in type.
  */
@@ -86,8 +86,8 @@ const BRAND = '#CF3429';
  * The document's type scale.
  *
  * Inline styles cannot inherit from the app's design tokens, so the sizes here
- * were being written per element and had drifted to nine of them — 9.5, 10, 11,
- * 12, 12.5, 13, 13.5, 17, 25, 30 — several within half a pixel of each other.
+ * were being written per element and had drifted to nine of them - 9.5, 10, 11,
+ * 12, 12.5, 13, 13.5, 17, 25, 30 - several within half a pixel of each other.
  * The same drift the app carried, for the same reason: no named scale to reach
  * for.
  *
@@ -114,7 +114,7 @@ function addressBlock(title, address) {
       (address.postal ? ` ${address.postal}` : ''),
     // Canada is not printed on a Canadian invoice. Every address in the system
     // is domestic by default, so "CA" on its own line was a stray country code
-    // under every address — it reads as a data field that leaked onto the page
+    // under every address - it reads as a data field that leaked onto the page
     // rather than as part of an address. A genuinely foreign address still
     // prints its country, spelled out, because there it is information.
     address.country && String(address.country).toUpperCase() !== 'CA'
@@ -230,7 +230,7 @@ function totalsRow(label, value, { strong = false, tone } = {}) {
  * @param {object}  args.order    The order it bills, if there is one
  * @param {object}  args.user     The buyer
  * @param {string}  [args.origin] Public site origin, for the "view online" link
- * @param {string}  [args.nonce]  CSP nonce. Present only for the browser copy —
+ * @param {string}  [args.nonce]  CSP nonce. Present only for the browser copy
  *                                without one the print button is not rendered,
  *                                which is exactly what the emailed copy wants.
  */
@@ -361,7 +361,7 @@ ${
           ${
             itemRows(order) ||
             deviceRows(invoice.devices) ||
-            `<tr><td colspan="5" style="padding:16px 10px;border-bottom:1px solid ${LINE};font-size:${T.item};color:${MUTED};">${escapeHtml(invoice.reference || `Account charge — ${invoice.number}`)}</td></tr>`
+            `<tr><td colspan="5" style="padding:16px 10px;border-bottom:1px solid ${LINE};font-size:${T.item};color:${MUTED};">${escapeHtml(invoice.reference || `Account charge - ${invoice.number}`)}</td></tr>`
           }
         </tbody>
       </table>
@@ -374,8 +374,8 @@ ${
             ${/*
                 The figure is INK, not brand, even when there is money outstanding.
 
-                Three red things were stacked here — this number, the "Balance
-                due" row beside it, and the Pay button below it — and a reader
+                Three red things were stacked here - this number, the "Balance
+                due" row beside it, and the Pay button below it - and a reader
                 cannot tell which of three identical signals is the one to act
                 on. The number's job is to be READ, and it is already the largest
                 thing in this half of the page; size is what makes it findable,
@@ -390,7 +390,7 @@ ${
               <span style="font-size:${T.figure};font-weight:800;color:${INK};letter-spacing:-.02em;">${money(settled ? invoice.amount : balance)}</span>
             </div>
             ${
-              // Pay from the document itself — the shortest path from "I am
+              // Pay from the document itself - the shortest path from "I am
               // looking at what I owe" to having paid it.
               //
               // A LINK, never a form. This page is served under its own
@@ -418,7 +418,7 @@ ${
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
 ${/*
                 An order supplies its own subtotal, shipping and tax. A
-                standalone invoice has none of those — so an itemised one
+                standalone invoice has none of those - so an itemised one
                 supplies its OWN, and a flat charge shows a subtotal equal to
                 the total and no tax line, which is exactly what it is.
               */''}
@@ -499,12 +499,12 @@ function renderInvoiceText({ invoice, order, origin }) {
   const docLabel = kind === 'receipt' ? 'receipt' : kind === 'due' ? 'amount due' : 'invoice';
 
   const lines = [
-    `${BUSINESS_INFO.name} — ${docLabel} ${invoice.number}`,
+    `${BUSINESS_INFO.name} - ${docLabel} ${invoice.number}`,
     order?.orderNumber ? `Order ${order.orderNumber}` : null,
     `Issued ${day(invoice.issuedAt)} · due ${day(invoice.dueDate)}`,
     '',
     ...(order?.items ?? []).map(
-      (item) => `${item.qty} × ${item.name} (${item.sku ?? ''}) — ${money(item.lineTotal)}`,
+      (item) => `${item.qty} × ${item.name} (${item.sku ?? ''}) - ${money(item.lineTotal)}`,
     ),
     '',
     `Total ${money(invoice.amount)}`,

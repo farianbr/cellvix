@@ -19,7 +19,7 @@ import cn from '@/lib/cn';
 import { pressable } from '@/lib/motion';
 
 /**
- * Add / edit an business (§6.14) — form on the left, **live preview card** on the
+ * Add / edit an business (§6.14) - form on the left, **live preview card** on the
  * right showing exactly how it will appear in the list.
  *
  * The preview is the reason the colour picker is worth having: a token name
@@ -136,7 +136,7 @@ export function AdminBusinessFormPage() {
   const navigate = useNavigate();
 
   const { data: existing, isLoading } = useAdminBusiness(id);
-  // Only asked for on the Add form — an existing business already owns its code.
+  // Only asked for on the Add form - an existing business already owns its code.
   const { data: codeData } = useNextBusinessCode(!editing);
   const { createBusiness, updateBusiness } = useAdminMutations();
 
@@ -234,7 +234,7 @@ export function AdminBusinessFormPage() {
       )}
 
       <form onSubmit={handleSubmit(onSubmit)}>
-        {/* Form left, preview right — and the preview drops below the form on a
+        {/* Form left, preview right - and the preview drops below the form on a
             phone rather than competing with it for width. */}
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start">
           <div className="flex flex-col gap-4">
@@ -338,7 +338,7 @@ export function AdminBusinessFormPage() {
 
             <Panel
               title="Management"
-              description="Staff are assigned from the Users screen — an business does not own its roster."
+              description="Staff are assigned from the Users screen - an business does not own its roster."
             >
               <Input label="Manager" placeholder="Name of the person running this store" {...register('manager')} />
               <div className="mt-4">

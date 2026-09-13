@@ -8,7 +8,7 @@ import { ease } from '@/lib/motion';
  * One section of the conversational checkout (brief §7).
  *
  * Exactly one section is expanded at a time. A completed section collapses to a
- * compact summary bar that stays clickable **forever** — including after the
+ * compact summary bar that stays clickable **forever** - including after the
  * buyer has reached Payment. Nothing locks.
  *
  * Uses the shared StepIndicator, so a completed checkout section looks like a
@@ -65,7 +65,7 @@ export function StepSection({
             {label}
           </h2>
 
-          {/* The collapsed state has to carry the answer, not just the label —
+          {/* The collapsed state has to carry the answer, not just the label
               otherwise the buyer has to reopen it to check what they entered. */}
           {isCompleted && summary && (
             <p className="mt-0.5 truncate text-sm text-ink-500">{summary}</p>

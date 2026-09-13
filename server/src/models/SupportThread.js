@@ -16,12 +16,12 @@ import mongoose from 'mongoose';
  *
  * *Control plane*, because the conversation is about the account: it outlives
  * any one business, must survive a business being deleted, and has to stay
- * readable while the tenant is suspended or past due — which is exactly when
+ * readable while the tenant is suspended or past due - which is exactly when
  * they most need to reach us. A thread living in a business database would
  * vanish with the business and be unreachable precisely when it mattered.
  *
  * **Messages are embedded, not a second collection.** A support conversation is
- * bounded — tens of messages, not thousands — and the screen always wants the
+ * bounded - tens of messages, not thousands - and the screen always wants the
  * whole thread. A separate collection would buy pagination nobody needs and
  * cost a join on every read. `messages` is capped in the service rather than
  * the schema, so the limit can change without a migration.
@@ -40,7 +40,7 @@ const supportMessageSchema = new mongoose.Schema(
     side: { type: String, enum: ['tenant', 'platform'], required: true },
 
     /**
-     * The author's id, in whichever collection their side implies — `User` for
+     * The author's id, in whichever collection their side implies - `User` for
      * a tenant, `SuperAdmin` for the platform.
      *
      * **No `ref`**, for the reason `AuditLog.actor` has none: it points into two
@@ -55,7 +55,7 @@ const supportMessageSchema = new mongoose.Schema(
 
     /**
      * Which of the tenant's businesses this message is about, when that is
-     * meaningful. Optional on purpose — most of a support conversation is about
+     * meaningful. Optional on purpose - most of a support conversation is about
      * the account rather than about one shop.
      */
     business: { type: mongoose.Schema.Types.ObjectId, ref: 'Business', default: null },

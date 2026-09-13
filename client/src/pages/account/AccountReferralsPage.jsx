@@ -9,7 +9,7 @@ import Skeleton from '@/components/ui/Skeleton';
 import { useReferrals } from '@/hooks/useAccount';
 
 /**
- * Refer & earn — the buyer's side of §6.13.
+ * Refer & earn - the buyer's side of §6.13.
  *
  * Two things a referrer needs and one they do not. They need their code and
  * their link, big enough to read out down a phone line; and they need to see
@@ -17,7 +17,7 @@ import { useReferrals } from '@/hooks/useAccount';
  * promise.
  *
  * What they are deliberately **not** shown is what the accounts they referred
- * spent. Commission is a percentage of it, so it could be inferred — but
+ * spent. Commission is a percentage of it, so it could be inferred - but
  * inferring it takes intent, and putting another business's trading volume on
  * a screen does not. The table shows who joined, whether they are trading, and
  * what the referrer earned.
@@ -37,7 +37,7 @@ function CopyRow({ label, value, mono = true }) {
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1600);
     } catch {
-      // Clipboard access can be refused — an insecure origin, a locked-down
+      // Clipboard access can be refused - an insecure origin, a locked-down
       // browser. The value is on screen and selectable either way, so this
       // fails quietly rather than throwing an error at something cosmetic.
     }
@@ -204,7 +204,7 @@ export function AccountReferralsPage() {
                 </Badge>
 
                 <p className="tnum w-20 text-right text-md font-semibold text-ink-900">
-                  {account.commissionEarned > 0 ? money(account.commissionEarned) : '—'}
+                  {account.commissionEarned > 0 ? money(account.commissionEarned) : '-'}
                 </p>
               </li>
             ))}
@@ -214,7 +214,7 @@ export function AccountReferralsPage() {
 
       {/* ---- how it added up ----------------------------------------------
           Collapsed: the tiles above already state what has been earned, and
-          this is the working behind that number — reference a buyer opens when
+          this is the working behind that number - reference a buyer opens when
           a figure surprises them, not something they need on arrival. */}
       {history.length > 0 && (
         <CollapsiblePanel
@@ -240,7 +240,7 @@ export function AccountReferralsPage() {
                   </p>
                   <p className="mt-0.5 text-xs text-ink-400">
                     {date(row.at)}
-                    {/* The rate as it stood when this was earned, not today's —
+                    {/* The rate as it stood when this was earned, not today's
                         which is why it is stored on the row rather than
                         recomputed. */}
                     {row.percent != null && ` · ${row.percent}%`}

@@ -4,7 +4,7 @@ import { ADMIN_NAV } from '@shared/schemas/admin';
  * Route metadata for the admin panel.
  *
  * Breadcrumbs are built from this, never parsed from the URL (ERP rework
- * §4b.2) — parsing is how you end up with `Purchase-orders` on screen. Every
+ * §4b.2) - parsing is how you end up with `Purchase-orders` on screen. Every
  * entry declares a `label`, an optional `parent` key, and the build `phase`
  * that ships it. Anything with a phase above 1 renders `StubPage` for now.
  *
@@ -71,10 +71,10 @@ export const SETTINGS_CATEGORIES = [
  * `built` says the screen actually exists, which `phase` alone cannot: phase 11
  * is ~16 screens landing across several passes, so its routes carry the same
  * phase number while some are real and some are still stubs. Anything reading
- * "is there a screen here" — the settings summary's cards — reads this flag.
+ * "is there a screen here" - the settings summary's cards - reads this flag.
  */
 export const ADMIN_ROUTES = {
-  // The full ERP dashboard — things-to-do cards, six KPIs, revenue chart — is
+  // The full ERP dashboard - things-to-do cards, six KPIs, revenue chart - is
   // phase 3. The existing overview holds the route until then, so this entry
   // describes what is actually on screen rather than what is planned.
   '/admin': {
@@ -156,7 +156,7 @@ export const ADMIN_ROUTES = {
     section: 'sales',
     phase: 1,
     title: 'New repair ticket',
-    description: 'Capture the whole job — device, condition, services, parts and pricing.',
+    description: 'Capture the whole job - device, condition, services, parts and pricing.',
   },
   '/admin/tickets/:id': {
     label: 'Ticket',
@@ -220,7 +220,7 @@ export const ADMIN_ROUTES = {
     section: 'sales',
     phase: 1,
     title: 'Invoices',
-    description: 'Issued, paid, outstanding and overdue — plus recording a payment.',
+    description: 'Issued, paid, outstanding and overdue - plus recording a payment.',
   },
   '/admin/invoices/:number': {
     label: 'Invoice',
@@ -322,7 +322,7 @@ export const ADMIN_ROUTES = {
     section: 'purchase',
     phase: 5,
     title: 'Service products',
-    description: 'Things bought in that are not stock — outsourced repair, freight, disposal.',
+    description: 'Things bought in that are not stock - outsourced repair, freight, disposal.',
   },
   '/admin/supplier-subscriptions': {
     label: 'Subscription Plans',
@@ -340,7 +340,7 @@ export const ADMIN_ROUTES = {
     section: 'purchase',
     phase: 5,
     title: 'Expenses',
-    description: 'Money out — categorised, taxed and feeding the P&L.',
+    description: 'Money out - categorised, taxed and feeding the P&L.',
   },
   '/admin/inventory': {
     label: 'Inventory',
@@ -439,7 +439,7 @@ export const ADMIN_ROUTES = {
   '/admin/marketing/blog': {
     label: 'Blog',
     // The URL stays under `marketing`; the NAV groups it under SEO. The two
-    // are allowed to differ — `section` is what the sidebar highlights on.
+    // are allowed to differ - `section` is what the sidebar highlights on.
     parent: 'seo',
     icon: 'Newspaper',
     section: 'seo',
@@ -474,7 +474,7 @@ export const ADMIN_ROUTES = {
     section: 'business',
     phase: 8,
     title: 'Add business',
-    description: 'Identity, location, management and hours — with a live preview.',
+    description: 'Identity, location, management and hours - with a live preview.',
   },
   '/admin/businesses/:id/edit': {
     label: 'Edit business',
@@ -483,7 +483,7 @@ export const ADMIN_ROUTES = {
     section: 'business',
     phase: 8,
     title: 'Edit business',
-    description: 'Identity, location, management and hours — with a live preview.',
+    description: 'Identity, location, management and hours - with a live preview.',
   },
   '/admin/businesses/:id': {
     label: 'Business',
@@ -495,7 +495,7 @@ export const ADMIN_ROUTES = {
     description: 'One store, its staff and its details.',
   },
 
-  // Settings — summary and the seven category landings share one screen.
+  // Settings - summary and the seven category landings share one screen.
   '/admin/settings': {
     label: 'Summary',
     parent: 'settings',
@@ -590,6 +590,18 @@ export const ADMIN_ROUTES = {
     // scrolling for something that is not below.
     description: 'The markup and margin a new product is pre-filled with.',
   },
+  '/admin/settings/agreements': {
+    label: 'Supplier Agreements',
+    // Filed under Financial beside Expense Categories, which is where the rest
+    // of the purchasing configuration lives.
+    parent: 'settings:financial',
+    icon: 'FileSignature',
+    section: 'settings',
+    phase: 11,
+    built: true,
+    title: 'Supplier agreements',
+    description: 'The documents a supplier signs before they can quote or invoice.',
+  },
   '/admin/settings/users': {
     label: 'Users',
     parent: 'settings:users',
@@ -680,7 +692,7 @@ export const ADMIN_ROUTES = {
     phase: 11,
     built: true,
     title: 'API keys',
-    description: 'Provider credentials. Write-only — a stored secret never comes back.',
+    description: 'Provider credentials. Write-only - a stored secret never comes back.',
   },
   '/admin/settings/third-party': {
     label: 'Third-Party Apps',
@@ -748,7 +760,7 @@ export function adminBreadcrumbTrail(pathname, { recordLabel } = {}) {
      *
      * `/admin/clients/:id/edit` sits under `/admin/clients/:id`, and pushing
      * that key straight into `to` produced a crumb pointing at the literal
-     * string `:id` — a dead link on every record. Because an ancestor is always
+     * string `:id` - a dead link on every record. Because an ancestor is always
      * a prefix of the current path, its real URL is simply the first N segments
      * of the one being viewed.
      */
@@ -763,7 +775,7 @@ export function adminBreadcrumbTrail(pathname, { recordLabel } = {}) {
     if (parent.startsWith('settings:')) {
       // A settings page sits under its category, which sits under the summary.
       // The summary is a real screen and carries the `Settings` label itself,
-      // so the group heading is skipped here — otherwise the trail says
+      // so the group heading is skipped here - otherwise the trail says
       // "Settings > Settings".
       const category = SETTINGS_CATEGORIES.find((c) => c.key === parent.slice(9));
       if (category) {
@@ -774,7 +786,7 @@ export function adminBreadcrumbTrail(pathname, { recordLabel } = {}) {
     }
 
     if (GROUPS[parent]) {
-      // A group is a heading, not a screen — there is nowhere for it to link,
+      // A group is a heading, not a screen - there is nowhere for it to link,
       // so it renders unlinked.
       trail.unshift({ label: GROUPS[parent].label, to: null });
       break;
@@ -784,7 +796,7 @@ export function adminBreadcrumbTrail(pathname, { recordLabel } = {}) {
   }
 
   /**
-   * Detail pages name the record, not the type (§4b.6) — but the record is
+   * Detail pages name the record, not the type (§4b.6) - but the record is
    * named on **its own** crumb rather than always on the last one.
    *
    * On `/admin/clients/:id` those are the same crumb. On a child of it, such as
@@ -822,8 +834,8 @@ export function adminBreadcrumbTrail(pathname, { recordLabel } = {}) {
  * and a detail route the nav never lists (`/admin/clients/:id`) still has to
  * highlight its list parent.
  *
- * `search` is not optional decoration. Two groups — Settings (`?cat=`) and
- * Reports (`?tab=`) — are a single path with a query string per child, so a
+ * `search` is not optional decoration. Two groups - Settings (`?cat=`) and
+ * Reports (`?tab=`) - are a single path with a query string per child, so a
  * caller that passes only the pathname cannot tell Users & Access from Summary
  * and lights up the wrong row on every one of them.
  */
@@ -855,7 +867,7 @@ export function activeNavKeys(pathname, search = '') {
     if (!matches) continue;
 
     // A child that names a query parameter only wins when the URL carries the
-    // same value — this is what separates the seven `/admin/reports?tab=` rows.
+    // same value - this is what separates the seven `/admin/reports?tab=` rows.
     // A child flagged `isDefault` also answers for the bare path, because the
     // page it points at drops the parameter rather than restating the default.
     if (query) {
@@ -868,7 +880,7 @@ export function activeNavKeys(pathname, search = '') {
     }
 
     // Longest path wins, and among equal paths a query-bearing child beats the
-    // bare one — otherwise `/admin/reports?tab=pl` would settle on whichever
+    // bare one - otherwise `/admin/reports?tab=pl` would settle on whichever
     // `/admin/reports` row the list happened to reach first.
     const weight = base.length + (query ? 1 : 0);
     if (weight > bestLength) {
@@ -877,7 +889,7 @@ export function activeNavKeys(pathname, search = '') {
     }
   }
 
-  // A route with no nav row of its own falls back to its breadcrumb parent —
+  // A route with no nav row of its own falls back to its breadcrumb parent
   // Approvals highlights Clients, a product detail highlights Inventory.
   if (!child && meta?.parent?.startsWith('/admin')) {
     child =

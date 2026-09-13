@@ -6,7 +6,7 @@ import * as offerService from '../services/offerService.js';
 /**
  * Blog, FAQ and offers.
  *
- * Three small domains that share one shape — public read, admin write — so they
+ * Three small domains that share one shape - public read, admin write - so they
  * share a controller rather than three near-identical files. The services stay
  * separate; the business logic is where the domains actually differ.
  */
@@ -66,7 +66,7 @@ const adminDeleteFaq = asyncHandler(async (req, res) => {
 // ---- offers -----------------------------------------------------------------
 
 const listOffers = asyncHandler(async (req, res) => {
-  // `req.user` may be null — the price gate inside decides what a guest sees.
+  // `req.user` may be null - the price gate inside decides what a guest sees.
   res.json(await offerService.listLive(req.user));
 });
 

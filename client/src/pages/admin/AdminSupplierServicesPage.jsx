@@ -45,11 +45,11 @@ import {
  *
  * They differ only in whether the charge repeats, so forking the page would
  * mean two copies of the same table drifting apart. What each one *says*
- * differs — a subscription has a renewal date and an annual cost, a service has
- * neither — and that is driven by the `MODE` table below rather than by
+ * differs - a subscription has a renewal date and an annual cost, a service has
+ * neither - and that is driven by the `MODE` table below rather than by
  * scattered conditionals.
  *
- * **Neither is the customer catalogue.** `Product` is what Cellvix sells — an
+ * **Neither is the customer catalogue.** `Product` is what Cellvix sells - an
  * iPhone 15 battery, with stock and a grade. Nothing here has stock or reaches
  * the storefront; these are costs, and they land in the P&L as real `Expense`
  * rows.
@@ -66,7 +66,7 @@ const MODE = {
     // A plan that repeats needs a start; a one-off does not.
     defaultBilling: 'monthly',
     emptyTitle: 'No plans yet',
-    emptyBody: 'Recurring supplier costs — a licence, a courier account, a service contract.',
+    emptyBody: 'Recurring supplier costs - a licence, a courier account, a service contract.',
   },
   service: {
     route: '/admin/supplier-services',
@@ -77,7 +77,7 @@ const MODE = {
     createTitle: 'Add a service product',
     defaultBilling: 'one_off',
     emptyTitle: 'No services yet',
-    emptyBody: 'Things bought in that are not stock — outsourced repair, freight, disposal.',
+    emptyBody: 'Things bought in that are not stock - outsourced repair, freight, disposal.',
   },
 };
 
@@ -117,7 +117,7 @@ function ServiceForm({ mode, suppliers, categories, row, onSubmit, onCancel, isP
   const recurring = billing !== 'one_off';
 
   // A subscription screen offers only repeating cycles, and a service screen
-  // only the one-off — picking the other kind here would file the row under a
+  // only the one-off - picking the other kind here would file the row under a
   // tab it does not appear on, which reads as the save having failed.
   const cycles =
     mode === 'subscription'
@@ -200,7 +200,7 @@ function ServiceForm({ mode, suppliers, categories, row, onSubmit, onCancel, isP
       <Textarea label="Notes" rows={2} {...register('notes')} />
 
       <p className="rounded-md bg-surface-2 px-3 py-2.5 text-xs leading-relaxed text-ink-500">
-        This is a cost, not something Cellvix sells — it has no stock and never reaches the
+        This is a cost, not something Cellvix sells - it has no stock and never reaches the
         storefront. Recording a charge against it writes a real expense, so it shows up in the P&amp;L
         like any other.
       </p>
@@ -387,7 +387,7 @@ export function AdminSupplierServicesPage({ mode = 'service' }) {
                   </span>
                 </>
               ) : (
-                <span className="text-xs text-ink-300">—</span>
+                <span className="text-xs text-ink-300">-</span>
               ),
           },
         ]
@@ -417,7 +417,7 @@ export function AdminSupplierServicesPage({ mode = 'service' }) {
     /**
      * Cancel and reactivate are two entries, not one that changes its icon.
      * `RowMenu` renders `icon` as a component and only `label` may be a
-     * function, so a per-row icon would render a broken element — and two
+     * function, so a per-row icon would render a broken element - and two
      * entries with their own `hidden` reads more plainly anyway.
      */
     {

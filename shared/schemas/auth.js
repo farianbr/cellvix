@@ -24,7 +24,7 @@ const registerSchema = z.object({
    *
    * `contactName` is what the model, the welcome mail, the approvals queue and
    * ~150 other references call it, so splitting it in the model to split it on
-   * one form would be the tail wagging the dog — same call as `phone` and its
+   * one form would be the tail wagging the dog - same call as `phone` and its
    * dial code. The form composes the two halves and sends this; `firstName` and
    * `lastName` never leave the client.
    */
@@ -37,7 +37,7 @@ const registerSchema = z.object({
   taxId: z.string().trim().optional(),
   // A referral code from an existing account (ERP rework §6.13). Optional, and
   // uppercased here so the buyer can type it however it was written down. An
-  // unrecognised code is refused server-side rather than ignored — silently
+  // unrecognised code is refused server-side rather than ignored - silently
   // dropping it costs a real referrer real money.
   referralCode: z
     .string()
@@ -83,7 +83,7 @@ const forgotPasswordSchema = z.object({
 /**
  * Setting a new password from a reset link.
  *
- * The token is the whole of the authorisation — there is no session yet and no
+ * The token is the whole of the authorisation - there is no session yet and no
  * current password to confirm, which is exactly why it is single-use and
  * short-lived server-side.
  */

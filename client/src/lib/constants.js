@@ -1,7 +1,7 @@
 /**
  * Shared display constants.
  *
- * BUSINESS_INFO now lives in shared/business.js — the server renders it onto
+ * BUSINESS_INFO now lives in shared/business.js - the server renders it onto
  * the invoice it emails, so client and server have to read one object. It is
  * re-exported here because every client surface already imports it from this
  * module.
@@ -16,7 +16,7 @@ export const GRADES = {
   'PULL-A': { label: 'Pull Grade A', short: 'PULL A', tone: 'brand' },
   'PULL-B': { label: 'Pull Grade B', short: 'PULL B', tone: 'warn' },
   // `short` is split on spaces into the badge's lines. Two short lines read in a
-  // circle; one long one does not — "AFTMKT" on a single line was wider than the
+  // circle; one long one does not - "AFTMKT" on a single line was wider than the
   // badge it sat in.
   AFTERMARKET: { label: 'Aftermarket', short: 'AFT MKT', tone: 'neutral' },
 };
@@ -27,7 +27,7 @@ export const GRADE_ORDER = ['NEW', 'OEM', 'PULL-A', 'PULL-B', 'AFTERMARKET'];
  * Scroll depth at which the phone/tablet layout hands search over.
  *
  * Above it, the mobile header carries the search bar. Below it, that row folds
- * away — it is a full row of chrome sitting over a grid the buyer is scrolling —
+ * away - it is a full row of chrome sitting over a grid the buyer is scrolling
  * and the bottom bar rises with the search button that unfolds it again. One
  * number so the handoff has no gap: the bar cannot leave before the button that
  * replaces it has arrived.
@@ -35,7 +35,7 @@ export const GRADE_ORDER = ['NEW', 'OEM', 'PULL-A', 'PULL-B', 'AFTERMARKET'];
 export const BOTTOM_NAV_REVEAL_AT = 160;
 
 /**
- * Low-stock threshold. ADMIN ONLY — it colours the inventory column in the
+ * Low-stock threshold. ADMIN ONLY - it colours the inventory column in the
  * admin product list. The storefront states in stock or out of stock and never
  * sees a count at all; the API does not send one (productService.serialize).
  */
@@ -62,11 +62,11 @@ export const SORT_OPTIONS = [
  * `componentType` leads: a business buyer knows they need a screen long before
  * they care whose screen, and asking the part first lets every level below it
  * be pruned to what actually stocks that component (see the server's
- * getTreeForPartType) — so the wizard cannot offer a combination that returns
+ * getTreeForPartType) - so the wizard cannot offer a combination that returns
  * nothing.
  *
- * It is NOT a node in the taxonomy tree — a battery exists for phones, laptops
- * and watches alike — so it is stored as a facet and read back through the
+ * It is NOT a node in the taxonomy tree - a battery exists for phones, laptops
+ * and watches alike - so it is stored as a facet and read back through the
  * store's componentType helpers. Everything below it IS a tree level.
  */
 export const FILTER_LEVELS = [

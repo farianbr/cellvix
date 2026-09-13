@@ -24,7 +24,7 @@ import { pressable } from '@/lib/motion';
 /**
  * Roles & Access (§6.15/3, §7.6).
  *
- * A **named role carries the permission map**, and staff hold the role — so
+ * A **named role carries the permission map**, and staff hold the role - so
  * changing what "Warehouse" may do updates everyone on it in one edit. That is
  * the operator's own mental model: they think in job titles, not in per-user
  * checkboxes.
@@ -156,7 +156,7 @@ function RoleCard({ role, onEdit, onDelete }) {
           </p>
         </div>
 
-        {/* The Admin role is never editable and never deletable — enforced on
+        {/* The Admin role is never editable and never deletable - enforced on
             the server too, because a hidden button is a suggestion. */}
         {!role.isSystem && (
           <div className="flex shrink-0 gap-1">
@@ -227,7 +227,7 @@ export function AdminRolesPage() {
       setConfirming(null);
     } catch (err) {
       // A role still held by somebody is refused, and the message names how
-      // many hold it — reassigning them is the operator's next move.
+      // many hold it - reassigning them is the operator's next move.
       setError(err.message);
     }
   }

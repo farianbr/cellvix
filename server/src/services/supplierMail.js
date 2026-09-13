@@ -4,12 +4,12 @@ import { MAIL, escapeHtml } from './welcomeMail.js';
 import { BUSINESS_INFO } from '../../../shared/business.js';
 
 /**
- * Mail to suppliers — the portal invitation, and everything a purchase order
+ * Mail to suppliers - the portal invitation, and everything a purchase order
  * puts to them (supplier process flow, §6.8a).
  *
  * Same contract as `welcomeMail.js` and for the same reason: **never throws**.
  * Every message here is a side effect of something already written to the
- * database — a supplier that exists, an order that has been sent — and a dead
+ * database - a supplier that exists, an order that has been sent - and a dead
  * SMTP host must not turn any of those into an error. Callers read `delivered`.
  *
  * Sent from `MAIL_FROM_ADMIN`, not `MAIL_FROM`. A supplier replying to their
@@ -116,7 +116,7 @@ function detailTable(rows) {
  * welcome does, and for the same reason and at the same cost: a supplier has no
  * other way to receive a credential they did not choose, and the message tells
  * them to change it. `sendSupplierPortalInvite` is called both when a supplier
- * is created and from the admin's **Resend portal link** button — the second
+ * is created and from the admin's **Resend portal link** button - the second
  * one always mints a fresh password, because the old one cannot be read back
  * out of the hash to be re-sent.
  */
@@ -143,7 +143,7 @@ async function sendSupplierPortalInvite({ supplier, password }) {
         ? `
         <tr><td style="padding:14px 36px 0;">
           <p style="margin:0;font:400 ${MAIL.small}/1.6 ${MAIL.body};color:${MAIL.ink500};">
-            This password is written in this email — anyone who can read the message can sign in as you.
+            This password is written in this email - anyone who can read the message can sign in as you.
             Please change it from the portal once you are in, and delete this message afterwards.
           </p>
         </td></tr>`
@@ -185,7 +185,7 @@ async function sendSupplierPortalInvite({ supplier, password }) {
     });
   } catch (error) {
     console.error(
-      `  Mail: portal invite for ${supplier?.email} could not be built — ${error.message}`,
+      `  Mail: portal invite for ${supplier?.email} could not be built - ${error.message}`,
     );
     return { delivered: false, via: null, error: error.message };
   }
@@ -194,7 +194,7 @@ async function sendSupplierPortalInvite({ supplier, password }) {
 /**
  * The portal password reset.
  *
- * **The link is the secret** — unlike the invite there is no password in the
+ * **The link is the secret** - unlike the invite there is no password in the
  * body, because this one is answering a request from somebody who already has
  * an account. The token is single-use and expires, so a message left sitting in
  * a mailbox stops working on its own.
@@ -211,7 +211,7 @@ async function sendSupplierResetEmail({ supplier, link, expiresDays = 7 }) {
       `  Choose a new password  ${link}`,
       '',
       `The link works once and expires in ${expiresDays} days.`,
-      'If this was not you, ignore this message — nothing has changed.',
+      'If this was not you, ignore this message - nothing has changed.',
       '',
       `${BUSINESS_INFO.name} · ${BUSINESS_INFO.address.city}, ${BUSINESS_INFO.address.region}`,
     ].join('\n');
@@ -226,12 +226,12 @@ async function sendSupplierResetEmail({ supplier, link, expiresDays = 7 }) {
         intro: `Somebody asked to reset the supplier portal password for <strong style="color:${MAIL.ink900};font-weight:600;">${escapeHtml(supplier.email)}</strong>. Use the button below within ${expiresDays} days.`,
         blocks: button(link, 'Choose a new password'),
         footerNote:
-          'If this was not you, ignore this message — nothing has changed until the link is used.',
+          'If this was not you, ignore this message - nothing has changed until the link is used.',
       }),
       text,
     });
   } catch (error) {
-    console.error(`  Mail: portal reset for ${supplier?.email} could not be built — ${error.message}`);
+    console.error(`  Mail: portal reset for ${supplier?.email} could not be built - ${error.message}`);
     return { delivered: false, via: null, error: error.message };
   }
 }
@@ -239,7 +239,7 @@ async function sendSupplierResetEmail({ supplier, link, expiresDays = 7 }) {
 /**
  * "We would like a price for these parts."
  *
- * Carries the line list but **no prices at all** — not ours, not another
+ * Carries the line list but **no prices at all** - not ours, not another
  * supplier's. The whole document is a question, and a number in it would be an
  * anchor we did not mean to set.
  */
@@ -281,7 +281,7 @@ async function sendPurchaseOrderInvitation({ supplier, po }) {
         </td></tr>` + button(link, 'Send us your price');
 
     const text = [
-      `${BUSINESS_INFO.name} is asking for a price — ${po.poNumber}.`,
+      `${BUSINESS_INFO.name} is asking for a price - ${po.poNumber}.`,
       '',
       ...(po.items ?? []).map(
         (item) => `  ${item.qtyOrdered} x ${item.name ?? ''} (${item.sku ?? ''})`,
@@ -296,11 +296,11 @@ async function sendPurchaseOrderInvitation({ supplier, po }) {
     return await sendMail({
       to: supplier.email,
       from: env.MAIL_FROM_ADMIN,
-      subject: `Purchase order ${po.poNumber} — your price, please`,
+      subject: `Purchase order ${po.poNumber} - your price, please`,
       html: shell({
         preheader: `We would like a price for ${(po.items ?? []).length} line${(po.items ?? []).length === 1 ? '' : 's'}.`,
         title: 'Request for your price',
-        intro: `We would like a price from <strong style="color:${MAIL.ink900};font-weight:600;">${escapeHtml(supplier.name)}</strong> for the parts below${po.closesAt ? `, by ${escapeHtml(new Date(po.closesAt).toDateString())}` : ''}. Prices go in the portal — the button is at the bottom.`,
+        intro: `We would like a price from <strong style="color:${MAIL.ink900};font-weight:600;">${escapeHtml(supplier.name)}</strong> for the parts below${po.closesAt ? `, by ${escapeHtml(new Date(po.closesAt).toDateString())}` : ''}. Prices go in the portal - the button is at the bottom.`,
         blocks,
         footerNote: `Reference ${escapeHtml(po.poNumber)}. Reply to this email and it reaches our purchasing team.`,
       }),
@@ -308,7 +308,7 @@ async function sendPurchaseOrderInvitation({ supplier, po }) {
     });
   } catch (error) {
     console.error(
-      `  Mail: purchase order invite for ${supplier?.email} could not be built — ${error.message}`,
+      `  Mail: purchase order invite for ${supplier?.email} could not be built - ${error.message}`,
     );
     return { delivered: false, via: null, error: error.message };
   }
@@ -319,7 +319,7 @@ async function sendPurchaseOrderInvitation({ supplier, po }) {
  *
  * Losers are told, deliberately. A supplier who priced work and hears nothing
  * learns only that answering is not worth the effort, and the next order gets
- * fewer answers. The message carries no competitor's price and no ranking —
+ * fewer answers. The message carries no competitor's price and no ranking
  * what another supplier charges is not this one's business.
  */
 async function sendPurchaseOrderOutcome({ supplier, po, won }) {
@@ -332,7 +332,7 @@ async function sendPurchaseOrderOutcome({ supplier, po, won }) {
     const link = `${origin}/supplier/orders/${po._id ?? po.id}`;
 
     const intro = won
-      ? `Thank you for pricing ${escapeHtml(po.poNumber)} — we would like to go ahead. The order is confirmed with you, and the details are in your portal.`
+      ? `Thank you for pricing ${escapeHtml(po.poNumber)} - we would like to go ahead. The order is confirmed with you, and the details are in your portal.`
       : `Thank you for pricing ${escapeHtml(po.poNumber)}. We have placed this order elsewhere on this occasion, and we will be in touch with the next one.`;
 
     const blocks = won
@@ -357,7 +357,7 @@ async function sendPurchaseOrderOutcome({ supplier, po, won }) {
       to: supplier.email,
       from: env.MAIL_FROM_ADMIN,
       subject: won
-        ? `Your price was accepted — ${po.poNumber}`
+        ? `Your price was accepted - ${po.poNumber}`
         : `Purchase order ${po.poNumber}`,
       html: shell({
         preheader: won ? 'We would like to go ahead.' : 'Thank you for pricing.',
@@ -370,7 +370,7 @@ async function sendPurchaseOrderOutcome({ supplier, po, won }) {
     });
   } catch (error) {
     console.error(
-      `  Mail: purchase outcome for ${supplier?.email} could not be built — ${error.message}`,
+      `  Mail: purchase outcome for ${supplier?.email} could not be built - ${error.message}`,
     );
     return { delivered: false, via: null, error: error.message };
   }
@@ -379,7 +379,7 @@ async function sendPurchaseOrderOutcome({ supplier, po, won }) {
 /**
  * We would like a better price. Sent whenever a negotiation round opens.
  *
- * The ask is stated plainly — a round that only says "please review" gives the
+ * The ask is stated plainly - a round that only says "please review" gives the
  * supplier nothing to answer. Where a target total was set it goes in the
  * message, because the number is the whole point of the conversation.
  */
@@ -431,7 +431,7 @@ async function sendNegotiationEmail({ supplier, po, askedTotal, note, subject })
     });
   } catch (error) {
     console.error(
-      `  Mail: negotiation for ${supplier?.email} could not be built — ${error.message}`,
+      `  Mail: negotiation for ${supplier?.email} could not be built - ${error.message}`,
     );
     return { delivered: false, via: null, error: error.message };
   }
@@ -441,14 +441,14 @@ async function sendNegotiationEmail({ supplier, po, askedTotal, note, subject })
  * The non-email channels, where the supplier has consented to them.
  *
  * **Nothing sends yet, and this says so rather than pretending.** There is no
- * Twilio or WhatsApp client anywhere in this codebase — `marketingService`'s
+ * Twilio or WhatsApp client anywhere in this codebase - `marketingService`'s
  * own adapters declare `delivers: () => false` for both, so credentials can be
  * saved on the API Keys screen and still transmit nothing (§6b U3, phase 13).
  *
  * So this returns `false` **always**, and the negotiation round records only the
  * channels that genuinely carried the message. That matters more here than on
  * the customer side: a round claiming it was WhatsApped is a fact a buyer would
- * act on — they would stop chasing, believing the supplier had been reached.
+ * act on - they would stop chasing, believing the supplier had been reached.
  * The message is logged so the intent is not lost, and wiring a real client
  * later is a change to this one function.
  *
@@ -466,7 +466,7 @@ async function sendSupplierMessage({ supplier, channel, po, askedTotal, note }) 
     .join(' ');
 
   console.warn(
-    `  Purchase: ${channel} to ${supplier?.name ?? 'supplier'} not sent — no ${channel} client is wired up. Message was: ${body}`,
+    `  Purchase: ${channel} to ${supplier?.name ?? 'supplier'} not sent - no ${channel} client is wired up. Message was: ${body}`,
   );
   return false;
 }
@@ -475,7 +475,7 @@ async function sendSupplierMessage({ supplier, channel, po, askedTotal, note }) 
  * Tell the purchasing desk that a supplier did something.
  *
  * A proforma invoice and a delivery update both arrive from **outside** the
- * panel, which is exactly the class of event nobody discovers on their own —
+ * panel, which is exactly the class of event nobody discovers on their own
  * the bell catches it, and this makes sure it also reaches somebody not looking
  * at the screen.
  */
@@ -490,13 +490,13 @@ async function sendPurchaseAdminAlert({ subject, po, supplierName, kind, status 
     const intro =
       kind === 'proforma'
         ? `<strong style="color:${MAIL.ink900};font-weight:600;">${escapeHtml(supplierName ?? 'A supplier')}</strong> has issued a proforma invoice against ${escapeHtml(po.poNumber)}. It is on the order for review.`
-        : `<strong style="color:${MAIL.ink900};font-weight:600;">${escapeHtml(supplierName ?? 'A supplier')}</strong> has updated the delivery on ${escapeHtml(po.poNumber)}${status ? ` — now ${escapeHtml(String(status).replace('_', ' '))}` : ''}.`;
+        : `<strong style="color:${MAIL.ink900};font-weight:600;">${escapeHtml(supplierName ?? 'A supplier')}</strong> has updated the delivery on ${escapeHtml(po.poNumber)}${status ? ` - now ${escapeHtml(String(status).replace('_', ' '))}` : ''}.`;
 
     const text = [
       subject,
       '',
       `  Purchase order  ${po.poNumber}`,
-      `  Supplier        ${supplierName ?? '—'}`,
+      `  Supplier        ${supplierName ?? '-'}`,
       ...(status ? [`  Delivery        ${String(status).replace('_', ' ')}`] : []),
       '',
       `  Open  ${link}`,
@@ -513,7 +513,7 @@ async function sendPurchaseAdminAlert({ subject, po, supplierName, kind, status 
         blocks:
           detailTable([
             ['Purchase order', po.poNumber, false],
-            ['Supplier', supplierName ?? '—', false],
+            ['Supplier', supplierName ?? '-', false],
             ...(status ? [['Delivery', String(status).replace('_', ' '), true]] : []),
           ]) + button(link, 'Open the order'),
         footerNote: 'You are receiving this because you handle purchasing.',
@@ -521,7 +521,7 @@ async function sendPurchaseAdminAlert({ subject, po, supplierName, kind, status 
       text,
     });
   } catch (error) {
-    console.error(`  Mail: purchase admin alert could not be built — ${error.message}`);
+    console.error(`  Mail: purchase admin alert could not be built - ${error.message}`);
     return { delivered: false, via: null, error: error.message };
   }
 }

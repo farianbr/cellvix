@@ -2,7 +2,7 @@ import ApiError from '../utils/ApiError.js';
 import env from '../config/env.js';
 
 /**
- * Payment gateway — MOCK.
+ * Payment gateway - MOCK.
  *
  * The client chose a mock at kickoff (PROJECT_INSTRUCTIONS.md §0), and the
  * default is still "every charge succeeds". Nothing anywhere else in the
@@ -13,9 +13,9 @@ import env from '../config/env.js';
  * DECLINES ARE OPT-IN. A payment-failure page that cannot be reached is a page
  * nobody can review, so there are two deliberate ways to make this decline:
  *
- *   - `MOCK_PAYMENT_DECLINE=true` in the environment — declines everything,
+ *   - `MOCK_PAYMENT_DECLINE=true` in the environment - declines everything,
  *     which is what the smoke test and the screenshot runner use;
- *   - a DELIVERY NOTE starting with `DECLINE` — one order at a time, no
+ *   - a DELIVERY NOTE starting with `DECLINE` - one order at a time, no
  *     restart, which is how the failure page is demonstrated to the client.
  *     This used to ride on the PO number, but a PO is supplier paperwork and
  *     the customer checkout no longer collects one. Delivery notes are the
@@ -28,7 +28,7 @@ import env from '../config/env.js';
  *
  * When a real gateway swaps in:
  *   - keep the `{ status, reference, processedAt }` shape;
- *   - keep throwing `PAYMENT_DECLINED` on a decline — the checkout page routes
+ *   - keep throwing `PAYMENT_DECLINED` on a decline - the checkout page routes
  *     on that code, not on the message;
  *   - move the secret key into config/env.js so it is validated at boot.
  */
@@ -46,7 +46,7 @@ function startsWithMarker(value) {
 
 function declineReason({ poNumber, deliveryNotes }) {
   if (env.MOCK_PAYMENT_DECLINE) return 'forced';
-  // Either field — the customer checkout sends a delivery note, the admin and
+  // Either field - the customer checkout sends a delivery note, the admin and
   // quick-order paths still send a PO number.
   if (startsWithMarker(deliveryNotes) || startsWithMarker(poNumber)) return 'marker';
   return null;
@@ -74,7 +74,7 @@ async function charge({ amount, method, orderNumber, poNumber, deliveryNotes }) 
   if (reason) throw ApiError.paymentDeclined(DECLINE_REASONS[reason]);
 
   return {
-    // Buying on terms does not move money now — the invoice does that later.
+    // Buying on terms does not move money now - the invoice does that later.
     status: method === 'terms' ? 'pending' : 'paid',
     reference: `mock_${method}_${orderNumber}_${Date.now().toString(36)}`,
     processedAt: new Date(),

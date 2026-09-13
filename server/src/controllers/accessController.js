@@ -7,7 +7,7 @@ import auditService from '../services/auditService.js';
  *
  * Thin, like every other controller here. The self-demotion, last-admin and
  * role-in-use rules live in the service so a second route cannot reach around
- * them — the actor's id is the only thing this layer adds, because only the
+ * them - the actor's id is the only thing this layer adds, because only the
  * request knows who is asking.
  */
 

@@ -7,12 +7,12 @@ import { db } from '../db/models.js';
 import '../models/User.js';
 
 /**
- * The scheduling board (§6.15 category 4 — **UI only, §6b U1–U2**, phase 11e).
+ * The scheduling board (§6.15 category 4 - **UI only, §6b U1–U2**, phase 11e).
  *
  * **Read-only, and there is deliberately no write route.** §6b rule 4: nothing
  * fakes success. A `POST` here would accept a booking the business has not
  * decided the shape of yet (§12 Q1) and store it against a model that may still
- * change — so the dialog on the screen is disabled rather than wired to an
+ * change - so the dialog on the screen is disabled rather than wired to an
  * endpoint that would quietly work.
  *
  * The collection ships empty, so both screens render their real chrome around

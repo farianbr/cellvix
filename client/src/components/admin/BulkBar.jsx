@@ -15,7 +15,7 @@ import { pressable } from '@/lib/motion';
  * because "Delete" with an ambiguous target is how somebody deletes thirty rows
  * they did not mean to select.
  *
- * `Clear` is always present and always last-but-one — an operator who opened
+ * `Clear` is always present and always last-but-one - an operator who opened
  * this bar by accident needs the way out to be in the same place every time.
  *
  * ```jsx

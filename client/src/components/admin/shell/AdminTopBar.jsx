@@ -11,7 +11,7 @@ import { pressable } from '@/lib/motion';
  * The ERP top bar (§4, convention 4): page-title chip with a back arrow,
  * global search, `+ Create`, notification bell, user chip.
  *
- * The bell is `NotificationMenu`, which owns its own query, badge and panel —
+ * The bell is `NotificationMenu`, which owns its own query, badge and panel
  * the top bar does not thread a count through, because a count computed here
  * and a list fetched there are two answers to one question.
  */
@@ -78,7 +78,7 @@ export function AdminTopBar({ user, onOpenSearch, onOpenMobileNav }) {
         </button>
 
         {/* Which shop the panel is looking at. Left of Create because it
-            qualifies everything to its right — what you create lands in the
+            qualifies everything to its right - what you create lands in the
             business you are in. */}
         <BusinessSwitcher />
 

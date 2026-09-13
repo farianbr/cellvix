@@ -8,8 +8,8 @@ import User from '../models/User.js';
  * A tax invoice is now raised only against money that actually arrived: an
  * order placed on terms produces an **amount due** in the `CVX-` series, which
  * is renumbered into `INV-` when it settles. Rows written before that split
- * carry no `kind` at all, and the customer's invoice screen — which shows two
- * panels, what is owed and what has been invoiced — cannot place them.
+ * carry no `kind` at all, and the customer's invoice screen - which shows two
+ * panels, what is owed and what has been invoiced - cannot place them.
  *
  * The rule is the same one the new code applies going forward:
  *
@@ -55,7 +55,7 @@ async function backfillInvoiceKind({ force = false, quiet = false } = {}) {
   const dues = outstanding.modifiedCount ?? 0;
 
   if (invoices + dues === 0) {
-    log('  every invoice already carries a kind — nothing to do.');
+    log('  every invoice already carries a kind - nothing to do.');
   } else {
     log(`  settled -> invoice: ${invoices}`);
     log(`  outstanding -> due: ${dues}`);
@@ -95,7 +95,7 @@ async function backfillInvoiceKind({ force = false, quiet = false } = {}) {
  * actually owes.
  *
  * `User.balance` was write-only before `invoicePaymentService` existed: placing
- * an order on terms incremented it, and **nothing decremented it** — not
+ * an order on terms incremented it, and **nothing decremented it** - not
  * paying an invoice, not voiding one. Repayment was reconstructed for display
  * and never written back. Every account that has ever paid an invoice is
  * therefore carrying a balance that includes debt it already settled, and the
@@ -141,7 +141,7 @@ async function reconcileBalances({ quiet = false, dryRun = false } = {}) {
   }
 
   if (corrections.length === 0) {
-    log('  every balance already matches what is owed — nothing to do.');
+    log('  every balance already matches what is owed - nothing to do.');
     return { corrected: 0 };
   }
 
@@ -183,7 +183,7 @@ if (process.argv[1] && process.argv[1].endsWith('backfill-invoice-kind.js')) {
         await backfillInvoiceKind({ force });
         console.log(
           '\n  Done. No invoice was renumbered and nothing else was touched.' +
-            '\n  Balances were NOT changed — run with --balances for that.\n',
+            '\n  Balances were NOT changed - run with --balances for that.\n',
         );
       }
     } finally {

@@ -2,12 +2,12 @@ import { asyncHandler } from '../utils/ApiError.js';
 import marketingService from '../services/marketingService.js';
 
 /**
- * Marketing — calls, SMS, WhatsApp, email campaigns and consent (§6.13, phase 9).
+ * Marketing - calls, SMS, WhatsApp, email campaigns and consent (§6.13, phase 9).
  *
  * Thin, like every other controller here. Two things this layer adds and the
  * service cannot: the acting staff member, taken from the session so a message
  * can never claim to be from somebody else, and the channel, which comes from
- * the route rather than the body — a request must not be able to nominate the
+ * the route rather than the body - a request must not be able to nominate the
  * channel it is sent on.
  */
 
@@ -20,7 +20,7 @@ const listMessages = asyncHandler(async (req, res) => {
 /**
  * One handler per channel, each closing over its own channel name.
  *
- * The alternative — reading `req.body.channel` — would let a caller compose on
+ * The alternative - reading `req.body.channel` - would let a caller compose on
  * the SMS screen and have it sent as email. The route knows which screen it
  * serves; the body does not get a vote.
  */
@@ -89,7 +89,7 @@ const resubscribe = asyncHandler(async (req, res) => {
 });
 
 /**
- * The public unsubscribe. No session, by design — see the service. The HMAC in
+ * The public unsubscribe. No session, by design - see the service. The HMAC in
  * the link is what authorises it.
  */
 const unsubscribe = asyncHandler(async (req, res) => {

@@ -30,7 +30,7 @@ import { FEATURES, resolveFeatures } from '../../../shared/schemas/features.js';
  * toggle features per business.
  *
  * **May not:** read a tenant's business records. Nothing in this file returns a
- * customer, an invoice, an order or a ticket — the console lists *businesses*
+ * customer, an invoice, an order or a ticket - the console lists *businesses*
  * and their configuration, never what is inside them. That is a deliberate
  * limit and not an oversight: an operator who can read every tenant's books is
  * a breach waiting for one stolen laptop.
@@ -105,7 +105,7 @@ function logout(res) {
 
 // ---- tenants ----------------------------------------------------------------
 
-/** URL-safe, lowercase, collapsed — the same shaping `taxonomyAdminService` uses. */
+/** URL-safe, lowercase, collapsed - the same shaping `taxonomyAdminService` uses. */
 function slugify(value) {
   return String(value ?? '')
     .toLowerCase()
@@ -118,7 +118,7 @@ function slugify(value) {
 /**
  * Every tenant, with the businesses each one owns.
  *
- * The business rows carry configuration only — name, type, status — never a
+ * The business rows carry configuration only - name, type, status - never a
  * count of customers or a figure of revenue. See the note at the top of this
  * file.
  */
@@ -132,24 +132,24 @@ async function listTenants() {
   ]);
 
   /**
-   * Each business's administrators — names and addresses only.
+   * Each business's administrators - names and addresses only.
    *
    * **This is the one place the console reads a `User`, and the limit is
    * deliberate.** It answers "can anybody actually sign in to this tenant",
    * which is a question about provisioning rather than about their records: an
    * account nobody can reach is a support call waiting to happen, and the
    * console is where it gets fixed. It returns no customer, no order and no
-   * figure — `role: 'admin'` is the whole filter, so a tenant's *customers*
+   * figure - `role: 'admin'` is the whole filter, so a tenant's *customers*
    * remain as invisible here as they were before.
    */
   /**
    * Owners belong to the **tenant**, not to a business.
    *
    * This used to filter `business: { $in: … }` and read from each business's
-   * own database — which was right while an admin lived beside the shop's
+   * own database - which was right while an admin lived beside the shop's
    * records, and became wrong the moment admins moved to the control plane so
    * one login could reach every business a tenant owns. The console then showed
-   * "No owner — nobody can sign in" on a tenant whose owner was signed in at the
+   * "No owner - nobody can sign in" on a tenant whose owner was signed in at the
    * time, because it was looking in the database the account had left.
    */
   const admins = await User.find({
@@ -223,7 +223,7 @@ async function listTenants() {
         admins: adminsByTenant.get(String(tenant._id)) ?? [],
         slotsUsed: holding.length,
         slotsFree: Math.max(0, (tenant.slots ?? 0) - holding.length),
-        plan: tenant.plan ? { id: String(tenant.plan), name: planName.get(String(tenant.plan)) ?? '—' } : null,
+        plan: tenant.plan ? { id: String(tenant.plan), name: planName.get(String(tenant.plan)) ?? '-' } : null,
         businesses: owned,
         createdAt: tenant.createdAt,
       };
@@ -290,7 +290,7 @@ async function updateTenant(id, body) {
  * Grant or revoke slots.
  *
  * **Never below what is already used.** Taking a tenant to fewer slots than it
- * has businesses would leave it over its own limit with no way to act on that —
+ * has businesses would leave it over its own limit with no way to act on that
  * the console cannot delete somebody's business to make the arithmetic work,
  * and silently allowing it would make `slotsFree` negative everywhere it is
  * read.
@@ -302,7 +302,7 @@ async function setSlots(id, { slots }) {
   const used = await Business.countDocuments(slotFilter(tenant._id));
   if (slots < used) {
     throw ApiError.badRequest(
-      `${tenant.name} already runs ${used} business(es) — grant at least that many slots, or remove a business first.`,
+      `${tenant.name} already runs ${used} business(es) - grant at least that many slots, or remove a business first.`,
       'SLOTS_BELOW_USED',
     );
   }
@@ -345,7 +345,7 @@ async function createBusiness(tenantId, body) {
     plan: tenant.plan,
     slotGrantedAt: new Date(),
     // Never the default. Exactly one business is the default and it is the one
-    // an unattributed record lands in — a new tenant's business must not
+    // an unattributed record lands in - a new tenant's business must not
     // quietly become that for everybody.
     isDefault: false,
   });
@@ -417,7 +417,7 @@ function slotFilter(tenantId) {
  * Suspend, reactivate, or put a business into maintenance.
  *
  * Distinct from the tenant's subscription status, which is about the *account*.
- * This is about one shop — a tenant in good standing may still have a business
+ * This is about one shop - a tenant in good standing may still have a business
  * that has stopped trading.
  */
 async function setBusinessStatus(businessId, { status }) {
@@ -437,7 +437,7 @@ async function setBusinessStatus(businessId, { status }) {
 }
 
 /**
- * Delete a business — soft, with a retention window.
+ * Delete a business - soft, with a retention window.
  *
  * **The default business is refused**, for the reason `accessService` already
  * gives: it is where an unattributed record lands, so the field cannot go empty.
@@ -484,7 +484,7 @@ async function restoreBusiness(businessId) {
     );
   }
 
-  // The tenant must still have room for it — the slot was held, but a slot
+  // The tenant must still have room for it - the slot was held, but a slot
   // count can be lowered while a business sits deleted.
   if (business.tenant) {
     const tenant = await Tenant.findById(business.tenant).lean();
@@ -514,7 +514,7 @@ async function restoreBusiness(businessId) {
  *
  * **Creating a tenant used to leave no way in.** The console could set up an
  * account, grant it slots and configure its features, and then nobody could
- * sign in to the thing that had been built — an owner had to be inserted by
+ * sign in to the thing that had been built - an owner had to be inserted by
  * hand. This is that missing step.
  *
  * **No password is ever set here, and none is sent.** The operator supplies a
@@ -559,7 +559,7 @@ async function createOwner(tenantId, body, { origin } = {}) {
   const businessId = body.business || (owned.length === 1 ? String(owned[0]._id) : null);
   if (!businessId) {
     throw ApiError.badRequest(
-      `${tenant.name} runs ${owned.length} businesses — say which one this owner administers.`,
+      `${tenant.name} runs ${owned.length} businesses - say which one this owner administers.`,
       'BUSINESS_REQUIRED',
     );
   }
@@ -585,7 +585,7 @@ async function createOwner(tenantId, body, { origin } = {}) {
      *
      * An owner administers the account, so one login reaches every business the
      * account owns and the header switcher moves between them. Pinning them to
-     * a single business — which this did — meant a tenant with two shops needed
+     * a single business - which this did - meant a tenant with two shops needed
      * two owner accounts and could not switch at all.
      */
     tenant: tenant._id,
@@ -597,7 +597,7 @@ async function createOwner(tenantId, body, { origin } = {}) {
   /**
    * A random password nobody is told, immediately superseded by the reset link.
    *
-   * `passwordHash` is required, so the account needs *something* — and a known
+   * `passwordHash` is required, so the account needs *something* - and a known
    * placeholder would be a working credential on every tenant the platform ever
    * creates. Random bytes that are never printed mean the reset link is the
    * only way in, which is the intent.
@@ -617,7 +617,7 @@ async function createOwner(tenantId, body, { origin } = {}) {
    * Mail failure does not fail the account.
    *
    * The owner exists either way, and an operator who sees an error after the
-   * user was created cannot tell whether to try again — which is how duplicate
+   * user was created cannot tell whether to try again - which is how duplicate
    * accounts get made. The response says whether the invitation went out, so
    * the console can offer to resend rather than to re-create.
    */
@@ -631,7 +631,7 @@ async function createOwner(tenantId, body, { origin } = {}) {
     });
   } catch (error) {
     invited = false;
-    console.error(`  Owner invite: could not email ${email} — ${error.message}`);
+    console.error(`  Owner invite: could not email ${email} - ${error.message}`);
   }
 
   return {
@@ -726,7 +726,7 @@ async function getBusinessFeatures(businessId) {
  *
  * **A locked key is refused rather than silently ignored.** `resolveFeatures`
  * would force it back on anyway (§3.2 rule 4), so accepting the write would
- * store a setting that does nothing — and a console that appears to accept a
+ * store a setting that does nothing - and a console that appears to accept a
  * change it did not make is worse than one that says no.
  *
  * Passing `null` clears the override and returns the key to its plan or type
@@ -751,7 +751,7 @@ async function setBusinessFeature(businessId, { key, enabled }) {
    * A plain object, replaced wholesale rather than mutated.
    *
    * `featureOverrides` is `Mixed`, and Mongoose cannot see a mutation inside a
-   * `Mixed` value — `overrides[key] = true` on the existing object would save
+   * `Mixed` value - `overrides[key] = true` on the existing object would save
    * nothing and the console would appear to accept a change it never made.
    * Assigning a new object is what marks the path dirty; `markModified` below
    * says so explicitly rather than relying on that being remembered.
@@ -796,7 +796,7 @@ async function createPlan(body) {
  * Edit a plan.
  *
  * **Changing a plan changes what its subscribers get**, immediately and without
- * a migration — `resolveFeatures` reads `featureDefaults` on every request. That
+ * a migration - `resolveFeatures` reads `featureDefaults` on every request. That
  * is the intended behaviour and the reason the console shows a subscriber count
  * before the save: raising a price is a billing conversation, but switching a
  * feature default off is something several tenants notice at once.
@@ -826,7 +826,7 @@ async function updatePlan(id, body) {
 /**
  * Set or clear one of a plan's feature defaults.
  *
- * `null` clears the key so it falls back to the business type's default — a
+ * `null` clears the key so it falls back to the business type's default - a
  * different act from switching it off, exactly as it is on a business override.
  *
  * A `locked` key is refused rather than ignored: `resolveFeatures` forces those
@@ -860,7 +860,7 @@ async function setPlanFeature(id, { key, enabled }) {
   return { plan: plan.toPublic() };
 }
 
-/** Plans with what each one costs the platform to honour — its subscriber count. */
+/** Plans with what each one costs the platform to honour - its subscriber count. */
 async function listPlansWithUsage() {
   const plans = await Plan.find({}).sort({ priceCents: 1, name: 1 });
   const tenants = await Tenant.find({ plan: { $ne: null } }).select('plan').lean();

@@ -7,7 +7,7 @@ import Business from '../models/Business.js';
 
 
 /**
- * My Profile (§6.15, phase 12) — the screen behind the top bar's user chip.
+ * My Profile (§6.15, phase 12) - the screen behind the top bar's user chip.
  *
  * Read-only. Editing a staff account already lives on Settings > Users, behind
  * an admin-only route, and a second edit path here would be a way around the
@@ -24,7 +24,7 @@ const me = asyncHandler(async (req, res) => {
     //
     // `actorKind` is pinned to `user` as well as the id: ids come from three
     // separate collections now, and "my recent activity" must mean what this
-    // person did — never what a platform operator did while stepping into the
+    // person did - never what a platform operator did while stepping into the
     // business. Those rows belong on the owner's activity screen, labelled as
     // support, not folded silently into somebody's own history.
     db().AuditLog.find({ kind: 'activity', actor: user._id, actorKind: 'user' })
@@ -41,7 +41,7 @@ const me = asyncHandler(async (req, res) => {
       phone: user.phone ?? '',
       accountType: user.role,
       roleName: user.role === 'admin' ? 'Administrator' : (role?.name ?? null),
-      // An admin holds every area at full — the same shape the session sends,
+      // An admin holds every area at full - the same shape the session sends,
       // so the screen has one thing to render rather than two.
       areas:
         user.role === 'admin'

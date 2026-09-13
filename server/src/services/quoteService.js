@@ -14,7 +14,7 @@ import { formatDate } from '../../../shared/dates.js';
  * Quotes (ERP rework §6.6, phase 7).
  *
  * A quote is the one document in this system where **the price comes from the
- * admin rather than the catalogue** — that is what a quote is: a negotiated
+ * admin rather than the catalogue** - that is what a quote is: a negotiated
  * number, held for a period. Everything computed *from* that number is still
  * the server's (invariant 8), and conversion re-reads the catalogue before it
  * writes an order.
@@ -24,7 +24,7 @@ import { formatDate } from '../../../shared/dates.js';
  *   1. **Expiry is derived, not stored.** A quote is expired because its date
  *      has passed, exactly as an invoice is overdue. Writing `expired` to a
  *      column would mean a nightly job whose only purpose is keeping the column
- *      honest — and a quote that expired an hour ago would still read as live
+ *      honest - and a quote that expired an hour ago would still read as live
  *      until that job ran.
  *   2. **Conversion never trusts the quote silently.** Prices are re-read from
  *      live products and any difference is *reported to the admin*, not applied
@@ -64,7 +64,7 @@ function endOfDay(value) {
 }
 
 /**
- * Expired is a reading of the date, never a stored value — but only for a quote
+ * Expired is a reading of the date, never a stored value - but only for a quote
  * that is still live. A quote already `accepted` or `converted` does not become
  * expired by the passage of time; the deal was done inside the window.
  */
@@ -85,8 +85,8 @@ function shapeQuote(quote) {
      * Populated when the account came back with it, a bare id otherwise.
      *
      * Keyed on `_id` rather than `businessName`: an account is identified by
-     * the person (§0), and a private customer has no company — so testing for
-     * one meant every such quote fell through to the `—` branch and lost the
+     * the person (§0), and a private customer has no company - so testing for
+     * one meant every such quote fell through to the `-` branch and lost the
      * account's name, email and link entirely.
      */
     user: quote.user?._id
@@ -101,7 +101,7 @@ function shapeQuote(quote) {
           id: quote.user?.toString() ?? null,
           businessName: null,
           contactName: null,
-          displayName: '—',
+          displayName: '-',
           email: null,
         },
     status: expired ? 'expired' : quote.status,
@@ -135,8 +135,8 @@ function shapeQuote(quote) {
     /**
      * The repair ticket this quote became, and the invoice that ticket became.
      *
-     * A quote converts one of two ways — into an order for goods, or into a
-     * ticket for work — and only the goods half was ever serialized. The
+     * A quote converts one of two ways - into an order for goods, or into a
+     * ticket for work - and only the goods half was ever serialized. The
      * lineage strip is the reason the ticket's own invoice comes across too:
      * the quote is the head of the chain, so it is the record furthest from
      * the invoice and the one that most needs told where the chain ended.
@@ -167,7 +167,7 @@ function shapeQuote(quote) {
 /**
  * Totals from the lines, at the buyer's own provincial rate.
  *
- * The rate comes from `Settings` rather than a constant (§9.5) — Cellvix ships
+ * The rate comes from `Settings` rather than a constant (§9.5) - Cellvix ships
  * Canada-wide, and quoting Ontario's HST to an Alberta business overstates the
  * total by eight points.
  */
@@ -226,7 +226,7 @@ async function listQuotes({ q, status, user, from, to, business } = {}) {
     })
       .select('_id')
       .lean();
-    // Named `matches`, not `users` — the callback parameter used to shadow this
+    // Named `matches`, not `users` - the callback parameter used to shadow this
     // function's own `user` scope argument, which is how a search would have
     // silently dropped the account filter.
     query.$or = [{ quoteNumber: rx }, { user: { $in: matches.map((row) => row._id) } }];
@@ -239,7 +239,7 @@ async function listQuotes({ q, status, user, from, to, business } = {}) {
     .populate('convertedOrder', 'orderNumber')
     .lean();
 
-  // Counts come from the whole collection, not the filtered set — a pill
+  // Counts come from the whole collection, not the filtered set - a pill
   // reading "Expired 0" because you are filtered to Accepted is useless.
   const [statusRows, expiredCount] = await Promise.all([
     db().Quote.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
@@ -257,7 +257,7 @@ async function listQuotes({ q, status, user, from, to, business } = {}) {
     counts,
     totals: {
       value: shaped.reduce((sum, quote) => sum + quote.total, 0),
-      // Only what is still winnable — a converted or rejected quote is not
+      // Only what is still winnable - a converted or rejected quote is not
       // pipeline, and counting it would flatter the number.
       open: shaped
         .filter((quote) => ['draft', 'sent'].includes(quote.storedStatus) && !quote.expired)
@@ -324,7 +324,7 @@ async function priceDrift(quote) {
       livePrice,
       difference: livePrice === null ? null : item.unitPrice - livePrice,
       // A quoted price under today's cost is the one an operator most needs to
-      // see — it is a sale that loses money at the moment it converts.
+      // see - it is a sale that loses money at the moment it converts.
       belowCost: product?.cost > 0 ? item.unitPrice < product.cost : false,
       unavailable: !product || !product.isActive,
       shortStock: product ? item.qty > product.stock : false,
@@ -398,7 +398,7 @@ async function createQuote(body, createdBy) {
   return getQuote(quote._id.toString());
 }
 
-/** Edits stop once a quote has been accepted — the client agreed to a number. */
+/** Edits stop once a quote has been accepted - the client agreed to a number. */
 async function updateQuote(id, body) {
   const query = isObjectId(id) ? { _id: id } : { quoteNumber: String(id) };
   const quote = await db().Quote.findOne(query);
@@ -406,7 +406,7 @@ async function updateQuote(id, body) {
 
   if (!['draft', 'sent'].includes(quote.status)) {
     throw ApiError.badRequest(
-      `${quote.quoteNumber} is ${quote.status} — raise a new quote rather than editing this one.`,
+      `${quote.quoteNumber} is ${quote.status} - raise a new quote rather than editing this one.`,
       'QUOTE_NOT_EDITABLE',
     );
   }
@@ -432,7 +432,7 @@ async function updateQuote(id, body) {
 /**
  * The status ladder an operator drives: send it, record the answer, or reject.
  *
- * `converted` is not here — that status is written by `convertQuote` and only
+ * `converted` is not here - that status is written by `convertQuote` and only
  * ever as the result of an order actually being created. A status that can be
  * set by hand is a status that can lie about whether an order exists.
  */
@@ -463,7 +463,7 @@ async function setQuoteStatus(id, { status, note }) {
   // date has to be extended first. That leaves a record of the extension.
   if (status === 'accepted' && isExpired(quote)) {
     throw ApiError.badRequest(
-      `${quote.quoteNumber} expired on ${formatDate(quote.validUntil)} — extend its expiry before accepting it.`,
+      `${quote.quoteNumber} expired on ${formatDate(quote.validUntil)} - extend its expiry before accepting it.`,
       'QUOTE_EXPIRED',
     );
   }
@@ -533,7 +533,7 @@ async function convertQuote(id, { acknowledgeDrift = false, deliveryCode } = {},
   }
   if (isExpired(quote)) {
     throw ApiError.badRequest(
-      `${quote.quoteNumber} has expired — extend its expiry before converting it.`,
+      `${quote.quoteNumber} has expired - extend its expiry before converting it.`,
       'QUOTE_EXPIRED',
     );
   }
@@ -541,7 +541,7 @@ async function convertQuote(id, { acknowledgeDrift = false, deliveryCode } = {},
   const user = quote.user;
   if (!user) throw ApiError.badRequest('That client no longer exists.', 'USER_NOT_FOUND');
   if (user.status !== 'approved') {
-    // Ordering needs approval — a quote does not get to bypass the gate that
+    // Ordering needs approval - a quote does not get to bypass the gate that
     // every other order goes through.
     throw ApiError.badRequest(
       `${user.businessName} is not approved to order yet.`,
@@ -574,7 +574,7 @@ async function convertQuote(id, { acknowledgeDrift = false, deliveryCode } = {},
     throw error;
   }
 
-  // The quoted prices are what binds — that is the promise, and it is the one
+  // The quoted prices are what binds - that is the promise, and it is the one
   // thing `orderBuilder` does not decide for itself. Everything computed *from*
   // them is still recomputed there rather than copied off the quote.
   const items = quote.items.map((item) => ({
@@ -587,8 +587,8 @@ async function convertQuote(id, { acknowledgeDrift = false, deliveryCode } = {},
     unitCost: item.unitCost,
   }));
 
-  // Everything from here — the approval gate, the address, the stock re-check,
-  // the totals, the order, the invoice and the bell — is `orderBuilder`'s, and
+  // Everything from here - the approval gate, the address, the stock re-check,
+  // the totals, the order, the invoice and the bell - is `orderBuilder`'s, and
   // is the same code `adminService.createOrder` runs.
   const { order, invoice } = await orderBuilder.raiseOrder({
     user,
@@ -605,7 +605,7 @@ async function convertQuote(id, { acknowledgeDrift = false, deliveryCode } = {},
   quote.timeline.push({
     status: 'converted',
     at: new Date(),
-    note: `Converted to ${orderNumber}${drift.hasDrift ? ' — quoted prices honoured over changed catalogue prices.' : ''}`,
+    note: `Converted to ${orderNumber}${drift.hasDrift ? ' - quoted prices honoured over changed catalogue prices.' : ''}`,
   });
   await quote.save();
 
@@ -625,7 +625,7 @@ async function deleteQuote(id) {
 
   if (quote.status === 'converted') {
     throw ApiError.badRequest(
-      `${quote.quoteNumber} became an order — deleting it would orphan that order's history.`,
+      `${quote.quoteNumber} became an order - deleting it would orphan that order's history.`,
       'QUOTE_CONVERTED',
     );
   }
@@ -637,14 +637,14 @@ async function deleteQuote(id) {
 /**
  * Turn an accepted estimate into the repair ticket that does the work.
  *
- * **A quote has two honest destinations.** A parts quote becomes an ORDER —
+ * **A quote has two honest destinations.** A parts quote becomes an ORDER
  * goods ship and money is owed immediately. A repair estimate becomes a TICKET:
  * the device comes in, the work happens over days, and the invoice is raised
  * off the ticket at the end. `convertQuote` does the first; this does the
  * second, and a quote records which way it went.
  *
  * The quoted lines land on the ticket as **parts on one device**, which is what
- * a quote's items actually are — a SKU, a quantity and a price. The technician
+ * a quote's items actually are - a SKU, a quantity and a price. The technician
  * adds labour as services once they have seen the device; a quote cannot know
  * that in advance, which is why the estimate and the final bill are allowed to
  * differ and why the ticket, not the quote, is what gets invoiced.
@@ -687,7 +687,7 @@ async function convertQuoteToTicket(id, { priority = 'normal', source = 'counter
 
   // The rate, derived from the quote's tax amount: a quote stores tax as cents
   // against a subtotal, a ticket stores a rate and recomputes from its own
-  // lines — which change as the technician works.
+  // lines - which change as the technician works.
   const taxRate =
     quote.subtotal > 0 ? Math.round(((quote.tax ?? 0) / quote.subtotal) * 10000) / 100 : 0;
 
@@ -733,7 +733,7 @@ async function convertQuoteToTicket(id, { priority = 'normal', source = 'counter
      * and recomputes the cents from its own lines, because those lines change
      * as the technician works. Copying the quote's total across without its
      * rate left a ticket whose printed total disagreed with the lines under it
-     * — the total said the quote's figure and the tax row said zero.
+     * - the total said the quote's figure and the tax row said zero.
      */
     taxRate,
     // Priced by the same helper every other ticket uses, so a converted ticket

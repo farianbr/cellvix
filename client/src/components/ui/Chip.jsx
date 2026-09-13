@@ -4,7 +4,7 @@ import { pressable } from '@/lib/motion';
 
 /**
  * A removable token representing one active filter. Rendered above the grid so
- * the user can always see — and undo — what the three filter systems have set.
+ * the user can always see - and undo - what the three filter systems have set.
  */
 export function Chip({ label, value, onRemove, tone = 'brand', className }) {
   const tones = {
@@ -21,7 +21,7 @@ export function Chip({ label, value, onRemove, tone = 'brand', className }) {
         className,
       )}
     >
-      {/* opacity-60 put this at 3.26:1 on the brand tint — a WCAG AA failure that
+      {/* opacity-60 put this at 3.26:1 on the brand tint - a WCAG AA failure that
           only appears once a facet chip is on screen, which is why the audit
           never reached it. 80% clears 4.5:1 and still reads as secondary. */}
       {label && <span className="eyebrow opacity-80">{label}</span>}

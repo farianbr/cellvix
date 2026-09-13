@@ -44,7 +44,7 @@ export function CartLine({ item, onQtyChange, onRemove, compact = false }) {
               )}
             >
               {/* Compact mode drops the eyebrow, so there the part type has to
-                  stay in the name — it is the only place it would appear. */}
+                  stay in the name - it is the only place it would appear. */}
               {compact ? item.name : productTitle(item.name, item.partTypeLabel)}
             </Link>
 
@@ -72,7 +72,7 @@ export function CartLine({ item, onQtyChange, onRemove, compact = false }) {
         {item.exceedsStock && (
           <p className="mt-2 flex items-center gap-1.5 text-xs text-warn">
             <AlertTriangle className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
-            Not enough stock for this quantity — the stepper is capped at what
+            Not enough stock for this quantity - the stepper is capped at what
             is available.
           </p>
         )}
@@ -99,7 +99,7 @@ export function CartLine({ item, onQtyChange, onRemove, compact = false }) {
                 item.priceVisible ? 'text-ink-900' : 'text-ink-300',
               )}
             >
-              {item.priceVisible ? money(lineTotal) : '—'}
+              {item.priceVisible ? money(lineTotal) : '-'}
             </span>
             {!compact && item.priceVisible && item.qty > 1 && (
               <span className="tnum block text-xs text-ink-400">

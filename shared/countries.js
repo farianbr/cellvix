@@ -3,7 +3,7 @@
  *
  * One list, two jobs: the phone field's calling-code picker and the address
  * form's country select. They were separate concerns until the sign-up form
- * needed both on the same screen — a visitor who picks `+44` and then has to
+ * needed both on the same screen - a visitor who picks `+44` and then has to
  * find "United Kingdom" again in a different control is being asked the same
  * question twice, and two lists is how the two answers drift apart.
  *
@@ -13,7 +13,7 @@
  * scanning the list is actually reading.
  *
  * `dial` keeps its `+`, because that is how the number is stored and composed
- * (`+1 780 123 4567`) — as a number it would lose the prefix on every read.
+ * (`+1 780 123 4567`) - as a number it would lose the prefix on every read.
  */
 export const COUNTRIES = [
   { code: 'AF', name: 'Afghanistan', dial: '+93' },
@@ -257,7 +257,7 @@ export const COUNTRIES = [
 /** Canada. Cellvix ships from Ontario, so it is the default on every address. */
 export const DEFAULT_COUNTRY = 'Canada';
 
-/** `+1`, the NANP — the dial code Canada and the US share. */
+/** `+1`, the NANP - the dial code Canada and the US share. */
 export const DEFAULT_DIAL = '+1';
 
 /**

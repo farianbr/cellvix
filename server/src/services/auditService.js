@@ -8,11 +8,11 @@ import { likeRegex } from '../utils/regex.js';
  * **`record()` is the only way a row is written**, and it never throws. That is
  * the single most important thing in this file: an audit write is a side effect
  * of an operation that has already succeeded, and letting it fail the operation
- * would mean a refund that actually went through gets reported as an error —
+ * would mean a refund that actually went through gets reported as an error
  * and then retried. A missing log row is a gap in the record; a double refund
  * is money.
  *
- * **There is no update and no delete.** Not "not exposed yet" — the functions do
+ * **There is no update and no delete.** Not "not exposed yet" - the functions do
  * not exist. §6.15 says neither screen ever deletes from the UI, and a log the
  * logged party can prune is not evidence.
  */
@@ -26,7 +26,7 @@ import { likeRegex } from '../utils/regex.js';
  * **A platform operator is checked first, and is never recorded as staff.**
  * `req.impersonation` is set only by an impersonation token (SAAS_PLATFORM
  * §4.5), and when it is present the acting party is a `SuperAdmin` from another
- * collection entirely — not the business's own staff. Recording it as `user`
+ * collection entirely - not the business's own staff. Recording it as `user`
  * would tell the owner one of their own people did it, which is the single
  * thing an impersonation log exists to prevent. `actorRole` says so in words
  * too, because the activity screen shows that column and a blank there reads as
@@ -68,7 +68,7 @@ function actorFrom(req) {
  * Writes one row. Never throws, never rejects.
  *
  * Callers are mutation paths that have already committed their change, so they
- * `await` this only to keep ordering tidy — the promise always resolves.
+ * `await` this only to keep ordering tidy - the promise always resolves.
  */
 async function record({
   req,
@@ -120,7 +120,7 @@ async function recordChange({ req, action, entity, before, after, fields, descri
  * A security-log row: sessions and accounts, not records.
  *
  * `subject` is the account the event is *about*, which is not always the actor.
- * A failed sign-in has no session, so `req.user` is empty — but the address
+ * A failed sign-in has no session, so `req.user` is empty - but the address
  * being tried is known, and stamping it lets the log answer "how many failures
  * against this account" rather than only "how many failures". It is written
  * onto the row directly rather than patched in afterwards: a follow-up update
@@ -137,14 +137,14 @@ async function recordSecurity({ req, action, entity, description, subject = null
       entity: entity ?? { kind: 'session', id: '' },
       description,
       ...base,
-      // The actor wins when there is one — an admin locking somebody out is the
+      // The actor wins when there is one - an admin locking somebody out is the
       // actor, and the locked account is the entity. `subject` only fills the
       // gap left by an unauthenticated event.
       ...(base.actor || !subject
         ? {}
         : {
             // A subject only ever fills in for an unauthenticated event, and
-            // those are always a `User` signing in — so `actorKind` goes back
+            // those are always a `User` signing in - so `actorKind` goes back
             // to `user` rather than inheriting whatever `base` carried.
             actorKind: 'user',
             actor: subject._id ?? null,
@@ -162,7 +162,7 @@ async function recordSecurity({ req, action, entity, description, subject = null
  * One page of the log.
  *
  * Both screens read through here; `kind` is what separates them, and the route
- * — not the caller's query — decides it, because the security log is admin-only
+ * - not the caller's query - decides it, because the security log is admin-only
  * and a client-supplied `kind` would be a way around that.
  */
 async function list({ kind = 'activity', q, action, entity, page = 1, limit = 50 } = {}) {

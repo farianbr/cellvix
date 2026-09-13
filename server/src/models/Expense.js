@@ -6,7 +6,7 @@ import mongoose from 'mongoose';
  * A row created by recording a purchase-order payment carries `purchaseOrder`
  * and is labelled as such in the list, so the operator can see which expenses
  * they entered and which the system entered for them. Those rows are not
- * editable from the expense screen — the purchase order owns them.
+ * editable from the expense screen - the purchase order owns them.
  *
  * `taxIncluded` decides how `tax` reads: when true the amount already contains
  * the tax, when false the tax sits on top. Storing the flag rather than

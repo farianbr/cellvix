@@ -49,9 +49,9 @@ const DELIVERY = [
   { value: 'pickup', label: 'Pickup' },
 ];
 
-/** Segmented pills, not a select — the counts are the point (§4, convention 8).
+/** Segmented pills, not a select - the counts are the point (§4, convention 8).
  *
- * `Open` sits directly after `All` because it is the working set — everything
+ * `Open` sits directly after `All` because it is the working set - everything
  * still owing somebody an action. It is also what the dashboard's "Open orders"
  * tile links to, so the number on that tile and the list it opens are the same
  * query rather than two definitions that drifted apart. */
@@ -65,7 +65,7 @@ const PILLS = [
 /**
  * Status advancement.
  *
- * Only forward transitions are offered, because that is all the server accepts —
+ * Only forward transitions are offered, because that is all the server accepts
  * the timeline is what the buyer's tracking page renders, and rewriting it would
  * mean rewriting what the customer was already told.
  */
@@ -176,7 +176,7 @@ function StatusForm({ order, onSubmit, onCancel, isPending, error }) {
  *
  * There is no gateway to send money back through (payments are mocked, and a
  * real one would still need a card reference we do not keep), and a wholesale
- * account's next order is usually days away — so a refund credits the account
+ * account's next order is usually days away - so a refund credits the account
  * and the credit spends itself at checkout. Partial refunds are allowed up to
  * what is left unrefunded; the server is the one that enforces that.
  */
@@ -238,7 +238,7 @@ function RefundForm({ order, onSubmit, onCancel, isPending, error }) {
 const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/orders'], icon: adminIcon('Package') };
 
 /**
- * Raising an order by hand — a phone order, a walk-in, one that arrived by
+ * Raising an order by hand - a phone order, a walk-in, one that arrived by
  * email (§7.2).
  *
  * Only **approved** clients are offered, and that is not a convenience: the
@@ -246,7 +246,7 @@ const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/orders'], icon: adminIcon('Package'
  * would be an invitation to an error the operator cannot fix from this form.
  *
  * A blank price quotes at list, the same convention the quote builder uses. The
- * totals below are a preview and say so — tax is the server's, at this client's
+ * totals below are a preview and say so - tax is the server's, at this client's
  * own provincial rate, which this form does not know.
  */
 function OrderForm({ clients, products, businesses = [], onSubmit, onCancel, isPending, error }) {
@@ -291,7 +291,7 @@ function OrderForm({ clients, products, businesses = [], onSubmit, onCancel, isP
             .map((line) => ({
               product: line.product,
               qty: Number(line.qty) || 1,
-              // Zero means "use the catalogue price" — the server's convention,
+              // Zero means "use the catalogue price" - the server's convention,
               // so a blank field sends zero rather than nothing.
               unitPrice: Math.round(Number(line.unitPriceDollars || 0) * 100),
             })),
@@ -311,7 +311,7 @@ function OrderForm({ clients, products, businesses = [], onSubmit, onCancel, isP
           control={control}
           name="user"
           label="Customer"
-          hint="Approved accounts only — ordering needs approval."
+          hint="Approved accounts only - ordering needs approval."
           options={clients.map((client) => ({
             value: client.id,
             label: client.displayName ?? client.contactName ?? client.email,
@@ -394,7 +394,7 @@ function OrderForm({ clients, products, businesses = [], onSubmit, onCancel, isP
         <Input label="Shipping" inputMode="decimal" suffix="CAD" {...register('shippingDollars')} />
       </div>
 
-      {/* Which shop fulfils this. Only offered when there is more than one —
+      {/* Which shop fulfils this. Only offered when there is more than one
           a picker with a single option is a question with one answer. Blank
           means the business the panel is switched to, which is the common case;
           it is asked because a customer collecting in person picks the shop
@@ -445,8 +445,8 @@ export function AdminOrdersPage() {
   /**
    * The status filter lives in the URL, not in local state.
    *
-   * The dashboard links here already filtered — "12 awaiting fulfilment" opens
-   * `?status=placed` — and a local `useState` swallowed that, landing the
+   * The dashboard links here already filtered - "12 awaiting fulfilment" opens
+   * `?status=placed` - and a local `useState` swallowed that, landing the
    * operator on every order and making them re-pick the filter they had just
    * clicked. In the URL it also means a filtered board can be linked to.
    */
@@ -474,7 +474,7 @@ export function AdminOrdersPage() {
   // Only approved accounts can order, so only approved accounts are offered.
   const { data: clientData } = useAdminUsers({ status: 'approved' });
   // For the "Fulfilled by" picker. `business: 'all'` because the list of shops is
-  // not itself scoped to a shop — an order must be sendable to one you are not
+  // not itself scoped to a shop - an order must be sendable to one you are not
   // currently working in.
   const { data: businessData } = useAdminBusinesses({ status: 'active', business: 'all' });
   const businesses = businessData?.businesses ?? [];
@@ -493,7 +493,7 @@ export function AdminOrdersPage() {
 
   /**
    * The server decides which of the selected orders can actually make the move
-   * — the client neither pre-filters the selection nor guesses the outcome.
+   * - the client neither pre-filters the selection nor guesses the outcome.
    * Whatever it reports back is what the operator is shown.
    */
   function setBulkStatus(next) {
@@ -512,7 +512,7 @@ export function AdminOrdersPage() {
   const orders = data?.orders ?? [];
   const counts = data?.counts ?? {};
 
-  // The KPI tiles below are summed from `orders`, the whole filtered set — the
+  // The KPI tiles below are summed from `orders`, the whole filtered set - the
   // table gets a page of it. See `useTablePage` for why paging is client-side.
   const { pageRows: pageOrders, page, totalPages, from, setPage } = useTablePage(orders);
 
@@ -587,7 +587,7 @@ export function AdminOrdersPage() {
             <span className="block text-ink-300">{order.tracking.carrier}</span>
           </span>
         ) : (
-          <span className="text-xs text-ink-300">—</span>
+          <span className="text-xs text-ink-300">-</span>
         ),
     },
   ];
@@ -717,7 +717,7 @@ export function AdminOrdersPage() {
         </div>
 
         {/* A batch is partial by design, so what did **not** move is reported
-            rather than swallowed — silently moving nineteen of twenty is how an
+            rather than swallowed - silently moving nineteen of twenty is how an
             operator comes to trust a button that is lying to them. */}
         {bulkResult && (
           <div className="border-b border-line bg-surface-2 px-3 py-2.5 sm:px-4">
@@ -744,7 +744,7 @@ export function AdminOrdersPage() {
               <ul className="mt-1.5 space-y-0.5">
                 {bulkResult.skipped.map((skip) => (
                   <li key={skip.orderNumber} className="text-xs text-ink-500">
-                    <span className="font-mono text-ink-700">{skip.orderNumber}</span> — {skip.reason}
+                    <span className="font-mono text-ink-700">{skip.orderNumber}</span> - {skip.reason}
                   </li>
                 ))}
               </ul>
@@ -756,7 +756,7 @@ export function AdminOrdersPage() {
           columns={columns}
           rows={pageOrders}
           rowKey={(order) => order.orderNumber}
-          // Addressed by number, not id — the route reads `:orderNumber`.
+          // Addressed by number, not id - the route reads `:orderNumber`.
           // Every other list in the panel opens its record this way and Orders
           // was the one that did not, so the busiest screen in Sales was the
           // only one where clicking a row did nothing.
@@ -897,7 +897,7 @@ export function AdminOrdersPage() {
               createOrder.mutate(values, {
                 onSuccess: (payload) => {
                   setCreating(false);
-                  // Straight to the order that was just raised — the next thing
+                  // Straight to the order that was just raised - the next thing
                   // an operator does is fulfil it.
                   if (payload?.order?.orderNumber) {
                     navigate(`/admin/orders/${payload.order.orderNumber}`);

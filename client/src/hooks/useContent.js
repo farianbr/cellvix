@@ -6,7 +6,7 @@ import api from '@/lib/api';
  *
  * All three are editorial: they change a few times a week at most, so they carry
  * a long `staleTime` and never refetch on focus. The offers query is the one
- * exception that matters — it is keyed on whether the viewer can see pricing, so
+ * exception that matters - it is keyed on whether the viewer can see pricing, so
  * signing in swaps a gated bundle price for a real one without a manual refetch.
  */
 

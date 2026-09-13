@@ -4,23 +4,23 @@ import { controlDb, dbFor } from './connections.js';
 import { currentConnection } from './context.js';
 
 /**
- * The model registry — every collection, bound to the right database.
+ * The model registry - every collection, bound to the right database.
  *
  * **Schemas are read back off the already-compiled models rather than exported
  * from each model file.** `mongoose.model('Order').schema` is the same object
  * the file built, so binding it to another connection needs no change to any of
- * the 35 model files — and, more usefully, none of them can drift out of step
+ * the 35 model files - and, more usefully, none of them can drift out of step
  * with a parallel list of schema exports. Several files define three or four
  * schemas (sub-documents for lines, addresses, hours); only the compiled one
  * matters, and this finds it without anybody deciding which.
  *
  * ## Which database holds what (SAAS_PLATFORM §4.1)
  *
- * **Control plane** — what *describes* businesses. A business database holding
+ * **Control plane** - what *describes* businesses. A business database holding
  * these would be circular: the record naming a business cannot live inside the
  * thing it names.
  *
- * **Per-business** — everything else. Including `User`, `Product` and
+ * **Per-business** - everything else. Including `User`, `Product` and
  * `Taxonomy`: a repair shop's parts list has nothing to do with a wholesaler's,
  * and a customer belongs to the business they buy from.
  *
@@ -38,7 +38,7 @@ const CONTROL_MODELS = new Set([
   'Business',
   'ImpersonationGrant',
   // A support conversation is about the account, outlives any one business, and
-  // must stay readable while the tenant is suspended — which is exactly when
+  // must stay readable while the tenant is suspended - which is exactly when
   // they most need to reach us.
   'SupportThread',
 ]);
@@ -57,10 +57,56 @@ function bind(connection, name) {
   try {
     return connection.model(name);
   } catch {
-    // Not yet compiled on this connection — build it from the default's schema.
+    // Not yet compiled on this connection - build it from the default's schema.
     const { schema } = mongoose.model(name);
-    return connection.model(name, schema);
+    const model = connection.model(name, schema);
+    // Everything this model can `populate` has to exist on the same connection
+    // before anybody tries. See `bindRefs`.
+    bindRefs(connection, schema);
+    return model;
   }
+}
+
+/**
+ * Compile every model a schema can `populate` into, on the same connection.
+ *
+ * **`populate` resolves a `ref` by name against the connection, not against
+ * Mongoose's global registry.** So a model bound to a business database could
+ * only populate a reference if the referenced model happened to have been
+ * touched on that connection already - which made it depend on the order a
+ * request read things in. In practice `getBidBoard` populated `bids.supplier`
+ * and got `null` back on every bid, because nothing had asked for
+ * `db().Supplier` first: the supplier id and email were empty in the API
+ * response, and the panel's mailto link, Confirm, Negotiate and Remove actions
+ * were all keyed on an id that was never there.
+ *
+ * Binding the refs alongside the model makes it order-independent. It walks
+ * nested paths and document arrays, because the reference that broke was
+ * `bids.supplier` - inside an array of subdocuments, which a flat scan of
+ * `schema.paths` does not reach.
+ *
+ * Control-plane refs are skipped: a `Business` lives in one database whichever
+ * one is being served, and compiling a second copy against a business
+ * connection would read an empty collection.
+ */
+function bindRefs(connection, schema, seen = new Set()) {
+  schema.eachPath((path, type) => {
+    // A ref can sit on the path itself or, for `[{ type: ObjectId, ref }]`, on
+    // its element caster.
+    const ref = type.options?.ref ?? type.caster?.options?.ref;
+    if (typeof ref === 'string' && !seen.has(ref) && !CONTROL_MODELS.has(ref)) {
+      seen.add(ref);
+      // Only what is already declared globally: an unknown name here means a
+      // model file nobody imported, and throwing would take down a request over
+      // a reference it was never going to follow.
+      if (mongoose.models[ref]) bind(connection, ref);
+    }
+
+    // Subdocuments and document arrays carry their own schemas, which is where
+    // `bids.supplier` lives.
+    const nested = type.schema ?? type.caster?.schema;
+    if (nested) bindRefs(connection, nested, seen);
+  });
 }
 
 /**
@@ -106,7 +152,7 @@ function modelsFor(connection) {
  * service stays as it was.
  *
  * Outside a request there is no context, and the default connection is the
- * honest answer rather than an error — a seed script writing to the database it
+ * honest answer rather than an error - a seed script writing to the database it
  * was pointed at is doing exactly what it should. `runInBusiness` is how a
  * script opts into a specific one.
  */

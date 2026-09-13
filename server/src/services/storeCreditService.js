@@ -8,7 +8,7 @@ import '../models/Invoice.js';
 import { nextInvoiceNumber } from './orderBuilder.js';
 
 /**
- * Store credit — the only place a store-credit balance moves.
+ * Store credit - the only place a store-credit balance moves.
  *
  * The rule this file exists to enforce: a balance is never written by hand.
  * Every change is `post()`, which increments the cached balance on the user and
@@ -84,7 +84,7 @@ async function post({
  *
  * The rule is "money entering the account gets a document, money leaving it on
  * an order does not". A `redemption` is already a payment row on that order's
- * own invoice, and an `adjustment` is a correction to a figure — issuing
+ * own invoice, and an `adjustment` is a correction to a figure - issuing
  * documents for either would have the statement counting the same cents twice.
  *
  * A `referral` accrual is included even though nobody paid Cellvix for it: it
@@ -115,7 +115,7 @@ const RECEIPT_LABELS = {
  * applies to a commission that could not post, and `mailer` to an order
  * confirmation that could not send.
  *
- * A reversal (negative `referral`) is receipted too, at its absolute value —
+ * A reversal (negative `referral`) is receipted too, at its absolute value
  * the document says what happened, and "commission reversed" is a thing that
  * happened.
  */
@@ -156,7 +156,7 @@ async function issueReceipt(entry) {
       ],
     });
   } catch (error) {
-    console.error(`  Store credit: receipt for movement ${entry?._id} failed — ${error.message}`);
+    console.error(`  Store credit: receipt for movement ${entry?._id} failed - ${error.message}`);
     return null;
   }
 }
@@ -194,7 +194,7 @@ async function statement(userId, { limit = 50 } = {}) {
 }
 
 /**
- * Admin allocation. A negative amount is a correction, not a purchase — it is
+ * Admin allocation. A negative amount is a correction, not a purchase - it is
  * the only way credit leaves an account without an order behind it, so it is
  * typed `adjustment` rather than `redemption` and reads that way on the
  * statement.
@@ -218,8 +218,8 @@ async function allocate(userId, { amount, note }, adminId) {
  * this decides nothing and simply moves the money, the same as every other
  * function here.
  *
- * A negative `amount` is a reversal — the referred payment was refunded or its
- * invoice voided — and carries `referral.reverses` pointing at the accrual it
+ * A negative `amount` is a reversal - the referred payment was refunded or its
+ * invoice voided - and carries `referral.reverses` pointing at the accrual it
  * undoes.
  *
  * Note it deliberately does **not** guard the balance the way a spend does. A
@@ -258,7 +258,7 @@ async function creditReferral({ referrerId, amount, note, referral }) {
     });
 
     // This branch writes the ledger itself rather than going through `post()`,
-    // so it has to raise the receipt itself too — the document belongs to the
+    // so it has to raise the receipt itself too - the document belongs to the
     // movement, not to the path that made it.
     await issueReceipt(entry);
 
@@ -296,7 +296,7 @@ async function recharge(user, { amount, poNumber }) {
  *
  * Refunding to the original payment method needs a real gateway; refunding to
  * store credit needs nothing but this ledger, keeps the money with Cellvix, and
- * is what a wholesale account wants anyway — the next order is usually days away.
+ * is what a wholesale account wants anyway - the next order is usually days away.
  * Partial refunds are allowed up to what is left unrefunded on the order.
  */
 async function refundOrder(orderNumber, { amount, note }, adminId) {
@@ -330,13 +330,13 @@ async function refundOrder(orderNumber, { amount, note }, adminId) {
   order.timeline.push({
     status: order.status,
     at: new Date(),
-    note: `Refunded to store credit${note ? ` — ${note}` : ''}.`,
+    note: `Refunded to store credit${note ? ` - ${note}` : ''}.`,
   });
   await order.save();
 
   // Referral commission follows the money back (§6.13). Placed here rather than
   // in each caller because both the admin refund route and an RMA resolution
-  // arrive through this function — a rule enforced at the choke point cannot be
+  // arrive through this function - a rule enforced at the choke point cannot be
   // forgotten by a third caller added later.
   //
   // Only a refund in FULL reverses the commission. A partial refund is left
@@ -359,7 +359,7 @@ async function refundOrder(orderNumber, { amount, note }, adminId) {
  * Spends credit against an order being placed.
  *
  * The caller passes the order total; how much credit is applied is decided here
- * and never by the client (PROJECT_INSTRUCTIONS.md §5.3 — the client never sends
+ * and never by the client (PROJECT_INSTRUCTIONS.md §5.3 - the client never sends
  * a price or a discount).
  */
 async function redeemForOrder({ userId, total, orderId, orderNumber }) {
@@ -379,7 +379,7 @@ async function redeemForOrder({ userId, total, orderId, orderNumber }) {
   return { applied, balance: after };
 }
 
-/** What an order could draw before it is placed — drives the checkout preview. */
+/** What an order could draw before it is placed - drives the checkout preview. */
 async function previewForTotal(userId, total) {
   const balance = await balanceOf(userId);
   return { balance, applicable: Math.max(0, Math.min(balance, total)) };

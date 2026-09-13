@@ -25,7 +25,7 @@ import mongoose from 'mongoose';
 const DEFAULT_TIER_WARRANTY_BONUS = { standard: 0, silver: 30, gold: 90, platinum: 180 };
 
 /**
- * Standard 2026 provincial rates (§0.13 — to be confirmed with the client,
+ * Standard 2026 provincial rates (§0.13 - to be confirmed with the client,
  * editable in Settings from day one).
  *
  * `kind` matters for the tax report: HST is a single combined tax, GST+PST are
@@ -53,7 +53,7 @@ const DEFAULT_TAX_RATES = [
  *
  * **Not the buyer's saved cards.** `User.paymentMethods` is what a customer
  * pays *with*; this is the vocabulary staff pick from when they record money
- * moving — an expense paid by cheque, an invoice settled by e-Transfer. The two
+ * moving - an expense paid by cheque, an invoice settled by e-Transfer. The two
  * lists are unrelated and must not be merged.
  *
  * `code` is the stable key and `label` is what the operator reads, so renaming
@@ -71,7 +71,7 @@ const DEFAULT_PAYMENT_METHODS = [
 ];
 
 /**
- * Shipping bands (§6.15 — CellShoppe's per-km mileage rate is dropped; Cellvix
+ * Shipping bands (§6.15 - CellShoppe's per-km mileage rate is dropped; Cellvix
  * ships parts, it does not drive to jobs).
  *
  * These are the three methods `shared/schemas/checkout.js` currently hard-codes,
@@ -79,7 +79,7 @@ const DEFAULT_PAYMENT_METHODS = [
  * renders and validates against, while the **money** moves here so a rate can
  * change without a deploy. Costs are integer cents, like every other amount.
  *
- * `freeOver: null` means the method never ships free — deliberately distinct
+ * `freeOver: null` means the method never ships free - deliberately distinct
  * from `0`, which would mean it always does.
  */
 const DEFAULT_SHIPPING_METHODS = [
@@ -91,7 +91,7 @@ const DEFAULT_SHIPPING_METHODS = [
 const settingsSchema = new mongoose.Schema(
   {
     // The singleton key. Unique, so a second document cannot be created by a
-    // race — `load()` upserts against it.
+    // race - `load()` upserts against it.
     key: { type: String, default: 'singleton', unique: true, index: true },
 
     business: {
@@ -130,7 +130,7 @@ const settingsSchema = new mongoose.Schema(
 
       defaultDueDays: { type: Number, default: 30 },
 
-      // Referral commission (§6.13), as a percentage — 5 means 5%, not 0.05.
+      // Referral commission (§6.13), as a percentage - 5 means 5%, not 0.05.
       // Stored as a percent because that is the unit the operator types into
       // the screen and the unit the rate is discussed in; the division happens
       // once, inside `referralService`.
@@ -150,7 +150,7 @@ const settingsSchema = new mongoose.Schema(
        * Extra warranty days a membership tier adds **on top of** the grade.
        *
        * Additive rather than absolute, and that is the whole design decision.
-       * An absolute figure per tier would silently overwrite the grade table —
+       * An absolute figure per tier would silently overwrite the grade table
        * a Gold customer's 90-day tier warranty would *shorten* the 365 days a
        * NEW part already carries, which is the opposite of what a tier is for.
        * A bonus can only ever improve the cover, so the two tables can never
@@ -166,7 +166,7 @@ const settingsSchema = new mongoose.Schema(
       },
 
       // The vocabulary staff pick from when recording money moving. See
-      // DEFAULT_PAYMENT_METHODS — this is not the buyer's saved cards.
+      // DEFAULT_PAYMENT_METHODS - this is not the buyer's saved cards.
       paymentMethods: {
         type: [{ _id: false, code: String, label: String }],
         default: () => DEFAULT_PAYMENT_METHODS,
@@ -182,7 +182,7 @@ const settingsSchema = new mongoose.Schema(
             detail: String,
             cost: Number,
             etaDays: Number,
-            // null means "never ships free" — not the same as 0.
+            // null means "never ships free" - not the same as 0.
             freeOver: { type: Number, default: null },
           },
         ],
@@ -193,7 +193,7 @@ const settingsSchema = new mongoose.Schema(
     /**
      * Defaults that pre-fill the New Product form (§6.15, Inventory Settings).
      *
-     * **Pre-fill only — a per-product value always wins.** These never
+     * **Pre-fill only - a per-product value always wins.** These never
      * retroactively reprice anything already in the catalogue; changing a
      * default changes what the next blank form suggests and nothing else.
      *
@@ -224,7 +224,7 @@ const settingsSchema = new mongoose.Schema(
      * configuring.
      *
      * One exception, deliberately: `invoiceOnOrder` defaults **true**, because
-     * it is already live — `orderService.placeOrder` has emailed the invoice
+     * it is already live - `orderService.placeOrder` has emailed the invoice
      * since phase 2. Shipping it off would silently switch off a path that has
      * been running for months, which is a behaviour change disguised as a
      * default.
@@ -233,7 +233,7 @@ const settingsSchema = new mongoose.Schema(
       // Live today.
       invoiceOnOrder: { type: Boolean, default: true },
 
-      // Paths that exist but are not yet called from anywhere — see the
+      // Paths that exist but are not yet called from anywhere - see the
       // `wired` map in `settingsService`, which is what stops the screen
       // implying these do something.
       quoteOnCreate: { type: Boolean, default: false },
@@ -260,7 +260,7 @@ const settingsSchema = new mongoose.Schema(
  * The one way to read settings.
  *
  * Upserts on first call so every caller gets a fully-defaulted document rather
- * than having to branch on "not configured yet". Returns a lean object — this
+ * than having to branch on "not configured yet". Returns a lean object - this
  * is read on report paths and nothing mutates it through here.
  */
 settingsSchema.statics.load = async function load() {
@@ -273,7 +273,7 @@ settingsSchema.statics.load = async function load() {
 
 /**
  * The rate for one province, as a fraction. Falls back to Ontario's HST, which
- * is where Cellvix is registered — an unknown province is a data problem, not a
+ * is where Cellvix is registered - an unknown province is a data problem, not a
  * reason to charge zero tax.
  */
 settingsSchema.statics.rateFor = function rateFor(settings, province) {
@@ -297,5 +297,11 @@ settingsSchema.statics.shippingFor = function shippingFor(settings, code) {
 
 const Settings = mongoose.model('Settings', settingsSchema);
 
-export { DEFAULT_TAX_RATES, DEFAULT_TIER_WARRANTY_BONUS, DEFAULT_PAYMENT_METHODS, DEFAULT_SHIPPING_METHODS, Settings };
+export {
+  DEFAULT_TAX_RATES,
+  DEFAULT_TIER_WARRANTY_BONUS,
+  DEFAULT_PAYMENT_METHODS,
+  DEFAULT_SHIPPING_METHODS,
+  Settings,
+};
 export default Settings;

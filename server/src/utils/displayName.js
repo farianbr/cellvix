@@ -9,16 +9,16 @@
  * can never come out empty.
  *
  * `User` carries the same logic as a `displayName` virtual for documents. This
- * function exists because most read paths are `.lean()` — plain objects, no
- * virtuals — and the two must not be allowed to disagree. Change one, change
+ * function exists because most read paths are `.lean()` - plain objects, no
+ * virtuals - and the two must not be allowed to disagree. Change one, change
  * both.
  *
  * @param {{ contactName?: string, businessName?: string, email?: string }} user
  * @returns {string}
  */
 function displayNameOf(user) {
-  if (!user) return '—';
-  return user.contactName?.trim() || user.businessName?.trim() || user.email || '—';
+  if (!user) return '-';
+  return user.contactName?.trim() || user.businessName?.trim() || user.email || '-';
 }
 
 export default { displayNameOf };

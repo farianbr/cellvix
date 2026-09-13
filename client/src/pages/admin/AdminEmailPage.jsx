@@ -48,14 +48,14 @@ import cn from '@/lib/cn';
  * Email campaigns (§6.13).
  *
  * **The one marketing channel that genuinely sends**, whenever `SMTP_URL` is
- * configured — so this is not on the §6b register waiting for a provider.
+ * configured - so this is not on the §6b register waiting for a provider.
  * Without a transport nothing is delivered and nothing is kept: the result
  * panel reports the failures rather than implying a delivery.
  *
  * **CASL is enforced on the server and explained here.** The audience picker
  * chooses a population; consent then removes from it, at send time, and there
  * is no control on this screen that can switch that off. That is why the send
- * dialog shows two numbers — who matched, and who will actually receive it.
+ * dialog shows two numbers - who matched, and who will actually receive it.
  */
 const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/marketing/email'], icon: adminIcon('Mail') };
 
@@ -94,7 +94,7 @@ function CampaignForm({ campaign, onSubmit, onCancel, isPending, error }) {
 
       <Input
         label="Campaign name"
-        hint="Internal only — recipients never see this."
+        hint="Internal only - recipients never see this."
         placeholder="Spring restock announcement"
         error={errors.name?.message}
         {...register('name')}
@@ -123,7 +123,7 @@ function CampaignForm({ campaign, onSubmit, onCancel, isPending, error }) {
         label="Message"
         rows={10}
         counter={20000}
-        hint="{{businessName}} and {{contactName}} are filled in per recipient. Sender details and an unsubscribe link are added automatically — CASL requires both."
+        hint="{{businessName}} and {{contactName}} are filled in per recipient. Sender details and an unsubscribe link are added automatically - CASL requires both."
         placeholder={'Hi {{contactName}},\n\nWe have just restocked…'}
         error={errors.body?.message}
         {...register('body')}
@@ -141,7 +141,7 @@ function CampaignForm({ campaign, onSubmit, onCancel, isPending, error }) {
   );
 }
 
-/** The Unsubscribes screen, in a modal — it is a register, not a workflow. */
+/** The Unsubscribes screen, in a modal - it is a register, not a workflow. */
 function UnsubscribesModal({ open, onClose }) {
   const [error, setError] = useState(null);
   const { data, isLoading } = useMarketingUnsubscribes({ limit: 100 });
@@ -164,7 +164,7 @@ function UnsubscribesModal({ open, onClose }) {
         <p className="rounded-md bg-surface-2 px-3 py-2.5 text-sm leading-relaxed text-ink-600">
           Canadian anti-spam law requires a working unsubscribe on every commercial email, and this
           is the register of who has used it. These accounts are excluded from every campaign
-          automatically — there is no setting that overrides it.
+          automatically - there is no setting that overrides it.
         </p>
 
         {error && (
@@ -194,7 +194,7 @@ function UnsubscribesModal({ open, onClose }) {
                 </div>
 
                 {/* Putting somebody back on the list records a NEW consent
-                    dated today, rather than erasing their refusal — the
+                    dated today, rather than erasing their refusal - the
                     operator is told that before they click. */}
                 <Button
                   variant="outline"
@@ -281,7 +281,7 @@ function SendDialog({ campaign, audience, open, onClose, onSent }) {
             <p className="rounded-md bg-danger-50 px-3 py-2.5 text-sm leading-relaxed text-ink-700">
               {result.failed} {result.failed === 1 ? 'message' : 'messages'} could not be delivered
               and {result.failed === 1 ? 'was' : 'were'} not sent. Check that an SMTP transport is
-              connected under Settings, then send again — nothing is retried automatically.
+              connected under Settings, then send again - nothing is retried automatically.
             </p>
           )}
           {result.skipped > 0 && (
@@ -309,7 +309,7 @@ function SendDialog({ campaign, audience, open, onClose, onSent }) {
             <div className="flex justify-between gap-3">
               <dt className="text-ink-500">Audience</dt>
               <dd className="text-ink-900">
-                {CAMPAIGN_AUDIENCE_LABELS[campaign?.audience?.filter] ?? '—'}
+                {CAMPAIGN_AUDIENCE_LABELS[campaign?.audience?.filter] ?? '-'}
               </dd>
             </div>
             <div className="flex justify-between gap-3">
@@ -318,7 +318,7 @@ function SendDialog({ campaign, audience, open, onClose, onSent }) {
             </div>
             {(audience?.skipped ?? 0) > 0 && (
               <div className="flex justify-between gap-3">
-                <dt className="text-ink-500">Excluded — no consent or unsubscribed</dt>
+                <dt className="text-ink-500">Excluded - no consent or unsubscribed</dt>
                 <dd className="tnum text-ink-500">{audience.skipped}</dd>
               </div>
             )}
@@ -446,7 +446,7 @@ export function AdminEmailPage() {
       align: 'right',
       priority: 2,
       // Open and click tracking would need a tracking pixel and rewritten
-      // links, neither of which exists — so those columns are absent rather
+      // links, neither of which exists - so those columns are absent rather
       // than showing an invented engagement rate.
       //
       // Undelivered messages are named here rather than left to be inferred: a
@@ -475,7 +475,7 @@ export function AdminEmailPage() {
       header: 'Sent at',
       priority: 3,
       render: (row) => (
-        <span className="text-ink-500">{row.sentAt ? dateTime(row.sentAt) : '—'}</span>
+        <span className="text-ink-500">{row.sentAt ? dateTime(row.sentAt) : '-'}</span>
       ),
     },
   ];
@@ -500,7 +500,7 @@ export function AdminEmailPage() {
       label: 'Delete',
       icon: Trash2,
       tone: 'danger',
-      // A sent campaign is a record of what went out and stays on file — the
+      // A sent campaign is a record of what went out and stays on file - the
       // server refuses it too, so this is a courtesy, not the control.
       hidden: (row) => row.status === 'sent',
       onSelect: (row) => setDeleting(row),
@@ -644,7 +644,7 @@ export function AdminEmailPage() {
  * Fetches the campaign's live audience before offering to send it.
  *
  * Split out so the count is read at the moment the operator opens the dialog
- * rather than whenever the list was last fetched — the number they are about to
+ * rather than whenever the list was last fetched - the number they are about to
  * act on has to be the current one.
  */
 function SendCampaignDialog({ campaign, onClose }) {

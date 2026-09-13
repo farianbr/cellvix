@@ -13,7 +13,7 @@ import { pressable } from '@/lib/motion';
  * Sign in to the supplier portal (§6.8a).
  *
  * Rendered by `SupplierPortalLayout` in place of the page a signed-out supplier
- * asked for, rather than at a route of its own — so a supplier who followed an
+ * asked for, rather than at a route of its own - so a supplier who followed an
  * emailed request link lands back on that request after signing in, instead of
  * having to find the email again.
  *

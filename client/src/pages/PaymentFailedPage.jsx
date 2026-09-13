@@ -11,7 +11,7 @@ import cn from '@/lib/cn';
 /**
  * Payment failed.
  *
- * Reached from checkout when order creation throws — the charge happens BEFORE
+ * Reached from checkout when order creation throws - the charge happens BEFORE
  * anything is written or any stock moves (orderService.createOrder), so this page
  * can say the two things a buyer actually wants to know: no money left your
  * account, and your cart is exactly as you left it. Both are true, not
@@ -19,7 +19,7 @@ import cn from '@/lib/cn';
  *
  * The failure details arrive in router state rather than the query string: a
  * decline reason is not something to leave in a shareable URL or a browser
- * history entry. Landing here directly still renders — with generic copy —
+ * history entry. Landing here directly still renders - with generic copy
  * because a refresh must not produce a blank page.
  */
 const REASONS = {
@@ -34,7 +34,7 @@ const REASONS = {
   },
   NETWORK_ERROR: {
     title: 'We could not reach the payment service',
-    body: 'The request never got through, so nothing was charged and no order was created. Your cart is intact — try again in a moment.',
+    body: 'The request never got through, so nothing was charged and no order was created. Your cart is intact - try again in a moment.',
   },
   DEFAULT: {
     title: 'The order did not go through',
@@ -45,7 +45,7 @@ const REASONS = {
 const REASSURANCES = [
   { icon: ShieldCheck, text: 'No charge was made. The order was never created.' },
   { icon: ShoppingCart, text: 'Your cart, addresses and delivery choice are all still saved.' },
-  { icon: RefreshCw, text: 'Retrying picks up exactly where you left off — nothing to re-enter.' },
+  { icon: RefreshCw, text: 'Retrying picks up exactly where you left off - nothing to re-enter.' },
 ];
 
 export function PaymentFailedPage() {
@@ -121,7 +121,7 @@ export function PaymentFailedPage() {
               <ul className="mt-3 space-y-3 text-sm leading-relaxed text-ink-500">
                 <li>
                   <span className="font-medium text-ink-900">Buy on your account terms.</span> Go
-                  back to checkout and choose “On account” at the payment step — no card involved.
+                  back to checkout and choose “On account” at the payment step - no card involved.
                 </li>
                 <li>
                   <span className="font-medium text-ink-900">Use a different card.</span> Add or

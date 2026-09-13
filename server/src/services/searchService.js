@@ -18,7 +18,7 @@ import { likeRegex } from '../utils/regex.js';
  * record types.
  *
  * **Permission filtering is server-side and is the whole point.** §7.6 is blunt
- * that a hidden nav item is a courtesy and never the control — the same applies
+ * that a hidden nav item is a courtesy and never the control - the same applies
  * here, and more sharply: a search result leaks the *existence and name* of a
  * record before anybody clicks it. A warehouse role searching a business name
  * must not learn that the business has three overdue invoices, so each group is
@@ -47,7 +47,7 @@ const PER_GROUP = 5;
 /**
  * What this caller may search.
  *
- * An admin gets everything. A staff account resolves its role **per request** —
+ * An admin gets everything. A staff account resolves its role **per request**
  * the same reasoning `requirePermission` uses: a role edited in one tab has to
  * bite on the next request in another, and a cached map is how somebody keeps
  * access they were just denied.

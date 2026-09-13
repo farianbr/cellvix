@@ -11,7 +11,7 @@ const CART_KEY = ['cart'];
  *
  * `useCart` is mounted by the header, the mobile header, the dropdown and every
  * product card at once. A per-instance guard lets each copy fire its own merge
- * in the same commit flush, and `mergeGuestCart` SUMS quantities — the cart
+ * in the same commit flush, and `mergeGuestCart` SUMS quantities - the cart
  * would come back multiplied by the number of mounted consumers.
  */
 let mergeState = 'idle'; // 'idle' | 'running' | 'done'
@@ -183,7 +183,7 @@ export function useCart() {
 
   // ---- bundles and the promo code -----------------------------------------
   // No optimistic patching here. A bundle line and a discount are the pricing
-  // engine's output, not arithmetic the client can predict — guessing then
+  // engine's output, not arithmetic the client can predict - guessing then
   // correcting would flash a wrong total at the buyer.
   const bundleQtyMutation = useMutation({
     mutationFn: ({ offerId, qty }) => api.patch(`/cart/bundles/${offerId}`, { qty }),
@@ -288,11 +288,11 @@ export function useCart() {
        *
        * `items.length === 0` is ambiguous before this flips: it means "empty"
        * for a guest but "not fetched yet" for a signed-in user. Anything that
-       * acts on emptiness — the checkout page's redirect, for one — must wait
+       * acts on emptiness - the checkout page's redirect, for one - must wait
        * for this rather than trusting the first render.
        */
       isReady: authLoading ? false : !isAuthenticated || data !== undefined,
-      // Any line whose quantity now exceeds stock — blocks checkout.
+      // Any line whose quantity now exceeds stock - blocks checkout.
       hasStockIssue:
         items.some((item) => item.exceedsStock) || bundles.some((bundle) => !bundle.available),
       addItem,

@@ -10,7 +10,7 @@ import useOnClickOutside from '@/hooks/useOnClickOutside';
  *
  * Pills are the primary filter and carry their counts, because "Pending (3)" is
  * the number an operator is actually looking for. `Filters ▾` holds the long
- * tail — province, terms, date — in a popover, so the strip stays one line.
+ * tail - province, terms, date - in a popover, so the strip stays one line.
  *
  * **Export honours the current filters.** The component passes them to the
  * handler rather than exporting the unfiltered set; an export that ignores the
@@ -81,7 +81,7 @@ export function FilterStrip({
   /**
    * Put the status pills on their own row above the search.
    *
-   * For a board with eight or nine statuses — the ticket queue — squeezing them
+   * For a board with eight or nine statuses - the ticket queue - squeezing them
    * onto one line with a search box and two menus means they scroll sideways,
    * and a filter an operator has to scroll to find is one they stop using. A
    * list with four pills reads better on a single line, so this is opt-in
@@ -110,7 +110,7 @@ export function FilterStrip({
                * The COMPACT ramp, not the full one: the full ramp opens at
                * near-black, and across an 80px pill that first third reads as a
                * stray dark stripe down one side rather than as depth. The
-               * compact ramp starts at the deep red instead — same identity, no
+               * compact ramp starts at the deep red instead - same identity, no
                * stripe.
                *
                * The active pill also has **no border at all**, not a
@@ -173,7 +173,7 @@ export function FilterStrip({
         /* Sized, not stretched. `flex-1` let the field absorb every pixel the
            pills and menus did not use, so on a wide screen it became a
            600px-wide box for a search term nobody types more than three words
-           into — and it pushed the pills, which are the primary filter, far
+           into - and it pushed the pills, which are the primary filter, far
            from the eye. It stays flexible below its cap so a narrow screen can
            still shrink it. */
         <div className="relative w-full min-w-[180px] shrink sm:w-[260px]">

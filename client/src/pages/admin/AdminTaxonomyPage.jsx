@@ -21,14 +21,14 @@ import { pressable } from '@/lib/motion';
 import SelectMenu from '@/components/ui/SelectMenu';
 
 /**
- * The taxonomy editor (§6.15 — CellShoppe's *Device & Models*, phase 11d).
+ * The taxonomy editor (§6.15 - CellShoppe's *Device & Models*, phase 11d).
  *
  * **Aliases are what this screen is for.** A business buyer types `15 PM` or
  * `iphone15pm`, and a catalogue that only matches "iPhone 15 Pro Max" returns
  * nothing for the way its users actually type. Aliases live on the model, so
  * one entry covers every part that fits that phone.
  *
- * **Structure is not editable here** — no `kind`, no slug, no re-parenting.
+ * **Structure is not editable here** - no `kind`, no slug, no re-parenting.
  * Every product carries a denormalised `path` written against this tree, and
  * changing a slug from a form would detach products from a hierarchy that still
  * looks correct on screen. What is editable is what an operator actually needs:
@@ -52,7 +52,7 @@ const KIND_LABEL = {
 };
 
 /**
- * The alias editor — chips plus a field, not a comma-separated text input.
+ * The alias editor - chips plus a field, not a comma-separated text input.
  *
  * A raw text field makes it impossible to see at a glance how many aliases a
  * model has or to remove one without editing a string, which is exactly the
@@ -100,7 +100,7 @@ function AliasField({ value, onChange }) {
         <Input
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
-          // Enter adds an alias rather than submitting the dialog — submitting
+          // Enter adds an alias rather than submitting the dialog - submitting
           // on the way to adding one loses it.
           onKeyDown={(event) => {
             if (event.key === 'Enter') {
@@ -186,7 +186,7 @@ function EditDialog({ node, onClose }) {
             <span className="font-medium">Active</span>
             <span className="mt-0.5 block text-sm text-ink-500">
               An inactive entry disappears from the storefront’s filters and pickers. Its products
-              stay orderable — this hides the category, not the parts.
+              stay orderable - this hides the category, not the parts.
             </span>
           </span>
         </label>
@@ -310,7 +310,7 @@ export function AdminTaxonomyPage() {
             )}
           </span>
         ) : (
-          <span className="text-sm text-ink-400">—</span>
+          <span className="text-sm text-ink-400">-</span>
         ),
     },
     {
@@ -436,7 +436,7 @@ export function AdminTaxonomyPage() {
 
       <p className="mt-4 text-sm leading-relaxed text-ink-500">
         Device types, brands, series and models come from the catalogue seed and their structure is
-        fixed here — a slug or a parent cannot be changed from this screen, because every product
+        fixed here - a slug or a parent cannot be changed from this screen, because every product
         stores the path it was filed under. Names, aliases and visibility are editable.
       </p>
 

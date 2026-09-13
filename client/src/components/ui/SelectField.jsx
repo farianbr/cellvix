@@ -4,11 +4,11 @@ import SelectMenu from './SelectMenu';
 /**
  * `SelectMenu` wired into a react-hook-form form.
  *
- * `register` only works on a real form element — it hands back a `ref`, a `name`
+ * `register` only works on a real form element - it hands back a `ref`, a `name`
  * and a DOM `onChange` that reads `event.target.value`. Our dropdown is a button
  * and a listbox, so it goes through `Controller` instead, which is what RHF
- * provides for exactly this. Everything else about the field — label, hint,
- * error, sizing — is `SelectMenu`'s.
+ * provides for exactly this. Everything else about the field - label, hint,
+ * error, sizing - is `SelectMenu`'s.
  *
  * ```jsx
  * const { control } = useForm(...);

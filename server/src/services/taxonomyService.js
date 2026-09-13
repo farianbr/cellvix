@@ -23,7 +23,7 @@ const TTL_MS = 5 * 60 * 1000;
 /**
  * Pruned trees, keyed by component type.
  *
- * Small and bounded — one entry per part type, ~25 of them — and each is the
+ * Small and bounded - one entry per part type, ~25 of them - and each is the
  * same shape as the full tree, so the client cannot tell which it got.
  */
 const prunedCache = new Map();
@@ -32,7 +32,7 @@ let prunedAt = 0;
 /**
  * Returns the whole category tree in one payload.
  *
- * The sidebar, mega menu and tab wizard all render from this single response —
+ * The sidebar, mega menu and tab wizard all render from this single response
  * three sources would drift. It changes rarely, so it is cached in process.
  */
 async function getTree({ force = false } = {}) {
@@ -80,7 +80,7 @@ async function getTree({ force = false } = {}) {
 
 /**
  * The same tree, containing only the branches that actually stock one component
- * type — and counting only that component's products.
+ * type - and counting only that component's products.
  *
  * The wizard asks for a component FIRST (§5.3), so every level below it has to
  * answer "which device types / brands / series / models can I get a battery
@@ -125,7 +125,7 @@ async function getTreeForPartType(partType) {
     },
   ]);
 
-  // Every slug that survives, at any level — a node is kept when its own slug
+  // Every slug that survives, at any level - a node is kept when its own slug
   // appears, which for a leaf means it has stock and for a parent means one of
   // its descendants does.
   const live = new Set();
@@ -184,7 +184,7 @@ async function getComponentTypes() {
 
   // `HAS_PICTURE` so this counts what the grid will actually show. Counted
   // without it, a component type whose every product is pictureless would be
-  // offered as step 1 of the wizard and lead straight to an empty grid — and
+  // offered as step 1 of the wizard and lead straight to an empty grid - and
   // the counts beside the live types would overstate by the hidden rows.
   const rows = await db().Product.aggregate([
     { $match: { isActive: true, ...HAS_PICTURE } },

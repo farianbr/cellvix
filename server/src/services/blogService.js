@@ -38,7 +38,7 @@ function serialize(post) {
   };
 }
 
-/** The list payload omits `body` — a nine-card index does not need nine articles. */
+/** The list payload omits `body` - a nine-card index does not need nine articles. */
 function serializeDetail(post) {
   return { ...serialize(post), body: post.body };
 }
@@ -47,7 +47,7 @@ function serializeDetail(post) {
 
 /**
  * Published posts only, newest first. A draft is invisible here no matter what
- * is typed in the query string — status is fixed on the query, not filtered
+ * is typed in the query string - status is fixed on the query, not filtered
  * from a parameter.
  */
 async function listPublished({ category, tag, q, page = 1, limit = PAGE_SIZE } = {}) {
@@ -174,7 +174,7 @@ function shapeWrite(data) {
 }
 
 /**
- * Publishing stamps `publishedAt` if the author left it blank — a published post
+ * Publishing stamps `publishedAt` if the author left it blank - a published post
  * with no date sorts to the bottom of every index and reads as a bug.
  */
 function resolvePublishedAt(data, existing) {

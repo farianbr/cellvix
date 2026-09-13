@@ -6,7 +6,7 @@ import mongoose from 'mongoose';
  * Admin-created only for now (§0.7), but `source` is modelled as `admin | web`
  * so a storefront request form is additive later rather than a migration.
  *
- * **A quote stores the price it promised.** That is the whole point of one — it
+ * **A quote stores the price it promised.** That is the whole point of one - it
  * is a commitment for a period, so unlike a cart it does not re-read the
  * catalogue on every view. What it must never do is let that stored price write
  * itself into an order unexamined: conversion re-prices against live products
@@ -25,7 +25,7 @@ const quoteItemSchema = new mongoose.Schema(
     qty: { type: Number, required: true, min: 1 },
 
     // The quoted price, in integer cents. Unlike a sale, this one IS sent by
-    // the admin — a quote is a negotiated number and has no server-side source
+    // the admin - a quote is a negotiated number and has no server-side source
     // of truth to read it from. Every total computed from it is still the
     // server's (invariant 8).
     unitPrice: { type: Number, required: true },
@@ -60,7 +60,7 @@ const quoteSchema = new mongoose.Schema(
     total: { type: Number, default: 0 },
 
     // **Expiry is honoured, not enforced by a job.** A quote is expired because
-    // the date has passed, the same way an invoice is overdue — deriving it
+    // the date has passed, the same way an invoice is overdue - deriving it
     // means no nightly task exists whose only purpose is keeping a column
     // honest. `status` still stores the terminal states an operator chose.
     validUntil: Date,

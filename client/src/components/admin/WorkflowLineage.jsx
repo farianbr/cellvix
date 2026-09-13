@@ -7,7 +7,7 @@ import { pressableSurface } from '@/lib/motion';
  * The chain a repair travels: quote → ticket → invoice.
  *
  * **Not the life cycle, and not a duplicate of it.** `ProcessStrip` says where
- * *one* record sits inside its own states — a quote is sent, an invoice is
+ * *one* record sits inside its own states - a quote is sent, an invoice is
  * partly paid. This says which *other records* are the same job. They answer
  * different questions and they sit at opposite ends of the page for that
  * reason: lineage at the top, because "am I even looking at the right record?"
@@ -19,13 +19,13 @@ import { pressableSurface } from '@/lib/motion';
  * Each step is optional going in and single going out: a ticket is raised from
  * **at most one** quote and an invoice from **at most one** ticket, but a
  * ticket taken at the counter has no quote and an invoice raised by hand has
- * neither. A record that was never quoted is not a chain with a hole in it —
+ * neither. A record that was never quoted is not a chain with a hole in it
  * it is a shorter chain, so the quote station is **left out** rather than
  * drawn empty. Drawing it greyed described a step that never happened and
  * asked the operator to go looking for a quote that does not exist.
  *
  * The one station that is drawn while still empty is the record's own **next**
- * step — an uninvoiced ticket shows the Invoice station in waiting, because
+ * step - an uninvoiced ticket shows the Invoice station in waiting, because
  * that is a step this job genuinely still has ahead of it. Callers pass
  * `pending` to say which, and nothing else is inferred.
  *
@@ -37,7 +37,7 @@ import { pressableSurface } from '@/lib/motion';
  *
  * ## The icons are the sidebar's
  *
- * `FileSignature`, `ClipboardList`, `FileText` — the same glyphs Sales uses for
+ * `FileSignature`, `ClipboardList`, `FileText` - the same glyphs Sales uses for
  * Quotes, Tickets and Invoices. An operator has already learned those three
  * shapes from the nav they use all day, and inventing a second vocabulary here
  * would mean the same record type had two icons depending on where it appeared.
@@ -90,7 +90,7 @@ function Station({ icon: Icon, label, number, to, current, pending }) {
     );
   }
 
-  // A step still ahead of this job: named, quiet, and not a control — there is
+  // A step still ahead of this job: named, quiet, and not a control - there is
   // nothing to press until the record exists.
   if (pending) {
     return <span className={cn(shared, 'border-dashed border-line bg-surface')}>{body}</span>;
@@ -111,7 +111,7 @@ function Station({ icon: Icon, label, number, to, current, pending }) {
 }
 
 /**
- * @param pending  Which station to draw as this job's next step, if any —
+ * @param pending  Which station to draw as this job's next step, if any
  *                 `'ticket'` or `'invoice'`. A step that is neither reached nor
  *                 pending is not drawn at all.
  */
@@ -136,7 +136,7 @@ export function WorkflowLineage({ quote, ticket, invoice, current, pending, clas
       icon: FileText,
       label: 'Invoice',
       number: invoice?.number ?? null,
-      // Invoices are addressed by number, not by id — the detail route reads
+      // Invoices are addressed by number, not by id - the detail route reads
       // `:number`, so an id here would 404 on a record that exists.
       to: invoice?.number ? `/admin/invoices/${invoice.number}` : null,
     },

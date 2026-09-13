@@ -4,7 +4,7 @@ import { useFilterStore, toQueryParams } from '@/store/filterStore';
 
 /**
  * Mirrors the filter store into the URL, and hydrates it from the URL once on
- * mount. The store is the source of truth after that — the URL is a projection,
+ * mount. The store is the source of truth after that - the URL is a projection,
  * which keeps deep links, refresh and the back button all working without the
  * two ever fighting each other.
  */

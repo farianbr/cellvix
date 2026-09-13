@@ -43,7 +43,7 @@ import {
  * Quotes (ERP rework §6.6).
  *
  * Admin-created only for now (§0.7). **Expired is derived from the date**, not
- * stored — the same reading the server does, so the pill and the row can never
+ * stored - the same reading the server does, so the pill and the row can never
  * disagree about whether a quote is still live.
  */
 const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/quotes'], icon: adminIcon('FileSignature') };
@@ -66,7 +66,7 @@ const STATUS_TONES = {
   rejected: 'danger',
 };
 
-/** `YYYY-MM-DD` in local time — `toISOString()` would shift the day westward. */
+/** `YYYY-MM-DD` in local time - `toISOString()` would shift the day westward. */
 function todayIso(offsetDays = 0) {
   const now = new Date();
   now.setDate(now.getDate() + offsetDays);
@@ -78,7 +78,7 @@ function todayIso(offsetDays = 0) {
  *
  * A quoted unit price left blank means "use the catalogue price", so an
  * operator quoting at list does not have to retype it. The running total below
- * is a preview — every figure is recomputed server-side at the client's own
+ * is a preview - every figure is recomputed server-side at the client's own
  * provincial rate, which this form cannot know.
  */
 /** `seedClient` pre-picks the customer when the form is opened from a profile. */
@@ -238,7 +238,7 @@ export function AdminQuotesPage() {
 
   const { data, isLoading } = useAdminQuotes({ status, q: query || undefined });
   const { data: clientData } = useAdminUsers({ status: 'approved' });
-  // Only loaded while the builder is open — the catalogue is 400+ rows.
+  // Only loaded while the builder is open - the catalogue is 400+ rows.
   const { data: inventoryData } = useAdminInventory({}, creating);
   const [selected, setSelected] = useState([]);
   const { createQuote, setQuoteStatus, deleteQuote } = useAdminMutations();
@@ -295,8 +295,8 @@ export function AdminQuotesPage() {
     if (skipped > 0) {
       window.alert(
         action === 'accept'
-          ? `${eligible.length} accepted. ${skipped} skipped — only a sent quote that has not expired can be accepted.`
-          : `${eligible.length} deleted. ${skipped} skipped — a converted quote cannot be deleted without orphaning the order it became.`,
+          ? `${eligible.length} accepted. ${skipped} skipped - only a sent quote that has not expired can be accepted.`
+          : `${eligible.length} deleted. ${skipped} skipped - a converted quote cannot be deleted without orphaning the order it became.`,
       );
     }
   }
@@ -318,7 +318,7 @@ export function AdminQuotesPage() {
       priority: 1,
       className: 'max-w-[180px] truncate',
       sortValue: (quote) => quote.user.displayName ?? '',
-      render: (quote) => quote.user.displayName ?? '—',
+      render: (quote) => quote.user.displayName ?? '-',
     },
     {
       key: 'createdAt',
@@ -338,7 +338,7 @@ export function AdminQuotesPage() {
             {date(quote.validUntil)}
           </span>
         ) : (
-          <span className="text-xs text-ink-300">—</span>
+          <span className="text-xs text-ink-300">-</span>
         ),
     },
     {
@@ -429,7 +429,7 @@ export function AdminQuotesPage() {
             key: 'open',
             label: 'Open pipeline',
             value: money(totals.open ?? 0),
-            // Converted and rejected quotes are excluded — counting them would
+            // Converted and rejected quotes are excluded - counting them would
             // flatter a number an operator uses to forecast.
             hint: 'Draft and sent quotes still live',
             tone: 'brand',
@@ -500,7 +500,7 @@ export function AdminQuotesPage() {
               body={
                 clients.length
                   ? 'Try a different filter, or build one.'
-                  : 'Approve a client first — a quote is priced for an account.'
+                  : 'Approve a client first - a quote is priced for an account.'
               }
             />
           }
@@ -518,8 +518,8 @@ export function AdminQuotesPage() {
 
       {/* Bulk actions.
           **Convert is deliberately absent.** Converting asks two questions per
-          quote — the delivery method, and whether a price that has drifted from
-          the catalogue is accepted — and a batch would have to answer both on
+          quote - the delivery method, and whether a price that has drifted from
+          the catalogue is accepted - and a batch would have to answer both on
           the operator's behalf for every row. Accepting and deleting ask
           nothing, so those are the two that are safe in bulk. */}
       <BulkBar count={selected.length} noun="selected" onClear={() => setSelected([])}>
@@ -570,7 +570,7 @@ export function AdminQuotesPage() {
                     .map((line) => ({
                       product: line.product,
                       qty: Number(line.qty),
-                      // Zero means "quote at list" — the server reads the
+                      // Zero means "quote at list" - the server reads the
                       // catalogue price rather than a typed one.
                       unitPrice: Math.round(Number(line.unitPriceDollars || 0) * 100),
                     })),

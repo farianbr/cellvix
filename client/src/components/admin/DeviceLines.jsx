@@ -9,14 +9,14 @@ import { pressable } from '@/lib/motion';
 import { CONDITION_GRADES, CONDITION_PARTS } from '@shared/schemas/admin';
 
 /** The intake grid's options, with an explicit "not yet answered" first. */
-const CONDITION_OPTIONS = [{ value: '', label: '— select —' }, ...CONDITION_GRADES];
+const CONDITION_OPTIONS = [{ value: '', label: ' - select - ' }, ...CONDITION_GRADES];
 
 /**
  * The device / services / parts editor, shared by the repair ticket and the
  * itemised invoice.
  *
- * Both documents describe the same object — a device, what was wrong with it,
- * what was done and what each of those cost — so they use one editor rather
+ * Both documents describe the same object - a device, what was wrong with it,
+ * what was done and what each of those cost - so they use one editor rather
  * than two that drift. It lives here for the same reason `ApproveClientForm`
  * and `StockForms` do: a second copy is how the two screens end up disagreeing
  * about what a line is.
@@ -38,7 +38,7 @@ function Section({ icon: Icon, title, hint, children, className }) {
 }
 
 /**
- * The priced lines on one device — services performed, or parts fitted.
+ * The priced lines on one device - services performed, or parts fitted.
  *
  * One component for both because they are the same thing on an invoice: a
  * description and a price. They are separate arrays only because a technician
@@ -113,7 +113,7 @@ function LineEditor({ control, register, name, label, addLabel }) {
  * `variant` is what the two callers differ on, and it is deliberately a
  * variant rather than two components: an intake ticket grades the device's
  * condition and stores an unlock code so a technician can test it, and an
- * invoice does neither — a passcode has no business on a document the customer
+ * invoice does neither - a passcode has no business on a document the customer
  * keeps, and a condition grid records the state at drop-off, which an invoice
  * issued afterwards is not describing.
  */
@@ -138,8 +138,8 @@ function DeviceBlock({ control, register, index, canRemove, onRemove, variant = 
         <Input label="Category" placeholder="Smartphone" {...register(`devices.${index}.category`)} />
         <Input label="Brand" placeholder="Apple" {...register(`devices.${index}.brand`)} />
         <Input label="Device / Series" placeholder="iPhone 15" {...register(`devices.${index}.series`)} />
-        {/* Required on intake — a ticket for an unnamed device cannot be found
-            again — but not on an invoice, where the line descriptions carry the
+        {/* Required on intake - a ticket for an unnamed device cannot be found
+            again - but not on an invoice, where the line descriptions carry the
             job and the schema allows the model to be blank. */}
         <Input
           label="Model"
@@ -230,7 +230,7 @@ function useTicketTotal(control) {
     );
   }, 0);
 
-  // A discount can never exceed the work — the server clamps it the same way.
+  // A discount can never exceed the work - the server clamps it the same way.
   const applied = Math.min(discount, gross);
   const subtotal = gross - applied;
   const tax = subtotal * (taxRate / 100);

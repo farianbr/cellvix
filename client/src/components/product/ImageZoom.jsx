@@ -11,7 +11,7 @@ const ZOOM = 3;
  *
  * The lens used to be centred on the pointer, which put the arrow in the middle
  * of the very detail it was magnifying. Lifting it clear means the cursor marks
- * WHAT is being read while the glass shows it, unobstructed — the way a real
+ * WHAT is being read while the glass shows it, unobstructed - the way a real
  * magnifier is held over a page rather than on the eye.
  */
 const CURSOR_GAP = 22;
@@ -21,7 +21,7 @@ const CURSOR_GAP = 22;
  *
  * Fixed at 180 it was too big for a small frame: a 350px detail image cannot
  * hold a 180px glass above the cursor with any clearance, so the clamp pulled
- * it back down over the pointer — the exact thing the offset exists to prevent.
+ * it back down over the pointer - the exact thing the offset exists to prevent.
  * Sized against the frame, the room above is there at every width.
  *
  * The cap stops it becoming a second picture on a large screen; the floor keeps
@@ -36,7 +36,7 @@ function lensSize(frameHeight) {
  *
  * A round glass floats just ABOVE the cursor and shows the area under it,
  * enlarged. The rest of the photograph stays put and stays visible, so the
- * reader keeps the whole part in view while inspecting one corner of it — which
+ * reader keeps the whole part in view while inspecting one corner of it - which
  * is the point of a magnifier and the reason this replaced the earlier version.
  *
  * The offset matters as much as the magnification: centred on the pointer, the
@@ -46,7 +46,7 @@ function lensSize(frameHeight) {
  * That first attempt scaled the WHOLE image under the pointer and panned it.
  * It meant the part jumped the moment the cursor crossed the frame, the thing
  * being looked at slid away from the cursor rather than staying under it, and
- * there was no longer any context around the detail — three separate ways of
+ * there was no longer any context around the detail - three separate ways of
  * losing the reader's place in a photo they were trying to read carefully.
  *
  * Behaviour:
@@ -84,7 +84,7 @@ export function ImageZoom({ product, className, children }) {
     //
     // It also SHRINKS near the top, to whatever fits in the room above the
     // cursor. The alternative is clamping a fixed lens, and a clamped lens slides
-    // down onto the pointer — which is the one thing this must never do. A
+    // down onto the pointer - which is the one thing this must never do. A
     // smaller glass in the top strip is a much cheaper compromise than a glass
     // that covers what it is magnifying, and the shrink is gradual enough to
     // read as the lens approaching the edge rather than as a glitch.
@@ -106,7 +106,7 @@ export function ImageZoom({ product, className, children }) {
     // fill the frame: PartFrame insets it by a percentage of the frame's width,
     // and `object-contain` then letterboxes it inside what is left. Measuring
     // the frame and ignoring both would put the lens over the right pixels but
-    // draw the wrong ones — off by the padding, and off again by the letterbox.
+    // draw the wrong ones - off by the padding, and off again by the letterbox.
     //
     // So measure the <img> itself and map into that box. Outside it there is
     // only ground and watermark, neither of which is worth magnifying.
@@ -145,11 +145,11 @@ export function ImageZoom({ product, className, children }) {
     //
     // Horizontally centred on the cursor, vertically lifted by half the lens
     // plus the gap. Both clamped to the frame so the glass never hangs off an
-    // edge — and because only its POSITION is clamped, the view inside stays
+    // edge - and because only its POSITION is clamped, the view inside stays
     // correct right into the corners.
     // ALWAYS above the cursor, at every point on the photo. It used to flip
     // below near the top edge, which meant the glass jumped across the pointer
-    // as the reader moved up — the thing they were reading through changed
+    // as the reader moved up - the thing they were reading through changed
     // sides for a reason nothing on screen explained.
     //
     // No vertical clamp is needed: `size` above has already been reduced to
@@ -179,7 +179,7 @@ export function ImageZoom({ product, className, children }) {
   const stop = useCallback(() => setLens(null), []);
 
   // No photograph means the line drawing, which is vector and has no detail to
-  // magnify — so it renders as an ordinary frame.
+  // magnify - so it renders as an ordinary frame.
   if (!photo) return children;
 
   return (
@@ -207,7 +207,7 @@ export function ImageZoom({ product, className, children }) {
             backgroundImage: `url("${photo}")`,
             // The photo is drawn at the size it occupies ON SCREEN × ZOOM, so
             // what the lens shows lines up exactly with what sits under the
-            // cursor — the same picture, three times bigger, not a re-fitted one.
+            // cursor - the same picture, three times bigger, not a re-fitted one.
             backgroundSize: `${lens.width * ZOOM}px ${lens.height * ZOOM}px`,
             backgroundPosition: `${lens.bgX}px ${lens.bgY}px`,
           }}

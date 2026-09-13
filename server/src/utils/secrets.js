@@ -7,7 +7,7 @@ import env from '../config/env.js';
  *
  * §6.15 is explicit and not negotiable: a stored secret is **write-only through
  * the API**. The server keeps it encrypted, returns a masked preview and a
- * boolean `configured`, and **never returns the value to a client** — not to an
+ * boolean `configured`, and **never returns the value to a client** - not to an
  * admin, not masked-then-revealed. The reveal toggle in the UI unmasks what the
  * admin just typed into the field, nothing more.
  *
@@ -20,7 +20,7 @@ import env from '../config/env.js';
  * that then gets sent to a provider as an API key.
  *
  * **A random IV per encryption**, stored alongside the ciphertext. Reusing an
- * IV under one key is the single worst thing you can do with GCM — it leaks the
+ * IV under one key is the single worst thing you can do with GCM - it leaks the
  * XOR of the plaintexts and breaks the authentication entirely.
  */
 
@@ -36,7 +36,7 @@ const KEY_BYTES = 32;
  * arbitrary length and entropy, and using it directly as an AES key would mean
  * a short one silently becomes a short key.
  *
- * The salt is fixed and non-secret, which is correct here — its job is domain
+ * The salt is fixed and non-secret, which is correct here - its job is domain
  * separation, so the derived encryption key is not the signing key even when
  * both come from the same passphrase. Per-secret salts would mean storing one
  * per row and buys nothing against an attacker who already has the database.
@@ -54,7 +54,7 @@ function key() {
 /**
  * Encrypts one secret.
  *
- * Returns a self-describing string — `v1:iv:tag:ciphertext`, all base64url —
+ * Returns a self-describing string - `v1:iv:tag:ciphertext`, all base64url
  * so the format can be changed later without guessing what an existing row is.
  */
 function encrypt(plaintext) {
@@ -76,12 +76,12 @@ function encrypt(plaintext) {
 }
 
 /**
- * Decrypts one secret. **Server-side provider calls only** — never a response.
+ * Decrypts one secret. **Server-side provider calls only** - never a response.
  *
  * Returns `null` rather than throwing on anything malformed, tampered, or
  * encrypted under a different key. A rotated `JWT_SECRET` makes every stored
  * secret undecryptable, and the right behaviour then is for the provider to
- * report itself unconfigured — which the channel notices already handle — not
+ * report itself unconfigured - which the channel notices already handle - not
  * for every request touching settings to 500.
  */
 function decrypt(stored) {
@@ -110,8 +110,8 @@ function decrypt(stored) {
  * The masked preview shown beside a configured key.
  *
  * **Derived from the length and last four characters only.** Enough for an
- * operator to tell which key is in the field — "is this the live one or the
- * test one" — and not enough to be worth stealing. Anything shorter than eight
+ * operator to tell which key is in the field - "is this the live one or the
+ * test one" - and not enough to be worth stealing. Anything shorter than eight
  * characters is masked completely: showing four of a six-character secret
  * gives away most of it.
  */

@@ -3,14 +3,14 @@ import mongoose from 'mongoose';
 /**
  * A platform-level operator (SAAS_PLATFORM §1, §4.5).
  *
- * **Its own collection, never a `User.role`** — the same argument that put
+ * **Its own collection, never a `User.role`** - the same argument that put
  * supplier logins on `Supplier`, one level up and with more at stake. A fifth
  * `User.role` would mean every `requireAuth` route in the application silently
  * gained a population that can see across tenants, and the only thing stopping
  * that would be having audited each route. Here the guarantee is structural:
  * `middleware/auth.js` resolves its subject in `User`, where no super admin
  * exists, so a token minted for this collection satisfies nothing on the tenant
- * side. The reverse holds too — `requireSuperAdmin` refuses a subject that is
+ * side. The reverse holds too - `requireSuperAdmin` refuses a subject that is
  * not a live super admin.
  *
  * **A super admin has no row in any business.** They create tenants, grant
@@ -39,7 +39,7 @@ const superAdminSchema = new mongoose.Schema(
 
     /**
      * A deactivated super admin cannot sign in, and the check runs on every
-     * request rather than only at sign-in — a token stays validly signed until
+     * request rather than only at sign-in - a token stays validly signed until
      * it expires, so revoking access has to bite immediately.
      */
     isActive: { type: Boolean, default: true, index: true },

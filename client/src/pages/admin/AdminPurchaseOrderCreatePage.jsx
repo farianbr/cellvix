@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router';
 import { useFieldArray, useForm } from 'react-hook-form';
 import {
@@ -28,6 +28,7 @@ import {
   useAdminSuppliers,
   useAdminMutations,
   useSuppliersForComponentTypes,
+  useReorderQueue,
 } from '@/hooks/useAdmin';
 import { pressable } from '@/lib/motion';
 
@@ -36,7 +37,7 @@ import { pressable } from '@/lib/motion';
  *
  * **A page, not a modal.** This was a dialog on the list screen, which is the
  * wrong shape for the work: a PO can run to a dozen lines, each one searched or
- * scanned, with a running total beside them — and a dialog gives that a scroll
+ * scanned, with a running total beside them - and a dialog gives that a scroll
  * container inside a scroll container and loses the draft the moment it is
  * dismissed. A page also has a URL, so "the order I was part-way through" is
  * something an operator can come back to.
@@ -45,14 +46,14 @@ import { pressable } from '@/lib/motion';
  * button arrives here.
  *
  * **An order is raised to several suppliers, not one** (re-ruled 2026-09-11).
- * The picker is tag-driven — tick the component types, and every active
- * supplier carrying one of them is offered — because "who sells batteries" is
+ * The picker is tag-driven - tick the component types, and every active
+ * supplier carrying one of them is offered - because "who sells batteries" is
  * the question a purchasing clerk actually has. Anybody can still be added by
  * hand: the tags are a default, not a rule.
  *
  * **Nothing this page computes is trusted.** The totals below are a preview;
  * `purchaseService` recomputes every one of them from the lines on write
- * (§8, invariant 8). Unit costs typed here are an *expectation* — the price the
+ * (§8, invariant 8). Unit costs typed here are an *expectation* - the price the
  * order is finally placed at comes from the confirmed supplier's own bid.
  */
 const ADMIN_PAGE = {
@@ -64,8 +65,8 @@ const ADMIN_PAGE = {
  * Who the order goes to.
  *
  * **Tag-suggested and pre-ticked, with every other supplier underneath.** The
- * suggestion answers the question a clerk actually has — "who sells batteries"
- * — and pre-ticking it means the common case is no clicks at all. The full list
+ * suggestion answers the question a clerk actually has - "who sells batteries"
+ * - and pre-ticking it means the common case is no clicks at all. The full list
  * stays reachable because a tag is a default, not a rule: a supplier nobody has
  * tagged yet is still a supplier somebody may want a price from.
  */
@@ -159,7 +160,7 @@ function SupplierMultiSelect({ componentTypes, allSuppliers, value, onChange }) 
   );
 }
 
-/** `YYYY-MM-DD` in local time — `toISOString()` would shift the day westward. */
+/** `YYYY-MM-DD` in local time - `toISOString()` would shift the day westward. */
 function isoDay(offsetDays = 0) {
   const now = new Date();
   now.setDate(now.getDate() + offsetDays);
@@ -206,6 +207,82 @@ export function AdminPurchaseOrderCreatePage() {
   const { fields, append, remove } = useFieldArray({ control, name: 'items' });
   const items = watch('items');
 
+  /**
+   * Arriving from the reorder queue with `?reorder=1`, lines already filled in.
+   *
+   * **The queue is fetched here rather than passed through the URL.** A list of
+   * a hundred product ids does not belong in an address bar, and more to the
+   * point the quantities would be stale: seeding from a fetch made when this
+   * screen opened means the numbers describe the shelf now, not whenever the
+   * Inventory page last polled. It is the same reason the server re-derives
+   * them rather than trusting a client.
+   *
+   * This replaces raising the draft outright. A generated PO was landing in the
+   * list before anybody had seen a line of it - which is the moment an operator
+   * most wants to change a quantity, drop a product, or pick different
+   * suppliers. Now nothing is written until they press save, so abandoning the
+   * screen leaves no record behind.
+   */
+  const wantsReorder = searchParams.get('reorder') === '1';
+  const { data: reorderData } = useReorderQueue(wantsReorder);
+  const [seeded, setSeeded] = useState(false);
+
+  useEffect(() => {
+    if (!wantsReorder || seeded || !reorderData?.items) return;
+
+    // `?products=` narrows the queue to what was ticked on the Inventory
+    // screen. Intersected rather than trusted: an id that is no longer below
+    // its reorder point is dropped, so a stale selection cannot put a
+    // well-stocked product on the order.
+    const picked = searchParams.get('products');
+    const wanted = picked ? new Set(picked.split(',').filter(Boolean)) : null;
+    const queue = wanted
+      ? reorderData.items.filter((item) => wanted.has(item.id))
+      : reorderData.items;
+
+    if (!queue.length) {
+      // Nothing to reorder any more - somebody restocked, or a second tab got
+      // here first. Said plainly rather than leaving an empty form that looks
+      // like it failed to load.
+      setError(
+        wanted
+          ? 'None of those products are below their reorder point any more.'
+          : 'Nothing is below its reorder point right now.',
+      );
+      setSeeded(true);
+      return;
+    }
+
+    setValue(
+      'items',
+      queue.map((item) => ({
+        // The whole row, in the shape `InventoryPicker` renders.
+        product: {
+          id: item.id,
+          name: item.name,
+          sku: item.sku,
+          barcode: item.barcode,
+          stock: item.stock,
+          cost: item.cost ?? 0,
+        },
+        qtyOrdered: item.suggestedQty,
+        unitCostDollars: ((item.cost ?? 0) / 100).toFixed(2),
+      })),
+      { shouldDirty: true },
+    );
+
+    // Tagged with what the lines actually cover, so the supplier picker offers
+    // the people who sell these parts without the operator tagging it by hand.
+    setComponentTypes([...new Set(queue.map((item) => item.partType).filter(Boolean))]);
+    setValue(
+      'notes',
+      `Raised from the reorder queue: ${queue.filter((i) => i.status === 'out').length} out of stock, ${queue.filter((i) => i.status === 'low').length} below reorder point.`,
+      { shouldDirty: true },
+    );
+
+    setSeeded(true);
+  }, [wantsReorder, seeded, reorderData, searchParams, setValue]);
+
   const tax = Math.round(Number(watch('taxDollars') || 0) * 100);
   const shipping = Math.round(Number(watch('shippingDollars') || 0) * 100);
 
@@ -218,7 +295,7 @@ export function AdminPurchaseOrderCreatePage() {
   /**
    * Choosing an item fills the rest of the row.
    *
-   * SKU and barcode are displayed rather than typed — they identify the product
+   * SKU and barcode are displayed rather than typed - they identify the product
    * that was picked, and a field an operator can edit is a field that can
    * disagree with the line it belongs to. Cost is seeded from the catalogue and
    * stays editable, because what a supplier charges this time is the one number
@@ -309,7 +386,7 @@ export function AdminPurchaseOrderCreatePage() {
         />
 
         {/* The supplier list owns the add form, so this hands off to it and
-            comes back — one form, one place its rules can drift. */}
+            comes back - one form, one place its rules can drift. */}
         <Link
           to="/admin/suppliers?new=1"
           className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-brand hover:underline"
@@ -322,14 +399,14 @@ export function AdminPurchaseOrderCreatePage() {
       <Panel title="Order details" className="mb-3">
         <Input
           label="Title"
-          placeholder="Q4 screen restock — Samsung S-series"
+          placeholder="Q4 screen restock - Samsung S-series"
           hint="Optional. What this order is for, in a few words."
           containerClassName="mb-3"
           {...register('title')}
         />
 
         {/* Status is no longer chosen here. An order reaches `sent` by actually
-            being sent — which mails every supplier on it — so offering it as a
+            being sent - which mails every supplier on it - so offering it as a
             dropdown on create would record a state nobody was told about. */}
         <div className="grid gap-3 sm:grid-cols-3">
           <Input label="Order date" type="date" required {...register('orderDate')} />
@@ -354,7 +431,7 @@ export function AdminPurchaseOrderCreatePage() {
       <Panel title="Order items" flush className="mb-3">
         <p className="border-b border-line px-4 py-3 text-sm leading-relaxed text-ink-500">
           Search an inventory item by <strong className="font-semibold text-ink-700">name, SKU
-          or barcode</strong> — scan straight into the box and the SKU, barcode and cost fill in
+          or barcode</strong> - scan straight into the box and the SKU, barcode and cost fill in
           automatically. Out-of-stock items are included, so you can restock them.
         </p>
 
@@ -380,7 +457,18 @@ export function AdminPurchaseOrderCreatePage() {
                 <th scope="col" className={cn(t.headCell('right'), 'w-28')}>
                   Total
                 </th>
-                <th scope="col" className={cn(t.headCell('right'), 'w-12')}>
+                {/* `relative` is load-bearing, not decoration.
+
+                    `sr-only` is `position: absolute`, so it anchors to the
+                    nearest positioned ancestor - and this cell had none, which
+                    sent it up to the document. Absolutely placed at the foot of
+                    a 1372px form inside a `h-dvh` shell, that 1px box stretched
+                    the *document* to 1002px against a 900px viewport: a second
+                    scrollbar beside the panel's own, scrolling 102px of blank
+                    space. Containing it here costs nothing and keeps the label
+                    for a screen reader, which still needs to hear what the
+                    column of buttons is for. */}
+                <th scope="col" className={cn(t.headCell('right'), 'relative w-12')}>
                   <span className="sr-only">Remove</span>
                 </th>
               </tr>
@@ -407,10 +495,10 @@ export function AdminPurchaseOrderCreatePage() {
                         and a field somebody can edit is one that can disagree
                         with the line it belongs to. */}
                     <td className={cn(t.cell(), 'font-mono text-xs text-ink-500')}>
-                      {line?.product?.sku ?? <span className="text-ink-300">—</span>}
+                      {line?.product?.sku ?? <span className="text-ink-300">-</span>}
                     </td>
                     <td className={cn(t.cell(), 'font-mono text-xs text-ink-500')}>
-                      {line?.product?.barcode ?? <span className="text-ink-300">—</span>}
+                      {line?.product?.barcode ?? <span className="text-ink-300">-</span>}
                     </td>
 
                     <td className={t.cell('right')}>

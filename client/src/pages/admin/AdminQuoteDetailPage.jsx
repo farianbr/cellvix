@@ -31,7 +31,7 @@ import Skeleton from '@/components/ui/Skeleton';
 import { pressable } from '@/lib/motion';
 
 /**
- * One quote — lines, expiry, the live price comparison, and conversion
+ * One quote - lines, expiry, the live price comparison, and conversion
  * (ERP rework §6.6).
  *
  * The comparison panel is the point of this screen. A quote is a promise held
@@ -117,11 +117,11 @@ function DriftTable({ drift, compact = false }) {
                 {money(line.quotedPrice)}
               </td>
               <td className={cn(t.cell('right'), 'tnum text-ink-700')}>
-                {line.livePrice === null ? '—' : money(line.livePrice)}
+                {line.livePrice === null ? '-' : money(line.livePrice)}
               </td>
               <td className={cn(t.cell('right'), 'tnum')}>
                 {line.difference === null ? (
-                  <span className="text-ink-300">—</span>
+                  <span className="text-ink-300">-</span>
                 ) : (
                   // Signed once: a quote below today's price is a negative, and
                   // the tone follows the sign rather than a second label.
@@ -150,14 +150,14 @@ function DriftTable({ drift, compact = false }) {
  *
  * **The steps are the real states, not a simplified three.** `draft → sent →
  * accepted → converted` is what `quoteService.ALLOWED_TRANSITIONS` enforces, so
- * a strip that skipped `draft` would show a quote as further along than it is —
+ * a strip that skipped `draft` would show a quote as further along than it is
  * and the buttons in the header, which follow the same ladder, would offer a
  * step the strip never drew.
  *
  * **Rejected and expired are exits, not steps.** They are terminal and they can
  * happen from more than one rung, so laying them out in a row would imply a
  * quote passes *through* them on the way to being converted. They replace the
- * strip with a line saying where the quote stopped and which rung it reached —
+ * strip with a line saying where the quote stopped and which rung it reached
  * `storedStatus` still carries that, which is exactly why the serializer keeps
  * it alongside the derived status.
  *
@@ -178,7 +178,7 @@ function QuoteLifecycle({ quote, className }) {
   if (stopped) {
     const rejected = quote.status === 'rejected';
     // How far it got before it stopped. `storedStatus` is the rung actually
-    // reached — an expired quote is stored as `sent`, and saying "expired" with
+    // reached - an expired quote is stored as `sent`, and saying "expired" with
     // no other context loses the fact that it was sent and never answered.
     const reached =
       QUOTE_LIFECYCLE.find((step) => step.key === quote.storedStatus)?.label ?? 'Draft';
@@ -187,7 +187,7 @@ function QuoteLifecycle({ quote, className }) {
      * A stopped quote shows the rail it did **not** finish.
      *
      * The rungs it reached stay filled and the rest stay empty, with the stage
-     * it died at marked in the exit's own tone — so "rejected" is placed on the
+     * it died at marked in the exit's own tone - so "rejected" is placed on the
      * ladder rather than replacing it with a sentence. A bare banner threw away
      * the one thing worth knowing: how close it got.
      */
@@ -218,7 +218,7 @@ function QuoteLifecycle({ quote, className }) {
           </span>
           <span className="opacity-80">
             {rejected
-              ? 'It goes no further — raise a new quote to price this again.'
+              ? 'It goes no further - raise a new quote to price this again.'
               : 'Extend its expiry to carry on, or raise a new quote at current prices.'}
           </span>
         </p>
@@ -234,7 +234,7 @@ function QuoteLifecycle({ quote, className }) {
       current={quote.status}
       caption={
         quote.status === 'converted'
-          ? 'This quote became an order — its price is now the order’s.'
+          ? 'This quote became an order - its price is now the order’s.'
           : 'A quote can be rejected at any stage, and lapses on its expiry date.'
       }
       className={className}
@@ -320,7 +320,7 @@ export function AdminQuoteDetailPage() {
         },
         onError: (err) => {
           // The server refuses a drifted conversion and hands back the full
-          // comparison. Showing it and asking is the whole contract — the
+          // comparison. Showing it and asking is the whole contract - the
           // operator decides to honour the quoted price, we never decide for
           // them and never apply it silently.
           if (err.code === 'QUOTE_PRICE_DRIFT' && err.fields?.drift) {
@@ -333,7 +333,7 @@ export function AdminQuoteDetailPage() {
   }
 
   return (
-    // The record measure, centred — one record is a reading screen, and a
+    // The record measure, centred - one record is a reading screen, and a
     // list is what earns the shell's full width. The `.record-page` class carries
     // the whole treatment; see the container tokens in index.css.
     <div className="record-page">
@@ -393,7 +393,7 @@ export function AdminQuoteDetailPage() {
 
       {/* Only a quote that became a repair has this chain. A quote converted
           into an *order* for goods never touches a ticket, and drawing three
-          empty stations on it would invent a workflow it is not in — the
+          empty stations on it would invent a workflow it is not in - the
           "Converted" panel in the sidebar is where that route is reported. */}
       {quote.convertedTicket && (
         <WorkflowLineage
@@ -401,7 +401,7 @@ export function AdminQuoteDetailPage() {
           quote={quote}
           ticket={quote.convertedTicket}
           invoice={quote.convertedTicket.invoice}
-          // The repair is under way but not yet billed — that step is still to
+          // The repair is under way but not yet billed - that step is still to
           // come, so it is drawn in waiting rather than left off.
           pending={quote.convertedTicket.invoice ? undefined : 'invoice'}
           className="mb-3"
@@ -420,7 +420,7 @@ export function AdminQuoteDetailPage() {
           <Clock className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
           <span>
             This quote expired on {date(quote.validUntil)}. Extend its expiry before accepting or
-            converting it — honouring a lapsed price is a decision worth recording.
+            converting it - honouring a lapsed price is a decision worth recording.
           </span>
         </p>
       )}
@@ -446,7 +446,7 @@ export function AdminQuoteDetailPage() {
           {
             key: 'margin',
             label: 'Margin',
-            value: marginPercent === null ? '—' : `${marginPercent}%`,
+            value: marginPercent === null ? '-' : `${marginPercent}%`,
             hint:
               margin.uncosted > 0
                 ? `Excludes ${formatCount(margin.uncosted)} line(s) with no recorded cost`
@@ -457,7 +457,7 @@ export function AdminQuoteDetailPage() {
           {
             key: 'expiry',
             label: 'Expires',
-            value: quote.validUntil ? date(quote.validUntil) : '—',
+            value: quote.validUntil ? date(quote.validUntil) : '-',
             hint: quote.expired ? 'Past its date' : 'Still live',
             tone: quote.expired ? 'warn' : 'info',
             icon: Clock,
@@ -468,7 +468,7 @@ export function AdminQuoteDetailPage() {
       <div className="grid gap-3 lg:grid-cols-[1fr_300px]">
         <div className="space-y-3">
           <Panel title="Lines" flush>
-            {/* Carries the density toggle — these lines follow the same density
+            {/* Carries the density toggle - these lines follow the same density
                 as every list table. */}
             <div className="border-b border-line px-3 py-2 sm:px-4">
               <CountLine
@@ -636,7 +636,7 @@ export function AdminQuoteDetailPage() {
             <span>
               These parts cost something different today than when{' '}
               <strong className="font-semibold">{quote.quoteNumber}</strong> was issued. Converting
-              honours <strong className="font-semibold">the quoted prices</strong> — that is the
+              honours <strong className="font-semibold">the quoted prices</strong> - that is the
               promise made to the client. Confirm you have seen the difference.
             </span>
           </p>

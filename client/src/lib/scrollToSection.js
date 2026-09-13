@@ -6,13 +6,13 @@
  * and putting it straight back (`measureAllKeyframes`). That restore is a
  * programmatic scroll, and a programmatic scroll **cancels an in-flight
  * browser smooth scroll**. Both of these pages animate rows in on scroll, so a
- * native anchor jump reliably stalled a couple of hundred pixels in — the first
+ * native anchor jump reliably stalled a couple of hundred pixels in - the first
  * revealed row killed it every time.
  *
  * So the animation is ours, and it re-asserts the position on every frame with
  * `behavior: 'instant'`. Anything that yanks the window mid-flight is corrected
  * on the next frame rather than ending the journey. Recomputing the target each
- * frame also absorbs the layout shifting under it — the announcement bar
+ * frame also absorbs the layout shifting under it - the announcement bar
  * collapsing, an image finishing, a disclosure closing above the target.
  */
 

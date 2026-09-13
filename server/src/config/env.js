@@ -14,7 +14,7 @@ const schema = z.object({
   // Required: there is no in-memory fallback (PROJECT_INSTRUCTIONS.md §8).
   MONGODB_URI: z
     .string()
-    .min(1, 'MONGODB_URI is required — there is no in-memory fallback')
+    .min(1, 'MONGODB_URI is required - there is no in-memory fallback')
     .refine((uri) => uri.startsWith('mongodb://') || uri.startsWith('mongodb+srv://'), {
       message: 'MONGODB_URI must start with mongodb:// or mongodb+srv://',
     }),
@@ -26,7 +26,7 @@ const schema = z.object({
   /**
    * The prefix every platform database name is built from (SAAS_PLATFORM §0.1).
    *
-   * **The platform has no name yet, and it is not "Cellvix"** — Cellvix is
+   * **The platform has no name yet, and it is not "Cellvix"** - Cellvix is
    * tenant #1's product business. Every database name is derived from this one
    * constant precisely so that naming the platform later is a config change
    * rather than a migration: `<prefix>_control` holds tenants, plans and super
@@ -41,7 +41,7 @@ const schema = z.object({
   // unset, `utils/secrets.js` derives a key from JWT_SECRET through scrypt, so
   // an existing deployment keeps working without a config change.
   //
-  // **Rotating either one makes every stored secret undecryptable** — by design,
+  // **Rotating either one makes every stored secret undecryptable** - by design,
   // not by accident. `decrypt` then returns null, the affected provider reports
   // itself unconfigured, and the keys have to be re-entered. That is the right
   // failure: the alternative is a key that silently decrypts to garbage and
@@ -61,14 +61,14 @@ const schema = z.object({
   CLIENT_ORIGIN: z.string().default('http://localhost:5173'),
 
   // Opt-in: makes the MOCK gateway decline every charge, so the payment-failure
-  // page can be exercised end to end. Off by default — see services/payment.js.
+  // page can be exercised end to end. Off by default - see services/payment.js.
   // ---- outbound mail ------------------------------------------------
   // Optional, but nothing can be emailed without it. With no SMTP_URL the
-  // mailer logs each message as a failure instead of sending — the order still
+  // mailer logs each message as a failure instead of sending - the order still
   // completes either way, so a missing mail server can never fail a checkout.
   SMTP_URL: z.string().optional(),
   MAIL_FROM: z.string().default('Cellvix <billing@cellvix.ca>'),
-  // Account mail — a welcome, credentials, anything about the account itself —
+  // Account mail - a welcome, credentials, anything about the account itself
   // rather than money. A message telling somebody their account is open should
   // not arrive from the billing desk: the reply goes to whoever handles
   // accounts, and "billing" on a welcome is the wrong address to reply to.
@@ -94,7 +94,7 @@ const schema = z.object({
 const parsed = schema.safeParse(process.env);
 
 if (!parsed.success) {
-  // Crash loudly and specifically — a half-configured server is worse than none.
+  // Crash loudly and specifically - a half-configured server is worse than none.
   console.error('\n  Invalid environment configuration:\n');
   for (const issue of parsed.error.issues) {
     console.error(`   - ${issue.path.join('.')}: ${issue.message}`);

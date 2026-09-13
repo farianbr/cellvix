@@ -6,7 +6,7 @@ import { useIsFetching } from '@tanstack/react-query';
  *
  * **The problem it solves is the jump.** A route used to answer a click by
  * replacing the whole page with a skeleton and then replacing that with the
- * real thing — two full repaints for one navigation, which reads as the layout
+ * real thing - two full repaints for one navigation, which reads as the layout
  * collapsing and rebuilding rather than as a page arriving. Keeping the old
  * content on screen and marking the wait in one 2px strip is both calmer and
  * more honest: nothing has changed yet, and something is coming.
@@ -110,7 +110,7 @@ export function RouteProgress() {
       aria-label="Loading"
     >
       <div
-        // The brand ramp, which is what it is for — a thin horizontal fill is
+        // The brand ramp, which is what it is for - a thin horizontal fill is
         // exactly the surface §2.2 keeps the gradient for. Compact, because at
         // 2px the full ramp's dark opening would read as a stripe.
         className="bg-brand-gradient-compact h-full origin-left transition-[transform,opacity] duration-300 ease-entrance motion-reduce:transition-none"

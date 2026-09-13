@@ -11,7 +11,7 @@ import mongoose from 'mongoose';
  * later is a service swap rather than a migration.
  *
  * `queued_unconfigured` exists so the history list can be truthful. Nothing in
- * this system ever reports "Sent" for a message that was not sent — §6b rule 4,
+ * this system ever reports "Sent" for a message that was not sent - §6b rule 4,
  * and the reason that status is in the enum rather than being approximated by
  * `failed` (it did not fail; nobody tried) or `logged` (that is a phone call
  * somebody made, which is a different fact).
@@ -38,7 +38,7 @@ const messageLogSchema = new mongoose.Schema(
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
 
     // Denormalised so the history list renders without populating, and so the
-    // row still reads correctly if the account is later renamed — what was
+    // row still reads correctly if the account is later renamed - what was
     // written is what was true when it was sent.
     businessName: String,
     to: String,
@@ -56,7 +56,7 @@ const messageLogSchema = new mongoose.Schema(
     // provider is missing rather than a generic "not configured".
     unconfiguredReason: String,
 
-    // Calls only. A URL, never a file — Cellvix has no asset store (§0).
+    // Calls only. A URL, never a file - Cellvix has no asset store (§0).
     recordingUrl: String,
 
     campaign: { type: mongoose.Schema.Types.ObjectId, ref: 'Campaign', index: true },

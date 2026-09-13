@@ -10,8 +10,8 @@ import { pressable } from '@/lib/motion';
  * The `···` overflow menu, as its own component.
  *
  * It began inside `DataTable` as the row-actions menu and stayed there, so a
- * screen that wanted the same control — a record's own page, where the same
- * secondary actions belong — had no way to reach it. Lifting it here keeps one
+ * screen that wanted the same control - a record's own page, where the same
+ * secondary actions belong - had no way to reach it. Lifting it here keeps one
  * implementation of "the actions that did not earn a button", which matters
  * because it is the thing an operator learns once and expects everywhere.
  *
@@ -33,7 +33,7 @@ export function ActionMenu({ items = [], context, label = 'More actions', trigge
    * Anchored and **portalled**, exactly as `SelectMenu` is.
    *
    * Absolutely positioned inside its own cell, this menu was clipped by every
-   * ancestor that hides its overflow — which on a table row is the horizontal
+   * ancestor that hides its overflow - which on a table row is the horizontal
    * scroll wrapper the table is always wrapped in, so the last rows' menus
    * disappeared under the panel edge. A portal takes it out of that box, and
    * fixed coordinates from the trigger keep it attached to the button.
@@ -45,11 +45,11 @@ export function ActionMenu({ items = [], context, label = 'More actions', trigge
     padding: 8,
   });
 
-  // The panel lives in a portal, so it is not inside `containerRef` — both refs
+  // The panel lives in a portal, so it is not inside `containerRef` - both refs
   // have to count as "inside" or the first click on an item closes the menu.
   useOnClickOutside([containerRef, panelRef], () => setOpen(false), open);
 
-  // A predicate or a plain value — see the note above.
+  // A predicate or a plain value - see the note above.
   const resolve = (value) => (typeof value === 'function' ? value(context) : value);
 
   const usable = items.filter((item) => !resolve(item.hidden));
@@ -105,7 +105,7 @@ export function ActionMenu({ items = [], context, label = 'More actions', trigge
         aria-expanded={open}
         className={cn(
           // Both branches carried an `active:scale` with only a colour
-          // transition beside it, so the scale snapped rather than eased — a
+          // transition beside it, so the scale snapped rather than eased - a
           // jump that reads as a glitch instead of as feedback. The helper
           // names transform alongside the colours.
           pressable,

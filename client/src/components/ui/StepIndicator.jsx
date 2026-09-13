@@ -29,7 +29,7 @@ const SIZES = {
  * depth. The orb ramp starts at the deep red, like the compact one.
  *
  * And a linear gradient is FLAT before its first stop and after its last, so
- * those flat regions hug the left and right rims as visible arcs — the circle
+ * those flat regions hug the left and right rims as visible arcs - the circle
  * looks like it has a thin vertical stroke down each side. The orb ramp puts
  * its stops at -35% and 135%, outside the element, so both rims land on a
  * colour that is still changing and neither edge goes flat.
@@ -43,8 +43,8 @@ const STATES = {
 
 /**
  * `glyph`:
- *   'auto'  — a tick once completed (the default everywhere).
- *   'index' — always the step number. The collapsed steps of the mobile tab
+ *   'auto' - a tick once completed (the default everywhere).
+ *   'index' - always the step number. The collapsed steps of the mobile tab
  *             wizard are numbers only, so a row of ticks would leave a buyer
  *             with no way to tell step 2 from step 4.
  */

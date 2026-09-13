@@ -18,8 +18,8 @@ import { resetPasswordSchema } from '@shared/schemas/auth';
  * happens with the site already open.
  *
  * The token is read from the query string and posted back with the new
- * password. Everything that makes it safe is server-side — single use, one
- * hour, matched against a stored hash — because a client-side check of a token
+ * password. Everything that makes it safe is server-side - single use, one
+ * hour, matched against a stored hash - because a client-side check of a token
  * the client already holds proves nothing.
  *
  * The server signs the session on success, so this navigates straight into the
@@ -56,7 +56,7 @@ export function ResetPasswordPage() {
   }
 
   // A link with no token at all is a mistyped or truncated URL, not a failed
-  // reset — say so before asking for a password that cannot go anywhere.
+  // reset - say so before asking for a password that cannot go anywhere.
   if (!token) {
     return (
       <div className="mx-auto flex max-w-md flex-col items-center px-4 py-20 text-center">

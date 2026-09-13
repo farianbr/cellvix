@@ -22,7 +22,7 @@ const blogPostSchema = new mongoose.Schema(
     publishedAt: { type: Date, index: true },
     isFeatured: { type: Boolean, default: false },
 
-    // Derived on save from the body's word count — never authored, so it cannot
+    // Derived on save from the body's word count - never authored, so it cannot
     // drift from the text it describes.
     readMinutes: { type: Number, default: 1 },
   },

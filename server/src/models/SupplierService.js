@@ -10,7 +10,7 @@ import mongoose from 'mongoose';
  * ways to answer "what do we pay this supplier", which is the question both
  * exist to answer.
  *
- * **This is not the customer catalogue.** `Product` is what Cellvix sells — a
+ * **This is not the customer catalogue.** `Product` is what Cellvix sells - a
  * part, with stock, a grade and a shelf. Nothing here has stock, appears in the
  * storefront, or can be added to a cart; these are costs, and they land in the
  * P&L through `Expense` like every other cost. Keeping them out of `Product`
@@ -18,7 +18,7 @@ import mongoose from 'mongoose';
  */
 
 /**
- * `one_off` is billed when it is used — a repair sent out, a one-time setup fee.
+ * `one_off` is billed when it is used - a repair sent out, a one-time setup fee.
  * The others repeat on a cycle and drive the renewal date.
  */
 const BILLING_CYCLES = ['one_off', 'monthly', 'quarterly', 'yearly'];

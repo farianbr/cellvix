@@ -3,7 +3,7 @@ import { Check } from 'lucide-react';
 import cn from '@/lib/cn';
 
 /**
- * Filter/consent checkbox. The whole row is the hit target — sidebar facets are
+ * Filter/consent checkbox. The whole row is the hit target - sidebar facets are
  * tapped on mobile, so a 16px box alone is not enough.
  */
 export const Checkbox = forwardRef(function Checkbox(

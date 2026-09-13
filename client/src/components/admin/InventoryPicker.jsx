@@ -10,7 +10,7 @@ import useOnClickOutside from '@/hooks/useOnClickOutside';
 import useAnchoredPosition from '@/hooks/useAnchoredPosition';
 import { pressable } from '@/lib/motion';
 
-/** Height of one result row — a two-line row at `p-2`. */
+/** Height of one result row - a two-line row at `p-2`. */
 const ROW_H = 52;
 
 /**
@@ -19,7 +19,7 @@ const ROW_H = 52;
  *
  * **Not `ProductPicker`.** That one is the buyer's quick-order pad and reads
  * the storefront catalogue: it carries no cost and no barcode, and it answers
- * with what a customer may buy. A purchase order needs the opposite of that —
+ * with what a customer may buy. A purchase order needs the opposite of that
  * the part's *cost*, its barcode, and above all the out-of-stock rows, because
  * restocking something that has run out is the single most common reason to
  * raise a PO. So this reads `/admin/inventory`, which already searches all
@@ -71,7 +71,7 @@ export function InventoryPicker({ value, onChange, autoFocus = false, className 
    * This is what separates scanning from searching: a scanner types the whole
    * code and the operator's hands are already on the next box, so making them
    * confirm a list of one defeats the point. Only an exact, unique match
-   * auto-commits — a partial or ambiguous one still opens the list.
+   * auto-commits - a partial or ambiguous one still opens the list.
    */
   useEffect(() => {
     if (!ready || products.length !== 1) return;
@@ -108,7 +108,7 @@ export function InventoryPicker({ value, onChange, autoFocus = false, className 
     }
   }
 
-  // A chosen line shows what it is, with a clear button — the search box is for
+  // A chosen line shows what it is, with a clear button - the search box is for
   // finding, and leaving it in place after a choice invites re-searching a row
   // that is already filled in.
   if (value) {

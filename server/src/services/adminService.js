@@ -42,7 +42,7 @@ const LOW_STOCK_THRESHOLD = 50;
  *
  * `from` and `to` are inclusive whole days in `YYYY-MM-DD`. `to` is pushed to
  * the end of its day here, on the server, so a range of "today to today" is a
- * real twenty-four hours rather than an empty instant — the client sends dates,
+ * real twenty-four hours rather than an empty instant - the client sends dates,
  * not timestamps, and only one side should own that rule.
  *
  * Defaults to the last thirty days, which is what the endpoint returned before
@@ -74,7 +74,7 @@ function bucketFor(start, end) {
  * Both units label by their first day: `27-Aug`. A week reads as its Monday.
  *
  * The year is appended only when the range spans more than one, because a
- * weekly walk snaps back to Monday and can start in the previous December —
+ * weekly walk snaps back to Monday and can start in the previous December
  * `29-Dec` to `28-Dec` for a calendar year is correct but reads as nonsense
  * without it.
  */
@@ -140,7 +140,7 @@ function isoWeek(date) {
  * payments actually received in the range, by payment date. They are different
  * numbers and the UI says which is which.
  *
- * **Refunds are their own line** (§9.2) — never a negative pushed into a
+ * **Refunds are their own line** (§9.2) - never a negative pushed into a
  * revenue figure.
  *
  * Today's response shape is preserved as a subset, so every existing consumer
@@ -230,7 +230,7 @@ async function stats({ from, to } = {}) {
       { $group: { _id: null, total: { $sum: '$amount' }, count: { $sum: 1 } } },
     ]),
 
-    // Receivables are a position, not a flow — always "as of now", never
+    // Receivables are a position, not a flow - always "as of now", never
     // filtered by the range, or the number stops meaning what it says.
     db().Invoice.aggregate([
       { $match: { status: { $ne: 'paid' } } },
@@ -240,7 +240,7 @@ async function stats({ from, to } = {}) {
           outstanding: { $sum: { $subtract: ['$amount', '$amountPaid'] } },
           // How MANY invoices make up that figure. The dashboard tile leads
           // with the money and needs the count beside it, and counting rows
-          // here is free — the aggregation has already matched them.
+          // here is free - the aggregation has already matched them.
           count: { $sum: 1 },
           overdue: {
             $sum: {
@@ -333,7 +333,7 @@ async function stats({ from, to } = {}) {
           _id: 0,
           id: { $toString: '$_id' },
           businessName: '$client.businessName',
-          // The same precedence `displayNameOf` applies — person, then company,
+          // The same precedence `displayNameOf` applies - person, then company,
           // then email. Expressed in the pipeline because this row never
           // becomes a document the helper could be called on.
           displayName: {
@@ -350,7 +350,7 @@ async function stats({ from, to } = {}) {
                     $cond: [
                       { $ne: ['$$business', ''] },
                       '$$business',
-                      { $ifNull: ['$client.email', '—'] },
+                      { $ifNull: ['$client.email', '-'] },
                     ],
                   },
                 ],
@@ -379,7 +379,7 @@ async function stats({ from, to } = {}) {
       .lean(),
 
     // Returns still needing attention. Deliberately unranged like the other
-    // badge counters — a badge that moved when you changed the dashboard's
+    // badge counters - a badge that moved when you changed the dashboard's
     // dates would be nonsense.
     db().Rma.countDocuments({ status: { $in: RMA_OPEN_STATUSES } }),
     db().Ticket.countDocuments({ status: { $in: TICKET_OPEN_STATUSES } }),
@@ -431,7 +431,7 @@ async function stats({ from, to } = {}) {
       total: collected,
       count: collectedRows[0]?.count ?? 0,
       // Percentage change against the preceding window of the same length.
-      // Null rather than 0 when there is nothing to compare to — "no change"
+      // Null rather than 0 when there is nothing to compare to - "no change"
       // and "no prior data" are different claims.
       deltaPercent: priorCollected > 0 ? ((collected - priorCollected) / priorCollected) * 100 : null,
     },
@@ -452,7 +452,7 @@ async function stats({ from, to } = {}) {
     },
 
     // The sidebar badge reads this by name. Open means every rung before
-    // resolved or rejected — a return still needing somebody's attention.
+    // resolved or rejected - a return still needing somebody's attention.
     rma: { open: openRmas },
 
     // Open here excludes `ready_to_pickup`: the repair is done and the badge
@@ -468,7 +468,7 @@ async function stats({ from, to } = {}) {
       displayName: displayNameOf(order.user),
     })),
     // Enough to render a row and link to the document. Labelled with
-    // `displayNameOf`, never `businessName` — an account is identified by the
+    // `displayNameOf`, never `businessName` - an account is identified by the
     // person, and a sole trader has no business name to show.
     recentInvoices: recentInvoices.map((invoice) => ({
       number: invoice.number,
@@ -544,8 +544,8 @@ function shapeUser(user) {
      * Consent, master flag and channels together.
      *
      * `recorded` says whether anybody has ever answered the channel question
-     * for this account. An account that predates the field has not declined —
-     * it has not been asked — and the UI has to be able to tell those apart,
+     * for this account. An account that predates the field has not declined
+     * it has not been asked - and the UI has to be able to tell those apart,
      * because "no consent recorded" is a prompt to go and ask, while "declined"
      * is an answer to respect.
      */
@@ -574,7 +574,7 @@ async function listUsers({ status, q } = {}) {
     query.$or = [{ businessName: rx }, { contactName: rx }, { email: rx }];
   }
 
-  // Pending first — the approvals queue is the point of this screen.
+  // Pending first - the approvals queue is the point of this screen.
   const users = await db().User.find(query).sort({ status: 1, createdAt: -1 }).limit(200).lean();
 
   const ids = users.map((user) => user._id);
@@ -613,7 +613,7 @@ async function listUsers({ status, q } = {}) {
     /**
      * Genuinely **overdue** money, which is not the same as `db().User.balance`.
      *
-     * `balance` is what the account currently owes on its line of credit —
+     * `balance` is what the account currently owes on its line of credit
      * an invoice raised yesterday on Net 30 is owed but perfectly in order.
      * Overdue is the unpaid remainder of invoices whose due date has passed,
      * which is the figure an operator chases, and it matches the definition
@@ -684,7 +684,7 @@ async function getUser(id) {
 
   /**
    * The lists are capped at ten because the profile shows a roll-up, not a
-   * ledger — but the header's tiles state *totals*, so those are counted
+   * ledger - but the header's tiles state *totals*, so those are counted
    * separately rather than taken from `orders.length`. A "Total revenue" that
    * silently stopped at the tenth invoice would be wrong on exactly the
    * accounts that matter most.
@@ -766,7 +766,7 @@ async function getUser(id) {
       amountPaid: invoice.amountPaid,
       balance: invoice.amount - invoice.amountPaid,
       // The profile's "last activity" reads this, and the Invoices roll-up
-      // shows it — an invoice with no date on it cannot be placed in time.
+      // shows it - an invoice with no date on it cannot be placed in time.
       issuedAt: invoice.issuedAt,
       dueDate: invoice.dueDate,
       status:
@@ -786,7 +786,7 @@ async function getUser(id) {
  *   later is a step that decides nothing. `status: 'pending'` is still offered,
  *   for an account being entered ahead of the paperwork.
  * - **Marketing consent defaults to false.** A business opening its own account
- *   gives implied consent under CASL s.10(9) — it asked for the relationship.
+ *   gives implied consent under CASL s.10(9) - it asked for the relationship.
  *   An admin typing that business in has not been asked anything by anybody, so
  *   there is no implied basis to record and pretending otherwise is the kind of
  *   thing that is indefensible later. The source is stamped `admin` so it is
@@ -833,7 +833,7 @@ async function createUser(data, adminId) {
    * Consent is recorded only when the admin actually ticked something.
    *
    * An absent `contactConsent` means nobody asked, which the profile screen
-   * shows as "nothing recorded yet" — a prompt to go and ask. Writing four
+   * shows as "nothing recorded yet" - a prompt to go and ask. Writing four
    * falses instead would claim the customer was asked and declined on every
    * channel, which is a different fact and one they never gave.
    */
@@ -850,7 +850,7 @@ async function createUser(data, adminId) {
 
   /**
    * The password is generated here rather than typed by the admin, and it is
-   * never persisted in the clear — `setPassword` hashes it, and the plaintext
+   * never persisted in the clear - `setPassword` hashes it, and the plaintext
    * lives only long enough to be put in the welcome email below.
    */
   const password = generatePassword();
@@ -886,14 +886,14 @@ async function createUser(data, adminId) {
  *
  * **What it deliberately does not touch.** Status, credit limit and terms are
  * not editable here even though they sit on the same document: each already has
- * its own endpoint that does more than write the field — `approveUser` stamps
+ * its own endpoint that does more than write the field - `approveUser` stamps
  * who approved and mints a referral code, `rejectUser` requires a reason,
  * `setCredit` is the line of credit. An edit form that also wrote `status`
  * would be a second, quieter approval path with none of that, which is exactly
  * the split the shared `ApproveClientForm` exists to prevent. It never touches
  * `balance` or `storeCredit` either: those move through their services only.
  *
- * **Email is editable but re-checked**, because it is the sign-in identity —
+ * **Email is editable but re-checked**, because it is the sign-in identity
  * changing it to one already in use would lock two accounts out of themselves.
  *
  * Fields absent from the payload are left alone; a field sent empty is cleared,
@@ -928,7 +928,7 @@ async function updateUser(id, data) {
 
   /**
    * The address list is not replaced wholesale. An account can carry several,
-   * and the form edits the default shipping one — overwriting the array would
+   * and the form edits the default shipping one - overwriting the array would
    * silently drop the others.
    */
   if (data.address) {
@@ -1018,7 +1018,7 @@ async function addInternalNote(id, { body }, staff) {
     body,
     staff: staff?._id,
     // Denormalised so a note still says who wrote it after that person leaves
-    // and their account is deleted — the attribution is part of the record.
+    // and their account is deleted - the attribution is part of the record.
     staffName: staff?.contactName ?? staff?.email ?? 'Staff',
     createdAt: new Date(),
   });
@@ -1039,7 +1039,7 @@ async function deleteInternalNote(id, noteId) {
   return listInternalNotes(user);
 }
 
-/** Newest first — a note panel is read from the top. */
+/** Newest first - a note panel is read from the top. */
 function listInternalNotes(user) {
   return {
     notes: [...(user.internalNotes ?? [])]
@@ -1176,7 +1176,7 @@ function shapeProduct(product) {
 }
 
 /**
- * `all: true` lifts the page cap — for the export, which must not silently
+ * `all: true` lifts the page cap - for the export, which must not silently
  * return the first hundred of four hundred products (§7.4). Deliberately a
  * separate flag rather than a bigger `limit` ceiling: the cap is there to stop
  * a screen asking for the whole catalogue by accident, and an export asking on
@@ -1192,7 +1192,7 @@ async function listProducts({ q, stock, page = 1, limit = 40, all = false } = {}
 
   if (stock === 'out') query.stock = 0;
   else if (stock === 'low') query.stock = { $gt: 0, $lt: LOW_STOCK_THRESHOLD };
-  // Both at once — the set the sidebar badge counts. It exists so that clicking
+  // Both at once - the set the sidebar badge counts. It exists so that clicking
   // that badge lands on a list of exactly the rows it was counting; without it
   // the badge said 189 and the only reachable views were 136 and 53.
   else if (stock === 'attention') {
@@ -1297,12 +1297,12 @@ async function deactivateProduct(id) {
 // ---- orders -----------------------------------------------------------------
 
 /**
- * An admin raising an order directly (§7.2's `+ Create > Order`) — a phone
+ * An admin raising an order directly (§7.2's `+ Create > Order`) - a phone
  * order, a walk-in, one that arrived by email.
  *
  * Almost nothing happens here. Prices are read from the catalogue by
- * `orderBuilder.buildOrderItems`, and everything after that — approval,
- * address, stock, totals, the order, the invoice, the bell — is
+ * `orderBuilder.buildOrderItems`, and everything after that - approval,
+ * address, stock, totals, the order, the invoice, the bell - is
  * `orderBuilder.raiseOrder`, the same code a converted quote runs. That is the
  * point of the split: a second way to raise an order must not become a second
  * set of rules about when one may be raised.
@@ -1351,7 +1351,7 @@ async function listOrders({ status, q, business } = {}) {
   const orders = await db().Order.find(query)
     .sort({ createdAt: -1 })
     .limit(200)
-    // `contactName` is required for `displayNameOf` — without it every row
+    // `contactName` is required for `displayNameOf` - without it every row
     // falls back to the company name, which is the thing §0 says not to show.
     .populate('user', 'businessName contactName email')
     .lean();
@@ -1373,7 +1373,7 @@ async function listOrders({ status, q, business } = {}) {
  * One order, for the detail screen (§4b.6, phase 12).
  *
  * Looked up by `orderNumber` rather than id, because that is what a packing
- * slip, an invoice and a customer email all carry — an operator reading a
+ * slip, an invoice and a customer email all carry - an operator reading a
  * number off paper should be able to type it into the URL.
  *
  * The linked invoice rides along so the screen can cross-link the two without a
@@ -1406,7 +1406,7 @@ async function getOrder(orderNumber) {
  *
  * The timeline is append-only: it is what the buyer's tracking page renders, so
  * rewriting history there would mean rewriting what the customer was told.
- * Moving to `shipped` without a tracking number is refused — that transition is
+ * Moving to `shipped` without a tracking number is refused - that transition is
  * exactly when the buyer expects one to appear.
  */
 async function updateOrderStatus(orderNumber, { status, note, tracking }) {
@@ -1462,7 +1462,7 @@ function defaultNote(status) {
 // ---- invoices ---------------------------------------------------------------
 
 /**
- * Overdue is **derived, never stored** — an unpaid invoice becomes overdue by
+ * Overdue is **derived, never stored** - an unpaid invoice becomes overdue by
  * the passage of time, and writing that to the database would mean a nightly
  * job whose only job is to keep a column honest. The account side already reads
  * it this way; this matches it exactly so the two never disagree.
@@ -1491,7 +1491,7 @@ function shapeAdminInvoice(invoice) {
     /**
      * The repair this invoice bills, and the quote behind that repair.
      *
-     * Only ever set on an invoice raised from a ticket — an invoice behind an
+     * Only ever set on an invoice raised from a ticket - an invoice behind an
      * order says what it is for through `orderNumber` instead, and neither
      * chain is ever both.
      */
@@ -1525,7 +1525,7 @@ function shapeAdminInvoice(invoice) {
     status: overdue ? 'overdue' : invoice.status,
 
     // The work, and how the amount was arrived at. Empty on a flat charge and
-    // on every invoice an order raised — the detail screen shows the breakdown
+    // on every invoice an order raised - the detail screen shows the breakdown
     // only when there is one, rather than a row of zeroes that explains
     // nothing. Sent so the document can reproduce its own arithmetic instead
     // of the reader taking the total on trust.
@@ -1586,7 +1586,7 @@ const recomputeInvoice = invoicePaymentService.recompute;
  * Order of operations, and it matters: lines, then the extended service fee,
  * then the discount, then tax on what is left. Taxing before the discount
  * charges tax on money nobody paid; discounting after tax quietly changes the
- * tax remitted. Travel mileage is deliberately absent — it is internal
+ * tax remitted. Travel mileage is deliberately absent - it is internal
  * bookkeeping, not a charge (§ the form says so on its face).
  *
  * Everything is integer cents, rounded once at each boundary. Rounding per line
@@ -1628,7 +1628,7 @@ function invoiceTotals(body, { extendedServiceFeeCents = 0 } = {}) {
   };
 }
 
-/** A form line as the shape the model stores — dollars in, cents out. */
+/** A form line as the shape the model stores - dollars in, cents out. */
 function toInvoiceLine(line) {
   return {
     name: line.name,
@@ -1647,7 +1647,7 @@ function isItemised(body) {
 }
 
 /**
- * A standalone invoice (§7.2's `+ Create > Invoice`) — one raised against an
+ * A standalone invoice (§7.2's `+ Create > Invoice`) - one raised against an
  * account for something no order covers.
  *
  * Two things it does that are easy to leave out:
@@ -1674,7 +1674,7 @@ async function createInvoice(body) {
   }
 
   // An itemised invoice bills its lines; a flat one bills the figure typed.
-  // Either way the amount stored is the one this function computed — the
+  // Either way the amount stored is the one this function computed - the
   // client's is never trusted with it.
   const itemised = isItemised(body);
   const totals = itemised
@@ -1738,7 +1738,7 @@ async function createInvoice(body) {
     internalNotes: body.internalNotes || undefined,
   });
 
-  // Re-derived from the invoices rather than incremented — see `creditService`.
+  // Re-derived from the invoices rather than incremented - see `creditService`.
   if (body.terms !== 'prepaid') {
     await creditService.syncBalance(user._id);
   }
@@ -1750,7 +1750,7 @@ async function createInvoice(body) {
  * Admin invoice list.
  *
  * `status=overdue` is a filter over derived state rather than a stored value,
- * so it is applied in the query as "not paid, and past due" — the dashboard
+ * so it is applied in the query as "not paid, and past due" - the dashboard
  * links straight here with it.
  */
 async function listInvoices({ status, q, from, to, business } = {}) {
@@ -1796,7 +1796,7 @@ async function listInvoices({ status, q, from, to, business } = {}) {
     .populate('user', 'businessName contactName')
     .lean();
 
-  // Counts come from the whole collection, not the filtered set — a pill that
+  // Counts come from the whole collection, not the filtered set - a pill that
   // showed "Overdue 0" because you are already filtered to Paid is useless.
   const [statusRows, overdueCount] = await Promise.all([
     db().Invoice.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
@@ -1824,7 +1824,7 @@ async function getInvoice(number) {
   const invoice = await db().Invoice.findOne({ number })
     .populate('order', 'orderNumber items total status')
     .populate('user', 'businessName contactName email phone')
-    // The chain behind a repair invoice — its ticket, and the quote that ticket
+    // The chain behind a repair invoice - its ticket, and the quote that ticket
     // came from. Two hops in one read, because the lineage strip sits above the
     // fold and a second round trip would draw it late.
     .populate({
@@ -1841,7 +1841,7 @@ async function getInvoice(number) {
 /**
  * Record a payment against an invoice.
  *
- * The client sends an amount, a date, a method and a reference — never a status
+ * The client sends an amount, a date, a method and a reference - never a status
  * and never a running total. `amountPaid` and `status` are both recomputed from
  * the payment rows, server-side, exactly as the Instructions require of every
  * money total.
@@ -1857,7 +1857,7 @@ async function recordPayment(number, { amountDollars, at, method, reference }) {
 
   // The payment row, the repayment of the line of credit, the promotion of a
   // settled `due` record into an invoice and the referral accrual all happen in
-  // `invoicePaymentService` — the one place any of that is allowed to happen,
+  // `invoicePaymentService` - the one place any of that is allowed to happen,
   // so an admin-recorded payment and a buyer-made one cannot behave
   // differently.
   await invoicePaymentService.recordPayment(invoice, {
@@ -1889,7 +1889,7 @@ async function voidInvoice(number, { reason } = {}) {
 
   const outstanding = invoice.amount - invoice.amountPaid;
   if (outstanding > 0) {
-    // `settle: false` — a void is forgiveness, not money. It must not promote
+    // `settle: false` - a void is forgiveness, not money. It must not promote
     // the record to an invoice (nothing was invoiced) and must not earn
     // commission, which is why this does not go through `recordPayment`.
     await invoicePaymentService.applyPayment(invoice, {
@@ -1899,7 +1899,7 @@ async function voidInvoice(number, { reason } = {}) {
       settle: false,
     });
 
-    // The debt is forgiven, so it stops counting against the line of credit —
+    // The debt is forgiven, so it stops counting against the line of credit
     // the same release a payment produces, for the opposite reason. Without
     // this a voided invoice would hold the account at its limit for money
     // nobody will ever collect.
@@ -1913,7 +1913,7 @@ async function voidInvoice(number, { reason } = {}) {
 
   // Voiding forgives the balance, so any commission this invoice earned is
   // commission on money that never arrived. Every accrual against it is
-  // reversed — commission on money that came back is money leaking out
+  // reversed - commission on money that came back is money leaking out
   // (§6.13). Idempotent, so voiding twice does not claw back twice.
   await referralService.reverseForInvoice(invoice.number);
 
@@ -1937,7 +1937,7 @@ async function voidInvoice(number, { reason } = {}) {
  * Reversing one recorded payment on an invoice.
  *
  * Thin: every rule lives in `invoicePaymentService.reversePayment`, which is
- * also where the original payment was applied — the undo and the do belong
+ * also where the original payment was applied - the undo and the do belong
  * together or they drift apart.
  */
 async function reverseInvoicePayment(number, index, { reason } = {}) {
@@ -1968,7 +1968,7 @@ async function emailInvoice(number) {
     to,
     subject: `Invoice ${invoice.number} from ${BUSINESS_INFO.name}`,
     html,
-    text: `Invoice ${invoice.number} — ${(invoice.amount / 100).toFixed(2)} CAD. Open the attached invoice for the full breakdown.`,
+    text: `Invoice ${invoice.number} - ${(invoice.amount / 100).toFixed(2)} CAD. Open the attached invoice for the full breakdown.`,
   });
 
   return { delivered: result?.delivered !== false, to };
@@ -1977,7 +1977,7 @@ async function emailInvoice(number) {
 /**
  * Correcting an invoice.
  *
- * **Only the fields that are a clerical detail** — the due date, the PO
+ * **Only the fields that are a clerical detail** - the due date, the PO
  * reference and the note. The amount is deliberately not editable: it is
  * derived from the order or the lines the invoice was raised against, and a
  * total somebody can retype is a total that no longer agrees with anything.
@@ -2008,7 +2008,7 @@ async function updateInvoice(number, data) {
  * would erase their proof and silently reduce revenue. That case is a **void**,
  * which leaves the record in place and says what happened to it.
  *
- * So this is only for an invoice raised in error and never paid — and it still
+ * So this is only for an invoice raised in error and never paid - and it still
  * releases the line of credit it reserved, because the debt goes with it.
  */
 async function deleteInvoice(number) {
@@ -2017,7 +2017,7 @@ async function deleteInvoice(number) {
 
   if ((invoice.amountPaid ?? 0) > 0) {
     throw ApiError.badRequest(
-      'This invoice has payments against it. Void it instead — deleting would erase the customer’s receipt.',
+      'This invoice has payments against it. Void it instead - deleting would erase the customer’s receipt.',
       'INVOICE_HAS_PAYMENTS',
     );
   }
@@ -2039,7 +2039,7 @@ async function deleteInvoice(number) {
 }
 
 /**
- * Every activity touching one account, newest first — the Activity tab on the
+ * Every activity touching one account, newest first - the Activity tab on the
  * client profile.
  *
  * Assembled from what already exists rather than from an audit log: `AuditLog`
@@ -2067,7 +2067,7 @@ async function userActivity(id) {
  * A batch is **partial by design**. One order that cannot make the move must
  * not fail the other forty, so each is attempted independently and the response
  * names what moved and what did not, with a reason per skip. The UI shows that
- * list — silently moving nineteen of twenty is how an operator comes to trust a
+ * list - silently moving nineteen of twenty is how an operator comes to trust a
  * button that is lying to them.
  *
  * Bulk deliberately offers **no tracking field**: one tracking number across
@@ -2109,7 +2109,7 @@ async function bulkUpdateOrderStatus({ orderNumbers, status, note }) {
     }
 
     if (status === 'shipped' && !order.tracking?.number) {
-      skipped.push({ orderNumber, reason: 'Needs a tracking number — ship it individually.' });
+      skipped.push({ orderNumber, reason: 'Needs a tracking number - ship it individually.' });
       continue;
     }
 
@@ -2127,7 +2127,7 @@ async function bulkUpdateOrderStatus({ orderNumbers, status, note }) {
  *
  * The buyer-facing route scopes its lookup to `user: req.user._id`, which is
  * correct there and means an admin gets a 404 on somebody else's invoice. This
- * renders **the same artefact through the same renderer** — a second rendering
+ * renders **the same artefact through the same renderer** - a second rendering
  * would be free to drift from what the customer actually received, and then the
  * two would disagree in front of a customer.
  */
@@ -2137,7 +2137,7 @@ async function bulkUpdateOrderStatus({ orderNumbers, status, note }) {
  *
  * Covers everything to date rather than a window. A statement is read to
  * answer "what do I owe", and a rolling window has to explain an opening
- * balance carried in from outside it — which is a second number to reconcile
+ * balance carried in from outside it - which is a second number to reconcile
  * before the first one can be trusted.
  */
 async function accountStatement(id, { nonce } = {}) {
@@ -2159,11 +2159,11 @@ async function accountStatement(id, { nonce } = {}) {
   });
 }
 /**
- * A customer paying down their line of credit — cash at the counter, an
+ * A customer paying down their line of credit - cash at the counter, an
  * e-transfer, a cheque in the post.
  *
- * **It settles real invoices, oldest first.** The alternative — decrementing
- * `balance` on its own — would leave the account reading as paid up while every
+ * **It settles real invoices, oldest first.** The alternative - decrementing
+ * `balance` on its own - would leave the account reading as paid up while every
  * invoice behind it still said unpaid, and the two figures would never agree
  * again. Money arrives against documents, so this walks the outstanding
  * invoices in issue order and applies the payment through the same
@@ -2178,10 +2178,10 @@ async function accountStatement(id, { nonce } = {}) {
  * clears the whole line through the payment gateway, optionally spending store
  * credit. This is the counter's: an arbitrary amount that has *already* been
  * handed over in cash or by transfer, recorded after the fact. Neither can
- * stand in for the other — one takes money, this one books money that arrived.
+ * stand in for the other - one takes money, this one books money that arrived.
  *
  * Overpayment is refused rather than parked. Money beyond what is owed is a
- * store-credit allocation — a different instrument with its own ledger — and
+ * store-credit allocation - a different instrument with its own ledger - and
  * quietly turning one into the other is how the two stop reconciling.
  */
 async function recordCreditPayment(id, { amountDollars, method, reference } = {}) {
@@ -2255,7 +2255,7 @@ async function invoiceDocument(number, { nonce } = {}) {
      *
      * Without it `renderInvoiceHtml` drops the "Pay now" button, so the
      * document an admin printed or emailed was a different sheet of paper from
-     * the one the customer opens from their account — the copy that reached
+     * the one the customer opens from their account - the copy that reached
      * them had no way to pay it. One renderer was always the point; this is the
      * argument that makes both callers produce the same page.
      *

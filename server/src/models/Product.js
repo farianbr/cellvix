@@ -24,8 +24,8 @@ const productSchema = new mongoose.Schema(
     compareAtPrice: Number,
 
     // Benchmark prices for the same part at named rival wholesalers, in integer
-    // cents like every other money field. Placeholder data for now — seeded,
-    // not scraped — but it leaves through the SAME price gate as `price` does:
+    // cents like every other money field. Placeholder data for now - seeded,
+    // not scraped - but it leaves through the SAME price gate as `price` does:
     // a buyer who may not see our number may not see the market's either,
     // because the two together ARE the commercial position being gated.
     competitors: [
@@ -41,7 +41,7 @@ const productSchema = new mongoose.Schema(
     //
     // Everything in this block is admin-only. `productService.serialize` is an
     // allowlist rather than a blocklist, so a field added here cannot reach a
-    // public payload by being forgotten — but the storefront rule is worth
+    // public payload by being forgotten - but the storefront rule is worth
     // restating where the fields live: in stock / out of stock, never a count,
     // never a reorder point, never a cost (ERP rework §6.10).
     stock: { type: Number, default: 0, index: true },
@@ -56,7 +56,7 @@ const productSchema = new mongoose.Schema(
     // cost change cannot rewrite the margin on a sale that already happened.
     cost: { type: Number, default: 0 },
 
-    // Bin or shelf, free text — 'A-12-3'. One business today (§0.9).
+    // Bin or shelf, free text - 'A-12-3'. One business today (§0.9).
     location: { type: String, trim: true, maxlength: 40 },
 
     // The default supplier for a reorder. A purchase-order line may still name

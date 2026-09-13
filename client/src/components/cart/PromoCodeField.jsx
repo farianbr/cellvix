@@ -9,15 +9,15 @@ import { pressable } from '@/lib/motion';
  * The one promo code a cart may carry.
  *
  * Singular on purpose: offers do not stack, so applying a code replaces
- * whatever was there rather than adding to it — and the field says so instead of
+ * whatever was there rather than adding to it - and the field says so instead of
  * letting a buyer discover it by trying.
  *
  * Three states share this space:
- *   - **applied** — the code is doing something, with the amount it took off;
- *   - **attached but idle** — a real code that does not bite on this cart yet
+ *   - **applied** - the code is doing something, with the amount it took off;
+ *   - **attached but idle** - a real code that does not bite on this cart yet
  *     (a minimum not met, nothing qualifying). It stays on, and starts working
  *     the moment the cart qualifies, so the notice explains rather than removes;
- *   - **automatic** — an offer that needed no code at all, shown so the buyer
+ *   - **automatic** - an offer that needed no code at all, shown so the buyer
  *     knows why the total moved and why their code would replace it.
  */
 export function PromoCodeField({ className }) {
@@ -36,7 +36,7 @@ export function PromoCodeField({ className }) {
       setValue('');
     } catch (rejection) {
       // Every rejection the server sends is buyer-facing copy with a named code
-      // behind it (§5.1) — show the message, never invent one.
+      // behind it (§5.1) - show the message, never invent one.
       setError(rejection.message);
     }
   }
@@ -79,8 +79,8 @@ export function PromoCodeField({ className }) {
             </p>
             <p className="mt-0.5 text-xs text-ink-500">
               {promo.title}
-              {promo.amount > 0 && ` — ${money(promo.amount)} off`}
-              {promo.freeShipping && ' — shipping is on us'}
+              {promo.amount > 0 && ` - ${money(promo.amount)} off`}
+              {promo.freeShipping && ' - shipping is on us'}
             </p>
           </div>
 
@@ -98,7 +98,7 @@ export function PromoCodeField({ className }) {
       ) : null}
 
       {/* The notice is for a code that is real and attached but not yet doing
-          anything. Removing it silently would be the wrong answer — the buyer
+          anything. Removing it silently would be the wrong answer - the buyer
           typed it for a reason. */}
       {promoNotice && (
         <div className="mt-2 flex items-start gap-2 rounded-md bg-warn-50 px-3 py-2.5 text-sm text-warn">
@@ -158,7 +158,7 @@ export function PromoCodeField({ className }) {
 
       {automatic && !error && (
         <p className="mt-1.5 text-xs text-ink-400">
-          Offers do not stack — a code you enter replaces the automatic one if it is worth more to
+          Offers do not stack - a code you enter replaces the automatic one if it is worth more to
           you.
         </p>
       )}

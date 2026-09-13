@@ -8,7 +8,7 @@ import '../models/User.js';
  * ## Why this exists
  *
  * `db().User.balance` was a stored counter incremented when an order drew on credit
- * and decremented when a payment arrived — six separate `$inc` sites across
+ * and decremented when a payment arrived - six separate `$inc` sites across
  * three services. Every one of them had to fire exactly once, in the right
  * direction, for the number to stay true. In practice it drifted: an account
  * whose invoices owed **$2.26** was carrying a stored balance of **$2,950.96**,
@@ -19,7 +19,7 @@ import '../models/User.js';
  * will be wrong. So the balance is now **derived**: it is the sum still owed on
  * this account's credit-terms invoices, and there is nothing to keep in step.
  * Paying an invoice restores the headroom because the invoice is the thing that
- * was measured in the first place — which is exactly how a credit card behaves,
+ * was measured in the first place - which is exactly how a credit card behaves,
  * and what an operator expects.
  *
  * ## What counts as drawn
@@ -27,7 +27,7 @@ import '../models/User.js';
  * Only invoices on **credit terms**. A prepaid invoice was settled at checkout
  * and never lent anything; counting it would charge the customer's limit for
  * money that never left Cellvix's hands. Voided invoices net to zero on their
- * own — a void writes a payment row for the outstanding amount — so they need
+ * own - a void writes a payment row for the outstanding amount - so they need
  * no special case here.
  */
 
@@ -84,7 +84,7 @@ async function balancesFor(userIds = []) {
  * Available headroom: the limit less what is drawn, never below zero.
  *
  * A limit that was lowered after money was drawn can legitimately leave an
- * account over its limit — that is a real state, and the answer to "how much
+ * account over its limit - that is a real state, and the answer to "how much
  * more may they spend" is still nothing rather than a negative.
  */
 function availableOf(user, balance) {
@@ -94,7 +94,7 @@ function availableOf(user, balance) {
 /**
  * Writes the derived figure back onto `db().User.balance`.
  *
- * The column is kept **as a cache, never as the truth** — reports, exports and
+ * The column is kept **as a cache, never as the truth** - reports, exports and
  * the seed still read it, and rewriting all of those at once is a bigger change
  * than this bug warrants. Every path that moves money calls this afterwards, so
  * the cache is re-derived rather than nudged, and a missed call now costs a

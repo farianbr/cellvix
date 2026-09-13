@@ -25,7 +25,7 @@ async function summary(user) {
 
     db().Invoice.find({ user: user._id }).sort({ issuedAt: -1 }).lean(),
 
-    // Most-ordered SKUs across this account's history — the "quick reorder"
+    // Most-ordered SKUs across this account's history - the "quick reorder"
     // shortcut is only useful if it reflects what they actually buy.
     db().Order.aggregate([
       { $match: { user: user._id } },
@@ -61,7 +61,7 @@ async function summary(user) {
     recentOrders: recentOrders.map(serializeOrder),
 
     // Money the business already holds with us. Separate from the line of
-    // credit below on purpose — see models/CreditTransaction.js.
+    // credit below on purpose - see models/CreditTransaction.js.
     storeCredit: user.storeCredit ?? 0,
 
     credit: {
@@ -69,7 +69,7 @@ async function summary(user) {
       balance: user.balance ?? 0,
       available: Math.max(0, (user.creditLimit ?? 0) - (user.balance ?? 0)),
       terms: user.terms,
-      // Percentage of the limit already drawn — drives the dashboard meter.
+      // Percentage of the limit already drawn - drives the dashboard meter.
       utilisation:
         user.creditLimit > 0 ? Math.min(100, Math.round((user.balance / user.creditLimit) * 100)) : 0,
     },
@@ -139,8 +139,8 @@ function enforceSingleDefault(user, addressId, { shipping, billing }) {
  * Guarantees the account always has one default of each kind while it has any
  * addresses at all.
  *
- * Every path can break this — deleting the default, or simply un-ticking it on
- * the only address that had it — and checkout autofill silently degrades when it
+ * Every path can break this - deleting the default, or simply un-ticking it on
+ * the only address that had it - and checkout autofill silently degrades when it
  * does. So the invariant is restored after every mutation rather than patched
  * at each call site.
  */
@@ -320,7 +320,7 @@ async function getInvoice(userId, number) {
 }
 
 /**
- * The printable invoice — the same document the buyer was emailed when the
+ * The printable invoice - the same document the buyer was emailed when the
  * order was placed, rendered fresh so a later payment shows on it.
  */
 async function invoiceDocument(user, number, { nonce, origin } = {}) {
@@ -337,7 +337,7 @@ async function invoiceDocument(user, number, { nonce, origin } = {}) {
  * deliberately is not one: the line of credit is a single balance on the user
  * document that orders draw against and payments retire. What a buyer wants to
  * see is how it got where it is, so this reconstructs the movements from the
- * invoices that caused them — draws from terms invoices, repayments from the
+ * invoices that caused them - draws from terms invoices, repayments from the
  * payments recorded against them.
  *
  * Store credit that settled part of a terms order is NOT a draw: that money
@@ -387,7 +387,7 @@ async function lineOfCreditActivity(user) {
       });
     }
 
-    // Settlement recorded as a figure rather than as a payment row — seeded
+    // Settlement recorded as a figure rather than as a payment row - seeded
     // history, and anything an admin marks paid without itemising it. Dated to
     // the last write on the invoice, which is when the settlement happened.
     const itemised = payments.reduce((sum, payment) => sum + (payment.amount ?? 0), 0);
@@ -427,7 +427,7 @@ async function storeCreditStatement(userId) {
   return storeCredit.statement(userId);
 }
 
-/** Advance recharge — prepay and hold the money as store credit. */
+/** Advance recharge - prepay and hold the money as store credit. */
 async function rechargeStoreCredit(user, { amountDollars, poNumber }) {
   const amount = Math.round(Number(amountDollars) * 100);
   const posted = await storeCredit.recharge(user, { amount, poNumber });
@@ -441,13 +441,13 @@ async function rechargeStoreCredit(user, { amountDollars, poNumber }) {
  * for whatever is left.
  *
  * Split out because paying a single invoice and paying the whole line of credit
- * differ only in what they are settling — the money side is identical, and two
+ * differ only in what they are settling - the money side is identical, and two
  * copies of "credit first, then card" is two places for the split to be wrong.
  *
  * The order matters: **credit is spent before the card is charged**, but the
  * card is charged before either is recorded against an invoice. A declined card
  * must not leave credit spent, so the redemption is unwound if the charge
- * throws. The reverse order — charge first, then redeem — would leave a real
+ * throws. The reverse order - charge first, then redeem - would leave a real
  * charge standing if the redemption failed, which is worse.
  *
  * Returns the payment rows to write, which the caller allocates.
@@ -491,7 +491,7 @@ async function settleAmount(user, { total, useStoreCredit, poNumber, label }) {
       if (creditApplied > 0) {
         await storeCredit.allocate(
           user._id,
-          { amount: creditApplied, note: `Payment for ${label} was declined — credit returned` },
+          { amount: creditApplied, note: `Payment for ${label} was declined - credit returned` },
           null,
         );
       }
@@ -528,7 +528,7 @@ async function payInvoice(user, number, { useStoreCredit, poNumber } = {}) {
     label: invoice.number,
   });
 
-  // One row at a time, through the one place a payment may be recorded — so
+  // One row at a time, through the one place a payment may be recorded - so
   // each earns referral commission on its own instalment and the line of
   // credit is repaid by the same amount that was collected.
   for (const row of rows) {
@@ -553,7 +553,7 @@ async function payInvoice(user, number, { useStoreCredit, poNumber } = {}) {
  * a wholesale account expects and the order that clears the oldest ageing first.
  *
  * One charge covers the lot and is then allocated across the records, rather
- * than one charge per record — a buyer clicking `Pay all` expects one line on
+ * than one charge per record - a buyer clicking `Pay all` expects one line on
  * their card statement, not seven.
  */
 async function payOffCredit(user, { useStoreCredit, poNumber } = {}) {
@@ -583,7 +583,7 @@ async function payOffCredit(user, { useStoreCredit, poNumber } = {}) {
 
   // Allocate oldest first. Each source of money (credit, then card) is drawn
   // down across the invoices in turn, so an invoice can legitimately carry two
-  // payment rows — part credit, part card — and the sum still lands exactly on
+  // payment rows - part credit, part card - and the sum still lands exactly on
   // its balance.
   const settled = [];
   const pool = rows.map((row) => ({ ...row, left: row.amount }));
@@ -626,7 +626,7 @@ async function payOffCredit(user, { useStoreCredit, poNumber } = {}) {
 /**
  * Everything that has happened on this account, newest first.
  *
- * Assembled by `activityFeed`, which the admin client profile already uses —
+ * Assembled by `activityFeed`, which the admin client profile already uses
  * one feed, so a buyer and their account rep are looking at the same history
  * rather than two views that can disagree.
  */
@@ -636,7 +636,7 @@ async function activity(userId, { limit = 40 } = {}) {
 
 /**
  * The activity page's feed: the same history, filtered by kind and date and cut
- * into pages. `activity` above stays as it is — the dashboard's "recent
+ * into pages. `activity` above stays as it is - the dashboard's "recent
  * activity" panel wants the last few events and nothing else, and giving it a
  * paginated envelope it would immediately throw away is worse than two callers.
  */

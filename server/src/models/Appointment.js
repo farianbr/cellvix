@@ -5,14 +5,14 @@ import mongoose from 'mongoose';
  * phase 11e).
  *
  * **The model is real; the screens do not write to it yet.** §6b rule 3 is
- * explicit about why — "real data model from day one, so turning a channel on
+ * explicit about why - "real data model from day one, so turning a channel on
  * later is a service swap, not a migration". The Calendar and Appointments
  * screens render their full chrome against this and it ships empty.
  *
  * **What Cellvix schedules is still assumed, not settled** (§12 Q1). A
  * wholesaler has no repair calendar, but it does have pickups, deliveries and
  * RMA drop-offs, and the same weekly board serves them. That reading is what
- * `kind` encodes below — and it is the one thing here worth re-confirming before
+ * `kind` encodes below - and it is the one thing here worth re-confirming before
  * the board is wired, because it is the field the rest of the shape hangs off.
  *
  * Deliberately conservative until then: `relatedTo` is a loose
@@ -48,7 +48,7 @@ const appointmentSchema = new mongoose.Schema(
     notes: { type: String, trim: true, maxlength: 2000 },
 
     /**
-     * Null while unscheduled — which is the whole point of the tray beside the
+     * Null while unscheduled - which is the whole point of the tray beside the
      * weekly board. An appointment exists before anybody has decided when it
      * happens, and a required date would mean inventing one.
      */

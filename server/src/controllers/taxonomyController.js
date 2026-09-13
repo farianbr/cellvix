@@ -5,7 +5,7 @@ import * as taxonomyService from '../services/taxonomyService.js';
  * The category tree, optionally pruned to the selected component types.
  *
  * `?partType=battery` returns only the branches that stock a battery, counted
- * by batteries — what the wizard needs once the buyer has answered step 1.
+ * by batteries - what the wizard needs once the buyer has answered step 1.
  * Component type is MULTI-SELECT, so `?partType=battery,screen-assembly` prunes
  * to the branches stocking either and counts both. Without it the response is
  * the full tree.

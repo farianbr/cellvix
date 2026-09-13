@@ -14,7 +14,7 @@ import { pressable } from '@/lib/motion';
  * an entry targeted at this part type outranks a catalogue-wide one, and the
  * placeholders are already filled with this product's names.
  *
- * The rows are the shared `Accordion` — the same numbered pills the help centre
+ * The rows are the shared `Accordion` - the same numbered pills the help centre
  * uses, so a buyer who has read one page knows how the other behaves. The first
  * entry opens on mount: on a product page the question at the top is the one
  * almost everyone is here for, and an all-closed stack makes them click to find

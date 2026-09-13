@@ -6,7 +6,7 @@ import { pressable } from '@/lib/motion';
 /**
  * A titled group of fields, optionally collapsible.
  *
- * Built for the optional halves of the account-creation forms — address and
+ * Built for the optional halves of the account-creation forms - address and
  * business details on both the admin and the storefront one. Those fields are
  * genuinely optional, and a long run of mostly-skippable inputs reads as a long
  * form rather than a short one with extras, which is what stops people
@@ -20,7 +20,7 @@ import { pressable } from '@/lib/motion';
  *
  * **Fields stay mounted when collapsed.** They are hidden with `hidden` rather
  * than unmounted, so anything already typed survives a collapse and still
- * submits — a disclosure that silently drops input the moment it closes is
+ * submits - a disclosure that silently drops input the moment it closes is
  * worse than no disclosure. It also keeps React Hook Form's registration and
  * validation intact regardless of what is open.
  *
@@ -40,7 +40,7 @@ export function FormSection({
    * A collapsed section hides its own errors: the form refuses to submit, the
    * message is real, and it is behind a closed header the buyer has no reason
    * to open. Passing this forces the section open so the error is visible where
-   * it happened. It only forces open — a section the user has opened by hand
+   * it happened. It only forces open - a section the user has opened by hand
    * stays open when the error clears.
    */
   hasError = false,

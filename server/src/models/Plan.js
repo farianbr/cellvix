@@ -4,8 +4,8 @@ import mongoose from 'mongoose';
  * A named subscription tier (SAAS_PLATFORM §1, §3.3).
  *
  * **Feature defaults, not enforcement.** A plan sits in the middle of the
- * resolution chain — business-type defaults, then plan defaults, then
- * per-business overrides — so it widens or narrows what a business starts with
+ * resolution chain - business-type defaults, then plan defaults, then
+ * per-business overrides - so it widens or narrows what a business starts with
  * and never decides what it may do at runtime. `requireFeature` is the only
  * thing that refuses a request, and it reads the resolved set.
  *
@@ -29,7 +29,7 @@ const planSchema = new mongoose.Schema(
 
     description: { type: String, trim: true, maxlength: 500 },
 
-    /** Integer cents, per month. Zero is a real answer — an internal tier. */
+    /** Integer cents, per month. Zero is a real answer - an internal tier. */
     priceCents: { type: Number, default: 0, min: 0 },
 
     /** Businesses a tenant on this plan may run, unless a super admin grants more. */
@@ -38,11 +38,11 @@ const planSchema = new mongoose.Schema(
     /**
      * Feature keys this plan has an opinion about, as `{ 'sales.quotes': true }`.
      *
-     * A `locked` key here is ignored — `resolveFeatures` forces those on
+     * A `locked` key here is ignored - `resolveFeatures` forces those on
      * whatever any layer says (§3.2 rule 4), because a tenant that can switch
      * off its own audit trail is a tenant that cannot be audited.
      */
-    // `Mixed`, not `Map` — feature keys are dot-namespaced and Mongoose maps
+    // `Mixed`, not `Map` - feature keys are dot-namespaced and Mongoose maps
     // reject keys containing a dot. Same reasoning as `Business.featureOverrides`.
     featureDefaults: { type: mongoose.Schema.Types.Mixed, default: () => ({}) },
 

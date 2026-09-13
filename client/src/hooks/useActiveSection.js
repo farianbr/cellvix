@@ -4,7 +4,7 @@ import { sectionOffset } from '@/lib/scrollToSection';
 /**
  * Which of a set of in-page sections the reader is currently on.
  *
- * Drives the FAQ's category sidebar and the article table of contents — both
+ * Drives the FAQ's category sidebar and the article table of contents - both
  * are jump lists that need to say where you are, not only where you can go.
  *
  * Measured on scroll rather than with an IntersectionObserver band, because the

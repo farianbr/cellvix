@@ -32,8 +32,8 @@ export function CartPanelTitle({ count }) {
 
 /**
  * Saved carts, surfaced where they are actually needed. They used to live only
- * on the quick order pad, which meant the one moment you want a parked build —
- * standing in front of an empty cart — was the one place you could not reach
+ * on the quick order pad, which meant the one moment you want a parked build
+ * standing in front of an empty cart - was the one place you could not reach
  * it. Restoring writes the cart cache directly, so the panel refills in place.
  */
 function SavedCartsPicker({ onClose }) {

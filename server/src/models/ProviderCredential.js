@@ -4,8 +4,8 @@ import mongoose from 'mongoose';
  * Provider credentials, encrypted at rest (ERP rework §6.15, phase 11c).
  *
  * **Its own collection, deliberately not a field on `Settings`.** `Settings` is
- * read on ordinary paths — pricing reads it for shipping bands, invoices read
- * it for the tax rate — and every one of those reads would then be carrying
+ * read on ordinary paths - pricing reads it for shipping bands, invoices read
+ * it for the tax rate - and every one of those reads would then be carrying
  * ciphertext around a codebase where a stray `res.json(settings)` is one typo
  * away from publishing it. Keeping secrets in a separate collection that
  * nothing else joins to means the only code holding a secret is the code that
@@ -13,7 +13,7 @@ import mongoose from 'mongoose';
  *
  * §6.15's rule is absolute: the API is **write-only** for these values. The
  * server stores `value` encrypted, returns `preview` and `configured`, and
- * never returns `value` to a client — not to an admin, not masked-then-revealed.
+ * never returns `value` to a client - not to an admin, not masked-then-revealed.
  * `toPublic()` below is the only serializer, and it cannot emit the ciphertext
  * because it never reads that field.
  */
@@ -35,7 +35,7 @@ const PROVIDER_FIELDS = [
     fields: [
       { key: 'accountSid', label: 'Account SID', hint: 'Starts with AC.' },
       { key: 'authToken', label: 'Auth token', secret: true },
-      { key: 'fromNumber', label: 'From number', hint: 'E.164 — +14165550100.' },
+      { key: 'fromNumber', label: 'From number', hint: 'E.164 - +14165550100.' },
     ],
   },
   {
@@ -59,7 +59,7 @@ const PROVIDER_FIELDS = [
     provider: 'email',
     label: 'Email provider',
     description:
-      'An SMTP transport. Nothing can be emailed without one — invoices, welcome mail and campaigns all record a failure instead of sending.',
+      'An SMTP transport. Nothing can be emailed without one - invoices, welcome mail and campaigns all record a failure instead of sending.',
     unblocks: null,
     fields: [
       { key: 'smtpUrl', label: 'SMTP URL', secret: true, hint: 'smtp://user:pass@host:587' },
@@ -88,7 +88,7 @@ const providerCredentialSchema = new mongoose.Schema(
     field: { type: String, required: true },
 
     /**
-     * The encrypted value — `v1:iv:tag:ciphertext` from `utils/secrets.js`.
+     * The encrypted value - `v1:iv:tag:ciphertext` from `utils/secrets.js`.
      *
      * `select: false`, so a query has to ask for it **by name**. Every ordinary
      * `find` comes back without it, which makes accidentally serializing a
@@ -97,10 +97,10 @@ const providerCredentialSchema = new mongoose.Schema(
      */
     value: { type: String, required: true, select: false },
 
-    /** `••••••••abcd` — safe to return, and enough to tell two keys apart. */
+    /** `••••••••abcd` - safe to return, and enough to tell two keys apart. */
     preview: { type: String, default: '' },
 
-    // Who set it and when. Never what they set — §6.15 is explicit that the
+    // Who set it and when. Never what they set - §6.15 is explicit that the
     // value is not audit-logged, only the fact of the write.
     updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
   },
@@ -112,7 +112,7 @@ const providerCredentialSchema = new mongoose.Schema(
 providerCredentialSchema.index({ provider: 1, field: 1 }, { unique: true });
 
 /**
- * The only serializer. **Cannot leak the value, because it never reads it** —
+ * The only serializer. **Cannot leak the value, because it never reads it**
  * `value` is `select: false`, so on an ordinary query it is not even loaded.
  */
 providerCredentialSchema.methods.toPublic = function toPublic() {

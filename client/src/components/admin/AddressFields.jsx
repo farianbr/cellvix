@@ -5,14 +5,14 @@ import { COUNTRY_OPTIONS } from '@shared/countries';
 import { regionsFor, regionLabelFor, postalLabelFor, postalExampleFor } from '@shared/regions';
 
 /**
- * City, region, postal code and country — the part of an address that changes
+ * City, region, postal code and country - the part of an address that changes
  * shape depending on where it is.
  *
  * **One component because there were three**, and they had already drifted: the
  * customer form imported the shared Canadian province list, the business form
  * imported the same list, and the supplier form declared its own array of
  * thirteen two-letter codes with no labels. All three offered a country select
- * that changed nothing — so an operator could pick Germany and then be asked
+ * that changed nothing - so an operator could pick Germany and then be asked
  * for a Canadian province and a postal code shaped `A1A 1A1`.
  *
  * ## What "dynamic" means here
@@ -67,7 +67,7 @@ export function AddressFields({
             options={regions}
           />
         ) : (
-          // No list worth offering for this country, so a text field — the
+          // No list worth offering for this country, so a text field - the
           // operator knows the answer and the form should not argue with it.
           <Input label={regionLabel} {...register(`${prefix}.region`)} />
         )}

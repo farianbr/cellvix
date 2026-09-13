@@ -71,8 +71,8 @@ const toCents = (dollars) => Math.round(Number(dollars || 0) * 100) || 0;
  * both would invite an admin to fill in fields the server then discards.
  */
 const REDEMPTION_OPTIONS = [
-  { value: 'multi', label: 'Multi-use — any number of orders' },
-  { value: 'single', label: 'Single-use — once per account' },
+  { value: 'multi', label: 'Multi-use - any number of orders' },
+  { value: 'single', label: 'Single-use - once per account' },
 ];
 
 const ELIGIBILITY_OPTIONS = [
@@ -392,7 +392,7 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
             {...register('bundlePriceDollars')}
           />
           <p className="px-1 text-xs text-ink-300">
-            SKUs are checked against the catalogue when you save — an unknown one is refused rather
+            SKUs are checked against the catalogue when you save - an unknown one is refused rather
             than published as a broken bundle.
           </p>
         </fieldset>
@@ -434,7 +434,7 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
           )}
 
           <p className="px-1 text-xs text-ink-300">
-            A restricted offer is invisible to everyone else — it is not listed for them, and its
+            A restricted offer is invisible to everyone else - it is not listed for them, and its
             code answers “not recognised” rather than “not for you”.
           </p>
         </fieldset>
@@ -508,7 +508,7 @@ export function AdminOffersPage() {
    * The columns.
    *
    * The list stacked up to six badges above every offer and then ran its
-   * numbers together into one middot-separated sentence — and the sentence said
+   * numbers together into one middot-separated sentence - and the sentence said
    * something DIFFERENT depending on the offer's kind. A combo read "3 SKUs ·
    * $220.00 (saves $35.90) · immediate → Sep 23"; a deal read "15% off ·
    * CELLS15 · immediate → Sep 20 · redeemed 0". Two shapes of prose in one
@@ -518,13 +518,13 @@ export function AdminOffersPage() {
    *
    * Columns fix that by construction. The "Value" column is the one place the
    * two kinds still differ, because a combo's bundle price and a deal's
-   * discount genuinely are different facts — but they now sit in the same place
+   * discount genuinely are different facts - but they now sit in the same place
    * on every row, which is what makes them scannable.
    *
    * The badge stack collapses to the two that are exceptions worth flagging:
    * a combo with an unavailable SKU, which stops the offer working, and a
    * restriction, which changes who sees it. Featured, single-use and the
-   * kind itself all become columns or glyphs — a badge that appears on most
+   * kind itself all become columns or glyphs - a badge that appears on most
    * rows is decoration.
    */
   const columns = [
@@ -594,7 +594,7 @@ export function AdminOffersPage() {
             {offer.usageLimit > 0 && <span className="text-ink-300">/{offer.usageLimit}</span>}
           </span>
         ) : (
-          <span className="text-ink-300">—</span>
+          <span className="text-ink-300">-</span>
         ),
     },
     {
@@ -624,7 +624,7 @@ export function AdminOffersPage() {
             {offer.status}
           </Badge>
           {/* Only the exceptions. An unavailable SKU stops a combo working, and
-              a restriction changes who can see the offer at all — everything
+              a restriction changes who can see the offer at all - everything
               else that used to be a badge is now a column. */}
           {offer.kind === 'combo' && !offer.available && (
             <p>

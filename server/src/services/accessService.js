@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 import { PERMISSION_AREAS, PERMISSION_LEVELS } from '../models/Role.js';
 /**
  * `Role` is a PER-BUSINESS collection, so it is read off the request's own
- * connection rather than imported — each business holds its own roles, and a
+ * connection rather than imported - each business holds its own roles, and a
  * module-level import would bind them all to the default database.
  *
  * The rest of this file keeps its direct imports on purpose: `Business` is
@@ -18,7 +18,7 @@ import ApiError from '../utils/ApiError.js';
 import { likeRegex } from '../utils/regex.js';
 
 /**
- * Businesses, roles and staff accounts (ERP rework §6.14, §6.15/3, §7.6 — phase 8).
+ * Businesses, roles and staff accounts (ERP rework §6.14, §6.15/3, §7.6 - phase 8).
  *
  * Three rules hold this file together:
  *
@@ -27,7 +27,7 @@ import { likeRegex } from '../utils/regex.js';
  *      A permission system whose subjects can edit it is decoration.
  *   2. **A role in use is never destroyed.** Deleting one would silently
  *      re-grant or revoke access for everyone holding it, so deletion is
- *      refused while a member remains — the same reasoning that makes a used
+ *      refused while a member remains - the same reasoning that makes a used
  *      `ExpenseCategory` deactivate rather than delete.
  *   3. **Exactly one default business exists, always.** It is where a stock
  *      movement lands when nothing names an business, so the field cannot be
@@ -133,7 +133,7 @@ async function ensureDefaultBusiness() {
     // product business; the platform itself has no name yet (§0.1), so this
     // names the business rather than the installation.
     slug: 'cellvix',
-    // Tenant #1's product business — the parts wholesaler. The type is what
+    // Tenant #1's product business - the parts wholesaler. The type is what
     // decides which sections its panel renders (SAAS_PLATFORM §1.1), so it is
     // set explicitly here rather than left to the schema default.
     businessType: 'product',
@@ -162,7 +162,7 @@ async function listBusinesses({ search, status } = {}) {
    * A deleted business is gone from the tenant's point of view.
    *
    * Soft deletion keeps the records and the slot (SAAS_PLATFORM §4.3.1), but
-   * that is the platform's concern — the business's own staff should not find
+   * that is the platform's concern - the business's own staff should not find
    * it still sitting in their switcher, and a header that offers a business
    * nobody can trade in is worse than one that simply no longer lists it. The
    * super-admin console reads `Business` directly and still sees it, which is
@@ -177,7 +177,7 @@ async function listBusinesses({ search, status } = {}) {
 
   const businesses = await Business.find(filter).sort({ isDefault: -1, name: 1 }).lean();
 
-  // The summary strip. Counted across every business, not the filtered set — a
+  // The summary strip. Counted across every business, not the filtered set - a
   // total that moves when you type in the search box is not a total.
   const all = await Business.find().select('status').lean();
   const summary = {
@@ -220,7 +220,7 @@ async function createBusiness(payload) {
   const business = await Business.create({
     ...payload,
     code: await nextBusinessCode(),
-    // The first business ever created is the default by necessity — there is
+    // The first business ever created is the default by necessity - there is
     // nothing else for an unattributed movement to point at.
     isDefault: (await Business.countDocuments()) === 0,
   });
@@ -256,7 +256,7 @@ async function setDefaultBusiness(id) {
 }
 
 /**
- * Refused while the business is the default or still has staff — the same
+ * Refused while the business is the default or still has staff - the same
  * reasoning as a role in use. Reassign, then delete.
  */
 async function deleteBusiness(id) {
@@ -294,7 +294,7 @@ async function listRoles() {
   ]);
   const byRole = new Map(counts.map((row) => [String(row._id), row.count]));
 
-  // Admins hold no Role row — they bypass the system — so the system role's
+  // Admins hold no Role row - they bypass the system - so the system role's
   // member count is the admin headcount, which is what the screen means by it.
   const adminCount = await User.countDocuments({ role: 'admin' });
 
@@ -405,7 +405,7 @@ function staffRow(user) {
 }
 
 /**
- * The Users screen (§6.15/3). Cellvix people only — buyers have their own
+ * The Users screen (§6.15/3). Cellvix people only - buyers have their own
  * screen under Clients, and mixing the two populations in one table is how an
  * operator ends up granting a customer a staff role.
  */
@@ -482,7 +482,7 @@ async function createStaff(payload) {
 
   const user = new User({
     // A staff account is a person, not a business, but `businessName` is
-    // required on the model — Cellvix is the business they belong to.
+    // required on the model - Cellvix is the business they belong to.
     businessName: 'Cellvix',
     contactName: name,
     email,
@@ -557,7 +557,7 @@ async function updateStaff(id, payload, actorId) {
 
   await user.save();
 
-  // Keep `Business.staff` — the reverse index the business card reads — honest.
+  // Keep `Business.staff` - the reverse index the business card reads - honest.
   const nextBusiness = user.business ? String(user.business) : null;
   if (previousBusiness !== nextBusiness) {
     if (previousBusiness) {
@@ -609,7 +609,7 @@ async function deleteStaff(id, actorId) {
  * The state of a role before it is changed, for the audit trail (§7.5).
  *
  * Read here rather than in the controller so the audit hook does not have to
- * import `Role` and reimplement `toPublic()` — the shape a log row records and
+ * import `Role` and reimplement `toPublic()` - the shape a log row records and
  * the shape the API returns must not be allowed to drift apart.
  *
  * Returns null for a missing or malformed id: this runs *before* the mutation

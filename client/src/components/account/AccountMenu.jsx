@@ -21,8 +21,8 @@ const PANEL_W = 296;
 /**
  * The inset every row in the panel shares.
  *
- * The header, the nav rows and sign-out used to be padded independently — the
- * header at 14px, the rows at 10px inside a 6px-padded scroller — so nothing
+ * The header, the nav rows and sign-out used to be padded independently - the
+ * header at 14px, the rows at 10px inside a 6px-padded scroller - so nothing
  * lined up down the left, and the text read as pushed into the corner while the
  * right side ran empty. One value across all three sections gives the panel a
  * single left margin and, because each row is a full-width block, an equal one
@@ -36,7 +36,7 @@ const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
  * Props for any button that opens the account menu.
  *
  * Marking the pressed button is what lets the panel anchor to the control the
- * user actually touched — three of them are mounted at once, and two are
+ * user actually touched - three of them are mounted at once, and two are
  * visible together on a phone.
  */
 export function useAccountMenuTrigger() {
@@ -63,7 +63,7 @@ export function useAccountMenuTrigger() {
  *
  * Reaching order history used to mean landing on /account first and finding the
  * sidebar; the same eight destinations are one click from any page now. It
- * reads `ACCOUNT_NAV_ITEMS` — the shared list the sidebar is built from — so the two cannot
+ * reads `ACCOUNT_NAV_ITEMS` - the shared list the sidebar is built from - so the two cannot
  * fall out of step.
  *
  * Rendered inside <header> next to CartDropdown, and behaves the same way: no
@@ -78,8 +78,8 @@ export function AccountMenu() {
 
   const titleId = useId();
 
-  // Three different buttons open this — desktop header, mobile header, bottom
-  // bar — and they sit in different places. The panel is positioned against the
+  // Three different buttons open this - desktop header, mobile header, bottom
+  // bar - and they sit in different places. The panel is positioned against the
   // one that was actually pressed (see useAccountMenuTrigger), so it always
   // reads as belonging to that control rather than to the page edge.
   const [anchor, setAnchor] = useState(null);
@@ -95,7 +95,7 @@ export function AccountMenu() {
       if (!trigger) return;
 
       const rect = trigger.getBoundingClientRect();
-      // A trigger in the lower half of the screen — the bottom bar — gets the
+      // A trigger in the lower half of the screen - the bottom bar - gets the
       // panel above it; hanging it below would put it off-screen.
       const below = rect.top < window.innerHeight / 2;
 
@@ -202,13 +202,13 @@ export function AccountMenu() {
 
                 {/* The rounded hover fill needs to sit off the panel edge, so
                     the container keeps a small inset and the ROWS give back the
-                    same amount — 6px + 6px lands the label on the header's
+                    same amount - 6px + 6px lands the label on the header's
                     12px. Previously 6px + 10px put every label 4px right of the
                     business name above it, which is the misalignment that made
                     the text look shoved into the corner. */}
                 <div className="scroll-slim flex-1 overflow-y-auto overscroll-contain p-1.5">
                   {isAdmin ? (
-                    // Staff have no buyer orders, invoices or credit — the buyer
+                    // Staff have no buyer orders, invoices or credit - the buyer
                     // nav would be eight dead ends.
                     <Link
                       to="/admin"

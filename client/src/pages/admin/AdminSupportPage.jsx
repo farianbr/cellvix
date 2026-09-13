@@ -16,7 +16,7 @@ import SupportThread from '@/components/support/SupportThread';
  * is the point: it must not read as a message from one of their own staff.
  *
  * **Reachable while the account is past due or suspended.** Those states refuse
- * writes everywhere else, and this is deliberately not among them — an account
+ * writes everywhere else, and this is deliberately not among them - an account
  * in trouble is exactly the one that needs to reach us, and a support channel
  * that switches off with the subscription is a support channel that is missing
  * when it matters. The route carries no feature gate for the same reason.

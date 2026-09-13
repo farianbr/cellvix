@@ -13,7 +13,7 @@ import env from '../config/env.js';
  * `preview` and never `value`; the only function that decrypts is `valuesFor`,
  * which is called by server code that is about to talk to a provider and by
  * nothing else. There is no route that reaches it and no serializer that
- * includes it — §6.15 says a stored secret never comes back to the client, not
+ * includes it - §6.15 says a stored secret never comes back to the client, not
  * even to an admin, and the way to hold that line is to make the leak
  * impossible rather than to remember not to do it.
  *
@@ -21,7 +21,7 @@ import env from '../config/env.js';
  * configure these providers, and a deployment that sets them must not be
  * silently overridden by a value typed into a screen months earlier. So the
  * resolution order is env first, database second, and the screen says which is
- * in force — otherwise an operator changes a key, nothing happens, and there is
+ * in force - otherwise an operator changes a key, nothing happens, and there is
  * nothing on screen to explain why.
  */
 
@@ -93,7 +93,7 @@ async function list() {
         label: entry.label,
         description: entry.description,
         unblocks: entry.unblocks,
-        // A provider is configured only when **every** field it needs is set —
+        // A provider is configured only when **every** field it needs is set
         // Twilio with a SID and no auth token cannot send anything, and a card
         // reading CONFIGURED there would be a lie.
         configured: fields.every((field) => field.configured),
@@ -109,7 +109,7 @@ async function list() {
 /**
  * Writes one provider's fields. Encrypts on the way in.
  *
- * An empty string **clears** the field rather than storing an empty secret —
+ * An empty string **clears** the field rather than storing an empty secret
  * that is how an operator removes a key, and it has to be distinguishable from
  * "leave this alone", which is what an absent key means.
  */
@@ -134,7 +134,7 @@ async function save(provider, values, actorId) {
     }
 
     // A non-secret field is previewed in full. `fromNumber` and `fromAddress`
-    // are operational config, not credentials — masking them would mean an
+    // are operational config, not credentials - masking them would mean an
     // operator cannot check which number a channel sends from without
     // re-typing it, and there is nothing there worth hiding. They are still
     // encrypted at rest: one storage path is easier to keep correct than two,
@@ -174,7 +174,7 @@ async function clear(provider) {
  * This is the only function in the codebase that decrypts a credential, and
  * nothing routes to it: it exists for the code that is about to call Twilio or
  * an SMTP host. If a future change makes a controller call this, that change is
- * the bug — §6.15 has no exception for "the admin asked nicely".
+ * the bug - §6.15 has no exception for "the admin asked nicely".
  *
  * Env wins over a stored value, matching `list()`'s `source`.
  */
@@ -194,7 +194,7 @@ async function valuesFor(provider) {
     }
 
     const ciphertext = stored.get(definition.key);
-    // Null on a failed decrypt — a rotated key, a tampered row — which reads
+    // Null on a failed decrypt - a rotated key, a tampered row - which reads
     // downstream as "not configured" rather than as a usable credential.
     if (ciphertext) out[definition.key] = decrypt(ciphertext);
   }

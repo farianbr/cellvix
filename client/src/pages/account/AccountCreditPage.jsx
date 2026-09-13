@@ -72,15 +72,15 @@ function CreditActivityRow({ entry }) {
  * The credit page carries two different things, and keeping them apart is the
  * whole point of the layout:
  *
- *   - **store credit** — money this account already holds with Cellvix, from a
+ *   - **store credit** - money this account already holds with Cellvix, from a
  *     refund, a top-up or an allocation. It spends itself at checkout.
- *   - **line of credit** — what Cellvix lends the business, drawn against and
+ *   - **line of credit** - what Cellvix lends the business, drawn against and
  *     repaid on terms.
  *
  * They were one "credit" number before, which meant a refund and a credit limit
  * looked like the same thing on the dashboard. They are not.
  *
- * The invoice statement is deliberately NOT repeated here — it is the whole of
+ * The invoice statement is deliberately NOT repeated here - it is the whole of
  * the invoices page, and two copies of the same list drift.
  */
 export function AccountCreditPage() {
@@ -155,7 +155,7 @@ export function AccountCreditPage() {
         summary={<span className="tnum">{money(credit.available)} available</span>}
         action={
           // The whole balance, cleared in one charge. Offered here because this
-          // is the page showing the balance — asking a buyer to read the number
+          // is the page showing the balance - asking a buyer to read the number
           // here and then go to another screen to act on it is a step with no
           // purpose. The amounts behind it are settled oldest first, server-side.
           credit.balance > 0 ? (
@@ -242,7 +242,7 @@ export function AccountCreditPage() {
 
       {/* ---- store credit -------------------------------------------------
           Split from its statement below. They were one panel, which made the
-          top-up form — the only thing on this page a buyer can act on — the
+          top-up form - the only thing on this page a buyer can act on - the
           header of a list they mostly scroll past. */}
       <CollapsiblePanel
         title="Top up store credit"

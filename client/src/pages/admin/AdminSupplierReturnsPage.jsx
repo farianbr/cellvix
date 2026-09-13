@@ -37,7 +37,7 @@ import {
  *
  * The purchase-side counterpart of `/admin/rma`, and deliberately the same shape
  * on screen: a status ladder, an age column that stops at close, and money that
- * is **recorded rather than projected**. What differs is the direction — stock
+ * is **recorded rather than projected**. What differs is the direction - stock
  * leaves the shelf and a credit is claimed from the supplier, rather than
  * arriving and being refunded to a customer.
  */
@@ -128,7 +128,7 @@ function ReturnForm({ suppliers, purchaseOrders, products, onSubmit, onCancel, i
           control={control}
           name="purchaseOrder"
           label="Purchase order"
-          hint="Optional — sets what the parts cost."
+          hint="Optional - sets what the parts cost."
           options={[
             { value: '', label: 'Not known' },
             ...supplierPos.map((po) => ({ value: po.id, label: po.poNumber })),
@@ -196,7 +196,7 @@ function ReturnForm({ suppliers, purchaseOrders, products, onSubmit, onCancel, i
       <div className="grid gap-3 sm:grid-cols-2">
         <Input
           label="Supplier's RMA number"
-          hint="Theirs, not ours — the number to quote."
+          hint="Theirs, not ours - the number to quote."
           {...register('supplierRmaNumber')}
         />
         <Input label="Reason" placeholder="Two arrived dead" {...register('reason')} />
@@ -385,7 +385,7 @@ export function AdminSupplierReturnsPage() {
       ),
     },
     {
-      // Claimed and given, side by side — the gap between them is the reason
+      // Claimed and given, side by side - the gap between them is the reason
       // somebody chases a supplier, so it is never collapsed into one figure.
       key: 'expectedCredit',
       header: 'Credit',
@@ -532,7 +532,7 @@ export function AdminSupplierReturnsPage() {
               body={
                 (supplierData?.suppliers ?? []).length
                   ? 'No returns match this filter.'
-                  : 'Add a supplier first — a return is raised against one.'
+                  : 'Add a supplier first - a return is raised against one.'
               }
             />
           }

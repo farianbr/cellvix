@@ -9,7 +9,7 @@ import { adminIcon } from '@/components/admin/shell/adminIcons';
  * The odd one of the four: there is nothing to send. This records a
  * conversation that already happened on a phone, in either direction, so its
  * messages are `logged` rather than `queued_unconfigured` and no provider
- * notice appears — nothing here is waiting on a key.
+ * notice appears - nothing here is waiting on a key.
  *
  * What *is* deferred is click-to-dial, recording fetch and call analysis, all
  * of which need a telephony provider (§6b U5). The hint below says so, so the

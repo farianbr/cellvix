@@ -44,7 +44,7 @@ const BADGE_LABELS = {
  *
  * The digit is `aria-hidden` and the meaning is carried by visually-hidden text
  * instead. The badge sits inside the row's own button or link, so its text
- * becomes part of that control's accessible name — without this a collapsed
+ * becomes part of that control's accessible name - without this a collapsed
  * group announced as "Orders & billing 3", a bare number with no unit.
  */
 function NavBadge({ count, label }) {
@@ -66,7 +66,7 @@ function NavBadge({ count, label }) {
  * The account sidebar: a flat Overview row and three expandable groups, the
  * same two-level tree the admin shell uses.
  *
- * One group open at a time, and the open one follows the route — so arriving on
+ * One group open at a time, and the open one follows the route - so arriving on
  * a page always shows you where you are, and the sidebar stays one screen
  * rather than ten rows a buyer reads end to end to find anything. A deliberate
  * collapse is kept in state until the route changes, so clicking a heading
@@ -175,7 +175,7 @@ function NavTree({ badges, activeGroup, activeChildKey }) {
 
 /**
  * Account shell (brief §8.3): ERP-grade information density in Cellvix's clean
- * visual language — sidebar navigation, not a raw admin panel.
+ * visual language - sidebar navigation, not a raw admin panel.
  *
  * Also the auth gate for everything under /account. Guests get a sign-in prompt,
  * pending businesses get the "under review" state rather than a bare 403.
@@ -191,7 +191,7 @@ export function AccountLayout() {
 
   // Below lg the section list is a dropdown, not a horizontal scroller. Eight
   // pills in a swipe strip hid half the account behind a gesture nothing on the
-  // page advertised — the two sections furthest right were effectively unreachable
+  // page advertised - the two sections furthest right were effectively unreachable
   // on a 360px phone. It lists the leaves, not the groups: a dropdown is already
   // a one-level-at-a-time control, so grouping it would add a step rather than
   // remove one.
@@ -238,7 +238,7 @@ export function AccountLayout() {
     );
   }
 
-  // Staff accounts have no buyer-side orders, invoices or credit — /account is
+  // Staff accounts have no buyer-side orders, invoices or credit - /account is
   // the wrong dashboard for them, so send them to the admin console.
   if (isAdmin) return <Navigate to="/admin" replace />;
 
@@ -251,7 +251,7 @@ export function AccountLayout() {
         <h1 className="text-2xl">Your account is under review</h1>
         <p className="mt-3 text-md leading-relaxed text-ink-500">
           We are verifying <span className="font-medium text-ink-900">{user.displayName}</span>.
-          Once that is done, wholesale pricing, ordering and this dashboard all unlock — usually within
+          Once that is done, wholesale pricing, ordering and this dashboard all unlock - usually within
           one business day.
         </p>
         <p className="mt-6 rounded-md bg-surface-2 px-4 py-3 text-sm text-ink-500">

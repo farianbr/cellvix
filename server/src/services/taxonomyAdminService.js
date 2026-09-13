@@ -8,7 +8,7 @@ import { likeRegex } from '../utils/regex.js';
 import { invalidateTree } from './taxonomyService.js';
 
 /**
- * The taxonomy editor (ERP rework §6.15 — CellShoppe's *Device & Models*,
+ * The taxonomy editor (ERP rework §6.15 - CellShoppe's *Device & Models*,
  * phase 11d).
  *
  * The master list behind the searchable picker on every product form and behind
@@ -29,7 +29,7 @@ import { invalidateTree } from './taxonomyService.js';
  * Aliases, cleaned.
  *
  * Lowercased so matching never case-folds at query time, deduplicated, and
- * stripped of anything that would match everything — an empty alias, or one
+ * stripped of anything that would match everything - an empty alias, or one
  * that is just whitespace, silently turns a search box into a firehose.
  */
 function normaliseAliases(input) {
@@ -68,7 +68,7 @@ function shape(node, counts) {
     order: node.order ?? 0,
     // The stored `productCount` is a denormalised rollup maintained by the
     // seed. `counts` is the live figure, which is what decides whether a node
-    // may be deleted — so the screen shows the number the rule uses.
+    // may be deleted - so the screen shows the number the rule uses.
     productCount: counts?.get(node.slug) ?? 0,
   };
 }
@@ -142,7 +142,7 @@ async function list({ search, kind, parent, includeInactive, page = 1, limit = 5
  * this being true right now, not true at the last seed.
  */
 async function liveCounts() {
-  // `Product` carries flat `*Slug` fields, not a nested `path` — the nested
+  // `Product` carries flat `*Slug` fields, not a nested `path` - the nested
   // shape is `Taxonomy`'s. One product contributes to all four of its ancestors,
   // so a brand's count is every part under every model it makes.
   const rows = await db().Product.aggregate([
@@ -219,7 +219,7 @@ async function update(id, input) {
 }
 
 /**
- * Removes a node — only when nothing points at it.
+ * Removes a node - only when nothing points at it.
  *
  * Two guards, both refusing rather than cascading: a node with products behind
  * it, and a node with children. Cascading either would delete catalogue
@@ -243,7 +243,7 @@ async function remove(id) {
   const used = counts.get(node.slug) ?? 0;
   if (used) {
     throw ApiError.badRequest(
-      `${node.name} is used by ${used} ${used === 1 ? 'product' : 'products'}. Deactivate it instead — deleting it would leave those products pointing at nothing.`,
+      `${node.name} is used by ${used} ${used === 1 ? 'product' : 'products'}. Deactivate it instead - deleting it would leave those products pointing at nothing.`,
       'TAXONOMY_IN_USE',
     );
   }

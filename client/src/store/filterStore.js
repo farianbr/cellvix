@@ -4,7 +4,7 @@ import { TREE_LEVELS } from '@/lib/constants';
 /**
  * THE unified filter state (PROJECT_INSTRUCTIONS.md §4).
  *
- * Three UIs write to this one store — the sidebar accordion, the header mega
+ * Three UIs write to this one store - the sidebar accordion, the header mega
  * menu, and the tab wizard. They never mutate state directly; they call the
  * actions below. The product grid is the only subscriber that triggers a fetch.
  */
@@ -27,7 +27,7 @@ const initial = {
   // first tab reads "Battery" rather than "battery" without a lookup.
   //
   // A MAP rather than a single string: component type is multi-select, and a
-  // buyer who has ticked Battery and Screen needs both names — the old scalar
+  // buyer who has ticked Battery and Screen needs both names - the old scalar
   // could only ever name one of them.
   componentLabels: {},
   // Human-readable labels for the active path, so chips and completed wizard
@@ -44,7 +44,7 @@ export const useFilterStore = create((set, get) => ({
 
   /**
    * Sets one level of the hierarchy and CASCADES: every level below it is
-   * cleared. This is what makes out-of-order wizard edits safe — picking a new
+   * cleared. This is what makes out-of-order wizard edits safe - picking a new
    * brand can never leave a stale model attached to it.
    */
   setPathLevel(level, value, label = null) {
@@ -70,7 +70,7 @@ export const useFilterStore = create((set, get) => ({
   /**
    * Step 1 of the wizard: the component types it is walking.
    *
-   * Multi-select — a buyer wanting Battery AND Screen is a legitimate thing to
+   * Multi-select - a buyer wanting Battery AND Screen is a legitimate thing to
    * want, and the sidebar always allowed it. The wizard, the mega menu and the
    * sidebar now all read and write this one list, so a tick in any of them is
    * the same tick.
@@ -84,7 +84,7 @@ export const useFilterStore = create((set, get) => ({
    *
    * Component type is a facet that cuts across the tree, not a level above it.
    * A buyer who has drilled to "iPhone 15 Pro" and then ticks Battery is asking
-   * for that model's battery — the most specific thing they have said is the
+   * for that model's battery - the most specific thing they have said is the
    * model, and clearing it throws away the better answer to honour the newer
    * one. This used to reset the path on every tick, which sent anyone filtering
    * in that order back to step 1.
@@ -95,7 +95,7 @@ export const useFilterStore = create((set, get) => ({
    * sidebar's own counts show it coming. `ActiveFilterChips` lists both, so
    * whichever the buyer wants to drop is one click away.
    *
-   * The wizard is the exception and handles it itself — see `wizardComponentType`,
+   * The wizard is the exception and handles it itself - see `wizardComponentType`,
    * which is what step 1 calls. There the tree below is genuinely re-derived
    * from the component, so a stale path would be offered from a tree it was
    * never chosen in.
@@ -124,7 +124,7 @@ export const useFilterStore = create((set, get) => ({
    * Step 1 of the WIZARD: the same toggle, but cascading the tree beneath it.
    *
    * Only the wizard resets the path, and only because it then walks the buyer
-   * back down a tree that has been re-pruned to the new component — offering
+   * back down a tree that has been re-pruned to the new component - offering
    * step 2 from one tree while step 5 still holds an answer from another is how
    * the wizard ends up proposing a combination that stocks nothing. The sidebar
    * and mega menu are not walking anybody anywhere, so they keep the path.
@@ -139,7 +139,7 @@ export const useFilterStore = create((set, get) => ({
   /**
    * Replaces the whole component-type selection at once.
    *
-   * `null` clears it — which is what `clearLevel('componentType')` wants, and
+   * `null` clears it - which is what `clearLevel('componentType')` wants, and
    * what the wizard's "start over" does.
    */
   setComponentTypes(slugs, labels = {}) {
@@ -154,7 +154,7 @@ export const useFilterStore = create((set, get) => ({
     }));
   },
 
-  /** Applies a whole path at once — used when the mega menu jumps straight to a model. */
+  /** Applies a whole path at once - used when the mega menu jumps straight to a model. */
   setPath(partial, labels = {}) {
     set((state) => {
       const path = { ...emptyPath(), ...partial };
@@ -174,7 +174,7 @@ export const useFilterStore = create((set, get) => ({
   },
 
   /**
-   * Fills in display names for levels that only have a slug — the case after a
+   * Fills in display names for levels that only have a slug - the case after a
    * deep link or a refresh, where the URL carries slugs but no labels.
    * Does not touch the path, so it never triggers a refetch.
    */
@@ -224,7 +224,7 @@ export const useFilterStore = create((set, get) => ({
   },
 
   /**
-   * How many wizard steps are answered, component type included — it is step 1,
+   * How many wizard steps are answered, component type included - it is step 1,
    * so a set path with no component is depth 1, not depth 2.
    */
   depth() {

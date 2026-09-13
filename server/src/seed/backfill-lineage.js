@@ -9,13 +9,13 @@ import Ticket from '../models/Ticket.js';
  * Both edges were only ever stored pointing forwards: `Quote.convertedTicket`
  * knows which ticket it became, and `Ticket.invoice` knows which invoice it
  * became. Nothing pointed the other way, so a ticket could not name the quote
- * behind it and an invoice could not name the repair it was billing — it said
+ * behind it and an invoice could not name the repair it was billing - it said
  * so only in its `reference` string, a sentence for a human rather than a link
  * a screen can follow.
  *
  * `Ticket.quote` and `Invoice.ticket` now exist and are written at conversion
  * time going forward. Every record converted **before** that leaves them null,
- * which the workflow lineage strip would draw as a chain that never happened —
+ * which the workflow lineage strip would draw as a chain that never happened
  * an invoice showing an empty Ticket station when the ticket is sitting right
  * there in the database.
  *
@@ -65,7 +65,7 @@ async function backfillLineage({ force = false, dryRun = false, quiet = false } 
   const invoiceEdges = invoiced.filter((ticket) => needsTicket.has(String(ticket.invoice)));
 
   if (quoteEdges.length + invoiceEdges.length === 0) {
-    log('  every chain already points both ways — nothing to do.');
+    log('  every chain already points both ways - nothing to do.');
     return { tickets: 0, invoices: 0 };
   }
 

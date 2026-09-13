@@ -126,8 +126,8 @@ const TIER_TONE = { standard: 'neutral', silver: 'info', gold: 'warn', platinum:
  *
  * Colouring each one by meaning made the row shout: eight washes, eight chips
  * and eight hairlines is a lot of signal for a set of figures somebody scans
- * once. The plain treatment the counts already used — white card, grey chip,
- * one ink colour — is what the whole row uses now, and colour is left to the
+ * once. The plain treatment the counts already used - white card, grey chip,
+ * one ink colour - is what the whole row uses now, and colour is left to the
  * one place it still earns its keep: a figure that is actually a problem.
  */
 const TILE_ALERT = 'text-danger';
@@ -175,7 +175,7 @@ const TICKET_COLUMNS = [
     render: (ticket) => (
       <>
         <span className="block truncate text-sm text-ink-900">
-          {[ticket.device.brand, ticket.device.model].filter(Boolean).join(' ') || '—'}
+          {[ticket.device.brand, ticket.device.model].filter(Boolean).join(' ') || '-'}
         </span>
         <span className="block truncate text-xs text-ink-400">{ticket.issue}</span>
       </>
@@ -216,7 +216,7 @@ const TICKET_COLUMNS = [
       ticket.estimateCents > 0 ? (
         <span className="text-sm font-semibold text-ink-900">{money(ticket.estimateCents)}</span>
       ) : (
-        <span className="text-xs text-ink-300">—</span>
+        <span className="text-xs text-ink-300">-</span>
       ),
   },
 ];
@@ -288,7 +288,7 @@ const ORDER_COLUMNS = [
  *
  * **No subtotal or tax columns**, which the reference has and this does not.
  * The profile's invoice payload carries the total and what is paid against it,
- * not the line detail those two would be summed from — printing a "subtotal"
+ * not the line detail those two would be summed from - printing a "subtotal"
  * derived from a guessed tax rate would be a figure nobody could reconcile
  * against the invoice it claims to describe. The invoice's own screen, one
  * click away, shows the real breakdown.
@@ -313,7 +313,7 @@ const INVOICE_COLUMNS = [
     sortValue: (invoice) => (invoice.issuedAt ? new Date(invoice.issuedAt).getTime() : 0),
     render: (invoice) => (
       <span className="tnum whitespace-nowrap text-sm text-ink-500">
-        {invoice.issuedAt ? date(invoice.issuedAt) : '—'}
+        {invoice.issuedAt ? date(invoice.issuedAt) : '-'}
       </span>
     ),
   },
@@ -325,7 +325,7 @@ const INVOICE_COLUMNS = [
     sortValue: (invoice) => (invoice.dueDate ? new Date(invoice.dueDate).getTime() : 0),
     render: (invoice) => (
       <span className="tnum whitespace-nowrap text-sm text-ink-500">
-        {invoice.dueDate ? date(invoice.dueDate) : '—'}
+        {invoice.dueDate ? date(invoice.dueDate) : '-'}
       </span>
     ),
   },
@@ -334,7 +334,7 @@ const INVOICE_COLUMNS = [
      * Paid, not "balance".
      *
      * A balance column reads "Settled" on every row of a healthy account,
-     * which is a column of the same word — it says nothing and still costs the
+     * which is a column of the same word - it says nothing and still costs the
      * width. What is actually useful beside a total is how much of it has
      * arrived, and the outstanding remainder is the one case worth colouring.
      */
@@ -420,7 +420,7 @@ const RMA_COLUMNS = [
     priority: 2,
     render: (rma) => (
       <span className="whitespace-nowrap font-mono text-xs text-ink-500">
-        {rma.orderNumber ?? '—'}
+        {rma.orderNumber ?? '-'}
       </span>
     ),
   },
@@ -500,7 +500,7 @@ const QUOTE_COLUMNS = [
           quote.expired ? 'font-medium text-warn' : 'text-ink-500',
         )}
       >
-        {quote.validUntil ? date(quote.validUntil) : '—'}
+        {quote.validUntil ? date(quote.validUntil) : '-'}
       </span>
     ),
   },
@@ -579,7 +579,7 @@ const ROWS_PER_PAGE = 10;
  * One Overview roll-up card: a few rows, and a link to the tab that owns them.
  *
  * The action is a button rather than a link because the tab lives in a query
- * parameter this page already owns — routing through the URL would work, but
+ * parameter this page already owns - routing through the URL would work, but
  * `setTab` is the one place that decides how a tab is selected.
  */
 function SummaryPanel({ title, cta, onOpen, children }) {
@@ -616,7 +616,7 @@ function SummaryRow({ label, children }) {
  *
  * Named rather than hidden: an operator who cannot find the Quotes tab assumes
  * the client has none. This says the screen is not built, which is a different
- * claim from "there is nothing here" (§6b, rule 4 — nothing fakes success).
+ * claim from "there is nothing here" (§6b, rule 4 - nothing fakes success).
  */
 function PendingTab({ icon: Icon, title, phase }) {
   return (
@@ -624,7 +624,7 @@ function PendingTab({ icon: Icon, title, phase }) {
       <PanelEmpty
         icon={Icon}
         title={title}
-        body={`This record type ships in phase ${phase}. Nothing is hidden here — there is nothing to show yet.`}
+        body={`This record type ships in phase ${phase}. Nothing is hidden here - there is nothing to show yet.`}
       />
     </Panel>
   );
@@ -637,7 +637,7 @@ export function AdminClientProfilePage() {
   const tab = searchParams.get('tab') ?? 'overview';
 
   const { data, isLoading } = useAdminUser(id);
-  // The activity feed is a second query and only runs on its own tab — it
+  // The activity feed is a second query and only runs on its own tab - it
   // merges four collections and there is no reason to pay for it on Overview.
   const { data: activityData, isLoading: activityLoading } = useAdminUserActivity(
     id,
@@ -647,7 +647,7 @@ export function AdminClientProfilePage() {
   /**
    * Contact history, from the same `MessageLog` the Marketing screens write.
    *
-   * Fetched on Overview as well as its own tab, because Overview summarises it —
+   * Fetched on Overview as well as its own tab, because Overview summarises it
    * but only a handful of rows there, since the roll-up shows three.
    */
   const wantsMessages = tab === 'tickets' || tab === 'overview';
@@ -659,7 +659,7 @@ export function AdminClientProfilePage() {
    * This account's repair tickets, for the Tickets tab.
    *
    * Filtered server-side by `user`, which only tickets raised against an
-   * account carry — a walk-in repair has no account and belongs on nobody's
+   * account carry - a walk-in repair has no account and belongs on nobody's
    * profile. Fetched on its own tab only; the header's count comes from
    * `totals` and does not need the rows.
    */
@@ -712,8 +712,8 @@ export function AdminClientProfilePage() {
    * covered.
    *
    * **Above the loading return, for the same reason `useSetRecordLabel` is.**
-   * These sat below it, which meant the first render — while `data` was still
-   * loading — ran three fewer hooks than the render after it, and React threw
+   * These sat below it, which meant the first render - while `data` was still
+   * loading - ran three fewer hooks than the render after it, and React threw
    * `Rendered more hooks than during the previous render` the moment the fetch
    * resolved. The page crashed on every visit.
    *
@@ -752,7 +752,7 @@ export function AdminClientProfilePage() {
    *
    * Defined once and passed to both the Conversations tab and the Overview
    * roll-up: two copies would eventually disagree about which route a channel
-   * posts to, and the `notice` handling is the part that must not drift — the
+   * posts to, and the `notice` handling is the part that must not drift - the
    * server says whether anything actually transmitted, and that is rendered
    * verbatim rather than turned into a confirmation (§6b rule 4).
    */
@@ -785,12 +785,12 @@ export function AdminClientProfilePage() {
       .slice(0, 2)
       .map((part) => part[0])
       .join('')
-      .toUpperCase() || '—';
+      .toUpperCase() || '-';
 
   /**
    * Header figures come from `totals`, not from the lists.
    *
-   * `orders` and `invoices` are the ten most recent — enough for the roll-up
+   * `orders` and `invoices` are the ten most recent - enough for the roll-up
    * panels, wrong for a tile that says "total". Summing them understated every
    * account past its tenth invoice, which is precisely the set of accounts
    * somebody opens this screen to check. The server counts the whole set.
@@ -807,7 +807,7 @@ export function AdminClientProfilePage() {
    *
    * Taken from the newest order or invoice already on screen rather than a
    * sixth query: both lists are sorted newest-first, so the answer is the first
-   * row of each. `lastLoginAt` is deliberately not in the running — signing in
+   * row of each. `lastLoginAt` is deliberately not in the running - signing in
    * is not activity on the account, it is somebody looking at it.
    */
   const lastActivityAt = [orders[0]?.createdAt, invoices[0]?.issuedAt]
@@ -818,7 +818,7 @@ export function AdminClientProfilePage() {
    * Paging for the Orders and Invoices tables.
    *
    * In the URL beside `tab`, so a page is part of the address like every other
-   * bit of screen state here — and clamped on read, because a filter or a
+   * bit of screen state here - and clamped on read, because a filter or a
    * fresh load can strand the URL on a page that no longer exists.
    */
   const ordersPage = Math.max(1, Number(searchParams.get('ordersPage') ?? 1));
@@ -857,7 +857,7 @@ export function AdminClientProfilePage() {
   /**
    * The header strip's figures.
    *
-   * Built as data rather than markup so the strip stays one loop — eight
+   * Built as data rather than markup so the strip stays one loop - eight
    * hand-written cells is eight places to get a divider or a type size wrong.
    * `emphasis` is only set where the number carries a warning; everything else
    * is deliberately the same weight, because a panel where four figures shout
@@ -891,7 +891,7 @@ export function AdminClientProfilePage() {
     },
     {
       // The line of credit: what Cellvix lends. Kept apart from store credit,
-      // as the Instructions require — they are two different instruments.
+      // as the Instructions require - they are two different instruments.
       key: 'credit-line',
       label: 'Line of credit',
       icon: Wallet,
@@ -926,7 +926,7 @@ export function AdminClientProfilePage() {
       key: 'last-activity',
       label: 'Last activity',
       icon: CalendarDays,
-      value: lastActivityAt ? relativeTime(lastActivityAt) : '—',
+      value: lastActivityAt ? relativeTime(lastActivityAt) : '-',
       hint: lastActivityAt ? date(lastActivityAt) : 'Nothing recorded yet',
     },
   ];
@@ -938,7 +938,7 @@ export function AdminClientProfilePage() {
     invoices: totals.invoiceCount ?? 0,
     quotes: openQuotes,
     'web-quotes': totals.webQuotes ?? 0,
-    // Open returns, matching the other counts on the strip — the tab had no
+    // Open returns, matching the other counts on the strip - the tab had no
     // entry at all, so an account with four returns in progress showed nothing.
     rmas: totals.openRmas ?? 0,
     notes: notes.length,
@@ -960,7 +960,7 @@ export function AdminClientProfilePage() {
        * Every other admin screen opens with an icon, a title and a description,
        * because every other screen is *about a kind of record*. This one is
        * about **a person**, and the things an operator does from it are
-       * transactional — raise a ticket, invoice them, send a statement. So it
+       * transactional - raise a ticket, invoice them, send a statement. So it
        * gets a monogram rather than the Customers glyph (which was the same
        * mark on every account), the contact details as a scannable row rather
        * than one run-on sentence, and the actions laid out as a row of equals.
@@ -969,7 +969,7 @@ export function AdminClientProfilePage() {
        * The approval decision, on the record it is about.
        *
        * A pending account was answerable only from the Approvals queue or the
-       * notification bell — so an operator who arrived here from a search, or
+       * notification bell - so an operator who arrived here from a search, or
        * from the customers list, could read everything about the business and
        * still had to go and find the same form somewhere else. The banner is
        * the whole state of the account said in one line, with both answers
@@ -1002,7 +1002,7 @@ export function AdminClientProfilePage() {
 
       {/* One card: identity, figures and tabs are the same object, and three
           separate slabs made the top of this screen read as three unrelated
-          widgets. The brand rule along the top is the only ornament — it says
+          widgets. The brand rule along the top is the only ornament - it says
           "this is a record" the way the reference does. */}
       <div className="mb-5 overflow-hidden rounded-lg border border-line bg-surface">
         <span className="block h-1 bg-brand-gradient" aria-hidden="true" />
@@ -1036,7 +1036,7 @@ export function AdminClientProfilePage() {
               {/* One line per fact, each behind its own icon: an operator
                   reading a phone number off the screen should not have to find
                   it inside a sentence of separators. Email and phone are
-                  actionable — this is a screen somebody uses while picking up
+                  actionable - this is a screen somebody uses while picking up
                   the handset. */}
               <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-ink-500">
                 {user.businessName && user.businessName !== user.displayName && (
@@ -1071,7 +1071,7 @@ export function AdminClientProfilePage() {
 
           {/* The transactional actions, in the order somebody reaches for
               them. Each opens the page that already owns that record type,
-              seeded with this account — never a second form of its own, which
+              seeded with this account - never a second form of its own, which
               is how two create paths end up disagreeing (§7.2). */}
           <div className="flex flex-wrap items-center gap-2">
             {/* A ticket stores its customer as free text, so the name, phone
@@ -1096,7 +1096,7 @@ export function AdminClientProfilePage() {
             {/* The printable account statement: every invoice and payment on
                 this account with a closing balance. It opens the rendered
                 document in a new tab, where the browser's print dialog is what
-                saves it as a PDF — the same route the invoice document takes,
+                saves it as a PDF - the same route the invoice document takes,
                 so there is one way to produce paper from this system. */}
             <Button
               size="sm"
@@ -1121,7 +1121,7 @@ export function AdminClientProfilePage() {
         {/**
          * Eight figures, one uniform treatment.
          *
-         * They were briefly coloured by meaning — a wash, a chip and a
+         * They were briefly coloured by meaning - a wash, a chip and a
          * hairline per tile keyed to what the number was. Eight of those in a
          * row is a lot of signal for a set of figures somebody scans once, and
          * the colour ended up competing with the numbers rather than ranking
@@ -1191,9 +1191,9 @@ export function AdminClientProfilePage() {
 
       {tab === 'overview' && (
         <div className="grid gap-4 lg:grid-cols-2">
-          {/* The one place the business name is shown. Everywhere else — the
+          {/* The one place the business name is shown. Everywhere else - the
               header, the breadcrumb, the customers list, every reference to
-              this account — uses `displayName`, which is the person (§0). The
+              this account - uses `displayName`, which is the person (§0). The
               company is a detail *about* them, and it belongs in the detail
               panel rather than standing in as their name. */}
           <Panel
@@ -1211,10 +1211,10 @@ export function AdminClientProfilePage() {
             <dl className="space-y-2.5 text-sm">
               {[
                 ['Name', user.displayName],
-                ['Business', user.businessName || '—'],
+                ['Business', user.businessName || '-'],
                 ['Email', user.email],
-                ['Phone', user.phone || '—'],
-                ['Tax ID', user.taxId || '—'],
+                ['Phone', user.phone || '-'],
+                ['Tax ID', user.taxId || '-'],
                 ['Registered', date(user.createdAt)],
                 ['Last signed in', user.lastLoginAt ? date(user.lastLoginAt) : 'Never'],
               ].map(([label, value]) => (
@@ -1228,8 +1228,8 @@ export function AdminClientProfilePage() {
 
           {/* Invoices get their own panel on Overview rather than only a line
               in "Recent activity". It is the section an operator opens a
-              customer to look at — what has been billed and what is still
-              owed — and the roll-up above buries it among order rows. */}
+              customer to look at - what has been billed and what is still
+              owed - and the roll-up above buries it among order rows. */}
           <Panel
             title="Invoices"
             action={
@@ -1258,7 +1258,7 @@ export function AdminClientProfilePage() {
                   /* A link, not a row with a click handler: an invoice has its
                      own URL, so this should be openable in a new tab and show
                      its destination in the status bar like any other link. The
-                     eye appears on hover — an icon on all five rows is five
+                     eye appears on hover - an icon on all five rows is five
                      copies of a fact the pointer already gives. */
                   <li key={invoice.number} className="first:pt-0 last:pb-0">
                     <Link
@@ -1275,7 +1275,7 @@ export function AdminClientProfilePage() {
                         />
                       </span>
                       <span className="block text-xs text-ink-400">
-                        {invoice.issuedAt ? date(invoice.issuedAt) : '—'}
+                        {invoice.issuedAt ? date(invoice.issuedAt) : '-'}
                         {invoice.balance > 0 && ` · ${money(invoice.balance)} owed`}
                       </span>
                     </div>
@@ -1386,7 +1386,7 @@ export function AdminClientProfilePage() {
                 ) : consentedChannels.length > 0 ? (
                   consentedChannels.join(' · ')
                 ) : user.consent.recorded ? (
-                  <span className="text-warn">Nothing — all declined</span>
+                  <span className="text-warn">Nothing - all declined</span>
                 ) : (
                   <span className="text-ink-400">Not recorded</span>
                 )}
@@ -1730,7 +1730,7 @@ export function AdminClientProfilePage() {
       {/* The returns this account has raised.
       
           This tab rendered a "arrives in phase 7" placeholder long after phase
-          7 shipped — the list screen, the workflow and the data were all live,
+          7 shipped - the list screen, the workflow and the data were all live,
           so an operator looking at a customer with five returns was told the
           feature did not exist. The tab now shows them, using the same columns
           and the same status tones as `/admin/rma`, because it is the same
@@ -1827,7 +1827,7 @@ export function AdminClientProfilePage() {
           )}
         </Panel>
       )}
-      {/* Approving sets credit terms and an account rep in one payload — the
+      {/* Approving sets credit terms and an account rep in one payload - the
           decision to do business with somebody and the decision how much credit
           to extend them are one decision, so they are one form. */}
       <Modal
@@ -1858,7 +1858,7 @@ export function AdminClientProfilePage() {
       </Modal>
 
       {/* The same `RejectForm` the Approvals queue uses. A reason is required
-          because it goes into the notification email — a rejection with no
+          because it goes into the notification email - a rejection with no
           explanation is a customer who calls to ask why. */}
       <Modal
         open={rejecting}

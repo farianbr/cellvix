@@ -8,7 +8,7 @@ import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminCredentials } from '@/hooks/useAdmin';
 
 /**
- * Third-Party Apps (§6.15 category 7 — **UI only, §6b U7**).
+ * Third-Party Apps (§6.15 category 7 - **UI only, §6b U7**).
  *
  * Ready-made OAuth connections. The round-trip needs a Google Cloud client id
  * and secret that Cellvix does not have yet, so this ships as interface and
@@ -16,7 +16,7 @@ import { useAdminCredentials } from '@/hooks/useAdmin';
  * screen.
  *
  * **§6b rule 2: a persistent notice naming what is inactive and what unblocks
- * it** — not a tooltip, not a disabled button with a title attribute. And §6b
+ * it** - not a tooltip, not a disabled button with a title attribute. And §6b
  * rule 4: nothing here reports a connection that does not exist, so `Connect`
  * is rendered as a disabled control with the blocker stated beside it rather
  * than as a live button that fails.
@@ -41,16 +41,16 @@ const CONNECTIONS = [
     label: 'Google Calendar',
     icon: CalendarDays,
     description:
-      'Two-way sync for the scheduling board — pickups, deliveries and RMA drop-offs on a calendar staff already watch.',
+      'Two-way sync for the scheduling board - pickups, deliveries and RMA drop-offs on a calendar staff already watch.',
     // Named plainly: this one is blocked twice over, and saying only "needs
     // OAuth" would imply connecting Google is enough to make it work.
     needs:
-      'The same OAuth credentials, and a decision on what the calendar actually schedules (§6b U1) — the board itself is not wired yet.',
+      'The same OAuth credentials, and a decision on what the calendar actually schedules (§6b U1) - the board itself is not wired yet.',
   },
 ];
 
 export function AdminThirdPartyPage() {
-  // Read only to show whether the Google API key is set — a different
+  // Read only to show whether the Google API key is set - a different
   // credential from these OAuth grants, and worth distinguishing on screen so
   // an operator who has set one does not think they have set the other.
   const { data } = useAdminCredentials();
@@ -67,7 +67,7 @@ export function AdminThirdPartyPage() {
       {/* The measure wraps the notice as well as the panels.
 
           It sat outside the capped container, so a full-bleed banner ran the
-          shell's whole width above content that stopped at the form measure —
+          shell's whole width above content that stopped at the form measure
           the page disagreed with itself about where its own edge was, and the
           notice read as belonging to the shell rather than to this screen. */}
       <div className="max-w-form">
@@ -76,7 +76,7 @@ export function AdminThirdPartyPage() {
         <span>
           <strong className="font-semibold">Not connected yet.</strong> These connections need Google
           Cloud OAuth credentials, which Cellvix does not have. The screen below shows what each one
-          will do and what it is waiting on — nothing here connects anything today.
+          will do and what it is waiting on - nothing here connects anything today.
         </span>
       </p>
 
@@ -127,7 +127,7 @@ export function AdminThirdPartyPage() {
             <li>Enable the People API for Contacts, and the Calendar API for Calendar.</li>
             <li>
               Configure the OAuth consent screen as an <strong>internal</strong> app if Cellvix uses
-              Google Workspace — that avoids a verification review.
+              Google Workspace - that avoids a verification review.
             </li>
             <li>
               Create an OAuth client id of type <em>Web application</em>, with this panel’s origin as
@@ -138,7 +138,7 @@ export function AdminThirdPartyPage() {
 
           <p className="mt-4 border-t border-line pt-3 text-sm leading-relaxed text-ink-500">
             The <strong className="font-semibold text-ink-700">Google Maps &amp; Places</strong> key
-            on the API Keys screen is a different credential — a server-side key for address
+            on the API Keys screen is a different credential - a server-side key for address
             autocomplete, not an OAuth grant. It is currently{' '}
             {googleKey?.configured ? 'set' : 'not set'}, and setting it does not connect either app
             above.

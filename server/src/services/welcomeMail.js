@@ -10,7 +10,7 @@ import { displayNameOf } from '../utils/displayName.js';
  * A business that registers itself chose its own password and must never be
  * sent one; an account an admin opened has a password the customer has never
  * seen, so something has to carry it to them. Both get the same message with
- * the same shape — one of them has a credentials block, the other does not.
+ * the same shape - one of them has a credentials block, the other does not.
  *
  * Sent from `MAIL_FROM_ADMIN`, not `MAIL_FROM`. A welcome arriving from the
  * billing desk is the wrong address to reply to.
@@ -21,7 +21,7 @@ import { displayNameOf } from '../utils/displayName.js';
  * password remains readable there for as long as the message is kept. The email
  * therefore tells the customer to change it and links straight to the page
  * where they can. If that tradeoff is ever revisited, the fix is a one-time
- * set-password link — the customer sets a secret that was never transmitted —
+ * set-password link - the customer sets a secret that was never transmitted
  * and this file is the only place that would need to change.
  *
  * Called fire-and-forget: the account is already written by the time this runs,
@@ -42,7 +42,7 @@ const LENGTH = 14;
  * A password that satisfies `passwordSchema` by construction.
  *
  * One letter, one digit and one symbol are placed first and the remainder drawn
- * from the full alphabet, then the whole thing is shuffled — generating at
+ * from the full alphabet, then the whole thing is shuffled - generating at
  * random and re-rolling until it happens to pass would occasionally loop, and
  * the schema is what the account is validated against on every later change.
  */
@@ -88,7 +88,7 @@ function escapeHtml(value) {
  * The palette and type scale both messages are built from.
  *
  * These used to be declared inside each renderer, so the welcome mail and the
- * password-reset mail each carried their own copy — and they had already
+ * password-reset mail each carried their own copy - and they had already
  * diverged: different card radii, different greys, twelve font sizes between
  * them with several a half-pixel apart. Mail cannot import a stylesheet, but
  * that is an argument for defining the values once in the module, not for
@@ -149,14 +149,14 @@ function renderHtml({ user, password, origin, approved }) {
         <!-- The gradient as a hairline rule: accent, not a filled header.
 
              It ran red-to-black, which is the brand ramp backwards, so the rule
-             faded to black at its right end — and because the card clips its
+             faded to black at its right end - and because the card clips its
              corners, that dark end was cut by the radius and read as a printing
              fault rather than as a brand mark. Black-to-red is the direction the
              brand sheet shows. The COMPACT ramp, though, starting at the deep
              red rather than at the near-black: across a 3px rule the full
              gradient spends its first third in something indistinguishable from
              black, which reads as a dark stub bolted to one end rather than as
-             depth. Same identity, no stub — this mirrors bg-brand-gradient-compact
+             depth. Same identity, no stub - this mirrors bg-brand-gradient-compact
              in the client, which exists for exactly this reason. -->
         <tr><td style="height:3px;line-height:3px;font-size:0;background:${MAIL.brand};">
           <div style="height:3px;background:linear-gradient(90deg,#8f221b 0%,#cf3429 55%,#e8564a 100%);">&nbsp;</div>
@@ -195,7 +195,7 @@ function renderHtml({ user, password, origin, approved }) {
               A quiet note, not a red panel.
 
               This was a filled pink block in danger red, sitting directly above
-              the sign-in button — so the loudest thing in the message was a
+              the sign-in button - so the loudest thing in the message was a
               caveat, and the action the message exists to prompt was the
               quieter of the two. The warning is real and it stays, but nothing
               here is wrong yet: the reader is being told what to do afterwards,
@@ -306,7 +306,7 @@ function renderText({ user, password, origin, approved }) {
 /**
  * Emails a welcome.
  *
- * `password` is omitted for a self-registered account — that buyer chose their
+ * `password` is omitted for a self-registered account - that buyer chose their
  * own and must never be sent one back. Passing it switches the message to the
  * credentials variant. Never throws.
  */
@@ -325,7 +325,7 @@ async function sendWelcomeEmail({ user, password = null }) {
       text: renderText({ user, password, origin, approved }),
     });
   } catch (error) {
-    console.error(`  Mail: welcome email for ${user?.email} could not be built — ${error.message}`);
+    console.error(`  Mail: welcome email for ${user?.email} could not be built - ${error.message}`);
     return { delivered: false, via: null, error: error.message };
   }
 }
@@ -334,7 +334,7 @@ async function sendWelcomeEmail({ user, password = null }) {
  * The password reset email.
  *
  * Lives here rather than in its own file because it shares this one's palette,
- * shell and the "never throws" contract — the account state is already written
+ * shell and the "never throws" contract - the account state is already written
  * by the time it runs, and a dead SMTP host must not turn a reset request into
  * an error the caller reports back to a form.
  *
@@ -405,7 +405,7 @@ async function sendPasswordResetEmail({ user, token, origin, expiresMinutes = 60
         </p>
         <p style="margin:0;font:400 ${MAIL.small}/1.7 ${body};color:${ink500};">
           <strong style="color:${ink900};font-weight:600;">If you did not ask for this</strong>, you can
-          ignore this email — your password stays as it is, and the link stops working on its own.
+          ignore this email - your password stays as it is, and the link stops working on its own.
         </p>
       </td></tr>
     </table>
@@ -428,7 +428,7 @@ async function sendPasswordResetEmail({ user, token, origin, expiresMinutes = 60
       '',
       `  ${link}`,
       '',
-      'If you did not ask for this, ignore this email — your password stays as it',
+      'If you did not ask for this, ignore this email - your password stays as it',
       'is, and the link stops working on its own.',
     ].join('\n');
 
@@ -440,7 +440,7 @@ async function sendPasswordResetEmail({ user, token, origin, expiresMinutes = 60
       text,
     });
   } catch (error) {
-    console.error(`  Mail: reset email for ${user?.email} could not be built — ${error.message}`);
+    console.error(`  Mail: reset email for ${user?.email} could not be built - ${error.message}`);
     return { delivered: false, via: null, error: error.message };
   }
 }

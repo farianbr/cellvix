@@ -21,7 +21,7 @@ import SelectMenu from '@/components/ui/SelectMenu';
  * the next time a column is added. §6.15 describes them as a pair for the same
  * reason.
  *
- * **Read-only, with no affordance suggesting otherwise** — no row menu, no
+ * **Read-only, with no affordance suggesting otherwise** - no row menu, no
  * selection checkboxes, no delete. Both are append-only by construction, and a
  * disabled delete button would imply the capability exists somewhere.
  *
@@ -132,7 +132,7 @@ export function AuditLogScreen({ kind, page: meta, notice }) {
               A platform operator is called out, not left to look like staff.
               This row is the owner's only evidence that somebody outside their
               business acted inside it (SAAS_PLATFORM §4.5), so it has to be
-              legible at a glance — an email nobody recognises, sitting in a
+              legible at a glance - an email nobody recognises, sitting in a
               column of colleagues, is not.
             */}
             {row.actorKind === 'superadmin' && (
@@ -186,7 +186,7 @@ export function AuditLogScreen({ kind, page: meta, notice }) {
       priority: 3,
       width: '140px',
       sortable: false,
-      render: (row) => <span className="font-mono text-xs text-ink-500">{row.ip || '—'}</span>,
+      render: (row) => <span className="font-mono text-xs text-ink-500">{row.ip || '-'}</span>,
     },
   ];
 
@@ -288,7 +288,7 @@ export function AuditLogScreen({ kind, page: meta, notice }) {
                 <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2 border-b border-line pb-3">
                   <h2 className="font-display text-md font-bold">
                     {actionLabel(row.action)}
-                    {row.entity?.label ? ` — ${row.entity.label}` : ''}
+                    {row.entity?.label ? ` - ${row.entity.label}` : ''}
                   </h2>
                   <p className="tnum text-sm text-ink-500">{dateTime(row.createdAt)}</p>
                 </div>

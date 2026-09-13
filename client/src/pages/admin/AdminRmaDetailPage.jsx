@@ -32,7 +32,7 @@ import Skeleton from '@/components/ui/Skeleton';
 import { pressable } from '@/lib/motion';
 
 /**
- * One return — per-item disposition, inspection notes, and the resolution
+ * One return - per-item disposition, inspection notes, and the resolution
  * (ERP rework §6.3).
  *
  * Two things are kept visibly apart here because they are genuinely different
@@ -64,10 +64,10 @@ const NEXT_LABELS = {
 
 const DISPOSITIONS = [
   { value: 'pending', label: 'Not decided' },
-  { value: 'restock', label: 'Restock — back on the shelf' },
-  { value: 'scrap', label: 'Scrap — written off' },
+  { value: 'restock', label: 'Restock - back on the shelf' },
+  { value: 'scrap', label: 'Scrap - written off' },
   { value: 'return_to_supplier', label: 'Return to supplier' },
-  { value: 'reject', label: 'Reject — send back to client' },
+  { value: 'reject', label: 'Reject - send back to client' },
 ];
 
 function statusLabel(status) {
@@ -77,7 +77,7 @@ function statusLabel(status) {
 /**
  * Inspection: what each part actually is, and what happens to it.
  *
- * `restock` is the only disposition that moves stock, and the form says so —
+ * `restock` is the only disposition that moves stock, and the form says so
  * an operator choosing it is choosing to put units back, not just describing
  * their condition.
  */
@@ -134,7 +134,7 @@ function InspectForm({ rma, onSubmit, onCancel, isPending, error }) {
 
       <p className="rounded-md bg-surface-2 px-3 py-2.5 text-xs leading-relaxed text-ink-500">
         Only <strong className="font-semibold">Restock</strong> puts units back on the shelf, and it
-        happens when the RMA is resolved — not now. Everything else records what became of the part
+        happens when the RMA is resolved - not now. Everything else records what became of the part
         without touching stock.
       </p>
 
@@ -154,7 +154,7 @@ function InspectForm({ rma, onSubmit, onCancel, isPending, error }) {
  * Resolution.
  *
  * The refund amount is proposed from what the order actually charged for these
- * lines and capped at what the order has left to refund — but the cap is the
+ * lines and capped at what the order has left to refund - but the cap is the
  * server's, enforced in `storeCreditService`. This form shows the numbers so
  * the operator is never asked to guess.
  */
@@ -224,7 +224,7 @@ function ResolveForm({ rma, refund, onSubmit, onCancel, isPending, error }) {
               {formatCount(restocking.reduce((sum, item) => sum + item.qty, 0))} unit
               {restocking.reduce((sum, item) => sum + item.qty, 0) === 1 ? '' : 's'}
             </strong>{' '}
-            back on the shelf — the lines inspection marked <em>restock</em>. Each writes a stock
+            back on the shelf - the lines inspection marked <em>restock</em>. Each writes a stock
             movement.
           </span>
         </p>
@@ -298,7 +298,7 @@ export function AdminRmaDetailPage() {
   const canResolve = rma.status === 'inspecting';
 
   return (
-    // The record measure, centred — one record is a reading screen, and a
+    // The record measure, centred - one record is a reading screen, and a
     // list is what earns the shell's full width. The `.record-page` class carries
     // the whole treatment; see the container tokens in index.css.
     <div className="record-page">
@@ -366,7 +366,7 @@ export function AdminRmaDetailPage() {
           {outcome.refund && (
             <p className="rounded-md bg-ok-50 px-3 py-2.5 text-sm text-ok">
               Refunded <strong className="font-semibold">{money(outcome.refund.amount)}</strong> to
-              store credit — new balance {money(outcome.refund.balance)}.
+              store credit - new balance {money(outcome.refund.balance)}.
             </p>
           )}
           <p
@@ -377,7 +377,7 @@ export function AdminRmaDetailPage() {
           >
             {outcome.restocked?.length
               ? `Restocked ${outcome.restocked.map((row) => `${row.sku} ×${row.qty}`).join(', ')}.`
-              : 'Nothing was restocked — no line was marked restock at inspection.'}
+              : 'Nothing was restocked - no line was marked restock at inspection.'}
           </p>
         </div>
       )}
@@ -415,7 +415,7 @@ export function AdminRmaDetailPage() {
             key: 'age',
             label: 'Age',
             value: `${rma.age}d`,
-            hint: rma.closed ? 'Closed — no longer ageing' : rma.overSla ? 'Past the SLA' : 'Within the SLA',
+            hint: rma.closed ? 'Closed - no longer ageing' : rma.overSla ? 'Past the SLA' : 'Within the SLA',
             tone: rma.overSla ? 'danger' : rma.closed ? 'neutral' : 'info',
             icon: Hourglass,
           },

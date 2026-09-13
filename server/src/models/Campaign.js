@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 /**
  * A bulk email campaign (ERP rework §6.13, §8).
  *
- * Email is the one marketing channel that is **fully wired** — this codebase
+ * Email is the one marketing channel that is **fully wired** - this codebase
  * already sends mail (`services/mailer.js`), so there is no provider to wait
  * for and no reason to stub it. The other three channels log; this one sends.
  *
@@ -14,7 +14,7 @@ import mongoose from 'mongoose';
  * way to guarantee that is to resolve the audience when the send runs.
  *
  * `stats` counts what actually happened. `sent` is incremented per accepted
- * message, never set to the audience size up front — CASL compliance is not a
+ * message, never set to the audience size up front - CASL compliance is not a
  * good look on a number we assumed.
  */
 
@@ -23,7 +23,7 @@ const CAMPAIGN_STATUSES = ['draft', 'scheduled', 'sending', 'sent', 'failed'];
 /**
  * Who a campaign goes to, before consent is applied.
  *
- * Consent and unsubscribe are NOT audience options — they are applied on top of
+ * Consent and unsubscribe are NOT audience options - they are applied on top of
  * whatever this selects, always, and cannot be turned off from the UI. See
  * `marketingService.resolveAudience`.
  */
@@ -57,7 +57,7 @@ const campaignSchema = new mongoose.Schema(
       clicked: { type: Number, default: 0 },
       bounced: { type: Number, default: 0 },
       unsubscribed: { type: Number, default: 0 },
-      // Saved but not sent, because the channel has no provider connected —
+      // Saved but not sent, because the channel has no provider connected
       // SMS and WhatsApp (§6b). Its own field rather than being folded into
       // `sent`, because a campaign that reads "sent 0" with no further
       // explanation looks like a failure when it is a configuration state. The

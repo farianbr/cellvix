@@ -11,7 +11,7 @@ import { dateTime } from '@/lib/format';
  * A support conversation, rendered from either side (SAAS_PLATFORM §4.5).
  *
  * **One component for both halves.** The console and the tenant's panel read
- * the same thread and differ only in which messages count as "mine" — so `side`
+ * the same thread and differ only in which messages count as "mine" - so `side`
  * is a prop rather than a reason to write this twice. A forked version would be
  * two places to fix the next time a message gains a field.
  *
@@ -26,7 +26,7 @@ export function SupportThread({
    * Which application this is rendering in.
    *
    * The same conversation appears in the tenant panel and in the platform
-   * console, and those wear different identities — a component hardcoded to
+   * console, and those wear different identities - a component hardcoded to
    * either one is wrong in the other half of the time. `platform` is the dark
    * console; the default is the tenant panel it was written for.
    */
@@ -55,7 +55,7 @@ export function SupportThread({
 
   const messages = thread?.messages ?? [];
 
-  // A conversation opens at its newest message, not its oldest — the reason to
+  // A conversation opens at its newest message, not its oldest - the reason to
   // open it is almost always the thing that just arrived.
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'nearest' });
@@ -142,7 +142,7 @@ export function SupportThread({
           value={body}
           onChange={(event) => setBody(event.target.value)}
           onKeyDown={(event) => {
-            // Enter sends, Shift+Enter breaks the line — the convention every
+            // Enter sends, Shift+Enter breaks the line - the convention every
             // chat the reader has used already follows.
             if (event.key === 'Enter' && !event.shiftKey) send(event);
           }}

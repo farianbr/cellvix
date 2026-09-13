@@ -9,7 +9,7 @@ import auditService from '../services/auditService.js';
  * returns previews and a `configured` flag; nothing here calls
  * `credentialService.valuesFor`, which is the only function that decrypts and
  * exists for the server code that talks to a provider. §6.15 has no exception
- * for "an admin asked" — a reveal endpoint would be one, so there isn't one.
+ * for "an admin asked" - a reveal endpoint would be one, so there isn't one.
  *
  * **Every write is audit-logged with the actor and IP but never the value**
  * (§6.15). The row names which fields were set or cleared, which is what makes

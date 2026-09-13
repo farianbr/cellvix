@@ -35,6 +35,7 @@ const SupplierOrdersPage = lazy(() => import('@/pages/supplier/SupplierOrdersPag
 const SupplierProformasPage = lazy(() => import('@/pages/supplier/SupplierProformasPage'));
 const SupplierDeliveriesPage = lazy(() => import('@/pages/supplier/SupplierDeliveriesPage'));
 const SupplierProfilePage = lazy(() => import('@/pages/supplier/SupplierProfilePage'));
+const SupplierAgreementPage = lazy(() => import('@/pages/supplier/SupplierAgreementPage'));
 const SuperAdminLayout = lazy(() => import('@/components/superadmin/SuperAdminLayout'));
 const SuperAdminTenantsPage = lazy(() => import('@/pages/superadmin/SuperAdminTenantsPage'));
 const SuperAdminPlansPage = lazy(() => import('@/pages/superadmin/SuperAdminPlansPage'));
@@ -53,7 +54,7 @@ const AccountAddressesPage = lazy(() => import('@/pages/account/AccountAddresses
 const AccountPaymentMethodsPage = lazy(() => import('@/pages/account/AccountPaymentMethodsPage'));
 const AccountCompanyPage = lazy(() => import('@/pages/account/AccountCompanyPage'));
 
-// The ERP panel is a separate application with its own shell — it mounts
+// The ERP panel is a separate application with its own shell - it mounts
 // outside RootLayout so it never carries the shop header, mega menu or footer.
 const AdminShell = lazy(() => import('@/components/admin/shell/AdminShell'));
 const AdminOverviewPage = lazy(() => import('@/pages/admin/AdminOverviewPage'));
@@ -109,6 +110,7 @@ const AdminSaleSettingsPage = lazy(() => import('@/pages/admin/AdminSaleSettings
 const AdminShippingSettingsPage = lazy(() => import('@/pages/admin/AdminShippingSettingsPage'));
 const AdminPaymentMethodsPage = lazy(() => import('@/pages/admin/AdminPaymentMethodsPage'));
 const AdminInventorySettingsPage = lazy(() => import('@/pages/admin/AdminInventorySettingsPage'));
+const AdminAgreementsPage = lazy(() => import('@/pages/admin/AdminAgreementsPage'));
 const AdminActivityLogPage = lazy(() => import('@/pages/admin/AdminActivityLogPage'));
 const AdminSupportPage = lazy(() => import('@/pages/admin/AdminSupportPage'));
 const AdminSecurityLogPage = lazy(() => import('@/pages/admin/AdminSecurityLogPage'));
@@ -129,7 +131,7 @@ const AdminInvoiceDetailPage = lazy(() => import('@/pages/admin/AdminInvoiceDeta
  *
  * From phase 1 to phase 12 this held the routes whose screens had not been
  * built, so the nav could be walked end to end ahead of the work. Every one of
- * them is now a real screen — `AdminStubPage` is kept for the next time a route
+ * them is now a real screen - `AdminStubPage` is kept for the next time a route
  * lands ahead of its page, and is deliberately not deleted.
  */
 
@@ -137,7 +139,7 @@ export function App() {
   return (
     <>
       {/* Mounted once, outside the routes: a toast outlives the screen that
-          raised it — an email sent from an invoice should still confirm after
+          raised it - an email sent from an invoice should still confirm after
           the operator has navigated on. */}
       <Toaster />
 
@@ -147,7 +149,7 @@ export function App() {
       <RouteProgress />
 
     <Routes>
-      {/* The ERP panel. Outside RootLayout by design (§4) — it owns the whole
+      {/* The ERP panel. Outside RootLayout by design (§4) - it owns the whole
           viewport. AdminShell is also the UI half of the guard; requireAdmin
           enforces it server-side. */}
       <Route
@@ -173,7 +175,7 @@ export function App() {
         <Route path="supplier-returns" element={<AdminSupplierReturnsPage />} />
         <Route path="supplier-services" element={<AdminSupplierServicesPage mode="service" />} />
         <Route path="supplier-subscriptions" element={<AdminSupplierServicesPage mode="subscription" />} />
-        {/* Supplier bidding lives on the purchase order itself (§6.8a) — the
+        {/* Supplier bidding lives on the purchase order itself (§6.8a) - the
             separate `/admin/rfqs` screens folded in on 2026-09-11, and
             `ADMIN_LEGACY_REDIRECTS` forwards the old path. */}
         <Route path="purchase-orders" element={<AdminPurchaseOrdersPage />} />
@@ -182,7 +184,7 @@ export function App() {
         <Route path="purchase-orders/create" element={<AdminPurchaseOrderCreatePage />} />
         <Route path="purchase-orders/:id" element={<AdminPurchaseOrderDetailPage />} />
         <Route path="expenses" element={<AdminExpensesPage />} />
-        {/* Categories live under Settings — the expense screen links there, and
+        {/* Categories live under Settings - the expense screen links there, and
             the old `/admin/expenses/categories` path still redirects to it. */}
         <Route path="settings/expense-categories" element={<AdminExpenseCategoriesPage />} />
 
@@ -199,7 +201,7 @@ export function App() {
         {/* Repair tickets. The detail screen is not built yet, so a row opens
             the edit dialog on the list rather than a route that would 404. */}
         <Route path="tickets" element={<AdminTicketsPage />} />
-        {/* Intake is a full screen, not a modal — see the page for why. */}
+        {/* Intake is a full screen, not a modal - see the page for why. */}
         <Route path="tickets/new" element={<AdminTicketFormPage />} />
         <Route path="tickets/:id/edit" element={<AdminTicketFormPage />} />
         <Route path="tickets/:id" element={<AdminTicketDetailPage />} />
@@ -211,18 +213,18 @@ export function App() {
         <Route path="marketing/faq" element={<AdminFaqPage />} />
 
         {/* Marketing channels (phase 9). SMS, WhatsApp and Calls share one
-            component — same MessageLog, different channel. Only email sends
+            component - same MessageLog, different channel. Only email sends
             today; the other two log and say so (§6b U3–U5). */}
         <Route path="marketing/sms" element={<AdminSmsPage />} />
         <Route path="marketing/whatsapp" element={<AdminWhatsappPage />} />
         <Route path="marketing/calls" element={<AdminCallsPage />} />
         <Route path="marketing/email" element={<AdminEmailPage />} />
-        {/* Referral commission (phase 10). Admin-only server-side — this pays
+        {/* Referral commission (phase 10). Admin-only server-side - this pays
             real money on an automatic trigger (§6.13). */}
         <Route path="marketing/referrals" element={<AdminReferralsPage />} />
 
         {/* Business, staff & roles (phase 8). `add` and `:id/edit` share one
-            form component — the same fields with a different verb. */}
+            form component - the same fields with a different verb. */}
         <Route path="businesses" element={<AdminBusinessesPage />} />
         <Route path="businesses/add" element={<AdminBusinessFormPage />} />
         <Route path="businesses/:id/edit" element={<AdminBusinessFormPage />} />
@@ -230,7 +232,7 @@ export function App() {
         <Route path="settings/users" element={<AdminUsersPage />} />
         <Route path="settings/roles" element={<AdminRolesPage />} />
 
-        {/* Settings — the summary and every category landing are one screen,
+        {/* Settings - the summary and every category landing are one screen,
             separated by `?cat=`, so they share a route (§6.15). */}
         <Route path="settings" element={<AdminSettingsPage />} />
         <Route path="settings/business-info" element={<AdminBusinessInfoPage />} />
@@ -238,6 +240,7 @@ export function App() {
         <Route path="settings/shipping" element={<AdminShippingSettingsPage />} />
         <Route path="settings/payment-methods" element={<AdminPaymentMethodsPage />} />
         <Route path="settings/inventory" element={<AdminInventorySettingsPage />} />
+        <Route path="settings/agreements" element={<AdminAgreementsPage />} />
         <Route path="settings/activity-log" element={<AdminActivityLogPage />} />
         {/* The tenant's line to the platform. No feature gate: reaching us is
             not a capability a tenant buys (SAAS_PLATFORM §4.5). */}
@@ -277,7 +280,7 @@ export function App() {
       {/* Outside RootLayout on purpose (§6.13): a person following the
           unsubscribe link from an email is opting out, and meeting them with
           the shop header, mega menu and footer would be reading the moment
-          badly. Public — CASL requires the mechanism to work without a
+          badly. Public - CASL requires the mechanism to work without a
           sign-in. */}
       <Route
         path="unsubscribe"
@@ -289,7 +292,7 @@ export function App() {
       />
 
       {/* The platform console (SAAS_PLATFORM §4.5). A third application on a
-          third session — outside RootLayout and outside AdminShell, because a
+          third session - outside RootLayout and outside AdminShell, because a
           super admin belongs to neither population and must not carry either
           one's chrome.
 
@@ -331,6 +334,7 @@ export function App() {
         <Route path="orders/:id" element={<SupplierPurchaseOrderPage />} />
         <Route path="proformas" element={<SupplierProformasPage />} />
         <Route path="deliveries" element={<SupplierDeliveriesPage />} />
+        <Route path="agreement" element={<SupplierAgreementPage />} />
         <Route path="profile" element={<SupplierProfilePage />} />
         <Route path="*" element={<Navigate to="/supplier" replace />} />
       </Route>

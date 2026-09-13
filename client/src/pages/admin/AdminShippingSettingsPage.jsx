@@ -12,11 +12,11 @@ import { money } from '@/lib/format';
 import { useAdminSettings, useAdminMutations } from '@/hooks/useAdmin';
 
 /**
- * Shipping Rates (§6.15) — the slot CellShoppe gives *Services*.
+ * Shipping Rates (§6.15) - the slot CellShoppe gives *Services*.
  *
  * CellShoppe's per-km mileage rate is dropped: Cellvix ships parts, it does not
  * drive to jobs. What replaces it is the thing checkout actually needed and had
- * been hard-coding — a flat rate per band, a free-over threshold, and the copy
+ * been hard-coding - a flat rate per band, a free-over threshold, and the copy
  * the buyer reads beside each one.
  *
  * **Bands cannot be added or removed here, only priced.** Checkout validates
@@ -122,7 +122,7 @@ export function AdminShippingSettingsPage() {
               }
               description={
                 freeOver === null
-                  ? `${cost === 0 ? 'Always free' : money(cost)} — never ships free on order value.`
+                  ? `${cost === 0 ? 'Always free' : money(cost)} - never ships free on order value.`
                   : `${cost === 0 ? 'Free' : money(cost)}, free over ${money(freeOver)}.`
               }
             >
@@ -134,8 +134,8 @@ export function AdminShippingSettingsPage() {
                 />
                 {/* The hint used to quote “2–4 business days” as its example,
                     which is the Ground band's own value. On every other band it
-                    sat directly under a field reading something else — "Next
-                    business day" on Express — so the hint appeared to be
+                    sat directly under a field reading something else - "Next
+                    business day" on Express - so the hint appeared to be
                     correcting the value beside it rather than describing the
                     field. An example is only an example while it is not also
                     one of the answers on screen. */}

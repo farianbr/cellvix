@@ -4,7 +4,7 @@ import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 
 /**
- * SMS (§6.13 · §6b U3 — UI-only sending).
+ * SMS (§6.13 · §6b U3 - UI-only sending).
  *
  * The compose form and the history are real and permanent; the send is what
  * waits on Twilio credentials. A message written here is stored with

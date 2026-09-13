@@ -15,7 +15,7 @@ import { adminIcon } from '@/components/admin/shell/adminIcons';
 import { useAdminSettings, useAdminMutations } from '@/hooks/useAdmin';
 
 /**
- * Business Info (§6.15, category 1) — who Cellvix is on an invoice, an email
+ * Business Info (§6.15, category 1) - who Cellvix is on an invoice, an email
  * and the storefront footer.
  *
  * This screen is the answer to open question 1 on the PROGRESS board: the
@@ -54,7 +54,7 @@ export function AdminBusinessInfoPage() {
   } = useForm({ resolver: zodResolver(businessInfoSchema), defaultValues: EMPTY });
 
   // The server is the source of truth, and a refetch must never overwrite an
-  // edit in progress — so this syncs only while the form is untouched.
+  // edit in progress - so this syncs only while the form is untouched.
   useEffect(() => {
     if (!data?.business || isDirty) return;
     reset({ ...EMPTY, ...data.business, address: { ...EMPTY.address, ...data.business.address } });
@@ -85,7 +85,7 @@ export function AdminBusinessInfoPage() {
 
       <PlaceholderNotice>
         These details ship with placeholder values and are printed on invoices, transactional email
-        and the storefront footer. Replace them with the real ones — the GST/HST number especially,
+        and the storefront footer. Replace them with the real ones - the GST/HST number especially,
         which is a stand-in and is not a valid registration.
       </PlaceholderNotice>
 

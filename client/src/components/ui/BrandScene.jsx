@@ -85,7 +85,7 @@ function SuccessScene() {
         />
         <path d="M81 50h24M81 55h18M81 60h13" stroke="var(--color-ink-200)" strokeWidth="1.4" strokeLinecap="round" />
 
-        {/* Tape, in brand — the one accent on the box */}
+        {/* Tape, in brand - the one accent on the box */}
         <path d="M4 26 64 48v62" stroke="var(--color-brand)" strokeWidth="2.4" fill="none" opacity="0.35" />
       </g>
 
@@ -146,7 +146,7 @@ function NotFoundScene() {
         <path d="M60 128h32M60 138h20" stroke="var(--color-ink-200)" strokeWidth="1.3" strokeLinecap="round" />
       </g>
 
-      {/* Screen assembly, lifted away — the piece that "came apart" */}
+      {/* Screen assembly, lifted away - the piece that "came apart" */}
       <g transform="rotate(11 196 100)">
         <rect
           x="168"
@@ -216,7 +216,7 @@ function PaymentFailedScene() {
         <path d="M52 74h44M104 74h14" stroke="var(--color-ink-200)" strokeWidth="2.4" strokeLinecap="round" />
       </g>
 
-      {/* The refusal itself: a hard stop, in danger — never in the brand red,
+      {/* The refusal itself: a hard stop, in danger - never in the brand red,
           which would read as branding rather than as an error (§2.2). */}
       <g transform="translate(198 40)">
         <circle cx="26" cy="26" r="24" fill="var(--color-danger-50)" stroke="var(--color-danger)" strokeWidth="2" />
@@ -228,7 +228,7 @@ function PaymentFailedScene() {
         />
       </g>
 
-      {/* A severed line between card and terminal — the connection, not the money */}
+      {/* A severed line between card and terminal - the connection, not the money */}
       <path
         d="M62 150h60"
         stroke="var(--color-ink-200)"

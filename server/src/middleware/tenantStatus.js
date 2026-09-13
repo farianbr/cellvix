@@ -6,7 +6,7 @@ import Tenant from '../models/Tenant.js';
  * What a tenant's subscription state still permits (SAAS_PLATFORM §6 phase 19).
  *
  * **`Tenant.status` was written and never read.** The console could set a
- * tenant to `suspended` or `cancelled` and nothing anywhere changed — their
+ * tenant to `suspended` or `cancelled` and nothing anywhere changed - their
  * businesses kept trading exactly as an active tenant's did. This is the half
  * that makes the field mean something.
  *
@@ -21,7 +21,7 @@ import Tenant from '../models/Tenant.js';
  *
  * **`past_due` keeps reads on deliberately.** Locking somebody out of their own
  * customer list over an unpaid invoice makes the invoice harder to pay, not
- * easier — they cannot call the customer whose payment would settle it. The
+ * easier - they cannot call the customer whose payment would settle it. The
  * lever that actually works is stopping them taking *new* business, which is
  * what refusing writes does.
  *
@@ -34,15 +34,15 @@ import Tenant from '../models/Tenant.js';
  * `requireFeature` answers "does this business have this capability" with a 404,
  * because a tenant should not learn what the product could do if they paid
  * more. This answers "is this account in good standing", and the answer must be
- * **legible** — somebody has to know to go and pay. So it is a 403 carrying a
+ * **legible** - somebody has to know to go and pay. So it is a 403 carrying a
  * code the client can render a real explanation for, which is the opposite
  * choice for the opposite reason.
  *
  * ## What this does NOT yet cover, and why
  *
  * **Only requests that name a business.** The client sends `?business=` on
- * `/admin` paths and `/auth/me` and nowhere else, so the storefront — the
- * catalogue, the cart, checkout — is *not* gated here: those requests carry no
+ * `/admin` paths and `/auth/me` and nowhere else, so the storefront - the
+ * catalogue, the cart, checkout - is *not* gated here: those requests carry no
  * scope, `businessScope` is null, and this returns early.
  *
  * That means the "storefront off" column of the table above is **not enforced
@@ -53,7 +53,7 @@ import Tenant from '../models/Tenant.js';
  * that phase is about to introduce, and the two would drift.
  *
  * Until then a suspended tenant's admin panel is read-only, which is the half
- * that matters most — no new orders, invoices or records — while their public
+ * that matters most - no new orders, invoices or records - while their public
  * catalogue stays up.
  */
 
@@ -110,7 +110,7 @@ async function enforceTenantStatus(req, _res, next) {
     /**
      * A platform operator is not bound by the tenant's billing state.
      *
-     * Support is *most* needed on an account that has stopped paying — sorting
+     * Support is *most* needed on an account that has stopped paying - sorting
      * out the dispute, exporting their data, fixing whatever caused the lapse.
      * Refusing an operator here would mean the only accounts we cannot help are
      * the ones asking for help, and the grant is already time-boxed, logged and
@@ -131,7 +131,7 @@ async function enforceTenantStatus(req, _res, next) {
 
     const isRead = READ_METHODS.has(req.method);
 
-    // `cancelled` refuses reads too — the account is over. The retention window
+    // `cancelled` refuses reads too - the account is over. The retention window
     // exists so the data can be restored or exported by us, not browsed by them.
     if (tenant.status === 'cancelled') {
       const [message, code] = STATUS_MESSAGES.cancelled;
@@ -151,11 +151,11 @@ async function enforceTenantStatus(req, _res, next) {
      * A lookup failure must not take the product down.
      *
      * This gate exists to enforce a *billing* position, and failing closed on a
-     * database blip would lock every tenant out over a transient error — a far
+     * database blip would lock every tenant out over a transient error - a far
      * worse outcome than one unpaid account writing a record it should not
      * have. Logged rather than swallowed silently.
      */
-    console.error(`  Tenant status: could not resolve — ${error.message}`);
+    console.error(`  Tenant status: could not resolve - ${error.message}`);
     return next();
   }
 }

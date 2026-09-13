@@ -13,7 +13,7 @@ import { ease } from '@/lib/motion';
 /**
  * Phone/tablet bottom bar (brief §4.2).
  *
- * Deliberately absent at the top of a page — the header already carries the
+ * Deliberately absent at the top of a page - the header already carries the
  * logo, search and cart there. It slides up once the header has scrolled away,
  * which is the point at which search and cart become unreachable.
  *
@@ -66,7 +66,7 @@ export function MobileBottomNav() {
 
             {/* The one raised control: search is the primary way into a
                 200k-SKU catalogue, so it does not look like the others. It puts
-                the cursor in the header's search field — that bar is sticky and
+                the cursor in the header's search field - that bar is sticky and
                 never leaves the screen, so a second one would be a duplicate. */}
             <li className="flex flex-1 justify-center">
               <button
@@ -80,7 +80,7 @@ export function MobileBottomNav() {
             </li>
 
             {/* `active` while the panel is open, so the bar says which button
-                put it there — the same signal the header buttons carry. */}
+                put it there - the same signal the header buttons carry. */}
             <BarItem
               icon={ShoppingCart}
               label="Cart"

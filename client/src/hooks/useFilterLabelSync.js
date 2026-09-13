@@ -7,7 +7,7 @@ import { useTaxonomy } from './useCatalog';
  * Backfills human-readable labels for the active filter path.
  *
  * The URL only carries slugs (`?brand=samsung`), so a deep link or a refresh
- * lands with `path` set but `labels` empty — which would leave the wizard tabs
+ * lands with `path` set but `labels` empty - which would leave the wizard tabs
  * and the filter chips showing "samsung" instead of "Samsung". This resolves
  * them from the taxonomy tree as soon as it arrives.
  */
@@ -29,7 +29,7 @@ export function useFilterLabelSync() {
     if (Object.keys(missing).length > 0) setLabels(missing);
   }, [tree]);
 
-  // Re-run whenever the path changes too — a mega-menu click sets labels, but a
+  // Re-run whenever the path changes too - a mega-menu click sets labels, but a
   // browser Back can land on a path whose labels were never populated.
   useEffect(() => {
     if (!tree) return undefined;

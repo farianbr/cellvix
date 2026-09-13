@@ -50,8 +50,8 @@ function monogram(name = '') {
 /**
  * Monograms for a whole option list, every one distinct.
  *
- * Initials alone are not unique — "Back Cover Sensor" and "Bottom Cover" both
- * give "BC" — and neither is any single fallback: sending the first of those to
+ * Initials alone are not unique - "Back Cover Sensor" and "Bottom Cover" both
+ * give "BC" - and neither is any single fallback: sending the first of those to
  * its own first word's initials gives "BA", which then collides with "Battery".
  * So each name offers candidates in order of preference and takes the first one
  * nobody has claimed, with the plain initials as the last resort.
@@ -70,7 +70,7 @@ function monogramsFor(options) {
 
     const candidates = [
       initials,
-      // first word's first two letters — separates "Back …" from "Bottom …"
+      // first word's first two letters - separates "Back …" from "Bottom …"
       first.slice(0, 2).toUpperCase(),
       // first word's initial + its second letter's neighbour, then three-word
       // initials, then first + last initial
@@ -281,7 +281,7 @@ export function WizardOverlay({ open, onClose, onNext, level, label, title, opti
       )}
 
       {/* Multi-select keeps the panel open on every tick, so it needs a way out
-          that is not the X in the corner — and a running total, because the
+          that is not the X in the corner - and a running total, because the
           tiles scroll and the ones already ticked go off screen. Single-select
           steps close themselves and get neither.
 

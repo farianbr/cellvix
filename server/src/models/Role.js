@@ -8,7 +8,7 @@ import mongoose from 'mongoose';
  * the map. Editing one role updates everyone holding it, which is what an
  * operator expects when they change what "Warehouse" is allowed to do.
  *
- * Access is per **area** — the top-level nav groups — not per page. A per-page
+ * Access is per **area** - the top-level nav groups - not per page. A per-page
  * matrix would be twenty rows nobody maintains correctly, and a permission
  * system nobody maintains is one that gets set to full access and forgotten.
  */
@@ -24,7 +24,7 @@ const PERMISSION_AREAS = [
   'settings',
 ];
 
-/** Ordered weakest to strongest — `LEVELS.indexOf` is the comparison. */
+/** Ordered weakest to strongest - `LEVELS.indexOf` is the comparison. */
 const PERMISSION_LEVELS = ['none', 'view', 'full'];
 
 const areaField = {
@@ -39,12 +39,12 @@ const roleSchema = new mongoose.Schema(
     slug: { type: String, required: true, unique: true, index: true },
 
     // Seeded with the product rather than created by the operator. A built-in
-    // may be edited (except the system one) but never deleted — deleting one
+    // may be edited (except the system one) but never deleted - deleting one
     // would orphan every staff member holding it.
     isBuiltIn: { type: Boolean, default: false },
 
     // The Admin role. Never editable, never deletable, and `admin` accounts
-    // bypass the role system entirely regardless of what this row says — it
+    // bypass the role system entirely regardless of what this row says - it
     // exists so the Roles & Access screen has something honest to render.
     isSystem: { type: Boolean, default: false },
 

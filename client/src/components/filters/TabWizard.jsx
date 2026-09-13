@@ -18,7 +18,7 @@ const LEVEL_KEYS = FILTER_LEVELS.map((l) => l.key);
  *
  * Behaviour that matters:
  *  - picking an option closes the overlay, flips that tab to "completed", and
- *    auto-opens the NEXT step — but only when the step was reached in sequence;
+ *    auto-opens the NEXT step - but only when the step was reached in sequence;
  *  - re-opening an already-completed tab is a non-linear edit: it applies the
  *    cascade reset from the store and stops, rather than dragging the user
  *    through every downstream step again;
@@ -27,17 +27,17 @@ const LEVEL_KEYS = FILTER_LEVELS.map((l) => l.key);
  * The steps are Component Type > Device Type > Brand > Series > Model. The
  * component leads because a business buyer knows they need a screen before they
  * know whose, and because it lets the server prune every level below it to the
- * branches that actually stock that component — so the wizard can never offer a
+ * branches that actually stock that component - so the wizard can never offer a
  * combination that returns an empty grid.
  *
  * Layout is two shapes, not one that squeezes:
  *  - lg and up: five equal cards in a grid; md wraps them 3+2;
- *  - below md: an expanding sequence. Exactly one step is open — the first one
- *    still to answer — and every other step collapses to its number. Five cards
+ *  - below md: an expanding sequence. Exactly one step is open - the first one
+ *    still to answer - and every other step collapses to its number. Five cards
  *    do not fit on a 375px phone, and the horizontal scroller this replaces put
  *    the later steps off the right edge where nobody found them.
  *
- * It writes to the same store the sidebar and mega menu write to — it is a third
+ * It writes to the same store the sidebar and mega menu write to - it is a third
  * face on one filter, not a filter of its own.
  */
 export function TabWizard() {
@@ -71,7 +71,7 @@ export function TabWizard() {
 
   // The tree is pruned to the chosen components, so steps 2-5 can only offer
   // combinations that actually return parts. Joined because the query key has to
-  // be a stable primitive — a fresh array every render would refetch forever.
+  // be a stable primitive - a fresh array every render would refetch forever.
   const componentKey = selectedComponents.join(',');
   const { data, isLoading } = useWizardTaxonomy(componentKey);
   const tree = data?.tree;
@@ -101,7 +101,7 @@ export function TabWizard() {
   // special-cased at every read below. `answers`/`answerLabels` are the path as
   // the WIZARD sees it: five steps, component type first.
   //
-  // Step 1's "answer" is the count of ticks, not a slug — it is the one
+  // Step 1's "answer" is the count of ticks, not a slug - it is the one
   // multi-select step, so what the rest of the wizard needs from it is whether
   // it has been answered at all, and its label is the list read back.
   const componentSummary =
@@ -127,7 +127,7 @@ export function TabWizard() {
       // Step 1 is MULTI-SELECT: it toggles the component facet and the overlay
       // STAYS OPEN, because one tick is rarely the whole answer and closing the
       // panel on the first would make the second tick a second trip. The buyer
-      // closes it themselves — or steps forward — when they are done choosing.
+      // closes it themselves - or steps forward - when they are done choosing.
       if (level === 'componentType') {
         wizardComponentType(option.slug, option.name);
         return;
@@ -221,8 +221,8 @@ export function TabWizard() {
           Two states, because a finished wizard and a running one are asking the
           reader for different things.
 
-          RUNNING: the answered steps stay as a row of dots — they are progress,
-          not content — and the step in hand gets a full-width row beneath them.
+          RUNNING: the answered steps stay as a row of dots - they are progress,
+          not content - and the step in hand gets a full-width row beneath them.
           Sharing one row with four dots left it ~130px wide on a 375px phone,
           where a two-word level name wrapped inside a fixed 44px pill and
           pushed against its own border.
@@ -230,7 +230,7 @@ export function TabWizard() {
           COMPLETE: the wizard steps back. Five identical ticks said only "done",
           which the reader already knows, and the concatenated line under them
           was clipped mid-word. Listing all five answers here instead would just
-          restate the chip row that sits directly below with the result count —
+          restate the chip row that sits directly below with the result count
           ActiveFilterChips is the canonical readout of everything filtering the
           grid, and two copies of it stacked on a phone is the same mistake in a
           tidier shape. So this collapses to the narrowest thing it alone owns:
@@ -286,14 +286,14 @@ export function TabWizard() {
                    * "You are here" said once, not four times.
                    *
                    * This carried a brand border AND a brand tint AND a brand
-                   * label AND a brand chevron — four signals for one piece of
+                   * label AND a brand chevron - four signals for one piece of
                    * meaning, on the only coloured block on a phone screen that
                    * already has a red announcement bar above it. The step read
                    * as an alert rather than as the next thing to tap.
                    *
                    * The border alone marks it. Everything inside goes back to
-                   * ink, which is also what makes "Choose…" — the actual
-                   * instruction — the most legible thing in the row.
+                   * ink, which is also what makes "Choose…" - the actual
+                   * instruction - the most legible thing in the row.
                    */
                   className={cn(
                     pressableSurface,
@@ -335,7 +335,7 @@ export function TabWizard() {
       {/* ---- md and up: equal cards, one per step --------------------------
           Five across only from lg. At md each card would be ~140px and the
           model names inside them truncate to nothing, so the steps wrap to a
-          3+2 grid instead — still no scroller, every label still readable. */}
+          3+2 grid instead - still no scroller, every label still readable. */}
       <ol className="hidden gap-2 p-3 md:grid md:grid-cols-3 lg:grid-cols-5">
         {FILTER_LEVELS.map((level, index) => {
           const value = answers[level.key];
@@ -430,7 +430,7 @@ export function TabWizard() {
         }}
         // Step 1's Next: carry the walk into step 2 rather than just dismissing
         // the panel. The tree is refetching against the new component ticks, so
-        // Device Type opens and renders its options when they land — the same
+        // Device Type opens and renders its options when they land - the same
         // handoff the old single-select path did automatically.
         onNext={() => {
           inSequence.current = true;

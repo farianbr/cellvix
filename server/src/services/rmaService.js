@@ -7,7 +7,7 @@ import { displayNameOf } from '../utils/displayName.js';
  * (SAAS_PLATFORM §4.1).
  *
  * `db()` reads the connection out of async-local context, which
- * `middleware/businessDb.js` opened for this request — so `db().Rma` is the
+ * `middleware/businessDb.js` opened for this request - so `db().Rma` is the
  * `Rma` collection of *this* business's database. Importing the model directly
  * would bind it to the default connection and quietly serve the wrong business
  * once the split is on.
@@ -29,7 +29,7 @@ import * as warrantyService from './warrantyService.js';
  * Two invariants meet in this file and neither bends for it:
  *
  *   - **`storeCreditService` is the only place a store-credit balance moves**
- *     (invariant 5). An RMA refund is not an exception to that rule — it is the
+ *     (invariant 5). An RMA refund is not an exception to that rule - it is the
  *     case the rule was written for. `resolveRma` calls `refundOrder` and reads
  *     the result; it never posts a ledger row itself.
  *   - **`applyStockMovement` is the only place `Product.stock` moves** (phase 5).
@@ -37,7 +37,7 @@ import * as warrantyService from './warrantyService.js';
  *     quantity that reappeared on the shelf has a document behind it.
  *
  * The status ladder is a real workflow, not a label. A part is requested,
- * approved, sent back, received, inspected, then resolved — and resolving
+ * approved, sent back, received, inspected, then resolved - and resolving
  * something that has not physically arrived is exactly the mistake the ladder
  * exists to prevent, so the transitions below are enforced rather than trusted.
  */
@@ -47,7 +47,7 @@ import * as warrantyService from './warrantyService.js';
  *
  * `rejected` is reachable from every open rung: a return can be refused the
  * moment it is understood, not only after it has been shipped back. And
- * `resolved` is reachable only from `inspecting` — the whole point of an
+ * `resolved` is reachable only from `inspecting` - the whole point of an
  * inspection step is that the resolution follows it.
  */
 const TRANSITIONS = {
@@ -93,7 +93,7 @@ async function nextRmaNumber() {
  * Age in whole days, and whether it has passed the SLA.
  *
  * **Age stops when the RMA closes.** A return resolved in two days should not
- * still be accruing age six months later — the Age column drives the operator's
+ * still be accruing age six months later - the Age column drives the operator's
  * day, and a resolved row shouting for attention teaches them to ignore it.
  */
 function ageOf(rma, slaDays) {
@@ -113,7 +113,7 @@ function shapeRma(rma, slaDays) {
     /**
      * The account, labelled by the PERSON (§0).
      *
-     * The gate was `businessName` existing — so a sole trader, who is allowed
+     * The gate was `businessName` existing - so a sole trader, who is allowed
      * to have none, fell to the else branch and lost their id along with their
      * name, rendering as a dash nothing could link to. The gate is now "did the
      * populate run", which is the question that was actually being asked.
@@ -128,7 +128,7 @@ function shapeRma(rma, slaDays) {
         }
       : {
           id: rma.user?.toString() ?? null,
-          displayName: '—',
+          displayName: '-',
           businessName: null,
           contactName: null,
           email: null,
@@ -174,7 +174,7 @@ function shapeRma(rma, slaDays) {
 
 /**
  * The value of the lines being returned, from the prices the order actually
- * charged. This is a **proposal**, not a decision — the operator can refund
+ * charged. This is a **proposal**, not a decision - the operator can refund
  * less, and `resolveRma` still checks it against what the order has left to
  * refund.
  */
@@ -232,7 +232,7 @@ async function listRmas({ q, status, from, to, user, business } = {}) {
 
   let shaped = rmas.map((rma) => shapeRma(rma, slaDays));
 
-  // `overdue` is a reading of age, so it cannot be a Mongo filter — it is
+  // `overdue` is a reading of age, so it cannot be a Mongo filter - it is
   // applied after shaping, on the same computation the Age column shows.
   if (status === 'overdue') shaped = shaped.filter((rma) => rma.overSla);
 
@@ -277,8 +277,8 @@ async function getRma(id) {
    * Warranty per returned line.
    *
    * Reported, never enforced: an out-of-warranty return is a normal commercial
-   * decision — goodwill, or a failure the relationship covers even though the
-   * warranty does not — and the operator makes it with the fact in front of
+   * decision - goodwill, or a failure the relationship covers even though the
+   * warranty does not - and the operator makes it with the fact in front of
    * them rather than being blocked by it (see warrantyService).
    *
    * Matched by SKU against the order's own lines, because the RMA line carries
@@ -301,7 +301,7 @@ async function getRma(id) {
     rma: shaped,
     warranty,
     // What a refund resolution would propose, and what the order can actually
-    // take — shown together so an operator is never asked to guess.
+    // take - shown together so an operator is never asked to guess.
     refund: {
       proposed: proposedRefund(rma),
       orderTotal: rma.order?.total ?? 0,
@@ -400,7 +400,7 @@ async function createRma(body, createdBy) {
 /**
  * Move an RMA along its ladder.
  *
- * `resolved` is deliberately NOT reachable here — resolving decides what
+ * `resolved` is deliberately NOT reachable here - resolving decides what
  * happens to money and stock, so it has its own endpoint that takes the
  * decision with it. A status route that could silently resolve an RMA would be
  * a status route that moves money.
@@ -412,7 +412,7 @@ async function setRmaStatus(id, { status, note }) {
 
   if (status === 'resolved') {
     throw ApiError.badRequest(
-      'Resolving an RMA decides a refund or a replacement — use the resolve action so that decision is recorded with it.',
+      'Resolving an RMA decides a refund or a replacement - use the resolve action so that decision is recorded with it.',
       'USE_RESOLVE',
     );
   }
@@ -432,7 +432,7 @@ async function setRmaStatus(id, { status, note }) {
   return getRma(rma._id.toString());
 }
 
-/** Inspection findings — the per-item condition and disposition. */
+/** Inspection findings - the per-item condition and disposition. */
 async function inspectRma(id, { items, inspectionNotes }) {
   const query = isObjectId(id) ? { _id: id } : { rmaNumber: String(id) };
   const rma = await db().Rma.findOne(query);
@@ -440,7 +440,7 @@ async function inspectRma(id, { items, inspectionNotes }) {
 
   if (['resolved', 'rejected'].includes(rma.status)) {
     throw ApiError.badRequest(
-      `${rma.rmaNumber} is ${rma.status} — its inspection is closed.`,
+      `${rma.rmaNumber} is ${rma.status} - its inspection is closed.`,
       'RMA_CLOSED',
     );
   }
@@ -461,7 +461,7 @@ async function inspectRma(id, { items, inspectionNotes }) {
 }
 
 /**
- * Resolve: refund, replace or reject — and restock what inspection kept.
+ * Resolve: refund, replace or reject - and restock what inspection kept.
  *
  * **The refund goes through `storeCreditService.refundOrder`** (invariant 5),
  * which owns the refundable cap, writes the ledger row, updates the order's
@@ -469,7 +469,7 @@ async function inspectRma(id, { items, inspectionNotes }) {
  * a balance by hand.
  *
  * **Restocking goes through `applyStockMovement`**, typed `return`, and only
- * for lines inspection marked `restock` — a customer can be refunded for a part
+ * for lines inspection marked `restock` - a customer can be refunded for a part
  * that is scrapped, and conflating the two is how a warehouse ends up with
  * phantom inventory. `restockedAt` guards against a second resolve putting the
  * same units back twice.
@@ -484,9 +484,9 @@ async function resolveRma(id, { resolution, amountDollars, note }, adminId) {
   }
   if (rma.status !== 'inspecting') {
     // The inspection step is the point. Resolving before it means deciding on
-    // goods nobody has looked at — and often on goods that have not arrived.
+    // goods nobody has looked at - and often on goods that have not arrived.
     throw ApiError.badRequest(
-      `${rma.rmaNumber} is ${rma.status.replace('_', ' ')} — it has to be inspected before it can be resolved.`,
+      `${rma.rmaNumber} is ${rma.status.replace('_', ' ')} - it has to be inspected before it can be resolved.`,
       'RMA_NOT_INSPECTED',
     );
   }
@@ -502,14 +502,14 @@ async function resolveRma(id, { resolution, amountDollars, note }, adminId) {
 
     // `refundOrder` owns the refundable cap and the ledger write. It throws
     // REFUND_TOO_LARGE if this exceeds what the order has left, which is the
-    // check that must not be duplicated here — one rule, one place.
+    // check that must not be duplicated here - one rule, one place.
     const posted = await storeCredit.refundOrder(
       rma.orderNumber,
       { amount, note: note || `RMA ${rma.rmaNumber}` },
       adminId,
     );
 
-    // `refundOrder` returns `{ balance, entry, refundedTotal, orderTotal }` —
+    // `refundOrder` returns `{ balance, entry, refundedTotal, orderTotal }`
     // the ledger row is `entry`, and its id is what links this RMA to the
     // movement it caused.
     rma.refundAmount = amount;

@@ -51,7 +51,7 @@ import {
 } from './cellshoppe.data.js';
 import '../models/Role.js';
 import Business from '../models/Business.js';
-// Registers the schema so `controlModels()` can bind it — the seed writes a
+// Registers the schema so `controlModels()` can bind it - the seed writes a
 // tenant, which is a control-plane record.
 import '../models/Tenant.js';
 import { ensureBuiltInRoles, ensureDefaultBusiness, nextBusinessCode } from '../services/accessService.js';
@@ -63,8 +63,8 @@ import { ensureReferralCode } from '../services/referralService.js';
 /**
  * Run a block of seeding inside one business's database.
  *
- * Every model the block touches — directly, or through a service several layers
- * down — resolves to this business's connection, because that is what
+ * Every model the block touches - directly, or through a service several layers
+ * down - resolves to this business's connection, because that is what
  * `runInBusiness` puts in async-local context. It is the same mechanism the
  * request pipeline uses; a script simply has to open the context itself, since
  * there is no middleware to do it.
@@ -225,7 +225,7 @@ const DEMO_USERS = [
  * history the account screens and the demo login are written around, and
  * anything else rotates through the other approved buyers. Every order used to
  * belong to the primary buyer, which left the admin Orders list a single-column
- * screen — no way to see the customer filter do anything, and every seeded
+ * screen - no way to see the customer filter do anything, and every seeded
  * return came from the same account.
  *
  * The early rungs of the status ladder are represented on purpose: a board
@@ -262,7 +262,7 @@ const CARRIERS = [
  *
  * **This writes into more than one database.** Business
  * records go to the business's own database and the control plane keeps
- * tenants, plans, super admins and the `Business` documents themselves — so the
+ * tenants, plans, super admins and the `Business` documents themselves - so the
  * seed cannot be a flat sequence of `insertMany` calls against one connection
  * any more. `inBusiness()` below is what puts each block in the right place, and
  * with the split off every one of those contexts resolves to the same
@@ -275,8 +275,8 @@ async function seedDatabase({ quiet = false } = {}) {
    * Drop each business database outright, rather than clearing collections.
    *
    * A collection-by-collection wipe can only clear collections the seed knows
-   * about, so anything left by an older version of the seed — or by a migration
-   * that has since been removed — survives forever. Dropping the database is
+   * about, so anything left by an older version of the seed - or by a migration
+   * that has since been removed - survives forever. Dropping the database is
    * the only wipe that is actually complete, and under the split it is cheap
    * because each business has its own.
    *
@@ -335,7 +335,7 @@ async function seedDatabase({ quiet = false } = {}) {
      * It is also where the smoke suite's residue accumulated. `npm run smoke`
      * creates accounts to exercise the approval flow and does not clean them
      * up, so a database that had been smoke-tested a few times was carrying
-     * ten `smoke-…@example.test` users and their notifications — visible in
+     * ten `smoke-…@example.test` users and their notifications - visible in
      * the admin panel, and indistinguishable from demo data to anyone reading
      * the screen.
      */
@@ -353,7 +353,7 @@ async function seedDatabase({ quiet = false } = {}) {
   // The business first: roles are per-business and cannot be written until
   // there is a business database to write them into. `ensureBuiltInRoles` is
   // therefore called inside each business's own context further down, not here
-  // — called here it wrote Cellvix's four roles into the control database and
+  // - called here it wrote Cellvix's four roles into the control database and
   // left every seeded staff account pointing at a role its own business did not
   // have.
   const defaultBusiness = await ensureDefaultBusiness();
@@ -363,12 +363,12 @@ async function seedDatabase({ quiet = false } = {}) {
    *
    * **A tenant is an account, not a business.** Cellvix and CellShoppe are two
    * businesses under one subscription, which is the case the whole slot model
-   * exists for — and the case the seed used to leave unbuilt: both businesses
+   * exists for - and the case the seed used to leave unbuilt: both businesses
    * were created with no tenant at all, so the console's slot arithmetic read
    * zero of three used and the tenant-status gate had nothing to act on.
    *
    * Upserted by slug so a re-seed keeps whatever a super admin has since
-   * changed about the account — its plan, its slot grant, its status.
+   * changed about the account - its plan, its slot grant, its status.
    */
   const tenant = await controlModels().Tenant.findOneAndUpdate(
     { slug: 'cellvix-group' },
@@ -387,7 +387,7 @@ async function seedDatabase({ quiet = false } = {}) {
   );
 
   // `ensureDefaultBusiness` predates tenancy and creates Cellvix with no owner,
-  // so the link is made here rather than there — that function also runs on a
+  // so the link is made here rather than there - that function also runs on a
   // bare boot, where no tenant exists to point at.
   if (!defaultBusiness.tenant) {
     defaultBusiness.tenant = tenant._id;
@@ -401,7 +401,7 @@ async function seedDatabase({ quiet = false } = {}) {
    * **CellShoppe is service-based**, so its panel renders Tickets and Quotes
    * where Cellvix renders Orders and Returns, and it has no storefront at all
    * (SAAS_PLATFORM §1.1). Seeding both is what makes the switcher demonstrate
-   * something rather than list one row — and what proves the feature resolver
+   * something rather than list one row - and what proves the feature resolver
    * actually reads the type rather than always answering with Cellvix's set.
    */
   const serviceBusiness = await Business.create({
@@ -414,7 +414,7 @@ async function seedDatabase({ quiet = false } = {}) {
     businessType: 'service',
     status: 'active',
     colorToken: 'info',
-    // Owned by the same tenant as Cellvix — one account, two businesses, which
+    // Owned by the same tenant as Cellvix - one account, two businesses, which
     // is what the switcher and the slot model exist for.
     tenant: tenant._id,
     slotGrantedAt: new Date(),
@@ -442,7 +442,7 @@ async function seedDatabase({ quiet = false } = {}) {
    *
    * The wrap is deliberately not re-indented. Several hundred lines moving one
    * level would show as a wholly rewritten file in a diff, burying the handful
-   * of lines that carry the actual change — and this restructure is exactly the
+   * of lines that carry the actual change - and this restructure is exactly the
    * kind that needs to stay readable afterwards.
    *
    * The CellShoppe block further down opens its own context and closes it
@@ -525,7 +525,7 @@ async function seedDatabase({ quiet = false } = {}) {
     // CASL consent (§6.13). Buyers register through a form that records this;
     // seeded buyers get the same record so the marketing screens have a real
     // population to work with. Without it every campaign resolves to an empty
-    // audience and the screens look broken when they are in fact correct —
+    // audience and the screens look broken when they are in fact correct
     // consent is closed by default, and a seeded account is still an account.
     //
     // Staff and admin are Cellvix, not customers, and are never in an
@@ -544,14 +544,14 @@ async function seedDatabase({ quiet = false } = {}) {
     }
 
     // Staff are Cellvix people: they hold a role and stand in an business. An
-    // admin holds neither — it bypasses the role system by design (§7.6).
+    // admin holds neither - it bypasses the role system by design (§7.6).
     if (staffRoleSlug) {
       user.staffRole = rolesBySlug.get(staffRoleSlug)?._id ?? null;
       user.business = defaultBusiness._id;
     }
 
     // Referral code, minted on approval exactly as `approveUser` does it
-    // (§6.13) — a pending business does not get one.
+    // (§6.13) - a pending business does not get one.
     if (data.status === 'approved' && data.role === 'buyer') {
       await ensureReferralCode(user);
     }
@@ -559,7 +559,7 @@ async function seedDatabase({ quiet = false } = {}) {
     users.push(await user.save());
   }
 
-  // Referral attribution, once every account exists — it points at another
+  // Referral attribution, once every account exists - it points at another
   // user's id, so it cannot be set while that user is still being created.
   // Set here and never again: attribution is fixed at registration (§6.13).
   for (const data of DEMO_USERS) {
@@ -583,7 +583,7 @@ async function seedDatabase({ quiet = false } = {}) {
   /**
    * The other approved buyers an order can belong to.
    *
-   * An account needs an address before it can be shipped to — the order stores
+   * An account needs an address before it can be shipped to - the order stores
    * a delivery address copied off the account, and one without an address would
    * produce an order nobody could dispatch. Falls back to the primary buyer if
    * no other approved account has one, so the seed still works on a cut-down
@@ -624,7 +624,7 @@ async function seedDatabase({ quiet = false } = {}) {
         slug: product.slug,
         grade: product.grade,
         // Carried so order history renders the same part illustration as the
-        // grid — without these the account page falls back to a generic drawing.
+        // grid - without these the account page falls back to a generic drawing.
         partType: product.partType,
         partTypeLabel: product.partTypeLabel,
         qty,
@@ -646,8 +646,8 @@ async function seedDatabase({ quiet = false } = {}) {
     /**
      * The rungs this order actually climbed.
      *
-     * `cancelled` is not on the ladder — it is an exit that can happen from
-     * anywhere — so an order that stopped there is given the rungs it reached
+     * `cancelled` is not on the ladder - it is an exit that can happen from
+     * anywhere - so an order that stopped there is given the rungs it reached
      * before it did, plus the cancellation itself. Without this its
      * `indexOf` is -1 and the order lands with an empty timeline, which the
      * tracking stepper renders as an order that never happened.
@@ -707,7 +707,7 @@ async function seedDatabase({ quiet = false } = {}) {
         postal: buyer.addresses[0].postal,
         country: 'Canada',
       },
-      deliveryMethod: { code: 'ground', label: 'Ground — 2 to 4 business days', cost: shipping, etaDays: 3 },
+      deliveryMethod: { code: 'ground', label: 'Ground - 2 to 4 business days', cost: shipping, etaDays: 3 },
       poNumber: `PO-${4400 + index}`,
       payment: {
         method: index % 2 === 0 ? 'terms' : 'card',
@@ -726,7 +726,7 @@ async function seedDatabase({ quiet = false } = {}) {
 
   insertedOrders.forEach((order, index) => {
     // A cancelled order is never billed. It used to be impossible to reach
-    // here — every seeded order was delivered or on its way — and raising an
+    // here - every seeded order was delivered or on its way - and raising an
     // invoice for goods that were never sent would put money on the books
     // that nobody owes.
     if (order.status === 'cancelled') return;
@@ -744,7 +744,7 @@ async function seedDatabase({ quiet = false } = {}) {
       number: `INV-2026-${String(10_042 + index).padStart(5, '0')}`,
       order: order._id,
       // The order's own buyer, not the loop variable left over from building
-      // the orders above — that pointed at whoever happened to be assigned
+      // the orders above - that pointed at whoever happened to be assigned
       // last, so every invoice would have been billed to one account once the
       // order book stopped belonging to a single buyer.
       user: order.user,
@@ -755,7 +755,7 @@ async function seedDatabase({ quiet = false } = {}) {
       terms: 'net30',
       status: paid ? 'paid' : overdue ? 'overdue' : 'unpaid',
       /**
-       * Paid **somewhere between the issue date and now** — never on the due
+       * Paid **somewhere between the issue date and now** - never on the due
        * date.
        *
        * Dating the payment `dueDate` was wrong twice. A Net-30 invoice raised
@@ -871,7 +871,7 @@ async function seedDatabase({ quiet = false } = {}) {
 
   // Received stock is added to what the catalogue generator already put on the
   // shelf, and `qtyAfter` is written from the running total rather than from
-  // the receipt alone — a movement whose `qtyAfter` disagrees with the product
+  // the receipt alone - a movement whose `qtyAfter` disagrees with the product
   // is precisely the reconciliation failure the ledger exists to make visible.
   const runningStock = new Map(
     insertedProducts.map((product) => [product._id.toString(), product.stock]),
@@ -899,7 +899,7 @@ async function seedDatabase({ quiet = false } = {}) {
   log(`  purchase orders: ${insertedPos.length}`);
 
   // Point each movement at the purchase order that produced it, now that the
-  // POs have ids, and give every received part its cost — a receipt is the
+  // POs have ids, and give every received part its cost - a receipt is the
   // moment the true cost is known, which is what `receivePurchaseOrder` does.
   const poByNumber = new Map(insertedPos.map((po) => [po.poNumber, po]));
   for (const movement of movementDocs) {
@@ -938,7 +938,7 @@ async function seedDatabase({ quiet = false } = {}) {
     poExpenses.push({
       number: `EXP-${year}-${String(expenseSequence).padStart(5, '0')}`,
       date: po.receivedDate ?? po.orderDate,
-      description: `Purchase Order ${po.poNumber} — ${supplier?.name ?? 'supplier'}`,
+      description: `Purchase Order ${po.poNumber} - ${supplier?.name ?? 'supplier'}`,
       category: purchaseCategory._id,
       payee: supplier?.name,
       method: plan._method,
@@ -982,9 +982,9 @@ async function seedDatabase({ quiet = false } = {}) {
    * Supplier returns and supplier services (§6.8b, §6.8c).
    *
    * Both screens had no seeded rows at all, so each was only ever seen in its
-   * empty state. The returns are built from real purchase-order lines — you
+   * empty state. The returns are built from real purchase-order lines - you
    * cannot send back a part you never bought, which is the rule
-   * `supplierReturnService` enforces — and the services reference real expense
+   * `supplierReturnService` enforces - and the services reference real expense
    * categories, since that is what the P&L groups them by.
    */
   const supplierReturns = await db().SupplierReturn.insertMany(
@@ -998,7 +998,7 @@ async function seedDatabase({ quiet = false } = {}) {
   log(`  supplier services: ${supplierServices.length}`);
 
   // Supplier card figures, recomputed from the orders exactly as
-  // `purchaseService.refreshSupplierTotals` does — never incremented.
+  // `purchaseService.refreshSupplierTotals` does - never incremented.
   await Promise.all(
     suppliers.map(async (supplier) => {
       const [row] = await db().PurchaseOrder.aggregate([
@@ -1039,7 +1039,7 @@ async function seedDatabase({ quiet = false } = {}) {
   );
 
   /**
-   * The supplier process flow (§6.8a) — tags, portal logins and bid orders.
+   * The supplier process flow (§6.8a) - tags, portal logins and bid orders.
    *
    * Last of the purchase block, because it needs all of it: suppliers to tag
    * and invite, products to ask about, and a `cost` on each one to base a
@@ -1054,14 +1054,14 @@ async function seedDatabase({ quiet = false } = {}) {
       `${bidResult.confirmed ? `, confirmed ${bidResult.confirmed}` : ''})`,
   );
 
-  // The settings singleton, recreated from its seeded defaults — per-province
+  // The settings singleton, recreated from its seeded defaults - per-province
   // tax rates included, which the tax report reads (§9.5).
   const settings = await db().Settings.load();
 
   // ---- quotes & returns (phase 7) -----------------------------------------
   // Quotes are priced off the catalogue at a negotiated discount; returns are
   // built from real order lines, so a seeded RMA can never name a part that was
-  // not actually sold — which is the rule `rmaService.createRma` enforces.
+  // not actually sold - which is the rule `rmaService.createRma` enforces.
 
   const approvedBuyers = users.filter(
     (user) => user.status === 'approved' && user.role === 'buyer',
@@ -1092,7 +1092,7 @@ async function seedDatabase({ quiet = false } = {}) {
    */
   /**
    * Built with the parts catalogue and the quote sequence from Cellvix, but the
-   * **people come from CellShoppe** — see where this is consumed below.
+   * **people come from CellShoppe** - see where this is consumed below.
    *
    * The customers and staff are deliberately not passed here: this call runs in
    * Cellvix's context, so anything it reads from `users` belongs to the wrong
@@ -1118,8 +1118,8 @@ async function seedDatabase({ quiet = false } = {}) {
   /**
    * **Everything below runs inside CellShoppe's own database.**
    *
-   * The block is self-contained — it builds from `repairs.*` and references no
-   * Cellvix order, product or customer — which is what makes wrapping it a
+   * The block is self-contained - it builds from `repairs.*` and references no
+   * Cellvix order, product or customer - which is what makes wrapping it a
    * matter of context rather than of untangling ids across two databases.
    *
    * `business: serviceBusinessId` stays on each record even though the database
@@ -1140,7 +1140,7 @@ async function seedDatabase({ quiet = false } = {}) {
    *
    * A business seeded without them has staff accounts with no role to hold and
    * a panel whose every settings read rebuilds a document from defaults on the
-   * fly — which works, but leaves the database looking half-seeded to anybody
+   * fly - which works, but leaves the database looking half-seeded to anybody
    * inspecting it. `load()` is an upsert, so this is idempotent.
    */
   await ensureBuiltInRoles();
@@ -1152,7 +1152,7 @@ async function seedDatabase({ quiet = false } = {}) {
    * **Its records used to reference Cellvix's people.** `buildRepairs` was
    * handed Cellvix's buyers and staff and the resulting tickets were written
    * into CellShoppe's database, so every `customer` id on them pointed into a
-   * database CellShoppe cannot read — twelve tickets whose customer column was
+   * database CellShoppe cannot read - twelve tickets whose customer column was
    * structurally empty. A business owns its customers, so it seeds its own.
    */
   const shoppeRoles = await db().Role.find().select('slug').lean();
@@ -1163,7 +1163,7 @@ async function seedDatabase({ quiet = false } = {}) {
     const customer = new (db().User)({ ...spec, business: serviceBusiness._id });
     await customer.setPassword(DEMO_PASSWORD);
     customer.approvedAt = new Date(Date.now() - 60 * 86_400_000);
-    // Walk-in consumers, so they carry consent like any seeded buyer — the
+    // Walk-in consumers, so they carry consent like any seeded buyer - the
     // marketing screens need a real audience here too.
     customer.marketingConsent = {
       granted: true,
@@ -1214,7 +1214,7 @@ async function seedDatabase({ quiet = false } = {}) {
   log(`  CellShoppe purchase: ${shoppeSuppliers.length} suppliers, ${shoppeExpenses.length} expenses`);
 
   /**
-   * Booked slots — the screen that exists *because* this is a service business.
+   * Booked slots - the screen that exists *because* this is a service business.
    *
    * `scheduling.appointments` is on for a service type and off for a product
    * one (§1.1), so an empty calendar here is the most visible sign the business
@@ -1265,7 +1265,7 @@ async function seedDatabase({ quiet = false } = {}) {
    *
    * This used to be built in Cellvix's block and handed Cellvix's buyers, so
    * every ticket written here carried a `customer` id pointing into a database
-   * CellShoppe cannot read. Building it here — where its people exist — is what
+   * CellShoppe cannot read. Building it here - where its people exist - is what
    * makes the customer column on a ticket resolve to a name.
    */
   const repairs = buildRepairs({
@@ -1277,7 +1277,7 @@ async function seedDatabase({ quiet = false } = {}) {
 
   /**
    * **No admin here.** CellShoppe has staff and customers of its own, but its
-   * administrator is the *tenant's*, and lives in the control plane — one login
+   * administrator is the *tenant's*, and lives in the control plane - one login
    * reaching every business the tenant owns, switched between with the header
    * control (SAAS_PLATFORM §1).
    *
@@ -1358,7 +1358,7 @@ async function seedDatabase({ quiet = false } = {}) {
   // End of CellShoppe's database. Everything after this is Cellvix's again.
 
   /**
-   * Web quotes — storefront enquiries, before anybody has priced them.
+   * Web quotes - storefront enquiries, before anybody has priced them.
    *
    * The Web Quote screen is the queue an operator raises a real quote *from*,
    * and it had no seeded rows at all: the only thing that ever landed in
@@ -1378,7 +1378,7 @@ async function seedDatabase({ quiet = false } = {}) {
    * broken panel rather than as a business that does not do this.
    *
    * Deliberately small. These are a wholesaler's *internal* jobs, not a repair
-   * shop's queue — a dozen would misrepresent what Cellvix does.
+   * shop's queue - a dozen would misrepresent what Cellvix does.
    */
   const cellvixTickets = await db().Ticket.insertMany(
     [
@@ -1407,10 +1407,10 @@ async function seedDatabase({ quiet = false } = {}) {
 
   const cellvixAppointments = await db().Appointment.insertMany(
     [
-      { title: 'Northline pickup — pallet of screens', inDays: 0, hour: 9 },
-      { title: 'Westcoast collection — battery order', inDays: 1, hour: 11 },
-      { title: 'Courier drop — Maritime Mobile', inDays: 2, hour: 14 },
-      { title: 'Northline pickup — weekly standing order', inDays: 5, hour: 9 },
+      { title: 'Northline pickup - pallet of screens', inDays: 0, hour: 9 },
+      { title: 'Westcoast collection - battery order', inDays: 1, hour: 11 },
+      { title: 'Courier drop - Maritime Mobile', inDays: 2, hour: 14 },
+      { title: 'Northline pickup - weekly standing order', inDays: 5, hour: 9 },
     ].map((row) => {
       const startAt = new Date();
       startAt.setHours(0, 0, 0, 0);
@@ -1439,17 +1439,17 @@ async function seedDatabase({ quiet = false } = {}) {
    *
    * **One pass at the end rather than a `business:` on eight `insertMany`
    * calls.** The builders in `sales.data.js`, `purchase.data.js` and
-   * `generate.js` do not know about businesses and should not have to — they
+   * `generate.js` do not know about businesses and should not have to - they
    * build records, and which business owns one is a fact about this seed rather
    * than about the shape of an order.
    *
    * `business: null` is the filter, so this cannot touch the repair records
    * already stamped for CellShoppe above: they have a business and are skipped.
-   * That also makes it idempotent — a second run finds nothing to do.
+   * That also makes it idempotent - a second run finds nothing to do.
    *
    * **Every collection that carries the field is listed.** One left out is a
    * set of rows that belong to no business, and `businessFilter` matches
-   * exactly — so they would be invisible under every business rather than
+   * exactly - so they would be invisible under every business rather than
    * visible under all of them.
    */
   const cellvixId = defaultBusiness._id;
@@ -1477,7 +1477,7 @@ async function seedDatabase({ quiet = false } = {}) {
     `  business assignment: ${stamped.reduce((sum, r) => sum + (r.modifiedCount ?? 0), 0)} records → ${defaultBusiness.name}`,
   );
 
-  // Returned out of the business context and then out of `seedDatabase` —
+  // Returned out of the business context and then out of `seedDatabase`
   // the counts are built from variables scoped inside the wrap.
   return {
     taxonomy: bySlug.size,
@@ -1507,7 +1507,7 @@ async function seedDatabase({ quiet = false } = {}) {
   });
 }
 
-/** True when nothing has been seeded yet — drives the empty-database warning on boot. */
+/** True when nothing has been seeded yet - drives the empty-database warning on boot. */
 async function isDatabaseEmpty() {
   return (await db().Product.estimatedDocumentCount()) === 0;
 }
@@ -1524,14 +1524,14 @@ if (process.argv[1] && process.argv[1].endsWith('run.js')) {
     console.log('    pending@cellvix.ca  pending approval');
     console.log('    admin@cellvix.ca    admin');
     // The portal is a separate session against a separate collection (§6.8a),
-    // so its logins are listed apart — reading them as a fourth kind of user
+    // so its logins are listed apart - reading them as a fourth kind of user
     // account is exactly the confusion the split exists to prevent.
     console.log(`\n  Supplier portal at /supplier (same password)`);
     console.log('    orders@northbridgeparts.example     quoted most, won one');
     console.log('    sales@kaiyuan-components.example    the best complete quote');
     console.log('    hello@pacificcell.example           batteries and charging ports');
     console.log('    procurement@atlasoem.example        declined one request');
-    console.log('    sales@rivettools.example            deactivated — cannot sign in\n');
+    console.log('    sales@rivettools.example            deactivated - cannot sign in\n');
     await disconnectDb();
     await mongoose.connection.close();
     process.exit(0);

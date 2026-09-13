@@ -5,7 +5,7 @@ import { db } from '../db/models.js';
 // Side-effect import, no binding: `getTicket` populates `quote`, and mongoose
 // resolves a `ref` by model name at call time. Without this the populate throws
 // "Schema hasn't been registered for model Quote" in any process that has not
-// already loaded a module importing it — every entry point except the full
+// already loaded a module importing it - every entry point except the full
 // server, which is why a script or a test hit it and the app did not.
 import '../models/Quote.js';
 import orderBuilder from './orderBuilder.js';
@@ -24,7 +24,7 @@ import { likeRegex } from '../utils/regex.js';
  *     than resolving a `User` first, which is why this list is one query where
  *     `rmaService.listRmas` needs two.
  *   - **Status moves are unrestricted, and every move is recorded.** A repair
- *     genuinely goes backwards — parts arrive wrong, a fix does not hold — so
+ *     genuinely goes backwards - parts arrive wrong, a fix does not hold - so
  *     the `timeline` is the control rather than a transition table. See the
  *     note on the model.
  *
@@ -41,7 +41,7 @@ import { likeRegex } from '../utils/regex.js';
  * problem, which happens one rung earlier: a device sitting on the pickup shelf
  * is finished work, and an Age column that keeps escalating it is nagging about
  * something no technician can act on. The SLA measures the bench, so it reads
- * the second list — and `TICKET_OPEN_STATUSES` on the model is the same
+ * the second list - and `TICKET_OPEN_STATUSES` on the model is the same
  * reading, which is what keeps the sidebar badge and this column agreeing.
  */
 const CLOSED_STATUSES = ['completed', 'cancelled'];
@@ -79,7 +79,7 @@ async function nextTicketNumber() {
 /**
  * Age in whole days, and whether it has passed the SLA.
  *
- * **Age stops when the ticket closes**, at `closedAt` rather than `updatedAt` —
+ * **Age stops when the ticket closes**, at `closedAt` rather than `updatedAt`
  * editing a note on a repair finished last month must not make it look like it
  * finished today. Only live work carries the warning, because a row that always
  * shouts is a row an operator learns to ignore.
@@ -90,7 +90,7 @@ function ageOf(ticket, slaDays) {
   const days = Math.max(0, Math.floor((until - new Date(ticket.createdAt)) / 86_400_000));
 
   // Waiting on a customer to collect is not an overdue repair, so the warning
-  // reads `SETTLED_STATUSES` while the greyed-out treatment reads `closed` —
+  // reads `SETTLED_STATUSES` while the greyed-out treatment reads `closed`
   // a ticket on the pickup shelf still shows its live age, just without the
   // escalation.
   const settled = SETTLED_STATUSES.includes(ticket.status);
@@ -226,7 +226,7 @@ function shapeTicket(ticket, slaDays) {
 /**
  * Who a ticket can be assigned to: staff and admins, never buyers.
  *
- * Returned alongside the list because `/admin/staff` is admin-only — a sales
+ * Returned alongside the list because `/admin/staff` is admin-only - a sales
  * user who is allowed to see tickets must still be able to filter them by
  * technician, and asking them to call an endpoint they cannot reach is not a
  * filter, it is an empty dropdown.
@@ -249,7 +249,7 @@ async function listTechnicians() {
  * The ticket list behind `/admin/tickets`.
  *
  * `counts` covers every pill and is computed over the whole collection, not the
- * filtered page — a pill showing the count of what the current filter already
+ * filtered page - a pill showing the count of what the current filter already
  * excludes would be useless. `open` and `overdue` are readings of age, so they
  * are counted from the open rows rather than asked of Mongo.
  */
@@ -282,7 +282,7 @@ async function listTickets({
   if (priority && priority !== 'all') query.priority = String(priority);
 
   // The customer profile's Tickets tab. Only tickets actually linked to an
-  // account — a walk-in repair carries no `user` and belongs to nobody's list.
+  // account - a walk-in repair carries no `user` and belongs to nobody's list.
   if (user && isObjectId(user)) query.user = user;
 
   if (technician === 'unassigned') query.technician = null;
@@ -310,7 +310,7 @@ async function listTickets({
   }
 
   // Per-page is an operator preference on the filter menu, so it is clamped
-  // rather than trusted — an unbounded `limit` is a denial of service with a
+  // rather than trusted - an unbounded `limit` is a denial of service with a
   // friendly name.
   const perPage = Math.min(Math.max(Number(limit) || 25, 5), 200);
   const currentPage = Math.max(Number(page) || 1, 1);
@@ -327,7 +327,7 @@ async function listTickets({
 
   let shaped = rows.map((ticket) => shapeTicket(ticket, slaDays));
 
-  // `overdue` is a reading of age, so it cannot be a Mongo filter — it is
+  // `overdue` is a reading of age, so it cannot be a Mongo filter - it is
   // applied after shaping, on the same computation the Age column shows.
   if (status === 'overdue') shaped = shaped.filter((ticket) => ticket.overSla);
 
@@ -366,7 +366,7 @@ async function getTicket(id) {
   const ticket = await db().Ticket.findOne(query)
     .populate('technician', 'contactName businessName email')
     // The lineage strip names its neighbours, so it needs their numbers rather
-    // than their ids — an operator navigates by QT-101018, not by an ObjectId.
+    // than their ids - an operator navigates by QT-101018, not by an ObjectId.
     .populate('quote', 'quoteNumber')
     .populate('invoice', 'number')
     .lean();
@@ -469,7 +469,7 @@ async function createTicket(body, createdBy) {
     taxRate: body.taxRate ?? 0,
   });
 
-  // The first device also fills the legacy single-device columns — see the note
+  // The first device also fills the legacy single-device columns - see the note
   // on `devices` in the model. A ticket taken on the short form has no devices
   // array at all, so those columns are the only record of what came in.
   const lead = devices[0];
@@ -480,7 +480,7 @@ async function createTicket(body, createdBy) {
     customerName: body.customerName,
     customerPhone: body.customerPhone,
     customerEmail: body.customerEmail || undefined,
-    // Set only when the ticket was raised against a known account — a walk-in
+    // Set only when the ticket was raised against a known account - a walk-in
     // has none, and `null` is the model's own default for that.
     user: body.user || null,
 
@@ -505,7 +505,7 @@ async function createTicket(body, createdBy) {
      * A counter that has listed three services and two parts has already said
      * what the job costs; asking them to total it themselves into a separate
      * box is asking for a number that disagrees with the lines beside it. The
-     * short form — no devices, just an estimate — still works, which is what
+     * short form - no devices, just an estimate - still works, which is what
      * keeps a thirty-second walk-in intake possible.
      */
     estimateCents: devices.length ? priced.total : toCents(body.estimateDollars),
@@ -531,7 +531,7 @@ async function createTicket(body, createdBy) {
 /**
  * Move a ticket's status.
  *
- * Any status to any status by design (see the file header) — but never
+ * Any status to any status by design (see the file header) - but never
  * silently: each move appends to `timeline`. `closedAt` is stamped the first
  * time the ticket closes and cleared if it is reopened, so age measures the
  * work rather than the last edit.
@@ -561,7 +561,7 @@ async function setTicketStatus(id, body, actor) {
 /**
  * Edit a ticket's details.
  *
- * Status is deliberately not editable here — it moves through
+ * Status is deliberately not editable here - it moves through
  * `setTicketStatus`, which is the only path that keeps the timeline honest.
  */
 async function updateTicket(id, body) {
@@ -608,7 +608,7 @@ async function deleteTicket(id) {
  *
  * A repair is quoted, the customer leaves a deposit, and the invoice does not
  * exist until the work is finished. The payment is held on the ticket and
- * carried onto the invoice when it converts — see `convertToInvoice`.
+ * carried onto the invoice when it converts - see `convertToInvoice`.
  *
  * Amounts are integer cents and the caller sends dollars, converted here rather
  * than in the controller so every path through this file agrees about units.
@@ -624,7 +624,7 @@ async function recordDeposit(id, { amountDollars, method = 'cash', note } = {}, 
   if (!ticket) throw ApiError.notFound('Ticket not found.', 'TICKET_NOT_FOUND');
 
   if (ticket.invoice) {
-    // Once it is an invoice, a payment belongs on the invoice — recording it
+    // Once it is an invoice, a payment belongs on the invoice - recording it
     // here would leave two records of one payment and no way to reconcile them.
     throw ApiError.badRequest(
       'This ticket is already invoiced. Record the payment against the invoice.',
@@ -668,7 +668,7 @@ async function removeDeposit(id, depositId) {
  *
  * **The ticket is the source of truth for what is billed.** Its devices,
  * services and parts become the invoice's lines, and its tax rate and discount
- * come across with them — the operator priced the job once, on the ticket, and
+ * come across with them - the operator priced the job once, on the ticket, and
  * re-keying it onto an invoice is how the two end up disagreeing.
  *
  * **Deposits become payments.** Money already taken is recorded against the new
@@ -711,7 +711,7 @@ async function convertToInvoice(id, { terms = 'prepaid' } = {}, actor) {
     );
   }
 
-  // The devices come across whole — the invoice's own `devices` array has the
+  // The devices come across whole - the invoice's own `devices` array has the
   // same shape, so the document reproduces the job rather than summarising it.
   const devices = (ticket.devices ?? []).map((device) => ({
     category: device.category,
@@ -768,7 +768,7 @@ async function convertToInvoice(id, { terms = 'prepaid' } = {}, actor) {
   });
 
   // `amountPaid` and `status` are derived from those payments rather than
-  // assumed — an invoice fully covered by deposits is already settled.
+  // assumed - an invoice fully covered by deposits is already settled.
   const paid = invoice.payments.reduce((sum, payment) => sum + payment.amount, 0);
   invoice.amountPaid = paid;
   if (paid >= invoice.amount) {

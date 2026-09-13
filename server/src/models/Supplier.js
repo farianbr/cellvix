@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 /**
  * A business Cellvix buys stock from.
  *
- * `ordersCount` and `totalSpent` are denormalised caches for the card grid —
+ * `ordersCount` and `totalSpent` are denormalised caches for the card grid
  * fifteen supplier cards would otherwise mean fifteen aggregations on every
  * paint. They are recomputed by `purchaseService` whenever a purchase order
  * moves money, never written by a client, and the purchase-order collection
@@ -43,7 +43,34 @@ const supplierSchema = new mongoose.Schema(
     isActive: { type: Boolean, default: true, index: true },
 
     /**
-     * What this supplier agreed to be contacted on — the same four channels,
+     * The agreements this supplier must sign before they may trade.
+     *
+     * **A list, not one document** (re-ruled 2026-09-13). A supplier often signs
+     * more than one thing: the master supply agreement, plus an NDA, plus a
+     * quality annex for a particular product line. Holding a single reference
+     * forced an operator to choose which of those mattered, and forced a second
+     * agreement to be pasted into the first as extra clauses.
+     *
+     * Chosen when the supplier is created and **editable afterwards** - adding
+     * one to an existing supplier is the normal case, not an exception, and it
+     * puts them back behind the gate until they sign the new one.
+     *
+     * Empty means no agreement is required, which is a real answer for a
+     * supplier whose paperwork was done on paper.
+     *
+     * The signatures live on `SupplierAgreement`, one row per agreement: a
+     * signed document has clause notes, initials and an image, and burying that
+     * in the supplier record would make every supplier read pull back a stack of
+     * contracts.
+     */
+    agreementTemplates: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: 'AgreementTemplate' }],
+      default: [],
+      index: true,
+    },
+
+    /**
+     * What this supplier agreed to be contacted on - the same four channels,
      * and the same shape, as `User.contactConsent` (CASL, §6.13).
      *
      * A supplier is a business contact, not a customer, and CASL's implied
@@ -72,7 +99,7 @@ const supplierSchema = new mongoose.Schema(
      * **Consent and preference are different facts.** `contactConsent` says what
      * we are *allowed* to use; this says which of those they would rather we
      * did. A supplier who consents to all four and prefers WhatsApp gets one
-     * message on WhatsApp, not four messages everywhere — and one who prefers a
+     * message on WhatsApp, not four messages everywhere - and one who prefers a
      * channel they have not consented to is a contradiction the send path
      * resolves in consent's favour, because permission outranks preference.
      *
@@ -91,7 +118,7 @@ const supplierSchema = new mongoose.Schema(
      * An application is a real Supplier document from the moment it arrives, so
      * the purchasing team reviews it on the screen they already use rather than
      * in a second inbox. What keeps it out of the working set is `isActive:
-     * false` on create — nothing can raise a purchase order against it, and it
+     * false` on create - nothing can raise a purchase order against it, and it
      * does not appear in the supplier picker, until somebody activates it.
      *
      * `appliedAt` is what separates "applied and not yet reviewed" from "a
@@ -103,7 +130,7 @@ const supplierSchema = new mongoose.Schema(
     supplies: { type: String, trim: true, maxlength: 600 },
 
     /**
-     * Which component types this supplier is tagged with — `Product.partType`
+     * Which component types this supplier is tagged with - `Product.partType`
      * slugs, the same vocabulary the storefront's step 1 offers.
      *
      * **The tag is what makes supplier bidding possible.** A purchasing clerk
@@ -117,7 +144,7 @@ const supplierSchema = new mongoose.Schema(
      * Deliberately NOT a taxonomy reference. A component type cuts across the
      * device tree and has no node of its own (see `taxonomyService`), so this
      * stores the slug and `taxonomyService.getComponentTypes()` stays the one
-     * place that list is derived — from the catalogue, so a tag can never name
+     * place that list is derived - from the catalogue, so a tag can never name
      * a component nothing is sold under.
      */
     componentTypes: { type: [String], default: [], index: true },
@@ -130,7 +157,7 @@ const supplierSchema = new mongoose.Schema(
      * `User.role` gates the buyer storefront and the admin panel, and a
      * supplier belongs to neither. A fourth role would mean every `requireAuth`
      * route in the app silently gained a population that has no cart, no
-     * orders, no invoices and no credit — a supplier session must not reach
+     * orders, no invoices and no credit - a supplier session must not reach
      * those routes at all, and the way to guarantee that rather than remember
      * it is for the session to carry a different cookie, which `authenticate`
      * does not read.
@@ -138,7 +165,7 @@ const supplierSchema = new mongoose.Schema(
      * `select: false` on the hash for the reason `User.passwordHash` has it: a
      * serializer that forgets to strip a field it never loaded cannot leak it.
      *
-     * `portalInviteAt` is when credentials were last sent — what the admin's
+     * `portalInviteAt` is when credentials were last sent - what the admin's
      * **Resend portal link** button reports.
      */
     passwordHash: { type: String, select: false },
@@ -150,7 +177,7 @@ const supplierSchema = new mongoose.Schema(
      * `User.resetTokenHash`: the mail carries the only copy of the plaintext,
      * so a stolen database cannot be used to set a supplier's password.
      *
-     * `portalTokenAt` is the EXPIRY, not the issue time — checked on use, the
+     * `portalTokenAt` is the EXPIRY, not the issue time - checked on use, the
      * way the buyer-side reset token is.
      */
     portalTokenHash: { type: String, select: false },

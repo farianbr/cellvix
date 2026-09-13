@@ -9,8 +9,8 @@ import PartIllustration from './PartIllustration';
  *
  * The caption used to sit inside the top of the frame and inset the drawing
  * below it, which cost the part a third of its own height on the surface where
- * a buyer is scanning for the part. It is a backdrop now — full-bleed, centred,
- * in ink at very low opacity — so the picture keeps the whole frame and the
+ * a buyer is scanning for the part. It is a backdrop now - full-bleed, centred,
+ * in ink at very low opacity - so the picture keeps the whole frame and the
  * watermark reads as texture behind it rather than as a label competing with
  * it. The part type and the model both
  * moved down into the card body, where the rest of the text details live.
@@ -19,15 +19,15 @@ import PartIllustration from './PartIllustration';
  * with the FRAME's width (@container), so a two-up phone card and a 600px
  * detail panel get the same layout at different sizes.
  *
- * `caption={false}` for the many small placements — cart lines, search rows,
- * order items — where the frame is ~40px and any text in it would be noise.
+ * `caption={false}` for the many small placements - cart lines, search rows,
+ * order items - where the frame is ~40px and any text in it would be noise.
  */
 /**
  * A product's picture: its own photograph, else the brand stock photo for its
  * part type, else the line drawing.
  *
  * The fallback chain lives here rather than at each call site because there are
- * a dozen of them — cards, cart lines, search rows, order items — and a chain
+ * a dozen of them - cards, cart lines, search rows, order items - and a chain
  * copied a dozen times is a chain that drifts.
  *
  * `alt=""` throughout: every placement already names the product in text beside
@@ -74,13 +74,13 @@ export function PartFrame({
         // decorative echo of a name that is already in the accessibility tree.
         //
         // `break-words` and the container-driven size keep a long model name
-        // inside the frame rather than clipping it — it fills the width, which
+        // inside the frame rather than clipping it - it fills the width, which
         // is the point, but it wraps to do it.
         <div
           className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center px-[2cqw]"
           aria-hidden="true"
         >
-          {/* Sized in `cqw` — a percentage of the FRAME's own width — rather
+          {/* Sized in `cqw` - a percentage of the FRAME's own width - rather
               than at two breakpoints. Stepped sizes left a dead band between
               them: the detail page on a phone is a ~350px frame, which fell
               under the 420px step and took the 40px type, so a full-bleed
@@ -94,7 +94,7 @@ export function PartFrame({
               "GALAXY S21 ULTRA" as a label, finds a phone sitting across the
               middle of it, and the whole frame reads as a rendering fault
               rather than as a designed surface. It is a watermark, not a
-              caption — the product's name is set properly two lines below it,
+              caption - the product's name is set properly two lines below it,
               so nothing is lost by making this texture again.
 
               8% ink instead of 25% brand does that. Ink, because a red

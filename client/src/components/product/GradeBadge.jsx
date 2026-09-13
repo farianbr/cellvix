@@ -3,7 +3,7 @@ import { GRADES } from '@/lib/constants';
 
 /**
  * The circular grade overlay that sits on the product image (brief §6, "PULL A").
- * Deliberately reads as a stamp, not a sticker — it is the first thing a business
+ * Deliberately reads as a stamp, not a sticker - it is the first thing a business
  * buyer looks for.
  *
  * Everything here is a fight between a circle and a word:
@@ -13,9 +13,9 @@ import { GRADES } from '@/lib/constants';
  *     never does; two short ones only have to fit a chord.
  *  2. This does NOT use the `eyebrow` utility, and must not. `eyebrow` hard-sets
  *     `font-size: 11px` and `letter-spacing: 0.08em`, and it beats any `text-[…]`
- *     or `tracking-[…]` put beside it — a per-line size here is not a preference,
+ *     or `tracking-[…]` put beside it - a per-line size here is not a preference,
  *     it is the whole mechanism, so the four properties are spelled out instead.
- *  3. The circle grows with the CARD (@container), not the viewport — 40px on a
+ *  3. The circle grows with the CARD (@container), not the viewport - 40px on a
  *     two-up phone card, 44px once there is room for it.
  */
 export function GradeBadge({ grade, className }) {
@@ -24,7 +24,7 @@ export function GradeBadge({ grade, className }) {
   /**
    * A pale tint with dark ink, not a saturated fill with white text.
    *
-   * Four solid discs — green, blue, amber, near-black — sat on the four product
+   * Four solid discs - green, blue, amber, near-black - sat on the four product
    * images of a single grid row, and each one was the highest-chroma object in
    * its card. The grade genuinely matters to a business buyer, which is the
    * argument for the badge existing at all; it is not the argument for it
@@ -36,7 +36,7 @@ export function GradeBadge({ grade, className }) {
    *
    * All five are tints, PULL-A included. It carried the brand gradient for a
    * while, which made one grade in a five-grade set look like a different kind
-   * of thing — a buyer comparing a PULL A against a PULL B was reading two
+   * of thing - a buyer comparing a PULL A against a PULL B was reading two
    * different visual languages for one axis. A grade scale has to look like a
    * scale.
    */
@@ -51,7 +51,7 @@ export function GradeBadge({ grade, className }) {
   const parts = String(meta.short).split(' ');
   const stacked = parts.length > 1;
   // "PULL A" is a qualifier over a grade letter, so the letter is the larger of
-  // the two. "AFT MKT" is one word broken in half — both halves stay equal.
+  // the two. "AFT MKT" is one word broken in half - both halves stay equal.
   const letterLast = stacked && parts[parts.length - 1].length === 1;
 
   function lineClass(index) {
@@ -69,8 +69,8 @@ export function GradeBadge({ grade, className }) {
     // make the separator part of the mark. It does the opposite: the badge sits
     // on a photograph, and a coloured ring competes with the tint inside it for
     // the same few pixels, so the disc reads as two rings rather than as one
-    // stamp. White does the one job a ring has here — separating the badge from
-    // whatever is behind it — and then gets out of the way.
+    // stamp. White does the one job a ring has here - separating the badge from
+    // whatever is behind it - and then gets out of the way.
     //
     // One separator, not two: no shadow. On a pale tint the shadow read as a
     // smudge under the disc rather than as elevation, and the ring already does

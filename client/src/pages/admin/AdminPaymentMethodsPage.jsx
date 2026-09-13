@@ -17,13 +17,13 @@ import { pressable } from '@/lib/motion';
  *
  * **This is not the buyer's saved cards.** `User.paymentMethods` is what a
  * customer pays *with*; this is the vocabulary staff pick from when they record
- * money moving — an expense paid by cheque, an invoice settled by e-Transfer.
+ * money moving - an expense paid by cheque, an invoice settled by e-Transfer.
  * The two lists are unrelated, and the screen says so, because "payment
  * methods" is exactly the phrase that would make somebody merge them.
  *
  * **A code is generated once from the label and then frozen.** Expenses and
  * payments store the code, so letting an edit change it would orphan every row
- * already recorded against it — renaming *Cheque* to *Check* must move the
+ * already recorded against it - renaming *Cheque* to *Check* must move the
  * label and leave the key alone.
  */
 const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/settings/payment-methods'], icon: adminIcon('CreditCard') };
@@ -75,7 +75,7 @@ export function AdminPaymentMethodsPage() {
   }
 
   function rename(code, label) {
-    // The label moves, the code never does — see the note above.
+    // The label moves, the code never does - see the note above.
     setMethods((current) =>
       current.map((method) => (method.code === code ? { ...method, label } : method)),
     );
@@ -138,14 +138,14 @@ export function AdminPaymentMethodsPage() {
                 {/* A fixed-width column, not a chip sized by its own content.
                     `credit-card` is twice the width of `cash`, and because the
                     field beside it is `flex-1` every row's input ended at a
-                    different point — eight text boxes down the page, each a
+                    different point - eight text boxes down the page, each a
                     different length, with the codes forming a ragged edge
                     between them. Nothing about the data is ragged; the layout
                     was. A fixed column lines both edges up and lets the codes
                     read as the column they are.
 
                     Wide enough for the longest code the seed data ships,
-                    `bank-transfer` at ~110px — the first attempt at 104px
+                    `bank-transfer` at ~110px - the first attempt at 104px
                     truncated it to `bank-transf…`, which is worse than the
                     ragged edge it replaced: a code that cannot be read in full
                     is the one thing this column exists to show. */}
@@ -177,7 +177,7 @@ export function AdminPaymentMethodsPage() {
               placeholder="e.g. Wire transfer"
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
-              // Enter inside this field means "add", not "submit the form" —
+              // Enter inside this field means "add", not "submit the form"
               // submitting on the way to adding a row loses the row.
               onKeyDown={(event) => {
                 if (event.key === 'Enter') {
@@ -195,7 +195,7 @@ export function AdminPaymentMethodsPage() {
 
           <p className="mt-3 text-sm leading-relaxed text-ink-500">
             Renaming a method keeps its code, so the expenses and payments already recorded against
-            it stay attached. Removing one leaves those rows naming a method that no longer exists —
+            it stay attached. Removing one leaves those rows naming a method that no longer exists
             rename it instead if it is still in the books.
           </p>
         </Panel>

@@ -2,12 +2,13 @@ import { db } from '../db/models.js';
 import '../models/Supplier.js';
 import { DELIVERY_STATUSES } from '../models/PurchaseOrder.js';
 import ApiError from '../utils/ApiError.js';
+import * as agreementService from './agreementService.js';
 import * as notificationService from './notificationService.js';
 import * as supplierMail from './supplierMail.js';
 import { renderProformaHtml } from './proformaDocument.js';
 
 /**
- * Supplier bidding on a purchase order — ask several, negotiate, confirm one
+ * Supplier bidding on a purchase order - ask several, negotiate, confirm one
  * (§6.8a, re-ruled 2026-09-11).
  *
  * This is what `rfqService` used to be. A `Rfq` document asked the question and
@@ -16,18 +17,21 @@ import { renderProformaHtml } from './proformaDocument.js';
  * The PO now carries its own bids and the RFQ is gone.
  *
  * **Five rules survive that move unchanged**, because none of them was ever
- * about the RFQ record — they are what makes buying from several suppliers at
+ * about the RFQ record - they are what makes buying from several suppliers at
  * once fair and auditable:
  *
  *   1. **One supplier never learns another's price.** `shapeForSupplier` returns
- *      that supplier's own bid and nothing else — no rank, no gap to the leader.
+ *      that supplier's own bid and nothing else - no rank, no gap to the leader.
  *      Enforced by the serializer rather than by remembering to filter.
  *   2. **An incomplete bid never ranks best.** A supplier who could not fill
  *      every line has a smaller total for a smaller order.
- *   3. **A quoted price is the supplier's; every total is ours.** The one
- *      payload in this app where a price is accepted and kept — and lines are
- *      still matched against the PO's own SKUs, with every subtotal recomputed
- *      against **our** `qtyOrdered` (§8, invariant 8).
+ *   3. **A quoted price and quantity are the supplier's; every total is ours.**
+ *      The one payload in this app where a price is accepted and kept. A
+ *      quantity joined it on 2026-09-13, because a supplier holding 30 of the
+ *      40 asked for could previously only quote for 40 they cannot ship or
+ *      decline the line entirely. It is **capped at what we asked for** - a
+ *      bigger number is a different order - and every subtotal is still
+ *      recomputed here from the lines, never accepted (§8, invariant 8).
  *   4. **Supplier credentials live on `Supplier`, behind their own cookie.**
  *      See `middleware/supplierAuth.js`.
  *   5. **Money never moves here.** Confirming a supplier copies their prices on
@@ -39,22 +43,42 @@ import { renderProformaHtml } from './proformaDocument.js';
 // ---- money ------------------------------------------------------------------
 
 /**
- * Totals for one bid, from the supplier's unit costs and **our** quantities.
+ * Totals for one bid, from the supplier's unit costs and the quantity they can
+ * actually supply.
  *
- * A supplier sending a quantity is not an error to reject, it is a number to
- * ignore: the total being compared has to be for what we asked for, or the
- * comparison ranks two different orders against each other.
+ * **Their quantity, capped at ours.** A supplier short on stock quotes for what
+ * they hold, and the total has to reflect that or we would compare an offer of
+ * 30 units against one of 40 as though they were the same purchase. A number
+ * *above* what we asked for is still ignored, for exactly that reason.
  *
- * Lines marked `available: false` contribute nothing — "cannot supply" is not a
+ * Lines marked `available: false` contribute nothing - "cannot supply" is not a
  * price of zero, and counting it as one would make the supplier who can fill
- * least look cheapest.
+ * least look cheapest. A short line still ranks below a complete one, because
+ * `complete` counts lines filled in full.
  */
 function recomputeBid(bid, qtyBySku) {
   bid.subtotal = (bid.lines ?? [])
     .filter((line) => line.available !== false)
-    .reduce((sum, line) => sum + (line.unitCost ?? 0) * (qtyBySku.get(line.sku) ?? 0), 0);
+    .reduce((sum, line) => sum + (line.unitCost ?? 0) * suppliedQty(line, qtyBySku), 0);
   bid.total = bid.subtotal + (bid.tax ?? 0) + (bid.shipping ?? 0);
   return bid;
+}
+
+/**
+ * How many of a line this bid actually covers.
+ *
+ * The supplier's own `qty` when they gave one, ours otherwise - and never more
+ * than we asked for. A supplier offering 60 against an order for 40 has not
+ * quoted our order, and totalling it at 60 would rank them against a different
+ * purchase.
+ *
+ * Undefined `qty` means "all of them", which is what every line quoted before
+ * the field existed meant, so an old bid totals exactly as it always did.
+ */
+function suppliedQty(line, qtyBySku) {
+  const asked = qtyBySku.get(line.sku) ?? 0;
+  if (line.qty == null) return asked;
+  return Math.min(Math.max(0, line.qty), asked);
 }
 
 function qtyMap(po) {
@@ -81,17 +105,31 @@ function shapeBids(po) {
   const lineCount = (po.items ?? []).length;
 
   const bids = (po.bids ?? []).map((bid) => {
-    const lines = (bid.lines ?? []).map((line) => ({
-      sku: line.sku,
-      unitCost: line.unitCost,
-      available: line.available !== false,
-      note: line.note ?? null,
-      qty: lineQty.get(line.sku) ?? 0,
-      lineTotal:
-        line.available === false ? 0 : (line.unitCost ?? 0) * (lineQty.get(line.sku) ?? 0),
-    }));
+    const lines = (bid.lines ?? []).map((line) => {
+      const asked = lineQty.get(line.sku) ?? 0;
+      const supplied = line.available === false ? 0 : suppliedQty(line, lineQty);
+
+      return {
+        sku: line.sku,
+        unitCost: line.unitCost,
+        available: line.available !== false,
+        note: line.note ?? null,
+        // What we asked for and what they can actually send. Both, because a
+        // buyer comparing offers needs to see a short line as short rather
+        // than as a smaller total with no explanation.
+        qty: asked,
+        suppliedQty: supplied,
+        short: line.available !== false && supplied < asked,
+        lineTotal: (line.unitCost ?? 0) * supplied,
+      };
+    });
 
     const quotedLines = lines.filter((line) => line.available).length;
+    // Filled IN FULL, not merely answered: a supplier who can send 30 of 40
+    // has not covered that line, and letting a short bid rank as complete is
+    // the same bug as letting an unpriced one rank on a smaller total.
+    const filledLines = lines.filter((line) => line.available && !line.short).length;
+    const shortLines = lines.filter((line) => line.short).length;
 
     return {
       id: bid._id.toString(),
@@ -104,7 +142,7 @@ function shapeBids(po) {
           }
         : {
             id: String(bid.supplier ?? ''),
-            name: bid.supplierName ?? '—',
+            name: bid.supplierName ?? '-',
             email: null,
             componentTypes: [],
           },
@@ -122,6 +160,19 @@ function shapeBids(po) {
       note: bid.note ?? null,
       declineReason: bid.declineReason ?? null,
       proforma: bid.proforma ? shapeProforma(bid.proforma) : null,
+      /**
+       * What accepting this PI would change about the order.
+       *
+       * Sent with the board rather than fetched when a row is expanded: it is
+       * cheap, it is derived from data already loaded, and a preview that
+       * arrives a beat after the panel opens is one an operator scrolls past
+       * before it renders. `null` once accepted - the order already matches, so
+       * there is nothing left to preview.
+       */
+      proformaDiff:
+        bid.proforma && bid.proforma.review !== 'accepted'
+          ? diffProforma(po, bid.proforma, bid)
+          : null,
       negotiations: (bid.negotiations ?? []).map((round) => ({
         id: round._id?.toString() ?? null,
         round: round.round,
@@ -147,10 +198,14 @@ function shapeBids(po) {
             note: bid.delivery.note ?? null,
           }
         : null,
-      // Whether this supplier priced every requested line. The comparison sorts
-      // on total, and a partial answer sorted beside a complete one is how the
-      // cheapest-looking bid turns out not to cover the order.
-      complete: quotedLines === lineCount && quotedLines > 0,
+      // Whether this supplier can fill every requested line IN FULL. The
+      // comparison sorts on total, and a partial answer sorted beside a
+      // complete one is how the cheapest-looking bid turns out not to cover
+      // the order - which is as true of a short line as of an unpriced one.
+      complete: filledLines === lineCount && filledLines > 0,
+      // How many they answered short, so the panel can say so rather than
+      // leaving a smaller total unexplained.
+      shortLines,
       quotedLines,
     };
   });
@@ -171,6 +226,17 @@ function shapeProforma(proforma) {
     revision: proforma.revision ?? 1,
     issuedAt: proforma.issuedAt ?? null,
     validUntil: proforma.validUntil ?? null,
+    // What the supplier is invoicing, at their quantities. Empty on a PI raised
+    // before line detail existed - the panel falls back to the order's own
+    // lines there rather than showing an empty table.
+    lines: (proforma.lines ?? []).map((line) => ({
+      sku: line.sku,
+      name: line.name ?? line.sku,
+      qty: line.qty,
+      unitCost: line.unitCost,
+      lineTotal: line.qty * line.unitCost,
+      note: line.note ?? null,
+    })),
     subtotal: proforma.subtotal ?? 0,
     tax: proforma.tax ?? 0,
     shipping: proforma.shipping ?? 0,
@@ -178,7 +244,10 @@ function shapeProforma(proforma) {
     paymentTerms: proforma.paymentTerms ?? null,
     bankDetails: proforma.bankDetails ?? null,
     note: proforma.note ?? null,
+    review: proforma.review ?? 'pending',
     acceptedAt: proforma.acceptedAt ?? null,
+    revisionRequestedAt: proforma.revisionRequestedAt ?? null,
+    revisionNote: proforma.revisionNote ?? null,
     history: (proforma.history ?? []).map((entry) => ({
       revision: entry.revision,
       total: entry.total,
@@ -226,6 +295,9 @@ function shapeForSupplier(po, supplierId) {
       lines: (bid.lines ?? []).map((line) => ({
         sku: line.sku,
         unitCost: line.unitCost,
+        // What they said they could supply, so the form comes back showing
+        // their own answer rather than resetting to the full quantity.
+        qty: line.qty ?? null,
         available: line.available !== false,
         note: line.note ?? null,
       })),
@@ -307,13 +379,13 @@ async function suppliersForComponentTypes(componentTypes = []) {
       componentTypes: supplier.componentTypes ?? [],
       // Which of the requested types this supplier actually covers. A supplier
       // tagged for batteries only, on an order covering batteries and screens,
-      // is worth asking — and worth showing as the partial match they are.
+      // is worth asking - and worth showing as the partial match they are.
       matched: (supplier.componentTypes ?? []).filter((type) => types.includes(type)),
       paymentTerms: supplier.paymentTerms,
       ordersCount: supplier.ordersCount ?? 0,
       totalSpent: supplier.totalSpent ?? 0,
       // Whether they can actually answer online. A supplier with no portal
-      // access can still be asked — the mail carries the line list — but the
+      // access can still be asked - the mail carries the line list - but the
       // screen should say so rather than let a clerk expect a price that has
       // nowhere to be typed.
       hasPortal: Boolean(supplier.portalInviteAt),
@@ -389,7 +461,7 @@ async function removeSupplier(id, supplierId) {
 
   if (bid.status === 'confirmed') {
     throw ApiError.badRequest(
-      'That supplier is confirmed for this order — cancel the order instead.',
+      'That supplier is confirmed for this order - cancel the order instead.',
       'BID_CONFIRMED',
     );
   }
@@ -456,7 +528,7 @@ async function sendInvitationSafely(po, supplier) {
     const result = await supplierMail.sendPurchaseOrderInvitation({ supplier, po });
     return result?.delivered ?? false;
   } catch (error) {
-    console.error(`  Purchase: invitation to ${supplier.name} failed — ${error.message}`);
+    console.error(`  Purchase: invitation to ${supplier.name} failed - ${error.message}`);
     return false;
   }
 }
@@ -465,7 +537,7 @@ async function sendInvitationSafely(po, supplier) {
  * Push back on a supplier's price.
  *
  * Append-only. The supplier is mailed and, where they have consented, messaged
- * on their other channels — and `channels` records where it actually went,
+ * on their other channels - and `channels` records where it actually went,
  * never where we meant it to go.
  */
 async function negotiate(id, supplierId, { askedTotal, askedLines, note } = {}, by) {
@@ -480,7 +552,7 @@ async function negotiate(id, supplierId, { askedTotal, askedLines, note } = {}, 
 
   if (!['quoted', 'negotiating'].includes(bid.status)) {
     throw ApiError.badRequest(
-      'There is nothing to negotiate yet — this supplier has not priced the order.',
+      'There is nothing to negotiate yet - this supplier has not priced the order.',
       'BID_NOT_QUOTED',
     );
   }
@@ -524,8 +596,8 @@ async function negotiate(id, supplierId, { askedTotal, askedLines, note } = {}, 
 /**
  * Email always, plus every channel the supplier has consented to.
  *
- * Email is the record — it is where the paperwork lands and what a dispute
- * reads back — so it goes regardless of what else does. The extra channels are
+ * Email is the record - it is where the paperwork lands and what a dispute
+ * reads back - so it goes regardless of what else does. The extra channels are
  * a courtesy on top, gated on consent (CASL, §6.13) and on the provider
  * actually being configured. Returns what genuinely went out.
  */
@@ -538,7 +610,7 @@ async function notifySupplier(supplier, payload) {
     const result = await supplierMail.sendNegotiationEmail({ supplier, ...payload });
     if (result?.delivered) sent.push('email');
   } catch (error) {
-    console.error(`  Purchase: negotiation mail to ${supplier.name} failed — ${error.message}`);
+    console.error(`  Purchase: negotiation mail to ${supplier.name} failed - ${error.message}`);
   }
 
   // The preferred channel first, then anything else consented to. Both are
@@ -558,7 +630,7 @@ async function notifySupplier(supplier, payload) {
       });
       if (delivered) sent.push(channel);
     } catch (error) {
-      console.error(`  Purchase: ${channel} to ${supplier.name} failed — ${error.message}`);
+      console.error(`  Purchase: ${channel} to ${supplier.name} failed - ${error.message}`);
     }
   }
 
@@ -570,8 +642,8 @@ async function notifySupplier(supplier, payload) {
  *
  * **This is where a bid becomes the purchase order.** The winner's unit costs
  * are copied on to the PO lines, `supplier` is set to them, and everything
- * downstream — receiving, the stock ledger, the `Expense` a payment writes,
- * the spend totals — then works exactly as it does for an order raised by
+ * downstream - receiving, the stock ledger, the `Expense` a payment writes,
+ * the spend totals - then works exactly as it does for an order raised by
  * hand. Rule 5.
  *
  * Only lines the winner marked available are priced. A supplier who could fill
@@ -598,19 +670,46 @@ async function confirmSupplier(id, { supplierId, expectedDate, note } = {}) {
     );
   }
 
+  const asked = qtyMap(po);
   const priced = new Map(
     (bid.lines ?? [])
       .filter((line) => line.available !== false)
-      .map((line) => [line.sku, line.unitCost ?? 0]),
+      .map((line) => [line.sku, { unitCost: line.unitCost ?? 0, qty: suppliedQty(line, asked) }]),
   );
 
   const dropped = [];
+  const shortened = [];
+
   po.items.forEach((item) => {
-    if (!priced.has(item.sku)) {
+    const quoted = priced.get(item.sku);
+
+    // Nothing quoted, or quoted at zero: either way they are shipping none of
+    // it, and a line for zero units is a line that does not belong on the
+    // order.
+    if (!quoted || quoted.qty <= 0) {
       dropped.push({ sku: item.sku, name: item.name });
       return;
     }
-    item.unitCost = priced.get(item.sku);
+
+    /**
+     * **The order follows the quantity they can actually supply.**
+     *
+     * Confirming at our quantity when the winner quoted fewer would put a
+     * number nobody agreed to into receiving, into the expense a payment
+     * writes, and into every margin report downstream - and the discrepancy
+     * would surface as a short delivery weeks later with no record of why.
+     */
+    if (quoted.qty < item.qtyOrdered) {
+      shortened.push({
+        sku: item.sku,
+        name: item.name,
+        from: item.qtyOrdered,
+        to: quoted.qty,
+      });
+      item.qtyOrdered = quoted.qty;
+    }
+
+    item.unitCost = quoted.unitCost;
     item.lineTotal = item.qtyOrdered * item.unitCost;
   });
 
@@ -656,17 +755,309 @@ async function confirmSupplier(id, { supplierId, expectedDate, note } = {}) {
   po.timeline.push({
     status: 'confirmed',
     at: now,
-    note: note ?? `Confirmed with ${bid.supplierName ?? 'supplier'}.`,
+    note:
+      note ??
+      // Short lines are named in the timeline, because the order's own
+      // quantities just changed and the reason has to survive the click.
+      `Confirmed with ${bid.supplierName ?? 'supplier'}.${
+        shortened.length
+          ? ` ${shortened.length} line${shortened.length === 1 ? '' : 's'} reduced to what they can supply.`
+          : ''
+      }`,
   });
 
   await po.save();
 
-  return { po: await getBidBoard(po._id), dropped };
+  return { po: await getBidBoard(po._id), dropped, shortened };
+}
+
+// ---- reviewing a proforma ---------------------------------------------------
+
+/**
+ * What accepting a supplier's proforma would do to this order, line by line.
+ *
+ * **Computed before the write and shown to the operator**, because accepting a
+ * PI rewrites the order's lines and a rewrite nobody previewed is one nobody
+ * agreed to. A supplier who short-ships one line and rounds another up to a
+ * case pack is normal, not exceptional - but it changes what we pay, what we
+ * expect to receive and what eventually restocks, so it has to be read first.
+ *
+ * Returns a row per SKU touched by either side, tagged with what changes:
+ * `added` (on the PI, not on the order), `removed` (they cannot supply it),
+ * `qty`, `cost`, `both`, or `same`.
+ */
+function diffProforma(po, proforma, bid) {
+  const ours = new Map((po.items ?? []).map((item) => [item.sku, item]));
+
+  /**
+   * A PI raised before line detail existed carries totals and nothing else.
+   *
+   * Reading its empty `lines` literally would say the supplier is shipping
+   * *none* of the order - every row "removed", a total of zero - which is the
+   * opposite of what those documents meant. They meant "as quoted, at the
+   * quantities you asked for", so that is what they are reconstructed as: the
+   * bid's own available lines against our `qtyOrdered`. The same fallback
+   * `submitProforma` applies when a supplier sends no lines, kept in step here
+   * so an old PI and a new one describe the same thing.
+   */
+  const stored = proforma?.lines ?? [];
+  const effective = stored.length
+    ? stored
+    : (bid?.lines ?? [])
+        .filter((line) => line.available !== false)
+        .map((line) => {
+          const item = ours.get(line.sku);
+          return {
+            sku: line.sku,
+            name: item?.name ?? line.sku,
+            qty: item?.qtyOrdered ?? 0,
+            unitCost: line.unitCost ?? 0,
+          };
+        });
+
+  const theirs = new Map(effective.map((line) => [line.sku, line]));
+
+  const rows = [];
+  for (const sku of new Set([...ours.keys(), ...theirs.keys()])) {
+    const a = ours.get(sku);
+    const b = theirs.get(sku);
+
+    if (!b || b.qty === 0) {
+      rows.push({
+        sku,
+        name: a?.name ?? b?.name ?? sku,
+        change: 'removed',
+        fromQty: a?.qtyOrdered ?? 0,
+        toQty: 0,
+        fromCost: a?.unitCost ?? 0,
+        toCost: b?.unitCost ?? a?.unitCost ?? 0,
+      });
+      continue;
+    }
+
+    if (!a) {
+      rows.push({
+        sku,
+        name: b.name ?? sku,
+        change: 'added',
+        fromQty: 0,
+        toQty: b.qty,
+        fromCost: 0,
+        toCost: b.unitCost,
+      });
+      continue;
+    }
+
+    const qtyMoved = a.qtyOrdered !== b.qty;
+    // A line that was never priced sits at zero, so "0 → a real price" is the
+    // normal case rather than a change worth flagging on its own.
+    const costMoved = (a.unitCost ?? 0) !== b.unitCost && (a.unitCost ?? 0) > 0;
+
+    rows.push({
+      sku,
+      name: a.name,
+      change: qtyMoved && costMoved ? 'both' : qtyMoved ? 'qty' : costMoved ? 'cost' : 'same',
+      fromQty: a.qtyOrdered,
+      toQty: b.qty,
+      fromCost: a.unitCost ?? 0,
+      toCost: b.unitCost,
+    });
+  }
+
+  rows.sort((x, y) => x.sku.localeCompare(y.sku));
+
+  const subtotal = rows
+    .filter((row) => row.change !== 'removed')
+    .reduce((sum, row) => sum + row.toCost * row.toQty, 0);
+
+  return {
+    rows,
+    changed: rows.filter((row) => row.change !== 'same').length,
+    subtotal,
+    tax: proforma?.tax ?? 0,
+    shipping: proforma?.shipping ?? 0,
+    total: subtotal + (proforma?.tax ?? 0) + (proforma?.shipping ?? 0),
+  };
+}
+
+/**
+ * Accept a supplier's proforma, and make the order match it.
+ *
+ * **The PI becomes the order of record.** Its quantities and prices are written
+ * onto `po.items`, because that is what we are agreeing to pay, what the
+ * warehouse should expect and what receiving will count against - leaving the
+ * order saying 40 while the invoice says 36 would put a discrepancy into
+ * inventory, payment and the margin on every downstream report, each of which
+ * would then need explaining separately.
+ *
+ * A line the PI drops leaves the order rather than sitting on it at a quantity
+ * nobody is shipping. A line the PI adds is **refused**: a supplier cannot
+ * enlarge an order we did not place by invoicing for it, and the honest answer
+ * to "we also sent you these" is a conversation, not a silent line item.
+ *
+ * Accepting does **not** confirm the supplier. Those are different decisions
+ * "this document is right" and "we are buying from you" - and an order out to
+ * three suppliers may have two acceptable PIs on it. `confirmSupplier` still
+ * has to be called, and it now finds the lines already agreed.
+ */
+async function acceptProforma(id, { supplierId, acceptedBy } = {}) {
+  const po = await loadPo(id, { populate: false });
+
+  if (['partial', 'received', 'cancelled'].includes(po.status)) {
+    throw ApiError.badRequest(
+      `${po.poNumber} has moved past pricing.`,
+      'PO_NOT_EDITABLE',
+    );
+  }
+
+  const bid = findBid(po, supplierId);
+  if (!bid) throw ApiError.notFound('That supplier is not on this order.', 'BID_NOT_FOUND');
+  if (!bid.proforma) {
+    throw ApiError.badRequest(
+      'That supplier has not issued a proforma invoice.',
+      'PROFORMA_NOT_FOUND',
+    );
+  }
+  if (bid.proforma.review === 'accepted') {
+    throw ApiError.badRequest('That proforma is already accepted.', 'PROFORMA_ACCEPTED');
+  }
+
+  const diff = diffProforma(po, bid.proforma, bid);
+
+  const added = diff.rows.filter((row) => row.change === 'added');
+  if (added.length) {
+    throw ApiError.badRequest(
+      `The proforma invoices for ${added.map((row) => row.sku).join(', ')}, which ${added.length === 1 ? 'is' : 'are'} not on this order. Ask the supplier to reissue it, or add the ${added.length === 1 ? 'line' : 'lines'} to the order first.`,
+      'PROFORMA_HAS_EXTRA_LINES',
+    );
+  }
+
+  /**
+   * What to write, taken from the **diff** rather than from the PI directly.
+   *
+   * `diffProforma` is where the legacy fallback lives - a PI raised before line
+   * detail existed has no `lines`, and reading those straight off the document
+   * would empty the order rather than leave it as quoted. Going through the
+   * diff means the rows an operator was shown are exactly the rows that get
+   * written, which is the only way the preview can be trusted.
+   */
+  const keep = new Map(
+    diff.rows
+      .filter((row) => row.change !== 'removed' && row.toQty > 0)
+      .map((row) => [row.sku, { qty: row.toQty, unitCost: row.toCost }]),
+  );
+  if (!keep.size) {
+    throw ApiError.badRequest(
+      'That proforma invoices for nothing.',
+      'PROFORMA_EMPTY',
+    );
+  }
+
+  po.items = po.items
+    .filter((item) => keep.has(item.sku))
+    .map((item) => {
+      const line = keep.get(item.sku);
+      item.qtyOrdered = line.qty;
+      item.unitCost = line.unitCost;
+      item.lineTotal = line.qty * line.unitCost;
+      return item;
+    });
+
+  // Recomputed from the lines, as every total in this file is - the PI's own
+  // `subtotal` is the supplier's arithmetic and is not what we store.
+  po.subtotal = po.items.reduce((sum, item) => sum + item.lineTotal, 0);
+  po.tax = bid.proforma.tax ?? 0;
+  po.shipping = bid.proforma.shipping ?? 0;
+  po.total = po.subtotal + po.tax + po.shipping;
+
+  const now = new Date();
+  bid.proforma.review = 'accepted';
+  bid.proforma.acceptedAt = now;
+  bid.proforma.acceptedBy = acceptedBy;
+
+  const dropped = diff.rows.filter((row) => row.change === 'removed');
+  po.timeline.push({
+    status: 'proforma_accepted',
+    at: now,
+    note: `Accepted ${bid.supplierName ?? 'supplier'}'s proforma${bid.proforma.number ? ` ${bid.proforma.number}` : ''}${
+      diff.changed ? ` - ${diff.changed} line${diff.changed === 1 ? '' : 's'} changed` : ''
+    }${dropped.length ? `, ${dropped.length} dropped` : ''}.`,
+  });
+
+  await po.save();
+
+  return { po: await getBidBoard(po._id), diff };
+}
+
+/**
+ * Send a proforma back for a new one, with a reason.
+ *
+ * The reason is required and is shown to the supplier verbatim: "please revise"
+ * with no note is a round trip that teaches them nothing, and they will guess
+ * usually at the wrong line.
+ *
+ * The PI is **kept**, not deleted. A superseded revision stays readable for the
+ * same reason `submitProforma` keeps its history: what they originally asked
+ * for is half of what a negotiation means.
+ */
+async function requestProformaRevision(id, { supplierId, note } = {}) {
+  const po = await loadPo(id, { populate: false });
+
+  const bid = findBid(po, supplierId);
+  if (!bid) throw ApiError.notFound('That supplier is not on this order.', 'BID_NOT_FOUND');
+  if (!bid.proforma) {
+    throw ApiError.badRequest(
+      'That supplier has not issued a proforma invoice.',
+      'PROFORMA_NOT_FOUND',
+    );
+  }
+
+  const reason = String(note ?? '').trim();
+  if (!reason) {
+    throw ApiError.badRequest(
+      'Say what needs changing - the supplier sees this.',
+      'REVISION_NOTE_REQUIRED',
+    );
+  }
+
+  const now = new Date();
+  bid.proforma.review = 'revision_requested';
+  bid.proforma.revisionRequestedAt = now;
+  bid.proforma.revisionNote = reason;
+
+  po.timeline.push({
+    status: 'proforma_revision',
+    at: now,
+    note: `Asked ${bid.supplierName ?? 'supplier'} to revise their proforma: ${reason}`,
+  });
+
+  await po.save();
+
+  await notifyAdminsByMail({
+    subject: `Proforma revision requested for ${po.poNumber}`,
+    po,
+    supplierName: bid.supplierName,
+    kind: 'proforma',
+  });
+
+  return { po: await getBidBoard(po._id) };
 }
 
 // ---- the portal side --------------------------------------------------------
 
-/** Every order this supplier was asked to price. Their own bid, never another's. */
+/**
+ * Every order this supplier was asked to price. Their own bid, never another's.
+ *
+ * **No gate here, deliberately** (re-ruled 2026-09-13). An earlier pass withheld
+ * an order's contents until the supplier accepted terms *on that order*, which
+ * was the wrong shape twice over: a master supply agreement is signed once for
+ * the relationship, not per purchase order, and a supplier who cannot see what
+ * they are being asked to quote on cannot judge whether signing is worth it.
+ *
+ * Reading is open; **committing is not**. `agreementService.assertSigned` gates
+ * `submitBid` and `submitProforma`, so a supplier browses freely and signs
+ * before they can put a price to anything.
+ */
 async function listForSupplier(supplierId) {
   const orders = await db().PurchaseOrder.find({
     'bids.supplier': supplierId,
@@ -681,7 +1072,19 @@ async function listForSupplier(supplierId) {
   };
 }
 
-/** One order, as its supplier sees it. Marks it viewed on first open. */
+/**
+ * One order, as its supplier sees it. Marks it viewed on first open.
+ *
+ * **Open to read** (re-ruled 2026-09-13). This used to return the purchase
+ * terms instead of the order until the supplier accepted them on that order
+ * a gate that asked again on every single order, which is not how a master
+ * supply agreement works. The agreement is signed once, in the portal, and
+ * gates the writes: `submitBid` and `submitProforma` call
+ * `agreementService.assertSigned`.
+ *
+ * Fetching marks the bid `viewed`, which is why the dashboard does not prefetch
+ * it: "opened it and has not answered" is a fact the purchasing team acts on.
+ */
 async function getForSupplier(id, supplierId) {
   const po = await db().PurchaseOrder.findOne({
     _id: id,
@@ -705,7 +1108,7 @@ async function getForSupplier(id, supplierId) {
  *
  * Rule 3 in full: the unit costs are theirs and are kept; every total is
  * recomputed from them against our quantities. Lines naming a SKU this order
- * does not contain are dropped rather than rejected — a supplier pasting an old
+ * does not contain are dropped rather than rejected - a supplier pasting an old
  * quote should not be met with a validation wall.
  */
 async function submitBid(id, supplierId, body) {
@@ -717,6 +1120,9 @@ async function submitBid(id, supplierId, body) {
   if (!po) throw ApiError.notFound('Order not found.', 'PO_NOT_FOUND');
 
   assertBiddable(po);
+  // A price is a commercial commitment, so it sits behind the master agreement.
+  // Reading an order does not - see `getForSupplier`.
+  await agreementService.assertSigned(supplierId);
 
   const bid = findBid(po, supplierId);
   const requested = qtyMap(po);
@@ -726,6 +1132,20 @@ async function submitBid(id, supplierId, body) {
     .map((line) => ({
       sku: line.sku,
       unitCost: Math.max(0, Math.round(line.unitCost ?? 0)),
+      /**
+       * What they can supply, capped at what we asked for.
+       *
+       * A quantity IS accepted here, which is the same exception a unit cost
+       * gets: the supplier is the only one who knows their stock. What is not
+       * accepted is a number *above* the order - that would be quoting a
+       * different purchase, and it would rank them against one.
+       *
+       * `undefined` when they did not say, meaning "all of them".
+       */
+      qty:
+        line.qty == null
+          ? undefined
+          : Math.min(Math.max(0, Math.round(line.qty)), requested.get(line.sku) ?? 0),
       available: line.available !== false,
       note: line.note,
     }));
@@ -804,7 +1224,7 @@ async function declineBid(id, supplierId, { reason } = {}) {
   po.timeline.push({
     status: 'declined',
     at: new Date(),
-    note: `${bid.supplierName ?? 'A supplier'} declined${reason ? ` — ${reason}` : ''}.`,
+    note: `${bid.supplierName ?? 'A supplier'} declined${reason ? ` - ${reason}` : ''}.`,
   });
   await po.save();
 
@@ -818,7 +1238,7 @@ async function declineBid(id, supplierId, { reason } = {}) {
  * server totals them, so the document's arithmetic is ours even though the
  * prices are theirs. `proformaDocument.js` renders it.
  *
- * A second PI supersedes the first rather than overwriting it — the number that
+ * A second PI supersedes the first rather than overwriting it - the number that
  * was negotiated away has to stay readable.
  */
 async function submitProforma(id, supplierId, body) {
@@ -833,6 +1253,10 @@ async function submitProforma(id, supplierId, body) {
     throw ApiError.badRequest('This order was withdrawn.', 'PO_CANCELLED');
   }
 
+  // The document the agreement exists to precede - "sign before sending any PI"
+  // is the rule this enforces.
+  await agreementService.assertSigned(supplierId);
+
   const bid = findBid(po, supplierId);
   if (!['quoted', 'negotiating', 'confirmed'].includes(bid.status)) {
     throw ApiError.badRequest(
@@ -844,12 +1268,53 @@ async function submitProforma(id, supplierId, body) {
   const previous = bid.proforma;
   const revision = previous ? (previous.revision ?? 1) + 1 : 1;
 
-  // Totalled from the bid lines, not from the payload: a PI that disagrees with
-  // the prices it was raised from is a document nobody can reconcile.
+  /**
+   * The lines this PI invoices - the supplier's quantities, ours as the default.
+   *
+   * **A quantity here IS the payload**, which is the same exception `submitBid`
+   * makes for a unit cost: the whole point of a proforma is the supplier
+   * telling us what they will actually ship, and a case pack that rounds 36 up
+   * to 40 or a line they are short on has to be expressible or the document
+   * cannot be reconciled against the invoice that follows it.
+   *
+   * What is still never accepted is a **total**. Every one below is recomputed
+   * from these lines, so a PI whose arithmetic disagrees with itself cannot be
+   * saved. And a line naming a SKU this order does not contain is dropped
+   * rather than rejected - the same forgiveness `submitBid` shows a supplier
+   * pasting an old quote.
+   *
+   * Prices still come from the bid unless the PI restates them: a proforma is
+   * the formal version of a price already given, so silence means "as quoted".
+   */
   const requested = qtyMap(po);
-  const subtotal = (bid.lines ?? [])
-    .filter((line) => line.available !== false)
-    .reduce((sum, line) => sum + (line.unitCost ?? 0) * (requested.get(line.sku) ?? 0), 0);
+  const quoted = new Map(
+    (bid.lines ?? [])
+      .filter((line) => line.available !== false)
+      .map((line) => [line.sku, line.unitCost ?? 0]),
+  );
+  const names = new Map((po.items ?? []).map((item) => [item.sku, item.name]));
+
+  const lines = Array.isArray(body.lines) && body.lines.length
+    ? body.lines
+        .filter((line) => requested.has(line.sku))
+        .map((line) => ({
+          sku: line.sku,
+          name: names.get(line.sku),
+          qty: Math.max(0, Math.round(line.qty ?? 0)),
+          unitCost: Math.max(0, Math.round(line.unitCost ?? quoted.get(line.sku) ?? 0)),
+          note: line.note,
+        }))
+    // No lines sent: the PI covers what they quoted, at our quantities. This is
+    // what every proforma raised before line detail existed meant, so an old
+    // client and a new one produce the same document.
+    : [...quoted.entries()].map(([sku, unitCost]) => ({
+        sku,
+        name: names.get(sku),
+        qty: requested.get(sku) ?? 0,
+        unitCost,
+      }));
+
+  const subtotal = lines.reduce((sum, line) => sum + line.unitCost * line.qty, 0);
   const tax = Math.max(0, Math.round(body.tax ?? bid.tax ?? 0));
   const shipping = Math.max(0, Math.round(body.shipping ?? bid.shipping ?? 0));
 
@@ -870,6 +1335,7 @@ async function submitProforma(id, supplierId, body) {
     revision,
     issuedAt: new Date(),
     validUntil: body.validUntil ? new Date(body.validUntil) : undefined,
+    lines,
     subtotal,
     tax,
     shipping,
@@ -877,6 +1343,11 @@ async function submitProforma(id, supplierId, body) {
     paymentTerms: body.paymentTerms,
     bankDetails: body.bankDetails,
     note: body.note,
+    // A new revision is unreviewed by definition - including one raised to
+    // answer a revision request, which is exactly the case where leaving the
+    // old `revision_requested` standing would tell the buyer their question was
+    // still open after it had been answered.
+    review: 'pending',
     history,
   };
 
@@ -916,7 +1387,7 @@ async function submitProforma(id, supplierId, body) {
  * losing bidder marking a delivery dispatched is a fact about nothing.
  *
  * **This does not move stock.** Receiving is a physical count somebody makes at
- * our end, and a supplier saying "delivered" is a claim, not a receipt —
+ * our end, and a supplier saying "delivered" is a claim, not a receipt
  * `purchaseService.receivePurchaseOrder` stays the only path into the ledger.
  */
 async function setDeliveryStatus(id, supplierId, body) {
@@ -957,7 +1428,7 @@ async function setDeliveryStatus(id, supplierId, body) {
   await notificationService.emit({
     type: 'po_delivery',
     severity: status === 'delivered' ? 'success' : 'info',
-    title: `${po.poNumber} — delivery ${status.replace('_', ' ')}`,
+    title: `${po.poNumber} - delivery ${status.replace('_', ' ')}`,
     detail: bid.delivery.trackingNumber
       ? `${bid.supplierName ?? 'Supplier'} · ${bid.delivery.trackingNumber}`
       : (bid.supplierName ?? 'Supplier'),
@@ -966,7 +1437,7 @@ async function setDeliveryStatus(id, supplierId, body) {
   });
 
   await notifyAdminsByMail({
-    subject: `${po.poNumber} — delivery ${status.replace('_', ' ')}`,
+    subject: `${po.poNumber} - delivery ${status.replace('_', ' ')}`,
     po,
     supplierName: bid.supplierName,
     kind: 'delivery',
@@ -981,7 +1452,7 @@ async function notifyAdminsByMail(payload) {
   try {
     await supplierMail.sendPurchaseAdminAlert(payload);
   } catch (error) {
-    console.error(`  Purchase: admin alert failed — ${error.message}`);
+    console.error(`  Purchase: admin alert failed - ${error.message}`);
   }
 }
 
@@ -1037,12 +1508,12 @@ async function getBidBoard(id) {
      *
      * Confirming an order moves the winner to `confirmed` and everyone else to
      * `lost`, so counting only `quoted` made a decided order report "0 of 2
-     * have answered" — the two suppliers who priced it had both been moved on
+     * have answered" - the two suppliers who priced it had both been moved on
      * from the status being counted. `negotiating` is the same case mid-flight.
      * A supplier who answered has answered, whatever we did with it afterwards.
      *
      * Counted on **evidence of a price** rather than on status, because
-     * confirming also marks an invite nobody ever opened as `lost` — status
+     * confirming also marks an invite nobody ever opened as `lost` - status
      * alone would count that supplier as having answered. `quotedAt` is written
      * only by `submitBid`, so it is the fact that cannot be produced any other
      * way.
@@ -1053,6 +1524,7 @@ async function getBidBoard(id) {
 }
 
 export {
+  acceptProforma,
   confirmSupplier,
   declineBid,
   getBidBoard,
@@ -1062,6 +1534,7 @@ export {
   negotiate,
   proformaDocument,
   removeSupplier,
+  requestProformaRevision,
   sendPurchaseOrder,
   setDeliveryStatus,
   shapeBids,

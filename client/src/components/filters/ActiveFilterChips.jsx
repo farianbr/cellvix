@@ -42,7 +42,7 @@ export function ActiveFilterChips({ facetMeta }) {
   }
 
   for (const level of FILTER_LEVELS) {
-    // componentType is a facet, not a path level — it is chipped just above.
+    // componentType is a facet, not a path level - it is chipped just above.
     if (level.key === 'componentType' || !path[level.key]) continue;
     chips.push({
       key: `path-${level.key}`,

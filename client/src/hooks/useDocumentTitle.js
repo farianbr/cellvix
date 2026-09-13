@@ -1,0 +1,154 @@
+import { useEffect } from 'react';
+import { useLocation } from 'react-router';
+import { matchAdminRoute } from '@/lib/adminRoutes';
+
+/**
+ * The browser tab's title, per route (Instructions 3.1).
+ *
+ * Every page shipped the one static title from `index.html`, so a browser with
+ * six Cellvix tabs open showed six identical labels - and the tab strip is the
+ * only navigation a person has once the window is behind something else. It is
+ * also what a bookmark and a history entry are named by, so "Cellvix" was the
+ * name of every page anybody had ever saved.
+ *
+ * **Titles come from the route table, not from each page.** `ADMIN_ROUTES`
+ * already carries a `title` for all 65 admin screens and already knows how to
+ * resolve `/admin/clients/abc123` back to `/admin/clients/:id` - teaching every
+ * page to set its own would have meant 65 near-identical effects that could
+ * drift from the breadcrumb beside them. The other three surfaces get their own
+ * small maps below for the same reason.
+ *
+ * **A record's own name wins where a page knows it.** A list is "Clients"; one
+ * client is that person. `title` overrides the route's label so a detail screen
+ * can name its record, which is the case where a tab strip earns the most
+ * four open invoices are otherwise four tabs reading "Invoice".
+ *
+ * ```js
+ * useDocumentTitle();                     // the route's own title
+ * useDocumentTitle(invoice?.number);      // this record, once it loads
+ * ```
+ */
+
+/** What each surface is called, and the suffix its pages carry. */
+const SUFFIX = {
+  admin: 'Cellvix Admin',
+  supplier: 'Cellvix Suppliers',
+  superadmin: 'Platform Console',
+  shop: 'Cellvix',
+};
+
+/**
+ * The three surfaces `ADMIN_ROUTES` does not cover.
+ *
+ * Small enough to be a literal map: these are fixed route sets that change when
+ * somebody adds a screen, and a missing entry falls back to the surface name
+ * rather than to nothing.
+ */
+const SUPPLIER_TITLES = {
+  '/supplier': 'Dashboard',
+  '/supplier/orders': 'Purchase orders',
+  '/supplier/proformas': 'Proforma invoices',
+  '/supplier/deliveries': 'Deliveries',
+  '/supplier/profile': 'Profile',
+  '/supplier/login': 'Sign in',
+};
+
+const SUPERADMIN_TITLES = {
+  '/superadmin': 'Tenants',
+  '/superadmin/plans': 'Plans',
+  '/superadmin/support': 'Support',
+  '/superadmin/login': 'Sign in',
+};
+
+/**
+ * The storefront.
+ *
+ * The shop page is the homepage, so `/` is the one route that carries the plain
+ * business name with no page label in front of it - a tab reading
+ * "Shop - Cellvix" on the site's front door reads like a subsection of itself.
+ */
+const SHOP_TITLES = {
+  '/': null,
+  '/cart': 'Cart',
+  '/checkout': 'Checkout',
+  '/payment-failed': 'Payment failed',
+  '/about': 'About',
+  '/contact': 'Contact',
+  '/offers': 'Offers',
+  '/blog': 'Blog',
+  '/faq': 'FAQ',
+  '/login': 'Sign in',
+  '/register': 'Create an account',
+  '/forgot-password': 'Reset your password',
+  '/reset-password': 'Choose a new password',
+  '/account': 'Your account',
+  '/account/orders': 'Your orders',
+  '/account/invoices': 'Your invoices',
+  '/account/credit': 'Credit',
+  '/account/activity': 'Activity',
+  '/account/referrals': 'Referrals',
+  '/account/quick-order': 'Quick order',
+  '/account/addresses': 'Addresses',
+  '/account/payment-methods': 'Payment methods',
+  '/account/company': 'Company details',
+};
+
+/** Which surface a pathname belongs to. */
+function surfaceOf(pathname) {
+  if (pathname.startsWith('/admin')) return 'admin';
+  if (pathname.startsWith('/supplier')) return 'supplier';
+  if (pathname.startsWith('/superadmin')) return 'superadmin';
+  return 'shop';
+}
+
+/**
+ * The page's own label, before the suffix - `null` for a page that should carry
+ * the bare business name.
+ */
+function labelFor(pathname, surface) {
+  const clean = pathname.replace(/\/+$/, '') || '/';
+
+  if (surface === 'admin') {
+    const match = matchAdminRoute(clean);
+    return match?.title ?? match?.label ?? 'Admin';
+  }
+
+  if (surface === 'superadmin') return SUPERADMIN_TITLES[clean] ?? null;
+  if (surface === 'supplier') {
+    if (SUPPLIER_TITLES[clean]) return SUPPLIER_TITLES[clean];
+    // `/supplier/orders/<id>` - the record's own number arrives as `title`
+    // from the page; without it, name the section rather than the id.
+    if (clean.startsWith('/supplier/orders/')) return 'Purchase order';
+    return null;
+  }
+
+  // The storefront's two record routes, whose pages pass their own `title`.
+  if (clean.startsWith('/product/')) return 'Product';
+  if (clean.startsWith('/blog/')) return 'Blog';
+  if (clean.startsWith('/thank-you/')) return 'Order confirmed';
+  return SHOP_TITLES[clean] ?? null;
+}
+
+/**
+ * Sets `document.title` for as long as this component is mounted.
+ *
+ * `title` names the record this screen is showing and wins over the route's
+ * label. Pass `undefined` while it is still loading - the route's own label is
+ * shown meanwhile, which is a better placeholder than a tab that says
+ * "undefined" for a beat.
+ */
+export function useDocumentTitle(title) {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    const surface = surfaceOf(pathname);
+    const label = title || labelFor(pathname, surface);
+    const suffix = SUFFIX[surface];
+
+    // A plain hyphen, not an em dash: a tab strip truncates hard, and the
+    // separator is doing structural work rather than punctuating a sentence.
+    document.title = label ? `${label} - ${suffix}` : suffix;
+  }, [pathname, title]);
+}
+
+export default useDocumentTitle;

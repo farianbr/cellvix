@@ -29,7 +29,7 @@ import SelectMenu from '@/components/ui/SelectMenu';
  *
  * **There is no scheduler yet**, and the screen says so rather than implying
  * these fire on their own. `Run now` is how they go out today, and a dry run
- * shows what *would* go out without sending anything — which is the first thing
+ * shows what *would* go out without sending anything - which is the first thing
  * anyone wants before switching a rule on against live invoices.
  */
 const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/settings/invoice-status'], icon: adminIcon('FileText') };
@@ -44,7 +44,7 @@ const EMPTY_RULE = {
   isActive: false,
 };
 
-/** "3 days before the invoice falls due" — the timing, in words. */
+/** "3 days before the invoice falls due" - the timing, in words. */
 function timingText(rule, triggers) {
   const trigger = triggers.find((t) => t.value === rule.trigger);
   const label = trigger?.label ?? rule.trigger;
@@ -89,7 +89,7 @@ function RuleDialog({ rule, triggers, tokens, channels, onClose }) {
       <form onSubmit={save} className="space-y-4">
         <Input
           label="Name"
-          hint="Only shown here — it is not sent to anybody."
+          hint="Only shown here - it is not sent to anybody."
           value={form.label}
           onChange={(event) => set({ label: event.target.value })}
         />
@@ -277,7 +277,7 @@ export function AdminInvoiceStatusPage() {
       {/* The measure wraps the banner too.
 
           It sat outside the capped container, so a full-bleed warning ran to
-          1400px above panels that stopped at 760 — the page disagreed with
+          1400px above panels that stopped at 760 - the page disagreed with
           itself about where its own edge was, and the banner read as belonging
           to the shell rather than to this screen. */}
       <div className="max-w-form">
@@ -377,7 +377,7 @@ export function AdminInvoiceStatusPage() {
                 {result.dryRun ? (
                   <>
                     <Clock className="size-4 text-ink-400" strokeWidth={2} aria-hidden="true" />
-                    Dry run — nothing was sent
+                    Dry run - nothing was sent
                   </>
                 ) : (
                   <>

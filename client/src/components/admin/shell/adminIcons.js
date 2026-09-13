@@ -54,7 +54,7 @@ import {
 /**
  * `ADMIN_NAV` and `ADMIN_ROUTES` name icons as strings so they stay plain data
  * modules the server can read. This is the one place those names become
- * components — import the map, not lucide, from admin shell code.
+ * components - import the map, not lucide, from admin shell code.
  */
 export const ADMIN_ICONS = {
   BarChart3,
@@ -109,7 +109,7 @@ export const ADMIN_ICONS = {
   Wrench,
 };
 
-/** Named icon or nothing — a missing key must not crash a nav row. */
+/** Named icon or nothing - a missing key must not crash a nav row. */
 export function adminIcon(name) {
   return ADMIN_ICONS[name] ?? null;
 }

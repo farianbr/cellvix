@@ -32,17 +32,17 @@ import { pressable } from '@/lib/motion';
  * Two shapes, drawn as two different objects rather than as one card component
  * with different text in it:
  *
- *   - a **deal** is a coupon — a stub with a perforation and a code on it;
- *   - a **combo** is an equation — the parts, a plus between them, and one
+ *   - a **deal** is a coupon - a stub with a perforation and a code on it;
+ *   - a **combo** is an equation - the parts, a plus between them, and one
  *     price on the other side of the equals.
  *
  * Both say the same thing a wholesale buyer wants first: what do I get, what
  * does it cost, and what do I have to do to get it. The rules behind them live
- * in `pricingService` — offers never stack, a code never reaches inside a
+ * in `pricingService` - offers never stack, a code never reaches inside a
  * bundle, and eligibility is enforced server-side, not by hiding a button.
  */
 
-/** "20% off" / "$40 off" / "Free shipping" — the offer in three words or fewer. */
+/** "20% off" / "$40 off" / "Free shipping" - the offer in three words or fewer. */
 function headline(offer) {
   if (offer.discountType === 'free-shipping') return 'Free shipping';
   if (offer.discountType === 'amount') return `${money(offer.discountAmount)} off`;
@@ -78,14 +78,14 @@ function conditions(offer) {
  *
  * Two half-circles in the PAGE's background colour, straddling the perforation.
  * It is the whole reason these cards do not look like every other card on the
- * site — so the colour has to track the page, not the card.
+ * site - so the colour has to track the page, not the card.
  */
 function Perforation({ responsive = false }) {
   // Placed on the stub itself, straddling the border that IS the perforation:
   // one notch at each end of that border. On the featured ticket the border
   // moves from the top edge to the left edge at md, so the notches move with it.
   // The card clips at its own edge, so only the inner half of each circle is
-  // ever visible — a semicircular bite with a hairline edge, which is what makes
+  // ever visible - a semicircular bite with a hairline edge, which is what makes
   // it read as punched rather than as a dot sitting on top.
   const base =
     'pointer-events-none absolute size-4 rounded-full border border-line bg-surface-2';
@@ -114,7 +114,7 @@ function Perforation({ responsive = false }) {
  * The promo code, copyable.
  *
  * Falls back silently where the clipboard API is unavailable (an insecure
- * origin, or a browser that refuses permission) — the code is on screen and
+ * origin, or a browser that refuses permission) - the code is on screen and
  * typeable either way, which is the actual requirement.
  */
 function CodeStub({ code, className }) {
@@ -126,7 +126,7 @@ function CodeStub({ code, className }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1600);
     } catch {
-      // Clipboard unavailable — nothing to recover from.
+      // Clipboard unavailable - nothing to recover from.
     }
   }
 
@@ -168,7 +168,7 @@ function EndsIn({ endsAt, className }) {
   );
 }
 
-/** Automatic or code-required — two different promises, said out loud. */
+/** Automatic or code-required - two different promises, said out loud. */
 function HowItApplies({ offer, className }) {
   if (offer.requiresCode) {
     return (
@@ -343,7 +343,7 @@ function ComboCard({ offer, onAdd, addState }) {
       </header>
 
       {/* ---- the equation -------------------------------------------------
-          Parts, plus, parts, equals one price — a stacked list would say the
+          Parts, plus, parts, equals one price - a stacked list would say the
           same thing and none of it at a glance.
 
           The row is centred rather than left-aligned: a two-part combo beside a
@@ -352,7 +352,7 @@ function ComboCard({ offer, onAdd, addState }) {
 
           On a phone it stops being one row. Three 92px parts plus the operators
           cannot fit 320px, and the price is the one thing in the card that must
-          never be the part scrolled off the edge — so below `sm` the parts wrap
+          never be the part scrolled off the edge - so below `sm` the parts wrap
           and the price sits under them behind a rule, with the `=` dropped
           because a stacked equals sign reads as a mistake. From `sm` the single
           row returns; if a long combo still outruns it there, the row scrolls
@@ -466,7 +466,7 @@ function FeaturedTicket({ offer, onAdd, onShop, addState }) {
       // which the standard ramp's bright end cannot support at 4.5:1.
       className="relative mb-10 overflow-hidden rounded-lg bg-brand-gradient-panel md:flex"
     >
-      {/* A diagonal hatch over the gradient — it stops the block reading as a
+      {/* A diagonal hatch over the gradient - it stops the block reading as a
           flat coloured rectangle without adding a second colour. */}
       <div
         aria-hidden="true"
@@ -689,7 +689,7 @@ export function OffersPage() {
           </p>
         </div>
 
-        {/* The rules, said once, where they cannot be missed — rather than in
+        {/* The rules, said once, where they cannot be missed - rather than in
             small print under nine cards. */}
         <ul className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-ink-400">
           <li className="inline-flex items-center gap-1.5">

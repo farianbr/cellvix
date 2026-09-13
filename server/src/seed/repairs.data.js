@@ -1,7 +1,7 @@
 /**
  * Demo repairs, as complete chains rather than as loose records.
  *
- * A repair is up to three records — **quote → ticket → invoice** — and the
+ * A repair is up to three records - **quote → ticket → invoice** - and the
  * three screens that render it all read the links between them. Seeding each
  * one separately produced a database where every ticket was an orphan: the
  * workflow lineage strip had nothing to draw, and the only chains that existed
@@ -22,7 +22,7 @@
  * ## Everything is priced the way the running code prices it
  *
  * Line totals, tax and the invoice balance are computed here with the same
- * arithmetic `ticketService.priceTicket` applies — integer cents throughout,
+ * arithmetic `ticketService.priceTicket` applies - integer cents throughout,
  * tax from a rate rather than a stored amount, and the invoice's `amountPaid`
  * derived from its payment rows rather than asserted. A seeded record that
  * disagrees with what the service would produce is worse than no record,
@@ -58,7 +58,7 @@ const SERVICES = {
  * One demo repair.
  *
  * `chain` says which of the three shapes this is. `status` is only read for a
- * ticket that has not been invoiced — an invoiced ticket is `completed` by
+ * ticket that has not been invoiced - an invoiced ticket is `completed` by
  * definition, and letting a plan claim otherwise would produce a ticket whose
  * stage disagrees with the invoice sitting against it.
  */
@@ -90,7 +90,7 @@ const REPAIR_PLANS = [
     openedDaysAgo: 17,
     closedDaysAgo: 12,
     terms: 'net15',
-    // Deposit at drop-off, balance still outstanding — the invoice reads
+    // Deposit at drop-off, balance still outstanding - the invoice reads
     // partially paid, which is a state the invoice screen has to render.
     depositCents: 10_000,
     paidInFull: false,
@@ -243,7 +243,7 @@ function buildLines(plan, parts) {
   const services = plan.services.map((key) => ({ ...SERVICES[key] }));
 
   // One catalogue part per plan at most, chosen by rotation rather than by
-  // name — the catalogue is regenerated and a name lookup would break with it.
+  // name - the catalogue is regenerated and a name lookup would break with it.
   const part = parts.length ? parts[plan.partIndex % parts.length] : null;
 
   return {
@@ -255,7 +255,7 @@ function buildLines(plan, parts) {
             priceCents: Math.max(1, part.price),
             qty: 1,
             product: part._id,
-            // Not stored on a ticket line — the model has no `sku` — but the
+            // Not stored on a ticket line - the model has no `sku` - but the
             // quote builder reads it to give its part line the catalogue's own
             // code rather than a synthetic one.
             sku: part.sku,
@@ -280,13 +280,13 @@ function priceLines({ services, parts }, taxRate) {
  *
  * Returns the three collections' rows already linked to each other, plus the
  * numbers used, so the caller can insert them in dependency order and report
- * what it made. Nothing is written here — the caller owns the database.
+ * what it made. Nothing is written here - the caller owns the database.
  *
  * @param products   the seeded catalogue, for the part lines
  * @param users      approved buyers, so some repairs belong to a real account
  * @param staff      technicians to assign
  * @param taxRate    the provincial rate, as a percentage
- * @param quoteSeq   the next free quote sequence number — repair quotes share
+ * @param quoteSeq   the next free quote sequence number - repair quotes share
  *                   the `QT-` series with the goods quotes, and the number is
  *                   uniquely indexed, so the two builders cannot both start at 1
  * @param invoiceSeq the next free invoice sequence number
@@ -319,7 +319,7 @@ function buildRepairs({
     const lines = buildLines(plan, parts);
     const priced = priceLines(lines, taxRate);
 
-    // The ticket and invoice line schemas have no `sku` — that field exists on
+    // The ticket and invoice line schemas have no `sku` - that field exists on
     // the line only so the quote builder can label its part with the
     // catalogue's own code. Dropped here rather than left for mongoose to
     // strip silently, so the shape written is the shape intended.
@@ -330,7 +330,7 @@ function buildRepairs({
 
     // A repair belongs to an account only when the customer's email matches a
     // seeded buyer. A walk-in without an account is the common case and must
-    // stay possible — `convertToInvoice` refuses one, which is itself worth
+    // stay possible - `convertToInvoice` refuses one, which is itself worth
     // being able to see.
     const account =
       plan.customer.email
@@ -341,7 +341,7 @@ function buildRepairs({
      * A quoted or invoiced repair needs an account behind it.
      *
      * `Quote.user` is required and `convertToInvoice` refuses a ticket with no
-     * customer — an invoice is raised *against* somebody. So a repair that
+     * customer - an invoice is raised *against* somebody. So a repair that
      * carries either record is attached to a seeded buyer by rotation where its
      * own customer has no account of their own.
      *
@@ -364,8 +364,8 @@ function buildRepairs({
         quoteNumber: quoteId,
         user: owner?._id ?? null,
         /**
-         * A repair quote prices the whole job — labour AND the parts it needs
-         * — at the prices the ticket then charges.
+         * A repair quote prices the whole job - labour AND the parts it needs
+         * - at the prices the ticket then charges.
          *
          * Quoting only the services made every quote read short against the
          * ticket it became, which is precisely the drift the quote screen

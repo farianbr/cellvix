@@ -40,13 +40,14 @@ import {
   useAdminInventory,
   useAdminSuppliers,
   useAdminMutations,
+  useReorderQueue,
 } from '@/hooks/useAdmin';
 
 /**
  * Inventory (ERP rework §6.10).
  *
  * Reads `GET /admin/inventory`, which returns exact quantities, reorder points,
- * cost and inventory value — all admin-only. **The storefront still shows only
+ * cost and inventory value - all admin-only. **The storefront still shows only
  * in stock / out of stock**, never a count and never a date; that payload is
  * produced by `productService.serialize`, which is an allowlist, so nothing
  * added to this screen can leak into a public response.
@@ -58,7 +59,7 @@ import {
 const STOCK_FILTERS = [
   { value: 'all', label: 'All' },
   // The sidebar badge counts low AND out together, so the filter it links to
-  // has to exist as a view — a count that lands somewhere showing a different
+  // has to exist as a view - a count that lands somewhere showing a different
   // number teaches the operator that the badges are decorative.
   { value: 'attention', label: 'Needs attention' },
   { value: 'in', label: 'In stock' },
@@ -78,7 +79,7 @@ const STOCK_LABELS = { in: 'in stock', low: 'low', out: 'out of stock' };
 const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/inventory'], icon: adminIcon('Boxes') };
 
 export function AdminProductsPage() {
-  // Seeded from the URL so a link can arrive pre-searched — a product's own
+  // Seeded from the URL so a link can arrive pre-searched - a product's own
   // page links here by SKU to edit the catalogue record. Local state after
   // that: typing in the box must not push a history entry per keystroke.
   const [searchParamsInit] = useState(() => new URLSearchParams(window.location.search));
@@ -101,6 +102,9 @@ export function AdminProductsPage() {
     stock: stock === 'all' ? undefined : stock,
   });
   const { data: supplierData } = useAdminSuppliers({ status: 'active' });
+  // The same queue the notification bell counts, so the bar and the badge can
+  // never disagree about how much needs buying.
+  const reorderQueue = useReorderQueue();
   const {
     createProduct,
     updateProduct,
@@ -125,6 +129,27 @@ export function AdminProductsPage() {
     if (next === 'all') params.delete('stock');
     else params.set('stock', next);
     setSearchParams(params, { replace: true });
+  }
+
+  /**
+   * Open the create-PO screen with the reorder lines already filled in.
+   *
+   * **It writes nothing.** This used to raise a draft outright and land on it,
+   * which put a purchase order in the list before anybody had seen a line of
+   * it - and the moment an operator most wants to change a quantity, drop a
+   * product or pick different suppliers is *before* the record exists, not
+   * after. Abandoning the screen now leaves nothing behind.
+   *
+   * The ids are a narrowing, not the order: the create page re-fetches the
+   * queue and seeds from that, so the quantities describe the shelf when the
+   * form opened rather than whenever this list last polled. Selecting rows that
+   * are comfortably in stock simply leaves them out, which is why the button
+   * labels itself with the count that will actually be carried over.
+   */
+  function draftReorder(ids) {
+    const params = new URLSearchParams({ reorder: '1' });
+    if (ids?.length) params.set('products', ids.join(','));
+    navigate(`/admin/purchase-orders/create?${params}`);
   }
 
   const columns = [
@@ -189,7 +214,7 @@ export function AdminProductsPage() {
             {formatCount(product.stock)}
           </span>
           {/* A reorder point of zero means "not set", which reads as never low
-              rather than always low — so the fallback threshold is named. */}
+              rather than always low - so the fallback threshold is named. */}
           <span className="block text-2xs text-ink-400">
             min {product.minStock > 0 ? product.minStock : LOW_STOCK_THRESHOLD}
           </span>
@@ -229,7 +254,7 @@ export function AdminProductsPage() {
             </span>
           </>
         ) : (
-          <span className="text-xs text-ink-300">—</span>
+          <span className="text-xs text-ink-300">-</span>
         ),
     },
     {
@@ -289,7 +314,7 @@ export function AdminProductsPage() {
         }
       />
 
-      {/* Every tile describes the whole catalogue, not the filtered set — a
+      {/* Every tile describes the whole catalogue, not the filtered set - a
           figure that moved with the pills would contradict the pills. */}
       <BadgeExplainer />
 
@@ -330,7 +355,7 @@ export function AdminProductsPage() {
           {
             key: 'value',
             label: 'Total value',
-            // Valued at cost, not retail — inventory is worth what it cost to
+            // Valued at cost, not retail - inventory is worth what it cost to
             // acquire, and valuing it at price books a profit that has not
             // happened yet.
             value: money(totals.value ?? 0),
@@ -350,6 +375,12 @@ export function AdminProductsPage() {
           activePill={stock}
           onPillChange={setStock}
           onExport={(format) => downloadExport('inventory', format, { q: query || undefined, stock: stock === 'all' ? undefined : stock })}
+        />
+
+        <ReorderBar
+          queue={reorderQueue.data}
+          selected={selected}
+          onDraft={draftReorder}
         />
 
         <div className="border-b border-line px-3 py-2 sm:px-4">
@@ -410,7 +441,7 @@ export function AdminProductsPage() {
                   onSuccess: (payload) => {
                     setEditing(null);
                     // A new product needs a reorder point and a cost before it
-                    // is much use, and both live on its detail page — so that is
+                    // is much use, and both live on its detail page - so that is
                     // where creating one lands. An edit stays put: the operator
                     // was already looking at the list they wanted.
                     if (payload?.product?.id) navigate(`/admin/inventory/${payload.product.id}`);
@@ -486,6 +517,78 @@ export function AdminProductsPage() {
         )}
       </Modal>
     </>
+  );
+}
+
+/**
+ * The reorder bar - what needs buying, and the one button that starts buying it.
+ *
+ * **Only shown when there is something to reorder.** A bar reading "0 products
+ * need reordering" is a permanent strip of furniture across a screen that is
+ * otherwise a table, and an operator stops reading anything that is always
+ * there. It appears when the shelf says so and leaves when the work is done.
+ *
+ * Two modes, one button. With rows selected it drafts those; with nothing
+ * selected it drafts the queue. The label says which, because "Draft PO" next
+ * to a checkbox column is genuinely ambiguous about scope, and a purchase order
+ * for the wrong twelve products is a real cost.
+ *
+ * The selection is intersected with the queue before it is counted: a row that
+ * is comfortably in stock will be dropped by the server, and a button promising
+ * to draft eight lines that raises three is a button nobody trusts twice.
+ */
+function ReorderBar({ queue, selected, onDraft }) {
+  const items = queue?.items ?? [];
+  const counts = queue?.counts ?? { out: 0, low: 0, total: 0 };
+
+  if (!counts.total) return null;
+
+  const queueIds = new Set(items.map((item) => item.id));
+  const picked = (selected ?? []).filter((id) => queueIds.has(id));
+  const drafting = picked.length || counts.total;
+
+  return (
+    <div className="flex flex-col gap-3 border-b border-line bg-warn-50 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-4">
+      <div className="flex min-w-0 items-start gap-2.5">
+        <AlertCircle
+          className={cn('mt-px size-4 shrink-0', counts.out > 0 ? 'text-danger' : 'text-warn')}
+          strokeWidth={2}
+          aria-hidden="true"
+        />
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-ink-900">
+            {counts.total} {counts.total === 1 ? 'product needs' : 'products need'} reordering
+          </p>
+          <p className="mt-0.5 text-xs text-ink-500">
+            {/* Both halves named, because they are different urgencies: an
+                empty shelf is a sale already lost, a low one is a week's
+                notice. A single blended count hides which you are looking at. */}
+            {[
+              counts.out > 0 && `${counts.out} out of stock`,
+              counts.low > 0 && `${counts.low} below reorder point`,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+            {queue?.estimatedCost > 0 && ` · about ${money(queue.estimatedCost)} at last cost`}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex shrink-0 items-center gap-2">
+        {picked.length > 0 && (
+          <p className="text-xs text-ink-500">
+            {picked.length} of {selected.length} selected {picked.length === 1 ? 'needs' : 'need'}{' '}
+            reordering
+          </p>
+        )}
+        {/* "Order" rather than "Draft PO": this opens the create screen with
+            the lines filled in and writes nothing, so a label naming a
+            document would promise a record that does not exist yet. */}
+        <Button size="sm" variant="primary" onClick={() => onDraft(picked)}>
+          Order {drafting} {drafting === 1 ? 'product' : 'products'}
+        </Button>
+      </div>
+    </div>
   );
 }
 

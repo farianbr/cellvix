@@ -109,7 +109,7 @@ function FeaturedPost({ post }) {
  * The blog index.
  *
  * Category and search live in the URL, not in component state alone, so a
- * filtered index can be linked and survives the back button — the same rule the
+ * filtered index can be linked and survives the back button - the same rule the
  * shop's filters follow (PROJECT_INSTRUCTIONS.md §4.2).
  */
 export function BlogPage() {
@@ -187,19 +187,19 @@ export function BlogPage() {
         <p className="eyebrow mb-2 text-brand">Cellvix journal</p>
         <h1 className="text-3xl sm:text-d-sm">Bench notes for repair businesses</h1>
         <p className="mt-3 text-md leading-relaxed text-ink-500">
-          Grading standards, diagnostics, credit terms and what is moving in the catalogue —
+          Grading standards, diagnostics, credit terms and what is moving in the catalogue
           written by the people who pick, test and ship the parts.
         </p>
       </header>
 
       {/* ---- filters -------------------------------------------------------
           Two presentations of one control. From `lg` the categories are a
-          wrapping row of pills — wrapping, not scrolling, so a sixth category
+          wrapping row of pills - wrapping, not scrolling, so a sixth category
           drops to a second line instead of off the edge. Below that they are a
           `SelectMenu`: on a 320px screen the pill row could only ever be a
           sideways scroll, which hides most of the categories behind a gesture
           nobody makes (§3.1). The menu is the one we draw ourselves rather than
-          a native `<select>` — the platform sizes that popup itself and clips
+          a native `<select>` - the platform sizes that popup itself and clips
           it against the viewport edge on a narrow screen, which is exactly what
           this control does not have room for. */}
       <div className="mb-7 flex flex-col gap-3 border-y border-line py-3 lg:flex-row lg:items-center lg:justify-between lg:gap-6">

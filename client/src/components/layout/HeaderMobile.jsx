@@ -14,7 +14,7 @@ import { ease, pressable } from '@/lib/motion';
 
 /**
  * Tablet / mobile header (brief §4.2, Unimart pattern):
- * hamburger — centred logo — cart, with the search bar on its own row beneath.
+ * hamburger - centred logo - cart, with the search bar on its own row beneath.
  */
 export function HeaderMobile() {
   const openMobileNav = useUiStore((s) => s.openMobileNav);
@@ -33,7 +33,7 @@ export function HeaderMobile() {
 
   /**
    * The search row folds away once the page has scrolled past the point where
-   * the bottom bar takes over (BOTTOM_NAV_REVEAL_AT) — it is a whole row of
+   * the bottom bar takes over (BOTTOM_NAV_REVEAL_AT) - it is a whole row of
    * chrome sitting on top of the grid the buyer came to read, and the bar's
    * raised search button reaches it from anywhere. Above that point the bar is
    * not on screen yet, so the row stays: there is never a moment with neither.
@@ -44,7 +44,7 @@ export function HeaderMobile() {
   const searchVisible = !scrolled || mobileSearchOpen;
 
   // Back at the top the row belongs to the header again, so the raised flag is
-  // dropped — otherwise it would stay latched for the rest of the session and
+  // dropped - otherwise it would stay latched for the rest of the session and
   // the row would never fold on the next scroll.
   useEffect(() => {
     if (!scrolled && mobileSearchOpen) closeMobileSearch();
@@ -58,7 +58,7 @@ export function HeaderMobile() {
    * cleared it and carried on scrolling kept the row for the rest of the visit.
    *
    * An empty field is the signal that the search is over. While there is a term
-   * in it the row stays put whatever the page does — scrolling with a query is
+   * in it the row stays put whatever the page does - scrolling with a query is
    * reading results, not dismissing them.
    */
   const [searchTerm, setSearchTerm] = useState('');
@@ -68,7 +68,7 @@ export function HeaderMobile() {
     if (mobileSearchOpen) openedAtY.current = window.scrollY;
   }, [mobileSearchOpen]);
 
-  // The field unmounts with the row, so the term it was holding has to go too —
+  // The field unmounts with the row, so the term it was holding has to go too
   // a stale one left here would keep the next raise from ever folding.
   useEffect(() => {
     if (!searchVisible) setSearchTerm('');
@@ -87,7 +87,7 @@ export function HeaderMobile() {
   // cut off the type-ahead panel, which hangs out of this box by design.
   const [collapsing, setCollapsing] = useState(false);
 
-  // Open, a trigger takes the accent rather than the hover grey — on a phone the
+  // Open, a trigger takes the accent rather than the hover grey - on a phone the
   // panel covers most of the screen, and the lit icon is the only thing left
   // saying which button put it there.
   const iconButton = (open) =>
@@ -113,15 +113,15 @@ export function HeaderMobile() {
           <img
             src="/brand/logo.png"
             srcSet="/brand/logo.png 1x, /brand/logo@2x.png 2x"
-            alt={`${BUSINESS_INFO.name} — ${BUSINESS_INFO.tagline}`}
+            alt={`${BUSINESS_INFO.name} - ${BUSINESS_INFO.tagline}`}
             width="1000"
             height="254"
             className="h-8 w-auto"
           />
         </Link>
 
-        {/* Signed in, this opens the account menu — the same dropdown the
-            desktop header uses — rather than reopening the sign-in popup. */}
+        {/* Signed in, this opens the account menu - the same dropdown the
+            desktop header uses - rather than reopening the sign-in popup. */}
         {isAuthenticated ? (
           <button
             type="button"
@@ -165,7 +165,7 @@ export function HeaderMobile() {
         </button>
       </div>
 
-      {/* The bottom bar's search button raises this row and focuses THIS field —
+      {/* The bottom bar's search button raises this row and focuses THIS field
           see uiStore. `initial={false}` so a reload deep down the page does not
           animate the row open just to fold it shut. */}
       <AnimatePresence initial={false}>

@@ -44,7 +44,7 @@ const CATEGORY_LABELS = Object.fromEntries(FAQ_CATEGORIES.map((c) => [c.value, c
  * FAQ entry form.
  *
  * The targeting fields only appear for product scope, because a general entry
- * has nothing to target — showing them greyed out would imply the FAQ page can
+ * has nothing to target - showing them greyed out would imply the FAQ page can
  * be filtered by part type, which it cannot.
  */
 function FaqForm({ faq, deviceTypes, partTypes, onSubmit, onCancel, isPending, error }) {
@@ -194,14 +194,14 @@ export function AdminFaqPage() {
    * The columns.
    *
    * This was a list where every entry printed its full answer, so a row ran to
-   * two or three lines and six entries filled the screen — an editor looking
+   * two or three lines and six entries filled the screen - an editor looking
    * for one question had to read every answer on the way to it. The answer is
    * what the entry says; the QUESTION is what identifies it, and identifying an
    * entry is the whole job of a list.
    *
    * The "FAQ page" badge is gone from the scope column's common case for the
    * same reason. It appeared on every row because almost every entry is a
-   * FAQ-page entry, and a badge that is always present carries no information —
+   * FAQ-page entry, and a badge that is always present carries no information
    * only the exception, a product-page entry, is worth marking.
    */
   const columns = [
@@ -220,7 +220,7 @@ export function AdminFaqPage() {
       render: (faq) => (
         <div className="min-w-0">
           <p className="truncate font-medium text-ink-900">{faq.question}</p>
-          {/* One line of the answer, as a reminder of which entry this is —
+          {/* One line of the answer, as a reminder of which entry this is
               not the entry itself. The editor opens to read it. */}
           <p className="truncate text-xs text-ink-400">{faq.answer}</p>
         </div>

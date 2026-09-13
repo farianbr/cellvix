@@ -1,5 +1,15 @@
 import { Link } from 'react-router';
-import { ArrowRight, CheckCircle2, Clock, FileText, Inbox, MessageSquare, Trophy, Truck } from 'lucide-react';
+import {
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  FileSignature,
+  FileText,
+  Inbox,
+  MessageSquare,
+  Trophy,
+  Truck,
+} from 'lucide-react';
 import { money, date, count as formatCount } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Badge from '@/components/ui/Badge';
@@ -7,7 +17,11 @@ import Skeleton from '@/components/ui/Skeleton';
 import KpiRow from '@/components/admin/KpiRow';
 import cn from '@/lib/cn';
 import { pressable } from '@/lib/motion';
-import { useSupplierSession, useSupplierOrders } from '@/hooks/useSupplierPortal';
+import {
+  useSupplierAgreement,
+  useSupplierOrders,
+  useSupplierSession,
+} from '@/hooks/useSupplierPortal';
 
 /**
  * What a supplier sees when they sign in (§6.8a).
@@ -20,8 +34,8 @@ import { useSupplierSession, useSupplierOrders } from '@/hooks/useSupplierPortal
  * behind the eight that are done.
  *
  * Nothing on this screen mentions another supplier. The server's serializer
- * returns this supplier's own bid and nothing else — no rank, no "you were $40
- * off" — because a sealed process that quietly reports the competition is a
+ * returns this supplier's own bid and nothing else - no rank, no "you were $40
+ * off" - because a sealed process that quietly reports the competition is a
  * live auction nobody agreed to run.
  */
 const BID_TONES = {
@@ -140,6 +154,12 @@ function Group({ icon: Icon, title, orders }) {
 export function SupplierDashboardPage() {
   const { supplier } = useSupplierSession();
   const { data, isLoading } = useSupplierOrders();
+  // Whether they still owe us a signature. Read here as well as on the
+  // agreement page, because the warning belongs where they land.
+  const { data: agreementData } = useSupplierAgreement();
+  // A list now: a supplier may carry several agreements, and being told about
+  // one while another also blocks them is worse than being told about neither.
+  const pendingAgreements = agreementData?.pending ?? [];
 
   const orders = data?.orders ?? [];
 
@@ -172,6 +192,48 @@ export function SupplierDashboardPage() {
 
   return (
     <>
+      {/**
+       * The agreement warning, above everything.
+       *
+       * **It stays until they sign**, which is the whole point: a supplier who
+       * has not signed can read their orders but cannot price one, and
+       * discovering that at the moment they press Send - after typing a dozen
+       * unit costs - is the worst possible time to learn it. Said here, on the
+       * screen they land on, every visit.
+       *
+       * Not a toast and not dismissible. A dismissible warning about something
+       * still blocking your work is a warning that gets dismissed.
+       */}
+      {pendingAgreements.length > 0 && (
+        <div className="mb-4 flex flex-col gap-3 rounded-lg border border-warn/40 bg-warn-50 p-4 sm:flex-row sm:items-center">
+          <FileSignature
+            className="size-5 shrink-0 text-warn"
+            strokeWidth={2}
+            aria-hidden="true"
+          />
+          <div className="min-w-0 flex-1">
+            <p className="font-display text-md font-semibold text-ink-900">
+              {pendingAgreements.length === 1
+                ? `Sign ${pendingAgreements[0].template.name} to start quoting`
+                : `Sign ${pendingAgreements.length} agreements to start quoting`}
+            </p>
+            <p className="mt-0.5 text-sm text-ink-600">
+              You can read the orders you have been invited to, but you cannot send a price or a
+              proforma invoice until this is signed.
+            </p>
+          </div>
+          <Link
+            to="/supplier/agreement"
+            className={cn(
+              pressable,
+              'inline-flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-md bg-brand-gradient px-4 text-sm font-semibold text-white shadow-sm',
+            )}
+          >
+            Read and sign
+          </Link>
+        </div>
+      )}
+
       <div className="mb-5">
         <h1 className="font-display text-2xl font-bold leading-tight text-ink-900">
           {needsPrice.length

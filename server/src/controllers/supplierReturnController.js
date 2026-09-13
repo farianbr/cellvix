@@ -51,7 +51,7 @@ const setStatus = asyncHandler(async (req, res) => {
       label: supplierReturn.returnNumber,
     },
     after: { status: supplierReturn.status },
-    // Shipping is the rung that moves stock, so the description says so —
+    // Shipping is the rung that moves stock, so the description says so
     // an audit row that reads the same for every transition is not much of one.
     description:
       supplierReturn.status === 'shipped'

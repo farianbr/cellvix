@@ -12,7 +12,7 @@ import cn from '@/lib/cn';
  * box: the same component fills a 64px thumbnail and a 680px featured panel, and
  * an SVG stretched across the second one turns a 2px stroke into a 14px one.
  *
- * `coverImage` on the post always wins — the moment real art exists this
+ * `coverImage` on the post always wins - the moment real art exists this
  * component is never reached for that post.
  */
 
@@ -52,7 +52,7 @@ const MOTIFS = {
   ),
 };
 
-/** Deterministic small integer from a slug — same post, same hatch, every time. */
+/** Deterministic small integer from a slug - same post, same hatch, every time. */
 function hash(value = '') {
   let total = 0;
   for (let index = 0; index < value.length; index += 1) {

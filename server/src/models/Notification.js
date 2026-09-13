@@ -6,9 +6,9 @@ import mongoose from 'mongoose';
  * **Only half the bell lives in this collection, and that is deliberate.** §7.3
  * names eight sources, and they are two different kinds of fact:
  *
- * - *Events* — a registration, an order, an accepted quote, a new RMA. These
+ * - *Events* - a registration, an order, an accepted quote, a new RMA. These
  *   happened at an instant and stay true forever. They are rows here.
- * - *Standing conditions* — an invoice is overdue, a product is low or out of
+ * - *Standing conditions* - an invoice is overdue, a product is low or out of
  *   stock, a PO is late, an account is still waiting for approval. These are
  *   **true right now and can stop being true** without anybody touching the
  *   bell.
@@ -16,14 +16,14 @@ import mongoose from 'mongoose';
  * A stored row for a standing condition goes stale the moment the invoice is
  * paid or the shelf is restocked, and then the panel is telling an operator to
  * chase money that already arrived. Keeping them in sync would mean a delete
- * hook on every payment, receipt and stock movement — eight more places to
+ * hook on every payment, receipt and stock movement - eight more places to
  * forget. So `notificationService` derives those four from the live records at
  * read time and this collection never sees them. The dropdown merges both and
  * the caller cannot tell them apart.
  *
  * **Read state is per admin, not per row.** `readBy` is an array of accounts
  * rather than a boolean, because one order is one event that several staff each
- * see separately — a boolean would let whoever opened the bell first mark it
+ * see separately - a boolean would let whoever opened the bell first mark it
  * read for everyone. Same reason `clearedBy` is a list: `Clear All` is a
  * personal action, not a shared one.
  *
@@ -34,10 +34,15 @@ import mongoose from 'mongoose';
  */
 
 /**
- * The event sources. The five standing conditions (`invoice_overdue`,
- * `low_stock`, `out_of_stock`, `po_overdue`, `pending_approval`) are
- * deliberately absent — they are derived, never written, and listing them here
- * would invite somebody to `emit()` one.
+ * The event sources. The four standing conditions (`invoice_overdue`,
+ * `reorder_queue`, `po_overdue`, `pending_approval`) are deliberately absent
+ * they are derived, never written, and listing them here would invite somebody
+ * to `emit()` one.
+ *
+ * `reorder_queue` replaced a per-product `low_stock` / `out_of_stock` pair: one
+ * row carrying the counts and the action that answers them, rather than forty
+ * rows restating one fact with no door out. Neither of the old types is emitted
+ * any more, and neither was ever stored - they were derived too.
  *
  * `new_registration` and the derived `pending_approval` overlap on purpose and
  * are not the same fact: this one records that an account *was created*, which
@@ -82,7 +87,7 @@ const notificationSchema = new mongoose.Schema(
     detail: { type: String, default: '' },
 
     /**
-     * What it is about, in the shape `AuditLog.entity` uses — a string id,
+     * What it is about, in the shape `AuditLog.entity` uses - a string id,
      * because some records are addressed by number (`INV-1043`) and a field
      * that only holds an ObjectId cannot describe the whole panel.
      */
@@ -97,12 +102,12 @@ const notificationSchema = new mongoose.Schema(
     href: { type: String, default: '' },
 
     /**
-     * The permission area that gates this row (§7.3: role-filtered — a
+     * The permission area that gates this row (§7.3: role-filtered - a
      * warehouse role sees stock and PO alerts, not overdue invoices).
      *
      * Stamped at write time and read by the service. It is a `PERMISSION_AREAS`
      * value, kept as a plain string rather than an enum so this model does not
-     * import from `shared/` — the service validates what it emits.
+     * import from `shared/` - the service validates what it emits.
      */
     area: { type: String, required: true, index: true },
 

@@ -2,7 +2,7 @@
  * CellShoppe's own population (SAAS_PLATFORM §1.1).
  *
  * **A service business needs its own everything.** Under database-per-business
- * CellShoppe holds its own customers, staff, suppliers and expenses — and it had
+ * CellShoppe holds its own customers, staff, suppliers and expenses - and it had
  * none of them: the seed wrote twelve repair tickets into its database whose
  * `customer` ids pointed at Cellvix's buyers, in a database CellShoppe cannot
  * read. Every one of those references dangled.
@@ -10,7 +10,7 @@
  * These are walk-in consumers rather than wholesale accounts, which is the
  * difference between the two businesses in one line: Cellvix sells parts to
  * repair shops, CellShoppe *is* a repair shop and sells to whoever walks in. So
- * no credit limits, no payment terms, no `businessName` — a person bringing in a
+ * no credit limits, no payment terms, no `businessName` - a person bringing in a
  * cracked phone is not a company.
  */
 
@@ -77,8 +77,8 @@ const SHOPPE_CUSTOMERS = [
 /**
  * CellShoppe's staff.
  *
- * A repair shop's roles are shaped differently from a wholesaler's — the bench
- * technician is the job that does not exist at Cellvix at all — but they hold
+ * A repair shop's roles are shaped differently from a wholesaler's - the bench
+ * technician is the job that does not exist at Cellvix at all - but they hold
  * the same built-in role slugs, because the permission areas are the same
  * question either way. Only the people differ.
  */
@@ -116,7 +116,7 @@ const SHOPPE_STAFF = [
  * Who CellShoppe buys parts from.
  *
  * A repair shop's suppliers are **distributors**, and one of them is Cellvix
- * itself — which is the relationship the whole platform is built around and
+ * itself - which is the relationship the whole platform is built around and
  * worth seeing in the data: tenant #1's wholesale business supplying tenant #1's
  * repair shop. They are separate businesses with separate databases, so this is
  * an ordinary supplier record rather than any kind of internal link.
@@ -153,11 +153,11 @@ const SHOPPE_SUPPLIERS = [
 
 /** What a repair shop actually spends money on, month to month. */
 const SHOPPE_EXPENSES = [
-  { label: 'Shop rent — Kingsway', amount: 385_000, category: 'Rent', daysAgo: 8 },
+  { label: 'Shop rent - Kingsway', amount: 385_000, category: 'Rent', daysAgo: 8 },
   { label: 'Hydro and internet', amount: 41_200, category: 'Utilities', daysAgo: 12 },
   { label: 'Adhesive, screens, tools restock', amount: 68_400, category: 'Supplies', daysAgo: 5 },
-  { label: 'Liability insurance — quarterly', amount: 122_000, category: 'Insurance', daysAgo: 21 },
-  { label: 'Local ads — Kingsway corridor', amount: 30_000, category: 'Marketing', daysAgo: 17 },
+  { label: 'Liability insurance - quarterly', amount: 122_000, category: 'Insurance', daysAgo: 21 },
+  { label: 'Local ads - Kingsway corridor', amount: 30_000, category: 'Marketing', daysAgo: 17 },
   { label: 'Bench tool replacement', amount: 54_900, category: 'Equipment', daysAgo: 34 },
   { label: 'Courier to Cellvix Wholesale', amount: 4_250, category: 'Shipping', daysAgo: 3 },
 ];
@@ -167,17 +167,17 @@ const SHOPPE_EXPENSES = [
  *
  * Scheduling is the feature that is on for a service business and off for a
  * product one (§1.1), so an empty calendar is the single most visible sign that
- * CellShoppe was never really populated — the screen exists precisely because
+ * CellShoppe was never really populated - the screen exists precisely because
  * this business type needs it.
  */
 const SHOPPE_APPOINTMENTS = [
-  { customer: 0, service: 'Screen replacement — iPhone 13', inDays: 0, hour: 10, minutes: 45 },
+  { customer: 0, service: 'Screen replacement - iPhone 13', inDays: 0, hour: 10, minutes: 45 },
   { customer: 1, service: 'Battery health check', inDays: 0, hour: 14, minutes: 30 },
   { customer: 2, service: 'Water damage assessment', inDays: 1, hour: 9, minutes: 60 },
   { customer: 3, service: 'Laptop keyboard swap', inDays: 1, hour: 13, minutes: 90 },
   { customer: 4, service: 'Charging port repair', inDays: 2, hour: 11, minutes: 45 },
   { customer: 5, service: 'Data recovery consult', inDays: 3, hour: 15, minutes: 30 },
-  { customer: 6, service: 'Screen replacement — Pixel 7', inDays: 4, hour: 10, minutes: 45 },
+  { customer: 6, service: 'Screen replacement - Pixel 7', inDays: 4, hour: 10, minutes: 45 },
 ];
 
 /** Enquiries from the shop's contact form, before anybody has priced them. */

@@ -6,7 +6,7 @@ import api from '@/lib/api';
  *
  * Deliberately **not** part of `useAuth`. That context is the buyer/admin
  * session, and folding a supplier into it would mean every consumer of
- * `useAuth` — the header, the price gate, the cart, the admin shell — gained a
+ * `useAuth` - the header, the price gate, the cart, the admin shell - gained a
  * fourth kind of user it was never written to reason about. A supplier signs in
  * against a different cookie and a different collection on the server (see
  * `middleware/supplierAuth.js`); keeping the client split the same way is what
@@ -23,7 +23,7 @@ export function useSupplierSession() {
   const { data, isLoading } = useQuery({
     queryKey: ME,
     // Answers 200 with `supplier: null` when signed out, so there is no 401 to
-    // swallow — an error here is a real one and should surface.
+    // swallow - an error here is a real one and should surface.
     queryFn: () => api.get('/supplier-portal/me'),
     staleTime: 5 * 60 * 1000,
     retry: false,
@@ -62,6 +62,23 @@ export function useSupplierOrder(id) {
   });
 }
 
+/**
+ * The master agreement: what this supplier still owes us, and what they signed.
+ *
+ * Fetched on every portal screen rather than only on the agreement page,
+ * because the *warning* is the point - a supplier who has not signed needs to
+ * be told wherever they are, not only once they find the right page.
+ */
+export function useSupplierAgreement() {
+  const { isAuthenticated } = useSupplierSession();
+  return useQuery({
+    queryKey: ['supplier-portal', 'agreement'],
+    queryFn: () => api.get('/supplier-portal/agreement'),
+    enabled: isAuthenticated,
+    staleTime: 60 * 1000,
+  });
+}
+
 export function useSupplierPortalMutations() {
   const queryClient = useQueryClient();
 
@@ -93,6 +110,18 @@ export function useSupplierPortalMutations() {
     }),
     changePassword: useMutation({
       mutationFn: (body) => api.post('/supplier-portal/password', body),
+    }),
+    /**
+     * Sign the master agreement.
+     *
+     * Invalidates everything under `supplier-portal`, not just the agreement:
+     * the dashboard banner, the order pages' "you cannot quote yet" state and
+     * the profile all read this answer, and a stale one of them would tell a
+     * supplier they still owe a signature they have just given.
+     */
+    signAgreement: useMutation({
+      mutationFn: (body) => api.post('/supplier-portal/agreement/sign', body),
+      onSuccess: invalidate,
     }),
     submitQuote: useMutation({
       mutationFn: ({ id, ...body }) => api.post(`/supplier-portal/orders/${id}/quote`, body),

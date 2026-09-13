@@ -7,7 +7,7 @@ import cn from '@/lib/cn';
  *
  * Deliberately not a spring: an eased ramp that decelerates into the final
  * figure reads as a number settling, where a bouncy one reads as a toy. Under
- * `prefers-reduced-motion` it renders the final value immediately — a counting
+ * `prefers-reduced-motion` it renders the final value immediately - a counting
  * animation is exactly the kind of motion that setting exists to stop.
  */
 export function CountUp({ to, duration = 1400, prefix = '', suffix = '', className }) {

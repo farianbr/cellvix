@@ -34,8 +34,8 @@ export function useAdminUsers(params) {
      *
      * The status pills and the search box are part of the query key, so
      * changing one used to drop `data` to `undefined` for the length of the
-     * round trip. Everything derived from it went with it — the counts on the
-     * pills, the `Review N` button, the KPI figures — so the toolbar visibly
+     * round trip. Everything derived from it went with it - the counts on the
+     * pills, the `Review N` button, the KPI figures - so the toolbar visibly
      * lost controls and then got them back, and the rows below jumped as the
      * header reflowed. Holding the last result means only the table body
      * changes, which is the only thing that actually did.
@@ -82,7 +82,7 @@ export function useAdminOrders(params) {
 }
 
 /**
- * One order, by number — the detail screen (phase 12).
+ * One order, by number - the detail screen (phase 12).
  *
  * Keyed on the order number rather than an id, matching the route and the
  * endpoint: that is the identifier a packing slip and a customer email carry.
@@ -197,7 +197,7 @@ export function useAdminPoBids(id) {
  * The supplier picker: who is tagged with these component types.
  *
  * Disabled until at least one type is chosen, because the endpoint answers with
- * nothing rather than everything — an empty filter must not put a hundred
+ * nothing rather than everything - an empty filter must not put a hundred
  * suppliers in front of somebody who has not said what they are buying yet.
  */
 export function useSuppliersForComponentTypes(componentTypes = []) {
@@ -255,7 +255,7 @@ export function useAdminExpenseCategories() {
 /**
  * `enabled` is explicit because the purchase-order form needs the whole
  * catalogue to populate its product picker and nothing else on that screen
- * does — fetching 400+ rows to render a list of purchase orders is waste.
+ * does - fetching 400+ rows to render a list of purchase orders is waste.
  */
 export function useAdminInventory(params, enabled = true) {
   const { canUseAdmin } = useAuth();
@@ -275,12 +275,63 @@ export function useAdminInventoryItem(id) {
   });
 }
 
+/**
+ * Everything at or below its reorder point, with the counts the bell shows.
+ *
+ * The same endpoint behind the notification's summary row and the Inventory
+ * screen's reorder bar, deliberately: two screens computing "what needs buying"
+ * separately is how a badge and the page it opens end up disagreeing.
+ */
+/**
+ * The agreement templates authored in admin.
+ *
+ * Carries `supplierCount` and `signedCount` per template, so the screen can
+ * say what publishing a revision would affect rather than leaving it to be
+ * discovered after the click.
+ */
+export function useAdminAgreements(includeInactive = false) {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'agreements', includeInactive],
+    queryFn: () => api.get('/admin/agreements', includeInactive ? { all: '1' } : undefined),
+    enabled: canUseAdmin,
+  });
+}
+
+/** One supplier’s signed agreement, for their profile. */
+export function useSupplierAgreement(supplierId) {
+  return useQuery({
+    queryKey: ['admin', 'suppliers', supplierId, 'agreement'],
+    queryFn: () => api.get(`/admin/suppliers/${supplierId}/agreement`),
+    enabled: Boolean(supplierId),
+  });
+}
+
+/** One agreement, with the roster of suppliers holding it. */
+export function useAdminAgreement(id) {
+  return useQuery({
+    queryKey: ['admin', 'agreements', 'one', id],
+    queryFn: () => api.get(`/admin/agreements/${id}`),
+    enabled: Boolean(id),
+  });
+}
+
+export function useReorderQueue(enabled = true) {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'inventory', 'reorder'],
+    queryFn: () => api.get('/admin/inventory/reorder'),
+    enabled: canUseAdmin && enabled,
+    staleTime: 15 * 1000,
+  });
+}
+
 // ---- quotes & RMA (phase 7) -------------------------------------------------
 
 /**
  * Web quotes: enquiries the storefront contact form sent in.
  *
- * `undefined` params means the caller does not want the list yet — the
+ * `undefined` params means the caller does not want the list yet - the
  * customer profile only fetches on its own tab.
  */
 export function useAdminWebQuotes(params) {
@@ -299,7 +350,7 @@ export function useAdminQuotes(params) {
   return useQuery({
     queryKey: ['admin', 'quotes', params],
     queryFn: () => api.get('/admin/quotes', params),
-    // `undefined` params means the caller does not want the list yet — the
+    // `undefined` params means the caller does not want the list yet - the
     // customer profile only fetches on its Quotes tab. Without this the hook
     // would fetch every quote in the system to render nothing.
     enabled: canUseAdmin && params !== undefined,
@@ -337,7 +388,7 @@ export function useAdminRma(id) {
 
 /**
  * Repair tickets. `params` carries the status pill, the search, the priority
- * and technician filters and the page — all of it in the key, so paging back
+ * and technician filters and the page - all of it in the key, so paging back
  * to a page already seen is instant.
  */
 export function useAdminTickets(params) {
@@ -345,13 +396,13 @@ export function useAdminTickets(params) {
   return useQuery({
     queryKey: ['admin', 'tickets', params],
     queryFn: () => api.get('/admin/tickets', params),
-    // `undefined` params means the caller does not want the list yet — the
+    // `undefined` params means the caller does not want the list yet - the
     // customer profile only fetches on its Tickets tab. Without this the hook
     // would fetch *every* ticket in the shop to render nothing.
     enabled: canUseAdmin && params !== undefined,
     staleTime: 15 * 1000,
     // A list that reflows under the operator while they read a row is worse
-    // than one a few seconds stale, but a page of tickets is a live board —
+    // than one a few seconds stale, but a page of tickets is a live board
     // keeping the previous page on screen during a refetch is the compromise.
     placeholderData: (previous) => previous,
   });
@@ -393,7 +444,7 @@ export function useAdminReport(tab, range, extra) {
  * Admin mutations.
  *
  * Approving a business changes what that account can see everywhere, so the
- * whole admin cache is invalidated rather than surgically patched — these are
+ * whole admin cache is invalidated rather than surgically patched - these are
  * low-frequency, high-consequence actions.
  */
 // ---- phase 8: businesses, roles and staff --------------------------------------
@@ -426,7 +477,7 @@ export function useNextBusinessCode(enabled = true) {
   });
 }
 
-/** Admin-only endpoints — a staff session gets a 403, so it never asks. */
+/** Admin-only endpoints - a staff session gets a 403, so it never asks. */
 export function useAdminRoles() {
   const { isAdmin } = useAuth();
   return useQuery({
@@ -453,7 +504,7 @@ export function useAdminStaff(params) {
  * Channel states and the counts above each marketing screen.
  *
  * `channels` is the one source of truth for which providers are connected
- * (§6b) — the notices on the SMS, WhatsApp and Calls screens read it rather
+ * (§6b) - the notices on the SMS, WhatsApp and Calls screens read it rather
  * than each hard-coding its own wording.
  */
 export function useMarketingSummary() {
@@ -503,7 +554,7 @@ export function useMarketingCampaigns(params) {
 }
 
 /**
- * One campaign, with its audience recounted server-side on every read —
+ * One campaign, with its audience recounted server-side on every read
  * consent moves between saves, and the count shown is the one the operator uses
  * to decide whether to send.
  */
@@ -530,7 +581,7 @@ export function useMarketingUnsubscribes(params) {
 /**
  * Referrals and the commission rate.
  *
- * Admin-only — a staff session gets a 403, so it never asks (§6.13). This pays
+ * Admin-only - a staff session gets a 403, so it never asks (§6.13). This pays
  * real money on an automatic trigger, which is a decision for whoever owns the
  * money rather than anyone holding `marketing: full`.
  */
@@ -554,7 +605,7 @@ export function useAdminReferrals(params) {
  * about the same field.
  *
  * `staleTime` is longer than the panel's default because settings change on the
- * order of months, not minutes — and every mutation invalidates `['admin']`
+ * order of months, not minutes - and every mutation invalidates `['admin']`
  * anyway, so an edit still lands immediately.
  */
 /** Returns going back to a supplier (Purchase § RMA / Returns). */
@@ -605,7 +656,7 @@ export function useAdminSettings() {
 /**
  * The bell's contents.
  *
- * **Polled, as §7.3 specifies** — "polled on an interval to start, upgraded to
+ * **Polled, as §7.3 specifies** - "polled on an interval to start, upgraded to
  * SSE only if that proves necessary". One minute is the interval: the four
  * standing conditions are recomputed on every read, so a shorter one buys
  * freshness nobody can act on while multiplying a query that touches invoices,
@@ -655,7 +706,7 @@ export function useNotificationActions() {
 /**
  * One page of the activity or security log.
  *
- * `kind` picks the endpoint rather than being sent as a parameter — the server
+ * `kind` picks the endpoint rather than being sent as a parameter - the server
  * decides which log a route reads, so a client cannot ask the activity route
  * for security rows.
  *
@@ -686,7 +737,7 @@ export function useAuditLog(kind, params) {
  * (§6.15), so there is nothing to fetch and nothing to cache: what comes back
  * is `configured`, `source` and a preview like `••••••••1234`.
  *
- * Admin-only — a staff session would only ever get a 403, so it never asks.
+ * Admin-only - a staff session would only ever get a 403, so it never asks.
  */
 export function useAdminCredentials() {
   const { isAdmin } = useAuth();
@@ -724,7 +775,7 @@ export function useAdminInvoiceRules() {
 // ---- phase 11e: scheduling board (UI only, §6b U1–U2) -----------------------
 
 /**
- * The scheduling board's data. Ships empty and there is no write hook — the
+ * The scheduling board's data. Ships empty and there is no write hook - the
  * screens render their chrome and say plainly that nothing is wired.
  */
 export function useAdminAppointments(params) {
@@ -746,7 +797,7 @@ export function useAdminAppointments(params) {
  * there is nothing to pass here and nothing this hook could ask for that the
  * session is not entitled to.
  *
- * Disabled under two characters, matching the server's own floor — otherwise
+ * Disabled under two characters, matching the server's own floor - otherwise
  * every palette open fires a request that returns nothing.
  */
 export function useAdminSearch(term) {
@@ -894,7 +945,7 @@ export function useAdminMutations() {
       onSuccess: invalidate,
     }),
 
-    // A standalone invoice — no order behind it. On terms it draws on the line
+    // A standalone invoice - no order behind it. On terms it draws on the line
     // of credit, so the client's own account view moved as well.
     createInvoice: useMutation({
       mutationFn: (body) => api.post('/admin/invoices', body),
@@ -912,7 +963,7 @@ export function useAdminMutations() {
       onSuccess: invalidate,
     }),
     // Resolves to `{ delivered, to }`. The caller reads `delivered` rather than
-    // treating a 200 as proof the customer has the document — the transport can
+    // treating a 200 as proof the customer has the document - the transport can
     // accept the request and still refuse the message.
     // Cash at the counter against the line of credit. Resolves to the invoices
     // it actually landed on, so the UI can name them rather than say "done".
@@ -1040,7 +1091,7 @@ export function useAdminMutations() {
      * Email this supplier their portal link and a fresh password.
      *
      * Resolves to `{ delivered, error }` rather than throwing on a mail
-     * failure — the credential is reset either way, and the screen has to be
+     * failure - the credential is reset either way, and the screen has to be
      * able to say "reset, but the email did not send" instead of claiming a
      * success that never left the building.
      */
@@ -1076,6 +1127,20 @@ export function useAdminMutations() {
     // Prices the order's lines from the winning bid, so every PO list moves too.
     confirmPoSupplier: useMutation({
       mutationFn: ({ id, ...body }) => api.post(`/admin/purchase-orders/${id}/confirm`, body),
+      onSuccess: invalidate,
+    }),
+
+    // Accepting rewrites the order's lines to match the proforma, so the order
+    // itself is invalidated alongside the bid board - the header totals and the
+    // items table are both reading numbers this just changed.
+    acceptProforma: useMutation({
+      mutationFn: ({ id, supplierId }) =>
+        api.post(`/admin/purchase-orders/${id}/bids/${supplierId}/proforma/accept`, {}),
+      onSuccess: invalidate,
+    }),
+    requestProformaRevision: useMutation({
+      mutationFn: ({ id, supplierId, note }) =>
+        api.post(`/admin/purchase-orders/${id}/bids/${supplierId}/proforma/revision`, { note }),
       onSuccess: invalidate,
     }),
 
@@ -1130,7 +1195,7 @@ export function useAdminMutations() {
       mutationFn: ({ id, ...body }) => api.patch(`/admin/expenses/categories/${id}`, body),
       onSuccess: invalidate,
     }),
-    // Resolves to `{ deactivated }` — a category in use is deactivated, and the
+    // Resolves to `{ deactivated }` - a category in use is deactivated, and the
     // caller is expected to say which of the two happened.
     deleteExpenseCategory: useMutation({
       mutationFn: (id) => api.delete(`/admin/expenses/categories/${id}`),
@@ -1169,7 +1234,7 @@ export function useAdminMutations() {
     }),
     /**
      * Conversion. Rejects with `QUOTE_PRICE_DRIFT` and the comparison in
-     * `error.fields.drift` when catalogue prices have moved — the caller shows
+     * `error.fields.drift` when catalogue prices have moved - the caller shows
      * that and retries with `acknowledgeDrift`, which is the admin's decision
      * to honour the quoted price anyway.
      */
@@ -1238,7 +1303,7 @@ export function useAdminMutations() {
       mutationFn: ({ id, ...body }) => api.patch(`/admin/rma/${id}/inspect`, body),
       onSuccess: invalidate,
     }),
-    /** Resolves to `{ restocked, refund }` — the caller says what actually
+    /** Resolves to `{ restocked, refund }` - the caller says what actually
      *  moved rather than reporting a bare success. */
     resolveRma: useMutation({
       mutationFn: ({ id, ...body }) => api.post(`/admin/rma/${id}/resolve`, body),
@@ -1303,7 +1368,7 @@ export function useAdminMutations() {
     // ---- phase 9 ----------------------------------------------------------
     // Every compose resolves to `{ message, notice }`. `notice` is non-null
     // when the channel could not actually send, and the screen must render it
-    // instead of a confirmation — §6b rule 4, no fake success.
+    // instead of a confirmation - §6b rule 4, no fake success.
     sendMessage: useMutation({
       mutationFn: ({ channel, ...body }) => api.post(`/admin/marketing/${channel}`, body),
       onSuccess: invalidate,
@@ -1336,7 +1401,7 @@ export function useAdminMutations() {
     }),
     // Resolves to `{ campaign, result }`, where `result` carries sent / queued
     // / failed / skipped. The screen reports those four numbers rather than a
-    // single "sent" — a partial run says so.
+    // single "sent" - a partial run says so.
     sendCampaign: useMutation({
       mutationFn: (id) => api.post(`/admin/marketing/campaigns/${id}/send`),
       onSuccess: invalidate,
@@ -1349,7 +1414,7 @@ export function useAdminMutations() {
 
     // ---- phase 10 ---------------------------------------------------------
     // The only writable thing in the whole referral feature. Accruals are
-    // produced by payments and reversed by refunds — there is no mutation that
+    // produced by payments and reversed by refunds - there is no mutation that
     // writes one by hand, and attribution is set once at registration.
     setReferralRate: useMutation({
       mutationFn: (percent) => api.patch('/admin/referrals/rate', { percent }),
@@ -1376,14 +1441,27 @@ export function useAdminMutations() {
       mutationFn: (body) => api.patch('/admin/settings/payment-methods', body),
       onSuccess: invalidate,
     }),
+    createAgreement: useMutation({
+      mutationFn: (body) => api.post('/admin/agreements', body),
+      onSuccess: invalidate,
+    }),
+    updateAgreement: useMutation({
+      mutationFn: ({ id, ...body }) => api.patch(`/admin/agreements/${id}`, body),
+      onSuccess: invalidate,
+    }),
+    // Publishing moves every supplier onto the new wording, which is what makes
+    // their existing signature stale - so it invalidates broadly.
+    publishAgreement: useMutation({
+      mutationFn: ({ id, ...body }) => api.post(`/admin/agreements/${id}/publish`, body),
+      onSuccess: invalidate,
+    }),
     saveInventorySettings: useMutation({
       mutationFn: (body) => api.patch('/admin/settings/inventory', body),
       onSuccess: invalidate,
     }),
-
     // ---- phase 11c: provider credentials -----------------------------------
     // Write-only. The response carries previews and `configured` flags, never
-    // the values that were just sent — so nothing here caches a secret.
+    // the values that were just sent - so nothing here caches a secret.
     saveCredentials: useMutation({
       mutationFn: ({ provider, ...values }) => api.patch(`/admin/credentials/${provider}`, values),
       onSuccess: invalidate,

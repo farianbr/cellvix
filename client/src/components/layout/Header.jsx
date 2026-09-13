@@ -10,7 +10,7 @@ import AccountMenu from '@/components/account/AccountMenu';
  * Header shell.
  *
  * Desktop and mobile headers are two different layouts (Woodmart vs Unimart per
- * the brief) swapped by CSS visibility, never by a JS width check — that keeps
+ * the brief) swapped by CSS visibility, never by a JS width check - that keeps
  * the correct one painted on the first frame.
  */
 export function Header() {
@@ -19,7 +19,7 @@ export function Header() {
   // The mega menu and cart dropdown hang off the header and dim everything
   // below it, so their scrims need the header's real height. It changes with
   // the breakpoint and when the announcement bar is dismissed, so measure it
-  // rather than hard-coding — a stale value leaves an undimmed strip.
+  // rather than hard-coding - a stale value leaves an undimmed strip.
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el) return undefined;

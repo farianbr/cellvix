@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Link, useParams } from 'react-router';
 import { ArrowLeft, ArrowRight, Clock, Tag } from 'lucide-react';
 import { date } from '@/lib/format';
@@ -9,6 +9,7 @@ import PostCover from '@/components/blog/PostCover';
 import TableOfContents from '@/components/blog/TableOfContents';
 import WhyCellvix from '@/components/product/WhyCellvix';
 import useActiveSection from '@/hooks/useActiveSection';
+import useDocumentTitle from '@/hooks/useDocumentTitle';
 import useScrollProgress from '@/hooks/useScrollProgress';
 import { useBlogPost } from '@/hooks/useContent';
 import { pressable } from '@/lib/motion';
@@ -29,16 +30,10 @@ export function BlogPostPage() {
   const headingIds = useMemo(() => headings.map((heading) => heading.id), [headings]);
   const activeHeading = useActiveSection(headingIds);
 
-  // The document title is the one piece of chrome a single-page router will not
-  // update on its own, and it is what a shared link shows in a tab strip.
-  useEffect(() => {
-    if (!post) return undefined;
-    const previous = document.title;
-    document.title = `${post.title} — Cellvix`;
-    return () => {
-      document.title = previous;
-    };
-  }, [post]);
+  // The post's own title in the tab, once it loads. `RootLayout` sets the
+  // route's default meanwhile, so there is no flash of "undefined" and no
+  // restore-on-unmount to remember - see `useDocumentTitle`.
+  useDocumentTitle(post?.title);
 
   if (isLoading) {
     return (
@@ -79,7 +74,7 @@ export function BlogPostPage() {
   return (
     <>
       {/* Reading progress. A long-form page is the one place a progress rule
-          earns its keep, and it is the gradient at 2px — an accent rule, not a
+          earns its keep, and it is the gradient at 2px - an accent rule, not a
           fill (PROJECT_INSTRUCTIONS.md §2.2). */}
       <div
         className="sticky top-0 z-30 h-0.5 w-full bg-line/60"
@@ -93,7 +88,7 @@ export function BlogPostPage() {
       </div>
 
       {/* The page is the same 1400px box every other page uses, so the header,
-          the footer and the article all line up down one pair of edges — a
+          the footer and the article all line up down one pair of edges - a
           narrower slab here read as a different site.
 
           Inside it, the PROSE still stops at 760px: a measure that grows with
@@ -109,7 +104,7 @@ export function BlogPostPage() {
 
           The tracks start at the page's left edge rather than being centred in
           it, so the contents rail lines up with the logo above it and the grid
-          on the Shop page — the same left margin down every page. The slack a
+          on the Shop page - the same left margin down every page. The slack a
           wide window has collects in a third, empty track on the right, which is
           where the eye expects white space in a left-aligned layout. */}
       <div className="mx-auto grid max-w-[1400px] gap-10 px-3 py-6 sm:px-4 lg:px-6 lg:py-10 xl:grid-cols-[220px_minmax(0,760px)_1fr]">

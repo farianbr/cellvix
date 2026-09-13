@@ -5,7 +5,7 @@ import { apiUrl } from './api';
  *
  * **The filters go on the URL, so the file matches the screen.** §7.4 is blunt:
  * an export that ignores the active filter set is a bug. Every caller passes
- * the same params object it gave the list query, so the two cannot disagree —
+ * the same params object it gave the list query, so the two cannot disagree
  * there is no second place here that decides what "current filters" means.
  *
  * **A plain navigation, not `fetch` + Blob.** The session lives in an httpOnly

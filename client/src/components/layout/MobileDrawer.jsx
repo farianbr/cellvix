@@ -18,7 +18,7 @@ import { pressable } from '@/lib/motion';
  *
  * The account sections deliberately are not here. They live one tap away in the
  * bottom bar's account slot (`MobileBottomNav`), which opens the full
- * `AccountMenu` — all nine of them, always current. Mirroring four of the nine
+ * `AccountMenu` - all nine of them, always current. Mirroring four of the nine
  * into this list gave the drawer a second, permanently incomplete copy of a
  * menu that already exists, and made "where do I find my invoices" a question
  * with two different answers.
@@ -36,14 +36,14 @@ const NAV_LINKS = [
   // the copy exists.
   //
   // `neverActive` because the active test below is an exact path match, and
-  // three entries sharing /contact would otherwise all light up at once — the
+  // three entries sharing /contact would otherwise all light up at once - the
   // highlight is meant to say "you are here", not "one of these three".
   { label: 'Privacy policy', to: '/contact', neverActive: true },
   { label: 'Terms & conditions', to: '/contact', neverActive: true },
 ];
 
 // Staff get one door into the console rather than the buyer dashboard links.
-// The ERP has its own sidebar and its own thirty-odd screens — mirroring that
+// The ERP has its own sidebar and its own thirty-odd screens - mirroring that
 // tree into the storefront drawer would be a second, worse copy of it.
 const ADMIN_LINKS = [
   { label: 'Shop all parts', to: '/' },
@@ -67,7 +67,7 @@ const SOCIAL = [
  *
  * Two tabs: Menu (site links) and Categories (a drill-down of the same tree the
  * desktop mega menu renders). Categories entries filter the grid and close the
- * drawer — they do not navigate.
+ * drawer - they do not navigate.
  */
 export function MobileDrawer() {
   const open = useUiStore((s) => s.mobileNavOpen);

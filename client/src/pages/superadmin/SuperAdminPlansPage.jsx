@@ -27,8 +27,8 @@ import { usePlans, useSuperAdminMutations } from '@/hooks/useSuperAdmin';
  * Subscription tiers.
  *
  * **A plan sets feature defaults; it does not enforce anything.** It sits in the
- * middle of the resolution chain — business-type defaults, then plan defaults,
- * then per-business overrides — so it widens or narrows what a business starts
+ * middle of the resolution chain - business-type defaults, then plan defaults,
+ * then per-business overrides - so it widens or narrows what a business starts
  * with. `requireFeature` is the only thing that refuses a request at runtime,
  * and it reads the resolved set.
  *
@@ -41,7 +41,7 @@ import { usePlans, useSuperAdminMutations } from '@/hooks/useSuperAdmin';
 /**
  * Edit a plan, including the feature defaults its subscribers inherit.
  *
- * **A change here reaches every tenant on the plan immediately** —
+ * **A change here reaches every tenant on the plan immediately**
  * `resolveFeatures` reads `featureDefaults` on each request, so there is no
  * migration and no delay. That is intended, and it is why the subscriber count
  * is stated at the top rather than left to be looked up: raising a price is a
@@ -128,7 +128,7 @@ function PlanEditor({ plan, features, onClose }) {
       {/*
         Feature defaults sit under the form and save on click rather than on
         submit, because they are per-key settings rather than fields of one
-        record — the same choice the per-business grid makes, for the same
+        record - the same choice the per-business grid makes, for the same
         reason.
       */}
       <div className="mt-5 border-t border-plat-line-soft pt-4">
@@ -172,7 +172,7 @@ function PlanEditor({ plan, features, onClose }) {
                               {
                                 id: plan.id,
                                 key: feature.key,
-                                // `null` clears the key — a third state, and the
+                                // `null` clears the key - a third state, and the
                                 // only way back to the type's own default.
                                 enabled: choice === 'default' ? null : choice === 'on',
                               },
@@ -246,7 +246,7 @@ export function SuperAdminPlansPage() {
 
         The admin panel's table is a Cellvix component with its light surface
         baked in, and three plans do not need sorting, density control or column
-        management — the controls would outnumber the data. A row per plan reads
+        management - the controls would outnumber the data. A row per plan reads
         at a glance and carries the console's own palette.
       */}
       <PlatformPanel>
@@ -318,7 +318,7 @@ export function SuperAdminPlansPage() {
             createPlan.mutate(
               {
                 ...values,
-                // Typed in dollars, sent in cents — the boundary every money
+                // Typed in dollars, sent in cents - the boundary every money
                 // field in this app crosses here rather than server-side.
                 priceCents: Math.round(Number(values.priceCents || 0) * 100),
               },

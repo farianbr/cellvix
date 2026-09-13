@@ -41,7 +41,7 @@ const purchaseOrderItemSchema = new mongoose.Schema(
      * what a client pays; the gap between them is the margin every report reads.
      *
      * **Zero until a supplier is confirmed.** A PO is now raised *to ask* what
-     * a part costs, so at `draft` there is no agreed price to hold — it is
+     * a part costs, so at `draft` there is no agreed price to hold - it is
      * copied here from the winning bid by `confirmSupplier`. Required would
      * mean inventing a number nobody quoted just to save the document.
      */
@@ -67,6 +67,23 @@ const bidLineSchema = new mongoose.Schema(
     // "cannot supply" is `available: false`, which is a different fact and must
     // not be encoded as a price of zero.
     unitCost: { type: Number, required: true, min: 0 },
+
+    /**
+     * How many this supplier can actually supply.
+     *
+     * **A short line is normal, not an exception.** A supplier holding 30 of
+     * the 40 we asked for previously had two ways to answer: quote for 40 they
+     * cannot ship, or mark the line unavailable and lose the 30 they can. This
+     * is the third and honest one.
+     *
+     * Undefined means "all of them", which is what every line quoted before
+     * this field existed meant - so an old bid and a new one total the same
+     * way. `available: false` still means none, and stays a separate fact: a
+     * zero here and a `false` there say the same thing, but only the flag
+     * carries "and do not ask me again".
+     */
+    qty: { type: Number, min: 0 },
+
     available: { type: Boolean, default: true },
     note: { type: String, trim: true, maxlength: 300 },
   },
@@ -78,7 +95,7 @@ const bidLineSchema = new mongoose.Schema(
  *
  * Append-only: a negotiation is a conversation, and overwriting the previous
  * ask would destroy the only record of what was agreed from what. The
- * supplier's answer lands as a fresh bid — `theirCounter` snapshots the total
+ * supplier's answer lands as a fresh bid - `theirCounter` snapshots the total
  * they came back with so a round reads as a pair without re-deriving it.
  *
  * `channels` records where the ask actually went, not where we intended it to
@@ -104,7 +121,7 @@ const negotiationSchema = new mongoose.Schema(
 );
 
 /**
- * A proforma invoice — the supplier's formal offer against this PO (§6.8b).
+ * A proforma invoice - the supplier's formal offer against this PO (§6.8b).
  *
  * Rendered by `proformaDocument.js` from these fields, never uploaded: a form
  * the server totals is a document whose arithmetic we can trust, and it needs
@@ -122,13 +139,42 @@ const proformaSchema = new mongoose.Schema(
     issuedAt: { type: Date, default: Date.now },
     validUntil: Date,
 
+    /**
+     * What the supplier is actually invoicing - **their** quantities, not ours.
+     *
+     * A proforma used to be totals only, derived from the bid lines against our
+     * `qtyOrdered`, which quietly assumed the supplier was shipping exactly what
+     * was asked for. They frequently are not: a line comes back short, a case
+     * pack rounds 36 up to 40, an item is dropped. With no line detail there was
+     * nowhere for that to be recorded and nothing for a buyer to read before
+     * agreeing to pay - the PI was a number with no arithmetic behind it.
+     *
+     * Holding the supplier's own quantity is what makes accepting a PI
+     * meaningful: `acceptProforma` writes these lines onto the order, so what we
+     * pay, what we expect to receive and what restocks all come from one place.
+     * Until then they are the supplier's claim and nothing else.
+     */
+    lines: [
+      {
+        sku: { type: String, required: true },
+        // Snapshot, so a PI stays readable after the catalogue moves on
+        // the same reason `Order` and `PurchaseOrder` keep theirs.
+        name: String,
+        qty: { type: Number, required: true, min: 0 },
+        // Integer cents. Zero is a legitimate price for a sample or a freebie.
+        unitCost: { type: Number, required: true, min: 0 },
+        note: { type: String, trim: true, maxlength: 300 },
+        _id: false,
+      },
+    ],
+
     // All integer cents, all recomputed server-side from the bid lines.
     subtotal: { type: Number, default: 0 },
     tax: { type: Number, default: 0 },
     shipping: { type: Number, default: 0 },
     total: { type: Number, default: 0 },
 
-    // How they want paying. Free text by design — a supplier abroad banks in
+    // How they want paying. Free text by design - a supplier abroad banks in
     // ways a Canadian field set would refuse to hold.
     paymentTerms: { type: String, trim: true, maxlength: 300 },
     bankDetails: { type: String, trim: true, maxlength: 1000 },
@@ -145,8 +191,28 @@ const proformaSchema = new mongoose.Schema(
       },
     ],
 
+    /**
+     * Where this PI has got to with us.
+     *
+     * `pending` until somebody reads it; `accepted` once its lines are written
+     * onto the order; `revision_requested` when we have sent it back. Stored
+     * rather than derived from `acceptedAt` alone, because "we asked for a new
+     * one" is a real state a supplier is waiting in, and a null `acceptedAt`
+     * could not tell it apart from "nobody has looked yet".
+     */
+    review: {
+      type: String,
+      enum: ['pending', 'accepted', 'revision_requested'],
+      default: 'pending',
+    },
+
     /** Set when we accept this PI as the basis for confirming the supplier. */
     acceptedAt: Date,
+    acceptedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+
+    /** Why we sent it back, and when. Shown to the supplier verbatim. */
+    revisionRequestedAt: Date,
+    revisionNote: { type: String, trim: true, maxlength: 2000 },
   },
   { _id: false },
 );
@@ -170,7 +236,7 @@ const DELIVERY_STATUSES = ['pending', 'preparing', 'dispatched', 'in_transit', '
  * `status` is mostly a fact about what the supplier did, not a stage we chose:
  * `viewed` when they open it, `quoted` when they price it, `declined` when they
  * say no. Only `confirmed` and `lost` come from our end, and both are written
- * by the same confirmation — so a PO can never have two confirmed suppliers or
+ * by the same confirmation - so a PO can never have two confirmed suppliers or
  * a winner without losers.
  */
 const purchaseOrderBidSchema = new mongoose.Schema(
@@ -185,6 +251,7 @@ const purchaseOrderBidSchema = new mongoose.Schema(
     viewedAt: Date,
     quotedAt: Date,
 
+
     lines: [bidLineSchema],
 
     // Integer cents, all recomputed server-side from `lines` on every submit.
@@ -197,7 +264,7 @@ const purchaseOrderBidSchema = new mongoose.Schema(
     total: { type: Number, default: 0 },
 
     // What they promise, in days from quoting. Their commitment, not a date we
-    // set — a lead time is half of what a purchasing decision weighs.
+    // set - a lead time is half of what a purchasing decision weighs.
     leadTimeDays: { type: Number, min: 0 },
     validUntil: Date,
 
@@ -236,7 +303,7 @@ const purchaseOrderSchema = new mongoose.Schema(
     poNumber: { type: String, required: true, unique: true, index: true }, // PO-2026-00001
 
     /**
-     * **The confirmed supplier** — who this order was actually placed with.
+     * **The confirmed supplier** - who this order was actually placed with.
      *
      * No longer required, and that is the whole shape of the change: a PO is
      * raised to ask several suppliers what they charge, so between `draft` and
@@ -244,7 +311,7 @@ const purchaseOrderSchema = new mongoose.Schema(
      * writes it.
      *
      * Kept as this field rather than a new `confirmedSupplier` because roughly
-     * fifteen call sites already read it — `refreshSupplierTotals`, the expense
+     * fifteen call sites already read it - `refreshSupplierTotals`, the expense
      * a payment writes, the spend-per-supplier aggregation, the inventory
      * price history, every populate. Narrowing its *meaning* costs nothing;
      * renaming it would have meant editing all of them to say the same thing.
@@ -263,7 +330,7 @@ const purchaseOrderSchema = new mongoose.Schema(
     confirmedAt: Date,
 
     /**
-     * Which component types this order was put out on — `Product.partType`
+     * Which component types this order was put out on - `Product.partType`
      * slugs, matched against `Supplier.componentTypes` to suggest who to ask.
      *
      * Stored rather than derived from the lines, because it is what the
@@ -276,6 +343,7 @@ const purchaseOrderSchema = new mongoose.Schema(
     business: { type: mongoose.Schema.Types.ObjectId, ref: 'Business' },
 
     status: { type: String, enum: PO_STATUSES, default: 'draft', index: true },
+
 
     /** When answers are due. Honoured on read, never by a nightly job. */
     closesAt: Date,

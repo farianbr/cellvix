@@ -6,7 +6,7 @@ import jwt from 'jsonwebtoken';
  * This middleware is why `openBusinessDb` mounts before authentication: a
  * module-level import binds these to the default connection, and with the
  * context opened later every sign-in failed with `INVALID_CREDENTIALS` against
- * an account that existed — in another database.
+ * an account that existed - in another database.
  *
  * The side-effect imports keep the schemas registered, which mongoose needs to
  * resolve a `ref` by name at populate time.
@@ -36,7 +36,7 @@ const STATUS_ERRORS = {
 
 /**
  * Reads the session cookie and attaches `req.user` when it resolves.
- * Never throws — an anonymous visitor is a valid state everywhere.
+ * Never throws - an anonymous visitor is a valid state everywhere.
  *
  * A cookie that cannot resolve to a user is actively cleared. Otherwise the
  * browser keeps presenting a dead token on every request for the rest of its
@@ -56,12 +56,12 @@ async function authenticate(req, res, next) {
      * A tenant's **admin** lives in the control plane so one login reaches every
      * business the tenant owns; **staff and buyers** live in the business's own
      * database. A session token names an id and not which of those it is, so
-     * both are tried — control plane first because it is the smaller collection
+     * both are tried - control plane first because it is the smaller collection
      * and because an admin is the account most likely to be switching business
      * when this runs.
      *
      * Two lookups rather than one, on a request that already makes several. The
-     * alternative — putting the population in the token — would mean a token
+     * alternative - putting the population in the token - would mean a token
      * minted before a role changed kept looking in the wrong place.
      */
     const user =
@@ -89,7 +89,7 @@ async function authenticate(req, res, next) {
  * **Admits an impersonating operator**, because every guard below funnels
  * through the idea of "a request that is allowed to be here", and a support
  * session is. What it deliberately does not do is give that operator a
- * `req.user` — the routes beneath still have to cope with there being no buyer
+ * `req.user` - the routes beneath still have to cope with there being no buyer
  * account, which is why `denyAdmin` refuses them outright.
  */
 function requireAuth(req, _res, next) {
@@ -102,7 +102,7 @@ function requireAuth(req, _res, next) {
  * approves the business (brief §8.2).
  */
 function requireApproved(req, _res, next) {
-  // Buyer-side, so a support session is refused here as it is by `denyAdmin` —
+  // Buyer-side, so a support session is refused here as it is by `denyAdmin`
   // and explicitly, because `requireAuth` now admits one and this would
   // otherwise read `status` off nothing.
   if (isImpersonating(req)) {
@@ -167,13 +167,13 @@ function denyAdmin(req, _res, next) {
 /**
  * Full admin. Deliberately NOT satisfied by a `staff` account, however
  * permissive its role: the things behind this guard are the ones §7.6 keeps
- * admin-only regardless of role — editing roles, creating users, API keys and
- * the security log — because a role that can grant itself power is not a
+ * admin-only regardless of role - editing roles, creating users, API keys and
+ * the security log - because a role that can grant itself power is not a
  * permission system.
  */
 function requireAdmin(req, _res, next) {
   // A platform operator inside a support session passes. They are not an
-  // `admin` of this business and never will be — the grant is what authorises
+  // `admin` of this business and never will be - the grant is what authorises
   // them, and it is time-boxed, revocable and written into the business's own
   // audit trail, which is a stronger claim than a role flag.
   if (isImpersonating(req)) return next();
@@ -185,7 +185,7 @@ function requireAdmin(req, _res, next) {
 /**
  * Admin panel access: an admin, or a staff member holding a role.
  *
- * A staff account with no `staffRole` is refused here — access is granted,
+ * A staff account with no `staffRole` is refused here - access is granted,
  * never inherited, so an employee nobody has assigned is a locked door rather
  * than a door standing open.
  */
@@ -214,7 +214,7 @@ function requireStaff(req, _res, next) {
  * disabled buttons are a courtesy; this is what actually decides.
  *
  * `admin` bypasses the role system entirely. Everyone else must hold `level`
- * or better on `area`, where `view` is genuinely read-only — it must not reach
+ * or better on `area`, where `view` is genuinely read-only - it must not reach
  * a mutating route, including an export that writes an audit row.
  */
 function requirePermission(area, level = 'view') {

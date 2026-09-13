@@ -19,7 +19,7 @@ const orderItemSchema = new mongoose.Schema(
     qty: { type: Number, required: true },
     // Always the LIST price. Savings live in `bundleDiscount` / `promoDiscount`
     // rather than being folded in here, so an invoice can show what a part costs
-    // and what came off it — which is what a business buyer reconciles against.
+    // and what came off it - which is what a business buyer reconciles against.
     unitPrice: { type: Number, required: true },
     lineTotal: { type: Number, required: true },
 
@@ -30,7 +30,7 @@ const orderItemSchema = new mongoose.Schema(
     //
     // **Undefined, not zero, when unknown.** Orders placed before cost was
     // tracked have no honest value here, and a zero would read as "this part
-    // was free" — a 100% margin. Every report distinguishes the two and says
+    // was free" - a 100% margin. Every report distinguishes the two and says
     // how many lines it could not cost.
     unitCost: Number,
     // Set on lines that arrived as part of a combo, so the order page can group
@@ -67,7 +67,7 @@ const orderSchema = new mongoose.Schema(
      * Which shop this order belongs to.
      *
      * Set at checkout from the business the operator is working in, or chosen
-     * explicitly when a customer wants to collect from — or be delivered by —
+     * explicitly when a customer wants to collect from - or be delivered by
      * a particular shop. Null on an order placed before businesses were scoped,
      * which reads as the default business rather than as missing data.
      */

@@ -8,7 +8,7 @@ import { pressable } from '@/lib/motion';
  *
  * Two icon buttons rather than one toggle, because a single button that
  * silently flips between two states cannot tell you which state you are in
- * without you pressing it — the label would have to read either the current
+ * without you pressing it - the label would have to read either the current
  * density or the one you would get, and both readings are defensible, so the
  * control is ambiguous by construction. A segmented pair shows both options and
  * marks the live one.

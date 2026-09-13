@@ -18,7 +18,7 @@ const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/clients/:id/edit'], icon: adminIcon
  *
  * **Why a route and not a dialog.** The form is two columns of a dozen fields;
  * at that size a modal is a scrolling box floating over a table nobody is
- * reading, and it cannot be linked to, refreshed or opened in a second tab —
+ * reading, and it cannot be linked to, refreshed or opened in a second tab
  * which is exactly what somebody does when they are copying details across from
  * another system. A route also means "back" behaves: cancelling returns to the
  * profile the operator came from instead of dumping them at the top of the list.

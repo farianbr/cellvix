@@ -60,7 +60,7 @@ export function AccountPaymentMethodsPage() {
     <div className="space-y-4">
       <p className="flex items-start gap-2 rounded-md bg-surface-2 px-4 py-3 text-sm text-ink-500">
         <Info className="mt-0.5 size-4 shrink-0 text-ink-400" strokeWidth={2} aria-hidden="true" />
-        This build runs against a mock payment gateway. Cards stored here are records only — no card
+        This build runs against a mock payment gateway. Cards stored here are records only - no card
         number is collected, transmitted or charged.
       </p>
 
@@ -172,7 +172,7 @@ export function AccountPaymentMethodsPage() {
 
             <div className="min-w-0 flex-1">
               <p className="font-display text-md font-bold text-ink-900">
-                On account — {user.terms.replace('net', 'Net ')}
+                On account - {user.terms.replace('net', 'Net ')}
               </p>
               <p className="mt-1 text-sm leading-relaxed text-ink-500">
                 Approved on this account. Orders placed on terms draw against your credit limit and

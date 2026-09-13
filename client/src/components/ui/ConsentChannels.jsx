@@ -25,7 +25,7 @@ export const CONSENT_CHANNELS = [
   { key: 'call', label: 'Phone Call', icon: Phone },
 ];
 
-/** An empty answer. Not the same fact as "declined" — see `ConsentPanel`. */
+/** An empty answer. Not the same fact as "declined" - see `ConsentPanel`. */
 export const EMPTY_CONSENT = { sms: false, whatsapp: false, email: false, call: false };
 
 export function ConsentChannels({ value = EMPTY_CONSENT, onChange, disabled = false, className }) {

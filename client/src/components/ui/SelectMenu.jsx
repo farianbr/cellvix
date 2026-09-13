@@ -8,7 +8,7 @@ import useAnchoredPosition from '@/hooks/useAnchoredPosition';
 import { popover } from '@/lib/motion';
 
 /**
- * The listbox we draw ourselves. **This is the site's dropdown** — a native
+ * The listbox we draw ourselves. **This is the site's dropdown** - a native
  * `<select>` is not used anywhere a Cellvix control is expected to look like a
  * Cellvix control.
  *
@@ -17,17 +17,17 @@ import { popover } from '@/lib/motion';
  * trigger and lets it run off; inside a modal it is styled by the platform and
  * matches nothing around it. This panel is anchored to the trigger, clamped to
  * the viewport, and rendered in a **portal** so no scrolling or overflow-hidden
- * ancestor — a `Panel`, a modal body, a table wrapper — can clip it.
+ * ancestor - a `Panel`, a modal body, a table wrapper - can clip it.
  *
  * Two shapes, one component:
- *   - **toolbar control** — `srLabel` only, no visible label. Filters, sorts.
- *   - **form field** — `label`, and `hint` / `error` under it, matching `Input`.
+ *   - **toolbar control** - `srLabel` only, no visible label. Filters, sorts.
+ *   - **form field** - `label`, and `hint` / `error` under it, matching `Input`.
  *
  * Keyboard contract is the ARIA listbox one: Enter/Space/Arrow opens, Arrow keys
  * and Home/End move the active option, Enter selects, Escape closes and returns
  * focus to the trigger.
  *
- * For a field inside a react-hook-form form, use `SelectField` — it wires this
+ * For a field inside a react-hook-form form, use `SelectField` - it wires this
  * to a `Controller` rather than to `register`, which a non-native control cannot
  * accept.
  */
@@ -36,7 +36,7 @@ const SIZES = {
   md: 'h-11 pl-3.5 pr-3 text-md rounded-md',
 };
 
-/** Height of one option row — px-2.5 py-2 around a 13px line. */
+/** Height of one option row - px-2.5 py-2 around a 13px line. */
 const OPTION_H = 33;
 
 /**
@@ -101,7 +101,7 @@ export function SelectMenu({
     matchWidth: true,
   });
 
-  // The list is portalled, so it is not inside `containerRef` — both refs have
+  // The list is portalled, so it is not inside `containerRef` - both refs have
   // to count as "inside" or the first click on an option closes the menu.
   useOnClickOutside([containerRef, listRef], () => setOpen(false), open);
 
@@ -199,8 +199,8 @@ export function SelectMenu({
             // allows one or the other.
             'bg-surface p-1 shadow-flyout focus:outline-none',
             // Scale from the trigger, not from the panel's own centre. The menu
-            // grows out of the control that opened it — downward menus from
-            // their top edge, a menu that flipped upward from its bottom — so
+            // grows out of the control that opened it - downward menus from
+            // their top edge, a menu that flipped upward from its bottom - so
             // the relationship between button and panel is visible in the
             // motion rather than only in the final position. Whether anyone
             // consciously notices is not the point; details like this are what
@@ -230,7 +230,7 @@ export function SelectMenu({
                 >
                   <span className="min-w-0 flex-1 truncate">{option.label}</span>
                   <Count value={option.count} muted={!isSelected} />
-                  {/* The tick always holds its column — dropping it from the
+                  {/* The tick always holds its column - dropping it from the
                       unselected rows pulled their counts 22px right of the
                       selected one's and made the list read as ragged. */}
                   <Check
@@ -277,7 +277,7 @@ export function SelectMenu({
           aria-expanded={open}
           aria-controls={open ? listId : undefined}
           // <label for> only names a labelable element, and a button is not
-          // one — without this the field's accessible name would be whichever
+          // one - without this the field's accessible name would be whichever
           // option happens to be selected. Naming it from the label AND the
           // button announces "Province, Ontario", which is both halves.
           aria-labelledby={label ? `${id}-label ${id}` : undefined}

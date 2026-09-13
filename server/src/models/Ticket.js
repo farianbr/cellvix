@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 /**
- * A repair ticket — a device brought in, diagnosed, worked on, collected.
+ * A repair ticket - a device brought in, diagnosed, worked on, collected.
  *
  * **The customer is free-typed, not an account reference.** A repair walks in
  * off the street; requiring an approved Cellvix business account before a
@@ -15,7 +15,7 @@ import mongoose from 'mongoose';
  * something ready by mistake must be able to walk it back. Enforcing an order
  * here would cost more in workarounds than it would prevent in mistakes, so
  * `ticketService` accepts any status and records every move in `timeline`
- * instead — the audit trail is the control, not the transition table.
+ * instead - the audit trail is the control, not the transition table.
  */
 const TICKET_STATUSES = [
   'diagnosis',
@@ -45,7 +45,7 @@ const TICKET_SOURCES = ['counter', 'kiosk', 'web', 'phone'];
  * Recorded **before** work starts, because it is the shop's protection: a
  * customer who says the camera worked when they handed it over is answered by
  * the row they signed, not by memory. `untested` is a real answer and is
- * distinct from `not_present` — one is a thing nobody checked, the other is a
+ * distinct from `not_present` - one is a thing nobody checked, the other is a
  * thing that was already missing.
  */
 const CONDITION_GRADES = ['working', 'faulty', 'not_present', 'untested'];
@@ -66,7 +66,7 @@ const CONDITION_PARTS = [
  * One line of work or one part fitted, priced.
  *
  * Services and parts are the same shape because they are the same thing on an
- * invoice — a description and a price. They are kept in separate arrays only so
+ * invoice - a description and a price. They are kept in separate arrays only so
  * the intake form can group them the way a technician thinks about them.
  */
 const ticketLineSchema = new mongoose.Schema(
@@ -86,8 +86,8 @@ const ticketLineSchema = new mongoose.Schema(
  * One device on a ticket.
  *
  * A ticket used to carry a single device inline. A customer bringing in two
- * handsets then needed two tickets, which split one job — one drop-off, one
- * collection, one invoice — into two records that had to be kept in step by
+ * handsets then needed two tickets, which split one job - one drop-off, one
+ * collection, one invoice - into two records that had to be kept in step by
  * hand. The device is its own subdocument now, and a ticket holds a list.
  */
 const ticketDeviceSchema = new mongoose.Schema(
@@ -183,7 +183,7 @@ const ticketSchema = new mongoose.Schema(
     priority: { type: String, enum: TICKET_PRIORITIES, default: 'normal', index: true },
     source: { type: String, enum: TICKET_SOURCES, default: 'counter' },
 
-    // A staff User, unlike the customer — a technician is an account, because
+    // A staff User, unlike the customer - a technician is an account, because
     // the assignment is what a workload report is counted from.
     technician: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null, index: true },
 
@@ -205,7 +205,7 @@ const ticketSchema = new mongoose.Schema(
      * Money taken before there is an invoice to take it against.
      *
      * A repair is quoted, the customer leaves a deposit, and the invoice does
-     * not exist until the work is done — so the payment has nowhere to live.
+     * not exist until the work is done - so the payment has nowhere to live.
      * Recorded here and **carried onto the invoice as a payment** when the
      * ticket converts, which is the only reason to hold it on the ticket at
      * all: a deposit that did not follow the money would have to be re-keyed,
@@ -226,7 +226,7 @@ const ticketSchema = new mongoose.Schema(
      *
      * `Quote.convertedTicket` already points forwards; this is the same edge
      * read backwards. A ticket that only knew its invoice could show half a
-     * chain — where it went, never where it came from — and the lineage strip
+     * chain - where it went, never where it came from - and the lineage strip
      * has to draw quote → ticket → invoice from whichever of the three the
      * operator happens to have open.
      */

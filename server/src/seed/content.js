@@ -8,7 +8,7 @@ import '../models/Offer.js';
 import { BLOG_POSTS, GENERAL_FAQS, PRODUCT_FAQS, buildOffers } from './content.data.js';
 
 /**
- * Seeds ONLY the editorial collections — blog posts, FAQs and offers.
+ * Seeds ONLY the editorial collections - blog posts, FAQs and offers.
  *
  * `npm run seed` wipes the whole database, which is the wrong tool once a
  * database has real accounts and order history in it. This one touches three
@@ -16,7 +16,7 @@ import { BLOG_POSTS, GENERAL_FAQS, PRODUCT_FAQS, buildOffers } from './content.d
  * working database without costing anyone their cart.
  *
  * Offers are built from the catalogue that is already there, so the SKUs in a
- * combo always exist — the same check `offerService` enforces on every write.
+ * combo always exist - the same check `offerService` enforces on every write.
  */
 const readMinutes = (body) =>
   Math.max(1, Math.round(body.trim().split(/\s+/).filter(Boolean).length / 220));
@@ -26,7 +26,7 @@ async function seedContent({ quiet = false } = {}) {
 
   const products = await db().Product.find({ isActive: true }).lean();
   if (products.length === 0) {
-    throw new Error('No products in this database — run `npm run seed` first.');
+    throw new Error('No products in this database - run `npm run seed` first.');
   }
 
   await Promise.all([db().BlogPost.deleteMany({}), db().Faq.deleteMany({}), db().Offer.deleteMany({})]);

@@ -210,12 +210,12 @@ export function regionsFor(country) {
   return rulesFor(country).regions ?? [];
 }
 
-/** What to call the subdivision field here — "Province", "State", "Prefecture". */
+/** What to call the subdivision field here - "Province", "State", "Prefecture". */
 export function regionLabelFor(country) {
   return rulesFor(country).regionLabel ?? 'Region / state';
 }
 
-/** What to call the postal field here — "Postal code", "ZIP code", "Postcode". */
+/** What to call the postal field here - "Postal code", "ZIP code", "Postcode". */
 export function postalLabelFor(country) {
   return rulesFor(country).postalLabel ?? 'Postal code';
 }

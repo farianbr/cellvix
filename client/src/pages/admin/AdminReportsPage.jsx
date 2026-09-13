@@ -39,7 +39,7 @@ import Skeleton from '@/components/ui/Skeleton';
 import { pressable } from '@/lib/motion';
 
 /**
- * Reports — the eight analytics tabs (ERP rework §6.12).
+ * Reports - the eight analytics tabs (ERP rework §6.12).
  *
  * **Tab and date range both live in the URL**, so every view is a link: an
  * operator sends "here is the quarter I mean" rather than "set the dates to".
@@ -68,14 +68,14 @@ const TABS = [
 
 /** A percentage from a stored fraction. `0.13` is 13%, never 0.13%. */
 function percent(fraction, digits = 2) {
-  if (fraction == null || Number.isNaN(fraction)) return '—';
+  if (fraction == null || Number.isNaN(fraction)) return '-';
   return `${(fraction * 100).toFixed(digits)}%`;
 }
 
 /**
  * A signed money figure, rendered once (§9.3).
  *
- * The sign lives in the number and the tone follows it — there is no second
+ * The sign lives in the number and the tone follows it - there is no second
  * "Net loss" label anywhere, because two ways to say the same thing is how a
  * report ends up printing `REVENUE $-350.70` beside `NET LOSS $350.70`.
  */
@@ -106,7 +106,7 @@ function CostCoverageNote({ coverage }) {
         Margin excludes <strong className="font-semibold">{formatCount(coverage.uncostedLines)}</strong>{' '}
         line{coverage.uncostedLines === 1 ? '' : 's'} with no recorded cost, worth{' '}
         {money(coverage.uncostedRevenue)}. Cost is captured on new orders from the product's cost
-        field — those lines are counted as revenue but not as profit.
+        field - those lines are counted as revenue but not as profit.
       </span>
     </p>
   );
@@ -120,7 +120,7 @@ function TableCard({ title, description, columns, rows, empty, emptyIcon = FileT
   return (
     <Panel title={title} description={description} action={action} flush>
       {/* One `TableCard` serves every report tab, so the count line lands on
-          all of them at once — and with it the density toggle, without which
+          all of them at once - and with it the density toggle, without which
           this whole screen was stuck at whatever a list page last set. */}
       {rows.length > 0 && (
         <div className="border-b border-line px-3 py-2 sm:px-4">
@@ -133,7 +133,7 @@ function TableCard({ title, description, columns, rows, empty, emptyIcon = FileT
         rows={pageRows}
         // `DataTable` passes only the row, so the key has to come from the row
         // itself. Report rows are aggregates and have no id: the composite
-        // below is what actually identifies one — a supplier-price row is an
+        // below is what actually identifies one - a supplier-price row is an
         // item AND a supplier, not either alone.
         rowKey={(row) =>
           row.id ??
@@ -229,7 +229,7 @@ function SummaryTab({ data }) {
 
         <Panel
           title="Outstanding"
-          description="Owed to Cellvix, as of today — a position, not a flow."
+          description="Owed to Cellvix, as of today - a position, not a flow."
           action={
             <Link to="/admin/invoices?status=overdue" className="text-sm font-semibold text-brand hover:underline">
               View all →
@@ -336,7 +336,7 @@ function ProfitAndLossTab({ data }) {
           {
             key: 'profit',
             label: 'Net profit',
-            // Signed once — a loss shows as a negative here and nowhere else.
+            // Signed once - a loss shows as a negative here and nowhere else.
             value: (
               <>
                 {(kpis.netProfit ?? 0) < 0 ? '−' : ''}
@@ -429,7 +429,7 @@ function ProfitAndLossTab({ data }) {
               className: 'tnum',
               render: (row) =>
                 row.margin === null ? (
-                  <span className="text-xs text-ink-300">—</span>
+                  <span className="text-xs text-ink-300">-</span>
                 ) : (
                   <>
                     <span className={cn('font-medium', row.margin < 0 ? 'text-danger' : 'text-ink-900')}>
@@ -470,7 +470,7 @@ function SalesTab({ data }) {
           // CellShoppe's clarifying caption is kept because it is genuinely
           // useful: the tiles above are invoiced totals by invoice date, this
           // is money actually collected in the range.
-          description="By payment date. The tiles above are invoiced totals by invoice date — these are different numbers."
+          description="By payment date. The tiles above are invoiced totals by invoice date - these are different numbers."
         >
           <p className="tnum font-display text-3xl font-bold leading-none text-ok">
             {money(data.collected?.total ?? 0)}
@@ -624,7 +624,7 @@ function ExpenseTab({ data }) {
           },
           { key: 'category', header: 'Category', priority: 2, render: (row) => <Badge tone="neutral" size="sm">{row.category}</Badge> },
           { key: 'payee', header: 'Payee', priority: 3, className: 'max-w-[140px] truncate' },
-          { key: 'method', header: 'Method', priority: 3, render: (row) => <span className="text-sm text-ink-500">{row.method ?? '—'}</span> },
+          { key: 'method', header: 'Method', priority: 3, render: (row) => <span className="text-sm text-ink-500">{row.method ?? '-'}</span> },
           {
             key: 'amount',
             header: 'Amount',
@@ -662,7 +662,7 @@ function InventoryTab({ data }) {
       <div className="grid gap-3">
         <TableCard
           title="All stock items"
-          description="Position as of today — these tiles do not move with the date range."
+          description="Position as of today - these tiles do not move with the date range."
           rows={data.products ?? []}
           empty="No products in the catalogue."
           emptyIcon={Boxes}
@@ -681,8 +681,8 @@ function InventoryTab({ data }) {
             },
             { key: 'category', header: 'Category', priority: 3, className: 'max-w-[140px] truncate' },
             { key: 'stock', header: 'Qty', priority: 1, align: 'right', className: 'tnum', render: (row) => formatCount(row.stock) },
-            { key: 'minStock', header: 'Min', priority: 3, align: 'right', className: 'tnum', render: (row) => (row.minStock > 0 ? row.minStock : '—') },
-            { key: 'cost', header: 'Unit cost', priority: 2, align: 'right', className: 'tnum', render: (row) => (row.cost > 0 ? money(row.cost) : <span className="text-xs text-ink-300">—</span>) },
+            { key: 'minStock', header: 'Min', priority: 3, align: 'right', className: 'tnum', render: (row) => (row.minStock > 0 ? row.minStock : '-') },
+            { key: 'cost', header: 'Unit cost', priority: 2, align: 'right', className: 'tnum', render: (row) => (row.cost > 0 ? money(row.cost) : <span className="text-xs text-ink-300">-</span>) },
             { key: 'value', header: 'Value', priority: 1, align: 'right', className: 'tnum', render: (row) => money(row.value) },
             {
               key: 'status',
@@ -699,7 +699,7 @@ function InventoryTab({ data }) {
 
         <TableCard
           title="Period movement"
-          description="Stock that moved inside the range — this panel is the period, the tiles above are today."
+          description="Stock that moved inside the range - this panel is the period, the tiles above are today."
           rows={data.movements ?? []}
           empty="No transactions this period."
           emptyIcon={Boxes}
@@ -718,7 +718,7 @@ function InventoryTab({ data }) {
               ),
             },
             { key: 'type', header: 'Type', priority: 2, render: (row) => <Badge tone="neutral" size="sm">{row.type}</Badge> },
-            { key: 'reference', header: 'Reference', priority: 3, render: (row) => <span className="font-mono text-xs text-ink-400">{row.reference ?? '—'}</span> },
+            { key: 'reference', header: 'Reference', priority: 3, render: (row) => <span className="font-mono text-xs text-ink-400">{row.reference ?? '-'}</span> },
             {
               key: 'qtyChange',
               header: 'Change',
@@ -755,7 +755,7 @@ function TaxTab({ data }) {
           { label: 'GST/HST paid', hint: 'Input tax on expenses', value: money(kpis.paid ?? 0), tone: 'text-ink-900' },
           {
             label: 'Net payable',
-            hint: net < 0 ? 'Negative — a refund or credit is due to Cellvix' : 'Owed to the tax authority',
+            hint: net < 0 ? 'Negative - a refund or credit is due to Cellvix' : 'Owed to the tax authority',
             // Signed once: negative means money comes back, and the hint says
             // so rather than a second "refund due" tile contradicting this one.
             value: `${net < 0 ? '−' : ''}${money(Math.abs(net))}`,
@@ -786,7 +786,7 @@ function TaxTab({ data }) {
       <div className="grid gap-3">
         <TableCard
           title="GST/HST register"
-          description="The rate shown is the rate that was actually charged, recovered from each order — a rate change today does not restate last quarter."
+          description="The rate shown is the rate that was actually charged, recovered from each order - a rate change today does not restate last quarter."
           rows={data.register ?? []}
           empty="No orders in this period."
           emptyIcon={Percent}
@@ -856,7 +856,7 @@ function StaffTab({ data }) {
           { key: 'invoiced', label: 'Total invoiced', value: money(kpis.totalInvoiced), hint: 'Whole business, by invoice date', tone: 'brand', icon: FileText },
           { key: 'invoices', label: 'Total invoices', value: formatCount(kpis.totalInvoices), hint: 'Issued in range', tone: 'neutral', icon: Receipt },
           { key: 'orders', label: 'Orders placed', value: formatCount(kpis.ordersClosed), hint: 'Excluding cancelled', tone: 'info', icon: ClipboardList },
-          { key: 'staff', label: 'Active staff', value: '—', hint: 'No staff accounts exist yet', tone: 'neutral', icon: Users },
+          { key: 'staff', label: 'Active staff', value: '-', hint: 'No staff accounts exist yet', tone: 'neutral', icon: Users },
         ]}
       />
 
@@ -878,7 +878,7 @@ function SupplierPricesTab({ data }) {
     <>
       <p className="mb-3 text-sm leading-relaxed text-ink-500">
         What each supplier charged per item, taken from purchase orders. The cheapest supplier for
-        each item is highlighted — use it to decide who to buy from. Drafts are excluded: a price
+        each item is highlighted - use it to decide who to buy from. Drafts are excluded: a price
         nobody has committed to is a quote, not evidence.
       </p>
 
@@ -990,7 +990,7 @@ export function AdminReportsPage() {
 
       {/* The shared `TabRow`. This was a local copy using the full
           `.bg-brand-gradient` on a 36px pill, where the ramp's near-black
-          opening reads as a stripe rather than as depth — the shared component
+          opening reads as a stripe rather than as depth - the shared component
           uses the compact ramp, which is the rule for anything this short. */}
       <TabRow tabs={TABS} value={tab} onChange={setTab} label="Report" className="mb-4" />
 

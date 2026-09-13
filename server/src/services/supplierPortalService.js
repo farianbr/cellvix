@@ -17,7 +17,7 @@ import { sendSupplierPortalInvite, sendSupplierResetEmail } from './supplierMail
  * than adding a fourth `User.role` rests on this file: `middleware/auth.js`
  * reads `env.COOKIE_NAME` and looks the subject up in `User`, so a token minted
  * here can never satisfy `requireAuth`, `requireApproved`, `requireStaff` or
- * `requirePermission` — not because those were audited, but because the
+ * `requirePermission` - not because those were audited, but because the
  * collection it points into is the wrong one. The reverse holds too: a buyer's
  * cookie carries a `User` id, and `requireSupplier` refuses a subject that is
  * not a live supplier.
@@ -86,7 +86,7 @@ function shapePortalSupplier(supplier) {
  * Mint credentials and email them.
  *
  * Called when a supplier is created with an email, and by the admin's **Resend
- * portal link** button. Both paths generate a **fresh password** — the stored
+ * portal link** button. Both paths generate a **fresh password** - the stored
  * value is a bcrypt hash, so the previous one cannot be read back out to be
  * re-sent, and pretending otherwise would mean keeping a plaintext copy for the
  * sake of a button.
@@ -107,7 +107,7 @@ async function invitePortal(supplierId) {
   }
   if (!supplier.isActive) {
     throw ApiError.badRequest(
-      `${supplier.name} is inactive — activate them before sending portal access.`,
+      `${supplier.name} is inactive - activate them before sending portal access.`,
       'SUPPLIER_INACTIVE',
     );
   }
@@ -133,8 +133,8 @@ async function invitePortal(supplierId) {
 /**
  * Sign in.
  *
- * One error for every failure — unknown email, wrong password, no portal access
- * yet — because the alternative tells an outsider which of our suppliers have
+ * One error for every failure - unknown email, wrong password, no portal access
+ * yet - because the alternative tells an outsider which of our suppliers have
  * accounts. `isActive` is the exception in spirit but not in message: it also
  * answers with the same line.
  */

@@ -11,7 +11,7 @@ import Rma from '../models/Rma.js';
  *
  * Orders, invoices, tickets, quotes and returns each gained an `business` field.
  * Every row written before that has none, and a null business is invisible to a
- * switcher filtering by one — so on a panel switched to "Cellvix Main" the
+ * switcher filtering by one - so on a panel switched to "Cellvix Main" the
  * business would appear to have no history at all.
  *
  * **The default business is the oldest one**, which is the shop that existed when
@@ -19,7 +19,7 @@ import Rma from '../models/Rma.js';
  * to. It is not a guess: Cellvix ran one location for the whole period this
  * data covers (§6.14).
  *
- * Idempotent, and narrow by construction — the filter is `business: null`, so a
+ * Idempotent, and narrow by construction - the filter is `business: null`, so a
  * second run touches nothing and a record already assigned to a shop is never
  * reassigned. Safe on a database with real data.
  */
@@ -31,7 +31,7 @@ async function backfillBusiness({ quiet = false, dryRun = false } = {}) {
   // Oldest first: the business that was there when the unassigned rows were made.
   const business = await Business.findOne({}).sort({ createdAt: 1 }).lean();
   if (!business) {
-    log('No businesses exist — nothing to assign to. Create one first.');
+    log('No businesses exist - nothing to assign to. Create one first.');
     return { assigned: 0 };
   }
 

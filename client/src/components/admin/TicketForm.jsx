@@ -38,7 +38,7 @@ import {
  *
  * **The form is the intake sheet**, not a thin wrapper over the ticket record.
  * A shop takes in a device by writing down what came in, what state it was in,
- * what the customer says is wrong, and what the job is expected to cost — and
+ * what the customer says is wrong, and what the job is expected to cost - and
  * every one of those is evidence later. So the form is sectioned the way that
  * conversation actually goes: who, what devices, what notes, what it costs.
  *
@@ -51,7 +51,7 @@ import {
  *
  * **The total is a preview.** Every figure below the lines is computed here for
  * the operator to see, and computed *again* on the server from the same lines
- * (§5.3). Nothing this form calculates is trusted — a client that could set the
+ * (§5.3). Nothing this form calculates is trusted - a client that could set the
  * price of the work would be setting the price of the work.
  *
  * **Short intake still works.** Every field except the customer is optional, so
@@ -150,7 +150,7 @@ export function TicketForm({ ticket, seed, technicians = [], onSubmit, onCancel,
         onSubmit({
           ...values,
           // A blank grade means "not recorded", which is not the same fact as
-          // `untested` — so empty keys are dropped rather than sent as ''.
+          // `untested` - so empty keys are dropped rather than sent as ''.
           devices: values.devices.map((device) => ({
             ...device,
             condition: Object.fromEntries(
@@ -188,7 +188,7 @@ export function TicketForm({ ticket, seed, technicians = [], onSubmit, onCancel,
         <Input
           label="Email"
           type="email"
-          hint="Optional — used only if the shop emails a receipt."
+          hint="Optional - used only if the shop emails a receipt."
           containerClassName="mt-2"
           {...register('customerEmail')}
         />
@@ -246,7 +246,7 @@ export function TicketForm({ ticket, seed, technicians = [], onSubmit, onCancel,
           <Textarea
             label="Technician notes"
             rows={2}
-            hint="Also printed — technical detail the customer may keep."
+            hint="Also printed - technical detail the customer may keep."
             placeholder="Technician notes…"
             {...register('technicianNotes')}
           />
@@ -261,7 +261,7 @@ export function TicketForm({ ticket, seed, technicians = [], onSubmit, onCancel,
                 <Lock className="size-3.5 text-warn" strokeWidth={2.25} aria-hidden="true" />
                 Internal notes
                 <span className="text-2xs font-normal text-warn">
-                  confidential — never printed
+                  confidential - never printed
                 </span>
               </span>
             }
@@ -288,7 +288,7 @@ export function TicketForm({ ticket, seed, technicians = [], onSubmit, onCancel,
             control={control}
             name="province"
             label="Province"
-            options={[{ value: '', label: '— pick province —' }, ...PROVINCES]}
+            options={[{ value: '', label: ' - pick province - ' }, ...PROVINCES]}
           />
           <Input
             label="Tax rate (%)"
@@ -298,7 +298,7 @@ export function TicketForm({ ticket, seed, technicians = [], onSubmit, onCancel,
           />
         </div>
 
-        {/* A preview. The server recomputes all of this from the lines — see
+        {/* A preview. The server recomputes all of this from the lines - see
             the note at the top of this file. */}
         <dl className="mt-4 space-y-1.5 border-t border-line pt-3 text-sm">
           <div className="flex justify-between gap-3">
@@ -324,7 +324,7 @@ export function TicketForm({ ticket, seed, technicians = [], onSubmit, onCancel,
         </dl>
 
         <p className="mt-2 text-xs leading-relaxed text-ink-400">
-          An estimate, not an invoice. Nothing here moves a balance — billing a finished repair is
+          An estimate, not an invoice. Nothing here moves a balance - billing a finished repair is
           a separate step.
         </p>
       </Section>

@@ -5,7 +5,7 @@ import cn from '@/lib/cn';
  *
  * Cellvix has not supplied catalogue photography yet (PROGRESS.md open question
  * #6). Rather than fake photos or grey boxes, each part type gets a technical
- * drawing — so a grid of results still reads at a glance. `ProductCard` renders
+ * drawing - so a grid of results still reads at a glance. `ProductCard` renders
  * `product.image` the moment real photography exists and never reaches here.
  */
 

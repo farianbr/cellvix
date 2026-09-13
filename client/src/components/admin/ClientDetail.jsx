@@ -21,7 +21,7 @@ const PAYMENT_METHODS = [
  * store-credit panel.
  *
  * They live here rather than inside the profile page so the two money surfaces
- * stay together and stay apart — the form edits what Cellvix will **lend**, the
+ * stay together and stay apart - the form edits what Cellvix will **lend**, the
  * panel posts what the business already **holds**, and the Instructions require
  * those never be merged into one card.
  */
@@ -44,7 +44,7 @@ const STATUS_TONES = {
  * Store credit on one account: allocate, correct, and read the ledger.
  *
  * Deliberately a separate panel from "Credit & terms" above it, because they are
- * different instruments — that form edits what Cellvix will LEND this business,
+ * different instruments - that form edits what Cellvix will LEND this business,
  * this one posts money the business HOLDS. Mixing them into one card is what
  * makes staff grant a $2,000 limit when they meant a $200 refund.
  */
@@ -88,7 +88,7 @@ export function StoreCreditPanel({ id, balance }) {
             placeholder="50"
             {...register('amountDollars')}
           />
-          <Input label="Reason" placeholder="Goodwill — late dispatch" {...register('note')} />
+          <Input label="Reason" placeholder="Goodwill - late dispatch" {...register('note')} />
         </div>
 
         <Button type="submit" size="sm" className="mt-3" loading={allocateStoreCredit.isPending}>
@@ -131,7 +131,7 @@ export function StoreCreditPanel({ id, balance }) {
 /**
  * Credit and terms: what Cellvix will **lend** this business.
  *
- * Deliberately separate from the store-credit panel — that one posts money the
+ * Deliberately separate from the store-credit panel - that one posts money the
  * business already **holds**. Mixing them into one card is what makes staff
  * grant a $2,000 limit when they meant a $200 refund.
  */
@@ -139,7 +139,7 @@ export function CreditForm({ id, user }) {
   const { setCredit, setUserStatus } = useAdminMutations();
 
   // `values` (not `defaultValues`) because the account arrives after first
-  // render — defaults would snapshot an empty user and the form would show
+  // render - defaults would snapshot an empty user and the form would show
   // a zero credit limit for an account that has one.
   const { register, handleSubmit, control } = useForm({
     values: {
@@ -214,8 +214,8 @@ export function CreditForm({ id, user }) {
  * Recording money a customer handed over against their line of credit.
  *
  * **A separate panel from `CreditForm`, on purpose.** That form sets what
- * Cellvix is willing to *lend* — a policy decision an owner makes. This records
- * what a customer *paid* — an event at the counter. Putting a "save" that
+ * Cellvix is willing to *lend* - a policy decision an owner makes. This records
+ * what a customer *paid* - an event at the counter. Putting a "save" that
  * changes a credit limit next to a "record" that moves money invites the wrong
  * one being pressed.
  *
@@ -282,7 +282,7 @@ export function CreditRepaymentForm({ id, user }) {
       </div>
 
       <p className="mb-3 text-sm leading-relaxed text-ink-500">
-        Money the customer has already handed over — cash at the counter, a transfer, a cheque.
+        Money the customer has already handed over - cash at the counter, a transfer, a cheque.
         It settles their unpaid invoices oldest first, so the account and the invoices behind it
         cannot disagree about what is left.
       </p>
@@ -318,7 +318,7 @@ export function CreditRepaymentForm({ id, user }) {
           Record payment
         </Button>
         <span className="text-xs text-ink-400">
-          Overpayment is refused — that is a store-credit allocation.
+          Overpayment is refused - that is a store-credit allocation.
         </span>
       </div>
     </form>

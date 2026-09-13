@@ -16,7 +16,7 @@ import { pressable } from '@/lib/motion';
  * API Keys (§6.15, category 7, phase 11c).
  *
  * **A stored secret never comes back to this screen.** The server returns
- * `configured`, a `source` and a masked preview — nothing else — so there is no
+ * `configured`, a `source` and a masked preview - nothing else - so there is no
  * value here to reveal, and the reveal toggle below unmasks **what the admin
  * has just typed into the field**, which is what CellShoppe's own toggle does.
  * That is the entire meaning of "write-only through the API" (§6.15), and it is
@@ -115,7 +115,7 @@ function ProviderCard({ provider }) {
                 <Input
                   label={field.label}
                   // `Input` carries its own reveal toggle for password fields,
-                  // and what it unmasks is the box's own contents — which here
+                  // and what it unmasks is the box's own contents - which here
                   // is only ever what this admin has just typed, never a
                   // stored value. That is exactly §6.15's rule, so there is no
                   // second toggle to build.
@@ -131,7 +131,7 @@ function ProviderCard({ provider }) {
                   /**
                    * An unconfigured field used to put `field.hint` in the
                    * placeholder AND below the field, so every empty row said
-                   * "Starts with AC." twice — once in grey inside the box and
+                   * "Starts with AC." twice - once in grey inside the box and
                    * again in grey underneath it. Repeating a line does not make
                    * it clearer; it makes the reader check whether the two say
                    * something different, and they never did.
@@ -143,7 +143,7 @@ function ProviderCard({ provider }) {
                     fromEnv
                       ? 'Set by an environment variable'
                       : field.configured
-                        ? `${field.preview} — type to replace`
+                        ? `${field.preview} - type to replace`
                         : ''
                   }
                   hint={
@@ -204,7 +204,7 @@ export function AdminApiKeysPage() {
       {/* The measure wraps the notice as well as the panels.
 
           It sat outside the capped container, so a full-bleed banner ran the
-          shell's whole width above content that stopped at the form measure —
+          shell's whole width above content that stopped at the form measure
           the page disagreed with itself about where its own edge was, and the
           notice read as belonging to the shell rather than to this screen. */}
       <div className="max-w-form">
@@ -212,7 +212,7 @@ export function AdminApiKeysPage() {
         <ShieldCheck className="mt-0.5 size-4 shrink-0 text-info" strokeWidth={2} aria-hidden="true" />
         <span>
           <strong className="font-semibold">Keys are write-only.</strong> They are encrypted before
-          being stored and are never sent back to this screen — not even to an administrator. A
+          being stored and are never sent back to this screen - not even to an administrator. A
           configured field shows only its last four characters, and the eye toggle reveals what you
           have just typed, nothing more. To change a key, type the new one; to remove it, clear the
           field and save.
@@ -228,7 +228,7 @@ export function AdminApiKeysPage() {
       <p className="mt-5 flex items-start gap-2 text-sm leading-relaxed text-ink-500">
         <Lock className="mt-0.5 size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
         <span>
-          Only an administrator can view or set these — a role with full Settings access cannot.
+          Only an administrator can view or set these - a role with full Settings access cannot.
           Every change is recorded in the security log with who made it and from where, never with
           the value.
         </span>

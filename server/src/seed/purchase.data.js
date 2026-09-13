@@ -1,5 +1,5 @@
 /**
- * Demo purchasing data — suppliers, purchase orders and standalone expenses
+ * Demo purchasing data - suppliers, purchase orders and standalone expenses
  * (ERP rework §6.7–6.9).
  *
  * Built from the seeded catalogue so every PO line points at a product that
@@ -9,14 +9,14 @@
  *
  * The purchase orders deliberately land in every state the list has to render:
  * a draft, one sent and waiting, one overdue against its expected date, one
- * part-received, and two fully received — one of which is paid and therefore
+ * part-received, and two fully received - one of which is paid and therefore
  * carries the expense that payment generated. A demo dataset where everything
  * is `received` teaches nothing about the screen.
  */
 
 const DAY = 86_400_000;
 
-/** `n` whole days before today, at midnight — a purchase date, not a moment. */
+/** `n` whole days before today, at midnight - a purchase date, not a moment. */
 function daysAgo(n) {
   const date = new Date(Date.now() - n * DAY);
   date.setHours(0, 0, 0, 0);
@@ -62,7 +62,7 @@ const SUPPLIERS = [
       country: 'Canada',
     },
     paymentTerms: 'net15',
-    notes: 'Canadian warehouse — two-day delivery, higher unit cost. Worth it for a rush.',
+    notes: 'Canadian warehouse - two-day delivery, higher unit cost. Worth it for a rush.',
     isActive: true,
   },
   {
@@ -113,7 +113,7 @@ const SUPPLIERS = [
       country: 'Canada',
     },
     paymentTerms: 'prepaid',
-    notes: 'Adhesives and opening tools. Deactivated — replaced by Northbridge.',
+    notes: 'Adhesives and opening tools. Deactivated - replaced by Northbridge.',
     isActive: false,
   },
 ];
@@ -136,7 +136,7 @@ function costFor(product) {
  * `receive` is a fraction of each line, applied by the builder: `0` leaves the
  * order untouched, `1` receives it in full, and anything between produces the
  * partial case. The builder derives `status` from what was received rather than
- * taking it from here, exactly as `purchaseService.recomputeStatus` does — so
+ * taking it from here, exactly as `purchaseService.recomputeStatus` does - so
  * the seeded data cannot contradict the rule the running code enforces.
  */
 const PO_PLANS = [
@@ -163,7 +163,7 @@ const PO_PLANS = [
     notes: 'Rush order to cover the shortfall on the Toronto account.',
   },
   {
-    // Expected date in the past with nothing received — this is the row the
+    // Expected date in the past with nothing received - this is the row the
     // list has to flag as overdue, and it is derived, never stored.
     supplierCode: 'PCS',
     lines: 3,
@@ -173,7 +173,7 @@ const PO_PLANS = [
     receive: 0,
     paid: false,
     shipping: 3_200,
-    notes: 'Chased 3 days ago — carrier claims customs hold.',
+    notes: 'Chased 3 days ago - carrier claims customs hold.',
   },
   {
     supplierCode: 'SKC',
@@ -184,7 +184,7 @@ const PO_PLANS = [
     receive: 0.5,
     paid: false,
     shipping: 21_500,
-    notes: 'Split shipment — second container still in transit.',
+    notes: 'Split shipment - second container still in transit.',
   },
   {
     supplierCode: 'AOD',
@@ -216,7 +216,7 @@ const PO_PLANS = [
  *
  * `products` is the seeded catalogue and `suppliersByCode` maps a supplier code
  * to its inserted document. Returns plain objects ready for `insertMany`, plus
- * the stock movements each receipt implies — the seed writes both, because a
+ * the stock movements each receipt implies - the seed writes both, because a
  * received quantity with no movement behind it is exactly the unexplainable
  * stock the ledger exists to prevent.
  */
@@ -282,7 +282,7 @@ function buildPurchaseOrders({ products, suppliersByCode, year = new Date().getF
           type: 'purchase',
           qtyChange: item.qtyReceived,
           // Filled in by the caller once the product's true starting quantity
-          // is known — a seeded `qtyAfter` computed here would be a guess.
+          // is known - a seeded `qtyAfter` computed here would be a guess.
           qtyAfter: after,
           unitCost: item.unitCost,
           reference: { kind: 'purchase_order', label: poNumber },
@@ -300,7 +300,7 @@ function buildPurchaseOrders({ products, suppliersByCode, year = new Date().getF
     }
 
     const subtotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
-    // 13% HST — Cellvix is Ontario-based. Phase 11 moves the rate to Settings;
+    // 13% HST - Cellvix is Ontario-based. Phase 11 moves the rate to Settings;
     // it is applied here rather than left at zero so the tax column is not
     // uniformly empty on every seeded screen.
     const tax = Math.round(subtotal * 0.13);
@@ -331,22 +331,22 @@ function buildPurchaseOrders({ products, suppliersByCode, year = new Date().getF
 }
 
 /**
- * Standalone expenses — the ones an operator enters by hand, as opposed to the
+ * Standalone expenses - the ones an operator enters by hand, as opposed to the
  * rows a PO payment generates. Categories are looked up by slug so this list
  * survives the category ids changing.
  */
 const EXPENSE_PLANS = [
-  { daysAgo: 4, description: 'Warehouse rent — current month', slug: 'rent', payee: 'Meadowvale Holdings', method: 'Pre-authorised debit', amount: 385_000, tax: 0, status: 'paid' },
+  { daysAgo: 4, description: 'Warehouse rent - current month', slug: 'rent', payee: 'Meadowvale Holdings', method: 'Pre-authorised debit', amount: 385_000, tax: 0, status: 'paid' },
   { daysAgo: 6, description: 'Hydro and water', slug: 'utilities', payee: 'Alectra Utilities', method: 'Pre-authorised debit', amount: 41_280, tax: 4_747, status: 'paid' },
   { daysAgo: 9, description: 'Courier account top-up', slug: 'shipping', payee: 'Purolator', method: 'Credit card', amount: 120_000, tax: 13_805, status: 'paid' },
-  { daysAgo: 12, description: 'Accounting software — annual', slug: 'software', payee: 'Ledgerly Inc.', method: 'Credit card', amount: 89_900, tax: 10_339, status: 'paid' },
+  { daysAgo: 12, description: 'Accounting software - annual', slug: 'software', payee: 'Ledgerly Inc.', method: 'Credit card', amount: 89_900, tax: 10_339, status: 'paid' },
   { daysAgo: 15, description: 'Commercial general liability premium', slug: 'insurance', payee: 'Northgate Insurance', method: 'Cheque', amount: 214_500, tax: 0, status: 'paid' },
-  { daysAgo: 18, description: 'Bookkeeping — quarterly review', slug: 'professional-fees', payee: 'Roy & Associates', method: 'e-Transfer', amount: 95_000, tax: 10_929, status: 'pending' },
+  { daysAgo: 18, description: 'Bookkeeping - quarterly review', slug: 'professional-fees', payee: 'Roy & Associates', method: 'e-Transfer', amount: 95_000, tax: 10_929, status: 'pending' },
   { daysAgo: 21, description: 'Business account monthly fees', slug: 'bank-charges', payee: 'RBC', method: 'Direct debit', amount: 6_500, tax: 0, status: 'paid' },
   { daysAgo: 24, description: 'Supplier directory listing', slug: 'marketing', payee: 'RepairBiz Directory', method: 'Credit card', amount: 45_000, tax: 5_177, status: 'paid' },
   { daysAgo: 27, description: 'Anti-static bags and labels', slug: 'supplies', payee: 'Rivet Tools & Consumables', method: 'Credit card', amount: 28_400, tax: 3_268, status: 'paid' },
-  { daysAgo: 33, description: 'Staff wages — bi-weekly', slug: 'salaries', payee: 'Payroll', method: 'Direct deposit', amount: 1_240_000, tax: 0, status: 'paid' },
-  { daysAgo: 41, description: 'Warehouse rent — previous month', slug: 'rent', payee: 'Meadowvale Holdings', method: 'Pre-authorised debit', amount: 385_000, tax: 0, status: 'paid' },
+  { daysAgo: 33, description: 'Staff wages - bi-weekly', slug: 'salaries', payee: 'Payroll', method: 'Direct deposit', amount: 1_240_000, tax: 0, status: 'paid' },
+  { daysAgo: 41, description: 'Warehouse rent - previous month', slug: 'rent', payee: 'Meadowvale Holdings', method: 'Pre-authorised debit', amount: 385_000, tax: 0, status: 'paid' },
   { daysAgo: 55, description: 'Shelving and bins', slug: 'supplies', payee: 'Rivet Tools & Consumables', method: 'Credit card', amount: 76_200, tax: 8_769, status: 'paid' },
 ];
 
@@ -384,7 +384,7 @@ function buildExpenses({ categoriesBySlug, year = new Date().getFullYear(), star
 }
 
 /**
- * Supplier returns — stock going back up the chain (§6.8b).
+ * Supplier returns - stock going back up the chain (§6.8b).
  *
  * The mirror of an RMA: a customer returns to us, we return to a supplier. The
  * screen had no seeded rows at all, so it was only ever seen in its empty
@@ -392,12 +392,12 @@ function buildExpenses({ categoriesBySlug, year = new Date().getFullYear(), star
  * to render.
  *
  * Every return is built **from a real purchase order line**, exactly as
- * `supplierReturnService` requires — you cannot send back a part you never
+ * `supplierReturnService` requires - you cannot send back a part you never
  * bought, and a seeded return naming a part that was never ordered would be
  * teaching the opposite.
  *
  * `expectedCredit` is what we claimed; `creditAmount` is what the supplier
- * actually issued, and the two differ on purpose — a supplier who part-credits
+ * actually issued, and the two differ on purpose - a supplier who part-credits
  * a claim is the case worth being able to see.
  */
 const SUPPLIER_RETURN_PLANS = [
@@ -439,7 +439,7 @@ const SUPPLIER_RETURN_PLANS = [
     supplierRma: 'KY-2026-0451',
     carrier: 'Purolator',
     tracking: 'CVX441907722',
-    note: 'Eight over the ordered quantity — returned at their cost.',
+    note: 'Eight over the ordered quantity - returned at their cost.',
   },
   {
     status: 'credited',
@@ -507,7 +507,7 @@ function buildSupplierReturns({ purchaseOrders = [], year = new Date().getFullYe
       product: line.product,
       sku: line.sku,
       name: line.name,
-      // Never more than were bought — the cap the service enforces.
+      // Never more than were bought - the cap the service enforces.
       qty: Math.min(plan.qty, line.qtyOrdered ?? plan.qty),
       unitCost: line.unitCost,
       reason: plan.itemReason,
@@ -518,7 +518,7 @@ function buildSupplierReturns({ purchaseOrders = [], year = new Date().getFullYe
 
     // The rungs this return actually climbed. `rejected` is an exit rather than
     // a rung, so it follows the stages that did happen instead of replacing
-    // them — the same treatment the ticket and quote life cycles get.
+    // them - the same treatment the ticket and quote life cycles get.
     const ladder =
       plan.status === 'rejected'
         ? ['draft', 'requested', 'rejected']
@@ -570,14 +570,14 @@ function buildSupplierReturns({ purchaseOrders = [], year = new Date().getFullYe
 /**
  * Supplier services and subscriptions (§6.8c).
  *
- * **Neither is the customer catalogue.** These are costs the business buys in —
- * a licence, a courier account, an outsourced repair — and they land in the
+ * **Neither is the customer catalogue.** These are costs the business buys in
+ * a licence, a courier account, an outsourced repair - and they land in the
  * P&L as real expense rows. Nothing here has stock or reaches the storefront.
  *
  * One screen renders both, split by billing cycle: a recurring `billing`
  * makes it a subscription with a renewal date, `one_off` makes it a service
  * product bought as needed. Both shapes are seeded, and the renewal dates are
- * spread either side of today on purpose — the board's "due soon" and
+ * spread either side of today on purpose - the board's "due soon" and
  * "overdue" counts are derived from that date, and a set that all renew next
  * year leaves both reading zero.
  */
@@ -594,7 +594,7 @@ const SUPPLIER_SERVICE_PLANS = [
     description: 'Per-seat licence for the workshop management suite. Five seats.',
   },
   {
-    name: 'Courier account — Purolator',
+    name: 'Courier account - Purolator',
     code: 'LOG-PURO',
     categorySlug: 'shipping',
     billing: 'monthly',
@@ -630,7 +630,7 @@ const SUPPLIER_SERVICE_PLANS = [
     billing: 'monthly',
     amount: 7_900,
     startedDaysAgo: 150,
-    // Already past its date — the overdue count needs a row.
+    // Already past its date - the overdue count needs a row.
     renewsInDays: -4,
     supplierCode: 'SKC',
     description: 'Board-level schematics and boardview library.',
@@ -658,7 +658,7 @@ const SUPPLIER_SERVICE_PLANS = [
     description: 'Board work sent out when it is beyond the bench.',
   },
   {
-    name: 'Data recovery — sent out',
+    name: 'Data recovery - sent out',
     code: 'SVC-DATA',
     categorySlug: 'professional-fees',
     billing: 'one_off',
@@ -690,20 +690,20 @@ const SUPPLIER_SERVICE_PLANS = [
 ];
 
 /**
- * @param categoriesBySlug  the inserted expense categories, keyed by slug —
+ * @param categoriesBySlug  the inserted expense categories, keyed by slug
  *                          `category` is required and is a real reference
  * @param suppliersByCode   inserted suppliers, so a service bought from a known
  *                          supplier names it rather than repeating a string
  */
 function buildSupplierServices({ categoriesBySlug = new Map(), suppliersByCode = new Map() }) {
-  // `supplier` is required — a cost is owed to somebody, and a service with no
+  // `supplier` is required - a cost is owed to somebody, and a service with no
   // payee is not a record anybody can act on. Plans that do not name one are
   // given a supplier by rotation rather than being dropped.
   const allSuppliers = [...suppliersByCode.values()];
 
   return SUPPLIER_SERVICE_PLANS.map((plan, index) => {
     const category = categoriesBySlug.get(plan.categorySlug);
-    // A service with no category cannot be saved — the field is required and
+    // A service with no category cannot be saved - the field is required and
     // it is what the P&L groups by. Skipped rather than forced onto whatever
     // category happens to be first.
     if (!category) return null;
@@ -728,7 +728,7 @@ function buildSupplierServices({ categoriesBySlug = new Map(), suppliersByCode =
       category: category._id,
 
       startedAt: daysAgo(plan.startedDaysAgo),
-      // A one-off never renews, so it carries no renewal date at all — a date
+      // A one-off never renews, so it carries no renewal date at all - a date
       // on it would put it on the renewals board, which is for commitments.
       nextRenewalAt:
         plan.billing === 'one_off' || plan.renewsInDays == null

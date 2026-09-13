@@ -1,4 +1,5 @@
 import { Navigate, Outlet } from 'react-router';
+import useDocumentTitle from '@/hooks/useDocumentTitle';
 import Header from './Header';
 import Footer from './Footer';
 import MobileBottomNav from './MobileBottomNav';
@@ -11,12 +12,15 @@ import { useAuth } from '@/hooks/useAuth';
 
 /** Chrome shared by every route: header, footer, and the global overlays. */
 export function RootLayout() {
+  // The browser tab, per route. One call per surface rather than one per
+  // page: the titles live in the route table beside the breadcrumbs.
+  useDocumentTitle();
   const { isLoading, isAdmin, isStaff } = useAuth();
 
   // Cellvix people have no buyer side. The catalogue, cart and checkout all
   // assume a business account behind them, so any staff account is sent to the
   // console
-  // from any storefront URL — typed, bookmarked or followed from an email.
+  // from any storefront URL - typed, bookmarked or followed from an email.
   //
   // The wait on `isLoading` is what keeps a hard refresh at `/` from painting
   // the shop for a beat before `/auth/me` answers.

@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 /**
  * The single category tree. One self-referencing collection feeds all three
- * filter systems — sidebar, mega menu and tab wizard — so they cannot drift.
+ * filter systems - sidebar, mega menu and tab wizard - so they cannot drift.
  *
  *   deviceType (Phone) -> brand (Samsung) -> series (S-Series) -> model (S23 Ultra)
  */
@@ -42,7 +42,7 @@ const taxonomySchema = new mongoose.Schema(
      *
      * Deliberately on the **model**, not on the product: one alias here covers
      * every SKU for that phone, where `Product.searchTerms` has to be repeated
-     * on each of the forty parts that fit it — and drift on one of them is a
+     * on each of the forty parts that fit it - and drift on one of them is a
      * part that quietly stops being findable.
      *
      * Stored lowercase and trimmed by `normaliseAliases` in the service, so

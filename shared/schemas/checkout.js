@@ -6,7 +6,7 @@ import { isValidPostal, postalExampleFor } from '../regions.js';
  *
  * Kept as a named export because tax, GST/HST and the seller's own address are
  * still Canadian facts, and several screens want exactly this list. An address
- * FORM should not read it directly — use `regionsFor(country)`, which returns
+ * FORM should not read it directly - use `regionsFor(country)`, which returns
  * this for Canada and the right list everywhere else.
  */
 const PROVINCES = [
@@ -29,7 +29,7 @@ const PROVINCES = [
  * An address anywhere.
  *
  * **Postal validation depends on the country**, so it cannot be a field-level
- * regex — the rule is only knowable once `country` has been read. A
+ * regex - the rule is only knowable once `country` has been read. A
  * `superRefine` runs after both fields are parsed and asks `regions.js` what
  * shape this country uses; a country with no fixed format accepts anything
  * non-empty, which is the honest answer rather than a false rejection.
@@ -39,7 +39,7 @@ const PROVINCES = [
  * called `region`; only the validation assumed otherwise.
  *
  * **The raw object and the refined schema are separate exports.** A
- * `superRefine` returns a `ZodEffects`, which has no `.extend()` — and
+ * `superRefine` returns a `ZodEffects`, which has no `.extend()` - and
  * `account.js` extends this to add a saved-address label. So the object stays
  * extendable as `addressShape`, and `withPostalRule()` applies the country
  * check to it or to anything built from it. An extender that forgets to call it
@@ -112,7 +112,7 @@ const CHECKOUT_STEPS = [
   { key: 'review', label: 'Review' },
 ];
 
-/** Placeholder rate — awaiting the client's real tax rules (PROGRESS.md Q4). */
+/** Placeholder rate - awaiting the client's real tax rules (PROGRESS.md Q4). */
 const TAX_RATE = 0.13;
 
 export { PROVINCES, addressShape, withPostalRule, addressSchema, DELIVERY_METHODS, checkoutSchema, CHECKOUT_STEPS, TAX_RATE };

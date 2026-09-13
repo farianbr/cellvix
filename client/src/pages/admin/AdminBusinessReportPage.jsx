@@ -30,11 +30,11 @@ import { pressable } from '@/lib/motion';
 import SelectMenu from '@/components/ui/SelectMenu';
 
 /**
- * Business Overview — the printable period report (ERP rework §6.11).
+ * Business Overview - the printable period report (ERP rework §6.11).
  *
  * Standalone from the tabbed analytics screen, because this one is a document:
  * an operator prints it, files it, or sends it to an accountant. **Print is a
- * real requirement**, not a nicety — the `print:` utilities below drop the
+ * real requirement**, not a nicety - the `print:` utilities below drop the
  * shell chrome and force the light palette, because a dark-themed report wastes
  * a cartridge and reads badly on paper.
  */
@@ -44,7 +44,7 @@ const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/reports/business'], icon: adminIcon
 function TotalRow({ cells }) {
   const t = useTableClasses();
   // The heavier rule stays: the line between the last row and the total is a
-  // real boundary — data against a sum of it — unlike the hairlines between two
+  // real boundary - data against a sum of it - unlike the hairlines between two
   // rows of the same kind.
   return (
     <tr className="border-t-2 border-line-strong font-semibold">
@@ -84,7 +84,7 @@ function ReportTable({ headers, rows, total, empty, caption }) {
       {caption && <p className="mb-2 text-xs text-ink-400">{caption}</p>}
 
       {/* Carries the density toggle, and is `print:hidden` for the same reason
-          this page avoids `DataTable` entirely — a control an operator presses
+          this page avoids `DataTable` entirely - a control an operator presses
           is chrome that means nothing on paper. */}
       <div className="mb-2 border-b border-line pb-2 print:hidden">
         <CountLine total={rows.length} noun="rows" />
@@ -163,7 +163,7 @@ export function AdminBusinessReportPage() {
     <div
       // Forces the light palette on paper regardless of theme, and drops the
       // interactive chrome. The shell's sidebar and top bar carry `print:hidden`
-      // of their own — this is the page's half of the contract.
+      // of their own - this is the page's half of the contract.
       className="print:bg-white print:text-black"
     >
       <div className="print:hidden">
@@ -210,9 +210,9 @@ export function AdminBusinessReportPage() {
       </div>
 
       {/* The printed header. Hidden on screen because the page header above
-          already says all this — on paper there is no shell to say it. */}
+          already says all this - on paper there is no shell to say it. */}
       <div className="hidden print:mb-6 print:block">
-        <h1 className="text-2xl font-bold">Cellvix — Business Overview</h1>
+        <h1 className="text-2xl font-bold">Cellvix - Business Overview</h1>
         <p className="mt-1 text-sm">
           {data?.range ? `${date(data.range.from)} to ${date(data.range.to)}` : ''}
           {brand ? ` · ${brands?.find((row) => row.slug === brand)?.name ?? brand}` : ' · every brand'}
@@ -281,7 +281,7 @@ export function AdminBusinessReportPage() {
               />
               <p className="mt-3 border-t border-line pt-2 text-sm text-ink-500">
                 {/* Named apart from Invoiced, deliberately (§9.1). */}
-                {money(data.collected?.total ?? 0)} collected — a different figure from the
+                {money(data.collected?.total ?? 0)} collected - a different figure from the
                 {' '}{money(kpis.invoiced)} invoiced above.
               </p>
               {(data.refunds?.total ?? 0) > 0 && (
@@ -397,7 +397,7 @@ export function AdminBusinessReportPage() {
               ))}
             </div>
 
-            {/* The arithmetic printed underneath, as §6.11 asks — a tax figure
+            {/* The arithmetic printed underneath, as §6.11 asks - a tax figure
                 an accountant cannot check is a tax figure they will not use. */}
             <p className="tnum mt-3 border-t border-line pt-2.5 text-sm text-ink-500">
               {money(tax.collected ?? 0)} collected − {money(tax.paid ?? 0)} paid ={' '}
@@ -405,7 +405,7 @@ export function AdminBusinessReportPage() {
                 {(tax.net ?? 0) < 0 ? '−' : ''}
                 {money(Math.abs(tax.net ?? 0))}
               </span>
-              {(tax.net ?? 0) < 0 && ' — a refund or credit is due to Cellvix.'}
+              {(tax.net ?? 0) < 0 && ' - a refund or credit is due to Cellvix.'}
             </p>
           </Panel>
         </>

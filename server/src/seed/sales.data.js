@@ -3,7 +3,7 @@
  *
  * Both land in every state their screens have to render, for the same reason
  * the purchase seed does: a dataset where everything is `resolved` teaches
- * nothing about the screen. Nothing hard-codes a SKU — lines are drawn from
+ * nothing about the screen. Nothing hard-codes a SKU - lines are drawn from
  * real orders and the seeded catalogue, so a regenerated catalogue cannot leave
  * a dangling reference.
  */
@@ -23,7 +23,7 @@ function daysAhead(n) {
 /**
  * Six quotes across the five states the list filters on.
  *
- * `expiresIn` is a positive number of days ahead or a negative number behind —
+ * `expiresIn` is a positive number of days ahead or a negative number behind
  * the negative one is the row that has to read as **expired**, which the server
  * derives from the date rather than storing.
  */
@@ -31,7 +31,7 @@ const QUOTE_PLANS = [
   { lines: 3, offset: 0, createdDaysAgo: 1, expiresIn: 29, status: 'draft', discount: 0.95, notes: 'Awaiting confirmation on the screen revision.' },
   { lines: 4, offset: 3, createdDaysAgo: 5, expiresIn: 25, status: 'sent', discount: 0.92, notes: '' },
   { lines: 2, offset: 7, createdDaysAgo: 9, expiresIn: 21, status: 'accepted', discount: 0.9, notes: 'Client confirmed by phone.' },
-  // Past its date and still open — the derived `expired` row.
+  // Past its date and still open - the derived `expired` row.
   { lines: 3, offset: 9, createdDaysAgo: 45, expiresIn: -8, status: 'sent', discount: 0.93, notes: 'No answer after two follow-ups.' },
   { lines: 5, offset: 12, createdDaysAgo: 21, expiresIn: 9, status: 'sent', discount: 0.88, notes: 'Volume pricing on the battery lines.' },
   { lines: 2, offset: 17, createdDaysAgo: 60, expiresIn: -30, status: 'rejected', discount: 0.97, notes: 'Went with another supplier on price.' },
@@ -46,7 +46,7 @@ const QUOTE_PLANS = [
 /**
  * `startSequence` lets a second batch of quotes continue this one's numbering.
  * Repair quotes are built separately (`repairs.data.js`) and land in the same
- * `QT-` series, and `quoteNumber` is uniquely indexed — two builders both
+ * `QT-` series, and `quoteNumber` is uniquely indexed - two builders both
  * starting at 1 would collide on insert.
  */
 function buildQuotes({
@@ -67,7 +67,7 @@ function buildQuotes({
     const items = Array.from({ length: plan.lines }, (_, i) => {
       const product = products[(plan.offset + cursor + i) % products.length];
       const qty = 5 + ((index + i) % 4) * 5;
-      // A quote is a negotiated number, so it sits below list — that is the
+      // A quote is a negotiated number, so it sits below list - that is the
       // whole reason a client asks for one.
       const unitPrice = Math.max(1, Math.round(product.price * plan.discount));
 
@@ -127,9 +127,9 @@ function buildQuotes({
  */
 const RMA_PLANS = [
   { lines: 1, status: 'requested', daysOpen: 3, reason: 'Screen arrived with a cracked digitiser.' },
-  // Open far longer than the SLA allows — the row the Age column exists for.
+  // Open far longer than the SLA allows - the row the Age column exists for.
   { lines: 2, status: 'approved', daysOpen: 19, reason: 'Two batteries will not hold a charge.' },
-  { lines: 1, status: 'in_transit', daysOpen: 6, reason: 'Wrong part sent — charging port does not fit.' },
+  { lines: 1, status: 'in_transit', daysOpen: 6, reason: 'Wrong part sent - charging port does not fit.' },
   {
     lines: 2,
     status: 'inspecting',
@@ -144,7 +144,7 @@ const RMA_PLANS = [
     daysOpen: 26,
     closedDaysAgo: 21,
     reason: 'Dead on arrival.',
-    conditions: ['Confirmed dead — no backlight'],
+    conditions: ['Confirmed dead - no backlight'],
     dispositions: ['scrap'],
     resolution: 'refund',
   },
@@ -152,7 +152,7 @@ const RMA_PLANS = [
 
 /**
  * `orders` are the seeded orders to return against. Lines are taken from each
- * order's own items, so a return can never name a part that was not sold —
+ * order's own items, so a return can never name a part that was not sold
  * which is exactly the rule `rmaService.createRma` enforces.
  */
 function buildRmas({ orders, year = new Date().getFullYear() }) {
@@ -173,7 +173,7 @@ function buildRmas({ orders, year = new Date().getFullYear() }) {
       product: line.product,
       sku: line.sku,
       name: line.name,
-      // Never more than were sold — the same cap the service applies.
+      // Never more than were sold - the same cap the service applies.
       qty: Math.min(1, line.qty),
       reason: plan.reason,
       condition: plan.conditions?.[i],
@@ -222,13 +222,13 @@ function buildRmas({ orders, year = new Date().getFullYear() }) {
 }
 
 /**
- * Web quotes — the storefront's contact form, before anybody has priced it.
+ * Web quotes - the storefront's contact form, before anybody has priced it.
  *
  * These are enquiries, not quotes: the Web Quote screen is the queue an
  * operator works *from* to raise a real one, which is why it sits under Quotes
  * in the nav. Spread across all three statuses and all five topics so the
  * screen's filters have something to separate, and deliberately mixed between
- * signed-in accounts and strangers — an enquiry from someone with no account is
+ * signed-in accounts and strangers - an enquiry from someone with no account is
  * the common case and the one the screen must not assume away.
  */
 const WEB_QUOTE_PLANS = [
@@ -262,7 +262,7 @@ const WEB_QUOTE_PLANS = [
     daysAgo: 2,
     status: 'new',
     message:
-      'A battery we fitted in March has started swelling. It is within your ninety days — what do you need from us to process it?',
+      'A battery we fitted in March has started swelling. It is within your ninety days - what do you need from us to process it?',
   },
   {
     name: 'Samuel Ortega',
@@ -304,7 +304,7 @@ const WEB_QUOTE_PLANS = [
     daysAgo: 19,
     status: 'closed',
     message:
-      'Quoted on a hundred Samsung A54 assemblies — thank you, we have gone ahead with the order.',
+      'Quoted on a hundred Samsung A54 assemblies - thank you, we have gone ahead with the order.',
   },
   {
     name: 'Devon Wray',

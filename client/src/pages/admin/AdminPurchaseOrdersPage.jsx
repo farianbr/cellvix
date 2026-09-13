@@ -33,11 +33,11 @@ import {
 } from '@/hooks/useAdmin';
 
 /**
- * Purchase orders — stock on order, what has arrived and what is outstanding
+ * Purchase orders - stock on order, what has arrived and what is outstanding
  * (ERP rework §6.8).
  *
  * The `ProcessStrip` at the foot is a status display of the purchase automation
- * cycle, not a wizard the operator drives — which is exactly why it is a
+ * cycle, not a wizard the operator drives - which is exactly why it is a
  * separate component from `StepIndicator` and never a fork of it (invariant 10).
  */
 const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/purchase-orders'], icon: adminIcon('ClipboardList') };
@@ -67,7 +67,7 @@ const STATUS_TONES = {
  * Which stage of the cycle a list is sitting at, for the strip beneath it.
  *
  * The list shows many orders at once, so the stage reflects where the filtered
- * set mostly is rather than pretending one order is being tracked — the detail
+ * set mostly is rather than pretending one order is being tracked - the detail
  * page is where a single order's real stage lives.
  */
 function cycleStage(status) {
@@ -128,11 +128,11 @@ export function AdminPurchaseOrdersPage() {
     },
     {
       /**
-       * The confirmed supplier — and before one is confirmed, how many were
+       * The confirmed supplier - and before one is confirmed, how many were
        * asked and how many answered.
        *
        * An order out for pricing genuinely has no supplier yet, and printing
-       * `—` there would leave the most active rows on the screen looking like
+       * `-` there would leave the most active rows on the screen looking like
        * the emptiest. "3 asked · 2 quoted" is the live fact instead.
        */
       key: 'supplier',
@@ -175,7 +175,7 @@ export function AdminPurchaseOrdersPage() {
             {date(order.expectedDate)}
           </span>
         ) : (
-          <span className="text-xs text-ink-300">—</span>
+          <span className="text-xs text-ink-300">-</span>
         ),
     },
     {
@@ -261,7 +261,7 @@ export function AdminPurchaseOrdersPage() {
               <Truck className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
               Suppliers
             </Link>
-            {/* A page now, not a dialog — a PO with a dozen scanned lines and a
+            {/* A page now, not a dialog - a PO with a dozen scanned lines and a
                 running total is the wrong shape for a modal. */}
             <Link
               to="/admin/purchase-orders/create"
@@ -315,7 +315,7 @@ export function AdminPurchaseOrdersPage() {
             key: 'pending',
             label: 'Pending value',
             value: money(totals.pendingValue ?? 0),
-            // A position, not a flow — committed and not yet landed, as of
+            // A position, not a flow - committed and not yet landed, as of
             // today, whatever the filter says (§9).
             hint: 'Committed and not yet received, as of today',
             tone: 'brand',
@@ -337,7 +337,7 @@ export function AdminPurchaseOrdersPage() {
           onPillChange={(next) => setParam('status', next)}
           // Eight statuses since bidding landed. On one line with the search box
           // and two menus they scroll sideways, and a filter somebody has to
-          // scroll to find is one they stop using — the ticket queue's reasoning.
+          // scroll to find is one they stop using - the ticket queue's reasoning.
           stackPills
           activeFilterCount={supplierId ? 1 : 0}
           onClearFilters={() => setParam('supplier', '')}
@@ -388,7 +388,7 @@ export function AdminPurchaseOrdersPage() {
               body={
                 suppliers.length
                   ? 'Try a different filter, or raise a new order.'
-                  : 'Add a supplier first — a purchase order needs somebody to buy from.'
+                  : 'Add a supplier first - a purchase order needs somebody to buy from.'
               }
             />
           }

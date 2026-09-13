@@ -43,7 +43,7 @@ import { pressable } from '@/lib/motion';
  *
  * Fields, taxonomy, competitor benchmarks, the stock movement history and the
  * purchase history that is this part's real price history. Everything here is
- * admin-only — the storefront's product page shows in stock / out of stock and
+ * admin-only - the storefront's product page shows in stock / out of stock and
  * nothing on this screen changes that.
  */
 
@@ -82,7 +82,7 @@ export function AdminInventoryDetailPage() {
 
   const [adjusting, setAdjusting] = useState(false);
   const [editingOps, setEditingOps] = useState(false);
-  // Hiding is the one action here that fires on the click itself — the other
+  // Hiding is the one action here that fires on the click itself - the other
   // three open a form that already asks before it writes. A storefront listing
   // vanishing because a button was next to the one somebody meant is exactly
   // the mistake a confirm step exists to catch.
@@ -185,7 +185,7 @@ export function AdminInventoryDetailPage() {
   ];
 
   return (
-    // The record measure, centred — one record is a reading screen, and a
+    // The record measure, centred - one record is a reading screen, and a
     // list is what earns the shell's full width. The `.record-page` class carries
     // the whole treatment; see the container tokens in index.css.
     <div className="record-page">
@@ -234,7 +234,7 @@ export function AdminInventoryDetailPage() {
             </Button>
             {/* Opens the form HERE. It used to link to the list pre-searched
                 for this SKU, which meant "edit this product" answered with a
-                search results page the operator then had to act on again — the
+                search results page the operator then had to act on again - the
                 work was one click further away than before they clicked. */}
             <Button
               size="sm"
@@ -272,7 +272,7 @@ export function AdminInventoryDetailPage() {
           {
             key: 'cost',
             label: 'Unit cost',
-            value: product.cost > 0 ? money(product.cost) : '—',
+            value: product.cost > 0 ? money(product.cost) : '-',
             hint: margin === null ? 'No cost recorded yet' : `${margin}% margin`,
             tone: 'warn',
             icon: Wallet,
@@ -304,19 +304,19 @@ export function AdminInventoryDetailPage() {
             <dl className="space-y-1.5 text-sm">
               <div className="flex justify-between gap-2">
                 <dt className="text-ink-400">Device</dt>
-                <dd className="text-right text-ink-700">{product.deviceTypeName ?? '—'}</dd>
+                <dd className="text-right text-ink-700">{product.deviceTypeName ?? '-'}</dd>
               </div>
               <div className="flex justify-between gap-2">
                 <dt className="text-ink-400">Brand</dt>
-                <dd className="text-right text-ink-700">{product.brandName ?? '—'}</dd>
+                <dd className="text-right text-ink-700">{product.brandName ?? '-'}</dd>
               </div>
               <div className="flex justify-between gap-2">
                 <dt className="text-ink-400">Series</dt>
-                <dd className="text-right text-ink-700">{product.seriesName ?? '—'}</dd>
+                <dd className="text-right text-ink-700">{product.seriesName ?? '-'}</dd>
               </div>
               <div className="flex justify-between gap-2">
                 <dt className="text-ink-400">Model</dt>
-                <dd className="text-right text-ink-700">{product.modelName ?? '—'}</dd>
+                <dd className="text-right text-ink-700">{product.modelName ?? '-'}</dd>
               </div>
               {product.barcode && (
                 <div className="flex justify-between gap-2">
@@ -486,7 +486,7 @@ export function AdminInventoryDetailPage() {
       </div>
 
       {/* The same two forms the inventory list opens, imported rather than
-          re-declared — a second copy is how the two screens drift apart. */}
+          re-declared - a second copy is how the two screens drift apart. */}
       <Modal
         open={editing}
         onClose={() => setEditing(false)}

@@ -45,7 +45,7 @@ export function AdminBusinessDetailPage() {
     .join(', ');
 
   return (
-    // The record measure, centred — one record is a reading screen, and a
+    // The record measure, centred - one record is a reading screen, and a
     // list is what earns the shell's full width. The `.record-page` class carries
     // the whole treatment; see the container tokens in index.css.
     <div className="record-page">
@@ -128,7 +128,7 @@ export function AdminBusinessDetailPage() {
                   <div key={row.day} className="flex justify-between border-b border-line py-1.5 last:border-0">
                     <dt className="text-ink-600">{DAY_LABEL[row.day] ?? row.day}</dt>
                     <dd className={row.closed ? 'text-ink-400' : 'text-ink-900'}>
-                      {row.closed ? 'Closed' : `${row.open ?? '—'} – ${row.close ?? '—'}`}
+                      {row.closed ? 'Closed' : `${row.open ?? '-'} – ${row.close ?? '-'}`}
                     </dd>
                   </div>
                 ))}

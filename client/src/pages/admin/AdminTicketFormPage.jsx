@@ -20,7 +20,7 @@ import cn from '@/lib/cn';
  * alone carries four identifiers, three free-text fields and an eight-row
  * condition grid, and a ticket can hold several. At that size a modal is a
  * scrolling box floating over a list nobody is reading, it cannot be linked to
- * or refreshed, and it cannot be opened in a second tab — which is exactly what
+ * or refreshed, and it cannot be opened in a second tab - which is exactly what
  * somebody does when they are copying details off a device in one hand.
  *
  * A route also means "back" behaves: cancelling returns to the list, and the
@@ -42,7 +42,7 @@ export function AdminTicketFormPage() {
    *
    * Both come from the list endpoint: it already returns `technicians`, and
    * there is no single-ticket GET. Fetching the list to find one row is
-   * wasteful in principle and free in practice at this size — the alternative
+   * wasteful in principle and free in practice at this size - the alternative
    * is a new endpoint whose only caller is this screen.
    */
   const { data, isLoading } = useAdminTickets({ status: 'all', limit: 200 });
@@ -53,8 +53,8 @@ export function AdminTicketFormPage() {
 
   /**
    * Seeded from the query string when the ticket was raised from a customer
-   * profile. A ticket stores its customer as free text — a repair walks in and
-   * the counter must not need an account first — so the name, phone and email
+   * profile. A ticket stores its customer as free text - a repair walks in and
+   * the counter must not need an account first - so the name, phone and email
    * travel in the link rather than an id this screen would have to resolve.
    */
   const seed = {

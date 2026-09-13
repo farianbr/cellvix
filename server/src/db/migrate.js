@@ -30,13 +30,13 @@ const COLLECTION = 'migrations';
 /**
  * The migrations, in order.
  *
- * `up` receives `{ connection, models }` and may use either — a schema-level
+ * `up` receives `{ connection, models }` and may use either - a schema-level
  * change usually wants the raw collection, and a data change usually wants the
  * model. Both are given rather than making every migration reach for the one it
  * was not handed.
  *
  * Deliberately empty at the flip. The split re-seeds rather than migrating
- * existing data (that was the ruling), so there is no backfill to run — and an
+ * existing data (that was the ruling), so there is no backfill to run - and an
  * invented first migration would be a lie about what has happened to these
  * databases. Entries arrive as real schema changes do.
  */
@@ -57,7 +57,7 @@ async function appliedIn(connection) {
  * Apply every outstanding migration to one database.
  *
  * **Recorded only after `up` resolves.** A migration that threw is not written
- * down, so the next run retries it — which is the right default, because the
+ * down, so the next run retries it - which is the right default, because the
  * alternative is a database silently stuck at a version nobody can reach.
  *
  * Each migration runs inside `runInBusiness` so anything it calls through the
@@ -73,7 +73,7 @@ async function migrateConnection(connection, { label, dryRun = false } = {}) {
   }
 
   if (dryRun) {
-    console.log(`  ${label}: ${pending.length} pending — ${pending.map((m) => m.id).join(', ')}`);
+    console.log(`  ${label}: ${pending.length} pending - ${pending.map((m) => m.id).join(', ')}`);
     return { label, pending: pending.map((m) => m.id), dryRun: true };
   }
 
@@ -102,7 +102,7 @@ async function migrateConnection(connection, { label, dryRun = false } = {}) {
  * Migrate the control plane and every business database.
  *
  * Businesses are read from the control plane, which is the only place that
- * knows they exist — so this cannot be driven from a list somebody maintains by
+ * knows they exist - so this cannot be driven from a list somebody maintains by
  * hand and forgets to update.
  *
  * **A deleted business is still migrated while its retention window is open.**
@@ -118,7 +118,7 @@ async function migrateAll({ dryRun = false } = {}) {
    * Read the businesses straight off the control database's collection.
    *
    * `connection.model(name, schema)` throws `OverwriteModelError` when that
-   * connection has already compiled the model — which it has, because the
+   * connection has already compiled the model - which it has, because the
    * registry bound it on the first control-plane read. Going to the raw
    * collection sidesteps the question entirely, and this needs two fields, not
    * a document with methods.

@@ -26,7 +26,7 @@ import { pressable } from '@/lib/motion';
 function Breadcrumbs({ product }) {
   const setPath = useFilterStore((s) => s.setPath);
 
-  // Crumbs filter the shop rather than pointing at category routes — the
+  // Crumbs filter the shop rather than pointing at category routes - the
   // taxonomy has no pages of its own (brief §3, §5).
   const crumbs = [
     { label: product.deviceTypeName, path: { deviceType: product.deviceTypeSlug } },
@@ -122,7 +122,7 @@ export function ProductDetailPage() {
     addItem(product, qty);
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1400);
-    // Desktop only — on a phone the dropdown would cover the page you just
+    // Desktop only - on a phone the dropdown would cover the page you just
     // acted on. See openCartAfterAdd.
     openCartAfterAdd();
   }
@@ -133,7 +133,7 @@ export function ProductDetailPage() {
 
       <div className="grid gap-6 md:grid-cols-2 lg:gap-10">
         {/* ---- visual ------------------------------------------------------ */}
-        {/* The same PartFrame the grid card uses, at aspect-square — the model
+        {/* The same PartFrame the grid card uses, at aspect-square - the model
             sits as a watermark behind the part. One component, so the treatment
             cannot drift between the two. The <h1> beside this owns the name.
 
@@ -149,7 +149,7 @@ export function ProductDetailPage() {
           <GradeBadge grade={product.grade} className="absolute left-4 top-4 z-3" />
 
           {/* Says the magnifier is there. Hidden from touch, where it is not,
-              and it fades once the pointer is over the image — by then the lens
+              and it fades once the pointer is over the image - by then the lens
               is on screen and saying so twice is clutter over the picture. */}
           <p className="pointer-events-none absolute bottom-4 right-4 z-3 hidden items-center gap-1.5 rounded-full border border-line bg-surface/90 px-2.5 py-1 text-xs font-medium text-ink-500 backdrop-blur-[2px] transition-opacity duration-200 group-hover:opacity-0 [@media(hover:hover)]:inline-flex">
             <Search className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
@@ -183,7 +183,7 @@ export function ProductDetailPage() {
                 discount looks made the same product read as two different
                 offers.
 
-                `compareAtPrice` wins when both exist — two struck numbers over
+                `compareAtPrice` wins when both exist - two struck numbers over
                 one price is a card claiming two discounts, and our own former
                 price is the more direct claim. */}
             <div className={cn(gated && 'price-gated')} aria-hidden={gated || undefined}>
@@ -228,7 +228,7 @@ export function ProductDetailPage() {
           </div>
 
           {/* What the same part costs elsewhere. Absent while the price is
-              gated — the server sends no comparison without a price to compare. */}
+              gated - the server sends no comparison without a price to compare. */}
           {!gated && (
             <MarketCompare market={product.market} price={product.price} variant="detail" className="mt-5" />
           )}
@@ -261,7 +261,7 @@ export function ProductDetailPage() {
           {/* The SKU used to sit under the title, where it was the second thing
               on the page and meant nothing to a buyer still deciding. It is a
               reordering reference, so it lives with the rest of the reference
-              data — first row, because it is the one a buyer comes back for. */}
+              data - first row, because it is the one a buyer comes back for. */}
           {product.specs && Object.keys(product.specs).length > 0 && (
             <dl className="mt-6 overflow-hidden rounded-lg border border-line">
               {Object.entries({ SKU: product.sku, ...product.specs }).map(([key, value], index) => (

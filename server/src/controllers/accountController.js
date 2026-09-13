@@ -51,7 +51,7 @@ const getInvoice = asyncHandler(async (req, res) => {
 });
 
 /**
- * The invoice as a printable page rather than JSON — the dashboard's PDF button
+ * The invoice as a printable page rather than JSON - the dashboard's PDF button
  * opens it and the browser's print dialog does the rest.
  *
  * Helmet's global CSP forbids inline script, and the page needs exactly one

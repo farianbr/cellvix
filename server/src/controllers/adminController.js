@@ -13,7 +13,7 @@ import '../models/Invoice.js';
  * reaching for `req` is the pattern this codebase already refuses elsewhere
  * (see `authService.register`, which takes `{ ip }` rather than the request).
  * Controllers here are thin wrappers, so this is also where a mutation is
- * unambiguously "done" — every row is written **after** the operation returned,
+ * unambiguously "done" - every row is written **after** the operation returned,
  * never before, so the log never claims something that then failed.
  *
  * `record` never throws, so none of these need a `try`.
@@ -74,7 +74,7 @@ const updateUser = asyncHandler(async (req, res) => {
  * Consent is always audited, and audited as a `security` record.
  *
  * Under CASL the defensible question is not "is consent on" but "who set it,
- * when, and on what basis" — so the before/after pair matters more here than on
+ * when, and on what basis" - so the before/after pair matters more here than on
  * an ordinary field edit, and it belongs in the log an auditor is pointed at
  * rather than the general activity feed.
  */
@@ -174,7 +174,7 @@ const setUserStatus = asyncHandler(async (req, res) => {
   const user = await adminService.setUserStatus(req.params.id, req.body);
 
   // Suspending an account is a security event as well as an administrative
-  // one — it is how somebody's access is taken away — so it lands in the
+  // one - it is how somebody's access is taken away - so it lands in the
   // security log rather than only in the activity feed.
   const kind = req.body?.status === 'suspended' ? 'security' : 'activity';
 
@@ -191,7 +191,7 @@ const setUserStatus = asyncHandler(async (req, res) => {
 });
 
 /**
- * The **line of credit** — what Cellvix lends. Not store credit, which moves
+ * The **line of credit** - what Cellvix lends. Not store credit, which moves
  * only through `storeCreditService` and is logged separately below.
  */
 const setCredit = asyncHandler(async (req, res) => {
@@ -237,7 +237,7 @@ const listOrders = asyncHandler(async (req, res) => {
 });
 
 const createOrder = asyncHandler(async (req, res) => {
-  // The body's business wins — it is the fulfilling shop the operator chose —
+  // The body's business wins - it is the fulfilling shop the operator chose
   // and the current scope is the fallback for the usual case where they did
   // not change it.
   const order = await adminService.createOrder({
@@ -265,7 +265,7 @@ const updateOrderStatus = asyncHandler(async (req, res) => {
 });
 
 /**
- * **Store credit** — what the business already holds, moved through the one
+ * **Store credit** - what the business already holds, moved through the one
  * service allowed to move it. §7.6 names this as money-moving and therefore
  * always audited with actor and IP.
  */
@@ -277,7 +277,7 @@ const allocateStoreCredit = asyncHandler(async (req, res) => {
     action: 'store_credit.allocate',
     entity: { kind: 'storeCredit', id: req.params.id, label: result?.entry?.type ?? '' },
     after: {
-      // Cents, from the ledger entry itself rather than the dollars posted —
+      // Cents, from the ledger entry itself rather than the dollars posted
       // this is what actually moved.
       amount: result?.entry?.amount ?? null,
       type: result?.entry?.type ?? null,
@@ -373,7 +373,7 @@ const voidInvoice = asyncHandler(async (req, res) => {
     action: 'invoice.void',
     entity: { kind: 'invoice', id: req.params.number, label: req.params.number },
     after: { status: invoice?.status ?? 'void', reason: req.body?.reason ?? '' },
-    description: `Voided ${req.params.number}${req.body?.reason ? ` — ${req.body.reason}` : ''}.`,
+    description: `Voided ${req.params.number}${req.body?.reason ? ` - ${req.body.reason}` : ''}.`,
   });
 
   res.json(result);
@@ -398,7 +398,7 @@ const reverseInvoicePayment = asyncHandler(async (req, res) => {
     action: 'invoice.payment.reverse',
     entity: { kind: 'invoice', id: req.params.number, label: req.params.number },
     after: { index: Number(req.params.index), reason: req.body?.reason ?? '' },
-    description: `Reversed a payment on ${req.params.number}${req.body?.reason ? ` — ${req.body.reason}` : ''}.`,
+    description: `Reversed a payment on ${req.params.number}${req.body?.reason ? ` - ${req.body.reason}` : ''}.`,
   });
 
   res.json(result);
@@ -418,7 +418,7 @@ const recordCreditPayment = asyncHandler(async (req, res) => {
     action: 'client.credit.payment',
     entity: { kind: 'user', id: req.params.id, label: req.params.id },
     after: { amount: result.amount, applied: result.applied },
-    description: `Recorded ${(result.amount / 100).toFixed(2)} against the line of credit — ${result.applied.map((row) => row.number).join(', ')}.`,
+    description: `Recorded ${(result.amount / 100).toFixed(2)} against the line of credit - ${result.applied.map((row) => row.number).join(', ')}.`,
   });
 
   res.json(result);
@@ -433,7 +433,7 @@ const emailInvoice = asyncHandler(async (req, res) => {
     after: { to: result.to, delivered: result.delivered },
     description: result.delivered
       ? `Emailed ${req.params.number} to ${result.to}.`
-      : `Tried to email ${req.params.number} to ${result.to} — the transport refused it.`,
+      : `Tried to email ${req.params.number} to ${result.to} - the transport refused it.`,
   });
 
   res.json(result);

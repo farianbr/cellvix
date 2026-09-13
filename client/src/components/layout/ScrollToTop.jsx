@@ -17,7 +17,7 @@ export function ScrollToTop() {
   useEffect(() => {
     if (hash) return;
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-    // `hash` is deliberately not a dependency — only a path change scrolls.
+    // `hash` is deliberately not a dependency - only a path change scrolls.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 

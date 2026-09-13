@@ -4,7 +4,7 @@ import { pressable } from '@/lib/motion';
 /**
  * The console's own surfaces (SAAS_PLATFORM §0.1).
  *
- * **Separate from `components/ui` on purpose.** Those are Cellvix's — light
+ * **Separate from `components/ui` on purpose.** Those are Cellvix's - light
  * surfaces, brand red, the tenant panel's language. The console is a different
  * application wearing a different identity, and sharing a `Panel` between them
  * would mean every future change to the tenant's look silently reshaped the
@@ -21,7 +21,7 @@ export function PlatformPanel({ title, description, action, children, className 
     <section
       className={cn(
         'rounded-xl border border-plat-line bg-plat-surface',
-        // A border OR a shadow, never both — the same rule the tenant panel
+        // A border OR a shadow, never both - the same rule the tenant panel
         // holds itself to, applied in the dark palette where a shadow does
         // almost nothing anyway.
         className,
@@ -48,7 +48,7 @@ export function PlatformPanel({ title, description, action, children, className 
 }
 
 /**
- * A row inside a panel — a business, a thread, a grant.
+ * A row inside a panel - a business, a thread, a grant.
  *
  * `onClick` makes the whole row pressable; without it the row is static and
  * renders as a plain element, so a non-interactive row never advertises itself
@@ -82,7 +82,7 @@ const TONES = {
   danger: 'bg-plat-danger/15 text-plat-danger',
 };
 
-/** A status pill. Tinted background, coloured text — never a solid fill. */
+/** A status pill. Tinted background, coloured text - never a solid fill. */
 export function PlatformBadge({ tone = 'neutral', children, className }) {
   return (
     <span
@@ -114,7 +114,7 @@ export function PlatformBadge({ tone = 'neutral', children, className }) {
 /**
  * `ghost` sits at `plat-muted`, not `plat-dim`.
  *
- * On a dark surface a dim grey label reads as *disabled* rather than as quiet —
+ * On a dark surface a dim grey label reads as *disabled* rather than as quiet
  * the first pass used the dimmest step and every row action looked switched
  * off. Muted is the quietest step that still reads as available; `plat-dim` is
  * reserved for genuinely secondary text like a code or a timestamp.
@@ -163,7 +163,7 @@ export function PlatformHeader({ title, description, action }) {
   return (
     <header className="mb-6 flex flex-wrap items-end gap-4">
       <div className="min-w-0 flex-1">
-        {/* Tracking tightens as the size grows — the optical correction that
+        {/* Tracking tightens as the size grows - the optical correction that
             separates a set headline from a scaled-up paragraph. */}
         <h1 className="text-[26px] font-semibold leading-[1.15] tracking-[-0.022em] text-plat-text">
           {title}

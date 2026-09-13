@@ -64,7 +64,7 @@ const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin'], icon: adminIcon('Home') };
  * One row of "this needs doing", with the count and a link to the filtered list.
  *
  * A card renders **only when its count is non-zero** (ERP rework §6.1.3). An
- * empty board is a good day and should say so, not show four zeroes — four
+ * empty board is a good day and should say so, not show four zeroes - four
  * zeroes teach an operator to stop reading the section.
  */
 function TodoCard({ icon: Icon, tone, title, body, to, onClick, cta }) {
@@ -75,7 +75,7 @@ function TodoCard({ icon: Icon, tone, title, body, to, onClick, cta }) {
   };
 
   // Most cards go somewhere; one of them opens the work in place. Both are the
-  // same object to the operator — a thing that needs doing, clicked — so they
+  // same object to the operator - a thing that needs doing, clicked - so they
   // render identically and differ only in the element underneath.
   const Shell = onClick ? 'button' : Link;
   const shellProps = onClick ? { type: 'button', onClick } : { to };
@@ -83,7 +83,7 @@ function TodoCard({ icon: Icon, tone, title, body, to, onClick, cta }) {
   return (
     <Shell
       {...shellProps}
-      // A wide card, so the softened press — same reason as the order rows.
+      // A wide card, so the softened press - same reason as the order rows.
       className={cn(
         pressableSurface,
         'group flex w-full items-center gap-3 rounded-lg border border-line bg-surface p-3.5 text-left hover:border-line-strong',
@@ -115,7 +115,7 @@ function TodoCard({ icon: Icon, tone, title, body, to, onClick, cta }) {
 /**
  * Where an audit row points.
  *
- * The feed is only useful if a line is a way *in* to the thing it describes —
+ * The feed is only useful if a line is a way *in* to the thing it describes
  * "Reversed a payment on INV-2026-10049" that cannot be clicked leaves the
  * operator to go and find that invoice by hand, which is most of the work the
  * line just saved them.
@@ -190,8 +190,8 @@ function activityIcon(entity) {
 /**
  * A recent order, read without leaving the dashboard.
  *
- * `stats` already returns the whole serialised order — lines, totals, address,
- * status — so the preview needs no second request and opens instantly. It is
+ * `stats` already returns the whole serialised order - lines, totals, address,
+ * status - so the preview needs no second request and opens instantly. It is
  * deliberately **read-only**: changing a status is the order screen's job, and
  * the footer link goes there rather than growing a second place that edits an
  * order.
@@ -237,7 +237,7 @@ function OrderPreview({ order, onClose }) {
 
                 <p className="tnum shrink-0 text-xs text-ink-500">×{formatCount(item.qty)}</p>
                 {/* `lineTotal` is the server's own figure, not qty × unitPrice
-                    recomputed here — the client never does money arithmetic. */}
+                    recomputed here - the client never does money arithmetic. */}
                 <p className="tnum w-20 shrink-0 text-right text-sm font-semibold text-ink-900">
                   {money(item.lineTotal)}
                 </p>
@@ -246,7 +246,7 @@ function OrderPreview({ order, onClose }) {
           </ul>
         )}
 
-        {/* Totals repeat the server's stored figures — nothing is recomputed
+        {/* Totals repeat the server's stored figures - nothing is recomputed
             here, so the preview can never disagree with the order. */}
         <dl className="space-y-1.5 text-sm">
           <Row label="Subtotal" value={money(order.subtotal)} />
@@ -291,10 +291,10 @@ function Row({ label, value, tone }) {
   );
 }
 
-/** Up to two initials for the avatar. `—` for a name that is somehow empty. */
+/** Up to two initials for the avatar. `-` for a name that is somehow empty. */
 function initials(name) {
   const words = String(name ?? '').trim().split(/\s+/).filter(Boolean);
-  if (words.length === 0) return '—';
+  if (words.length === 0) return '-';
   return words.slice(0, 2).map((word) => word[0].toUpperCase()).join('');
 }
 
@@ -302,7 +302,7 @@ function initials(name) {
  * The approvals queue, as a dialog.
  *
  * **Why a dialog and not a section.** A pending account is a decision, and a
- * decision is a thing you sit down to — the operator opens it, works the list,
+ * decision is a thing you sit down to - the operator opens it, works the list,
  * and closes it. As a panel it sat permanently on a screen that is otherwise
  * for reading, taking the most vertical space of anything on the page while
  * usually holding two or three rows, and on a quiet day it vanished entirely
@@ -311,7 +311,7 @@ function initials(name) {
  *
  * **It is a queue, so it is ordered and it states its age.** Oldest first, and
  * every row says how long it has been waiting, because the failure mode here is
- * not a wrong decision — it is an account nobody looked at. A row past a week
+ * not a wrong decision - it is an account nobody looked at. A row past a week
  * carries a warn badge for the same reason.
  *
  * The row is deliberately not a form. Approving sets a credit limit and terms,
@@ -456,7 +456,7 @@ export function AdminOverviewPage() {
   const [previewing, setPreviewing] = useState(null);
   const [approving, setApproving] = useState(null);
   const [queueOpen, setQueueOpen] = useState(false);
-  // The same mutation the approvals queue and the notification bell use —
+  // The same mutation the approvals queue and the notification bell use
   // approving from here is the identical act, so it must not be a second path.
   const { approveUser } = useAdminMutations();
 
@@ -529,7 +529,7 @@ export function AdminOverviewPage() {
           ? `${formatCount(inventory.outOfStock)} out of stock · ${formatCount(inventory.lowStock)} running low`
           : `${formatCount(inventory.lowStock)} at or below the reorder point`,
       // Out of stock first when there is any, because that is the half the
-      // card leads with and the more urgent one — a zero-stock part is a sale
+      // card leads with and the more urgent one - a zero-stock part is a sale
       // being refused right now. It also has to be this way round: `stock=low`
       // is `> 0`, so a card announcing "53 out of stock" linked to the one
       // filter that excludes all 53.
@@ -619,7 +619,7 @@ export function AdminOverviewPage() {
           hints say so.
 
           Every tile carries `to`, and each one lands on the list **filtered to
-          the figure it just showed** rather than the section's front page — a
+          the figure it just showed** rather than the section's front page - a
           tile reading "3 overdue" that opens all invoices makes the operator
           re-find the three they clicked for. */}
       <KpiRow
@@ -630,7 +630,7 @@ export function AdminOverviewPage() {
             value: money(collected.total),
             // A reversal is stored as a negative payment row, so a period whose
             // refunds outweigh its receipts collects a negative amount. That is
-            // real and correct, but it must not render as an ordinary figure —
+            // real and correct, but it must not render as an ordinary figure
             // money leaving is exactly the case the value colour exists for.
             meta: period,
             hint:
@@ -667,7 +667,7 @@ export function AdminOverviewPage() {
             // could say and nothing else does.
             //
             // Receivables are a position as of now rather than a flow through
-            // the range, so the hint says so — a tile in a dated row otherwise
+            // the range, so the hint says so - a tile in a dated row otherwise
             // reads as belonging to that date.
             hint:
               receivables.count > 0
@@ -690,7 +690,7 @@ export function AdminOverviewPage() {
           },
           {
             key: 'clients',
-            // "Customers" everywhere the operator reads it — the sidebar
+            // "Customers" everywhere the operator reads it - the sidebar
             // already says so, and the route keeping `clients` is an internal
             // detail that should not surface as a second word for one thing.
             label: 'Customers',
@@ -748,7 +748,7 @@ export function AdminOverviewPage() {
           ) : (
             <BarList
               items={topClients.map((client) => ({
-                // The person, not the company — a sole trader has no
+                // The person, not the company - a sole trader has no
                 // business name and would render as a blank bar label.
                 label: client.displayName ?? client.businessName,
                 value: client.total,
@@ -760,7 +760,7 @@ export function AdminOverviewPage() {
               caption="Top customers by invoiced value"
               formatValue={money}
               rank
-              // Share of the top-five total, not of all invoicing — the panel
+              // Share of the top-five total, not of all invoicing - the panel
               // says "Top clients", so that is the whole this reads against.
               showShare
             />
@@ -912,7 +912,7 @@ export function AdminOverviewPage() {
 
           They are deliberately unranged, unlike the tiles above. "Recent"
           answers "what has been happening", and a date filter would empty the
-          panel on any range with no activity in it — a blank feed reads as a
+          panel on any range with no activity in it - a blank feed reads as a
           broken panel, not as an accurate report of a quiet fortnight. */}
       <div className="grid gap-4 lg:grid-cols-2">
         <Panel

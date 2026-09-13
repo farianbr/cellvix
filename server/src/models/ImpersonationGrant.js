@@ -6,13 +6,13 @@ import mongoose from 'mongoose';
  *
  * **Control plane, not the business database.** The row is evidence *about* the
  * platform's own conduct, so it must survive the business being suspended,
- * deleted or migrated — a record of who entered a business that vanishes when
+ * deleted or migrated - a record of who entered a business that vanishes when
  * that business does is not a record. The business's own `AuditLog` gets the
  * matching entry-and-exit pair, and that is the copy the owner reads; this is
  * the copy the platform answers for.
  *
- * **The token is not stored, only its lifetime.** Every check that matters —
- * expiry, revocation, which business — is re-read from this document on each
+ * **The token is not stored, only its lifetime.** Every check that matters
+ * expiry, revocation, which business - is re-read from this document on each
  * request, so a signed token that outlives its grant is refused. Storing the
  * token itself would add a second thing to keep in step with no gain: the JWT
  * already carries its own signature, and a stolen one is defeated by revoking
@@ -33,7 +33,7 @@ const IMPERSONATION_MAX_MINUTES = 240;
 const impersonationGrantSchema = new mongoose.Schema(
   {
     /**
-     * Who went in. A `SuperAdmin`, never a `User` — the whole point is that
+     * Who went in. A `SuperAdmin`, never a `User` - the whole point is that
      * this actor belongs to the platform rather than to the business.
      */
     superAdmin: {
@@ -60,7 +60,7 @@ const impersonationGrantSchema = new mongoose.Schema(
 
     /**
      * Why. Free text, required, and never defaulted to something like
-     * "support" — a reason nobody had to type is a field that reads as
+     * "support" - a reason nobody had to type is a field that reads as
      * completed while carrying no information.
      */
     reason: { type: String, required: true, trim: true, maxlength: 500 },

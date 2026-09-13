@@ -46,7 +46,7 @@ import { useAdminTickets, useAdminMutations } from '@/hooks/useAdmin';
  *
  * The status control is an inline dropdown on every row rather than a menu
  * item, which is deliberate. A repair moves several times a day and often
- * backwards — the wrong screen arrives, a fix does not hold — so the move an
+ * backwards - the wrong screen arrives, a fix does not hold - so the move an
  * operator makes most often should cost one click, not three. The server takes
  * any status and records each move on the ticket timeline; the timeline is the
  * control here, not a transition table.
@@ -100,7 +100,7 @@ export function AdminTicketsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   /**
-   * `?new=1` still opens intake — it now redirects to the form's own route.
+   * `?new=1` still opens intake - it now redirects to the form's own route.
    *
    * The `+ Create > Ticket` menu and the customer profile both link here with
    * that flag (and, from a profile, the customer's details as companions). The
@@ -140,7 +140,7 @@ export function AdminTicketsPage() {
 
   /**
    * Every filter lives in the URL so a filtered board can be linked to. Any
-   * change but the page itself resets to page 1 — staying on page 4 of a set
+   * change but the page itself resets to page 1 - staying on page 4 of a set
    * that now has two pages shows an empty table.
    */
   function setParam(key, value) {
@@ -202,7 +202,7 @@ export function AdminTicketsPage() {
             {ticket.device.brand && ticket.device.model && (
               <span className="text-ink-300"> · </span>
             )}
-            <span className="text-ink-500">{ticket.device.model ?? '—'}</span>
+            <span className="text-ink-500">{ticket.device.model ?? '-'}</span>
           </span>
           <span className="block truncate text-xs text-ink-500">{ticket.issue}</span>
         </>

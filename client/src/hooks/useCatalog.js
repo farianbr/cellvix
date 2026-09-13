@@ -18,7 +18,7 @@ export function useTaxonomy() {
  *
  * **A second hook rather than a wider `useTaxonomy`.** `GET /api/taxonomy`
  * answers `{ tree, componentTypes }`, but `useTaxonomy` selects `data.tree` and
- * six callers rely on its result *being* the tree array — widening the select
+ * six callers rely on its result *being* the tree array - widening the select
  * would break all of them to fix one. Two hooks over one query key means one
  * request still serves both, and each caller gets the shape it expects.
  *
@@ -45,7 +45,7 @@ export function useComponentTypes() {
  * full tree, so the wizard's first step renders against real data too.
  *
  * `keepPreviousData` so switching component type does not blank the steps
- * below while the new tree is in flight — they are about to be reset anyway,
+ * below while the new tree is in flight - they are about to be reset anyway,
  * and a flash of empty cards reads as a bug.
  */
 export function useWizardTaxonomy(partType) {

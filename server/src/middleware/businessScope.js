@@ -4,7 +4,7 @@
  * **This was `outletScope`.** Same two rules, one much larger consequence: an
  * outlet filter that was forgotten showed one shop's rows under another shop of
  * the same business. A business filter that is forgotten shows **another
- * business's records entirely** — its customers, its invoices, its margins.
+ * business's records entirely** - its customers, its invoices, its margins.
  *
  * §4.1 specified database-per-business precisely so that could not happen, and
  * that ruling was reversed on 2026-09-11 in favour of shipping. So the
@@ -12,7 +12,7 @@
  *
  *   **Every query that reads records for a screen must spread
  *   `businessFilter(req)`.** Not most of them. A `Model.find({ status })`
- *   without it is a leak, and it will not announce itself — the rows simply
+ *   without it is a leak, and it will not announce itself - the rows simply
  *   look like more data than expected.
  *
  * Two inputs, and the order matters because one is a permission and the other
@@ -28,7 +28,7 @@
  *      `all` means no filter, which is the honest reading of "All businesses".
  *
  * The result lands on `req.businessScope` as an id or null. `null` means "do
- * not filter" and is deliberately the same value as "no business chosen" — a
+ * not filter" and is deliberately the same value as "no business chosen" - a
  * query builder can then spread the filter unconditionally.
  *
  * **This middleware only reads.** It never rejects: a staff member asking for
@@ -44,7 +44,7 @@ function resolveBusinessScope(req, _res, next) {
    *
    * **This is a containment boundary, not a convenience.** A platform operator
    * who could edit `?business=` would reach every business on the installation
-   * from a grant issued for one — and the audit trail would record the actions
+   * from a grant issued for one - and the audit trail would record the actions
    * in the business they entered, not the one they actually touched. The pin is
    * set by `authenticateImpersonation`, which runs first; honouring it here is
    * the half that makes it stick.
@@ -65,13 +65,13 @@ function resolveBusinessScope(req, _res, next) {
   }
 
   /**
-   * Nothing asked for — keep whatever `resolveBusiness` worked out.
+   * Nothing asked for - keep whatever `resolveBusiness` worked out.
    *
    * **This used to null the scope**, which was correct while `?business=` was
    * the only source: absent meant "all businesses". Now the host resolves a
    * business before authentication (§4.2), so overwriting here would throw away
    * the storefront's business on every request that happens not to carry a
-   * query string — which is all of them.
+   * query string - which is all of them.
    *
    * `all` still clears it, because that is a deliberate request for the
    * unscoped view rather than an absent answer.
@@ -92,7 +92,7 @@ function resolveBusinessScope(req, _res, next) {
  * `{ ...businessFilter(req), status: 'open' }` without branching.
  *
  * **An exact match, deliberately.** The tempting alternative is to also match
- * `business: null` so that anything unassigned stays visible — but that leaks:
+ * `business: null` so that anything unassigned stays visible - but that leaks:
  * every unassigned record would appear under *every* business, so switching to
  * one would show another's history and the figures would not add up.
  * `backfill:business` is what makes exactness safe; it stamps the pre-scoping

@@ -199,7 +199,7 @@ export function AccountCompanyPage() {
       {/* Collapsed: a password form open by default is a form nobody came to
           fill in, sitting under the details they did come for.
 
-          No `summary` — the account carries no `passwordChangedAt`, and the
+          No `summary` - the account carries no `passwordChangedAt`, and the
           only line available would restate the title. The description says what
           opening it offers, which is what a summary would have had to do. */}
       <CollapsiblePanel title="Security" description="Change your password.">

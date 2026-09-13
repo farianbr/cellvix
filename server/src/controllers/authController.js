@@ -7,7 +7,7 @@ import { db } from '../db/models.js';
 /**
  * The session shape, plus the resolved permission map for Cellvix staff.
  *
- * The map is sent so the panel can hide what a role cannot reach — a courtesy,
+ * The map is sent so the panel can hide what a role cannot reach - a courtesy,
  * never the control (§7.6). `requirePermission` decides for real on every
  * request, so a client that ignores this learns nothing and gains nothing.
  *
@@ -38,7 +38,7 @@ async function sessionUser(user) {
 /**
  * The business's feature set, for the panel's shell.
  *
- * **Sent beside the user, not inside it** — a feature is a property of the
+ * **Sent beside the user, not inside it** - a feature is a property of the
  * business, and a permission is a property of the account. Nesting one in the
  * other would be the first step towards a per-user feature, which is a thing
  * this design does not have (§4.4).
@@ -56,7 +56,7 @@ function staffFeatures(req) {
 }
 
 const register = asyncHandler(async (req, res) => {
-  // The IP is recorded with the CASL consent, so it is read here — only the
+  // The IP is recorded with the CASL consent, so it is read here - only the
   // request knows it, and the service must not reach for `req` (§6.13).
   const user = await authService.register(req.body, { ip: req.ip });
   // Deliberately no session: sign-up does not grant access until an admin
@@ -64,7 +64,7 @@ const register = asyncHandler(async (req, res) => {
   res.status(201).json({
     user: user.toPublic(),
     message:
-      'Thanks for signing up — your account is pending admin approval. We will email you once it is verified.',
+      'Thanks for signing up - your account is pending admin approval. We will email you once it is verified.',
   });
 });
 
@@ -72,7 +72,7 @@ const register = asyncHandler(async (req, res) => {
  * Sign in, and record the attempt either way (§6.15, Security Log).
  *
  * **Both outcomes are logged.** A security log that only records successes
- * answers the least interesting question — the failures are what show somebody
+ * answers the least interesting question - the failures are what show somebody
  * working through a password list, and a lockout with no failures before it
  * reads as a system fault rather than an attack.
  *
@@ -91,7 +91,7 @@ const login = asyncHandler(async (req, res) => {
       entity: { kind: 'session', id: '', label: req.body?.email ?? '' },
       description:
         error.code === 'STAFF_LOCKED'
-          ? `Sign-in refused for ${req.body?.email} — account is locked.`
+          ? `Sign-in refused for ${req.body?.email} - account is locked.`
           : `Failed sign-in for ${req.body?.email}.`,
       // Resolved without leaking anything: the row names the account when it
       // exists, while the response stays identical either way.
@@ -132,7 +132,7 @@ const logout = asyncHandler(async (req, res) => {
  *
  * A guest gets 200 with `user: null`, not 401. "Nobody is signed in" is a valid
  * answer to this question rather than a failure, and every visitor asks it on
- * first paint — answering with an error meant a red entry in the browser console
+ * first paint - answering with an error meant a red entry in the browser console
  * on every anonymous page load, which no client-side catch can suppress.
  */
 const me = asyncHandler(async (req, res) => {
@@ -144,7 +144,7 @@ const me = asyncHandler(async (req, res) => {
      *
      * Reported here rather than on a route of its own because every screen
      * already asks this question on first paint, and the banner has to be able
-     * to appear on **any** of them — an operator who navigates deep into a
+     * to appear on **any** of them - an operator who navigates deep into a
      * panel must not lose the one control that gets them out. `null` for
      * everybody else, which is the overwhelming majority of requests.
      */
@@ -190,7 +190,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
  *
  * Signing in here is deliberate: they have just proven control of the mailbox
  * and chosen a password, so asking them to type it again immediately is a step
- * that protects nothing. `remember` is false — a reset is often done on a
+ * that protects nothing. `remember` is false - a reset is often done on a
  * machine that is not theirs.
  */
 const resetPassword = asyncHandler(async (req, res) => {

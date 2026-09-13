@@ -11,7 +11,7 @@ import useOnClickOutside from '@/hooks/useOnClickOutside';
 import useAnchoredPosition from '@/hooks/useAnchoredPosition';
 import { pressable } from '@/lib/motion';
 
-/** Height of one result row — see the row markup below (p-1.5 + a size-8 tile). */
+/** Height of one result row - see the row markup below (p-1.5 + a size-8 tile). */
 const ROW_H = 51;
 
 /**
@@ -20,7 +20,7 @@ const ROW_H = 51;
  * Typing a SKU from memory is how a line got entered before, which meant every
  * typo came back as "SKU not found" after the whole pad had been filled in. The
  * catalogue search matches SKU as well as name, so the same keystrokes now find
- * the part — and what lands in the row is a product that certainly exists, with
+ * the part - and what lands in the row is a product that certainly exists, with
  * its stock state visible before the line is submitted.
  *
  * `value` is the chosen product (or null); `onChange` receives one or null.
@@ -42,7 +42,7 @@ export function ProductPicker({ value, onChange, label, autoFocus = false, class
   const showPanel = open && debounced.trim().length >= 2;
 
   // The pad lives inside a Panel, which clips its overflow to keep its rounded
-  // corners — an absolutely-positioned list was cut off at the panel's edge.
+  // corners - an absolutely-positioned list was cut off at the panel's edge.
   // Portalled and anchored to the field, so it opens over everything and sizes
   // itself to the room actually left below (or above) the row.
   const [panelStyle] = useAnchoredPosition(containerRef, showPanel, {
@@ -56,7 +56,7 @@ export function ProductPicker({ value, onChange, label, autoFocus = false, class
     matchWidth: true,
   });
 
-  // The list is portalled, so it is not inside containerRef — both refs count as
+  // The list is portalled, so it is not inside containerRef - both refs count as
   // "inside" or the first click on a result closes the menu before it lands.
   useOnClickOutside([containerRef, listRef], () => setOpen(false), open);
 

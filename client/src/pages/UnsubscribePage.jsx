@@ -13,7 +13,7 @@ import cn from '@/lib/cn';
  *
  * **This exists because the law requires it**, not because it is a nice touch.
  * CASL says a commercial email must carry a working unsubscribe that takes no
- * more than two clicks — so this page is public, needs no sign-in, and does the
+ * more than two clicks - so this page is public, needs no sign-in, and does the
  * work on arrival rather than presenting a form to fill in. The HMAC in the
  * link is what authorises it; a guessed account id gets nowhere.
  *
@@ -26,7 +26,7 @@ export function UnsubscribePage() {
   const [state, setState] = useState({ status: 'working' });
 
   // React 18 mounts twice in development. Without this the request fires
-  // twice — harmless, because unsubscribing is idempotent, but the second
+  // twice - harmless, because unsubscribing is idempotent, but the second
   // response would overwrite the first for no reason.
   const fired = useRef(false);
 
@@ -77,7 +77,7 @@ export function UnsubscribePage() {
               marketing must not stop an order confirmation or an invoice from
               arriving, and saying so here prevents a support call. */}
           <p className="mt-4 rounded-lg bg-surface-2 px-4 py-3 text-sm leading-relaxed text-ink-500">
-            You will still receive messages about your account and your orders — confirmations,
+            You will still receive messages about your account and your orders - confirmations,
             invoices and delivery updates. Those are not marketing and are not affected by this.
           </p>
 
@@ -102,7 +102,7 @@ export function UnsubscribePage() {
           <p className="mt-3 text-md leading-relaxed text-ink-600">{state.message}</p>
 
           {/* An unsubscribe that cannot complete must still lead somewhere a
-              person can act — a dead end here is a compliance failure. */}
+              person can act - a dead end here is a compliance failure. */}
           <p className="mt-4 text-sm leading-relaxed text-ink-500">
             Email{' '}
             <a

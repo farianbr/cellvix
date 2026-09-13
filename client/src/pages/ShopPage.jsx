@@ -17,7 +17,7 @@ import useFilterStore from '@/store/filterStore';
 import useUiStore from '@/store/uiStore';
 
 /**
- * The Shop page IS the homepage (brief §3). No hero, no marketing landing —
+ * The Shop page IS the homepage (brief §3). No hero, no marketing landing
  * a buyer lands directly on filterable stock.
  */
 export function ShopPage() {
@@ -60,7 +60,7 @@ export function ShopPage() {
             <h1 className="font-display text-lg font-bold sm:text-xl">
               Parts
               <span className="tnum ml-2 text-md font-medium text-ink-400">
-                {isLoading ? '—' : `${formatCount(total)} results`}
+                {isLoading ? '-' : `${formatCount(total)} results`}
               </span>
             </h1>
 

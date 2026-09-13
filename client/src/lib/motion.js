@@ -2,7 +2,7 @@
  * The motion vocabulary. Every transition in the app comes from here.
  *
  * Before this existed, each component picked its own duration and curve at the
- * call site — twelve different durations across the client, several of them
+ * call site - twelve different durations across the client, several of them
  * within 20ms of each other, and an entrance curve too weak to read as
  * deliberate. Motion that varies at random between components is exactly what
  * makes an interface feel machine-assembled: the eye cannot learn the system,
@@ -62,10 +62,10 @@ export const duration = {
    Springs matter for anything interruptible. A spring that is reversed
    mid-flight keeps its velocity and turns around smoothly; a duration-based
    tween restarts from zero and visibly stutters. Use these wherever the user
-   can change their mind mid-animation — dragging, rapid toggling, a menu
+   can change their mind mid-animation - dragging, rapid toggling, a menu
    dismissed while it is still opening. */
 export const spring = {
-  /** Default for interruptible UI. No overshoot — this is a work app. */
+  /** Default for interruptible UI. No overshoot - this is a work app. */
   snappy: { type: 'spring', duration: 0.35, bounce: 0 },
   /** Panels and sheets. A trace of bounce so they feel physical, not driven. */
   panel: { type: 'spring', duration: 0.45, bounce: 0.12 },
@@ -100,7 +100,7 @@ export const popover = {
   exit: { opacity: 0, scale: 0.98, y: -2, transition: transition.exit },
 };
 
-/** Centred dialogs. Modals keep a centre origin — unlike a popover they are
+/** Centred dialogs. Modals keep a centre origin - unlike a popover they are
  *  not anchored to a trigger, so scaling from one would be a lie. */
 export const dialog = {
   initial: { opacity: 0, scale: 0.97, y: 8 },
@@ -108,7 +108,7 @@ export const dialog = {
   exit: { opacity: 0, scale: 0.99, y: 4, transition: transition.exit },
 };
 
-/** The scrim behind any overlay. Opacity only — a blurred backdrop that also
+/** The scrim behind any overlay. Opacity only - a blurred backdrop that also
  *  moves is two effects competing for the same moment. */
 export const scrim = {
   initial: { opacity: 0 },
@@ -117,7 +117,7 @@ export const scrim = {
 };
 
 /** Tooltips. Faster than a popover and travelling less, because they are
- *  incidental — the user is already looking at the trigger. */
+ *  incidental - the user is already looking at the trigger. */
 export const tooltip = {
   initial: { opacity: 0, scale: 0.97 },
   animate: { opacity: 1, scale: 1, transition: transition.fast },
@@ -160,7 +160,7 @@ export const listItem = {
 };
 
 /**
- * Stagger container. Keep the step short — 30–60ms. Long staggers turn a list
+ * Stagger container. Keep the step short - 30–60ms. Long staggers turn a list
  * of twenty rows into a two-second wait, and stagger is decoration: it must
  * never gate interaction.
  *
@@ -180,7 +180,7 @@ export function staggerContainer(step = 0.04) {
  * its own centre. Pick by the side the popover opens on.
  *
  * Whether anyone consciously notices a menu growing from the button that
- * opened it is not the point — in aggregate, details like this are the
+ * opened it is not the point - in aggregate, details like this are the
  * difference between an interface that feels considered and one that does not.
  */
 export const originClass = {
@@ -195,7 +195,7 @@ export const originClass = {
 };
 
 /**
- * Press feedback. Every pressable element in the app carries this — it is the
+ * Press feedback. Every pressable element in the app carries this - it is the
  * single cheapest thing that makes a UI feel like it is listening.
  *
  * Kept as a class string rather than a Motion prop because it must work on
@@ -208,7 +208,7 @@ export const pressable =
   'transition-[transform,background-color,border-color,color,box-shadow,filter] duration-press ease-entrance ' +
   'active:scale-[0.97] motion-reduce:active:scale-100 motion-reduce:transition-none';
 
-/** The same, softened, for a large surface — a card or a table row. Scaling a
+/** The same, softened, for a large surface - a card or a table row. Scaling a
  *  full-width row by 3% is a visible lurch; 0.5% is a nudge. */
 export const pressableSurface =
   'transition-[transform,background-color,border-color,box-shadow] duration-press ease-entrance ' +

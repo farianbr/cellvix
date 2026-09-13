@@ -5,7 +5,7 @@ import '../models/Settings.js';
  * How long a part is covered for, and whether a given line still is.
  *
  * **This is the only place warranty length is decided.** Before it, the grade
- * table in Settings was editable and displayed and read by nothing — the RMA
+ * table in Settings was editable and displayed and read by nothing - the RMA
  * screens never consulted it, so a shop could set NEW to 365 days and the
  * system would accept a return on day 900 without comment. Membership tiers
  * added a second input to the same question, and two callers each doing their
@@ -28,8 +28,8 @@ import '../models/Settings.js';
  *
  * It does not block anything. `isCovered` is an *answer*, surfaced to the
  * operator raising an RMA; it never refuses the return. An out-of-warranty
- * return is a normal commercial act — a goodwill replacement, a part that
- * failed for a reason the warranty does not cover but the relationship does —
+ * return is a normal commercial act - a goodwill replacement, a part that
+ * failed for a reason the warranty does not cover but the relationship does
  * and a system that made it impossible would be telling the shop how to run
  * itself. The decision stays with the person, who now has the fact.
  */
@@ -53,7 +53,7 @@ function tierBonusDays(settings, tier) {
  *
  * Read from the timeline rather than a dedicated field, because that is where
  * the status ladder actually records it. An order that has not been delivered
- * yet has no warranty clock running at all — `null` says so, and the caller
+ * yet has no warranty clock running at all - `null` says so, and the caller
  * reports "not started" rather than quietly measuring from the order date and
  * expiring somebody's cover early.
  */
@@ -62,7 +62,7 @@ function deliveredAt(order) {
   return entry?.at ? new Date(entry.at) : null;
 }
 
-/** Whole days between two dates, floored — a part is in warranty for all of day 90. */
+/** Whole days between two dates, floored - a part is in warranty for all of day 90. */
 function daysBetween(from, to) {
   return Math.floor((to.getTime() - from.getTime()) / 86_400_000);
 }
@@ -82,7 +82,7 @@ function coverFor({ settings, grade, tier, order, at = new Date() }) {
    *
    * A grade with no row in the table carries no warranty, and a Gold customer
    * buying such a part would otherwise come out with ninety days of cover that
-   * the product itself was never sold with — the tier would be inventing a
+   * the product itself was never sold with - the tier would be inventing a
    * warranty rather than extending one.
    */
   const bonus = base > 0 ? tierBonusDays(settings, tier) : 0;
@@ -101,7 +101,7 @@ function coverFor({ settings, grade, tier, order, at = new Date() }) {
       expiresAt: null,
       daysRemaining: null,
       // Not delivered is not the same as not covered, and the UI has to be able
-      // to say which — see the module comment.
+      // to say which - see the module comment.
       status: 'not_started',
       isCovered: true,
     };

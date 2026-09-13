@@ -34,18 +34,18 @@ import { pressable } from '@/lib/motion';
 import cn from '@/lib/cn';
 
 /**
- * One supplier — contact details, consent, linked products, PO history and the
+ * One supplier - contact details, consent, linked products, PO history and the
  * spend chart that feeds the Supplier Prices report (ERP rework §6.7).
  *
  * **Tabbed**, matched to CellShoppe. Everything used to stack into one long
  * two-column page, which works while a supplier has one purchase order and
  * stops working at fifty: the contact details an operator opened the page for
- * end up below a table that has grown without limit. Three views — who they
- * are, what we ordered, what they supply — and the tab carries its own count so
+ * end up below a table that has grown without limit. Three views - who they
+ * are, what we ordered, what they supply - and the tab carries its own count so
  * the empty ones answer themselves without being opened.
  *
  * The breadcrumb names the supplier rather than the type (§4b.6), which the
- * page publishes through `useRecordLabel` — the shell renders one `Breadcrumbs`
+ * page publishes through `useRecordLabel` - the shell renders one `Breadcrumbs`
  * for every screen, so a detail page is a sibling of its trail, not a parent.
  */
 
@@ -71,7 +71,7 @@ function monthLabel(key) {
   return formatted.toLocaleDateString('en-CA', { month: 'short', year: '2-digit' });
 }
 
-/** Two letters from the business name — the header's avatar. */
+/** Two letters from the business name - the header's avatar. */
 function initials(name = '') {
   return name
     .split(/\s+/)
@@ -94,13 +94,13 @@ function DetailRow({ label, children }) {
     <div className="flex items-baseline justify-between gap-4 border-b border-line py-2.5 last:border-0">
       <dt className="eyebrow shrink-0 text-ink-400">{label}</dt>
       <dd className="min-w-0 wrap-break-word text-right text-sm text-ink-900">
-        {children ?? <span className="text-ink-300">—</span>}
+        {children ?? <span className="text-ink-300">-</span>}
       </dd>
     </div>
   );
 }
 
-/** One header fact — an icon and a value, or nothing at all. */
+/** One header fact - an icon and a value, or nothing at all. */
 function HeaderFact({ icon: Icon, children }) {
   if (!children) return null;
   return (
@@ -138,7 +138,7 @@ export function AdminSupplierProfilePage() {
    *
    * The same handler the Suppliers list carries, and it must stay the same
    * shape: the password is reset **either way**, so a mail failure is not a
-   * no-op to report and forget — the supplier's old password has stopped
+   * no-op to report and forget - the supplier's old password has stopped
    * working, and the message has to say that rather than only that something
    * went wrong.
    */
@@ -234,7 +234,7 @@ export function AdminSupplierProfilePage() {
             {date(order.expectedDate)}
           </span>
         ) : (
-          <span className="text-xs text-ink-300">—</span>
+          <span className="text-xs text-ink-300">-</span>
         ),
     },
     {
@@ -302,7 +302,7 @@ export function AdminSupplierProfilePage() {
       align: 'right',
       className: 'tnum',
       render: (product) =>
-        product.cost > 0 ? money(product.cost) : <span className="text-xs text-ink-300">—</span>,
+        product.cost > 0 ? money(product.cost) : <span className="text-xs text-ink-300">-</span>,
     },
     {
       key: 'price',
@@ -317,7 +317,7 @@ export function AdminSupplierProfilePage() {
   /**
    * Row menus, so both tables carry the `Actions` column every other list
    * screen has. Without one a `DataTable` renders as an inert grid: no trailing
-   * column, no row hover, nothing saying the row goes anywhere — which is why
+   * column, no row hover, nothing saying the row goes anywhere - which is why
    * these two read as a different component from the Customers table.
    */
   const orderMenu = [
@@ -367,7 +367,7 @@ export function AdminSupplierProfilePage() {
         }
         action={
           <>
-            {/* Straight into a new order against this supplier — the thing an
+            {/* Straight into a new order against this supplier - the thing an
                 operator most often came to this page to do. */}
             <Link
               to={`/admin/purchase-orders/create?supplier=${supplier.id}`}
@@ -440,7 +440,7 @@ export function AdminSupplierProfilePage() {
           {
             key: 'last',
             label: 'Last order',
-            value: supplier.lastOrderAt ? date(supplier.lastOrderAt) : '—',
+            value: supplier.lastOrderAt ? date(supplier.lastOrderAt) : '-',
             hint: supplier.lastOrderAt ? 'Most recent order placed' : 'Never ordered from',
             tone: 'neutral',
             icon: CalendarDays,
@@ -522,7 +522,7 @@ export function AdminSupplierProfilePage() {
                 </p>
               ) : (
                 // Never asked is not the same fact as declined, and the panel
-                // has to be able to say which — see `Supplier.contactConsent`.
+                // has to be able to say which - see `Supplier.contactConsent`.
                 <p className="mt-2.5 text-sm text-ink-400">
                   Not recorded yet. Set it from Edit.
                 </p>
@@ -534,7 +534,7 @@ export function AdminSupplierProfilePage() {
                * **Here, not only in the list's row menu.** The button existed
                * solely as a `···` entry on `/admin/suppliers`, which is the
                * wrong place to look: you open a supplier's profile to act on
-               * that supplier, and this page — the one about them — could not
+               * that supplier, and this page - the one about them - could not
                * say whether they could even sign in, let alone invite them.
                *
                * The state is stated before the button, because "has this
@@ -552,7 +552,7 @@ export function AdminSupplierProfilePage() {
                   </p>
                 ) : !supplier.isActive ? (
                   // Deactivating is how the purchasing team ends a relationship,
-                  // and it closes the portal door too — `invitePortal` refuses an
+                  // and it closes the portal door too - `invitePortal` refuses an
                   // inactive supplier, so offering the button here would only ever
                   // produce an error.
                   <p className="text-sm text-ink-400">
@@ -569,7 +569,7 @@ export function AdminSupplierProfilePage() {
                             : ' Not signed in yet.'}
                         </>
                       ) : (
-                        'No portal access yet — they cannot answer a request for quote.'
+                        'No portal access yet - they cannot answer a request for quote.'
                       )}
                     </p>
 
@@ -584,8 +584,8 @@ export function AdminSupplierProfilePage() {
                     </Button>
 
                     {/* Said before the click, not after. Resending always mints a
-                        new password — the stored value is a hash, so the old one
-                        cannot be read back out to be sent again — and a supplier
+                        new password - the stored value is a hash, so the old one
+                        cannot be read back out to be sent again - and a supplier
                         whose working password silently stopped working is a
                         support call nobody expected. */}
                     {supplier.portalInviteAt && (
@@ -610,7 +610,7 @@ export function AdminSupplierProfilePage() {
 
             <Panel
               title="Spend by month"
-              description="Sent and received orders only — a draft is a plan, not money."
+              description="Sent and received orders only - a draft is a plan, not money."
             >
               <BarList
                 items={spend.map((row) => ({
@@ -629,7 +629,7 @@ export function AdminSupplierProfilePage() {
       {tab === 'orders' && (
         <Panel title="Purchase orders" flush>
           {/* The count line is what carries the density toggle, so a table
-              without one is a table an operator cannot set the density of —
+              without one is a table an operator cannot set the density of
               which is how every detail page ended up stuck at whatever the
               last list screen left the preference on. */}
           <div className="border-b border-line px-3 py-2 sm:px-4">
@@ -714,7 +714,7 @@ export function AdminSupplierProfilePage() {
 /**
  * The four channels, each showing its answer.
  *
- * Read-only, so this is not `ConsentChannels` — that component is a control and
+ * Read-only, so this is not `ConsentChannels` - that component is a control and
  * its chips invite a click. It reads from the same `CONSENT_CHANNELS` list, so
  * a channel added later appears on both without either being edited.
  *
@@ -741,7 +741,7 @@ function ConsentSummary({ consent }) {
           >
             <Icon className="size-3.5 shrink-0" strokeWidth={2.25} aria-hidden="true" />
             {label}
-            <span aria-hidden="true">{!recorded ? '—' : on ? '✓' : '✕'}</span>
+            <span aria-hidden="true">{!recorded ? '-' : on ? '✓' : '✕'}</span>
             <span className="sr-only">
               {!recorded ? 'not recorded' : on ? 'consented' : 'declined'}
             </span>

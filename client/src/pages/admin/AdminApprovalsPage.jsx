@@ -33,7 +33,7 @@ const TABS = [
  * The reason a rejection carries.
  *
  * Exported because the customer profile rejects from its own pending banner
- * and must ask the same question the same way — the reason goes into the
+ * and must ask the same question the same way - the reason goes into the
  * notification email either way, and two prompts would eventually disagree
  * about what is required.
  */
@@ -57,7 +57,7 @@ export function RejectForm({ user, onSubmit, onCancel, isPending }) {
         error={errors.reason?.message}
         data-autofocus
         {...register('reason', {
-          required: 'Give a reason — it goes in the notification email.',
+          required: 'Give a reason - it goes in the notification email.',
           minLength: { value: 3, message: 'Give a reason.' },
         })}
       />
@@ -116,7 +116,7 @@ export function AdminApprovalsPage() {
    * which put three gradients on a screen with three pending accounts.
    *
    * As a table each fact has a column and comparison is free. The actions
-   * collapse into one column, and Approve is a plain solid button — a table row
+   * collapse into one column, and Approve is a plain solid button - a table row
    * is not the place for the page's signature treatment, and the operator is
    * choosing between two adjacent actions rather than being pointed at one.
    */
@@ -168,7 +168,7 @@ export function AdminApprovalsPage() {
       header: 'Industry',
       width: '12%',
       priority: 3,
-      render: (user) => user.businessType || <span className="text-ink-300">—</span>,
+      render: (user) => user.businessType || <span className="text-ink-300">-</span>,
     },
     {
       key: 'createdAt',

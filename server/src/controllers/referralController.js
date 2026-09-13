@@ -21,7 +21,7 @@ const list = asyncHandler(async (req, res) => {
 });
 
 /**
- * The commission rate — audited, which phase 10 recorded as a gap waiting on
+ * The commission rate - audited, which phase 10 recorded as a gap waiting on
  * `AuditLog`. This one number multiplies every future payout, so "who raised
  * it, and when" is exactly the question a log has to be able to answer.
  */
@@ -37,7 +37,7 @@ const setRate = asyncHandler(async (req, res) => {
     after: { percent: result.percent },
     // Said on the row for the same reason it is said on the screen: it is the
     // first thing anyone reading this back will want to know.
-    description: `Referral commission set to ${result.percent}%. Not retroactive — existing accruals keep the rate they were earned at.`,
+    description: `Referral commission set to ${result.percent}%. Not retroactive - existing accruals keep the rate they were earned at.`,
   });
 
   res.json(result);

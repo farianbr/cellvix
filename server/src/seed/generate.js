@@ -96,15 +96,15 @@ const COLOUR_VARIANTS = ['Black', 'White', 'Space Grey', 'Blue', 'Graphite'];
  *
  * INVENTED NAMES, on purpose. These are placeholders standing in for a real
  * price feed, and seeding a real distributor's name against a number we made up
- * would be putting words in a named company's mouth — it reads as a factual
+ * would be putting words in a named company's mouth - it reads as a factual
  * claim about their pricing the moment it renders on a card.
  */
 const COMPETITORS = ['Northbound Parts', 'MapleCell Supply', 'PartsDirect CA'];
 
 /**
  * A stable 32-bit seed from a string, so a product that has no sequence number
- * — anything already in a live database, reached by the backfill rather than by
- * the generator — can still be given the same benchmarks on every run.
+ * - anything already in a live database, reached by the backfill rather than by
+ * the generator - can still be given the same benchmarks on every run.
  */
 function hashString(value) {
   let hash = 2166136261;
@@ -126,7 +126,7 @@ function hashString(value) {
  * Takes its OWN generator, seeded per product from the sequence number, rather
  * than drawing from the catalogue's shared `random()`. Sharing it would advance
  * that stream by four extra calls per product, which changes every price and
- * stock roll after this one — the catalogue is meant to be byte-identical on
+ * stock roll after this one - the catalogue is meant to be byte-identical on
  * every reseed, and adding a field here must not silently redraw the store.
  */
 function buildCompetitors(price, seed) {
@@ -146,7 +146,7 @@ function buildCompetitors(price, seed) {
 /**
  * Builds the product catalogue.
  *
- * Not every model gets every part type — that would be a uniform grid with no
+ * Not every model gets every part type - that would be a uniform grid with no
  * interesting empty states. The generator picks a deterministic subset so facet
  * counts vary the way a real catalogue does, and so "no results" is reachable.
  */
@@ -174,7 +174,7 @@ function buildProducts({ targetCount = 420 } = {}) {
     }
   }
 
-  // How premium a model is — drives price within each part's band.
+  // How premium a model is - drives price within each part's band.
   const premiumHint = (name) =>
     /ultra|pro max|pro|max|fold|plus|16|15/i.test(name) ? 0.72 + random() * 0.28 : random() * 0.7;
 

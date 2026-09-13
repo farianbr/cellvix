@@ -13,13 +13,13 @@ import { date, dateTime } from '@/lib/format';
 import { pressable } from '@/lib/motion';
 
 /**
- * My Profile (§6.15, phase 12) — the screen behind the top bar's user chip.
+ * My Profile (§6.15, phase 12) - the screen behind the top bar's user chip.
  *
  * **Read-only.** §6.15 lists an `Edit` button; editing a staff account already
  * lives on Settings → Users behind an admin-only route, and a second edit path
  * here would be a way around the self-demotion and last-admin rules
  * `accessService` enforces there. So this links to that screen rather than
- * duplicating it — and only for somebody who can actually open it.
+ * duplicating it - and only for somebody who can actually open it.
  *
  * The permission grid is the part worth having: "what can I actually reach"
  * is otherwise something a staff member works out by clicking around and
@@ -117,13 +117,13 @@ export function AdminProfilePage() {
               <div className="flex justify-between gap-3">
                 <dt className="text-ink-500">Last sign-in</dt>
                 <dd className="tnum text-ink-900">
-                  {profile.lastLoginAt ? dateTime(profile.lastLoginAt) : '—'}
+                  {profile.lastLoginAt ? dateTime(profile.lastLoginAt) : '-'}
                 </dd>
               </div>
             </dl>
 
             <div className="mt-4 flex flex-wrap gap-2 border-t border-line pt-4">
-              {/* Only shown to somebody who can actually open it — a link that
+              {/* Only shown to somebody who can actually open it - a link that
                   403s is worse than no link. */}
               {isAdmin && (
                 <Link
@@ -146,7 +146,7 @@ export function AdminProfilePage() {
             </div>
 
             <p className="mt-3 text-sm leading-relaxed text-ink-400">
-              Your name, email and role are changed on Settings → Users by an administrator — the one
+              Your name, email and role are changed on Settings → Users by an administrator - the one
               place the self-demotion and last-admin rules are enforced.
             </p>
           </Panel>
@@ -179,7 +179,7 @@ export function AdminProfilePage() {
             {isAdmin && (
               <p className="mt-3 flex items-start gap-2 border-t border-line pt-3 text-sm leading-relaxed text-ink-500">
                 <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-brand" strokeWidth={2.25} aria-hidden="true" />
-                An administrator bypasses the role system entirely — this grid is what that means in
+                An administrator bypasses the role system entirely - this grid is what that means in
                 practice, not a role that could be edited.
               </p>
             )}

@@ -1,6 +1,6 @@
 /**
  * View-layer formatters. Money is stored and transported as integer cents
- * everywhere else in the system — this is the only place it becomes a string.
+ * everywhere else in the system - this is the only place it becomes a string.
  */
 
 import {
@@ -26,26 +26,26 @@ const CAD_COMPACT = new Intl.NumberFormat('en-CA', {
 
 /** 12995 -> "$129.95" */
 export function money(cents) {
-  if (cents === null || cents === undefined || Number.isNaN(cents)) return '—';
+  if (cents === null || cents === undefined || Number.isNaN(cents)) return '-';
   return CAD.format(cents / 100);
 }
 
-/** 1299500 -> "$12,995" — for dashboard tiles where cents are noise. */
+/** 1299500 -> "$12,995" - for dashboard tiles where cents are noise. */
 export function moneyCompact(cents) {
-  if (cents === null || cents === undefined || Number.isNaN(cents)) return '—';
+  if (cents === null || cents === undefined || Number.isNaN(cents)) return '-';
   return CAD_COMPACT.format(cents / 100);
 }
 
 /**
- * 1299500 -> "$13K" — for chart axis ticks, where `moneyCompact`'s "$12,995"
+ * 1299500 -> "$13K" - for chart axis ticks, where `moneyCompact`'s "$12,995"
  * is wide enough to force the plot area narrow on a phone.
  *
  * Not `Intl`'s `notation: 'compact'`: it renders 1500 as "1.5K" and 999 as
  * "999", so a tick column mixes widths and decimal places down its length. An
- * axis is a ruler — every mark on it should read the same shape.
+ * axis is a ruler - every mark on it should read the same shape.
  */
 export function moneyAxis(cents) {
-  if (cents === null || cents === undefined || Number.isNaN(cents)) return '—';
+  if (cents === null || cents === undefined || Number.isNaN(cents)) return '-';
 
   const dollars = cents / 100;
   const magnitude = Math.abs(dollars);
@@ -54,7 +54,7 @@ export function moneyAxis(cents) {
   if (magnitude >= 1_000_000) return `${sign}$${Math.round(magnitude / 1_000_000)}M`;
   if (magnitude >= 1_000) return `${sign}$${Math.round(magnitude / 1_000)}K`;
   // Rounding to whole dollars below $10 makes a sub-dollar step print the same
-  // label twice — an axis reading `$0 $1 $1 $2 $2 $3`. Keep the cents on a
+  // label twice - an axis reading `$0 $1 $1 $2 $2 $3`. Keep the cents on a
   // small scale, and drop them again once they are noise.
   if (magnitude > 0 && magnitude < 10) return `${sign}$${dollars.toFixed(2).replace('-', '')}`;
   return `${sign}$${Math.round(magnitude)}`;
@@ -76,7 +76,7 @@ export {
 
 /** "in 6 days" / "3 days ago" / "today" */
 export function relativeDays(value) {
-  if (!value) return '—';
+  if (!value) return '-';
   const days = Math.round((new Date(value) - new Date()) / 86_400_000);
   if (days === 0) return 'today';
   if (days === 1) return 'tomorrow';
@@ -85,7 +85,7 @@ export function relativeDays(value) {
 }
 
 /**
- * "just now" / "4m ago" / "3h ago" / "2d ago" / "14-Mar" — for the notification
+ * "just now" / "4m ago" / "3h ago" / "2d ago" / "14-Mar" - for the notification
  * bell (§7.3), which needs finer grain than `relativeDays`.
  *
  * A notification from eleven minutes ago rendered as "today" tells the operator
@@ -127,7 +127,7 @@ export function titleize(slug = '') {
  * directly above the name, so the full name repeated it a word later.
  *
  * The suffix is only removed when it really is a suffix and something is left
- * over — a bad label, a name that never carried it, or a product whose whole
+ * over - a bad label, a name that never carried it, or a product whose whole
  * name IS the part type all fall through to the untouched name.
  */
 export function productTitle(name = '', partTypeLabel = '') {

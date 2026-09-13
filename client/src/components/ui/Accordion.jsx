@@ -7,13 +7,13 @@ import { ease, pressable } from '@/lib/motion';
 
 /**
  * Disclosure list. One implementation serves the FAQ page and the per-product
- * FAQ section — the same pattern in two places would drift into two patterns.
+ * FAQ section - the same pattern in two places would drift into two patterns.
  *
  * Each entry is a rounded pill made of two elements: a 2px outer that carries
  * the edge and an inner that carries the face. Closed, the outer is a hairline
  * in `line`; open, it becomes the brand gradient, so the accent arrives as a
  * thin active-state rule rather than as a filled panel (PROJECT_INSTRUCTIONS.md
- * §2.2). Nothing resizes between the two states — only the two backgrounds and
+ * §2.2). Nothing resizes between the two states - only the two backgrounds and
  * the icon's rotation change.
  *
  * Accessibility: the header is a real `<button>` carrying `aria-expanded` and
@@ -40,7 +40,7 @@ export function Accordion({
 
   // The reveal is a blur-and-rise rather than a plain fade: the blur is what
   // makes a stack of near-identical pills read as arriving in order. Under
-  // `prefers-reduced-motion` it degrades to opacity only, per §2.5 — a filter
+  // `prefers-reduced-motion` it degrades to opacity only, per §2.5 - a filter
   // animation is exactly the kind of motion that setting exists to stop.
   const hidden = reduce
     ? { opacity: 0 }
@@ -83,7 +83,7 @@ export function Accordion({
                   className="group flex w-full items-center gap-3 px-4 py-4 text-left sm:gap-4 sm:px-6 sm:py-5"
                 >
                   {numbered ? (
-                    // Hidden on phones, where the row has no width to spare —
+                    // Hidden on phones, where the row has no width to spare
                     // the same call the reference layout makes.
                     <span
                       className={cn(
@@ -112,7 +112,7 @@ export function Accordion({
                   {/* A rotating plus, not a swapped plus/minus glyph: the icon
                       stays one element, so the transform is the only thing that
                       changes and nothing reflows under the cursor. The circle
-                      uses the same two-element trick as the row — a gradient
+                      uses the same two-element trick as the row - a gradient
                       edge appears around a white face once it is open. */}
                   {/* Sized down on phones: at 44px it was the loudest thing in
                       a 320px row and crowded the question off two lines. 32px
@@ -161,7 +161,7 @@ export function Accordion({
                     }
                     className="overflow-hidden"
                   >
-                    {/* Indented to the question's text, not to the number — the
+                    {/* Indented to the question's text, not to the number - the
                         answer belongs to the question, not to the list. */}
                     <div
                       className={cn(

@@ -3,7 +3,7 @@ import { AlertCircle } from 'lucide-react';
 import cn from '@/lib/cn';
 
 /**
- * Multi-line field. Mirrors `Input`'s API — label, hint, error — so a form can
+ * Multi-line field. Mirrors `Input`'s API - label, hint, error - so a form can
  * swap one for the other without changing anything around it.
  */
 export const Textarea = forwardRef(function Textarea(

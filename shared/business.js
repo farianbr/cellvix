@@ -1,7 +1,7 @@
 /**
- * The seller's own details — the one place they are written down.
+ * The seller's own details - the one place they are written down.
  *
- * PLACEHOLDER DATA. Cellvix has not supplied real contact details yet — see
+ * PLACEHOLDER DATA. Cellvix has not supplied real contact details yet - see
  * "Open questions" #1 in PROGRESS.md. Replace here only: the footer, contact
  * tab, contact page and the invoice document the server emails all read this
  * object, client and server alike.

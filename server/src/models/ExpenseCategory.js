@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
  *
  * Admin-managed rather than an enum: the starter set is Canadian and sensible,
  * but the operator adds their own without a deploy. A category that is in use
- * cannot be hard-deleted — only deactivated — because deleting one would
+ * cannot be hard-deleted - only deactivated - because deleting one would
  * silently re-bucket every historical expense that pointed at it.
  */
 const expenseCategorySchema = new mongoose.Schema(
@@ -13,7 +13,7 @@ const expenseCategorySchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, index: true },
 
-    // A design token name, not a hex value — the palette lives in CSS and an
+    // A design token name, not a hex value - the palette lives in CSS and an
     // arbitrary colour from a form is how a page ends up off-brand (§2b).
     colorToken: { type: String, default: 'ink' },
 

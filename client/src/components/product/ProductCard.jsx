@@ -44,8 +44,8 @@ export function ProductCard({ product }) {
    *
    * The percentage is derived from whichever number won rather than taken from
    * `market.savingsPercent`, which is computed against the market average. On a
-   * product carrying both, those disagree — a 17% market saving beside a strike
-   * worth 15% — and the badge has to describe the strike it is sitting next to.
+   * product carrying both, those disagree - a 17% market saving beside a strike
+   * worth 15% - and the badge has to describe the strike it is sitting next to.
    * Same rounding as the server uses for the market figure, so a card and the
    * breakdown behind it never differ by a point.
    */
@@ -60,18 +60,18 @@ export function ProductCard({ product }) {
     addItem(product, qty);
     setJustAdded(true);
     setTimeout(() => setJustAdded(false), 1400);
-    // Desktop only — see openCartAfterAdd.
+    // Desktop only - see openCartAfterAdd.
     openCartAfterAdd();
   }
 
   return (
-    // @container so the card adapts to its own width, not the viewport's — the
+    // @container so the card adapts to its own width, not the viewport's - the
     // same card sits in a 2-, 3- and 4-column grid.
     <article
       aria-busy={isAdding || undefined}
       // Bordered, not shadowed. §2 allows one or the other and this card is
       // bordered, so hover deepens the border it already has rather than
-      // adding a shadow underneath it — a card that gains an elevation it did
+      // adding a shadow underneath it - a card that gains an elevation it did
       // not have at rest reads as lifting off the page, which is a much larger
       // gesture than "the pointer is here".
       className="group relative @container flex flex-col overflow-hidden rounded-lg border border-line bg-surface transition-[border-color] duration-snap ease-entrance hover:border-ink-200"
@@ -92,8 +92,8 @@ export function ProductCard({ product }) {
       <div className="relative shrink-0 overflow-hidden bg-surface-2">
         {/* The dark "Out of stock" pill that used to sit in this corner was a
             third stamp on one image, next to the grade badge and the in-cart
-            pill. The part itself carries the state now — drained of colour and
-            sat back — and the words live once, down in the body. */}
+            pill. The part itself carries the state now - drained of colour and
+            sat back - and the words live once, down in the body. */}
         {/* PartFrame sets the model name as a watermark BEHIND the part and
             gives the drawing the whole frame, so the image is the biggest thing
             on the card while scrolling. The part type and model are read from
@@ -102,7 +102,7 @@ export function ProductCard({ product }) {
             The zoom lives on the image's own wrapper. Three things were wrong
             with it: `duration-300` on a linear-ish default curve read as a
             lurch, the drawing was scaling inside a frame that also had to make
-            room for a caption, and nothing promoted the layer — so the browser
+            room for a caption, and nothing promoted the layer - so the browser
             rasterised the photo mid-scale and the zoom stepped instead of
             gliding. `will-change-transform` promotes it up front, and the
             standard exit curve does the easing. */}
@@ -126,7 +126,7 @@ export function ProductCard({ product }) {
 
         <GradeBadge grade={product.grade} className="absolute left-2 top-2 @min-[200px]:left-3 @min-[200px]:top-3" />
 
-        {/* A bare number in a coloured circle here read as a second grade stamp —
+        {/* A bare number in a coloured circle here read as a second grade stamp
             same shape, same corner of the same image. This is a labelled pill on
             a light ground instead: different shape, different weight, and it
             says what the number counts. */}
@@ -171,7 +171,7 @@ export function ProductCard({ product }) {
             A price on an out-of-stock card is a number nobody can act on: it
             invited a buyer to cost a job around a line we could not ship, and it
             made a dead card look like a live one at a glance down the grid. The
-            unavailable state takes the slot instead — same height, so the row of
+            unavailable state takes the slot instead - same height, so the row of
             cards stays level.
             In stock, availability is still a boolean: the on-hand count used to
             sit here, and a buyer planning a build around "37 in stock" was
@@ -203,14 +203,14 @@ export function ProductCard({ product }) {
                     A struck market average used to sit on its own line ABOVE
                     the price, while a struck `compareAtPrice` sat beside it.
                     So a card with a market saving was two lines tall and a card
-                    with a former price was one — the same information in two
+                    with a former price was one - the same information in two
                     shapes, side by side in the same grid. Everything strikes
                     inline now, and the reserved spacer that row needed goes
                     with it. */}
                 {/* `flex-wrap` with the badge allowed to drop to a second line.
                     A 140px card at 320px cannot hold price + strike + badge on
                     one line, and with everything `shrink-0` the badge was
-                    simply clipped off the right edge — the card showed "Sa…"
+                    simply clipped off the right edge - the card showed "Sa…"
                     or nothing at all. Wrapping keeps it. */}
                 <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
                   <span className="font-display text-lg font-bold tracking-tight text-ink-900 tnum @min-[200px]:text-xl @min-[260px]:text-2xl">
@@ -222,7 +222,7 @@ export function ProductCard({ product }) {
 
                       They used to be a ternary: a struck `compareAtPrice`, OR
                       the market saving. That meant the 17 products carrying
-                      both showed the strike and silently dropped the badge —
+                      both showed the strike and silently dropped the badge
                       the cards a buyer is most likely to compare were the ones
                       missing the reason to.
 
@@ -243,7 +243,7 @@ export function ProductCard({ product }) {
                       {savedPercent > 0 && (
                         // The saving beside the price, not under it: it is a
                         // property of this number. The word "Save" is kept at
-                        // every width — a bare "21%" beside a price is ambiguous
+                        // every width - a bare "21%" beside a price is ambiguous
                         // enough to read as a rate rather than a discount, and
                         // the phone grid is where most buyers meet it.
                         <span className="tnum shrink-0 rounded-full bg-ok-50 px-1.5 py-0.5 text-2xs font-bold text-ok">
@@ -270,7 +270,7 @@ export function ProductCard({ product }) {
             </div>
 
             {/* What the same part costs elsewhere. Renders nothing unless the
-                server sent a comparison — which it does not when the price is
+                server sent a comparison - which it does not when the price is
                 gated, or when we are not actually the cheaper option.
                 Shown at every card width: it is the reason to buy the part, so
                 hiding it on the surface most buyers are on was the wrong tradeoff.
@@ -280,7 +280,7 @@ export function ProductCard({ product }) {
           </>
         )}
 
-        {/* Add to cart. One row at every card width — the stepper narrows with
+        {/* Add to cart. One row at every card width - the stepper narrows with
             the card (QtyStepper size="card") instead of dropping onto a second
             line, which is what made the two-up phone card 80px taller than it
             needed to be. Under 200px the button's word goes and the trolley
@@ -303,7 +303,7 @@ export function ProductCard({ product }) {
                 /**
                  * The brand gradient. Add to cart is the card's primary
                  * action, and the client's direction is that the gradient IS
-                 * the brand rather than a treatment to be rationed — a grid of
+                 * the brand rather than a treatment to be rationed - a grid of
                  * cards each carrying it reads as Cellvix, which is the point.
                  *
                  * `justAdded` flips to solid green for its 1.4s, because that
@@ -317,7 +317,7 @@ export function ProductCard({ product }) {
             >
               {/* Icon only on a narrow card. The trolley is a well-understood
                   glyph and the button is the full width of the row beside the
-                  stepper, so there is no doubt what it does — and dropping the
+                  stepper, so there is no doubt what it does - and dropping the
                   word buys the price and the compare control the horizontal
                   room they actually need. `aria-label` above carries the name
                   either way, so nothing is lost to a screen reader. */}

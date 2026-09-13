@@ -15,18 +15,18 @@ import { isoDate, dateRange } from '@/lib/format';
  * **The presets lead and the calendar is folded away** because picking "This
  * Month" is the common act and typing two dates is the rare one. Two date
  * inputs sitting open above the presets read as the primary control and push
- * the presets — the thing actually used — below the fold of the eye. The
+ * the presets - the thing actually used - below the fold of the eye. The
  * button states the applied range, so nothing is hidden that was not already
  * legible; opening it is only needed to *change* an unusual range.
  *
- * **The range lives in the URL** (`?from=&to=`), so any view is a link — an
+ * **The range lives in the URL** (`?from=&to=`), so any view is a link - an
  * operator sends "here is the quarter I mean" rather than "set the dates to".
  * The inputs are local draft state until Apply, because a half-typed date must
  * not refetch the page on every keystroke.
  *
  * Presets are computed in the browser's timezone, which is the operator's, and
  * both bounds are inclusive whole days: `from` is 00:00 and `to` is the date
- * itself — the server is responsible for treating `to` as end-of-day.
+ * itself - the server is responsible for treating `to` as end-of-day.
  */
 
 /** `YYYY-MM-DD` in local time. `toISOString()` would shift the day in every timezone west of UTC. */
@@ -128,7 +128,7 @@ export const DASHBOARD_PRESETS = RANGE_PRESETS.filter((preset) =>
  * followed a link that carried no range at all.
  *
  * Without it, moving Dashboard to Invoices and back silently reset a custom
- * range to "this month" — the operator sets a range once and then loses it on
+ * range to "this month" - the operator sets a range once and then loses it on
  * every navigation, which teaches them not to bother setting one.
  *
  * Session rather than local: a range is a working context, not a preference. It
@@ -172,7 +172,7 @@ export function useDateRange(defaultPreset = 'this-month') {
   const to = searchParams.get('to');
 
   // Restore into the URL rather than returning a range the address bar
-  // disagrees with — otherwise the page and its own link say different things,
+  // disagrees with - otherwise the page and its own link say different things,
   // and `activePreset` below would highlight a pill the URL does not describe.
   useEffect(() => {
     if (from || to) return;
@@ -199,7 +199,7 @@ export function useDateRange(defaultPreset = 'this-month') {
  *
  * **A number without its period is not an answer.** "Collected $1,691.99" is
  * only true of some stretch of time, and once the operator can change that
- * stretch, every figure on the screen has to say which one it is showing —
+ * stretch, every figure on the screen has to say which one it is showing
  * otherwise a filtered dashboard looks exactly like an unfiltered one and the
  * number is read as all-time.
  *
@@ -281,7 +281,7 @@ export function DateRangeBar({ presets = RANGE_PRESETS, defaultPreset = 'this-mo
   // It used to require the draft to DIFFER from what is applied, which quietly
   // stranded the most ordinary case: "This Month" already resolves to
   // 1st → today, so an operator opening the panel and picking today as the end
-  // date produced a draft identical to the preset — and the button they were
+  // date produced a draft identical to the preset - and the button they were
   // reaching for was disabled with nothing on screen saying why.
   //
   // A no-op Apply is harmless: it commits the same range and closes the panel,
@@ -304,14 +304,14 @@ export function DateRangeBar({ presets = RANGE_PRESETS, defaultPreset = 'this-mo
     <div className={cn('mb-4 flex flex-wrap items-center gap-x-2 gap-y-2', className)}>
       {/* A segmented control on its own track, not a row of bare words.
           Unlabelled text sitting directly on the page background reads as a
-          caption rather than as something pressable — an operator has to guess
+          caption rather than as something pressable - an operator has to guess
           the row is interactive. The inset track states "these are controls and
           they are one set", and the active segment is a raised surface inside
           it, which is the same figure/ground relationship a physical selector
           has.
 
           **Custom range lives INSIDE the track**, as the last segment. It is
-          one of the same choices — a period — and pushing it to the far end of
+          one of the same choices - a period - and pushing it to the far end of
           the row made it read as a separate tool that did something else. In
           the track it also shows its selected state the same way every other
           segment does, so "which period am I on" has one answer in one place.
@@ -320,7 +320,7 @@ export function DateRangeBar({ presets = RANGE_PRESETS, defaultPreset = 'this-mo
           cannot fit, and a track that wraps to two lines pushes the whole
           dashboard down for a control used once. Scrolling keeps the strip one
           row and reachable. `min-w-0` lets it actually shrink inside the flex
-          row — without it the last segment is clipped off the viewport edge. */}
+          row - without it the last segment is clipped off the viewport edge. */}
       <div
         ref={popoverRef}
         className="flex min-w-0 max-w-full items-center rounded-lg border border-line bg-surface-2 p-0.5"
@@ -345,7 +345,7 @@ export function DateRangeBar({ presets = RANGE_PRESETS, defaultPreset = 'this-mo
                   isActive
                     ? // Raised out of the track: a real surface with a hairline,
                       // so the chosen segment is legible without colouring it.
-                      // Bordered, not shadowed — §2 allows one or the other.
+                      // Bordered, not shadowed - §2 allows one or the other.
                       'border border-line bg-surface font-semibold text-ink-900'
                     : // The inactive segment owns a transparent border so
                       // activating one does not shift the row by a pixel.
@@ -367,7 +367,7 @@ export function DateRangeBar({ presets = RANGE_PRESETS, defaultPreset = 'this-mo
         {/* OUTSIDE the scrolling strip, deliberately.
         
             The strip is `overflow-x-auto` so the presets can scroll on a narrow
-            screen — and an overflow container CLIPS its children in both axes,
+            screen - and an overflow container CLIPS its children in both axes,
             so a popover rendered inside it is invisible no matter where it is
             positioned. The trigger is therefore a sibling of the strip rather
             than its last item: it keeps the same track and the same divider,
@@ -408,18 +408,18 @@ export function DateRangeBar({ presets = RANGE_PRESETS, defaultPreset = 'this-mo
             aria-label="Custom date range"
             // Anchored to the BUTTON's right edge, not the track's left. The
             // positioning context used to be the whole strip, so the panel
-            // opened under "Today" — metres from the control that summoned it,
+            // opened under "Today" - metres from the control that summoned it,
             // which reads as a different element entirely. A popover has to
             // come out of its own trigger. It grows inward (right-anchored)
             // because the button sits at the strip's end.
             //
             // `max-w-` keeps it on a phone screen; the width is set by the two
-            // inputs, which need real room — a native date input renders
+            // inputs, which need real room - a native date input renders
             // `05-Sep-2026` plus a calendar glyph, and under ~150px the year
             // truncates.
             className="absolute right-0 top-full z-40 mt-2 w-[340px] max-w-[calc(100vw-2rem)] rounded-lg border border-line bg-surface p-3.5 shadow-card"
           >
-            {/* The two dates read as one sentence — "from A to B" — rather than
+            {/* The two dates read as one sentence - "from A to B" - rather than
                 two independent fields that happen to sit together. The word
                 carries the relationship, so neither input needs a label above
                 it repeating what the row already says. */}
@@ -462,7 +462,7 @@ export function DateRangeBar({ presets = RANGE_PRESETS, defaultPreset = 'this-mo
             <div className="mt-3 flex items-center justify-between gap-2 border-t border-line pt-3">
               {/* One tap for the common end date, so reaching today does not
                   mean opening a calendar and finding it. Sits on the action
-                  row because it is one — it changes the draft, like Reset. */}
+                  row because it is one - it changes the draft, like Reset. */}
               <button
                 type="button"
                 onClick={() => setDraft((current) => ({ ...current, to: today }))}

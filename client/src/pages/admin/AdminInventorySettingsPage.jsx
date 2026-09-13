@@ -15,7 +15,7 @@ import { money } from '@/lib/format';
 import { useAdminSettings, useAdminMutations } from '@/hooks/useAdmin';
 
 /**
- * Inventory Settings (§6.15, category 2) — the defaults that pre-fill the New
+ * Inventory Settings (§6.15, category 2) - the defaults that pre-fill the New
  * Product form.
  *
  * **Pre-fill only.** Nothing here reprices anything already in the catalogue,
@@ -26,7 +26,7 @@ import { useAdminSettings, useAdminMutations } from '@/hooks/useAdmin';
  * **Markup and margin are two views of one number**, related by
  * `markup = margin ÷ (100 − margin) × 100`. Both are stored because a supplier
  * quotes in whichever one they think in. The conversion is printed live, and a
- * button converts one into the other — without that, two fields that are
+ * button converts one into the other - without that, two fields that are
  * supposed to describe the same markup will quietly drift apart, and the form
  * would be storing a contradiction.
  */
@@ -68,8 +68,8 @@ export function AdminInventorySettingsPage() {
   const impliedMarkup = Number.isFinite(margin) ? marginToMarkup(margin) : null;
   const impliedMargin = Number.isFinite(markup) ? markupToMargin(markup) : null;
 
-  // Compared with a tolerance, not for equality. The seeded pair — 40% markup,
-  // 28.5% margin — is the same markup rounded to one decimal in each direction
+  // Compared with a tolerance, not for equality. The seeded pair - 40% markup,
+  // 28.5% margin - is the same markup rounded to one decimal in each direction
   // (28.5% implies 39.86%), and flagging that as a contradiction would put a
   // permanent warning on a form nobody has touched. Half a point apart is a
   // rounded pair; further apart is a slip worth naming.
@@ -155,8 +155,8 @@ export function AdminInventorySettingsPage() {
             {!agree && impliedMarkup !== null && (
               <div className="mt-3 flex flex-wrap items-center gap-2.5 border-t border-line pt-3">
                 <p className="min-w-0 flex-1 text-sm leading-relaxed text-ink-600">
-                  These two do not describe the same markup. That is allowed — they pre-fill
-                  different fields — but it is usually a slip.
+                  These two do not describe the same markup. That is allowed - they pre-fill
+                  different fields - but it is usually a slip.
                 </p>
                 <Button
                   type="button"

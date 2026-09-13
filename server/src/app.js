@@ -33,7 +33,7 @@ function createApp() {
   // nested OBJECT. Several list endpoints drop query values straight into a
   // Mongo filter, so that object would arrive as a live query operator. The
   // simple parser yields strings and arrays only, which closes the whole class
-  // in one line. Nothing on the client sends bracket syntax — `lib/api.js`
+  // in one line. Nothing on the client sends bracket syntax - `lib/api.js`
   // builds every query string with `URLSearchParams`.
   app.set('query parser', 'simple');
 
@@ -49,7 +49,7 @@ function createApp() {
   if (!env.isProd) app.use(morgan('dev'));
 
   /**
-   * Which business this request is for — **before anybody is authenticated**
+   * Which business this request is for - **before anybody is authenticated**
    * (SAAS_PLATFORM §4.2).
    *
    * This is the ordering phase 2 exists to establish. A buyer signs in at the
@@ -65,14 +65,14 @@ function createApp() {
   app.use(resolveBusiness);
 
   /**
-   * Open that business's database — **before anybody is authenticated**
+   * Open that business's database - **before anybody is authenticated**
    * (SAAS_PLATFORM §4.1, §4.2).
    *
    * This sat after the whole authentication stack until the flip proved it
    * could not: `authenticate` resolves a `User`, `User` is a per-business
    * collection, and with the context opened later it read the default
    * connection instead. Every sign-in failed with `INVALID_CREDENTIALS`
-   * against an account that plainly existed — the account was simply in
+   * against an account that plainly existed - the account was simply in
    * another database.
    *
    * So the order is: work out which business, open its database, then read the
@@ -95,13 +95,13 @@ function createApp() {
    * property of the wiring rather than a rule somebody has to remember when
    * adding the next route.
    *
-   * Both run on every request so one browser can hold both sessions — which is
+   * Both run on every request so one browser can hold both sessions - which is
    * what a Cellvix employee testing the portal actually needs.
    */
   app.use(authenticateSupplier);
 
   /**
-   * The super-admin console's session — a third cookie into a third collection
+   * The super-admin console's session - a third cookie into a third collection
    * (SAAS_PLATFORM §4.5).
    *
    * Resolved alongside the other two and separate from both. All three run on
@@ -111,12 +111,12 @@ function createApp() {
   app.use(authenticateSuperAdmin);
 
   /**
-   * A support session — a fourth cookie, and the only one that crosses from the
+   * A support session - a fourth cookie, and the only one that crosses from the
    * platform into a tenant's data (SAAS_PLATFORM §4.5).
    *
    * **Mounted after the console's session and before business scope**, and both
    * halves of that are load-bearing. After, because entering a business is an
-   * act performed on the console session and the two coexist — leaving must
+   * act performed on the console session and the two coexist - leaving must
    * return the operator to a console they are still signed in to. Before,
    * because this pins `req.businessScope` to the business the grant names, and
    * `resolveBusinessScope` must not then overwrite it from the query string.
@@ -128,7 +128,7 @@ function createApp() {
    *
    * **The order is load-bearing and this is why they are mounted together.**
    * `attachFeatures` reads `req.businessScope`, so scope has to be resolved
-   * first — and `resolveBusinessScope` is *also* listed in the per-route
+   * first - and `resolveBusinessScope` is *also* listed in the per-route
    * `admin` guard array, where it runs again harmlessly. Mounting it here as
    * well is what makes the feature set correct: without it the scope was still
    * undefined when features resolved, and every request silently got the union
@@ -148,7 +148,7 @@ function createApp() {
    * a property of the whole account, so a route that forgot it would be a hole
    * in a billing rule rather than a missing decoration.
    *
-   * Note that only requests carrying a business are covered — the storefront
+   * Note that only requests carrying a business are covered - the storefront
    * sends no scope today, which the middleware's own header explains.
    */
   app.use(enforceTenantStatus);
@@ -158,7 +158,7 @@ function createApp() {
   /**
    * In production this one service is the whole site: the API above, and the
    * built React app below it. Keeping them on a single origin is what lets the
-   * session cookie stay `sameSite: 'lax'` — split across two hosts it would have
+   * session cookie stay `sameSite: 'lax'` - split across two hosts it would have
    * to become `sameSite: 'none'`, which is a strictly weaker cookie.
    *
    * In development Vite serves the client on :5173 and proxies `/api` here, so
@@ -166,7 +166,7 @@ function createApp() {
    */
   if (env.isProd) {
     // Vite fingerprints every asset filename, so a year is safe. `index.html` is
-    // deliberately excluded and served by the fallback below with no max-age —
+    // deliberately excluded and served by the fallback below with no max-age
     // cached, it would pin browsers to the previous deploy's asset names.
     app.use(express.static(CLIENT_DIST, { maxAge: '1y', index: false }));
 

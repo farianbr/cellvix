@@ -1,5 +1,14 @@
 import { NavLink, useLocation } from 'react-router';
-import { FileText, LayoutDashboard, LogOut, Package, Truck, UserRound, X } from 'lucide-react';
+import {
+  FileSignature,
+  FileText,
+  LayoutDashboard,
+  LogOut,
+  Package,
+  Truck,
+  UserRound,
+  X,
+} from 'lucide-react';
 import cn from '@/lib/cn';
 import { BUSINESS_INFO } from '@shared/business';
 import { pressable } from '@/lib/motion';
@@ -8,7 +17,7 @@ import { pressable } from '@/lib/motion';
  * The supplier portal's sidebar.
  *
  * **The admin panel's shape, not its contents.** Same three widths, same
- * `--color-ink-deep` ground, same active-row treatment — a supplier signing in
+ * `--color-ink-deep` ground, same active-row treatment - a supplier signing in
  * should recognise a real application rather than a form on a page. What it
  * does *not* share is `ADMIN_NAV`: a supplier has five screens and no
  * permission map, so the nav is a flat list defined here.
@@ -23,6 +32,7 @@ const NAV = [
   { key: 'orders', label: 'Purchase Orders', to: '/supplier/orders', icon: Package },
   { key: 'proformas', label: 'Proforma Invoices', to: '/supplier/proformas', icon: FileText },
   { key: 'deliveries', label: 'Deliveries', to: '/supplier/deliveries', icon: Truck },
+  { key: 'agreement', label: 'Agreement', to: '/supplier/agreement', icon: FileSignature },
   { key: 'profile', label: 'Profile & Access', to: '/supplier/profile', icon: UserRound },
 ];
 
@@ -34,7 +44,7 @@ function BrandBlock({ compact, supplier }) {
         compact && 'justify-center px-0',
       )}
     >
-      {/* The compact ramp on a small glyph — the full ramp's near-black opening
+      {/* The compact ramp on a small glyph - the full ramp's near-black opening
           reads as a stripe at this size (Instructions §2.2). */}
       <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-brand-gradient-compact font-display text-lg font-bold text-white">
         {BUSINESS_INFO.name.charAt(0)}

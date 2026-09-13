@@ -23,7 +23,7 @@ import * as purchaseService from './purchaseService.js';
  *
  * **A cancelled plan is dated, not deleted.** "When did we stop paying for
  * this" is a question somebody asks six months later, and a deleted row cannot
- * answer it — while the expenses it already generated stay where they are,
+ * answer it - while the expenses it already generated stay where they are,
  * because they really were spent.
  */
 
@@ -48,7 +48,7 @@ function daysUntil(target) {
   return Math.round((end - start) / 86_400_000);
 }
 
-/** `YYYY-MM-DD` in local time — `toISOString()` would shift the day westward. */
+/** `YYYY-MM-DD` in local time - `toISOString()` would shift the day westward. */
 function isoDay(date) {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
 }
@@ -57,7 +57,7 @@ function isoDay(date) {
  * The next renewal after `from`.
  *
  * `one_off` never renews, so it answers `null` rather than a date nobody should
- * act on — a renewals board showing a one-time setup fee due again next month
+ * act on - a renewals board showing a one-time setup fee due again next month
  * would have somebody paying it twice.
  */
 function advance(from, billing) {
@@ -79,7 +79,7 @@ function shape(row) {
    * applicable" rather than printing a misleading zero.
    *
    * Measured **whole day to whole day**, not by elapsed milliseconds. A plan
-   * due at 00:00 today is due *today* — comparing timestamps made it a fraction
+   * due at 00:00 today is due *today* - comparing timestamps made it a fraction
    * of a day in the past, which `Math.ceil` rendered as `-0` and which read as
    * neither due nor overdue on every board that asked. Zeroing both sides to
    * local midnight makes "today" a clean 0.
@@ -94,8 +94,8 @@ function shape(row) {
     description: row.description ?? null,
     supplier: row.supplier?.name
       ? { id: row.supplier._id.toString(), name: row.supplier.name }
-      : { id: row.supplier?.toString() ?? null, name: row.supplierName ?? '—' },
-    supplierName: row.supplierName ?? row.supplier?.name ?? '—',
+      : { id: row.supplier?.toString() ?? null, name: row.supplierName ?? '-' },
+    supplierName: row.supplierName ?? row.supplier?.name ?? '-',
     amount: row.amount ?? 0,
     billing: row.billing,
     recurring,
@@ -105,7 +105,7 @@ function shape(row) {
           name: row.category.name,
           colorToken: row.category.colorToken ?? 'ink',
         }
-      : { id: row.category?.toString() ?? null, name: '—', colorToken: 'ink' },
+      : { id: row.category?.toString() ?? null, name: '-', colorToken: 'ink' },
     startedAt: row.startedAt ?? null,
     nextRenewalAt: recurring && !cancelled ? (row.nextRenewalAt ?? null) : null,
     dueInDays,
@@ -167,7 +167,7 @@ async function listServices({ q, kind, supplier, status } = {}) {
 
   let shaped = rows.map(shape);
 
-  // `due` is a reading of the renewal date, so it cannot be a Mongo filter —
+  // `due` is a reading of the renewal date, so it cannot be a Mongo filter
   // applied after shaping, on the same computation the Due column shows.
   if (status === 'due') {
     shaped = shaped.filter((row) => row.dueInDays != null && row.dueInDays <= 14);
@@ -272,7 +272,7 @@ async function updateService(id, body) {
  *
  * **The expense is the artefact.** This writes a real `Expense` through
  * `purchaseService.createExpense`, so the charge appears in the expense list,
- * the P&L and the tax report exactly as a hand-entered one does — there is no
+ * the P&L and the tax report exactly as a hand-entered one does - there is no
  * private total here for the reports to miss.
  *
  * Recurring plans then advance by one cycle. The advance is computed from the
@@ -286,7 +286,7 @@ async function recordCharge(id, body, createdBy) {
 
   if (row.cancelledAt) {
     throw ApiError.badRequest(
-      `${row.name} was cancelled — reactivate it before recording another charge.`,
+      `${row.name} was cancelled - reactivate it before recording another charge.`,
       'SERVICE_CANCELLED',
     );
   }
@@ -300,7 +300,7 @@ async function recordCharge(id, body, createdBy) {
       // but an expense dated by whichever server handled the request is a row
       // nobody can reconcile against a statement.
       date: body.date ?? isoDay(date),
-      description: body.description || `${row.name} — ${row.supplierName}`,
+      description: body.description || `${row.name} - ${row.supplierName}`,
       category: String(row.category),
       payee: row.supplierName,
       method: body.method,
@@ -329,7 +329,7 @@ async function recordCharge(id, body, createdBy) {
  * Cancel or reactivate.
  *
  * Dated rather than deleted, and the expenses already generated stay exactly
- * where they are — they really were spent, and a cancellation does not unspend
+ * where they are - they really were spent, and a cancellation does not unspend
  * them.
  */
 async function setCancelled(id, cancelled) {

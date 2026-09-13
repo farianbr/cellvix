@@ -26,8 +26,8 @@ import SelectMenu from '@/components/ui/SelectMenu';
 /**
  * The CRM half of a customer profile: consent, tier, conversations and notes.
  *
- * Kept in one file because all four are the same kind of thing — what we know
- * about a relationship rather than what the account has bought — and they share
+ * Kept in one file because all four are the same kind of thing - what we know
+ * about a relationship rather than what the account has bought - and they share
  * the same column on the profile.
  */
 
@@ -40,7 +40,7 @@ const CHANNELS = CONSENT_CHANNELS;
  * What the customer agreed to be contacted on (CASL, §6.13).
  *
  * **The ticks are draft state until Save.** Consent is a record of an answer,
- * not a live switch — writing on every click would stamp a new consent
+ * not a live switch - writing on every click would stamp a new consent
  * timestamp four times while somebody is still deciding what the customer
  * actually said.
  *
@@ -61,15 +61,15 @@ export function ConsentPanel({ consent, onSave, isPending }) {
       title="Communication consent"
       description={
         unsubscribed
-          ? `Unsubscribed ${dateTime(consent.unsubscribedAt)} — this outranks everything below.`
+          ? `Unsubscribed ${dateTime(consent.unsubscribedAt)} - this outranks everything below.`
           : consent.recorded
             ? `Recorded ${dateTime(consent.at)}${consent.source ? ` · by ${consent.source}` : ''}`
-            : 'Nothing recorded yet — nobody has asked this customer.'
+            : 'Nothing recorded yet - nobody has asked this customer.'
       }
     >
       {unsubscribed && (
         <p className="mb-3 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
-          This customer unsubscribed. That is their own act and an admin does not undo it here —
+          This customer unsubscribed. That is their own act and an admin does not undo it here
           it is lifted from the Marketing screen, which records who lifted it.
         </p>
       )}
@@ -139,7 +139,7 @@ export function TierPanel({ tier, onChange, isPending, warrantyBonus = 0 }) {
                 <span className="font-normal text-ink-400">on the part&rsquo;s grade</span>
               </>
             ) : (
-              <span className="font-normal text-ink-400">None — grade warranty only</span>
+              <span className="font-normal text-ink-400">None - grade warranty only</span>
             )}
           </dd>
         </div>
@@ -150,7 +150,7 @@ export function TierPanel({ tier, onChange, isPending, warrantyBonus = 0 }) {
       </dl>
 
       <p className="mt-2.5 text-xs leading-snug text-ink-400">
-        The bonus is set per tier in Sale Settings and lengthens cover — it never shortens it.
+        The bonus is set per tier in Sale Settings and lengthens cover - it never shortens it.
         Discounts are decided in one place, an offer, so a tier never quietly applies one; when a
         tier should affect price, it is set up as an offer restricted to that tier.
       </p>
@@ -253,7 +253,7 @@ export function ConversationsPanel({
           </p>
         )}
         {/* The server says whether a channel actually transmitted. It is
-            rendered verbatim rather than being turned into a confirmation —
+            rendered verbatim rather than being turned into a confirmation
             nothing here reports "sent" for something that was not sent. */}
         {notice && (
           <p className="flex items-start justify-between gap-2 rounded-md bg-warn-50 px-3 py-2.5 text-sm text-warn">
@@ -343,7 +343,7 @@ export function ConversationsPanel({
  *
  * Append-only by design (see the User model): the value of "always disputes the
  * freight line" depends on nobody being able to quietly rewrite what a
- * colleague recorded, so there is no edit — only add, and a delete that leaves
+ * colleague recorded, so there is no edit - only add, and a delete that leaves
  * an audit row.
  */
 
@@ -360,7 +360,7 @@ export function NotesPanel({ notes = [], onAdd, onDelete, isPending }) {
   return (
     <Panel
       title="Internal notes"
-      description="Staff only — the customer never sees these."
+      description="Staff only - the customer never sees these."
       action={
         <Badge tone="neutral" size="sm">
           Staff only
@@ -443,14 +443,14 @@ export function NotesPanel({ notes = [], onAdd, onDelete, isPending }) {
  * letter by letter, and it carries `?ref=` which the registration form reads.
  *
  * **`referredBy` is read-only, everywhere.** Attribution is set once at
- * registration and never edited — a referral that could be reassigned later is
+ * registration and never edited - a referral that could be reassigned later is
  * a commission that could be moved after it was earned, and the payout ledger
  * snapshots its rate precisely so that history cannot be rewritten.
  */
 export function ReferralPanel({ user, percent }) {
   const [copied, setCopied] = useState(null);
 
-  // The link only works once a code exists, and a code is minted on approval —
+  // The link only works once a code exists, and a code is minted on approval
   // a pending account has nothing to share yet, and the panel says so rather
   // than showing a link that resolves to nothing.
   const link = user.referralCode
@@ -489,7 +489,7 @@ export function ReferralPanel({ user, percent }) {
               </div>
             ) : (
               <p className="text-sm text-ink-400">
-                Minted when the account is approved — an account that cannot yet order cannot refer.
+                Minted when the account is approved - an account that cannot yet order cannot refer.
               </p>
             )}
           </dd>
@@ -525,7 +525,7 @@ export function ReferralPanel({ user, percent }) {
                 View referrer
               </Link>
             ) : (
-              <span className="text-ink-400">Nobody — direct signup</span>
+              <span className="text-ink-400">Nobody - direct signup</span>
             )}
           </dd>
         </div>
@@ -539,7 +539,7 @@ export function ReferralPanel({ user, percent }) {
       <p className="mt-3 border-t border-line pt-3 text-xs leading-snug text-ink-400">
         Commission is paid as store credit when a referred customer&rsquo;s invoice is{' '}
         <strong className="font-semibold text-ink-500">paid</strong>, not when it is raised, and each
-        payout keeps the rate in force when it was earned — changing the rate is never retroactive.
+        payout keeps the rate in force when it was earned - changing the rate is never retroactive.
         Attribution is set at registration and cannot be reassigned.
       </p>
     </Panel>

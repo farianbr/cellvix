@@ -4,7 +4,7 @@ import * as orderService from '../services/orderService.js';
 /**
  * The binding price of the current cart.
  *
- * Every figure the checkout page shows comes from here — including the discount
+ * Every figure the checkout page shows comes from here - including the discount
  * breakdown, because a total the buyer cannot reconcile line by line is a total
  * they will query.
  */

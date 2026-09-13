@@ -13,21 +13,21 @@ import { displayNameOf } from '../utils/displayName.js';
  * Two callers reach an order without a checkout: converting an accepted quote
  * (`quoteService.convertQuote`, §6.6) and an admin raising one directly for a
  * phone or email order (`adminService.createOrder`, §7.2). They do different
- * work up front — one honours quoted prices and reports drift, the other reads
- * the catalogue — and then they do **exactly** the same thing: check the
+ * work up front - one honours quoted prices and reports drift, the other reads
+ * the catalogue - and then they do **exactly** the same thing: check the
  * account, price it, take the stock, write the order, raise the invoice, ring
  * the bell.
  *
  * That shared tail lives here rather than in either caller. It was already
- * written twice before this file existed — `nextOrderNumber` had two copies and
- * the `INV-` generator had two more, one of them inlined — and a second place
+ * written twice before this file existed - `nextOrderNumber` had two copies and
+ * the `INV-` generator had two more, one of them inlined - and a second place
  * that raises orders is a second place to forget that ordering needs approval,
  * or that stock has to be re-checked between pricing and writing.
  *
  * **What it does not do is decide a price.** `items` arrive already priced by
  * the caller, because that is the one thing the two genuinely disagree about: a
  * quote's price is a promise the catalogue no longer governs. Everything
- * computed *from* those prices — line totals, subtotal, tax, total — is
+ * computed *from* those prices - line totals, subtotal, tax, total - is
  * recomputed here from the live tax rate, never taken on trust (invariant 8).
  */
 
@@ -57,7 +57,7 @@ async function nextOrderNumber() {
  * The series is a parameter because there are three of them and they must not
  * share a counter: `INV` for a settled tax invoice, `CVX` for an amount still
  * due, `RCT` for a store-credit receipt. Each keeps its own gapless run, which
- * is the whole point of renumbering a `due` record when it settles — the `INV`
+ * is the whole point of renumbering a `due` record when it settles - the `INV`
  * sequence contains only invoices that were actually raised.
  */
 async function nextInvoiceNumber(series = 'INV') {
@@ -82,7 +82,7 @@ function provinceFor(user) {
  * Turns `{ product, qty, unitPrice }` into order lines, priced from the
  * catalogue.
  *
- * `unitPrice` of zero means "use the catalogue price" — the convention
+ * `unitPrice` of zero means "use the catalogue price" - the convention
  * `quoteItemSchema` documents and `adminOrderSchema` inherits. A non-zero value
  * is an admin overriding it deliberately, which is allowed on an order raised
  * by hand for the same reason it is allowed on a quote: the negotiation
@@ -108,7 +108,7 @@ async function buildOrderItems(rawItems) {
       sku: product.sku,
       name: product.name,
       // Denormalised so the buyer's order page keeps reading the same after a
-      // product is renamed or delisted — the same fields checkout copies.
+      // product is renamed or delisted - the same fields checkout copies.
       slug: product.slug,
       image: product.images?.[0],
       grade: product.grade,
@@ -131,7 +131,7 @@ async function buildOrderItems(rawItems) {
  * without an order to hang them on.
  *
  * Nothing settled here, so this is always a `due` record in the `CVX-` series,
- * never an invoice. It becomes one — renumbered into `INV-` — when it is paid
+ * never an invoice. It becomes one - renumbered into `INV-` - when it is paid
  * in full, and `services/invoicePaymentService.js` is the only thing that does
  * that.
  */
@@ -156,7 +156,7 @@ async function createInvoiceFor(order, terms) {
 /**
  * Writes the order, takes the stock and raises the invoice.
  *
- * `user` is a full account document or lean object — the caller has already
+ * `user` is a full account document or lean object - the caller has already
  * loaded it, and re-reading it here would let the two paths disagree about
  * which account they are billing.
  *
@@ -164,7 +164,7 @@ async function createInvoiceFor(order, terms) {
  *
  * - **Ordering needs approval.** A quote conversion does not get to bypass the
  *   gate every other order goes through, and neither does an admin raising one
- *   by hand — a pending business is pending because nobody has decided to
+ *   by hand - a pending business is pending because nobody has decided to
  *   extend it credit yet.
  * - **A shipping address has to exist**, because an order that cannot be sent
  *   anywhere is a record of a promise nobody can keep.
@@ -174,7 +174,7 @@ async function createInvoiceFor(order, terms) {
  *
  * Stock moves with a single `bulkWrite` and writes no `StockMovement`, matching
  * checkout. That leaves the sales side outside the `applyStockMovement` ledger
- * the purchase side uses — a real inconsistency, but a pre-existing one, and
+ * the purchase side uses - a real inconsistency, but a pre-existing one, and
  * making this one path behave differently from checkout on the same product
  * would be worse than the uniform gap.
  */
@@ -222,7 +222,7 @@ async function raiseOrder({
     const wanted = demand.get(product._id.toString()) ?? 0;
     if (product.stock < wanted) {
       throw ApiError.conflict(
-        `${product.sku} has ${product.stock} on hand — that order needs ${wanted}.`,
+        `${product.sku} has ${product.stock} on hand - that order needs ${wanted}.`,
         'INSUFFICIENT_STOCK',
       );
     }

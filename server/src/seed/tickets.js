@@ -26,7 +26,7 @@ function daysAgo(days) {
 /**
  * `[status, ageDays, closedAfterDays | null]`.
  *
- * `closedAfterDays` is only meaningful for a closed status — it is what makes a
+ * `closedAfterDays` is only meaningful for a closed status - it is what makes a
  * completed repair read "2d" rather than "24d".
  */
 const DEMO_TICKETS = [
@@ -48,7 +48,7 @@ const DEMO_TICKETS = [
     customerEmail: 'aisha.khan@example.ca',
     deviceBrand: 'Apple',
     deviceModel: 'iPhone 13 Pro Max',
-    issue: 'Screen replacement — waiting on the OEM panel.',
+    issue: 'Screen replacement - waiting on the OEM panel.',
     status: 'waiting_for_parts',
     priority: 'high',
     age: 13,
@@ -169,7 +169,7 @@ const DEMO_TICKETS = [
     customerPhone: '+1 5145550163',
     deviceBrand: 'OnePlus',
     deviceModel: 'Nord 4',
-    issue: 'Charging port lint-blocked — cleaned, customer declined further work.',
+    issue: 'Charging port lint-blocked - cleaned, customer declined further work.',
     status: 'cancelled',
     priority: 'low',
     age: 30,
@@ -184,7 +184,7 @@ async function seedTickets({ quiet = false } = {}) {
   const year = new Date().getFullYear();
 
   // Assign against whoever is actually on this database rather than a name
-  // baked into the file — a technician id that points at nothing would show as
+  // baked into the file - a technician id that points at nothing would show as
   // a blank column and break the filter.
   const staff = await db().User.find({ role: { $in: ['staff', 'admin'] } })
     .select('_id')
@@ -203,7 +203,7 @@ async function seedTickets({ quiet = false } = {}) {
 
   const have = new Set(existing.map((ticket) => ticket.ticketNumber));
 
-  // Nothing to do if a previous run already put a full set in — matched by the
+  // Nothing to do if a previous run already put a full set in - matched by the
   // customer/device pair, since the numbers are assigned fresh each time.
   const already = await db().Ticket.find({
     customerName: { $in: DEMO_TICKETS.map((t) => t.customerName) },

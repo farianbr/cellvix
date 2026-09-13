@@ -19,7 +19,7 @@ async function getOrCreateCart(userId) {
  * Shapes a cart for the wire.
  *
  * Every number here comes from `pricingService.priceCart`, which is also what
- * the checkout quote and the placed order run through — so the subtotal in the
+ * the checkout quote and the placed order run through - so the subtotal in the
  * mini-cart, the total at checkout and the amount charged are the same
  * arithmetic on the same live documents, not three implementations that agree
  * until one of them does not.
@@ -65,7 +65,7 @@ async function serialize(cart, user) {
     id: cart._id.toString(),
     items,
     bundles: priced.bundles,
-    // The badge counts parts, so a bundle contributes the parts inside it —
+    // The badge counts parts, so a bundle contributes the parts inside it
     // "3 items" that turns into six things in a box is a bad surprise.
     count: items.reduce((sum, item) => sum + item.qty, 0) + bundleUnits,
     subtotal: priced.subtotal,
@@ -81,8 +81,8 @@ async function serialize(cart, user) {
      * The default shipping band, so the cart's preview arithmetic reads the
      * live rate rather than a hard-coded one.
      *
-     * The cart's shipping and tax lines are explicitly a preview — the binding
-     * numbers come from `/orders/quote` — but a preview built on a constant
+     * The cart's shipping and tax lines are explicitly a preview - the binding
+     * numbers come from `/orders/quote` - but a preview built on a constant
      * stops matching the moment an operator edits the rate in Settings
      * (§6.15), and "free shipping over $500" is exactly the kind of promise a
      * page must not make out of a stale number.
@@ -210,7 +210,7 @@ async function clearCart(userId) {
 
 /**
  * Folds a guest's localStorage cart into the account's cart on sign-in.
- * Quantities are summed, not replaced — a buyer who added two screens as a
+ * Quantities are summed, not replaced - a buyer who added two screens as a
  * guest and one on their phone should end up with three.
  */
 async function mergeGuestCart(userId, guestItems) {
@@ -317,7 +317,7 @@ async function deleteSaved(userId, savedCartId) {
 /**
  * Quick order pad (brief §8.3): resolve a list of SKUs and quantities in one go.
  *
- * Unmatched SKUs are reported back rather than silently dropped — a buyer
+ * Unmatched SKUs are reported back rather than silently dropped - a buyer
  * pasting 40 lines from a spreadsheet needs to know which three did not land.
  * SKU matching is case-insensitive and exact; partial matches would be guessing.
  */
@@ -427,7 +427,7 @@ async function findLiveCombo(slugOrId) {
  * change. Offers do not stack, so this REPLACES whatever code was there.
  *
  * A code that is real but does not currently bite is still accepted and
- * attached — `priceCart` returns a `promoNotice` explaining what the cart is
+ * attached - `priceCart` returns a `promoNotice` explaining what the cart is
  * missing, and the discount starts applying the moment it qualifies.
  */
 async function applyPromoCode(userId, code, user) {

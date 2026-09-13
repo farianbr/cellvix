@@ -12,7 +12,7 @@ import ApiError from '../utils/ApiError.js';
  * place that maps both onto the same conversation.
  *
  * **The tenant is resolved from the business, never from the request.** A panel
- * user has no tenant id to send and must not be trusted with one if they did —
+ * user has no tenant id to send and must not be trusted with one if they did
  * `?tenant=` would be an invitation to read somebody else's thread. The chain
  * is `req.businessScope` → `Business.tenant` → thread, all server-side.
  *
@@ -148,7 +148,7 @@ async function replyAsPlatform(tenantId, superAdmin, { body, business }) {
   let businessName = '';
   if (business) {
     const row = await Business.findById(business).select('name tenant').lean();
-    // A message cannot be pinned to a business the tenant does not own — that
+    // A message cannot be pinned to a business the tenant does not own - that
     // would name somebody else's shop in their conversation.
     if (!row || String(row.tenant) !== String(tenantId)) {
       throw ApiError.badRequest('That business does not belong to this tenant.', 'BUSINESS_NOT_IN_TENANT');
@@ -185,7 +185,7 @@ async function resolveThread(tenantId) {
  * The signed-in tenant's own conversation.
  *
  * Returns `thread: null` rather than failing when the business belongs to no
- * tenant — the screen renders an explanation, which is better than an error for
+ * tenant - the screen renders an explanation, which is better than an error for
  * a state that is entirely normal for Cellvix today.
  */
 async function getMyThread(req) {
@@ -219,7 +219,7 @@ async function postAsTenant(req, { body }) {
     authorName: req.user?.contactName ?? '',
     authorEmail: req.user?.email ?? '',
     body,
-    // Pinned to whichever business they are working in — for the tenant side
+    // Pinned to whichever business they are working in - for the tenant side
     // that is always known, and it saves them saying which shop they mean.
     business: business?._id ?? null,
     businessName: business?.name ?? '',

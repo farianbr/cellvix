@@ -11,6 +11,7 @@ import * as orderController from '../controllers/orderController.js';
 import * as accountController from '../controllers/accountController.js';
 import * as adminController from '../controllers/adminController.js';
 import * as purchaseController from '../controllers/purchaseController.js';
+import * as agreementController from '../controllers/agreementController.js';
 import * as supplierReturnController from '../controllers/supplierReturnController.js';
 import * as supplierServiceController from '../controllers/supplierServiceController.js';
 import * as reportController from '../controllers/reportController.js';
@@ -114,6 +115,7 @@ import {
   purchaseSendSchema,
   purchaseNegotiateSchema,
   purchaseConfirmSchema,
+  proformaRevisionSchema,
   supplierQuoteSchema,
   supplierDeclineSchema,
   supplierProformaSchema,
@@ -166,6 +168,8 @@ import {
   shippingSettingsSchema,
   paymentMethodsSettingsSchema,
   inventorySettingsSchema,
+  agreementTemplateSchema,
+  agreementSignSchema,
   providerCredentialSchema,
   taxonomyNodeSchema,
   invoiceStatusRuleSchema,
@@ -192,8 +196,8 @@ const authLimiter = rateLimit({
  *
  * The business is reported because it is the one thing a caller cannot
  * otherwise discover without a session: under database-per-business every
- * request reads one database, and a tool that needs to name it explicitly — the
- * smoke suite on a single local host, a deployment check — has nowhere else to
+ * request reads one database, and a tool that needs to name it explicitly - the
+ * smoke suite on a single local host, a deployment check - has nowhere else to
  * ask. It exposes an id and a name, never records.
  */
 router.get('/health', (req, res) =>
@@ -270,7 +274,7 @@ router.post('/cart/merge', requireAuth, denyAdmin, validate(mergeCartSchema), ca
 router.post('/cart/save', requireAuth, denyAdmin, validate(saveCartSchema), cartController.save);
 router.delete('/cart', requireAuth, denyAdmin, cartController.clear);
 
-// Combos and promo codes are priced things, so they need approval — a pending
+// Combos and promo codes are priced things, so they need approval - a pending
 // business can still hold loose parts in its cart while it waits.
 router.post('/cart/bundles', requireAuth, denyAdmin, requireApproved, validate(addBundleSchema), cartController.addBundle);
 router.patch('/cart/bundles/:offerId', requireAuth, denyAdmin, requireApproved, validate(setBundleQtySchema), cartController.setBundleQty);
@@ -303,7 +307,7 @@ router.delete('/account/addresses/:addressId', ...account, accountController.rem
 router.post('/account/payment-methods', ...account, validate(paymentMethodSchema), accountController.addPaymentMethod);
 router.delete('/account/payment-methods/:methodId', ...account, accountController.removePaymentMethod);
 
-// Password change is available to any signed-in user, approved or not — and
+// Password change is available to any signed-in user, approved or not - and
 // deliberately not denyAdmin: it is the only way a staff account changes its
 // own password, and it touches no buyer data.
 router.post('/account/password', requireAuth, validate(changePasswordSchema), accountController.changePassword);
@@ -325,7 +329,7 @@ router.get('/invoices/:number/document', ...account, accountController.invoiceDo
 router.post('/invoices/:number/pay', ...account, validate(accountInvoicePaymentSchema), accountController.payInvoice);
 router.post('/account/credit/payoff', ...account, validate(creditPayoffSchema), accountController.payOffCredit);
 
-// The account's own history — the same feed the admin client profile reads, so
+// The account's own history - the same feed the admin client profile reads, so
 // a buyer and their account rep are never looking at two different stories.
 router.get('/account/activity', ...account, accountController.activity);
 
@@ -344,7 +348,7 @@ router.get('/account/referrals', ...account, accountController.referrals);
 // Panel access. `requireStaff` admits an admin or a staff member holding a
 // role; `requirePermission` on each route below decides what they may do with
 // it. Routes that must stay admin-only regardless of role use `adminOnly`.
-// `resolveBusinessScope` reads which shop this request is about — a staff
+// `resolveBusinessScope` reads which shop this request is about - a staff
 // member's own business, or the one an admin picked in the top-bar switcher. It
 // only sets `req.businessScope`; each service decides whether that scopes it,
 // because a few things are deliberately business-wide (the catalogue, the
@@ -360,14 +364,14 @@ router.get('/admin/stats', ...admin, adminController.stats);
 // The tenant's own half of the support conversation with us. Not permissioned
 // and deliberately not feature-gated: reaching the platform is not a capability
 // a tenant buys, and a business whose account is in trouble must still be able
-// to say so. The tenant is resolved from `req.businessScope` server-side —
+// to say so. The tenant is resolved from `req.businessScope` server-side
 // nothing here accepts a tenant id from the client.
 router.get('/admin/support', ...admin, supportController.myThread);
 router.get('/admin/support/unread', ...admin, supportController.unread);
 router.post('/admin/support', ...admin, validate(supportMessageSchema), supportController.postMessage);
 
 router.get('/admin/users', ...admin, requirePermission('clients', 'view'), adminController.listUsers);
-// Opening a client account is a `full` action, not a `view` one — a hidden
+// Opening a client account is a `full` action, not a `view` one - a hidden
 // `+ Create` entry is a courtesy, this is the permission (§7.6).
 router.post('/admin/users', ...admin, requirePermission('clients', 'full'), validate(clientSchema), adminController.createUser);
 router.get('/admin/users/:id', ...admin, requirePermission('clients', 'view'), adminController.getUser);
@@ -382,7 +386,7 @@ router.patch('/admin/users/:id/status', ...admin, requirePermission('clients', '
 router.patch('/admin/users/:id/credit', ...admin, requirePermission('clients', 'full'), validate(creditSchema), adminController.setCredit);
 // The line of credit above is edited; store credit below is posted to.
 router.get('/admin/users/:id/store-credit', ...admin, requirePermission('clients', 'view'), adminController.storeCreditStatement);
-// The printable account statement — every invoice and payment on the account,
+// The printable account statement - every invoice and payment on the account,
 // which is a different document from the store-credit ledger above it.
 // Cash at the counter against the line of credit. It settles real invoices
 // oldest-first rather than decrementing a balance, so the account and its
@@ -397,29 +401,29 @@ router.post('/admin/users/:id/store-credit', ...admin, requirePermission('client
 router.get('/admin/products', ...admin, requirePermission('purchase', 'view'), adminController.listProducts);
 router.post('/admin/products', ...admin, requirePermission('purchase', 'full'), validate(productSchema), adminController.createProduct);
 router.patch('/admin/products/:id', ...admin, requirePermission('purchase', 'full'), validate(productSchema), adminController.updateProduct);
-// Toggles isActive rather than deleting — orders reference products by id.
+// Toggles isActive rather than deleting - orders reference products by id.
 router.delete('/admin/products/:id', ...admin, requirePermission('purchase', 'full'), adminController.toggleProduct);
 
 router.get('/admin/orders', ...admin, requirePermission('sales', 'view'), adminController.listOrders);
-// An order raised by hand — a phone or email order. Same rules as a converted
+// An order raised by hand - a phone or email order. Same rules as a converted
 // quote, because it runs the same code (`services/orderBuilder.js`).
 router.post('/admin/orders', ...admin, requirePermission('sales', 'full'), validate(adminOrderSchema), adminController.createOrder);
 // Registered ahead of the `:orderNumber` routes so a literal path can never be
-// swallowed by a parameter. Partial by design — the response names what moved
+// swallowed by a parameter. Partial by design - the response names what moved
 // and what did not.
 router.patch('/admin/orders/bulk-status', ...admin, requirePermission('sales', 'full'), validate(bulkOrderStatusSchema), adminController.bulkUpdateOrderStatus);
 router.get('/admin/orders/:orderNumber', ...admin, requirePermission('sales', 'view'), adminController.getOrder);
 router.patch('/admin/orders/:orderNumber/status', ...admin, requirePermission('sales', 'full'), validate(orderStatusSchema), adminController.updateOrderStatus);
-// Refunds go to store credit — there is no gateway to send money back through.
+// Refunds go to store credit - there is no gateway to send money back through.
 router.post('/admin/orders/:orderNumber/refund', ...admin, requirePermission('sales', 'full'), validate(refundSchema), adminController.refundOrder);
 
 // Invoices. `amountPaid` and the status are recomputed server-side from the
-// payment rows on every write — the client never sends either.
+// payment rows on every write - the client never sends either.
 router.get('/admin/invoices', ...admin, requirePermission('sales', 'view'), adminController.listInvoices);
-// A standalone invoice — one with no order behind it (§7.2).
+// A standalone invoice - one with no order behind it (§7.2).
 router.post('/admin/invoices', ...admin, requirePermission('sales', 'full'), validate(adminInvoiceSchema), adminController.createInvoice);
 router.get('/admin/invoices/:number', ...admin, requirePermission('sales', 'view'), adminController.getInvoice);
-// The same artefact the customer receives, rendered by the same renderer — the
+// The same artefact the customer receives, rendered by the same renderer - the
 // buyer route scopes its lookup to the signed-in user, so an admin needs this.
 router.get('/admin/invoices/:number/document', ...admin, requirePermission('sales', 'view'), adminController.invoiceDocument);
 router.post('/admin/invoices/:number/payments', ...admin, requirePermission('sales', 'full'), validate(invoicePaymentSchema), adminController.recordInvoicePayment);
@@ -432,7 +436,7 @@ router.post('/admin/invoices/:number/payments/:index/reverse', ...admin, require
 // Emailing the invoice sends the same document the print route renders, so the
 // copy in the customer's inbox and the copy on screen can never disagree.
 router.post('/admin/invoices/:number/email', ...admin, requirePermission('sales', 'full'), adminController.emailInvoice);
-// Clerical corrections only — the amount is not editable; see invoiceUpdateSchema.
+// Clerical corrections only - the amount is not editable; see invoiceUpdateSchema.
 router.patch('/admin/invoices/:number', ...admin, requirePermission('sales', 'full'), validate(invoiceUpdateSchema), adminController.updateInvoice);
 // Refused once a payment exists: that case is a void, which keeps the record.
 router.delete('/admin/invoices/:number', ...admin, requirePermission('sales', 'full'), adminController.deleteInvoice);
@@ -445,7 +449,7 @@ router.get('/admin/suppliers', ...admin, requirePermission('purchase', 'view'), 
 router.get('/admin/suppliers/:id', ...admin, requirePermission('purchase', 'view'), purchaseController.getSupplier);
 router.post('/admin/suppliers', ...admin, requirePermission('purchase', 'full'), validate(supplierSchema), purchaseController.createSupplier);
 router.patch('/admin/suppliers/:id', ...admin, requirePermission('purchase', 'full'), validate(supplierSchema), purchaseController.updateSupplier);
-// Toggles isActive rather than deleting — purchase orders reference suppliers.
+// Toggles isActive rather than deleting - purchase orders reference suppliers.
 router.delete('/admin/suppliers/:id', ...admin, requirePermission('purchase', 'full'), purchaseController.toggleSupplier);
 
 // --- returns to a supplier (Purchase § RMA / Returns) ------------------------
@@ -454,7 +458,7 @@ router.delete('/admin/suppliers/:id', ...admin, requirePermission('purchase', 'f
 //
 // **Gated on `purchase.returns`, which is OFF for Cellvix.** The nav row has
 // carried `hidden: true` since the section was switched off, but the routes
-// stayed open — and §3.2 rule 1 is explicit that hiding a nav item while
+// stayed open - and §3.2 rule 1 is explicit that hiding a nav item while
 // leaving its routes reachable is a defect, not a partial implementation. The
 // screen, its model and its schema all stay exactly where they are; switching
 // the feature on is the whole of bringing it back.
@@ -478,7 +482,7 @@ router.patch('/admin/supplier-services/:id/cancel', ...admin, requirePermission(
 router.delete('/admin/supplier-services/:id', ...admin, requirePermission('purchase', 'full'), supplierServiceController.remove);
 
 // The supplier picker is registered ahead of `/admin/purchase-orders/:id`, or
-// the literal path is swallowed as an id — the ordering expense categories need
+// the literal path is swallowed as an id - the ordering expense categories need
 // too.
 router.get('/admin/purchase-orders/suppliers', ...admin, requirePermission('purchase', 'view'), purchaseController.suppliersForComponentTypes);
 
@@ -491,7 +495,7 @@ router.patch('/admin/purchase-orders/:id/status', ...admin, requirePermission('p
 // Receiving increments stock and writes a StockMovement per line, server-side.
 // Partial by design: the response names what moved and what did not.
 router.post('/admin/purchase-orders/:id/receive', ...admin, requirePermission('purchase', 'full'), validate(purchaseReceiveSchema), purchaseController.receivePurchaseOrder);
-// Recording a payment creates the Expense row — once. A second call is refused.
+// Recording a payment creates the Expense row - once. A second call is refused.
 router.post('/admin/purchase-orders/:id/payment', ...admin, requirePermission('purchase', 'full'), validate(purchasePaymentSchema), purchaseController.recordPurchasePayment);
 
 // --- supplier bidding on a purchase order (supplier process flow, §6.8a) ----
@@ -500,7 +504,7 @@ router.post('/admin/purchase-orders/:id/payment', ...admin, requirePermission('p
 // one document answers both "who did we ask" and "what did we pay".
 //
 // All on the same `purchase` area as the PO routes they sit beside, because it
-// is the same job — confirming a supplier prices a real purchase order, so
+// is the same job - confirming a supplier prices a real purchase order, so
 // anybody who may do this may already raise one by hand.
 router.get('/admin/purchase-orders/:id/bids', ...admin, requirePermission('purchase', 'view'), purchaseController.getBidBoard);
 router.post('/admin/purchase-orders/:id/bids', ...admin, requirePermission('purchase', 'full'), validate(purchaseInviteSchema), purchaseController.inviteSuppliers);
@@ -512,9 +516,15 @@ router.post('/admin/purchase-orders/:id/confirm', ...admin, requirePermission('p
 // A supplier's proforma invoice, as a printable sheet. Its own CSP, like the
 // other two rendered documents.
 router.get('/admin/purchase-orders/:id/bids/:supplierId/proforma', ...admin, requirePermission('purchase', 'view'), purchaseController.proformaDocument);
+// Reviewing a proforma. Accepting rewrites the order's lines to match it, so
+// what we pay, what receiving counts and what restocks all come from one
+// document - `purchase: full`, like every other write that moves money.
+router.post('/admin/purchase-orders/:id/bids/:supplierId/proforma/accept', ...admin, requirePermission('purchase', 'full'), purchaseController.acceptProforma);
+router.post('/admin/purchase-orders/:id/bids/:supplierId/proforma/revision', ...admin, requirePermission('purchase', 'full'), validate(proformaRevisionSchema), purchaseController.requestProformaRevision);
 
-// Issues a credential, so it needs `full` rather than `view` — and it is
+// Issues a credential, so it needs `full` rather than `view` - and it is
 // audited as a security event in the controller.
+router.get('/admin/suppliers/:id/agreement', ...admin, requirePermission('purchase', 'view'), agreementController.getForSupplier);
 router.post('/admin/suppliers/:id/portal-invite', ...admin, requirePermission('purchase', 'full'), purchaseController.invitePortal);
 
 // --- the super-admin console (SAAS_PLATFORM §4.5, §6) -----------------------
@@ -524,7 +534,7 @@ router.post('/admin/suppliers/:id/portal-invite', ...admin, requirePermission('p
 // subject in `SuperAdmin`, so an admin's token satisfies none of these and a
 // super admin's token satisfies nothing else in this file.
 //
-// Nothing here returns a tenant's business RECORDS — no customer, invoice,
+// Nothing here returns a tenant's business RECORDS - no customer, invoice,
 // order or ticket. The console lists businesses and their configuration, which
 // is a deliberate limit (§4.5) and not an omission.
 router.post('/superadmin/login', authLimiter, validate(superAdminLoginSchema), superAdminController.login);
@@ -535,7 +545,7 @@ router.get('/superadmin/me', superAdminController.me);
 router.get('/superadmin/tenants', requireSuperAdmin, superAdminController.listTenants);
 router.post('/superadmin/tenants', requireSuperAdmin, validate(tenantSchema), superAdminController.createTenant);
 router.patch('/superadmin/tenants/:id', requireSuperAdmin, validate(tenantSchema), superAdminController.updateTenant);
-// Refused below what the tenant already runs — see the service.
+// Refused below what the tenant already runs - see the service.
 router.patch('/superadmin/tenants/:id/slots', requireSuperAdmin, validate(tenantSlotsSchema), superAdminController.setSlots);
 // Spends a slot. Refused when none is left.
 router.post('/superadmin/tenants/:id/businesses', requireSuperAdmin, validate(superAdminBusinessSchema), superAdminController.createBusiness);
@@ -545,7 +555,7 @@ router.get('/superadmin/businesses/:id/features', requireSuperAdmin, superAdminC
 // A `locked` key is refused rather than silently ignored (§3.2 rule 4).
 router.patch('/superadmin/businesses/:id/features', requireSuperAdmin, validate(businessFeatureSchema), superAdminController.setBusinessFeature);
 
-// The tenant's own administrator. Sets no password — the owner receives an
+// The tenant's own administrator. Sets no password - the owner receives an
 // invitation and chooses their own, so no credential passes through an
 // operator's hands. Rate-limited: it sends mail to an address somebody typed.
 router.post('/superadmin/tenants/:id/owner', requireSuperAdmin, authLimiter, validate(tenantOwnerSchema), superAdminController.createOwner);
@@ -555,7 +565,7 @@ router.post('/superadmin/owners/:id/invite', requireSuperAdmin, authLimiter, sup
 // and written into the target business's own audit trail on the way in and the
 // way out. `leave` is deliberately unguarded: a console session can expire
 // while an operator is inside a business, and they must still be able to get
-// out — the impersonation cookie is the authority there, and leaving with
+// out - the impersonation cookie is the authority there, and leaving with
 // nothing open is a no-op rather than an error.
 router.post('/superadmin/businesses/:id/impersonate', requireSuperAdmin, validate(impersonationSchema), superAdminController.enterBusiness);
 router.post('/superadmin/impersonation/leave', superAdminController.leaveBusiness);
@@ -564,7 +574,7 @@ router.post('/superadmin/impersonation/:id/revoke', requireSuperAdmin, superAdmi
 
 // Support conversations. One thread per tenant, held in the control plane so it
 // survives a business being deleted and stays reachable while the account is
-// suspended — which is exactly when a tenant most needs to reach us.
+// suspended - which is exactly when a tenant most needs to reach us.
 router.get('/superadmin/support', requireSuperAdmin, superAdminController.listThreads);
 router.get('/superadmin/support/:id', requireSuperAdmin, superAdminController.getThread);
 router.post('/superadmin/support/:id/reply', requireSuperAdmin, validate(supportMessageSchema), superAdminController.replyToThread);
@@ -588,7 +598,7 @@ router.patch('/superadmin/plans/:id/features', requireSuperAdmin, validate(planF
 //
 // **A separate population behind a separate cookie.** These routes are guarded
 // by `requireSupplier`, which reads the supplier session and resolves it in
-// `Supplier` — a buyer or admin token satisfies none of them, and a supplier
+// `Supplier` - a buyer or admin token satisfies none of them, and a supplier
 // token satisfies nothing above. See `middleware/supplierAuth.js` for why the
 // guarantee is structural rather than a matter of having audited each route.
 //
@@ -601,22 +611,29 @@ router.post('/supplier-portal/forgot-password', authLimiter, validate(supplierFo
 router.post('/supplier-portal/reset-password', authLimiter, validate(supplierResetSchema), supplierPortalController.resetPassword);
 router.post('/supplier-portal/password', requireSupplier, validate(supplierPasswordSchema), supplierPortalController.changePassword);
 
+// The master agreement, signed once before a supplier may price anything.
+// Reading an order is open; `submitBid` and `submitProforma` call
+// `agreementService.assertSigned`, so the gate is on the commitment rather than
+// on the page.
+router.get('/supplier-portal/agreement', requireSupplier, agreementController.mine);
+router.post('/supplier-portal/agreement/sign', requireSupplier, validate(agreementSignSchema), agreementController.sign);
+
 router.get('/supplier-portal/orders', requireSupplier, supplierPortalController.listOrders);
 router.get('/supplier-portal/orders/:id', requireSupplier, supplierPortalController.getOrder);
 router.post('/supplier-portal/orders/:id/quote', requireSupplier, validate(supplierQuoteSchema), supplierPortalController.submitQuote);
 router.post('/supplier-portal/orders/:id/decline', requireSupplier, validate(supplierDeclineSchema), supplierPortalController.declineQuote);
 // The supplier's own proforma invoice against an order they have priced. Every
-// figure on it is computed from the bid lines — no total is accepted here.
+// figure on it is computed from the bid lines - no total is accepted here.
 router.post('/supplier-portal/orders/:id/proforma', requireSupplier, validate(supplierProformaSchema), supplierPortalController.submitProforma);
 // Only the confirmed supplier may report a delivery, and reporting one never
-// moves stock — receiving is a count somebody makes at our end.
+// moves stock - receiving is a count somebody makes at our end.
 router.post('/supplier-portal/orders/:id/delivery', requireSupplier, validate(supplierDeliverySchema), supplierPortalController.setDeliveryStatus);
 // Their own proforma, as a printable sheet. The session supplies the supplier
 // id, so this can only ever render their own.
 router.get('/supplier-portal/orders/:id/proforma', requireSupplier, supplierPortalController.proformaDocument);
 
 // Categories are registered ahead of `/admin/expenses/:id` so a literal path
-// can never be swallowed by a parameter — the same ordering the bulk order
+// can never be swallowed by a parameter - the same ordering the bulk order
 // route needs.
 router.get('/admin/expenses/categories', ...admin, requirePermission('purchase', 'view'), purchaseController.listExpenseCategories);
 router.post('/admin/expenses/categories', ...admin, requirePermission('purchase', 'full'), validate(expenseCategorySchema), purchaseController.createExpenseCategory);
@@ -634,6 +651,13 @@ router.delete('/admin/expenses/:id', ...admin, requirePermission('purchase', 'fu
 // affected by anything here.
 router.get('/admin/inventory', ...admin, requirePermission('purchase', 'view'), purchaseController.listInventory);
 router.get('/admin/inventory/movements', ...admin, requirePermission('purchase', 'view'), purchaseController.listStockMovements);
+// The reorder queue, and the draft it raises. Both registered ahead of
+// `/admin/inventory/:id` for the same reason the supplier picker is: a literal
+// segment after a parameterised route is never reached.
+//
+// Generating is `purchase: full` - it creates a purchasing document, even
+// though that document commits nothing until somebody sends it.
+router.get('/admin/inventory/reorder', ...admin, requirePermission('purchase', 'view'), purchaseController.reorderQueue);
 router.get('/admin/inventory/:id', ...admin, requirePermission('purchase', 'view'), purchaseController.getInventoryItem);
 router.patch('/admin/inventory/:id/ops', ...admin, requirePermission('purchase', 'full'), validate(productOpsSchema), purchaseController.updateInventoryOps);
 // A manual correction, through the same ledger as every other stock movement.
@@ -657,7 +681,7 @@ router.post('/admin/quotes/:id/convert-ticket', ...admin, requirePermission('sal
 router.delete('/admin/quotes/:id', ...admin, requirePermission('sales', 'full'), salesController.deleteQuote);
 
 // Refunds route through storeCreditService and restocking through the stock
-// ledger — an RMA is not an exception to either rule.
+// ledger - an RMA is not an exception to either rule.
 router.get('/admin/rma', ...admin, requirePermission('sales', 'view'), salesController.listRmas);
 router.post('/admin/rma', ...admin, requirePermission('sales', 'full'), validate(rmaSchema), salesController.createRma);
 router.get('/admin/rma/:id', ...admin, requirePermission('sales', 'view'), salesController.getRma);
@@ -712,7 +736,7 @@ router.delete('/admin/staff/:id', ...adminOnly, accessController.deleteStaff);
 
 // --- reports (phase 6) -----------------------------------------------------
 // Read-only, always (§9.6). One GET per tab and no write verb on this path at
-// all — a report that can mutate is a report nobody can safely re-run.
+// all - a report that can mutate is a report nobody can safely re-run.
 router.get('/admin/reports/:tab', ...admin, requirePermission('reports', 'view'), reportController.report);
 
 // Editorial content. Unlike products, none of these are referenced by an order,
@@ -745,7 +769,7 @@ router.get('/admin/marketing/summary', ...marketingView, marketingController.sum
 router.get('/admin/marketing/messages', ...marketingView, marketingController.listMessages);
 
 // One route per channel rather than a `:channel` parameter, so the channel is
-// decided by the path and never by the payload — see the controller.
+// decided by the path and never by the payload - see the controller.
 router.post('/admin/marketing/sms', ...marketingFull, validate(messageSchema), marketingController.sendSms);
 router.post('/admin/marketing/whatsapp', ...marketingFull, validate(messageSchema), marketingController.sendWhatsapp);
 router.post('/admin/marketing/email', ...marketingFull, validate(messageSchema), marketingController.sendEmail);
@@ -760,7 +784,7 @@ router.delete('/admin/marketing/templates/:id', ...marketingFull, marketingContr
 
 // Registered ahead of `/campaigns/:id` so the literal path cannot be swallowed.
 router.get('/admin/marketing/unsubscribes', ...marketingView, marketingController.listUnsubscribes);
-// Re-subscribing records a NEW consent rather than clearing the old refusal —
+// Re-subscribing records a NEW consent rather than clearing the old refusal
 // it is a claim that somebody asked to be put back, and needs its own date.
 router.post('/admin/marketing/unsubscribes/:id/resubscribe', ...marketingFull, marketingController.resubscribe);
 
@@ -776,7 +800,7 @@ router.post('/admin/marketing/campaigns/:id/send', ...marketingFull, marketingCo
 // --- referral commission (phase 10) -----------------------------------------
 // **Admin-only, not merely `marketing: full`** (§6.13). This feature pays real
 // money on an automatic trigger, and the rate control multiplies every future
-// payout — that is a decision for whoever owns the money, not for anyone who
+// payout - that is a decision for whoever owns the money, not for anyone who
 // can write a blog post.
 //
 // Read and rate only. There is no route that writes an accrual or edits an
@@ -788,7 +812,7 @@ router.patch('/admin/referrals/rate', ...adminOnly, validate(referralRateSchema)
 
 // ---- phase 11a: settings ----------------------------------------------------
 // Reading is `settings: view`; every write is `settings: full`. There is no
-// whole-document PUT — each route touches only the paths its own screen owns,
+// whole-document PUT - each route touches only the paths its own screen owns,
 // so one form cannot revert another's field by posting back a stale copy.
 //
 // `financial.referralPercent` is deliberately absent from all of these: it is
@@ -801,8 +825,19 @@ router.patch('/admin/settings/shipping', ...admin, requirePermission('settings',
 router.patch('/admin/settings/payment-methods', ...admin, requirePermission('settings', 'full'), validate(paymentMethodsSettingsSchema), settingsController.updatePaymentMethods);
 router.patch('/admin/settings/inventory', ...admin, requirePermission('settings', 'full'), validate(inventorySettingsSchema), settingsController.updateInventory);
 
+// Supplier agreements - the documents authored here and signed in the portal.
+// Filed under `settings` like the rest of what an operator configures; reading
+// one is `settings: view`, writing is `settings: full`.
+router.get('/admin/agreements', ...admin, requirePermission('settings', 'view'), agreementController.listTemplates);
+router.post('/admin/agreements', ...admin, requirePermission('settings', 'full'), validate(agreementTemplateSchema), agreementController.createTemplate);
+router.get('/admin/agreements/:id', ...admin, requirePermission('settings', 'view'), agreementController.getTemplate);
+router.patch('/admin/agreements/:id', ...admin, requirePermission('settings', 'full'), validate(agreementTemplateSchema), agreementController.updateTemplate);
+// A signed template is never edited in place - this makes the next version and
+// moves every supplier onto it, which is what makes their signature stale.
+router.post('/admin/agreements/:id/publish', ...admin, requirePermission('settings', 'full'), validate(agreementTemplateSchema.partial()), agreementController.publishRevision);
+
 // ---- phase 11b: the audit trail ---------------------------------------------
-// Read-only by design — rows are written as a side effect of the operations
+// Read-only by design - rows are written as a side effect of the operations
 // being logged, and there is deliberately no route that creates, edits or
 // deletes one (§6.15: neither log is ever deletable from the UI).
 //
@@ -811,7 +846,7 @@ router.patch('/admin/settings/inventory', ...admin, requirePermission('settings'
 // somebody who is guessing at them.
 // --- web quotes -------------------------------------------------------------
 // Enquiries the storefront contact form sent in. They are ContactMessage rows,
-// not a new record type — see the controller for why.
+// not a new record type - see the controller for why.
 router.get('/admin/web-quotes', ...admin, requirePermission('sales', 'view'), webQuoteController.list);
 router.patch('/admin/web-quotes/:id/status', ...admin, requirePermission('sales', 'full'), validate(webQuoteStatusSchema), webQuoteController.setStatus);
 
@@ -825,7 +860,7 @@ router.get('/admin/audit/security', ...adminOnly, auditController.security);
 // host of its choosing.
 //
 // The GET returns previews and a `configured` flag. **There is no route that
-// returns a stored secret** — not masked-then-revealed, not to an admin. The
+// returns a stored secret** - not masked-then-revealed, not to an admin. The
 // only function that decrypts is `credentialService.valuesFor`, which nothing
 // here calls and which exists for the code that talks to a provider.
 router.get('/admin/credentials', ...adminOnly, credentialController.list);
@@ -848,14 +883,14 @@ router.get('/admin/invoice-rules', ...admin, requirePermission('settings', 'view
 router.post('/admin/invoice-rules', ...admin, requirePermission('settings', 'full'), validate(invoiceStatusRuleSchema), invoiceStatusController.create);
 router.patch('/admin/invoice-rules/:id', ...admin, requirePermission('settings', 'full'), validate(invoiceStatusRuleSchema), invoiceStatusController.update);
 router.delete('/admin/invoice-rules/:id', ...admin, requirePermission('settings', 'full'), invoiceStatusController.remove);
-// Running sends real email, so it needs `full` even in dry-run form — the dry
+// Running sends real email, so it needs `full` even in dry-run form - the dry
 // run reveals which accounts would be contacted, which is not a `view` fact.
 router.post('/admin/invoice-rules/run', ...admin, requirePermission('settings', 'full'), invoiceStatusController.run);
 
 // ---- phase 11e: email settings & the scheduling board -----------------------
 router.patch('/admin/settings/communications', ...admin, requirePermission('settings', 'full'), validate(communicationsSettingsSchema), settingsController.updateCommunications);
 
-// Read-only, and there is **no write route** — §6b U1–U2: the board ships as
+// Read-only, and there is **no write route** - §6b U1–U2: the board ships as
 // interface without wiring, and an endpoint that accepted a booking would be
 // the "fake success" rule 4 forbids.
 router.get('/admin/appointments', ...admin, requirePermission('settings', 'view'), appointmentController.list);
@@ -863,7 +898,7 @@ router.get('/admin/appointments', ...admin, requirePermission('settings', 'view'
 // ---- phase 12: global search ------------------------------------------------
 // Staff-level only, with no per-area guard here on purpose: the service decides
 // which groups this caller may see from their own role. A single
-// `requirePermission` would be wrong in both directions — too strict for a role
+// `requirePermission` would be wrong in both directions - too strict for a role
 // holding one area, too loose for one holding none.
 router.get('/admin/search', ...admin, searchController.search);
 
@@ -875,7 +910,7 @@ router.get('/admin/profile', ...admin, profileController.me);
 
 // ---- phase 12b: list exports (§7.4) -----------------------------------------
 // Each export runs the SAME service function its list runs, with the same query
-// string — §7.4: an export that ignores the active filters is a bug. Each also
+// string - §7.4: an export that ignores the active filters is a bug. Each also
 // carries the same permission guard as the list it mirrors, so an export can
 // never be the weaker door onto the same rows.
 router.get('/admin/export/clients', ...admin, requirePermission('clients', 'view'), exportController.clients);
@@ -885,7 +920,7 @@ router.get('/admin/export/inventory', ...admin, requirePermission('purchase', 'v
 router.get('/admin/export/expenses', ...admin, requirePermission('purchase', 'view'), exportController.expenses);
 
 // ---- phase 12c: notifications (§7.3) ----------------------------------------
-// Staff-level only, with no per-area guard here on purpose — the same reasoning
+// Staff-level only, with no per-area guard here on purpose - the same reasoning
 // global search uses: the service decides which areas this caller's role may
 // receive from, and a single `requirePermission` would be wrong in both
 // directions, too strict for a role holding one area and too loose for one

@@ -9,7 +9,7 @@ import { isValidPostal, postalExampleFor } from '../regions.js';
 const cents = z.coerce.number().int().min(0).max(100_000_000);
 
 /**
- * Approving a business is where credit terms get set — it is one decision, not
+ * Approving a business is where credit terms get set - it is one decision, not
  * two, so the approval payload carries them.
  */
 const approveUserSchema = z.object({
@@ -25,7 +25,7 @@ const approveUserSchema = z.object({
 });
 
 const rejectUserSchema = z.object({
-  reason: z.string().trim().min(3, 'Give a reason — it goes in the notification email.').max(400),
+  reason: z.string().trim().min(3, 'Give a reason - it goes in the notification email.').max(400),
 });
 
 const creditSchema = z.object({
@@ -39,8 +39,8 @@ const creditSchema = z.object({
  *
  * Deliberately **not** `registerSchema` with extra fields. Two differences
  * matter enough to keep them apart: an admin-opened account defaults to
- * `approved` — the admin is the approval, and making them create a pending
- * account only to approve it a second later is a step that means nothing — and
+ * `approved` - the admin is the approval, and making them create a pending
+ * account only to approve it a second later is a step that means nothing - and
  * the account it opens carries credit terms from the first moment, which a
  * self-registration never does.
  */
@@ -111,8 +111,8 @@ const clientSchema = z.object({
  * has started it, and `ClientForm` drops it entirely when the street is blank.
  *
  * The address fields are also flat-optional rather than a nested `.optional()`
- * object, because React Hook Form always sends the sub-object — with empty
- * strings in it — and an `.optional()` wrapper never sees `undefined`.
+ * object, because React Hook Form always sends the sub-object - with empty
+ * strings in it - and an `.optional()` wrapper never sees `undefined`.
  */
 /**
  * The object half of `clientFormSchema`, exported so a form can reshape it.
@@ -120,7 +120,7 @@ const clientSchema = z.object({
  * `clientFormSchema` itself is a `ZodEffects` once `.superRefine` is attached,
  * and a `ZodEffects` has no `.omit()` / `.extend()`. The new-customer form asks
  * for the contact's name as two fields and composes one `contactName` on
- * submit — the same trick the storefront sign-up plays — so it needs the plain
+ * submit - the same trick the storefront sign-up plays - so it needs the plain
  * object to build from. Derived, never restated: a field added below is
  * validated on both forms.
  */
@@ -162,7 +162,7 @@ const clientFormBase = z
  * The address block's "started it, so finish it" rule, as a function.
  *
  * Named rather than inline so `clientFormSchema` and the new-customer form's
- * reshaped variant apply the identical check — an inline copy in each is how
+ * reshaped variant apply the identical check - an inline copy in each is how
  * two forms end up disagreeing about what a valid address is.
  */
 const refineClientAddress = (values, ctx) => {
@@ -231,7 +231,7 @@ const clientCreateFormSchema = clientFormBase
  * Not `clientSchema.partial()`: this endpoint writes a **strictly smaller set
  * of fields**. Password is absent because a reset is its own flow, and status,
  * `creditLimit` and `terms` are absent because each has an endpoint that does
- * more than set the field — an edit form that also wrote `status` would be a
+ * more than set the field - an edit form that also wrote `status` would be a
  * second approval path with no reason, no rep and no audit trail of its own.
  *
  * The optional descriptors accept an empty string so an operator can clear a
@@ -258,7 +258,7 @@ const clientUpdateSchema = z.object({
       postal: z.string().trim().min(3, 'Enter a postal or ZIP code.'),
       country: z.string().trim().max(60).default('Canada'),
     })
-    // The Canadian pattern is checked only on a Canadian address — see the note
+    // The Canadian pattern is checked only on a Canadian address - see the note
     // on `clientFormSchema`. A UK or US address is valid and has its own shape.
     .superRefine((address, ctx) => {
       if ((address.country || 'Canada') !== 'Canada') return;
@@ -291,7 +291,7 @@ const contactConsentSchema = z.object({
   call: z.boolean(),
 });
 
-/** Membership tiers. A label — it never touches price (see the User model). */
+/** Membership tiers. A label - it never touches price (see the User model). */
 const MEMBERSHIP_TIERS = [
   { value: 'standard', label: 'Standard' },
   { value: 'silver', label: 'Silver' },
@@ -320,7 +320,7 @@ const storeCreditSchema = z.object({
   note: z.string().trim().max(240).optional(),
 });
 
-/** Refunds go to store credit — see storeCreditService.refundOrder. */
+/** Refunds go to store credit - see storeCreditService.refundOrder. */
 const refundSchema = z.object({
   amountDollars: z.coerce.number().positive('Enter an amount to refund.'),
   note: z.string().trim().max(240).optional(),
@@ -361,7 +361,7 @@ const ORDER_STATUS_FLOW = [
  *
  * **This exists so a count and its own link cannot disagree.** The dashboard's
  * "Open orders" tile counted these four statuses and then linked to
- * `?status=placed`, so a tile reading 2 opened a list showing one row — or an
+ * `?status=placed`, so a tile reading 2 opened a list showing one row - or an
  * empty one, when both open orders happened to be `shipped`. The operator is
  * told a number and then shown something that contradicts it, which makes the
  * whole row untrustworthy.
@@ -373,10 +373,10 @@ const ORDER_STATUS_FLOW = [
 const ORDER_OPEN_STATUSES = ['placed', 'processing', 'shipped', 'out_for_delivery'];
 
 /**
- * An order that has not gone out yet — the picking queue.
+ * An order that has not gone out yet - the picking queue.
  *
  * Narrower than `ORDER_OPEN_STATUSES`: a shipped order is still open, but
- * nobody has to pack it. Same reason as above for existing as a shared list —
+ * nobody has to pack it. Same reason as above for existing as a shared list
  * the "Fulfil orders" card counts these two and has to link to the same two.
  */
 const ORDER_UNFULFILLED_STATUSES = ['placed', 'processing'];
@@ -408,14 +408,14 @@ const CARRIERS = [
  * The admin sidebar, two levels deep (ERP rework §5).
  *
  * Shape: a flat `Home` row, then six groups whose children are the real
- * screens. `icon` names a lucide export; the shell maps it — the schema stays
+ * screens. `icon` names a lucide export; the shell maps it - the schema stays
  * a plain data module so the server can read it too.
  *
  * `badge` names a counter on `GET /admin/stats`; the sidebar renders it when
  * the count is non-zero.
  *
  * `badgeLabel` is what that number COUNTS, as a noun the operator would say
- * out loud — "waiting for approval", "out of stock or running low". It is not
+ * out loud - "waiting for approval", "out of stock or running low". It is not
  * decoration: a bare number in a sidebar is unreadable twice over. A sighted
  * operator cannot tell whether "6" is unread, overdue or merely total, and a
  * screen reader announces "Tickets 6" with no clue what six means. The label
@@ -429,20 +429,20 @@ const CARRIERS = [
  * like English.
  *
  * It is written `[singular, plural]` because these counts pass through one
- * routinely — one overdue invoice is the good day, and "1 overdue invoices" in
+ * routinely - one overdue invoice is the good day, and "1 overdue invoices" in
  * the tooltip is exactly the kind of detail that makes an interface feel
  * unfinished.
  *
  * `badgeFilter` is the view that shows exactly the badged rows. The rule it
  * enforces: **a count must be reachable**. Inventory badged 189 and opened a
  * list of 420 with no 189 anywhere on it, which teaches an operator that the
- * numbers are decorative. The row still navigates to the unfiltered page —
- * that is what a nav row is for — and the page states the count and offers the
+ * numbers are decorative. The row still navigates to the unfiltered page
+ * that is what a nav row is for - and the page states the count and offers the
  * filter on arrival, so the number is explained where it is doubted rather
  * than only in a tooltip nobody hovers.
  *
  * `area` is the permission area this item lives under (§7.6). Group-level, so
- * every child inherits its parent's area — a per-page matrix is twenty rows
+ * every child inherits its parent's area - a per-page matrix is twenty rows
  * nobody maintains correctly.
  */
 const ADMIN_NAV = [
@@ -529,7 +529,7 @@ const ADMIN_NAV = [
         //
         // **Switched off for Cellvix, not deleted** (SAAS_PLATFORM §5.5). The
         // business does not return stock to suppliers, and the row was also the
-        // second "RMA / Returns" in the sidebar — the same words under Sales
+        // second "RMA / Returns" in the sidebar - the same words under Sales
         // and under Purchase meaning opposite directions of travel, which is a
         // question the nav should never have been asking.
         //
@@ -617,7 +617,7 @@ const ADMIN_NAV = [
      * offers pushed AT a known audience.
      *
      * Blog and FAQ were under Marketing because they are things you publish,
-     * but publishing is where the similarity ends — nobody writes a help
+     * but publishing is where the similarity ends - nobody writes a help
      * article as part of a campaign, and an operator looking for one had to
      * think of it as marketing first. They keep their `/admin/marketing/*`
      * URLs: those are bookmarked and linked from the storefront, and moving a
@@ -726,7 +726,7 @@ const ADMIN_LEGACY_REDIRECTS = {
 /**
  * Recording a payment against an invoice.
  *
- * The client sends an amount, a date, a method and a reference — never a status
+ * The client sends an amount, a date, a method and a reference - never a status
  * and never a running total. `amountPaid` and the invoice status are both
  * recomputed server-side from the payment rows.
  */
@@ -767,7 +767,7 @@ const webQuoteStatusSchema = z.object({
 });
 
 const invoiceVoidSchema = z.object({
-  reason: z.string().trim().min(3, 'Give a reason — it stays on the invoice.').max(240),
+  reason: z.string().trim().min(3, 'Give a reason - it stays on the invoice.').max(240),
 });
 
 /**
@@ -790,7 +790,7 @@ const bulkOrderStatusSchema = z.object({
 
 /**
  * A supplier. `paymentTerms` reuses the same vocabulary as a client's line of
- * credit, read the other way round — what Cellvix owes, not what it is owed.
+ * credit, read the other way round - what Cellvix owes, not what it is owed.
  */
 const supplierSchema = z.object({
   name: z.string().trim().min(2, 'Enter a supplier name.').max(120),
@@ -806,17 +806,27 @@ const supplierSchema = z.object({
       city: z.string().trim().max(80).optional(),
       region: z.string().trim().max(2).optional(),
       postal: z.string().trim().max(10).optional(),
-      // A country **name**, matching customers and businesses — not the 2-letter
+      // A country **name**, matching customers and businesses - not the 2-letter
       // code this field briefly held. One convention across the app is what
       // lets `COUNTRY_OPTIONS` serve every address form (see shared/countries).
       country: z.string().trim().max(60).default(DEFAULT_COUNTRY),
     })
     .optional(),
   paymentTerms: z.enum(['prepaid', 'net15', 'net30', 'net60']).default('net30'),
+  /**
+   * The agreements this supplier signs before they may quote.
+   *
+   * A list, because a supplier often signs more than one thing: the master
+   * supply agreement, an NDA, a quality annex for one product line. An empty
+   * array means none is required, which is a real answer for a supplier whose
+   * paperwork was done on paper, and is distinct from omitting the field (which
+   * leaves the current list alone).
+   */
+  agreementTemplates: z.array(z.string().trim().length(24)).max(20).optional(),
   notes: z.string().trim().max(2000).optional(),
   isActive: z.boolean().default(true),
   /**
-   * The component types this supplier is tagged with — `Product.partType`
+   * The component types this supplier is tagged with - `Product.partType`
    * slugs, which is what a request for quote picks suppliers by.
    *
    * Not an enum: the list of component types is derived from the catalogue
@@ -835,7 +845,7 @@ const supplierSchema = z.object({
 /**
  * A purchase-order line.
  *
- * `unitCost` is what Cellvix pays and **is** sent by the client — unlike a
+ * `unitCost` is what Cellvix pays and **is** sent by the client - unlike a
  * sales price, which is always read from the catalogue. A purchase price is
  * negotiated per order and has no server-side source of truth to read it from;
  * what the server still owns is every total computed from it (§8, invariant 8).
@@ -854,7 +864,7 @@ const purchaseOrderItemSchema = z.object({
  *
  * **`supplier` is gone and `suppliers` replaces it** (re-ruled 2026-09-11). An
  * order is now put to several suppliers and confirmed to one, so at the moment
- * it is raised there is nobody it is with yet — naming a single required
+ * it is raised there is nobody it is with yet - naming a single required
  * supplier would mean picking the winner before anybody had quoted.
  *
  * `unitCost` is likewise no longer collected here: the whole point of sending
@@ -901,7 +911,7 @@ const purchaseReceiveSchema = z.object({
   note: z.string().trim().max(300).optional(),
 });
 
-/** Recording a PO payment creates an `Expense` row — server-side, once. */
+/** Recording a PO payment creates an `Expense` row - server-side, once. */
 const purchasePaymentSchema = z.object({
   method: z.string().trim().max(40).optional(),
   reference: z.string().trim().max(80).optional(),
@@ -915,7 +925,7 @@ const purchasePaymentSchema = z.object({
  * A request for quote: one line list, several suppliers, no prices.
  *
  * `componentTypes` is what the suppliers were **chosen by**, and it is sent
- * alongside the lines rather than derived from them — a clerk who picks
+ * alongside the lines rather than derived from them - a clerk who picks
  * "battery", invites the battery suppliers and then adds a screen to the list
  * has still asked the battery suppliers, and recomputing would rewrite that.
  */
@@ -931,7 +941,7 @@ const purchaseSendSchema = z.object({
 /**
  * Pushing back on a supplier's price.
  *
- * Either a target for the whole order or a per-line ask — both are optional,
+ * Either a target for the whole order or a per-line ask - both are optional,
  * because "can you do better?" with a note and no number is a real opening
  * move. What is never accepted is a total: `askedTotal` is what we are *asking
  * for*, and the supplier's answer arrives as a fresh bid that is recomputed
@@ -954,6 +964,21 @@ const purchaseNegotiateSchema = z.object({
  * price in this payload would be a way to confirm one number and order at
  * another.
  */
+/**
+ * Sending a proforma invoice back for a new one.
+ *
+ * The note is required and is shown to the supplier verbatim: "please revise"
+ * with no reason is a round trip that teaches them nothing, and they will guess
+ * - usually at the wrong line.
+ */
+const proformaRevisionSchema = z.object({
+  note: z
+    .string()
+    .trim()
+    .min(1, 'Say what needs changing - the supplier sees this.')
+    .max(2000),
+});
+
 const purchaseConfirmSchema = z.object({
   supplierId: z.string().trim().min(1, 'Pick the supplier to confirm.'),
   expectedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a calendar date.').optional().or(z.literal('')),
@@ -969,7 +994,7 @@ const purchaseConfirmSchema = z.object({
  * supplier cannot add a line nobody asked for, and every total is still
  * recomputed against **our** quantities (§8).
  *
- * `available: false` is how a supplier says "not this one" — distinct from a
+ * `available: false` is how a supplier says "not this one" - distinct from a
  * price of zero, which is a legitimate answer for a sample.
  */
 const supplierQuoteSchema = z.object({
@@ -978,6 +1003,19 @@ const supplierQuoteSchema = z.object({
       z.object({
         sku: z.string().trim().min(1),
         unitCost: cents.default(0),
+        /**
+         * How many they can actually supply.
+         *
+         * **Short is the normal case, not an error.** A supplier with 30 of the
+         * 40 we asked for had only two ways to answer: quote for 40 they cannot
+         * ship, or mark the line unavailable and lose the 30 they can. Both are
+         * worse than the truth. Omitted means "all of them", which is what
+         * every quote sent before this field existed meant.
+         *
+         * Capped at what we asked for server-side: a supplier offering *more*
+         * than the order wants is not a quote, it is a different order.
+         */
+        qty: z.coerce.number().int().min(0).max(1_000_000).optional(),
         available: z.boolean().default(true),
         note: z.string().trim().max(300).optional(),
       }),
@@ -1006,6 +1044,30 @@ const supplierDeclineSchema = z.object({
 const supplierProformaSchema = z.object({
   number: z.string().trim().max(60).optional(),
   validUntil: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a calendar date.').optional().or(z.literal('')),
+  /**
+   * What the supplier is actually invoicing, at **their** quantities.
+   *
+   * A quantity is accepted here - the same exception a unit cost gets on a bid,
+   * and for the same reason: the point of a proforma is the supplier saying what
+   * they will ship, and a short line or a case pack that rounds 36 up to 40 has
+   * to be expressible or the document cannot be reconciled against the invoice
+   * that follows it. Zero means "cannot supply this after all".
+   *
+   * Omitting `lines` entirely means "as quoted, at the quantities you asked
+   * for", which is what every proforma meant before line detail existed.
+   * Totals are never accepted - the server recomputes all three from these.
+   */
+  lines: z
+    .array(
+      z.object({
+        sku: z.string().trim().min(1),
+        qty: z.coerce.number().int().min(0).max(1_000_000),
+        unitCost: cents.optional(),
+        note: z.string().trim().max(300).optional(),
+      }),
+    )
+    .max(200)
+    .optional(),
   tax: cents.optional(),
   shipping: cents.optional(),
   paymentTerms: z.string().trim().max(300).optional(),
@@ -1038,7 +1100,7 @@ const superAdminLoginSchema = z.object({
 
 const tenantSchema = z.object({
   name: z.string().trim().min(1, 'Give the tenant a name.').max(120),
-  // Derived from the name when omitted — the service slugifies either way, so
+  // Derived from the name when omitted - the service slugifies either way, so
   // this never has to be typed.
   slug: z.string().trim().max(60).optional(),
   status: z.enum(['active', 'past_due', 'suspended', 'cancelled']).optional(),
@@ -1069,7 +1131,7 @@ const businessAssignSchema = z.object({
 /**
  * One message in a tenant's support conversation (SAAS_PLATFORM §4.5).
  *
- * `business` is optional and only meaningful from the platform side — the
+ * `business` is optional and only meaningful from the platform side - the
  * tenant's own messages are pinned to whichever business they are working in,
  * which the server already knows and does not need to be told.
  */
@@ -1093,7 +1155,7 @@ const tenantOwnerSchema = z.object({
   contactName: z.string().trim().min(1, 'Give the owner a name.').max(120),
   email: z.string().trim().toLowerCase().email('Enter a valid email.'),
   phone: z.string().trim().max(40).optional().or(z.literal('')),
-  // Optional only while the tenant has exactly one business — the service
+  // Optional only while the tenant has exactly one business - the service
   // refuses to guess when there are several.
   business: z.string().trim().optional().or(z.literal('')),
 });
@@ -1102,7 +1164,7 @@ const tenantOwnerSchema = z.object({
  * Stepping into a business for support (SAAS_PLATFORM §4.5).
  *
  * **`reason` is required and has no default.** It is written into the tenant's
- * own activity log, where their owner reads it — a reason nobody had to type
+ * own activity log, where their owner reads it - a reason nobody had to type
  * would render as a filled-in field carrying no information, which is worse
  * than an empty one because it looks answered.
  */
@@ -1110,7 +1172,7 @@ const impersonationSchema = z.object({
   reason: z
     .string()
     .trim()
-    .min(4, 'Say why you are stepping in — the business owner sees this.')
+    .min(4, 'Say why you are stepping in - the business owner sees this.')
     .max(500),
   // Bounded server-side too; this keeps the console from offering a standing key.
   minutes: z.coerce.number().int().min(5).max(240).optional(),
@@ -1143,7 +1205,7 @@ const planSchema = z.object({
 /**
  * One feature default on a plan.
  *
- * `null` clears the key so it falls back to the business type — a different act
+ * `null` clears the key so it falls back to the business type - a different act
  * from switching it off, and the only way back to a default, exactly as it is
  * on a per-business override.
  */
@@ -1156,7 +1218,7 @@ const planFeatureSchema = z.object({
  * A business's own trading status, distinct from its tenant's subscription.
  *
  * The values are spelled out rather than referencing `BUSINESS_STATUSES`, which
- * is declared further down this file — a `const` read before its declaration is
+ * is declared further down this file - a `const` read before its declaration is
  * a temporal-dead-zone error at module load, not a hoisted undefined.
  */
 const businessStatusSchema = z.object({
@@ -1220,7 +1282,7 @@ const stockAdjustSchema = z.object({
     .refine((value) => value !== 0, 'Enter a change.')
     .refine((value) => Math.abs(value) <= 1_000_000, 'That is more than this form will take.'),
   type: z.enum(['adjustment', 'damage', 'return', 'transfer']).default('adjustment'),
-  note: z.string().trim().min(3, 'Give a reason — it stays on the movement.').max(300),
+  note: z.string().trim().min(3, 'Give a reason - it stays on the movement.').max(300),
 });
 
 /** The ERP fields on a product (§6.10). Separate from `productSchema` so the
@@ -1238,7 +1300,7 @@ const productOpsSchema = z.object({
 /**
  * A quote line.
  *
- * `unitPrice` **is** sent by the client here, unlike a sale — a quote is a
+ * `unitPrice` **is** sent by the client here, unlike a sale - a quote is a
  * negotiated number and has no server-side source of truth to read it from.
  * Zero means "use the catalogue price", so an operator quoting at list does not
  * have to retype it. Every total computed from it stays the server's.
@@ -1272,7 +1334,7 @@ const quoteStatusSchema = z.object({
 
 /**
  * Conversion. `acknowledgeDrift` is the admin confirming they have seen the
- * catalogue prices that moved since the quote was issued — without it the
+ * catalogue prices that moved since the quote was issued - without it the
  * server refuses and returns the comparison instead.
  */
 const quoteConvertSchema = z.object({
@@ -1282,12 +1344,12 @@ const quoteConvertSchema = z.object({
 
 
 /**
- * An admin raising an order directly — a phone order, a walk-in, an account
+ * An admin raising an order directly - a phone order, a walk-in, an account
  * that placed it by email (§7.2's `+ Create > Order`).
  *
  * Shaped like `quoteSchema` because it is the same act one step further along,
  * and `unitPrice` carries the same meaning: zero means "use the catalogue
- * price". What it does **not** carry is any total, discount or tax — those are
+ * price". What it does **not** carry is any total, discount or tax - those are
  * recomputed server-side from live products, exactly as at checkout, because a
  * client that can send a price is a client that can set one.
  */
@@ -1310,12 +1372,12 @@ const adminOrderSchema = z.object({
 });
 
 /**
- * A standalone invoice — one raised against an account for something no order
+ * A standalone invoice - one raised against an account for something no order
  * covers: a restocking fee, a repair, an agreed adjustment (§7.2's
  * `+ Create > Invoice`).
  *
  * `Invoice.order` has always been optional; this is the first thing to use
- * that. There are no line items because the model has no place to put them —
+ * that. There are no line items because the model has no place to put them
  * an invoice stores a single `amount`, and inventing an items array here would
  * mean the number on screen and the number in the database came from different
  * places.
@@ -1330,7 +1392,7 @@ const adminOrderSchema = z.object({
  * not a second row on this form.
  *
  * The rate is a DEFAULT. The form lets an operator override it, because zero is
- * a real answer — an exempt customer, an out-of-country sale — and a rate the
+ * a real answer - an exempt customer, an out-of-country sale - and a rate the
  * software insists on is a rate somebody works around by editing the total.
  */
 /** The province codes, taken from the one list the checkout already uses. */
@@ -1342,7 +1404,7 @@ const TAX_RATES = {
 };
 
 /**
- * One priced line — a service performed, or a part fitted.
+ * One priced line - a service performed, or a part fitted.
  *
  * Services and parts are the same shape because they are the same thing on an
  * invoice: a description, a quantity and a price. `product` links a part back
@@ -1392,7 +1454,7 @@ const invoiceDeviceSchema = z.object({
 /**
  * Raising an invoice by hand (§7.2).
  *
- * Two shapes, one schema. A **flat charge** sends `amount` and nothing else —
+ * Two shapes, one schema. A **flat charge** sends `amount` and nothing else
  * a restocking fee, an agreed adjustment, the case this form was built for. An
  * **itemised invoice** sends `devices`, and the server computes the amount
  * from the lines; whatever `amount` the client sent is ignored, because a
@@ -1403,7 +1465,7 @@ const invoiceDeviceSchema = z.object({
  */
 const adminInvoiceSchema = z.object({
   user: z.string().trim().min(1, 'Pick a customer.'),
-  // Required for a flat charge, ignored when `devices` carries lines — the
+  // Required for a flat charge, ignored when `devices` carries lines - the
   // superRefine below enforces exactly that.
   amount: cents.optional(),
 
@@ -1416,7 +1478,7 @@ const adminInvoiceSchema = z.object({
   discountDollars: z.coerce.number().min(0).max(1_000_000).default(0),
   discountCode: z.string().trim().max(40).or(z.literal('')).optional(),
 
-  /** Internal only — recorded, never added to what the customer owes. */
+  /** Internal only - recorded, never added to what the customer owes. */
   travelKm: z.coerce.number().min(0).max(100_000).default(0),
   /**
    * The one travel figure that IS charged, when the job is out of area.
@@ -1440,7 +1502,7 @@ const adminInvoiceSchema = z.object({
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a calendar date.')
     .optional(),
-  // Left blank, the server derives it from the terms. Sent, it wins — an
+  // Left blank, the server derives it from the terms. Sent, it wins - an
   // agreed due date is a fact about the arrangement, not about the terms table.
   dueDate: z
     .string()
@@ -1455,7 +1517,7 @@ const adminInvoiceSchema = z.object({
     );
 
     // An itemised invoice computes its own total, so an amount is not asked
-    // for. A flat one has nothing else to bill from, so it is required — and
+    // for. A flat one has nothing else to bill from, so it is required - and
     // an invoice for nothing is not a document.
     if (!hasLines && !(value.amount > 0)) {
       ctx.addIssue({
@@ -1508,7 +1570,7 @@ const rmaInspectSchema = z.object({
 
 /**
  * Resolution. The amount is only read for a refund, and it routes through
- * `storeCreditService` — this schema never carries a balance, only an intent.
+ * `storeCreditService` - this schema never carries a balance, only an intent.
  */
 const rmaResolveSchema = z
   .object({
@@ -1589,12 +1651,12 @@ const TICKET_STATUS_LABELS = {
 /**
  * Opening a ticket.
  *
- * The customer is a name and a phone, not an account id — a repair is a
+ * The customer is a name and a phone, not an account id - a repair is a
  * walk-in, and requiring an approved business first would make the counter
  * unusable. The phone is required because it is how the shop calls someone to
  * say their device is ready; without it the ticket cannot be closed out.
  */
-/** One priced line — a service performed or a part fitted. Same shape for both. */
+/** One priced line - a service performed or a part fitted. Same shape for both. */
 const ticketLineSchema = z.object({
   name: z.string().trim().min(1, 'Name the line.').max(160),
   description: z.string().trim().max(300).or(z.literal('')).optional(),
@@ -1607,7 +1669,7 @@ const ticketLineSchema = z.object({
  * How a component tested at drop-off, and which components a counter checks.
  *
  * Declared here rather than only on the model so the intake form renders the
- * same grid the server will accept — a form offering a ninth component the
+ * same grid the server will accept - a form offering a ninth component the
  * schema rejects is a form that fails on submit.
  */
 const CONDITION_GRADES = [
@@ -1677,7 +1739,7 @@ const ticketSchema = z.object({
    * The reported fault, as one line for the list and the search index.
    *
    * Optional on the wire, because the intake form records the fault **per
-   * device** now — a two-device ticket has two problems and no single sentence
+   * device** now - a two-device ticket has two problems and no single sentence
    * that is honestly "the" issue. `createTicket` falls back to the first
    * device's `problem`, so the column is still filled; requiring it here would
    * reject the very form that supersedes it.
@@ -1688,14 +1750,14 @@ const ticketSchema = z.object({
   priority: z.enum(TICKET_PRIORITIES).default('normal'),
   source: z.enum(TICKET_SOURCES).default('counter'),
 
-  // Empty string means "unassigned" — a select cannot emit `undefined`.
+  // Empty string means "unassigned" - a select cannot emit `undefined`.
   technician: z.string().trim().or(z.literal('')).optional(),
 
   estimateDollars: z.coerce.number().min(0).max(1_000_000).optional(),
   notes: z.string().trim().max(2000).optional(),
 
   // The richer intake shape. All optional, so the short form that existed
-  // before this — name, phone, one device, one estimate — still validates.
+  // before this - name, phone, one device, one estimate - still validates.
   devices: z.array(ticketDeviceSchema).max(10).optional(),
   clientNotes: z.string().trim().max(2000).or(z.literal('')).optional(),
   technicianNotes: z.string().trim().max(2000).or(z.literal('')).optional(),
@@ -1717,7 +1779,7 @@ const ticketUpdateSchema = ticketSchema
  *
  * Any status to any status: a repair genuinely goes backwards when the wrong
  * part arrives, so the ladder is not enforced. The move is recorded on the
- * ticket timeline instead — the audit trail is the control here.
+ * ticket timeline instead - the audit trail is the control here.
  */
 const ticketStatusSchema = z.object({
   status: z.enum(TICKET_STATUSES),
@@ -1763,7 +1825,7 @@ const businessHoursSchema = z.object({
 });
 
 /**
- * `code` is absent on purpose — it is assigned server-side (§6.14). A code the
+ * `code` is absent on purpose - it is assigned server-side (§6.14). A code the
  * form proposes is a code two operators can pick in the same moment.
  */
 const businessSchema = z.object({
@@ -1776,7 +1838,7 @@ const businessSchema = z.object({
       line2: z.string().trim().max(200).optional(),
       city: z.string().trim().max(120).optional(),
       region: z.string().trim().max(60).optional(),
-      // Empty is allowed — an business can be filed before its lease is signed —
+      // Empty is allowed - an business can be filed before its lease is signed
       // but a value that is present must be a real postal code FOR ITS OWN
       // COUNTRY. Checked in the refinement below, because the rule cannot be
       // known until `country` has been read.
@@ -1815,7 +1877,7 @@ const roleSchema = z.object({
 
 /**
  * Creating a Cellvix person. `accountType` is the account kind; `staffRole` is
- * the permission set, and is required for staff — enforced here and again in
+ * the permission set, and is required for staff - enforced here and again in
  * the service, because access granted by an omitted field is access nobody
  * chose to grant.
  */
@@ -1834,7 +1896,7 @@ const staffUserSchema = z
     path: ['staffRole'],
   });
 
-/** The edit form. No password — changing one has its own route and its own rules. */
+/** The edit form. No password - changing one has its own route and its own rules. */
 const staffUserUpdateSchema = z.object({
   name: z.string().trim().min(1).max(120).optional(),
   phone: z.string().trim().max(40).optional(),
@@ -1875,7 +1937,7 @@ const messageSchema = z
     userId: z.string().trim().min(1, 'Choose an account.'),
     subject: z.string().trim().max(200).optional(),
     body: z.string().trim().max(5000).optional(),
-    // Calls are the only inbound-capable channel today — somebody rang us.
+    // Calls are the only inbound-capable channel today - somebody rang us.
     direction: z.enum(['inbound', 'outbound']).default('outbound'),
     recordingUrl: z.string().trim().url('Enter a valid URL.').optional().or(z.literal('')),
     templateId: z.string().trim().optional(),
@@ -1903,7 +1965,7 @@ const messageTemplateSchema = z.object({
 });
 
 /**
- * A campaign. `audience` names a filter, never a list of recipients — consent
+ * A campaign. `audience` names a filter, never a list of recipients - consent
  * is resolved at send time, so a list captured here would be both stale and
  * unlawful to rely on (§6.13).
  */
@@ -1917,7 +1979,7 @@ const campaignSchema = z.object({
 });
 
 /**
- * The public unsubscribe payload — the account id and the HMAC from the link.
+ * The public unsubscribe payload - the account id and the HMAC from the link.
  * Deliberately unauthenticated: CASL requires the mechanism to work without a
  * sign-in, and the token is what stands in for one.
  */
@@ -1929,7 +1991,7 @@ const unsubscribeSchema = z.object({
 // ---- phase 10: referral commission ------------------------------------------
 
 /**
- * The commission rate, as a percentage — 5 means 5%.
+ * The commission rate, as a percentage - 5 means 5%.
  *
  * This is the only writable field in the whole referral feature. Accruals are
  * produced by payments and reversed by refunds; nothing may write one by hand,
@@ -1948,7 +2010,7 @@ const referralRateSchema = z.object({
  * Business Info (§6.15, category 1).
  *
  * Feeds invoices, transactional email and the storefront footer. Only the name
- * is required — a business that has not yet been given a website should be able
+ * is required - a business that has not yet been given a website should be able
  * to save the fields it does have rather than being blocked on the ones it
  * does not.
  */
@@ -1977,7 +2039,7 @@ const businessInfoSchema = z.object({
 /**
  * One province's tax rate.
  *
- * **A fraction, not a percentage** — `0.13`, never `13`. The model stores it
+ * **A fraction, not a percentage** - `0.13`, never `13`. The model stores it
  * this way and `Settings.rateFor` reads it this way, so the conversion happens
  * once, in the screen, rather than being a thing every reader has to remember.
  * The 0.35 ceiling is a sanity bound: no Canadian combined rate is close to it,
@@ -1989,14 +2051,14 @@ const taxRateRowSchema = z.object({
   rate: z.coerce
     .number()
     .min(0, 'A tax rate cannot be negative.')
-    .max(0.35, 'That looks like a percentage. Enter a fraction — 13% is 0.13.'),
+    .max(0.35, 'That looks like a percentage. Enter a fraction - 13% is 0.13.'),
   kind: z.enum(['GST', 'HST', 'GST+PST', 'GST+QST']),
 });
 
 /**
  * Sale Settings (§6.15, category 2).
  *
- * `warrantyByGrade` is keyed on **product grade**, not membership tier —
+ * `warrantyByGrade` is keyed on **product grade**, not membership tier
  * wholesale warranties on what the part is, not on who bought it (§6.15).
  */
 const saleSettingsSchema = z.object({
@@ -2026,7 +2088,7 @@ const saleSettingsSchema = z.object({
 /**
  * Shipping Rates (§6.15).
  *
- * `code` is present but never written — the service matches on it and refuses
+ * `code` is present but never written - the service matches on it and refuses
  * anything it does not already have, because checkout validates
  * `deliveryMethod` against a fixed enum and a band invented here would be
  * unselectable.
@@ -2050,7 +2112,7 @@ const shippingSettingsSchema = z.object({
 });
 
 /**
- * Payment Methods (§6.15) — the list staff pick from when recording money
+ * Payment Methods (§6.15) - the list staff pick from when recording money
  * moving. **Not** the buyer's saved cards, which are `User.paymentMethods`.
  *
  * `code` is the stable key that expenses and payments store, so it is set once
@@ -2079,7 +2141,7 @@ const paymentMethodsSettingsSchema = z.object({
  * here reprices anything already in the catalogue.
  *
  * Margin stops below 100 because `markup = margin ÷ (100 − margin) × 100`
- * divides by zero at 100 — a 100% margin means selling at infinite markup on a
+ * divides by zero at 100 - a 100% margin means selling at infinite markup on a
  * zero cost, which is not a number a form should accept.
  */
 const inventorySettingsSchema = z.object({
@@ -2093,6 +2155,98 @@ const inventorySettingsSchema = z.object({
     .max(99.9, 'A margin of 100% or more has no finite markup.'),
 });
 
+/**
+ * Supplier agreements (§6.15) - the documents authored in admin and signed in
+ * the portal.
+ *
+ * **Clauses are rows, not a blob of prose.** The paper form gives every clause
+ * its own exceptions box and its own initials, which is how these actually get
+ * negotiated: eight clauses accepted, one qualified. A single rich-text body
+ * could not hold that.
+ */
+const agreementClauseSchema = z.object({
+  // Optional on the way in: a new clause is assigned one server-side, because a
+  // client inventing its own could collide with an existing key and silently
+  // move a supplier's note onto the wrong clause.
+  key: z.string().trim().max(60).optional(),
+  title: z.string().trim().min(1, 'Give the clause a heading.').max(200),
+  body: z.string().trim().min(1, 'Write the clause.').max(10_000),
+  requiresInitials: z.boolean().default(true),
+});
+
+const agreementTemplateSchema = z.object({
+  name: z.string().trim().min(1, 'Name the agreement.').max(200),
+  description: z.string().trim().max(500).optional(),
+  preamble: z.string().trim().max(5_000).optional(),
+  clauses: z.array(agreementClauseSchema).min(1, 'Add at least one clause.').max(60),
+  /**
+   * Our half of the execution block, signed when the agreement is written.
+   *
+   * A contract signed by one party is a draft, and asking a supplier to
+   * countersign an empty rule is asking them to trust a form. The image is
+   * validated properly server-side - media type against an allowlist, decoded
+   * size against a cap - so this only checks it is a data URL at all.
+   */
+  buyerSignatory: z
+    .object({
+      name: z.string().trim().max(200).optional(),
+      title: z.string().trim().max(120).optional(),
+      company: z.string().trim().max(200).optional(),
+      signatureImage: z
+        .string()
+        .regex(/^data:[a-z/+-]+;base64,/, 'That signature could not be read.')
+        .optional()
+        .or(z.literal('')),
+      signedAt: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a calendar date.')
+        .optional()
+        .or(z.literal('')),
+    })
+    .optional(),
+});
+
+/**
+ * A supplier signing their agreement.
+ *
+ * **No clause wording.** The titles and bodies are copied from the template
+ * server-side, so a client cannot sign a document it rewrote on the way past.
+ * What the supplier sends is theirs: initials, exceptions, signature, name.
+ */
+const agreementSignSchema = z.object({
+  /**
+   * Which agreement is being signed.
+   *
+   * Required, because a supplier can carry several: "their agreement" was
+   * unambiguous with one document and is a guess with three. The server checks
+   * it against what they actually hold, so naming one they were never sent is
+   * refused rather than silently signed.
+   */
+  template: z.string().trim().length(24),
+  clauses: z
+    .array(
+      z.object({
+        key: z.string().trim().min(1),
+        initials: z.string().trim().max(10).optional(),
+        note: z.string().trim().max(2000).optional(),
+      }),
+    )
+    .max(60)
+    .optional(),
+  signature: z.object({
+    kind: z.enum(['drawn', 'uploaded']),
+    // Validated properly server-side - media type against an allowlist and
+    // decoded size against a cap. This only checks it is a data URL at all.
+    image: z
+      .string()
+      .min(1, 'Draw or upload your signature.')
+      .regex(/^data:[a-z/+-]+;base64,/, 'That signature could not be read.'),
+  }),
+  signedName: z.string().trim().min(1, 'Type your full name.').max(200),
+  signedTitle: z.string().trim().max(120).optional(),
+  signedCompany: z.string().trim().max(200).optional(),
+});
+
 // ---- phase 11c: provider credentials ----------------------------------------
 
 /**
@@ -2103,8 +2257,8 @@ const inventorySettingsSchema = z.object({
  * screen renders from, and duplicating that list here would give it two places
  * to drift.
  *
- * **An empty string is meaningful.** It clears the field — that is how a key is
- * removed — and it has to stay distinguishable from an absent key, which means
+ * **An empty string is meaningful.** It clears the field - that is how a key is
+ * removed - and it has to stay distinguishable from an absent key, which means
  * "leave this one alone". So empty is allowed and `.strict()` is not used.
  *
  * There is no schema for *reading* a credential, because there is no route that
@@ -2118,7 +2272,7 @@ const providerCredentialSchema = z.record(
 // ---- phase 11d: taxonomy & invoice status rules -----------------------------
 
 /**
- * Editing a taxonomy node (§6.15 — *Device & Models*).
+ * Editing a taxonomy node (§6.15 - *Device & Models*).
  *
  * **Only the safe fields.** `kind`, `slug` and `parent` are absent on purpose:
  * every product carries a denormalised `path` written against that structure,
@@ -2166,7 +2320,7 @@ const invoiceStatusRuleSchema = z.object({
  *
  * Every toggle defaults **off** in the model, and this schema does not
  * re-default them: the form always posts the full set, so an absent key here
- * would mean "switch it off" rather than "leave it alone" — which is the wrong
+ * would mean "switch it off" rather than "leave it alone" - which is the wrong
  * reading for a payload that is meant to be complete.
  */
 const communicationsSettingsSchema = z.object({
@@ -2182,7 +2336,7 @@ const communicationsSettingsSchema = z.object({
   reminderDaysBefore: z.coerce.number().int().min(0, 'Use 0 or more days.').max(90),
   followUpDaysAfter: z.coerce.number().int().min(0, 'Use 0 or more days.').max(90),
   adminEmail: z.string().trim().email('Enter a valid email address.').optional().or(z.literal('')),
-  // Cents. 0 means "never notify on size" — distinct from an empty field.
+  // Cents. 0 means "never notify on size" - distinct from an empty field.
   notifyAboveAmount: cents.default(0),
   lowStockEmail: z.string().trim().email('Enter a valid email address.').optional().or(z.literal('')),
 });
@@ -2192,7 +2346,7 @@ const communicationsSettingsSchema = z.object({
  *
  * `purchaseOrder` is optional on purpose: a fault can surface long after the
  * paperwork, and refusing to record the return because nobody can find the PO
- * helps nobody. Costs are never sent — the server snapshots them from the
+ * helps nobody. Costs are never sent - the server snapshots them from the
  * purchase order, or the product, so the expected credit cannot be typed.
  */
 const SUPPLIER_RETURN_REASON_VALUES = [
@@ -2229,7 +2383,7 @@ const supplierReturnStatusSchema = z.object({
   trackingNumber: z.string().trim().max(60).optional(),
 });
 
-/** The credit a supplier actually gave — recorded, never projected. */
+/** The credit a supplier actually gave - recorded, never projected. */
 const supplierCreditSchema = z.object({
   amountDollars: z.coerce.number().min(0, 'A credit cannot be negative.').max(1_000_000),
   reference: z.string().trim().max(80).optional(),
@@ -2243,7 +2397,7 @@ const supplierCreditSchema = z.object({
  *
  * One schema for both: they differ only in `billing`, and a `one_off` charge is
  * a service while anything that repeats is a subscription. `category` is
- * required for the same reason an expense requires one — a cost the reports
+ * required for the same reason an expense requires one - a cost the reports
  * cannot group becomes an "uncategorised" line that grows until it is the
  * largest on the page.
  */
@@ -2272,7 +2426,7 @@ const supplierServiceUpdateSchema = supplierServiceSchema.partial();
 
 /**
  * Recording a charge. Every field is optional because the plan already knows
- * what it costs — an operator confirming a renewal at the agreed price should
+ * what it costs - an operator confirming a renewal at the agreed price should
  * not have to retype it, and an amount sent here overrides it for that charge
  * only.
  */
@@ -2286,4 +2440,4 @@ const supplierChargeSchema = z.object({
   reference: z.string().trim().max(80).optional(),
 });
 
-export { quoteToTicketSchema, ticketDepositSchema, ticketConvertSchema, TAX_RATES, INVOICE_SERVICE_TYPES, ORDER_OPEN_STATUSES, ORDER_UNFULFILLED_STATUSES, approveUserSchema, rejectUserSchema, creditSchema, clientSchema, clientFormSchema, clientCreateFormSchema, clientUpdateSchema, CONSENT_CHANNELS, contactConsentSchema, MEMBERSHIP_TIERS, tierSchema, internalNoteSchema, storeCreditSchema, refundSchema, userStatusSchema, productSchema, ORDER_STATUS_FLOW, orderStatusSchema, CARRIERS, ADMIN_NAV, ADMIN_LEGACY_REDIRECTS, invoicePaymentSchema, invoiceVoidSchema, webQuoteStatusSchema, creditPaymentSchema, invoiceUpdateSchema, bulkOrderStatusSchema, supplierSchema, purchaseOrderSchema, purchaseOrderStatusSchema, purchaseReceiveSchema, purchasePaymentSchema, purchaseInviteSchema, purchaseSendSchema, purchaseNegotiateSchema, purchaseConfirmSchema, supplierQuoteSchema, supplierDeclineSchema, supplierProformaSchema, supplierDeliverySchema, superAdminLoginSchema, tenantSchema, tenantSlotsSchema, superAdminBusinessSchema, businessAssignSchema, businessFeatureSchema, impersonationSchema, tenantOwnerSchema, supportMessageSchema, planSchema, planFeatureSchema, businessStatusSchema, supplierLoginSchema, supplierForgotSchema, supplierResetSchema, supplierPasswordSchema, expenseSchema, expenseCategorySchema, stockAdjustSchema, productOpsSchema, quoteSchema, quoteStatusSchema, quoteConvertSchema, adminOrderSchema, adminInvoiceSchema, RMA_ITEM_DISPOSITIONS, rmaSchema, TICKET_STATUSES, TICKET_PRIORITIES, TICKET_SOURCES, TICKET_STATUS_LABELS, CONDITION_GRADES, CONDITION_PARTS, ticketSchema, ticketDeviceSchema, ticketLineSchema, ticketUpdateSchema, ticketStatusSchema, rmaStatusSchema, rmaInspectSchema, rmaResolveSchema, PERMISSION_AREAS, PERMISSION_LEVELS, PERMISSION_LEVEL_LABELS, BUSINESS_STATUSES, BUSINESS_COLOR_TOKENS, businessSchema, roleSchema, staffUserSchema, staffUserUpdateSchema, MESSAGE_CHANNELS, TEMPLATE_DOCUMENTS, CAMPAIGN_AUDIENCES, CAMPAIGN_AUDIENCE_LABELS, messageSchema, callLogSchema, messageTemplateSchema, campaignSchema, unsubscribeSchema, referralRateSchema, businessInfoSchema, saleSettingsSchema, shippingSettingsSchema, paymentMethodsSettingsSchema, inventorySettingsSchema, providerCredentialSchema, taxonomyNodeSchema, invoiceStatusRuleSchema, communicationsSettingsSchema, SUPPLIER_RETURN_REASON_VALUES, supplierReturnSchema, supplierReturnStatusSchema, supplierCreditSchema, SUPPLIER_BILLING_CYCLES, supplierServiceSchema, supplierServiceUpdateSchema, supplierChargeSchema };
+export { quoteToTicketSchema, ticketDepositSchema, ticketConvertSchema, TAX_RATES, INVOICE_SERVICE_TYPES, ORDER_OPEN_STATUSES, ORDER_UNFULFILLED_STATUSES, approveUserSchema, rejectUserSchema, creditSchema, clientSchema, clientFormSchema, clientCreateFormSchema, clientUpdateSchema, CONSENT_CHANNELS, contactConsentSchema, MEMBERSHIP_TIERS, tierSchema, internalNoteSchema, storeCreditSchema, refundSchema, userStatusSchema, productSchema, ORDER_STATUS_FLOW, orderStatusSchema, CARRIERS, ADMIN_NAV, ADMIN_LEGACY_REDIRECTS, invoicePaymentSchema, invoiceVoidSchema, webQuoteStatusSchema, creditPaymentSchema, invoiceUpdateSchema, bulkOrderStatusSchema, supplierSchema, purchaseOrderSchema, purchaseOrderStatusSchema, purchaseReceiveSchema, purchasePaymentSchema, purchaseInviteSchema, purchaseSendSchema, purchaseNegotiateSchema, purchaseConfirmSchema, proformaRevisionSchema, supplierQuoteSchema, supplierDeclineSchema, supplierProformaSchema, supplierDeliverySchema, superAdminLoginSchema, tenantSchema, tenantSlotsSchema, superAdminBusinessSchema, businessAssignSchema, businessFeatureSchema, impersonationSchema, tenantOwnerSchema, supportMessageSchema, planSchema, planFeatureSchema, businessStatusSchema, supplierLoginSchema, supplierForgotSchema, supplierResetSchema, supplierPasswordSchema, expenseSchema, expenseCategorySchema, stockAdjustSchema, productOpsSchema, quoteSchema, quoteStatusSchema, quoteConvertSchema, adminOrderSchema, adminInvoiceSchema, RMA_ITEM_DISPOSITIONS, rmaSchema, TICKET_STATUSES, TICKET_PRIORITIES, TICKET_SOURCES, TICKET_STATUS_LABELS, CONDITION_GRADES, CONDITION_PARTS, ticketSchema, ticketDeviceSchema, ticketLineSchema, ticketUpdateSchema, ticketStatusSchema, rmaStatusSchema, rmaInspectSchema, rmaResolveSchema, PERMISSION_AREAS, PERMISSION_LEVELS, PERMISSION_LEVEL_LABELS, BUSINESS_STATUSES, BUSINESS_COLOR_TOKENS, businessSchema, roleSchema, staffUserSchema, staffUserUpdateSchema, MESSAGE_CHANNELS, TEMPLATE_DOCUMENTS, CAMPAIGN_AUDIENCES, CAMPAIGN_AUDIENCE_LABELS, messageSchema, callLogSchema, messageTemplateSchema, campaignSchema, unsubscribeSchema, referralRateSchema, businessInfoSchema, saleSettingsSchema, shippingSettingsSchema, paymentMethodsSettingsSchema, inventorySettingsSchema, agreementTemplateSchema, agreementSignSchema, providerCredentialSchema, taxonomyNodeSchema, invoiceStatusRuleSchema, communicationsSettingsSchema, SUPPLIER_RETURN_REASON_VALUES, supplierReturnSchema, supplierReturnStatusSchema, supplierCreditSchema, SUPPLIER_BILLING_CYCLES, supplierServiceSchema, supplierServiceUpdateSchema, supplierChargeSchema };

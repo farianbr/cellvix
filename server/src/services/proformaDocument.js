@@ -6,7 +6,7 @@ import { formatDate } from '../../../shared/dates.js';
  *
  * A **supplier's** formal offer against a purchase order, rendered from the
  * fields they filled in on the portal. The mirror image of `invoiceDocument.js`
- * — that one is money coming in and is written by us; this one is money going
+ * - that one is money coming in and is written by us; this one is money going
  * out and its numbers came from outside.
  *
  * **Form-driven, never uploaded.** There is no PDF library in this codebase and

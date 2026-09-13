@@ -4,13 +4,13 @@
  * **The export honours the current filter set.** §7.4 is blunt about it: "an
  * export that ignores active filters is a bug, not a shortcut." So every export
  * route runs the *same service function* the screen ran, with the same query,
- * and formats whatever comes back — rather than a second query that agrees with
+ * and formats whatever comes back - rather than a second query that agrees with
  * the list until one of them is changed.
  *
  * **XLSX is a real spreadsheet, written by hand.** A `.xlsx` is a zip of XML
  * parts, and Excel is happy with the minimal set. Building it here rather than
  * adding a spreadsheet dependency keeps this consistent with how `nodemailer`
- * is treated — the feature works out of the box, and nothing in the export path
+ * is treated - the feature works out of the box, and nothing in the export path
  * can fail because an optional package is missing.
  */
 
@@ -20,7 +20,7 @@ import { deflateRawSync } from 'node:zlib';
  * CRC-32, computed here rather than taken from `node:zlib`.
  *
  * `zlib.crc32` only exists from Node 20.15, and this project supports Node >= 20
- * — depending on a patch release would mean an export that throws on a runtime
+ * - depending on a patch release would mean an export that throws on a runtime
  * the rest of the codebase runs on perfectly well. The table is built once.
  */
 const CRC_TABLE = (() => {
@@ -54,7 +54,7 @@ function csvCell(value) {
  * Rows to CSV.
  *
  * Prefixed with a UTF-8 BOM. Without it Excel on Windows reads the file as the
- * system codepage and mangles every accented business name — which for a
+ * system codepage and mangles every accented business name - which for a
  * Canadian wholesaler means Québec addresses arrive broken.
  */
 function toCsv(columns, rows) {

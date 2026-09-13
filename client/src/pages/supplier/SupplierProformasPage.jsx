@@ -19,7 +19,7 @@ import cn from '@/lib/cn';
  * The list is the orders this supplier can see, filtered to the ones carrying a
  * proforma.
  *
- * Each row links to the rendered document — the same sheet the purchasing desk
+ * Each row links to the rendered document - the same sheet the purchasing desk
  * sees, from `proformaDocument.js`, so there is one piece of paper rather than
  * two that can disagree.
  */

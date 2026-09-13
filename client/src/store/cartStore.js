@@ -68,7 +68,7 @@ export const useCartStore = create(
         return get().items.reduce((sum, item) => sum + item.qty, 0);
       },
 
-      /** null when any line has a hidden price — a guest must not see a total. */
+      /** null when any line has a hidden price - a guest must not see a total. */
       subtotal() {
         const items = get().items;
         if (items.some((item) => !item.priceVisible || item.price === null)) return null;

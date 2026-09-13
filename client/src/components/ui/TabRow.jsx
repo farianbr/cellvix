@@ -3,7 +3,7 @@ import { pressable } from '@/lib/motion';
 import { count as formatCount } from '@/lib/format';
 
 /**
- * A row of view tabs — one record's sections, or one list's saved filters.
+ * A row of view tabs - one record's sections, or one list's saved filters.
  *
  * **One definition, because there were three**, and they had already drifted:
  * the approvals queue, the reports screen and the customer profile each drew
@@ -15,7 +15,7 @@ import { count as formatCount } from '@/lib/format';
  * `.bg-brand-gradient-compact` box with a rounded count beside it, so a control
  * that *switches which section of a record you are reading* looked exactly like
  * one that *narrows a list*. On the supplier profile the tabs read as filters
- * for the panel underneath — the operator's own report — because in that visual
+ * for the panel underneath - the operator's own report - because in that visual
  * language, that is precisely what they were saying.
  *
  * The two controls now look like the two different things they are:
@@ -24,7 +24,7 @@ import { count as formatCount } from '@/lib/format';
  *                          selected tab is marked by a rule beneath it and by
  *                          brand-coloured text. Nothing is filled, so it cannot
  *                          be mistaken for a filter pill.
- *   `pills`                A genuine filter — the approvals queue's
+ *   `pills`                A genuine filter - the approvals queue's
  *                          pending/approved/all. Matches `FilterStrip`, which
  *                          is the point: same job, same look.
  *
@@ -33,7 +33,7 @@ import { count as formatCount } from '@/lib/format';
  * record, in no order, and picking one changes what is displayed rather than
  * what is true.
  *
- * `count` is rendered when a tab defines one, including zero — an "Items
+ * `count` is rendered when a tab defines one, including zero - an "Items
  * supplied 0" tab tells the operator the answer without making them open it,
  * which is the whole reason the number sits on the tab.
  */
@@ -49,7 +49,7 @@ export function TabRow({
    *
    * A record's section tabs sit **above** the panel they switch, so bare on the
    * page background they read as loose chips floating between the KPI tiles and
-   * the content — nothing says they belong to the page rather than to the block
+   * the content - nothing says they belong to the page rather than to the block
    * above them. On the same surface as everything else, the row becomes part of
    * the furniture and the tab that is on reads as a state of the page.
    *

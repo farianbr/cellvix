@@ -7,7 +7,7 @@ import * as supportService from '../services/supportService.js';
  * The super-admin console (SAAS_PLATFORM §4.5, §6).
  *
  * Every handler below reads `req.superAdmin`, which only
- * `middleware/superAdminAuth.js` sets — never `req.user`, never `req.supplier`.
+ * `middleware/superAdminAuth.js` sets - never `req.user`, never `req.supplier`.
  * That is what keeps a signed-in admin or supplier out of the console by
  * holding the wrong cookie, and a super admin out of everything else.
  */
@@ -20,7 +20,7 @@ const logout = asyncHandler(async (_req, res) => {
   res.json(superAdminService.logout(res));
 });
 
-/** Who is signed in. `null` rather than a 401 — the shell asks on every load. */
+/** Who is signed in. `null` rather than a 401 - the shell asks on every load. */
 const me = asyncHandler(async (req, res) => {
   res.json({ admin: req.superAdmin ? req.superAdmin.toPublic() : null });
 });
@@ -69,7 +69,7 @@ const setBusinessFeature = asyncHandler(async (req, res) => {
  * Create the tenant's administrator and email them an invitation.
  *
  * `origin` is passed through so the reset link points at the host the operator
- * is actually using — a link to the production domain is useless to somebody
+ * is actually using - a link to the production domain is useless to somebody
  * setting a tenant up on staging.
  */
 const createOwner = asyncHandler(async (req, res) => {
@@ -80,7 +80,7 @@ const createOwner = asyncHandler(async (req, res) => {
   );
 });
 
-/** Send a fresh invitation — for one that expired, or never arrived. */
+/** Send a fresh invitation - for one that expired, or never arrived. */
 const resendOwnerInvite = asyncHandler(async (req, res) => {
   res.json(
     await superAdminService.resendOwnerInvite(req.params.id, { origin: req.get('origin') }),
@@ -92,7 +92,7 @@ const resendOwnerInvite = asyncHandler(async (req, res) => {
 /**
  * Step into a business.
  *
- * Performed on the **console** session — `requireSuperAdmin` guards the route —
+ * Performed on the **console** session - `requireSuperAdmin` guards the route
  * and it mints a separate cookie rather than replacing that session, so leaving
  * returns the operator to a console they never signed out of.
  */
@@ -166,7 +166,7 @@ const setBusinessStatus = asyncHandler(async (req, res) => {
   res.json(await superAdminService.setBusinessStatus(req.params.id, req.body));
 });
 
-/** Soft, with a retention window — the slot stays spent until it closes. */
+/** Soft, with a retention window - the slot stays spent until it closes. */
 const deleteBusiness = asyncHandler(async (req, res) => {
   res.json(await superAdminService.deleteBusiness(req.params.id));
 });

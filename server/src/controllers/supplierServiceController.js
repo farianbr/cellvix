@@ -6,7 +6,7 @@ import auditService from '../services/auditService.js';
  * Bought-in services and supplier subscriptions.
  *
  * Recording a charge writes real money into the P&L, so it is audited with the
- * expense number it produced — that is the row somebody follows when they ask
+ * expense number it produced - that is the row somebody follows when they ask
  * where a figure on the expense report came from.
  */
 

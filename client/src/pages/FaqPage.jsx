@@ -19,15 +19,15 @@ import { ease, pressable } from '@/lib/motion';
  * The category jump list.
  *
  * Two presentations of one nav, chosen by width rather than one layout squeezed
- * into both. From `lg` it is a sticky rail beside the answers — a help page's
+ * into both. From `lg` it is a sticky rail beside the answers - a help page's
  * sections are a permanent map, and a map belongs in the margin. Below that it
  * is the same `SelectMenu` the shop toolbar sorts with: the row of pills it
  * replaces scrolled sideways on a phone, and a native `<select>` was no better
- * — the platform draws that popup wider than its trigger and clips it against
+ * - the platform draws that popup wider than its trigger and clips it against
  * the viewport edge.
  *
  * Both go through `scrollToSection` rather than letting the browser follow the
- * anchor, because a native smooth scroll gets cancelled here — see that file.
+ * anchor, because a native smooth scroll gets cancelled here - see that file.
  */
 function CategoryNav({ groups, activeId }) {
   if (groups.length < 2) return null;
@@ -173,7 +173,7 @@ export function FaqPage() {
         </h1>
 
         <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-ink-400">
-          Approval, pricing, credit terms, shipping and warranty — the answers the sales desk gives
+          Approval, pricing, credit terms, shipping and warranty - the answers the sales desk gives
           most often. If yours is not here, the desk is a phone call away.
         </p>
 
@@ -210,7 +210,7 @@ export function FaqPage() {
           </span>
           <h2 className="text-xl">No answer for that yet</h2>
           <p className="mx-auto mt-2 max-w-sm text-md text-ink-500">
-            Ask the sales desk directly — and the answer usually ends up on this page.
+            Ask the sales desk directly - and the answer usually ends up on this page.
           </p>
           <Link
             to="/contact"
@@ -244,7 +244,7 @@ export function FaqPage() {
       <section className="mx-auto mt-12 max-w-[860px] text-center lg:mt-16">
         <h2 className="text-xl sm:text-2xl">Have any other questions?</h2>
         <p className="mx-auto mt-2.5 max-w-md text-md leading-relaxed text-ink-400">
-          The sales desk answers sourcing, credit and warranty questions directly — no ticket queue.
+          The sales desk answers sourcing, credit and warranty questions directly - no ticket queue.
         </p>
 
         <div className="mt-6 flex flex-wrap justify-center gap-2.5">

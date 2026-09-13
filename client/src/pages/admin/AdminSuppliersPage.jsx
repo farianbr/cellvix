@@ -5,6 +5,7 @@ import { DEFAULT_COUNTRY } from '@shared/countries';
 import useCreateParam from '@/hooks/useCreateParam';
 import {
   AlertCircle,
+  Check,
   CheckCircle2,
   ClipboardList,
   ExternalLink,
@@ -39,14 +40,14 @@ import useTablePage from '@/hooks/useTablePage';
 import ProcessStrip from '@/components/admin/ProcessStrip';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
-import { useAdminSuppliers, useAdminMutations } from '@/hooks/useAdmin';
+import { useAdminSuppliers, useAdminMutations, useAdminAgreements } from '@/hooks/useAdmin';
 import { useComponentTypes } from '@/hooks/useCatalog';
 import { pressable } from '@/lib/motion';
 import { toast } from '@/store/toastStore';
 import cn from '@/lib/cn';
 
 /**
- * Suppliers — the businesses Cellvix buys stock from (ERP rework §6.7).
+ * Suppliers - the businesses Cellvix buys stock from (ERP rework §6.7).
  *
  * A **table**, matched to CellShoppe. This was a card grid, and §6.7 specified
  * one on the reasoning that suppliers are read as contacts rather than as rows.
@@ -57,7 +58,7 @@ import cn from '@/lib/cn';
  * live `mailto:`/`tel:` links, so nothing the card did for an operator is lost.
  *
  * The `ProcessStrip` at the foot is the same one the Purchase Orders list
- * carries — a supplier is stage one of the purchase automation cycle, and both
+ * carries - a supplier is stage one of the purchase automation cycle, and both
  * screens showing the same seven stations is what makes it one pipeline rather
  * than two similar-looking rows.
  */
@@ -87,6 +88,10 @@ function termsLabel(value) {
  * other way round: what Cellvix owes this supplier, not what it is owed.
  */
 function SupplierForm({ supplier, onSubmit, onCancel, isPending, error }) {
+  // Fetched here rather than threaded through both call sites: the form is the
+  // only thing that needs the list, and the query is cached.
+  const { data: agreementData } = useAdminAgreements();
+  const agreements = agreementData?.templates?.filter((row) => row.isActive) ?? [];
   /**
    * Consent is held outside the form, the way `CustomerForm` holds it.
    *
@@ -102,7 +107,7 @@ function SupplierForm({ supplier, onSubmit, onCancel, isPending, error }) {
   /**
    * What this supplier sells, as component-type slugs.
    *
-   * Held outside `useForm` because it is a set of toggles rather than a field —
+   * Held outside `useForm` because it is a set of toggles rather than a field
    * the same reason consent is. Unlike consent it is always sent: an empty list
    * is a real answer here ("we have not tagged them yet"), and it is the fact
    * that keeps them out of the request-for-quote picker.
@@ -118,13 +123,14 @@ function SupplierForm({ supplier, onSubmit, onCancel, isPending, error }) {
       phone: supplier?.phone ?? '',
       website: supplier?.website ?? '',
       paymentTerms: supplier?.paymentTerms ?? 'net30',
+      agreementTemplates: supplier?.agreementTemplates ?? [],
       address: {
         line1: supplier?.address?.line1 ?? '',
         line2: supplier?.address?.line2 ?? '',
         city: supplier?.address?.city ?? '',
         // Blank, not `ON`. Defaulting the region to Ontario meant every
         // supplier saved without touching that field was recorded as being in
-        // Ontario — including the ones in Shenzhen.
+        // Ontario - including the ones in Shenzhen.
         region: supplier?.address?.region ?? '',
         postal: supplier?.address?.postal ?? '',
         country: supplier?.address?.country ?? DEFAULT_COUNTRY,
@@ -168,7 +174,96 @@ function SupplierForm({ supplier, onSubmit, onCancel, isPending, error }) {
         <SelectField control={control} name="paymentTerms" label="Payment terms" options={TERMS} />
       </div>
 
-      {/* Email keeps a full row — an address is genuinely long, and truncating
+      {/* Which documents they sign before they may quote.
+
+          **Several, not one.** A supplier commonly signs a master supply
+          agreement plus an NDA plus a quality annex; forcing a single choice
+          meant pasting the second document into the first as extra clauses.
+
+          Offered here rather than on a later screen because it is a commercial
+          decision about this supplier - an overseas manufacturer and a local
+          courier do not sign the same thing - and because a supplier created
+          without one can trade immediately, which is a choice somebody should
+          make deliberately rather than discover.
+
+          Adding one to an existing supplier is the normal case, not an
+          exception: they go back behind the gate and are warned on their
+          dashboard until the new one is signed. */}
+      <Controller
+        control={control}
+        name="agreementTemplates"
+        render={({ field }) => (
+          <div>
+            <p className="mb-1.5 font-display text-sm font-semibold text-ink-900">
+              Agreements to sign
+            </p>
+            {!agreements.length ? (
+              <p className="text-sm text-ink-400">
+                No agreements have been written yet.{' '}
+                <Link
+                  to="/admin/settings/agreements"
+                  className="font-semibold text-brand hover:underline"
+                >
+                  Write one
+                </Link>
+                .
+              </p>
+            ) : (
+              <>
+                <div className="grid gap-1.5 sm:grid-cols-2">
+                  {agreements.map((template) => {
+                    const on = (field.value ?? []).includes(template.id);
+                    return (
+                      <button
+                        key={template.id}
+                        type="button"
+                        aria-pressed={on}
+                        onClick={() =>
+                          field.onChange(
+                            on
+                              ? (field.value ?? []).filter((id) => id !== template.id)
+                              : [...(field.value ?? []), template.id],
+                          )
+                        }
+                        className={cn(
+                          pressable,
+                          'flex w-full items-start gap-2.5 rounded-md border p-2.5 text-left',
+                          on
+                            ? 'border-ok/40 bg-ok-50'
+                            : 'border-line bg-surface hover:border-line-strong',
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            'mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-sm border',
+                            on ? 'border-ok bg-ok text-white' : 'border-line-strong',
+                          )}
+                        >
+                          {on && <Check className="size-3" strokeWidth={3} aria-hidden="true" />}
+                        </span>
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-medium text-ink-900">
+                            {template.name}
+                          </span>
+                          <span className="block truncate text-xs text-ink-400">
+                            v{template.version} · {template.clauses.length} clauses
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="mt-1.5 text-xs text-ink-400">
+                  They cannot send a price or a proforma invoice until every one of these is
+                  signed. Leave all unticked if no agreement is required.
+                </p>
+              </>
+            )}
+          </div>
+        )}
+      />
+
+      {/* Email keeps a full row - an address is genuinely long, and truncating
           one mid-domain while a 6-character postal box sits at the same width
           is what made this form feel oversized. Phone and website pair up
           because neither fills half of it. */}
@@ -194,7 +289,7 @@ function SupplierForm({ supplier, onSubmit, onCancel, isPending, error }) {
         <Input label="Website" placeholder="https://…" {...register('website')} />
       </div>
 
-      {/* Unit first, then street — the order they are said and written on an
+      {/* Unit first, then street - the order they are said and written on an
           envelope. `line2` holds the unit, as it does everywhere else. */}
       <div className="grid gap-3 sm:grid-cols-[90px_1fr]">
         <Input label="Unit / apt" placeholder="101" {...register('address.line2')} />
@@ -204,7 +299,7 @@ function SupplierForm({ supplier, onSubmit, onCancel, isPending, error }) {
       {/* City, region, postal and country, all keyed off the country. A parts
           supplier is as likely to be in Shenzhen as in Edmonton, and this form
           asked every one of them for a Canadian province and an `A1A 1A1`
-          postal code — it even kept its own array of thirteen bare province
+          postal code - it even kept its own array of thirteen bare province
           codes, so the select showed `ON` with no label saying Ontario. */}
       <AddressFields control={control} register={register} setValue={setValue} />
 
@@ -216,13 +311,13 @@ function SupplierForm({ supplier, onSubmit, onCancel, isPending, error }) {
       />
 
       {/* What they sell. This is the field a request for quote picks suppliers
-          by, so an untagged supplier is one nobody can ask — which is why the
+          by, so an untagged supplier is one nobody can ask - which is why the
           hint says so rather than describing the control. */}
       <div>
         <p className="mb-1.5 font-display text-sm font-semibold text-ink-900">Component types</p>
         <p className="mb-2.5 text-sm text-ink-400">
           What this supplier sells. A request for quote finds suppliers by these
-          tags — one with none set will never appear in the picker.
+          tags - one with none set will never appear in the picker.
         </p>
         <ComponentTypePicker value={componentTypes} onChange={setComponentTypes} />
       </div>
@@ -263,7 +358,7 @@ function SupplierForm({ supplier, onSubmit, onCancel, isPending, error }) {
 }
 
 /**
- * The supplier's identity cell — name over the two ways to reach them.
+ * The supplier's identity cell - name over the two ways to reach them.
  *
  * Email and phone are real `mailto:`/`tel:` links rather than plain text. This
  * is a contact list before it is a ledger: the operator who opens it is usually
@@ -317,17 +412,17 @@ function SupplierIdentity({ supplier }) {
  *
  * **Three chips, then a count.** The tag list is what decides who can be asked
  * to price a part, so it belongs in the table rather than only in the edit
- * form — but a supplier carrying nine tags would otherwise set the height of
+ * form - but a supplier carrying nine tags would otherwise set the height of
  * every row on the page. Three is enough to recognise a supplier by; the
  * overflow chip carries the rest in its `title` so the full list is one hover
  * away without a second request.
  *
  * Labels come from the catalogue-derived taxonomy, never from a constant here,
- * for the reason `ComponentTypePicker` gives — a slug with no matching type
+ * for the reason `ComponentTypePicker` gives - a slug with no matching type
  * falls back to showing the slug rather than rendering an empty chip.
  */
 function SupplierTags({ slugs = [], labels }) {
-  if (!slugs.length) return <span className="text-ink-300">—</span>;
+  if (!slugs.length) return <span className="text-ink-300">-</span>;
 
   const shown = slugs.slice(0, 3);
   const rest = slugs.slice(3);
@@ -375,7 +470,7 @@ export function AdminSuppliersPage() {
   /**
    * Issue portal credentials and say honestly whether the email left.
    *
-   * The password is reset either way — it is a fresh one every time, because
+   * The password is reset either way - it is a fresh one every time, because
    * the stored value is a hash and the previous password cannot be read back
    * out. So a mail failure is not a no-op to be reported as an error and
    * forgotten: the supplier's old password has stopped working, and the message
@@ -403,7 +498,7 @@ export function AdminSuppliersPage() {
    * `listSuppliers` already caps at 300 rows and this table pages client-side,
    * so the whole set is in hand and a round-trip would buy nothing. The KPI
    * tiles keep reading the server's unfiltered counts, which is the rule the
-   * status pills follow too — a tile that moved with the filter would stop
+   * status pills follow too - a tile that moved with the filter would stop
    * being the total it is labelled as.
    */
   const allSuppliers = data?.suppliers ?? [];
@@ -421,7 +516,7 @@ export function AdminSuppliersPage() {
    * `?edit=<id>` opens the edit form on arrival.
    *
    * The supplier profile's Edit button links here rather than carrying its own
-   * copy of this modal — one form, one place it can drift. The row has to be
+   * copy of this modal - one form, one place it can drift. The row has to be
    * loaded before it can be edited, so this resolves against the fetched list
    * and clears the parameter once it has, which stops a back-navigation from
    * reopening a form the operator already closed.
@@ -469,7 +564,7 @@ export function AdminSuppliersPage() {
     {
       /**
        * What this supplier sells. The column that makes the tag system visible
-       * — tags decide who appears in the picker when a purchase order goes out,
+       * - tags decide who appears in the picker when a purchase order goes out,
        * and a tag nobody can see on the list is a tag nobody maintains.
        *
        * Sorts on the count rather than the names: "who covers the most" is the
@@ -565,14 +660,14 @@ export function AdminSuppliersPage() {
      * Email this supplier their portal link and a fresh password (§6.8a).
      *
      * Two entries for the same call, so the label tells the truth about which
-     * of the two things is happening — a supplier who has never been invited
+     * of the two things is happening - a supplier who has never been invited
      * needs a different sentence from one whose contact changed. Hidden
      * entirely when there is no address: there would be nowhere to send it, and
      * an action that can only fail should not be offered.
      *
      * **The toast reports what actually happened.** The password is reset
      * whether or not the mail leaves, so a failure has to say so rather than
-     * claim a send — otherwise a clerk waits for an answer from a supplier who
+     * claim a send - otherwise a clerk waits for an answer from a supplier who
      * never got the message, and the old password no longer works either.
      */
     {
@@ -739,7 +834,7 @@ export function AdminSuppliersPage() {
 
       {/* The same strip the Purchase Orders list carries. A supplier is stage
           one of that cycle, so the page that creates them shows where they sit
-          in it — and both screens then describe one pipeline rather than two. */}
+          in it - and both screens then describe one pipeline rather than two. */}
       <ProcessStrip title="Purchase automation cycle" current="supplier" />
 
       <Modal
@@ -757,7 +852,7 @@ export function AdminSuppliersPage() {
             createSupplier.mutate(values, {
               onSuccess: (payload) => {
                 setCreating(false);
-                // Straight to the supplier that was just added — the next thing
+                // Straight to the supplier that was just added - the next thing
                 // an operator does is raise a purchase order against it.
                 if (payload?.supplier?.id) navigate(`/admin/suppliers/${payload.supplier.id}`);
               },

@@ -1,7 +1,7 @@
 /**
  * Seed content for the blog, the FAQ and the offers page.
  *
- * Written as wholesale copy for a Canadian parts wholesaler rather than lorem —
+ * Written as wholesale copy for a Canadian parts wholesaler rather than lorem
  * the layouts have to be judged against text of a realistic length, and an
  * admin editing a seeded post should see the house voice, not filler.
  *
@@ -32,16 +32,16 @@ const BLOG_POSTS = [
 
 Grading is not a general impression of condition. It is four specific checks, and the worst result of the four is the grade.
 
-- **Glass** — hairlines under a raking light, chips at the corner radius, any lift at the bezel.
-- **Panel** — dead or stuck subpixels, burn-in on OLED, uneven backlight on LCD.
-- **Touch** — a full-surface swipe with a test pattern, including the outer 3 mm where digitizers fail first.
-- **Flex** — connector wear, kinks, and any evidence the cable has been peeled and re-seated.
+- **Glass** - hairlines under a raking light, chips at the corner radius, any lift at the bezel.
+- **Panel** - dead or stuck subpixels, burn-in on OLED, uneven backlight on LCD.
+- **Touch** - a full-surface swipe with a test pattern, including the outer 3 mm where digitizers fail first.
+- **Flex** - connector wear, kinks, and any evidence the cable has been peeled and re-seated.
 
 ### What each grade means in practice
 
 **Pull A** passes all four with nothing visible at arm's length. It goes into a customer's phone and nobody asks a question about it.
 
-**Pull B** has cosmetic marks that survive a wipe — light hairlines, a scuff outside the active area — but the panel, touch and flex are clean. It is the right part for a budget repair where the customer has been told what they are getting.
+**Pull B** has cosmetic marks that survive a wipe - light hairlines, a scuff outside the active area - but the panel, touch and flex are clean. It is the right part for a budget repair where the customer has been told what they are getting.
 
 > A part that fails touch or panel is not a Pull B. It is scrap, and it never reaches the catalogue.
 
@@ -117,10 +117,10 @@ Photograph the diagnostic screen and open the claim through your account rep wit
 
 ## The moving parts
 
-- **Credit limit** — the most you can have outstanding at once, in CAD.
-- **Balance** — the total of your unpaid invoices right now.
-- **Available** — the limit minus the balance. This is what a new order draws against.
-- **Terms** — prepaid, Net 15, Net 30 or Net 60. Terms set the due date on every invoice we raise.
+- **Credit limit** - the most you can have outstanding at once, in CAD.
+- **Balance** - the total of your unpaid invoices right now.
+- **Available** - the limit minus the balance. This is what a new order draws against.
+- **Terms** - prepaid, Net 15, Net 30 or Net 60. Terms set the due date on every invoice we raise.
 
 Placing an order on terms increases your balance immediately. Paying an invoice reduces it the day the payment lands.
 
@@ -132,7 +132,7 @@ An order that would take you past your available credit is not silently rejected
 
 Send your account rep a note with the volume you are planning and roughly when. Limits are reviewed on payment history first and time-as-a-customer second, so a clean twelve weeks on Net 30 is worth more than any document you can send us.
 
-> Reseller certificate on file? Send it once and it applies to every future order — it is not per-order paperwork.`,
+> Reseller certificate on file? Send it once and it applies to every future order - it is not per-order paperwork.`,
   },
   {
     title: 'What changed in the Cellvix catalogue this quarter',
@@ -159,7 +159,7 @@ The grading scale is unchanged in name, but the Pull A threshold moved. Any hair
 
 ## Retired
 
-Parts for devices we no longer see demand for are deactivated rather than deleted, so your past orders and invoices still read correctly. If a SKU you rely on has gone quiet, tell your rep before you re-source it — quiet usually means a supplier change, not an exit.`,
+Parts for devices we no longer see demand for are deactivated rather than deleted, so your past orders and invoices still read correctly. If a SKU you rely on has gone quiet, tell your rep before you re-source it - quiet usually means a supplier change, not an exit.`,
   },
   {
     title: 'Five ways repair shops lose margin on parts',
@@ -176,7 +176,7 @@ Parts for devices we no longer see demand for are deactivated rather than delete
 
 ## 1. Freight stacking
 
-Three orders in a week is three shipping charges. Consolidating to one weekly order — with a quick-order pad, not a browse — usually pays for itself before the discount does.
+Three orders in a week is three shipping charges. Consolidating to one weekly order - with a quick-order pad, not a browse - usually pays for itself before the discount does.
 
 ## 2. Grade mismatch
 
@@ -224,7 +224,7 @@ const GENERAL_FAQS = [
   {
     question: 'Do I need an account to see prices?',
     answer:
-      'Yes. Cellvix is wholesale-only, so pricing is visible to approved business accounts. Anyone can browse the full catalogue, search and read specifications without signing in — prices and ordering unlock once your business is approved.',
+      'Yes. Cellvix is wholesale-only, so pricing is visible to approved business accounts. Anyone can browse the full catalogue, search and read specifications without signing in - prices and ordering unlock once your business is approved.',
     category: 'ordering',
     order: 10,
   },
@@ -245,7 +245,7 @@ const GENERAL_FAQS = [
   {
     question: 'Can I save a cart and come back to it?',
     answer:
-      'Yes. Save the current cart from the cart panel, give it a name, and restore it later from Account. Recurring builds — a screen, battery and adhesive set for one model — are worth saving once and reusing.',
+      'Yes. Save the current cart from the cart panel, give it a name, and restore it later from Account. Recurring builds - a screen, battery and adhesive set for one model - are worth saving once and reusing.',
     category: 'ordering',
     order: 40,
   },
@@ -275,7 +275,7 @@ const GENERAL_FAQS = [
   {
     question: 'Can more than one person use our account?',
     answer:
-      'One login per business today. Multi-user accounts with per-buyer permissions are on the roadmap — tell your rep if you need it and we will flag your account when it ships.',
+      'One login per business today. Multi-user accounts with per-buyer permissions are on the roadmap - tell your rep if you need it and we will flag your account when it ships.',
     category: 'accounts',
     order: 40,
   },
@@ -305,7 +305,7 @@ const GENERAL_FAQS = [
   {
     question: 'Do you offer volume pricing?',
     answer:
-      'Yes. Standing volume on a model family is priced by the sales desk rather than by a public tier table — send your rep the models and monthly quantities and you will get a quote against your own mix.',
+      'Yes. Standing volume on a model family is priced by the sales desk rather than by a public tier table - send your rep the models and monthly quantities and you will get a quote against your own mix.',
     category: 'pricing',
     order: 40,
   },
@@ -351,7 +351,7 @@ const GENERAL_FAQS = [
   {
     question: 'Can I return a part I ordered by mistake?',
     answer:
-      'Unopened, unfitted parts can be returned within fourteen days in their original packaging. Contact your rep first for a return reference — parts arriving without one cannot be matched to your account.',
+      'Unopened, unfitted parts can be returned within fourteen days in their original packaging. Contact your rep first for a return reference - parts arriving without one cannot be matched to your account.',
     category: 'returns',
     order: 30,
   },
@@ -425,7 +425,7 @@ const PRODUCT_FAQS = [
     order: 40,
   },
   {
-    question: 'It says out of stock — can I still order it?',
+    question: 'It says out of stock - can I still order it?',
     answer:
       'Not through checkout. Ask your account rep to place a backorder: they can tell you the incoming quantity and the expected date for this specific SKU rather than a generic estimate.',
     category: 'ordering',
@@ -436,7 +436,7 @@ const PRODUCT_FAQS = [
   {
     question: 'Does this screen come with the frame and small parts attached?',
     answer:
-      'Screen assemblies ship as the panel, digitizer and frame together. Earpiece mesh, proximity brackets and camera brackets are not transferred — move them across from the original assembly.',
+      'Screen assemblies ship as the panel, digitizer and frame together. Earpiece mesh, proximity brackets and camera brackets are not transferred - move them across from the original assembly.',
     category: 'products',
     partType: 'screen-assembly',
     deviceTypeSlug: '',
@@ -463,7 +463,7 @@ const PRODUCT_FAQS = [
   {
     question: 'Is adhesive included with this battery?',
     answer:
-      'Battery adhesive strips are supplied with NEW and OEM cells. Pulls and aftermarket cells ship without adhesive — order it as a separate line if you need it.',
+      'Battery adhesive strips are supplied with NEW and OEM cells. Pulls and aftermarket cells ship without adhesive - order it as a separate line if you need it.',
     category: 'products',
     partType: 'battery',
     deviceTypeSlug: '',
@@ -490,7 +490,7 @@ const PRODUCT_FAQS = [
 ];
 
 /**
- * Offers are built from the seeded catalogue rather than hardcoded SKUs — the
+ * Offers are built from the seeded catalogue rather than hardcoded SKUs - the
  * generator's sequence numbers move whenever the catalogue changes shape, and a
  * combo pointing at a SKU that no longer exists is exactly the broken card the
  * write-time SKU check exists to prevent.
@@ -501,7 +501,7 @@ function buildOffers(products) {
   /**
    * A combo is only honest if every part in it fits the same device. The
    * generator gives each model a random subset of part types, so the model has
-   * to be chosen by what it actually carries — picking a screen first and then
+   * to be chosen by what it actually carries - picking a screen first and then
    * hunting for "a battery" produced a bundle that advertised one phone and
    * shipped a cell for another.
    */
@@ -534,7 +534,7 @@ function buildOffers(products) {
 
   const bundle = (items, discount) => {
     const regular = items.reduce((sum, item) => sum + item.product.price * item.qty, 0);
-    // Round to the nearest dollar — a bundle priced at $237.41 reads as an
+    // Round to the nearest dollar - a bundle priced at $237.41 reads as an
     // arithmetic result, not as an offer.
     return Math.round((regular * (1 - discount)) / 100) * 100;
   };
@@ -676,7 +676,7 @@ function buildOffers(products) {
       slug: '40-off-pull-a-screens',
       subtitle: 'On orders over $750',
       description:
-        'Tested pulls with no cosmetic marks at arm’s length — the grade most shops fit by default. $40 off when your order clears $750.',
+        'Tested pulls with no cosmetic marks at arm’s length - the grade most shops fit by default. $40 off when your order clears $750.',
       kind: 'deal',
       badge: 'Save $40',
       accent: 'brand',
@@ -713,7 +713,7 @@ function buildOffers(products) {
     {
       title: 'Boxing week: 20% off aftermarket',
       slug: 'boxing-week-aftermarket',
-      subtitle: 'Scheduled — starts later this month',
+      subtitle: 'Scheduled - starts later this month',
       description:
         'A scheduled promotion, held back until its start date. It does not appear on the offers page until then.',
       kind: 'deal',

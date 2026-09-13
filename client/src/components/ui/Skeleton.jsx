@@ -20,7 +20,7 @@ const RADIUS = {
  *
  * A shimmer sweeps instead. It has a direction, which implies progress, and
  * because the highlight is only ever over part of the element the overall
- * brightness stays steady — the page does not breathe. The sweep is a
+ * brightness stays steady - the page does not breathe. The sweep is a
  * background-position animation on a gradient, so it stays on the compositor
  * and costs nothing while the app is busy parsing the response it is waiting
  * for.
@@ -40,7 +40,7 @@ export function Skeleton({ className, rounded = 'md' }) {
 
 /**
  * A run of text lines. The last line is short, because real paragraphs end
- * mid-measure — a stack of equal-width bars is the most obvious tell that a
+ * mid-measure - a stack of equal-width bars is the most obvious tell that a
  * skeleton was not thought about.
  */
 export function SkeletonText({ lines = 3, className }) {

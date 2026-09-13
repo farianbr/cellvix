@@ -7,13 +7,13 @@ import useUiStore from '@/store/uiStore';
 const AuthContext = createContext(null);
 
 /**
- * Session state. The token itself is an httpOnly cookie the JS never sees —
+ * Session state. The token itself is an httpOnly cookie the JS never sees
  * `/auth/me` is the only way to learn who is signed in.
  *
  * Three states matter across the whole UI:
- *   guest     — prices hidden, "Login to view" gate on every card
- *   pending   — signed in, still gated, shown "your account is under review"
- *   approved  — full wholesale pricing and ordering
+ *   guest - prices hidden, "Login to view" gate on every card
+ *   pending - signed in, still gated, shown "your account is under review"
+ *   approved - full wholesale pricing and ordering
  */
 export function AuthProvider({ children }) {
   const queryClient = useQueryClient();
@@ -21,21 +21,21 @@ export function AuthProvider({ children }) {
   const { data, isLoading } = useQuery({
     queryKey: ['auth', 'me'],
     // `/auth/me` answers 200 with `user: null` for a guest, so there is no 401 to
-    // catch here — an error from this call is a real one and should surface.
+    // catch here - an error from this call is a real one and should surface.
     queryFn: () => api.get('/auth/me'),
     staleTime: 5 * 60 * 1000,
     retry: false,
   });
 
   const user = data?.user ?? null;
-  // The business's switched-on features, for staff only — `null` for everyone
+  // The business's switched-on features, for staff only - `null` for everyone
   // else. A courtesy that shapes the nav; `requireFeature` decides for real.
   const features = data?.features ?? null;
 
   /**
    * An active platform-support session, or null (SAAS_PLATFORM §4.5).
    *
-   * Rides on `/auth/me` so it is available on every screen from first paint —
+   * Rides on `/auth/me` so it is available on every screen from first paint
    * the banner has to be able to render anywhere, and the way out of a business
    * must not depend on which page the operator happens to be standing on.
    */
@@ -55,7 +55,7 @@ export function AuthProvider({ children }) {
     async (credentials) => {
       const result = await api.post('/auth/login', credentials);
       // `features` rides along with the user, or the panel renders once with an
-      // empty set — every gated nav row missing until the next `/auth/me`.
+      // empty set - every gated nav row missing until the next `/auth/me`.
       queryClient.setQueryData(['auth', 'me'], {
         user: result.user,
         features: result.features ?? null,
@@ -89,10 +89,10 @@ export function AuthProvider({ children }) {
       isPending: user?.status === 'pending',
       isAdmin: user?.role === 'admin',
       // Panel access. An admin always has it; a staff member has it only once
-      // an administrator has granted a role — access is granted, never
+      // an administrator has granted a role - access is granted, never
       // inherited (§7.6). The server decides for real; this only shapes the UI.
       isStaff: user?.role === 'staff',
-      // A support session reaches the panel with no `user` at all — the grant
+      // A support session reaches the panel with no `user` at all - the grant
       // is the authorisation, exactly as it is server-side in `requireStaff`.
       // Without this the operator would enter a business and land on a sign-in
       // screen, holding a valid grant the client refused to believe in.
@@ -100,7 +100,7 @@ export function AuthProvider({ children }) {
         Boolean(impersonation) ||
         user?.role === 'admin' ||
         (user?.role === 'staff' && Boolean(user?.staffRole)),
-      // Area permissions, or null for an admin — who bypasses the map entirely.
+      // Area permissions, or null for an admin - who bypasses the map entirely.
       permissions: user?.permissions ?? null,
       // What this BUSINESS has switched on, which is a different question from
       // what this ACCOUNT may do with it (SAAS_PLATFORM §4.4).
@@ -124,13 +124,13 @@ export function AuthProvider({ children }) {
  *
  * Sign out used to fire on the click. It is one press, it is easy to hit by
  * mistake next to the account links it sits among, and undoing it means finding
- * the credentials again — on a shared workshop machine, often someone else's.
+ * the credentials again - on a shared workshop machine, often someone else's.
  * The cart survives, but the session and anything half-filled on the page do
  * not, so it gets the same confirmation as any other action that cannot be
  * taken back.
  *
  * The dialog is raised through the UI store and rendered ONCE at the app root
- * (`SignOutConfirm`), rather than at each of the four buttons — a confirmation
+ * (`SignOutConfirm`), rather than at each of the four buttons - a confirmation
  * every call site has to remember is one that a fifth button will forget.
  *
  * Returns the same zero-argument function the call sites already pass straight

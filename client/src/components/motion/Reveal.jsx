@@ -5,7 +5,7 @@ import { ease } from '@/lib/motion';
 /**
  * Scroll-triggered reveal (brief §9).
  *
- * "Animated but soothing" — an 18px rise over 500ms, once, when the element is
+ * "Animated but soothing" - an 18px rise over 500ms, once, when the element is
  * a third of the way into view. Under `prefers-reduced-motion` it degrades to a
  * plain fade, which is the rule from PROJECT_INSTRUCTIONS.md §2.5: opacity only,
  * no transform.

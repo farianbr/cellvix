@@ -40,12 +40,12 @@ export function CartPage() {
   } = useCart();
   const { isApproved, isAuthenticated } = useAuth();
   const openAccount = useUiStore((s) => s.openAccount);
-  // "Save cart for later" EMPTIES the active cart and drops the promo code —
+  // "Save cart for later" EMPTIES the active cart and drops the promo code
   // the button label says none of that, so it is said here before it happens.
   const [savingConfirm, setSavingConfirm] = useState(false);
 
   // A preview of the checkout arithmetic, computed from what the server already
-  // told us the cart is worth. The binding numbers come from /orders/quote —
+  // told us the cart is worth. The binding numbers come from /orders/quote
   // this is here so the cart does not have to round-trip on every keystroke.
   //
   // The rates come from the server with the cart, not from a constant here:
@@ -56,12 +56,12 @@ export function CartPage() {
   const shipping = payable === null ? null : freeShipping ? 0 : (shippingPreview?.cost ?? 0);
   const tax = payable === null ? null : Math.round((payable + shipping) * TAX_RATE);
   const total = payable === null ? null : payable + shipping + tax;
-  // Only meaningful when a threshold actually exists — a band with no free-over
+  // Only meaningful when a threshold actually exists - a band with no free-over
   // has no distance to advertise.
   const awayFromFreeShipping =
     payable === null || freeOver === null ? null : freeOver - payable;
 
-  // Skeleton until we actually know what is in the cart — an empty-state flash
+  // Skeleton until we actually know what is in the cart - an empty-state flash
   // while the request is in flight reads as "we lost your cart".
   if (!isReady) {
     return (
@@ -83,7 +83,7 @@ export function CartPage() {
         </span>
         <h1 className="text-2xl">Your cart is empty</h1>
         <p className="mt-3 text-md text-ink-500">
-          Browse the catalogue and add the parts you need — quantities and pricing carry through to
+          Browse the catalogue and add the parts you need - quantities and pricing carry through to
           checkout.
         </p>
         <Link

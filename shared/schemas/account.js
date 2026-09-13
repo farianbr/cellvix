@@ -14,7 +14,7 @@ const profileSchema = z.object({
 /**
  * Saved addresses reuse the checkout address shape plus a label and defaults.
  *
- * Extends `addressShape` — the plain object — and then re-applies the country's
+ * Extends `addressShape` - the plain object - and then re-applies the country's
  * postal rule, because `.extend()` exists on an object schema and not on the
  * refined one. Extending the refined schema silently threw at import time.
  */
@@ -67,7 +67,7 @@ const changePasswordSchema = z
   });
 
 /**
- * The account sidebar, two levels deep — the same shape as `ADMIN_NAV`, so one
+ * The account sidebar, two levels deep - the same shape as `ADMIN_NAV`, so one
  * nav-tree pattern serves both sides of the product.
  *
  * A flat `Overview` row, then three groups whose children are the real screens.
@@ -76,7 +76,7 @@ const changePasswordSchema = z
  * ten. The groups are the three reasons a buyer opens this area: to follow
  * money owed, to buy something, or to change a setting.
  *
- * `icon` names a lucide export that `accountIcons.js` maps — the schema stays a
+ * `icon` names a lucide export that `accountIcons.js` maps - the schema stays a
  * plain data module the server can also read.
  *
  * `badge` names a counter on `GET /account/summary`; the sidebar renders it
@@ -126,7 +126,7 @@ const ACCOUNT_NAV = [
  * Every leaf in `ACCOUNT_NAV`, flat and in render order.
  *
  * The tree is the sidebar's shape, but three callers want the destinations and
- * not the grouping — the mobile section dropdown, the header account menu, and
+ * not the grouping - the mobile section dropdown, the header account menu, and
  * the active-route lookup. Derived here rather than kept as a second list,
  * because two hand-maintained lists of the same routes is how a screen goes
  * missing from one of them.
@@ -135,7 +135,7 @@ const ACCOUNT_NAV_ITEMS = ACCOUNT_NAV.flatMap((item) => item.children ?? [item])
 
 /**
  * Advance recharge: the buyer prepays and holds the money as store credit.
- * Bounded at both ends — a $5 top-up costs more in gateway fees than it is
+ * Bounded at both ends - a $5 top-up costs more in gateway fees than it is
  * worth, and five figures should be a phone call to the sales desk.
  */
 const rechargeSchema = z.object({
@@ -150,7 +150,7 @@ const rechargeSchema = z.object({
  * Paying an invoice, or paying the line of credit down.
  *
  * **No amount.** What is owed is a fact the server already holds, and §5.3 is
- * explicit that the client never sends a price — an amount here would be a
+ * explicit that the client never sends a price - an amount here would be a
  * number a buyer could edit into an underpayment that still marked an invoice
  * settled. The invoice's own balance is the amount, every time.
  *
@@ -160,7 +160,7 @@ const rechargeSchema = z.object({
  * The card fields are **display only** and are not read by the payment path.
  * They exist because the gateway is a mock (`services/payment.js`) and a
  * payment form with nothing in it does not demonstrate anything. Nothing here
- * is stored — the repo holds no PAN anywhere, by design.
+ * is stored - the repo holds no PAN anywhere, by design.
  */
 const invoicePaymentSchema = z.object({
   useStoreCredit: z.boolean().optional().default(false),

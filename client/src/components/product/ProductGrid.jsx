@@ -6,7 +6,7 @@ import Button from '@/components/ui/Button';
 import useFilterStore from '@/store/filterStore';
 
 /**
- * The grid. 2 / 3 / 4 per row (brief §6) — the only thing on the shop page that
+ * The grid. 2 / 3 / 4 per row (brief §6) - the only thing on the shop page that
  * re-renders when a filter changes.
  *
  * While a refetch is in flight the previous results stay mounted under a veil
@@ -72,7 +72,7 @@ export function ProductGrid({ products = [], isLoading, isFetching, error }) {
     <div className="relative">
       {/* 2 up on phones, 3 through tablet, 4 only from xl. At lg the 264px
           sidebar reappears, so a fourth column there left each card under
-          200px — narrower than the same card gets on a phone. */}
+          200px - narrower than the same card gets on a phone. */}
       <div
         className={cn(
           'grid grid-cols-2 gap-3 transition-opacity duration-snap md:grid-cols-3 md:gap-4 xl:grid-cols-4',

@@ -13,15 +13,15 @@ import { ease, pressable } from '@/lib/motion';
  * Two presentations of the same list, because a long-form page has room for a
  * rail on a wide screen and none at all on a phone:
  *
- *   `variant="rail"`   — sticky in the left margin from `xl` up, with the
+ *   `variant="rail"` - sticky in the left margin from `xl` up, with the
  *                        current section marked. Hidden below that.
- *   `variant="inline"` — a collapsed disclosure above the body, for every width
+ *   `variant="inline"` - a collapsed disclosure above the body, for every width
  *                        narrower than the rail. Collapsed by default: a reader
  *                        who wants the map opens it, and one who does not is
  *                        not made to scroll past six links to reach paragraph
  *                        one.
  *
- * Renders nothing for an article with fewer than two headings — a contents list
+ * Renders nothing for an article with fewer than two headings - a contents list
  * of one entry is furniture, not navigation.
  */
 export function TableOfContents({ headings = [], activeId, variant = 'rail', className }) {

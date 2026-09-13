@@ -20,7 +20,7 @@ import { applyStockMovement } from './purchaseService.js';
  *
  *   - **Stock moves only through `applyStockMovement`.** Shipping a return takes
  *     parts off the shelf, and that decrement gets a `StockMovement` like every
- *     other — a quantity with no document behind it is one nobody can explain.
+ *     other - a quantity with no document behind it is one nobody can explain.
  *   - **The ladder is enforced, not trusted.** A return cannot be credited
  *     before it has been shipped, for the same reason a customer RMA cannot be
  *     resolved before the goods physically arrive.
@@ -29,7 +29,7 @@ import { applyStockMovement } from './purchaseService.js';
 /**
  * Forward-only, with one escape.
  *
- * `rejected` is reachable from every open rung — a supplier can refuse a claim
+ * `rejected` is reachable from every open rung - a supplier can refuse a claim
  * the moment they hear it, not only after the parts are in their warehouse.
  * `credited` is reachable only from `shipped`: crediting something still on our
  * own shelf is the mistake the ladder exists to prevent.
@@ -101,8 +101,8 @@ function shape(row, slaDays) {
     returnNumber: row.returnNumber,
     supplier: row.supplier?.name
       ? { id: row.supplier._id.toString(), name: row.supplier.name }
-      : { id: row.supplier?.toString() ?? null, name: row.supplierName ?? '—' },
-    supplierName: row.supplierName ?? row.supplier?.name ?? '—',
+      : { id: row.supplier?.toString() ?? null, name: row.supplierName ?? '-' },
+    supplierName: row.supplierName ?? row.supplier?.name ?? '-',
     purchaseOrder: row.purchaseOrder
       ? {
           id: (row.purchaseOrder._id ?? row.purchaseOrder).toString(),
@@ -128,7 +128,7 @@ function shape(row, slaDays) {
     supplierRmaNumber: row.supplierRmaNumber ?? null,
     expectedCredit: expected,
     creditAmount: row.creditAmount ?? 0,
-    // The gap between what was claimed and what was given — the figure that
+    // The gap between what was claimed and what was given - the figure that
     // makes a short-paid claim visible instead of quietly absorbed.
     creditShortfall: row.status === 'credited' ? expected - (row.creditAmount ?? 0) : 0,
     creditReference: row.creditReference ?? null,
@@ -188,7 +188,7 @@ async function listReturns({ q, status, supplier, from, to } = {}) {
 
   let shaped = rows.map((row) => shape(row, slaDays));
 
-  // `overdue` is a reading of age, so it cannot be a Mongo filter — applied
+  // `overdue` is a reading of age, so it cannot be a Mongo filter - applied
   // after shaping, on the same computation the Age column shows.
   if (status === 'overdue') shaped = shaped.filter((row) => row.overSla);
 
@@ -233,7 +233,7 @@ async function getReturn(id) {
  * Open a return against a supplier.
  *
  * Costs are snapshotted from the purchase order where one is named, and from
- * the product otherwise — a supplier credits what was paid, and reading a live
+ * the product otherwise - a supplier credits what was paid, and reading a live
  * cost later would change the expected credit every time they moved a price.
  */
 async function createReturn(body, createdBy) {
@@ -362,7 +362,7 @@ async function recordCredit(id, { amount, reference, note }, _actor) {
 
   if (row.status !== 'shipped') {
     throw ApiError.badRequest(
-      'A return is credited once it has been shipped back — nothing has left yet.',
+      'A return is credited once it has been shipped back - nothing has left yet.',
       'NOT_SHIPPED',
     );
   }
@@ -390,7 +390,7 @@ async function deleteReturn(id) {
   // deleting the row would leave that movement referring to nothing.
   if (row.items.some((item) => item.shippedAt)) {
     throw ApiError.badRequest(
-      `${row.returnNumber} has already shipped — it cannot be deleted without orphaning its stock movements.`,
+      `${row.returnNumber} has already shipped - it cannot be deleted without orphaning its stock movements.`,
       'ALREADY_SHIPPED',
     );
   }

@@ -6,7 +6,7 @@ import { MESSAGE_CHANNELS } from './MessageLog.js';
  *
  * Not on the §6b register, deliberately: templates are **fully functional on
  * email from day one**, because email works in this codebase. A template picked
- * on the SMS screen fills the textarea perfectly well — it is the *sending*
+ * on the SMS screen fills the textarea perfectly well - it is the *sending*
  * that waits on Twilio, not the text. So this is a real feature with one
  * channel's delivery pending, rather than a UI-only surface.
  *
@@ -18,7 +18,7 @@ import { MESSAGE_CHANNELS } from './MessageLog.js';
 const TEMPLATE_DOCUMENTS = ['none', 'order', 'invoice', 'quote', 'rma'];
 
 /**
- * Placeholders a body may contain. Substitution is literal and total — an
+ * Placeholders a body may contain. Substitution is literal and total - an
  * unknown token is left as written rather than replaced with an empty string,
  * so a typo shows up in the preview as `{{bussiness}}` instead of silently
  * sending a sentence with a hole in it.
@@ -50,7 +50,7 @@ const messageTemplateSchema = new mongoose.Schema(
 messageTemplateSchema.index({ channel: 1, isActive: 1 });
 
 /**
- * Fills a body against one account. Unknown tokens survive untouched — see the
+ * Fills a body against one account. Unknown tokens survive untouched - see the
  * note on TEMPLATE_TOKENS.
  */
 messageTemplateSchema.statics.render = function render(body, user) {

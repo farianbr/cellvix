@@ -124,7 +124,7 @@ function MapCard({ className }) {
           strokeWidth="1.4"
         />
 
-        {/* pin — the micro-interaction */}
+        {/* pin - the micro-interaction */}
         <g className="transition-transform duration-300 ease-[var(--ease-entrance)] group-hover:-translate-y-1.5">
           <path
             d="M216 74c-8.8 0-16 7-16 15.6 0 11.7 16 25.4 16 25.4s16-13.7 16-25.4C232 81 224.8 74 216 74z"
@@ -152,7 +152,7 @@ function MapCard({ className }) {
  * The product page links here carrying the SKU it was on, so a buyer asking
  * about a part does not have to go back and find the part number. Only the two
  * parameters below are honoured, and the message is composed here rather than
- * taken from the URL — a link that can type into a form somebody else submits
+ * taken from the URL - a link that can type into a form somebody else submits
  * is not a link worth accepting.
  */
 function usePrefill() {
@@ -169,7 +169,7 @@ function usePrefill() {
 
 /**
  * Contact Us (brief §9): functional-first, checkout-style fields, minimal
- * friction — laid out as the same slab stack the About page uses, so the two
+ * friction - laid out as the same slab stack the About page uses, so the two
  * editorial pages read as one site rather than as two templates.
  */
 export function ContactPage() {
@@ -187,7 +187,7 @@ export function ContactPage() {
     formState: { errors },
   } = useForm({
     resolver: zodResolver(contactSchema),
-    // Autofill from the account when there is one — same courtesy as checkout.
+    // Autofill from the account when there is one - same courtesy as checkout.
     values: {
       name: user?.contactName ?? '',
       business: user?.businessName ?? '',
@@ -235,12 +235,12 @@ export function ContactPage() {
           </h1>
 
           <p className="mx-auto mt-5 max-w-xl text-lg leading-relaxed text-ink-400">
-            Account questions, stock checks, warranty claims or a problem with an order — answered
+            Account questions, stock checks, warranty claims or a problem with an order - answered
             by a person who can see your account, within one business day.
           </p>
         </motion.div>
 
-        {/* On a phone these were three stacked 150px-tall blocks — a lot of
+        {/* On a phone these were three stacked 150px-tall blocks - a lot of
             page spent restating three contact details. Below `sm` each one is a
             compact row instead: the icon holds the left edge and the label,
             value and hint sit beside it. From `sm` the three-up grid takes
@@ -433,7 +433,7 @@ export function ContactPage() {
                 </span>
                 <h3 className="text-lg">Ordering, not asking?</h3>
                 <p className="mt-2 text-md leading-relaxed text-ink-500">
-                  Stock, grades and lead times are on every product page — no need to write in for a
+                  Stock, grades and lead times are on every product page - no need to write in for a
                   number the catalogue already shows.
                 </p>
                 <Link
@@ -506,7 +506,7 @@ export function ContactPage() {
             </address>
 
             <p className="mt-6 max-w-lg text-md leading-relaxed text-ink-400">
-              Everything in the catalogue ships from this building — Canadian stock, no customs step
+              Everything in the catalogue ships from this building - Canadian stock, no customs step
               between the order and the bench.
             </p>
           </Reveal>
@@ -522,7 +522,7 @@ export function ContactPage() {
         <SectionHeader
           id="faq-cta-heading"
           title="Already answered?"
-          lede="Approval, credit terms, grading and warranty are covered in the help centre — most questions the desk gets are already there."
+          lede="Approval, credit terms, grading and warranty are covered in the help centre - most questions the desk gets are already there."
           centered
         />
 

@@ -5,12 +5,12 @@ import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
 
 /**
- * Security Log (§6.15, category 6) — sign-ins, failures, lockouts, and the
+ * Security Log (§6.15, category 6) - sign-ins, failures, lockouts, and the
  * account changes that decide who can sign in at all.
  *
  * **Admin-only, and the banner says so** (§6.15). These rows name accounts and
  * addresses that failed to authenticate, which is precisely the material that
- * helps somebody who is guessing at them — so this is not a screen a
+ * helps somebody who is guessing at them - so this is not a screen a
  * `settings: view` role should reach. The server refuses it regardless; the
  * banner is there so an administrator knows the audience is narrow before they
  * screen-share it.
@@ -34,7 +34,7 @@ export function AdminSecurityLogPage() {
           />
           <span>
             <strong className="font-semibold">Administrators only.</strong> These entries name
-            accounts and addresses that failed to sign in. Treat them as sensitive — they are useful
+            accounts and addresses that failed to sign in. Treat them as sensitive - they are useful
             to somebody guessing at credentials.
           </span>
         </p>

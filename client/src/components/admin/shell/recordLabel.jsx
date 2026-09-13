@@ -5,7 +5,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
  * `⌂ > Sales > Orders > CVX-2026-00042` rather than `… > Order` (§4b.6).
  *
  * The shell renders one `Breadcrumbs` for every screen, so the label cannot be
- * passed down as a prop — the detail page is a sibling of the trail, not a
+ * passed down as a prop - the detail page is a sibling of the trail, not a
  * parent. A one-value context is the smallest thing that lets the page tell the
  * shell what it is looking at.
  *

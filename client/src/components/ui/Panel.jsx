@@ -16,7 +16,7 @@ export function Panel({
    * A lucide glyph beside the title, in flat brand.
    *
    * A stack of panels whose headings are all the same weight of ink gives the
-   * eye no way to find one section again — the operator re-reads every heading
+   * eye no way to find one section again - the operator re-reads every heading
    * on every visit. The glyph is the thing they actually navigate by, and it is
    * the panel's only colour, so it locates the section without turning the
    * header into a second focus of attention.
@@ -27,7 +27,7 @@ export function Panel({
    */
   icon: Icon,
   /**
-   * A qualifier beside the title, in a smaller, quieter type — the period a
+   * A qualifier beside the title, in a smaller, quieter type - the period a
    * panel's figures cover, most often. It sits on the title's line rather than
    * in `description` because it narrows the heading itself; in the description
    * it read as a second sentence competing with what that line is for.
@@ -81,13 +81,13 @@ export function Panel({
  *
  * **Why this and not `Accordion`.** `Accordion` is the FAQ's disclosure list:
  * numbered pills, marketing type scale, answers rendered through `RichText`,
- * and one-open-at-a-time. A dashboard section is none of those — it holds live
+ * and one-open-at-a-time. A dashboard section is none of those - it holds live
  * components, sits at ERP density, and several of them are usefully open at
  * once. Forcing the two together would have meant an `Accordion` with half its
  * behaviour switched off at every dashboard call site.
  *
  * What it keeps from `Panel` is the shell, so a collapsible section and a plain
- * one are visibly the same object — the only additions are a chevron, a hit
+ * one are visibly the same object - the only additions are a chevron, a hit
  * area over the whole header, and the summary slot.
  *
  * `summary` is the point of the pattern: a closed section still has to answer
@@ -99,7 +99,7 @@ export function Panel({
  * Accessibility: the header is a real `<button>` carrying `aria-expanded` and
  * `aria-controls`, and a closed body is removed from the tree rather than
  * hidden with CSS, so a screen reader and Ctrl-F agree about what is on the
- * page. `action` renders outside that button — a control inside the toggle
+ * page. `action` renders outside that button - a control inside the toggle
  * would be a button nested in a button.
  */
 export function CollapsiblePanel({
@@ -170,7 +170,7 @@ export function CollapsiblePanel({
         </h2>
 
         {/* The closed section's answer. Hidden once the body is open, where the
-            real figures are — two copies of the same number, one of them
+            real figures are - two copies of the same number, one of them
             abbreviated, is where they start to disagree. */}
         {summary && !open && (
           <div className="shrink-0 text-sm text-ink-500">{summary}</div>
@@ -209,7 +209,7 @@ export function CollapsiblePanel({
   );
 }
 
-/** A single figure with a label — the dashboard's top row. */
+/** A single figure with a label - the dashboard's top row. */
 export function StatTile({ label, value, hint, tone = 'neutral', icon: Icon, className }) {
   const tones = {
     neutral: 'text-ink-900',
@@ -238,7 +238,7 @@ export function StatTile({ label, value, hint, tone = 'neutral', icon: Icon, cla
   );
 }
 
-/** Empty state used inside panels — quieter than the page-level one. */
+/** Empty state used inside panels - quieter than the page-level one. */
 export function PanelEmpty({ icon: Icon, title, body, action }) {
   return (
     <div className="flex flex-col items-center gap-3 py-10 text-center">

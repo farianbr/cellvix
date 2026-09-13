@@ -15,7 +15,7 @@ import { useSupplierSession, useSupplierPortalMutations } from '@/hooks/useSuppl
  *
  * **Read-only except the password.** A supplier's name, contact, terms and
  * component-type tags are what the purchasing team recorded and what the
- * supplier picker filters on — letting a supplier retag themselves would let
+ * supplier picker filters on - letting a supplier retag themselves would let
  * them into quoting rounds nobody asked them to. Changing any of it is a
  * conversation with the desk, and the page says so rather than offering a form
  * that would be refused.
@@ -76,7 +76,7 @@ export function SupplierProfilePage() {
               <div key={label} className="flex items-baseline justify-between gap-3">
                 <dt className="shrink-0 text-ink-500">{label}</dt>
                 <dd className="min-w-0 truncate text-right font-medium text-ink-900">
-                  {value || <span className="font-normal text-ink-300">—</span>}
+                  {value || <span className="font-normal text-ink-300">-</span>}
                 </dd>
               </div>
             ))}

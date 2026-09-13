@@ -106,7 +106,7 @@ export function HeaderDesktop() {
           <img
             src="/brand/logo.png"
             srcSet="/brand/logo.png 1x, /brand/logo@2x.png 2x"
-            alt={`${BUSINESS_INFO.name} — ${BUSINESS_INFO.tagline}`}
+            alt={`${BUSINESS_INFO.name} - ${BUSINESS_INFO.tagline}`}
             width="1000"
             height="254"
             className="h-9 w-auto"
@@ -178,7 +178,7 @@ export function HeaderDesktop() {
             <span className="text-left leading-tight">
               <span className="eyebrow block text-ink-300">Cart</span>
               <span className="tnum block font-display text-sm font-semibold text-ink-900">
-                {subtotal === null ? '—' : money(subtotal)}
+                {subtotal === null ? '-' : money(subtotal)}
               </span>
             </span>
           </button>

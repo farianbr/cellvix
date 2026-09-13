@@ -12,7 +12,7 @@ import { SUPPLIER_COOKIE, clearSupplierSession } from '../services/supplierPorta
  * The mirror of `middleware/auth.js`, reading a **different cookie into a
  * different collection**. That separation is the whole security argument for
  * keeping supplier logins on `Supplier` rather than adding a `User.role`: a
- * token minted for a supplier cannot satisfy `requireAuth` — not because every
+ * token minted for a supplier cannot satisfy `requireAuth` - not because every
  * buyer and admin route was audited, but because `authenticate` reads
  * `env.COOKIE_NAME` and resolves the subject in `User`, where no supplier
  * exists. The guarantee is structural, so it cannot be lost by somebody adding
@@ -21,7 +21,7 @@ import { SUPPLIER_COOKIE, clearSupplierSession } from '../services/supplierPorta
  * `kind: 'supplier'` is checked on the payload as well as the collection. Both
  * cookies are signed with the same `JWT_SECRET`, so without it a buyer's token
  * pasted into the supplier cookie would resolve here to whatever `Supplier`
- * document happened to share that id — vanishingly unlikely, and still not a
+ * document happened to share that id - vanishingly unlikely, and still not a
  * thing to leave to chance.
  */
 async function authenticateSupplier(req, res, next) {
@@ -37,12 +37,12 @@ async function authenticateSupplier(req, res, next) {
     }
 
     // `db()`, not the raw model: `Supplier` is per-business, so the imported
-    // model is bound to the default connection — the control database — where
+    // model is bound to the default connection - the control database - where
     // no supplier exists. Reading it there mints a session at sign-in and then
     // fails to resolve it on every request after.
     const supplier = await db().Supplier.findById(payload.sub);
     // A supplier that was deactivated keeps a valid signature until it expires,
-    // so activity is re-checked here rather than only at sign-in — otherwise
+    // so activity is re-checked here rather than only at sign-in - otherwise
     // ending a supplier relationship leaves them reading requests for quote for
     // up to thirty days.
     if (supplier?.isActive) {

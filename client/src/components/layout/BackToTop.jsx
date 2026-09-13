@@ -3,7 +3,7 @@ import { ArrowUp } from 'lucide-react';
 import useScrollProgress from '@/hooks/useScrollProgress';
 import { ease } from '@/lib/motion';
 
-/** Roughly a screen and a half down — before that, the header is a short flick away. */
+/** Roughly a screen and a half down - before that, the header is a short flick away. */
 const REVEAL_AT = 480;
 
 const RADIUS = 21;
@@ -31,7 +31,7 @@ export function BackToTop() {
         <motion.button
           type="button"
           onClick={toTop}
-          aria-label={`Back to top — ${Math.round(progress * 100)}% of the page read`}
+          aria-label={`Back to top - ${Math.round(progress * 100)}% of the page read`}
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}

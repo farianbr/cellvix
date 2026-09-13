@@ -18,7 +18,7 @@ import { ease, pressable } from '@/lib/motion';
  * Left column: model matches, popular part-type suggestions, matching pages.
  * Right column: live product results. Footer: "View all N items".
  *
- * Picking a model on the left writes into the shared filter store — it filters
+ * Picking a model on the left writes into the shared filter store - it filters
  * the grid rather than navigating.
  */
 export function LiveSearch({
@@ -36,7 +36,7 @@ export function LiveSearch({
   const inputRef = useRef(null);
 
   // LiveSearch renders in three places (desktop header, mobile header, mobile
-  // drawer), so the ids have to be per-instance — a fixed id would duplicate.
+  // drawer), so the ids have to be per-instance - a fixed id would duplicate.
   const inputId = useId();
   const panelId = `${inputId}-results`;
 
@@ -52,7 +52,7 @@ export function LiveSearch({
 
   // The mobile bottom bar's search button bumps a token in the ui store rather
   // than opening a second search field: this bar is inside the sticky header, so
-  // it is already on screen — it just does not have the cursor.
+  // it is already on screen - it just does not have the cursor.
   useEffect(() => {
     if (!focusToken) return;
     inputRef.current?.focus();
@@ -132,7 +132,7 @@ export function LiveSearch({
             className={cn(
               // 16px on a phone, 14 from sm up. Mobile Safari zooms the whole
               // page in when a focused input's text is under 16px, and it does
-              // not zoom back out — the sticky header ends up wider than the
+              // not zoom back out - the sticky header ends up wider than the
               // viewport and the layout is stuck skewed until a reload.
               'h-11 w-full rounded-md border border-line bg-surface-2 pl-11 pr-10 text-lg text-ink-900 sm:text-md',
               'placeholder:text-ink-300',
@@ -179,7 +179,7 @@ export function LiveSearch({
             <div className="grid max-h-[70vh] grid-cols-1 overflow-hidden md:grid-cols-[minmax(190px,214px)_1fr]">
               {/* ---- left: facets --------------------------------------
                   On a phone this is the entire panel. Product rows carry a
-                  price, and prices are gated per account — a stack of them
+                  price, and prices are gated per account - a stack of them
                   under the keyboard is the wrong thing to spend a small screen
                   on. Models and part types narrow the grid in one tap; the
                   footer button goes to the full result set. */}
@@ -276,7 +276,7 @@ export function LiveSearch({
                           </span>
 
                           <span className="min-w-0 flex-1">
-                            {/* Wrap rather than truncate — "Galaxy S23 Back …"
+                            {/* Wrap rather than truncate - "Galaxy S23 Back …"
                                 tells a buyer nothing about which part it is. */}
                             <span className="line-clamp-2 text-md font-medium leading-snug text-ink-900">
                               {product.name}
@@ -288,7 +288,7 @@ export function LiveSearch({
 
                           <span className="w-[92px] shrink-0 text-right">
                             <span className="tnum block font-display text-md font-bold text-ink-900">
-                              {product.priceVisible ? money(product.price) : '—'}
+                              {product.priceVisible ? money(product.price) : '-'}
                             </span>
                             <span
                               className={cn(

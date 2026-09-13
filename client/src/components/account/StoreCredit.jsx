@@ -10,14 +10,14 @@ import { useAccountMutations } from '@/hooks/useAccount';
 import { pressable } from '@/lib/motion';
 
 /**
- * Store credit — money the account already holds with Cellvix.
+ * Store credit - money the account already holds with Cellvix.
  *
  * Lives here rather than on the credit page because two pages show it: the
  * credit page, where it sits beside the line of credit, and payment methods,
  * where it is a way to pay like a card is. One implementation, so a top-up
  * cannot behave differently depending on which page it was made from.
  *
- * Never confuse this with the line of credit — see PROJECT_INSTRUCTIONS.md and
+ * Never confuse this with the line of credit - see PROJECT_INSTRUCTIONS.md and
  * services/storeCreditService.js on the server.
  */
 

@@ -18,14 +18,14 @@ import SelectMenu from '@/components/ui/SelectMenu';
 /**
  * Message Templates (§6.15 category 5, phase 11e).
  *
- * The model and its CRUD landed in phase 9 — this is the screen that was
+ * The model and its CRUD landed in phase 9 - this is the screen that was
  * missing. Templates are **fully functional on email from day one**: a template
  * picked on the SMS screen fills the textarea perfectly well, and it is the
  * *sending* that waits on Twilio, not the text. So this is not on the §6b
  * register.
  *
  * **Call templates are a script for staff to read**, not a message anybody
- * sends — §6.15 keeps that and so does this, because it is the reason the Calls
+ * sends - §6.15 keeps that and so does this, because it is the reason the Calls
  * screen logs rather than dials.
  */
 const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/settings/templates'], icon: adminIcon('MessageSquare') };
@@ -234,12 +234,12 @@ export function AdminTemplatesPage() {
         }
       />
 
-      {/* Channel tabs with a count each, as §6.15 specifies — the count is what
+      {/* Channel tabs with a count each, as §6.15 specifies - the count is what
           makes an empty channel visible without opening it. */}
       {/* The measure wraps the tabs and the notice as well as the list.
 
           They sat outside the capped container, so the channel tabs and a
-          full-bleed warning ran to 1400px above a panel that stopped at 760 —
+          full-bleed warning ran to 1400px above a panel that stopped at 760
           the page disagreed with itself about where its own edge was. */}
       <div className="max-w-form">
       <nav aria-label="Channels" className="mb-4 -mx-3 flex gap-1 overflow-x-auto px-3 pb-1 sm:mx-0 sm:px-0">
@@ -278,7 +278,7 @@ export function AdminTemplatesPage() {
           whether the text is going anywhere. */}
       {status && !status.delivers && channel !== 'call' && (
         <p className="mb-4 rounded-lg border border-warn/25 bg-warn-50 px-3.5 py-3 text-sm leading-relaxed text-ink-700">
-          Templates on this channel are saved and can be picked when composing — {status.reason}
+          Templates on this channel are saved and can be picked when composing - {status.reason}
         </p>
       )}
 

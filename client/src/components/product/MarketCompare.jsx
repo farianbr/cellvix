@@ -9,7 +9,7 @@ import { pressable } from '@/lib/motion';
  *
  * Every number here is computed server-side (productService.marketPosition) and
  * arrives on `product.market`. Nothing in this file subtracts one price from
- * another — the saving on the card and the saving in the breakdown are the same
+ * another - the saving on the card and the saving in the breakdown are the same
  * integer, so they cannot disagree by a rounding step.
  *
  * `market` is null whenever there is nothing honest to claim: no benchmarks, or
@@ -17,8 +17,8 @@ import { pressable } from '@/lib/motion';
  * the price gate, so a buyer who cannot see our price cannot see the market's.
  *
  * Two shapes, one source:
- *   variant="card" — one line, collapsed, opens a breakdown in place.
- *   variant="detail" — the same breakdown, already open.
+ *   variant="card" - one line, collapsed, opens a breakdown in place.
+ *   variant="detail" - the same breakdown, already open.
  */
 export function MarketCompare({ market, price, variant = 'card', className }) {
   const [open, setOpen] = useState(false);
@@ -28,7 +28,7 @@ export function MarketCompare({ market, price, variant = 'card', className }) {
 
   const { competitors, average, savings, savingsPercent, isLowest } = market;
 
-  // The rows, ours included and cheapest first — a comparison table that does
+  // The rows, ours included and cheapest first - a comparison table that does
   // not rank is just a list, and the reader has to do the ordering themselves.
   const rows = [
     { name: 'Cellvix', price, isUs: true },
@@ -79,7 +79,7 @@ export function MarketCompare({ market, price, variant = 'card', className }) {
   //
   // The breakdown opens as a layer over the card's own body rather than in
   // flow. Expanding it in flow stretched the grid row and shoved the price and
-  // Add button of every other card on that row downwards — reading one card's
+  // Add button of every other card on that row downwards - reading one card's
   // comparison should not move three cards the reader was not touching.
   //
   // It hangs UPWARD from the trigger (`bottom-full`) because the card clips its
@@ -89,11 +89,11 @@ export function MarketCompare({ market, price, variant = 'card', className }) {
     <div className={cn('relative', className)}>
       {/* A bordered button rather than a text row: the saving now lives beside
           the price as a badge, so this control's only job is to open the
-          comparison — and a control that opens something should look like one.
+          comparison - and a control that opens something should look like one.
 
           It names the count in full at EVERY width. "Compare 4" used to be the
           narrow form, on the theory that the number is the half that carries
-          the information — but a bare count next to a chart glyph does not say
+          the information - but a bare count next to a chart glyph does not say
           what is being counted, and the phone grid is the surface most buyers
           are on. The word wraps to a second line on a very narrow card rather
           than being cut, which costs a few pixels of height and keeps the

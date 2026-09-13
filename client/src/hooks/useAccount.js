@@ -46,7 +46,7 @@ export function useInvoices() {
 /**
  * The store-credit statement: balance plus the movements behind it.
  *
- * Separate query from the account summary, which carries only the balance — the
+ * Separate query from the account summary, which carries only the balance - the
  * statement is a page, the balance is a number several pages want.
  */
 export function useStoreCredit() {
@@ -60,7 +60,7 @@ export function useStoreCredit() {
 }
 
 /**
- * Line-of-credit movements — the draws and repayments behind the balance.
+ * Line-of-credit movements - the draws and repayments behind the balance.
  * Separate from useStoreCredit: two instruments, two statements.
  */
 export function useCreditActivity() {
@@ -74,7 +74,7 @@ export function useCreditActivity() {
 }
 
 /**
- * The account's own history — orders, invoices, payments and credit movements
+ * The account's own history - orders, invoices, payments and credit movements
  * merged into one feed. The same feed the account rep sees on the admin side.
  */
 export function useAccountActivity() {
@@ -164,7 +164,7 @@ function afterMoneyMoved(queryClient) {
  * Account mutations.
  *
  * Every one of these returns the updated user, so they all write straight into
- * the auth cache — the header, checkout autofill and address list stay in step
+ * the auth cache - the header, checkout autofill and address list stay in step
  * without a refetch round-trip.
  */
 export function useAccountMutations() {

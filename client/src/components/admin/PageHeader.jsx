@@ -4,7 +4,7 @@ import cn from '@/lib/cn';
  * Every admin screen opens the same way (§4, convention 6): icon + H1 +
  * one-line description on the left, primary action top-right.
  *
- * The icon tile is the flat `brand-50` tint, **not** the gradient — the
+ * The icon tile is the flat `brand-50` tint, **not** the gradient - the
  * gradient is a signature reserved for primary CTAs and one hero block a page
  * (§2b), and a page header is neither. A grey glyph on a grey tile was the
  * single biggest reason the panel read as unbranded: it is the first mark on

@@ -5,7 +5,7 @@ import { featureEnabled, featureForNav } from '@shared/schemas/features';
  * Client-side permission reads (ERP rework §7.6).
  *
  * **This is a courtesy, never the control.** Every one of these answers shapes
- * the UI — a hidden nav group, a disabled button — and none of them protects
+ * the UI - a hidden nav group, a disabled button - and none of them protects
  * anything. `requirePermission` on the server decides for real on every
  * request, so a viewer who edits this in their console gets a screen full of
  * 403s rather than access.
@@ -15,7 +15,7 @@ import { featureEnabled, featureForNav } from '@shared/schemas/features';
  * Does this session clear `level` on `area`?
  *
  * A missing map answers **no**: an admin arrives with every area at full, and
- * a staff member with no role has no map at all — which is exactly the account
+ * a staff member with no role has no map at all - which is exactly the account
  * that should be seeing nothing.
  */
 export function can(permissions, area, level = 'view') {
@@ -32,11 +32,11 @@ export function canEdit(permissions, area) {
 /**
  * Filters the sidebar tree to what this session may see.
  *
- * A group with no reachable area is dropped whole rather than rendered empty —
+ * A group with no reachable area is dropped whole rather than rendered empty
  * an expandable section that opens onto nothing reads as a bug.
  *
  * **The dashboard is never filtered.** `home` is a nav area, not a permission
- * area — it is deliberately absent from `PERMISSION_AREAS`, because the
+ * area - it is deliberately absent from `PERMISSION_AREAS`, because the
  * dashboard is the panel's front door and every staff account lands on it.
  * Treating it as a permission would have `can()` look up a key no role map ever
  * carries, answer "no" under the closed-by-default rule, and hide Home from
@@ -52,7 +52,7 @@ const UNFILTERED_AREAS = new Set(['home']);
  * **Two independent filters, and they answer different questions.**
  * `permissions` is what this ACCOUNT may do; `features` is what this BUSINESS
  * has at all (SAAS_PLATFORM §4.4). A row survives only if both say yes, and
- * neither is the control — `requirePermission` and `requireFeature` decide for
+ * neither is the control - `requirePermission` and `requireFeature` decide for
  * real on every request.
  *
  * `hidden` on a nav row is the older form of the same idea and still works: the
@@ -62,7 +62,7 @@ const UNFILTERED_AREAS = new Set(['home']);
  * names it.
  *
  * **`features` being absent means everything is on.** A buyer's client never
- * receives a set, and a staff client renders once before `/auth/me` resolves —
+ * receives a set, and a staff client renders once before `/auth/me` resolves
  * defaulting to "off" would blank the sidebar on every first paint and look
  * exactly like a permissions bug.
  *
@@ -87,7 +87,7 @@ export function visibleNav(nav, permissions, features = null) {
       group.children ? { ...group, children: group.children.filter(allowed) } : group,
     )
     // A group whose every child was switched off is dropped whole rather than
-    // rendered empty — an expandable section that opens onto nothing reads as a
+    // rendered empty - an expandable section that opens onto nothing reads as a
     // bug, which is the same reasoning the permission filter above follows.
     .filter((group) => !group.children || group.children.length > 0);
 }

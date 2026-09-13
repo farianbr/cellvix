@@ -20,7 +20,7 @@ import storeCreditService from './storeCreditService.js';
  *
  * **1. Earned on payment, never on order.** An unpaid invoice has earned nobody
  * anything. The trigger is `recordPayment`, and the basis is the payment
- * amount, not the invoice total — an instalment earns on the instalment.
+ * amount, not the invoice total - an instalment earns on the instalment.
  *
  * **2. The rate is snapshotted, never looked up.** Each accrual stores the
  * percent in force when it was earned, exactly as an order line snapshots
@@ -32,8 +32,8 @@ import storeCreditService from './storeCreditService.js';
  * deliberate rather than accidental.
  *
  * **4. Accrual is idempotent.** Commission is keyed on the invoice number plus
- * the index of the payment row within it, so replaying a payment — a retry, a
- * double-submit — cannot pay twice.
+ * the index of the payment row within it, so replaying a payment - a retry, a
+ * double-submit - cannot pay twice.
  *
  * **5. Money that comes back takes its commission with it.** A refund or a void
  * writes an offsetting entry. Commission on money that was returned is money
@@ -58,7 +58,7 @@ const SUFFIX_LENGTH = 3;
  * without checking, which a random string never manages. `CLV` marks it as ours
  * on somebody else's screen.
  *
- * The random tail is what actually makes it unique — the initials are not a
+ * The random tail is what actually makes it unique - the initials are not a
  * key, and two Jordan Smiths must not collide. Three characters of the alphabet
  * above is 29,791 codes per name pair, and `ensureReferralCode` retries on the
  * collisions that remain.
@@ -74,7 +74,7 @@ function letterPair(source, fallback) {
     .toUpperCase()
     .replace(/[^A-Z]/g, '');
   // Padded rather than skipped, so the shape is fixed at 10 characters however
-  // short the name is — a one-letter name still produces a readable code.
+  // short the name is - a one-letter name still produces a readable code.
   return (letters + fallback).slice(0, 2);
 }
 
@@ -116,7 +116,7 @@ function buildCode(user) {
  * rather than signup: a pending business might never be approved, and a code
  * that can refer people before its own account is trusted is worth abusing.
  *
- * Retries on collision rather than trusting randomness — a unique index that
+ * Retries on collision rather than trusting randomness - a unique index that
  * throws in production is not a plan.
  */
 async function ensureReferralCode(user) {
@@ -133,7 +133,7 @@ async function ensureReferralCode(user) {
   }
 
   // The initials are fixed per account, so the retry only ever re-rolls the
-  // three-character tail — 31^3 rather than the 31^8 the old fully random code
+  // three-character tail - 31^3 rather than the 31^8 the old fully random code
   // had. Eight attempts rather than five for that reason. Exhausting them means
   // thousands of accounts share one name pair, which is a data problem worth
   // failing loudly over rather than minting a duplicate.
@@ -143,7 +143,7 @@ async function ensureReferralCode(user) {
 /**
  * Resolves a referral code typed at registration into the referrer it names.
  *
- * Returns `null` for an absent code — referral is optional and a blank field
+ * Returns `null` for an absent code - referral is optional and a blank field
  * must never block a signup. An *unrecognised* code is refused rather than
  * ignored: somebody typing a code believes it will be honoured, and silently
  * dropping it costs a real referrer real money.
@@ -207,7 +207,7 @@ async function setPercent(percent) {
  *
  * Called after a payment row is appended. `paymentIndex` is the row's position
  * in `invoice.payments`, which together with the invoice number uniquely
- * identifies the instalment — an invoice paid in three parts earns three times,
+ * identifies the instalment - an invoice paid in three parts earns three times,
  * and each one has to be separately reversible.
  *
  * **Never throws into the caller.** Recording a payment is the operator's
@@ -220,7 +220,7 @@ async function accrueForPayment(invoice, paymentIndex) {
     const payment = invoice.payments?.[paymentIndex];
     if (!payment) return null;
 
-    // A void is forgiveness, not money — it must not earn anybody a commission.
+    // A void is forgiveness, not money - it must not earn anybody a commission.
     if (payment.method === 'void') return null;
     if (!(payment.amount > 0)) return null;
 
@@ -248,7 +248,7 @@ async function accrueForPayment(invoice, paymentIndex) {
     if (!(percent > 0)) return null;
 
     // Integer cents throughout. Rounded once, here, and the rounded figure is
-    // what the ledger stores — so a reversal subtracts exactly what was added
+    // what the ledger stores - so a reversal subtracts exactly what was added
     // rather than recomputing and drifting by a cent.
     const amount = Math.round((payment.amount * percent) / 100);
     if (amount <= 0) return null;
@@ -271,7 +271,7 @@ async function accrueForPayment(invoice, paymentIndex) {
   } catch (error) {
     // A commission that failed to post is a business problem to investigate,
     // never a reason to fail the payment that triggered it.
-    console.error(`  Referral: accrual for ${invoice?.number} failed — ${error.message}`);
+    console.error(`  Referral: accrual for ${invoice?.number} failed - ${error.message}`);
     return null;
   }
 }
@@ -310,7 +310,7 @@ async function reverseForInvoice(invoiceNumber, paymentIndex = null) {
       await storeCreditService.creditReferral({
         referrerId: accrual.user,
         amount: -accrual.amount,
-        note: `Referral commission reversed — ${invoiceNumber}`,
+        note: `Referral commission reversed - ${invoiceNumber}`,
         referral: {
           from: accrual.referral?.from,
           fromName: accrual.referral?.fromName,
@@ -327,7 +327,7 @@ async function reverseForInvoice(invoiceNumber, paymentIndex = null) {
 
     return { reversed };
   } catch (error) {
-    console.error(`  Referral: reversal for ${invoiceNumber} failed — ${error.message}`);
+    console.error(`  Referral: reversal for ${invoiceNumber} failed - ${error.message}`);
     return { reversed: 0 };
   }
 }
@@ -338,7 +338,7 @@ async function reverseForInvoice(invoiceNumber, paymentIndex = null) {
  * An order's refund is matched to its invoice, then handled exactly like a
  * void: the commission that money earned goes back with it.
  *
- * `Invoice` carries no order number — it references the order by id — so the
+ * `Invoice` carries no order number - it references the order by id - so the
  * caller passes the order's `_id`.
  */
 async function reverseForOrder(orderId) {
@@ -368,7 +368,7 @@ async function listReferrals({ search, from, to } = {}) {
     .lean();
   const byId = new Map(referrers.map((row) => [String(row._id), row]));
 
-  // Every referral movement in one read, then grouped in memory — the ledger is
+  // Every referral movement in one read, then grouped in memory - the ledger is
   // small next to the orders collection and this keeps the period filter and
   // the pairing arithmetic in one place.
   const ledgerFilter = { type: 'referral' };
@@ -405,7 +405,7 @@ async function listReferrals({ search, from, to } = {}) {
     } else {
       current.reversed += row.amount;
       // A reversed accrual is no longer a payment that earned anything, so it
-      // stops being counted — otherwise a fully clawed-back pairing still reads
+      // stops being counted - otherwise a fully clawed-back pairing still reads
       // as though it had paid out.
       current.payments = Math.max(current.payments - 1, 0);
     }
@@ -436,13 +436,13 @@ async function listReferrals({ search, from, to } = {}) {
         contactName: account.contactName,
         email: account.email,
         // A pending referral has earned nothing yet and cannot until it is
-        // approved and starts paying invoices — the screen shows it so the
+        // approved and starts paying invoices - the screen shows it so the
         // operator can see the pipeline, not only the payouts.
         status: account.status,
       },
       joinedAt: account.createdAt,
       paymentsCounted: stat.payments,
-      // Net of reversals — the column shows what this pairing has actually kept.
+      // Net of reversals - the column shows what this pairing has actually kept.
       commissionEarned: stat.earned,
       // Gross, so the screen can say a reversal happened rather than leaving it
       // to be inferred from a net that merely moved.
@@ -464,14 +464,14 @@ async function listReferrals({ search, from, to } = {}) {
 
   const totals = {
     // "Active" means a referrer with at least one referral that has earned
-    // something — a code handed out and never used is not an active referrer.
+    // something - a code handed out and never used is not an active referrer.
     activeReferrers: new Set(
       rows.filter((row) => row.paymentsCounted > 0).map((row) => row.referrer.id),
     ).size,
     referredAccounts: rows.length,
     // Summed from the gross figures, not from each row's net. Netting first
     // would report zero reversals for a pairing that accrued $100 and had all
-    // $100 clawed back — the two cancel, and "nothing was reversed" is exactly
+    // $100 clawed back - the two cancel, and "nothing was reversed" is exactly
     // the wrong thing to say about that.
     creditIssued: rows.reduce((sum, row) => sum + row.commissionAccrued, 0),
     creditReversed: rows.reduce((sum, row) => sum + row.commissionReversed, 0),
@@ -486,7 +486,7 @@ async function listReferrals({ search, from, to } = {}) {
 }
 
 /**
- * One referrer's own standing — the buyer-facing view of §6.13.
+ * One referrer's own standing - the buyer-facing view of §6.13.
  *
  * Separate from `listReferrals` rather than a filter over it: that function
  * walks every referred account in the system to build the admin table, and
@@ -495,7 +495,7 @@ async function listReferrals({ search, from, to } = {}) {
  *
  * What it deliberately does **not** return is anything about the referred
  * accounts' money. A referrer is shown who joined, whether that account is
- * active yet, and what they themselves earned — never what the referred
+ * active yet, and what they themselves earned - never what the referred
  * business spent. That is somebody else's trading history and no part of the
  * commission arrangement.
  *

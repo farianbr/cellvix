@@ -24,7 +24,7 @@ async function sendInvoiceEmail({ invoice, order, user }) {
       text,
     });
   } catch (error) {
-    console.error(`  Mail: invoice ${invoice?.number} could not be built — ${error.message}`);
+    console.error(`  Mail: invoice ${invoice?.number} could not be built - ${error.message}`);
     return { delivered: false, via: null, error: error.message };
   }
 }

@@ -42,7 +42,7 @@ const userSchema = new mongoose.Schema(
      * not open an account at all, and every screen greeted a person by their
      * paperwork.
      *
-     * Nothing reads `businessName` directly for display any more — use
+     * Nothing reads `businessName` directly for display any more - use
      * `displayName` below, which falls back to the person and then to the email
      * so a heading can never render blank.
      */
@@ -63,7 +63,7 @@ const userSchema = new mongoose.Schema(
     //
     // The brief's "one login per business, no team roles" governs BUYERS: a
     // customer company has exactly one login, and that has not changed. 'staff'
-    // is a Cellvix-side employee (ERP rework §7.6) — our people, never a
+    // is a Cellvix-side employee (ERP rework §7.6) - our people, never a
     // buyer's colleague. The two populations never mix.
     role: { type: String, enum: ['buyer', 'staff', 'admin'], default: 'buyer' },
 
@@ -72,14 +72,14 @@ const userSchema = new mongoose.Schema(
     // and a buyer never reaches it.
     //
     // A staff account with no staffRole has NO admin access at all. Access is
-    // granted, never inherited — an unassigned employee is a locked door.
+    // granted, never inherited - an unassigned employee is a locked door.
     staffRole: { type: mongoose.Schema.Types.ObjectId, ref: 'Role', default: null },
 
     /**
      * Which of OUR businesses this staff account works in (§6.14).
      *
      * **Not to be confused with `businessName` / `businessType` above**, which
-     * describe the CUSTOMER's own company — a buyer's shop, its industry. This
+     * describe the CUSTOMER's own company - a buyer's shop, its industry. This
      * references a `Business` document, meaning one of the businesses the
      * tenant operates, and it is what scopes a staff member's view.
      */
@@ -94,20 +94,20 @@ const userSchema = new mongoose.Schema(
      * that belongs to a business lives with the business.** That one rule
      * decides which database holds a `User`:
      *
-     * - `admin` — the person who runs the *account*. Lives in the control
+     * - `admin` - the person who runs the *account*. Lives in the control
      *   plane, carries `tenant`, and reaches every business that tenant owns
      *   through the header switcher. One login, N businesses.
-     * - `staff` — hired by one shop to work in one shop. Lives in that
+     * - `staff` - hired by one shop to work in one shop. Lives in that
      *   business's own database and carries `business`. A staff member of one
      *   business is invisible to another, which is the isolation the split
      *   exists for.
-     * - `buyer` — a customer of one business. Lives in that business's
+     * - `buyer` - a customer of one business. Lives in that business's
      *   database. Somebody buying from two businesses genuinely is two
      *   relationships and therefore two accounts.
      *
      * The first version of the split put admins in the business database too,
      * which meant a tenant running two shops needed two admin logins and could
-     * not switch between them — the switcher was there and could not work,
+     * not switch between them - the switcher was there and could not work,
      * because the account on the other side did not exist.
      */
     tenant: { type: mongoose.Schema.Types.ObjectId, ref: 'Tenant', default: null, index: true },
@@ -126,7 +126,7 @@ const userSchema = new mongoose.Schema(
     // All money in integer cents.
     //
     // Two different things, deliberately named apart: creditLimit/balance are
-    // the LINE OF CREDIT — what Cellvix lends this business and what it
+    // the LINE OF CREDIT - what Cellvix lends this business and what it
     // currently owes. storeCredit is money the business already holds with us
     // (refunds, top-ups, admin allocations). See models/CreditTransaction.js.
     creditLimit: { type: Number, default: 0 },
@@ -157,7 +157,7 @@ const userSchema = new mongoose.Schema(
     referralCode: { type: String, unique: true, sparse: true, index: true },
 
     // Who referred this account. **Set once, at registration, and never
-    // editable afterwards** (§6.13) — a referrer that can be changed later is a
+    // editable afterwards** (§6.13) - a referrer that can be changed later is a
     // way to redirect money that has already been earned. Nothing in the admin
     // API exposes a write to this field.
     referredBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null, index: true },
@@ -166,7 +166,7 @@ const userSchema = new mongoose.Schema(
     //
     // Canadian anti-spam law requires consent, a working unsubscribe and sender
     // identification on commercial email. This records the first two: what was
-    // granted, where it came from, and when — because "we had consent" is a
+    // granted, where it came from, and when - because "we had consent" is a
     // claim that has to be evidenced, not asserted.
     //
     // Registering a B2B wholesale account is implied consent under CASL s.10(9) for
@@ -183,7 +183,7 @@ const userSchema = new mongoose.Schema(
      * What the customer agreed to be contacted **on** (§6.13, CASL).
      *
      * This sits *beneath* `marketingConsent.granted`, which stays the master
-     * switch — a campaign needs the master flag AND the channel it is sending
+     * switch - a campaign needs the master flag AND the channel it is sending
      * on, and `unsubscribedAt` still outranks both. Modelling it the other way
      * round, with four independent flags and no master, would mean an
      * unsubscribe had four places to be honoured and would eventually be missed
@@ -209,7 +209,7 @@ const userSchema = new mongoose.Schema(
     },
 
     /**
-     * Membership tier — a label an admin sets, and nothing more (yet).
+     * Membership tier - a label an admin sets, and nothing more (yet).
      *
      * It deliberately does **not** touch price. `services/pricingService.js` is
      * the only place a discount is decided and offers never stack; a tier that
@@ -245,7 +245,7 @@ const userSchema = new mongoose.Schema(
     // Set the moment somebody unsubscribes. A timestamp rather than a boolean,
     // because the date is the part that matters if the consent is ever
     // questioned. Non-null excludes the account from every campaign, and it
-    // outranks `marketingConsent.granted` — a later unsubscribe always beats an
+    // outranks `marketingConsent.granted` - a later unsubscribe always beats an
     // earlier opt-in.
     unsubscribedAt: Date,
 
@@ -254,19 +254,19 @@ const userSchema = new mongoose.Schema(
      *
      * The value in the email is the only copy of the secret. What is kept here
      * is `sha256(token)`, so a leaked database dump cannot be used to reset
-     * anybody's password — the same reason `passwordHash` exists two fields up.
+     * anybody's password - the same reason `passwordHash` exists two fields up.
      * SHA-256 without a salt is right here and wrong for a password: the token
      * is 32 random bytes, so there is no dictionary to attack and no need for a
      * slow KDF.
      *
-     * `resetTokenAt` is the expiry, not the issue time — checked on use, so an
+     * `resetTokenAt` is the expiry, not the issue time - checked on use, so an
      * old link fails closed. Both are cleared the moment a reset succeeds,
      * which is what makes a link single-use.
      */
     resetTokenHash: { type: String, select: false },
     resetTokenAt: { type: Date, select: false },
 
-    // Set when an admin locks a staff account out without deleting it — the
+    // Set when an admin locks a staff account out without deleting it - the
     // Users screen's Locked count. Distinct from `status: 'suspended'`, which
     // is the buyer-side approval ladder and has its own error message.
     lockedAt: Date,
@@ -293,7 +293,7 @@ userSchema.methods.verifyPassword = function verifyPassword(plain) {
  * The person first, because the account is theirs; the company only if there is
  * no person; the email last so a heading can never come out blank. Every screen
  * that greets, lists or addresses an account reads this rather than picking a
- * field itself — otherwise "what is this account called" gets answered
+ * field itself - otherwise "what is this account called" gets answered
  * differently on the dashboard, the approvals queue and an invoice, and an
  * account with no company name renders as an empty heading on some of them.
  *

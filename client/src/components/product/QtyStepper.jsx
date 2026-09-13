@@ -9,7 +9,7 @@ const SIZES = {
   // For the product card only. Its cells narrow with the CARD, not the viewport:
   // in a two-up mobile grid the card is ~169px wide, and 28px cells are what let
   // the stepper and the Add button share one row instead of stacking into an
-  // 80px-tall block. ONLY use this inside an `@container` — the `@min-[…]`
+  // 80px-tall block. ONLY use this inside an `@container` - the `@min-[…]`
   // variants have nothing to measure otherwise.
   card: {
     wrap: 'h-9',
