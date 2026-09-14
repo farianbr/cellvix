@@ -158,11 +158,26 @@ export function TierPanel({ tier, onChange, isPending, warrantyBonus = 0 }) {
   );
 }
 
+/**
+ * `note` sits with the channels rather than beside them.
+ *
+ * A conversation log that cannot hold "spoke to them at the counter, agreed to
+ * replace the screen" has a hole in it, and the hole gets filled by an internal
+ * note - which the next person reads as staff chatter rather than as part of
+ * the conversation. A note is contact history whose transport happened to be a
+ * person standing there, so it belongs in this list, ordered with the calls and
+ * emails around it.
+ *
+ * It is **not** the same thing as the Internal notes panel below. That one is
+ * staff-only and the customer never sees it; this one is what was said TO them,
+ * and the customer portal shows it.
+ */
 const CHANNEL_META = {
   email: { label: 'Email', icon: Mail, tone: 'text-brand' },
   sms: { label: 'SMS', icon: MessageSquare, tone: 'text-info' },
   whatsapp: { label: 'WhatsApp', icon: MessageCircle, tone: 'text-ok' },
   call: { label: 'Call', icon: Phone, tone: 'text-ink-500' },
+  note: { label: 'Note', icon: StickyNote, tone: 'text-warn' },
 };
 
 const STATUS_TONE = {
@@ -206,7 +221,12 @@ export function ConversationsPanel({
   const [channel, setChannel] = useState('call');
   const [direction, setDirection] = useState('outbound');
   const [body, setBody] = useState('');
+  // Neither transmits: a call already happened down a line, a note already
+  // happened across a counter. Both are logged, and the button has to say which
+  // it is about to do rather than claiming a send (§6b rule 4).
   const isCall = channel === 'call';
+  const isNote = channel === 'note';
+  const logsOnly = isCall || isNote;
   function submit(event) {
     event.preventDefault();
     if (!body.trim()) return;
@@ -244,7 +264,11 @@ export function ConversationsPanel({
           value={body}
           onChange={(event) => setBody(event.target.value)}
           placeholder={
-            isCall ? 'What was the call about?' : 'Write the message…'
+            isCall
+              ? 'What was the call about?'
+              : isNote
+                ? 'What was said? The customer can see this on their portal.'
+                : 'Write the message…'
           }
         />
         {error && (
@@ -271,11 +295,11 @@ export function ConversationsPanel({
           <Button
             type="submit"
             size="sm"
-            icon={isCall ? Phone : Send}
+            icon={logsOnly ? CHANNEL_META[channel].icon : Send}
             loading={isPending}
             disabled={!body.trim()}
           >
-            {isCall ? 'Log call' : `Send ${CHANNEL_META[channel].label}`}
+            {isCall ? 'Log call' : isNote ? 'Add note' : `Send ${CHANNEL_META[channel].label}`}
           </Button>
         </div>
       </form>

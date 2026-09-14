@@ -807,6 +807,7 @@ export function AdminOffersPage() {
         open={Boolean(deleting)}
         onClose={() => setDeleting(null)}
         title="Delete this offer?"
+        confirmLabel="Delete offer"
         body={
           deleting
             ? `“${deleting.title}” will be removed permanently. To take it off the site without losing it, uncheck Active instead.`

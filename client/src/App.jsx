@@ -27,6 +27,7 @@ const OffersPage = lazy(() => import('@/pages/OffersPage'));
 // Public and outside RootLayout: somebody arriving here is leaving, and the
 // shop header would be reading the moment badly (phase 9, §6.13).
 const UnsubscribePage = lazy(() => import('@/pages/UnsubscribePage'));
+const CustomerPortalPage = lazy(() => import('@/pages/CustomerPortalPage'));
 
 const SupplierPortalLayout = lazy(() => import('@/components/supplier/SupplierPortalLayout'));
 const SupplierDashboardPage = lazy(() => import('@/pages/supplier/SupplierDashboardPage'));
@@ -198,8 +199,11 @@ export function App() {
         <Route path="rma" element={<AdminRmaPage />} />
         <Route path="rma/:id" element={<AdminRmaDetailPage />} />
 
-        {/* Repair tickets. The detail screen is not built yet, so a row opens
-            the edit dialog on the list rather than a route that would 404. */}
+        {/* Repair tickets. The detail screen DOES exist - see `tickets/:id`
+            below. The note that used to sit here said it did not, and two links
+            on the customer profile were still routing to `?q=<number>` to work
+            around that, which dropped the operator on a filtered list instead
+            of the ticket they clicked. */}
         <Route path="tickets" element={<AdminTicketsPage />} />
         {/* Intake is a full screen, not a modal - see the page for why. */}
         <Route path="tickets/new" element={<AdminTicketFormPage />} />
@@ -287,6 +291,22 @@ export function App() {
         element={
           <Suspense fallback={<RouteFallback />}>
             <UnsubscribePage />
+          </Suspense>
+        }
+      />
+
+      {/* The customer portal (§6.13a).
+          Outside RootLayout for the same reason unsubscribe is: the shop
+          header, mega menu and footer belong to a storefront this customer's
+          business may not have at all, and a repair customer checking whether
+          their phone is ready should not arrive inside a parts catalogue.
+          Public - the HMAC in the link is the credential, and the page only
+          reads. */}
+      <Route
+        path="portal/:business/:token"
+        element={
+          <Suspense fallback={<RouteFallback />}>
+            <CustomerPortalPage />
           </Suspense>
         }
       />

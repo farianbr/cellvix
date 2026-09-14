@@ -78,6 +78,16 @@ const CHANNEL_PROVIDERS = {
     savedButUnwired:
       'WhatsApp credentials are saved, but outbound sending is not wired up yet. Messages are saved to history and are not sent.',
   },
+  /**
+   * A note transports nothing - it records something said in person, so there
+   * is no provider, nothing to configure and nothing that could fail. Same
+   * shape as `call` for that reason, and the same `logged` status.
+   */
+  note: {
+    label: 'Notes',
+    configured: async () => true,
+    reason: null,
+  },
   call: {
     label: 'Calls',
     // A logged call records something that already happened on a phone, so
@@ -123,8 +133,9 @@ async function channelStatus(channel) {
     label: provider.label,
     configured,
     delivers,
-    // `call` never transmits, so "configured" means something different there.
-    sends: channel !== 'call',
+    // Neither `call` nor `note` transmits, so "configured" means something
+    // different for both: there is no provider to be ready or unready.
+    sends: channel !== 'call' && channel !== 'note',
     reason: delivers ? null : configured ? provider.savedButUnwired : provider.reason,
   };
 }
@@ -278,9 +289,9 @@ async function sendMessage(
     recordingUrl: recordingUrl || undefined,
   };
 
-  if (channel === 'call') {
-    // Nothing is transmitted: this records a conversation that already
-    // happened, on either side of the line.
+  if (channel === 'call' || channel === 'note') {
+    // Nothing is transmitted: both record a conversation that already
+    // happened - one down a phone line, one across a counter.
     row.status = 'logged';
   } else if (channel === 'email') {
     if (isSuppressed(account, 'email')) {

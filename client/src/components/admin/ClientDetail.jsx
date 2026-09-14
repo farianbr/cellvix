@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Wallet, WalletCards } from 'lucide-react';
 import cn from '@/lib/cn';
@@ -5,6 +6,7 @@ import { money, date } from '@/lib/format';
 import Input from '@/components/ui/Input';
 import SelectField from '@/components/ui/SelectField';
 import Button from '@/components/ui/Button';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { useAdminMutations, useAdminStoreCredit } from '@/hooks/useAdmin';
 import { toast } from '@/store/toastStore';
 
@@ -55,6 +57,21 @@ export function StoreCreditPanel({ id, balance }) {
     defaultValues: { amountDollars: '', note: '' },
   });
 
+  /**
+   * **A filled-in form still confirms when it moves money.**
+   *
+   * §3.0.1 exempts a form the user deliberately opened and filled - the rule is
+   * about writes fired from one click. This is the exception that outranks it:
+   * the amount lands in the `CreditTransaction` ledger, which is append-only,
+   * so a mistyped figure is corrected by posting a second, opposite movement
+   * rather than by fixing the first. Nothing here can be edited afterwards.
+   *
+   * The dialog restates the amount because a slipped decimal is the actual
+   * failure - $500 for $50 - and that is only catchable by reading the number
+   * back before it is written.
+   */
+  const [pending, setPending] = useState(null);
+
   const movements = data?.transactions ?? [];
 
   return (
@@ -72,14 +89,7 @@ export function StoreCreditPanel({ id, balance }) {
         negative amount is a correction.
       </p>
 
-      <form
-        onSubmit={handleSubmit((values) =>
-          allocateStoreCredit.mutate(
-            { id, amountDollars: Number(values.amountDollars), note: values.note },
-            { onSuccess: () => reset({ amountDollars: '', note: '' }) },
-          ),
-        )}
-      >
+      <form onSubmit={handleSubmit((values) => setPending(values))}>
         <div className="grid gap-3 sm:grid-cols-[140px_minmax(0,1fr)]">
           <Input
             label="Amount"
@@ -124,6 +134,27 @@ export function StoreCreditPanel({ id, balance }) {
           ))}
         </ul>
       )}
+
+      <ConfirmDialog
+        open={Boolean(pending)}
+        onClose={() => setPending(null)}
+        onConfirm={() => {
+          allocateStoreCredit.mutate(
+            { id, amountDollars: Number(pending.amountDollars), note: pending.note },
+            { onSuccess: () => reset({ amountDollars: '', note: '' }) },
+          );
+          setPending(null);
+        }}
+        loading={allocateStoreCredit.isPending}
+        title={
+          Number(pending?.amountDollars) < 0
+            ? `Take ${money(Math.abs(Number(pending?.amountDollars ?? 0)) * 100)} off this account?`
+            : `Post ${money(Number(pending?.amountDollars ?? 0) * 100)} to this account?`
+        }
+        body={pending?.note || undefined}
+        confirmLabel="Post to account"
+        tone="warn"
+      />
     </div>
   );
 }
@@ -137,6 +168,11 @@ export function StoreCreditPanel({ id, balance }) {
  */
 export function CreditForm({ id, user }) {
   const { setCredit, setUserStatus } = useAdminMutations();
+  // Suspend and reinstate both fired from a single click with nothing in
+  // between. Suspending stops a business ordering and hides wholesale pricing
+  // from them; reinstating hands both back. Neither is a thing to do by
+  // accident from a form somebody opened to edit a credit limit.
+  const [statusChange, setStatusChange] = useState(null);
 
   // `values` (not `defaultValues`) because the account arrives after first
   // render - defaults would snapshot an empty user and the form would show
@@ -190,7 +226,7 @@ export function CreditForm({ id, user }) {
             size="sm"
             variant="outline"
             loading={setUserStatus.isPending}
-            onClick={() => setUserStatus.mutate({ id, status: 'suspended' })}
+            onClick={() => setStatusChange('suspended')}
           >
             Suspend account
           </Button>
@@ -200,12 +236,34 @@ export function CreditForm({ id, user }) {
             size="sm"
             variant="outline"
             loading={setUserStatus.isPending}
-            onClick={() => setUserStatus.mutate({ id, status: 'approved' })}
+            onClick={() => setStatusChange('approved')}
           >
             Reinstate account
           </Button>
         )}
       </div>
+
+      <ConfirmDialog
+        open={Boolean(statusChange)}
+        onClose={() => setStatusChange(null)}
+        onConfirm={() => {
+          setUserStatus.mutate({ id, status: statusChange });
+          setStatusChange(null);
+        }}
+        loading={setUserStatus.isPending}
+        title={
+          statusChange === 'suspended'
+            ? `Suspend ${user.displayName}?`
+            : `Reinstate ${user.displayName}?`
+        }
+        body={
+          statusChange === 'suspended'
+            ? 'They keep their cart and history, but cannot order or see wholesale pricing.'
+            : 'They can order and see wholesale pricing again.'
+        }
+        confirmLabel={statusChange === 'suspended' ? 'Suspend account' : 'Reinstate account'}
+        tone={statusChange === 'suspended' ? 'danger' : 'info'}
+      />
     </form>
   );
 }
@@ -226,6 +284,14 @@ export function CreditForm({ id, user }) {
 export function CreditRepaymentForm({ id, user }) {
   const { recordCreditPayment } = useAdminMutations();
   const owing = user?.balance ?? 0;
+
+  /**
+   * Confirms for the same reason the store-credit panel does: this settles real
+   * invoices, oldest first, and reversing it means finding each invoice the
+   * payment touched and reversing them one at a time. The form exemption in
+   * §3.0.1 does not cover a write that moves money.
+   */
+  const [pending, setPending] = useState(null);
 
   const {
     register,
@@ -258,22 +324,7 @@ export function CreditRepaymentForm({ id, user }) {
 
   return (
     <form
-      onSubmit={handleSubmit((values) =>
-        recordCreditPayment.mutate(
-          { id, ...values, reference: values.reference || undefined },
-          {
-            onSuccess: (result) => {
-              const names = (result?.applied ?? []).map((row) => row.number).join(', ');
-              toast.ok(
-                'Payment recorded',
-                names ? `Settled against ${names}.` : 'The balance has been updated.',
-              );
-              reset();
-            },
-            onError: (error) => toast.error('Nothing was recorded', error.message),
-          },
-        ),
-      )}
+      onSubmit={handleSubmit((values) => setPending(values))}
       className="rounded-md border border-line p-4"
     >
       <div className="mb-3 flex items-center gap-2">
@@ -321,6 +372,33 @@ export function CreditRepaymentForm({ id, user }) {
           Overpayment is refused - that is a store-credit allocation.
         </span>
       </div>
+
+      <ConfirmDialog
+        open={Boolean(pending)}
+        onClose={() => setPending(null)}
+        onConfirm={() => {
+          recordCreditPayment.mutate(
+            { id, ...pending, reference: pending.reference || undefined },
+            {
+              onSuccess: (result) => {
+                const names = (result?.applied ?? []).map((row) => row.number).join(', ');
+                toast.ok(
+                  'Payment recorded',
+                  names ? `Settled against ${names}.` : 'The balance has been updated.',
+                );
+                reset();
+              },
+              onError: (error) => toast.error('Nothing was recorded', error.message),
+            },
+          );
+          setPending(null);
+        }}
+        loading={recordCreditPayment.isPending}
+        title={`Record ${money(Number(pending?.amountDollars ?? 0) * 100)} from ${user.displayName}?`}
+        body="Settles their unpaid invoices, oldest first."
+        confirmLabel="Record payment"
+        tone="warn"
+      />
     </form>
   );
 }

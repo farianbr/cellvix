@@ -33,6 +33,15 @@ const sendSms = composer('sms');
 const sendWhatsapp = composer('whatsapp');
 const sendEmail = composer('email');
 const logCall = composer('call');
+/**
+ * A note said to the customer, not about them.
+ *
+ * Same shape as a logged call - nothing transmits, the row lands `logged` - and
+ * deliberately NOT the internal-notes endpoint: that writes to `User`, is
+ * staff-only and the customer never sees it. This is contact history, and the
+ * customer portal shows it.
+ */
+const logNote = composer('note');
 
 // ---- templates --------------------------------------------------------------
 
@@ -102,4 +111,4 @@ const summary = asyncHandler(async (_req, res) => {
   res.json(await marketingService.summary());
 });
 
-export { listMessages, sendSms, sendWhatsapp, sendEmail, logCall, listTemplates, createTemplate, updateTemplate, deleteTemplate, listCampaigns, getCampaign, createCampaign, updateCampaign, deleteCampaign, sendCampaign, listUnsubscribes, resubscribe, unsubscribe, summary };
+export { listMessages, sendSms, sendWhatsapp, sendEmail, logCall, logNote, listTemplates, createTemplate, updateTemplate, deleteTemplate, listCampaigns, getCampaign, createCampaign, updateCampaign, deleteCampaign, sendCampaign, listUnsubscribes, resubscribe, unsubscribe, summary };

@@ -296,6 +296,11 @@ const storeCreditStatement = asyncHandler(async (req, res) => {
   res.json(await adminService.storeCreditStatement(req.params.id));
 });
 
+/** Every payment this customer has made, flattened off their invoices. */
+const userPayments = asyncHandler(async (req, res) => {
+  res.json(await adminService.userPayments(req.params.id));
+});
+
 const refundOrder = asyncHandler(async (req, res) => {
   const result = await adminService.refundOrder(req.params.orderNumber, req.body, req.user._id);
 
@@ -534,4 +539,4 @@ const accountStatement = asyncHandler(async (req, res) => {
   );
   res.type('html').send(html);
 });
-export { stats, listUsers, createUser, getUser, updateUser, setContactConsent, setTier, addInternalNote, deleteInternalNote, approveUser, rejectUser, setUserStatus, setCredit, listProducts, createProduct, updateProduct, toggleProduct, listOrders, createOrder, getOrder, updateOrderStatus, allocateStoreCredit, storeCreditStatement, refundOrder, listInvoices, createInvoice, getInvoice, recordInvoicePayment, recordCreditPayment, voidInvoice, emailInvoice, reverseInvoicePayment, updateInvoice, deleteInvoice, userActivity, bulkUpdateOrderStatus, invoiceDocument, accountStatement };
+export { stats, listUsers, createUser, getUser, userPayments, updateUser, setContactConsent, setTier, addInternalNote, deleteInternalNote, approveUser, rejectUser, setUserStatus, setCredit, listProducts, createProduct, updateProduct, toggleProduct, listOrders, createOrder, getOrder, updateOrderStatus, allocateStoreCredit, storeCreditStatement, refundOrder, listInvoices, createInvoice, getInvoice, recordInvoicePayment, recordCreditPayment, voidInvoice, emailInvoice, reverseInvoicePayment, updateInvoice, deleteInvoice, userActivity, bulkUpdateOrderStatus, invoiceDocument, accountStatement };

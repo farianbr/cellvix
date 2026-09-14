@@ -674,8 +674,7 @@ export function AdminInvoiceDetailPage() {
           )
         }
         title="Reverse this payment?"
-        body="A reversing entry is added for the same amount. The original payment stays on the history, struck through, so the record still shows the money arrived and was taken back."
-        consequence="The balance goes back up, the line of credit is re-drawn, and any commission this payment earned is reversed."
+        body="A reversing entry is added. The original stays on the history, struck through."
         tone="danger"
         confirmLabel="Reverse payment"
         loading={reverseInvoicePayment.isPending}
@@ -691,8 +690,7 @@ export function AdminInvoiceDetailPage() {
           )
         }
         title={`Void ${invoice.number}?`}
-        body="The outstanding balance is forgiven and stops counting against the account's line of credit. The invoice stays in the record."
-        consequence="Any referral commission this invoice earned is reversed."
+        body="The balance is forgiven and stops counting against their credit. The invoice stays in the record."
         tone="danger"
         confirmLabel="Void invoice"
         loading={voidInvoice.isPending}
@@ -714,7 +712,6 @@ export function AdminInvoiceDetailPage() {
         }
         title={`Delete ${invoice.number}?`}
         body="The invoice is removed and the balance it reserved is released back to the account's line of credit."
-        consequence="This cannot be undone. An invoice with a payment against it is a void, not a delete - the customer holds a receipt for it."
         tone="danger"
         confirmLabel="Delete invoice"
         loading={deleteInvoice.isPending}

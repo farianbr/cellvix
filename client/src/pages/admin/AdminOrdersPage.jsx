@@ -853,7 +853,6 @@ export function AdminOrdersPage() {
             ? `${money(Math.round((refundConfirm?.amountDollars ?? 0) * 100))} goes to ${refunding.displayName ?? refunding.businessName ?? 'this account'} as store credit against order ${refunding.orderNumber}.`
             : ''
         }
-        consequence="Store credit is spendable at checkout straight away. Reversing this means a manual adjustment on the credit ledger."
         confirmPhrase={refunding?.orderNumber}
         confirmPhraseLabel="the order number"
         confirmLabel="Issue refund"
@@ -866,12 +865,7 @@ export function AdminOrdersPage() {
         onClose={() => setBulkConfirm(null)}
         onConfirm={() => setBulkStatus(bulkConfirm)}
         title={`Mark ${selected.length} ${selected.length === 1 ? 'order' : 'orders'} ${bulkConfirm}?`}
-        body="The server decides which of the selected orders can actually make this move, and reports back what it changed."
-        consequence={
-          bulkConfirm === 'delivered'
-            ? 'Delivered closes each order out. There is no bulk action to undo it.'
-            : undefined
-        }
+        body="The server decides which of them can make this move, and reports back."
         tone="danger"
         confirmLabel={`Mark ${bulkConfirm}`}
         loading={bulkOrderStatus.isPending}

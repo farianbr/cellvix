@@ -937,7 +937,6 @@ export function AdminInvoicesPage() {
             ? `Invoice ${voiding.number} for ${voiding.displayName ?? voiding.businessName} will be marked void.`
             : ''
         }
-        consequence="There is no un-void. Billing this customer again means raising a replacement invoice."
         confirmPhrase={voiding?.number}
         confirmPhraseLabel="the invoice number"
         confirmLabel="Void invoice"

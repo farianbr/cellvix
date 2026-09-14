@@ -701,6 +701,7 @@ async function getUser(id) {
     openQuotes,
     webQuotes,
     openRmas,
+    referredCount,
   ] = await Promise.all([
     db().Order.find({ user: id }).sort({ createdAt: -1 }).limit(10).lean(),
     db().Invoice.find({ user: id }).sort({ issuedAt: -1 }).limit(10).lean(),
@@ -733,6 +734,11 @@ async function getUser(id) {
     // the number's job is to say how much work is here, and a resolved return
     // is not work.
     db().Rma.countDocuments({ user: id, status: { $in: RMA_OPEN_STATUSES } }),
+
+    // How many accounts this one brought in. The referral panel showed the
+    // code, the link and the commission earned but never this - and "is the
+    // referral actually working" is the question somebody opens it to answer.
+    db().User.countDocuments({ referredBy: id }),
   ]);
 
   const billed = totals[0] ?? { invoiced: 0, collected: 0, invoiceCount: 0 };
@@ -754,6 +760,7 @@ async function getUser(id) {
       openQuotes,
       webQuotes,
       openRmas,
+      referredCount,
     },
     // Staff notes ride with the profile: they are the thing somebody reads
     // before picking up the phone, so a second request for them would just be
@@ -772,6 +779,59 @@ async function getUser(id) {
       status:
         invoice.status !== 'paid' && invoice.dueDate < new Date() ? 'overdue' : invoice.status,
     })),
+  };
+}
+
+/**
+ * Every payment this customer has made, newest first (§6.13).
+ *
+ * **There is no `Payment` collection** - a payment is a subdocument of the
+ * invoice it settles - so this unwinds rather than queries, and the invoice
+ * number comes back on each row because without it a list of amounts and dates
+ * cannot be reconciled against anything.
+ *
+ * Its own call rather than a field on `getUser`: the profile caps invoices at
+ * ten, and a payments list that silently stopped at the tenth invoice would be
+ * wrong precisely on the accounts somebody opens this tab to check.
+ *
+ * **A reversed payment is returned, marked, not dropped.** It happened, the
+ * customer may hold a receipt for it, and a row that vanishes is how somebody
+ * ends up certain they paid twice. The reversal is a separate negative row, so
+ * the two together net to nothing and both remain visible.
+ */
+async function userPayments(id) {
+  const rows = await db().Invoice.aggregate([
+    { $match: { user: new mongoose.Types.ObjectId(String(id)) } },
+    { $unwind: '$payments' },
+    {
+      $project: {
+        _id: 0,
+        invoice: '$number',
+        amount: '$payments.amount',
+        at: '$payments.at',
+        method: '$payments.method',
+        reference: '$payments.reference',
+        reversedAt: '$payments.reversedAt',
+      },
+    },
+    { $sort: { at: -1 } },
+    // Enough that nobody's history is truncated in practice, capped so one
+    // pathological account cannot return an unbounded document.
+    { $limit: 500 },
+  ]);
+
+  return {
+    payments: rows.map((row) => ({
+      invoice: row.invoice,
+      amount: row.amount ?? 0,
+      at: row.at,
+      method: row.method ?? null,
+      reference: row.reference ?? null,
+      reversedAt: row.reversedAt ?? null,
+    })),
+    // Reversed rows are excluded from the total and their negative counterparts
+    // are not: netting twice would double-count the reversal.
+    total: rows.reduce((sum, row) => (row.reversedAt ? sum : sum + (row.amount ?? 0)), 0),
   };
 }
 
@@ -1697,6 +1757,9 @@ async function createInvoice(body) {
     // No `order`: that is what makes this one standalone, and the field has
     // always been optional so nothing else has to change to allow it.
     user: user._id,
+    // With no order to inherit from, the customer is what knows the business.
+    // Without it the charge never appears on the Invoices screen.
+    business: user.business ?? null,
     amount,
     amountPaid: 0,
     issuedAt,
@@ -2266,4 +2329,4 @@ async function invoiceDocument(number, { nonce } = {}) {
   });
 }
 
-export { stats, listUsers, getUser, createUser, updateUser, setContactConsent, setTier, addInternalNote, deleteInternalNote, approveUser, rejectUser, setUserStatus, allocateStoreCredit, storeCreditStatement, refundOrder, setCredit, listProducts, createProduct, updateProduct, deactivateProduct, createOrder, listOrders, getOrder, updateOrderStatus, createInvoice, listInvoices, getInvoice, recordPayment, recordCreditPayment, voidInvoice, emailInvoice, reverseInvoicePayment, updateInvoice, deleteInvoice, userActivity, bulkUpdateOrderStatus, invoiceDocument, accountStatement };
+export { stats, listUsers, getUser, userPayments, createUser, updateUser, setContactConsent, setTier, addInternalNote, deleteInternalNote, approveUser, rejectUser, setUserStatus, allocateStoreCredit, storeCreditStatement, refundOrder, setCredit, listProducts, createProduct, updateProduct, deactivateProduct, createOrder, listOrders, getOrder, updateOrderStatus, createInvoice, listInvoices, getInvoice, recordPayment, recordCreditPayment, voidInvoice, emailInvoice, reverseInvoicePayment, updateInvoice, deleteInvoice, userActivity, bulkUpdateOrderStatus, invoiceDocument, accountStatement };

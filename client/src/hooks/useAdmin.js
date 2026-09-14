@@ -162,6 +162,50 @@ export function useAdminUserActivity(id, enabled = true) {
   });
 }
 
+/**
+ * Every payment this customer has made.
+ *
+ * Its own query rather than a field on the profile: the profile caps invoices
+ * at ten, and this reads across all of them. Fetched only on its own tab -
+ * nothing else on the screen shows a payment row.
+ */
+export function useAdminUserPayments(id, enabled = true) {
+  return useQuery({
+    queryKey: ['admin', 'users', id, 'payments'],
+    queryFn: () => api.get(`/admin/users/${id}/payments`),
+    enabled: Boolean(id) && enabled,
+  });
+}
+
+/**
+ * The customer's portal link.
+ *
+ * **Never fetched on render.** The URL is the credential and reading it is
+ * audited, so an automatic fetch would write an audit row every time somebody
+ * opened a profile and make the trail useless for its one purpose - answering
+ * who had the link. It runs when an admin asks, and `rotate` is the revoke.
+ */
+export function useCustomerPortalLink(id) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ rotate = false } = {}) =>
+      api.get(`/admin/users/${id}/portal-link`, rotate ? { rotate: '1' } : undefined),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin', 'users', id] }),
+  });
+}
+
+/**
+ * Mail the customer their own portal link.
+ *
+ * The server mints the link rather than taking one from here: the address it
+ * sends to and the token it sends should come from one read of one record.
+ */
+export function useEmailCustomerPortalLink(id) {
+  return useMutation({
+    mutationFn: () => api.post(`/admin/users/${id}/portal-link/email`),
+  });
+}
+
 // ---- purchase (phase 5) -----------------------------------------------------
 
 export function useAdminSuppliers(params) {

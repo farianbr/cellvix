@@ -262,7 +262,23 @@ export function CommandPalette({ open, onClose }) {
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={onKeyDown}
             placeholder="Search screens, clients, orders, invoices…"
-            className="h-12 flex-1 bg-transparent text-md text-ink-900 placeholder:text-ink-300 focus:outline-none"
+            /**
+             * `focus:shadow-none`, not just `focus:outline-none`.
+             *
+             * The global `:focus-visible` rule in index.css draws its ring with
+             * a **box-shadow**, not an outline, so `outline-none` removed
+             * nothing and the brand ring was painting a rounded red rectangle
+             * around a field that has no border of its own - it read as a stray
+             * box floating inside the palette.
+             *
+             * Every other input in the app happens to hide it by accident, by
+             * setting its own `focus:ring-2`. This field wants no ring at all:
+             * it is the only focusable thing in the dialog, it is focused the
+             * moment the palette opens, and the caret is already saying where
+             * you are typing. Suppressing it here costs no discoverability and
+             * leaves the global rule intact for everything else.
+             */
+            className="h-12 flex-1 bg-transparent text-md text-ink-900 placeholder:text-ink-300 focus:shadow-none focus:outline-none"
           />
           <kbd className="shrink-0 rounded border border-line px-1.5 py-0.5 text-2xs text-ink-300">
             Esc

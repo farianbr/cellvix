@@ -157,10 +157,23 @@ export function ChannelScreen({
     () =>
       (userData?.users ?? []).map((user) => ({
         value: user.id,
-        // The contact name rides in the label rather than a second line: two
-        // businesses can share a first name, and the picker has to be
-        // unambiguous at a glance.
-        label: user.contactName ? `${user.businessName} - ${user.contactName}` : user.businessName,
+        /**
+         * `displayName`, per §0: an account is identified by the person.
+         *
+         * This built the label from `businessName` and fell back to it when
+         * there was no contact name, so a walk-in repair customer - who has a
+         * person and no company - rendered as "undefined - Marcus Idowu", and
+         * every CellShoppe customer in the list read that way.
+         *
+         * `displayName` is the server's own answer to this question (person,
+         * then company, then email) and is the only thing that should be shown
+         * as an account's name. The company is appended when there is one,
+         * because two people can share a first name and the picker has to be
+         * unambiguous at a glance.
+         */
+        label: user.businessName
+          ? `${user.displayName} · ${user.businessName}`
+          : user.displayName,
       })),
     [userData],
   );
@@ -254,6 +267,8 @@ export function ChannelScreen({
                 name="userId"
                 label="Account"
                 placeholder="Choose an account"
+                searchable
+                searchPlaceholder="Search customers…"
                 options={accountOptions}
                 error={errors.userId?.message}
               />

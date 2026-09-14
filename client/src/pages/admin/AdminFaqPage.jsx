@@ -432,6 +432,7 @@ export function AdminFaqPage() {
         open={Boolean(deleting)}
         onClose={() => setDeleting(null)}
         title="Delete this FAQ entry?"
+        confirmLabel="Delete entry"
         body={deleting ? `“${deleting.question}” will be removed from the site immediately.` : ''}
         loading={deleteFaq.isPending}
         error={deleteFaq.error?.message}

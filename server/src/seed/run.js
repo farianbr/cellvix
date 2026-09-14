@@ -1170,6 +1170,17 @@ async function seedDatabase({ quiet = false } = {}) {
       source: 'registration',
       at: new Date(Date.now() - 90 * 86_400_000),
     };
+
+    /**
+     * A referral code, exactly as the Cellvix loop above mints one.
+     *
+     * These customers are seeded already approved, and `approveUser` is what
+     * normally mints the code - so skipping it here left all eight of them
+     * reading "Not issued" on a panel whose whole subject is the code. The
+     * Cellvix loop has always called this; this one never did.
+     */
+    if (customer.status === 'approved') await ensureReferralCode(customer);
+
     await customer.save();
     shoppeCustomers.push(customer);
   }

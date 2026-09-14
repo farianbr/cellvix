@@ -369,7 +369,7 @@ export function AdminTicketDetailPage() {
           )
         }
         title={`Cancel ${ticket.ticketNumber}?`}
-        body="The job stops here and the ticket closes. Its history is kept, and any deposit taken stays recorded against it - refund that separately."
+        body="The job stops and the ticket closes. Any deposit stays recorded - refund it separately."
         tone="danger"
         confirmLabel="Cancel ticket"
         loading={setTicketStatus.isPending}

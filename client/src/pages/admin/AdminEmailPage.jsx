@@ -631,7 +631,7 @@ export function AdminEmailPage() {
         }}
         onConfirm={confirmDelete}
         title={`Delete ${deleting?.name ?? 'campaign'}?`}
-        body="This campaign has not been sent, so nothing has gone out. Deleting it cannot be undone."
+        body="It has not been sent, so nothing has gone out."
         confirmLabel="Delete campaign"
         loading={deleteCampaign.isPending}
         error={error}

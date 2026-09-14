@@ -18,6 +18,7 @@ import cn from '@/lib/cn';
 import { money, date, dateTime, count as formatCount } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Modal from '@/components/ui/Modal';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
 import PageHeader from '@/components/admin/PageHeader';
@@ -242,10 +243,42 @@ function QuoteLifecycle({ quote, className }) {
   );
 }
 
-export function AdminQuoteDetailPage() {
+export const QUOTE_STATUS_CONFIRM = {
+  sent: {
+    title: 'Mark this quote as sent?',
+    body: 'It counts as issued from now on, and the customer can accept it.',
+    confirmLabel: 'Mark as sent',
+    tone: 'warn',
+  },
+  accepted: {
+    title: 'Mark this quote as accepted?',
+    body: 'The priced offer is committed and the quote can be converted.',
+    confirmLabel: 'Mark as accepted',
+    tone: 'warn',
+  },
+  rejected: {
+    title: 'Reject this quote?',
+    body: 'It closes and cannot be accepted afterwards.',
+    consequence: 'Requoting means raising a new one.',
+    confirmLabel: 'Reject quote',
+    tone: 'danger',
+  },
+};
+
+function AdminQuoteDetailPage() {
   const t = useTableClasses();
   const { id } = useParams();
   const navigate = useNavigate();
+  /**
+   * The three status buttons all wrote on a single click.
+   *
+   * Each one is a decision somebody else then acts on: "sent" is what puts the
+   * quote in front of the customer, "accepted" commits the priced offer, and
+   * "rejected" closes it - and none of the three can be walked back from this
+   * screen. They sit next to each other in one row, which is exactly where a
+   * misclick lands on the wrong one.
+   */
+  const [pendingStatus, setPendingStatus] = useState(null);
   const [converting, setConverting] = useState(false);
   const [driftFromServer, setDriftFromServer] = useState(null);
 
@@ -359,7 +392,7 @@ export function AdminQuoteDetailPage() {
               <Button
                 icon={Send}
                 loading={setQuoteStatus.isPending}
-                onClick={() => setQuoteStatus.mutate({ id: quote.id, status: 'sent' })}
+                onClick={() => setPendingStatus('sent')}
               >
                 Mark as sent
               </Button>
@@ -368,7 +401,7 @@ export function AdminQuoteDetailPage() {
               <Button
                 icon={CheckCircle2}
                 loading={setQuoteStatus.isPending}
-                onClick={() => setQuoteStatus.mutate({ id: quote.id, status: 'accepted' })}
+                onClick={() => setPendingStatus('accepted')}
               >
                 Mark as accepted
               </Button>
@@ -382,7 +415,7 @@ export function AdminQuoteDetailPage() {
               <Button
                 variant="ghost"
                 icon={Ban}
-                onClick={() => setQuoteStatus.mutate({ id: quote.id, status: 'rejected' })}
+                onClick={() => setPendingStatus('rejected')}
               >
                 Reject
               </Button>
@@ -677,6 +710,20 @@ export function AdminQuoteDetailPage() {
           </div>
         </div>
       </Modal>
+
+      <ConfirmDialog
+        open={Boolean(pendingStatus)}
+        onClose={() => setPendingStatus(null)}
+        onConfirm={() => {
+          setQuoteStatus.mutate(
+            { id: quote.id, status: pendingStatus },
+            { onSuccess: () => setPendingStatus(null) },
+          );
+        }}
+        loading={setQuoteStatus.isPending}
+        error={setQuoteStatus.error?.message}
+        {...(QUOTE_STATUS_CONFIRM[pendingStatus] ?? QUOTE_STATUS_CONFIRM.sent)}
+      />
     </div>
   );
 }

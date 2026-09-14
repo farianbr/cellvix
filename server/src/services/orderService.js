@@ -297,6 +297,9 @@ async function createOrder(user, input) {
   const invoice = await db().Invoice.create({
     number: await nextInvoiceNumber(fullySettled ? 'INV' : 'CVX'),
     kind: fullySettled ? 'invoice' : 'due',
+    // From the order, as in `orderBuilder`: an unscoped invoice is missing from
+    // the Invoices screen and present on the customer's profile.
+    business: order.business ?? null,
     settledAt: fullySettled ? new Date() : undefined,
     order: order._id,
     user: user._id,

@@ -711,13 +711,6 @@ function AgreementForm({ mode, id, onDone }) {
               : 'Save these changes?'
         }
         body={`${clauses.filter((c) => c.title.trim() && c.body.trim()).length} clauses.`}
-        consequence={
-          mode === 'publish'
-            ? 'Every supplier holding the current version is moved to this one and must sign it again before their next quote.'
-            : mode === 'create'
-              ? 'It becomes available to attach to a supplier. Nobody is asked to sign until you do.'
-              : 'Nobody has signed this yet, so the wording can still change.'
-        }
         confirmPhrase={mode === 'publish' ? source?.name : undefined}
         confirmPhraseLabel="the agreement name"
         confirmLabel={

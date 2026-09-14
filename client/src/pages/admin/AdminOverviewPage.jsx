@@ -49,6 +49,7 @@ import { TrendChart, BarList } from '@/components/admin/charts/Charts';
 import ApproveClientForm from '@/components/admin/ApproveClientForm';
 import { ADMIN_ROUTES } from '@/lib/adminRoutes';
 import { adminIcon } from '@/components/admin/shell/adminIcons';
+import { featureEnabled } from '@shared/schemas/features';
 import { useAuth } from '@/hooks/useAuth';
 
 import { useAdminStats, useAdminMutations } from '@/hooks/useAdmin';
@@ -444,7 +445,18 @@ function titleCase(value) {
 }
 
 export function AdminOverviewPage() {
-  const { user } = useAuth();
+  const { user, features } = useAuth();
+
+  /**
+   * Whether this business sells goods at all.
+   *
+   * The to-do cards above are count-gated and so look after themselves - a
+   * service business has no orders, so "Fulfil orders" never fires. The panels
+   * below are not: "Recent orders" would sit there permanently empty, pointing
+   * at a route that now answers 404 for this business, which reads as a broken
+   * screen rather than as a section this business does not have.
+   */
+  const hasOrders = !features || featureEnabled(features, 'sales.orders');
   // The range lives in the URL, so the whole dashboard is linkable (§6.1.2).
   const range = useDateRange('this-month');
   // Every figure below states the period it covers. A filtered dashboard that
@@ -769,7 +781,8 @@ export function AdminOverviewPage() {
       </div>
 
       {/* ---- recent orders and low stock ---------------------------------- */}
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className={cn('grid gap-4', hasOrders && 'lg:grid-cols-2')}>
+        {hasOrders && (
         <Panel
           icon={Package}
           title="Recent orders"
@@ -837,7 +850,11 @@ export function AdminOverviewPage() {
             </ul>
           )}
         </Panel>
+        )}
 
+        {/* Inventory is not gated: a repair shop holds parts, counts them and
+            runs out of them exactly as a wholesaler does. What differs is
+            whether those parts are sold as goods or fitted to a job. */}
         <Panel
           icon={AlertTriangle}
           title="Low stock"

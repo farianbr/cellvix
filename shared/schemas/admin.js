@@ -1913,7 +1913,23 @@ const staffUserUpdateSchema = z.object({
  * reason the permission areas are: `shared/` is the boundary both halves read,
  * and importing from `server/` would drag mongoose into the browser bundle.
  */
-const MESSAGE_CHANNELS = ['call', 'sms', 'whatsapp', 'email'];
+/**
+ * **`note` is a channel, not a fifth thing.**
+ *
+ * A customer-facing conversation log that cannot hold "spoke to them at the
+ * counter, agreed to replace the screen" is a log with a hole in it, and the
+ * hole gets filled by an internal note that the next person reads as staff
+ * chatter rather than as part of the conversation. A note is contact history
+ * whose transport happened to be a person standing there, so it belongs in the
+ * same list, ordered with the calls and the emails around it.
+ *
+ * It never transmits, which is why it always lands `logged` - the same status a
+ * call gets, and for the same reason: it already happened, nobody is sending
+ * anything. `InternalNote` stays where it is and keeps its own meaning
+ * (staff-only, never shown to a customer, §6.13); this is the opposite record,
+ * and the portal shows it.
+ */
+const MESSAGE_CHANNELS = ['call', 'sms', 'whatsapp', 'email', 'note'];
 const TEMPLATE_DOCUMENTS = ['none', 'order', 'invoice', 'quote', 'rma'];
 const CAMPAIGN_AUDIENCES = ['approved', 'pending', 'all_customers', 'with_orders'];
 

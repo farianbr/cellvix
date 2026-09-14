@@ -374,7 +374,7 @@ export function AdminApprovalsPage() {
           )
         }
         title={`Suspend ${suspending?.displayName ?? 'this account'}?`}
-        body="They keep their cart and their history, but they cannot place an order or see wholesale pricing until the account is reinstated."
+        body="They keep their cart and history, but cannot order or see wholesale pricing until reinstated."
         tone="danger"
         confirmLabel="Suspend account"
         loading={setUserStatus.isPending}

@@ -36,6 +36,7 @@ import * as notificationController from '../controllers/notificationController.j
 import * as supportController from '../controllers/supportController.js';
 
 import * as supplierPortalController from '../controllers/supplierPortalController.js';
+import * as customerPortalController from '../controllers/customerPortalController.js';
 import * as superAdminController from '../controllers/superAdminController.js';
 
 import validate from '../middleware/validate.js';
@@ -249,6 +250,25 @@ router.post('/contact', authLimiter, validate(contactSchema), contactController.
 // limited like every other unauthenticated write.
 router.post('/unsubscribe', authLimiter, validate(unsubscribeSchema), marketingController.unsubscribe);
 
+// --- customer portal (§6.13a) ----------------------------------------------
+/**
+ * Deliberately unauthenticated, and deliberately read-only.
+ *
+ * A service business has no storefront, so its customers have nowhere to sign
+ * in and mostly have no password to sign in with - the HMAC in the link is what
+ * authorises the read, exactly as it does for unsubscribe. A guessed token gets
+ * a 404 that looks identical to a well-formed token naming nobody.
+ *
+ * **It sits above the authenticated stack on purpose.** `businessScope` and
+ * `openBusinessDb` have nothing to read on a request with no session, so the
+ * service opens the business's own database itself from the code inside the
+ * signed token.
+ *
+ * Rate limited like every other unauthenticated route: the token space is far
+ * too large to walk, but there is no reason to let anybody try.
+ */
+router.get('/portal/:business/:token', authLimiter, customerPortalController.profile);
+
 // --- catalogue -------------------------------------------------------------
 router.get('/taxonomy', taxonomyController.tree);
 router.get('/products', productController.list);
@@ -385,6 +405,29 @@ router.patch('/admin/users/:id/reject', ...admin, requirePermission('clients', '
 router.patch('/admin/users/:id/status', ...admin, requirePermission('clients', 'full'), validate(userStatusSchema), adminController.setUserStatus);
 router.patch('/admin/users/:id/credit', ...admin, requirePermission('clients', 'full'), validate(creditSchema), adminController.setCredit);
 // The line of credit above is edited; store credit below is posted to.
+/**
+ * The customer's portal link.
+ *
+ * `full` rather than `view`: the URL IS the credential, so handing one out is
+ * closer to resetting a password than to reading a field, and `?rotate=1`
+ * actively breaks a link the customer may be relying on. Both are audited in
+ * the controller.
+ */
+router.get('/admin/users/:id/portal-link', ...admin, requirePermission('clients', 'full'), customerPortalController.link);
+// Mails that link to the customer. `full`, like reading it: this puts a working
+// key into somebody's inbox.
+router.post('/admin/users/:id/portal-link/email', ...admin, requirePermission('clients', 'full'), customerPortalController.email);
+
+/**
+ * What this customer has actually paid, across every invoice.
+ *
+ * Not gated on a feature: a product business reads it off the Credit tab, where
+ * terms and ledger sit together, but a service business has no line of credit
+ * and would otherwise have nowhere at all to answer "have they paid us" - the
+ * invoice list says what is owed, not what arrived.
+ */
+router.get('/admin/users/:id/payments', ...admin, requirePermission('clients', 'view'), adminController.userPayments);
+
 router.get('/admin/users/:id/store-credit', ...admin, requirePermission('clients', 'view'), adminController.storeCreditStatement);
 // The printable account statement - every invoice and payment on the account,
 // which is a different document from the store-credit ledger above it.
@@ -404,18 +447,18 @@ router.patch('/admin/products/:id', ...admin, requirePermission('purchase', 'ful
 // Toggles isActive rather than deleting - orders reference products by id.
 router.delete('/admin/products/:id', ...admin, requirePermission('purchase', 'full'), adminController.toggleProduct);
 
-router.get('/admin/orders', ...admin, requirePermission('sales', 'view'), adminController.listOrders);
+router.get('/admin/orders', ...admin, requireFeature('sales.orders'), requirePermission('sales', 'view'), adminController.listOrders);
 // An order raised by hand - a phone or email order. Same rules as a converted
 // quote, because it runs the same code (`services/orderBuilder.js`).
-router.post('/admin/orders', ...admin, requirePermission('sales', 'full'), validate(adminOrderSchema), adminController.createOrder);
+router.post('/admin/orders', ...admin, requireFeature('sales.orders'), requirePermission('sales', 'full'), validate(adminOrderSchema), adminController.createOrder);
 // Registered ahead of the `:orderNumber` routes so a literal path can never be
 // swallowed by a parameter. Partial by design - the response names what moved
 // and what did not.
-router.patch('/admin/orders/bulk-status', ...admin, requirePermission('sales', 'full'), validate(bulkOrderStatusSchema), adminController.bulkUpdateOrderStatus);
-router.get('/admin/orders/:orderNumber', ...admin, requirePermission('sales', 'view'), adminController.getOrder);
-router.patch('/admin/orders/:orderNumber/status', ...admin, requirePermission('sales', 'full'), validate(orderStatusSchema), adminController.updateOrderStatus);
+router.patch('/admin/orders/bulk-status', ...admin, requireFeature('sales.orders'), requirePermission('sales', 'full'), validate(bulkOrderStatusSchema), adminController.bulkUpdateOrderStatus);
+router.get('/admin/orders/:orderNumber', ...admin, requireFeature('sales.orders'), requirePermission('sales', 'view'), adminController.getOrder);
+router.patch('/admin/orders/:orderNumber/status', ...admin, requireFeature('sales.orders'), requirePermission('sales', 'full'), validate(orderStatusSchema), adminController.updateOrderStatus);
 // Refunds go to store credit - there is no gateway to send money back through.
-router.post('/admin/orders/:orderNumber/refund', ...admin, requirePermission('sales', 'full'), validate(refundSchema), adminController.refundOrder);
+router.post('/admin/orders/:orderNumber/refund', ...admin, requireFeature('sales.orders'), requirePermission('sales', 'full'), validate(refundSchema), adminController.refundOrder);
 
 // Invoices. `amountPaid` and the status are recomputed server-side from the
 // payment rows on every write - the client never sends either.
@@ -667,43 +710,43 @@ router.post('/admin/inventory/:id/adjust', ...admin, requirePermission('purchase
 // A quote's stored price is honoured only while the quote is valid, and
 // conversion re-prices against live products before it writes an order.
 
-router.get('/admin/quotes', ...admin, requirePermission('sales', 'view'), salesController.listQuotes);
-router.post('/admin/quotes', ...admin, requirePermission('sales', 'full'), validate(quoteSchema), salesController.createQuote);
-router.get('/admin/quotes/:id', ...admin, requirePermission('sales', 'view'), salesController.getQuote);
-router.patch('/admin/quotes/:id', ...admin, requirePermission('sales', 'full'), validate(quoteSchema), salesController.updateQuote);
-router.patch('/admin/quotes/:id/status', ...admin, requirePermission('sales', 'full'), validate(quoteStatusSchema), salesController.setQuoteStatus);
+router.get('/admin/quotes', ...admin, requireFeature('sales.quotes'), requirePermission('sales', 'view'), salesController.listQuotes);
+router.post('/admin/quotes', ...admin, requireFeature('sales.quotes'), requirePermission('sales', 'full'), validate(quoteSchema), salesController.createQuote);
+router.get('/admin/quotes/:id', ...admin, requireFeature('sales.quotes'), requirePermission('sales', 'view'), salesController.getQuote);
+router.patch('/admin/quotes/:id', ...admin, requireFeature('sales.quotes'), requirePermission('sales', 'full'), validate(quoteSchema), salesController.updateQuote);
+router.patch('/admin/quotes/:id/status', ...admin, requireFeature('sales.quotes'), requirePermission('sales', 'full'), validate(quoteStatusSchema), salesController.setQuoteStatus);
 // Refuses with QUOTE_PRICE_DRIFT and the full comparison when catalogue prices
 // have moved and the admin has not acknowledged them.
-router.post('/admin/quotes/:id/convert', ...admin, requirePermission('sales', 'full'), validate(quoteConvertSchema), salesController.convertQuote);
+router.post('/admin/quotes/:id/convert', ...admin, requireFeature('sales.quotes'), requireFeature('sales.orders'), requirePermission('sales', 'full'), validate(quoteConvertSchema), salesController.convertQuote);
 // The other destination. A parts quote becomes an order; a repair estimate
 // becomes the ticket that does the work, and is invoiced off that ticket.
-router.post('/admin/quotes/:id/convert-ticket', ...admin, requirePermission('sales', 'full'), validate(quoteToTicketSchema), salesController.convertQuoteToTicket);
-router.delete('/admin/quotes/:id', ...admin, requirePermission('sales', 'full'), salesController.deleteQuote);
+router.post('/admin/quotes/:id/convert-ticket', ...admin, requireFeature('sales.quotes'), requireFeature('sales.tickets'), requirePermission('sales', 'full'), validate(quoteToTicketSchema), salesController.convertQuoteToTicket);
+router.delete('/admin/quotes/:id', ...admin, requireFeature('sales.quotes'), requirePermission('sales', 'full'), salesController.deleteQuote);
 
 // Refunds route through storeCreditService and restocking through the stock
 // ledger - an RMA is not an exception to either rule.
-router.get('/admin/rma', ...admin, requirePermission('sales', 'view'), salesController.listRmas);
-router.post('/admin/rma', ...admin, requirePermission('sales', 'full'), validate(rmaSchema), salesController.createRma);
-router.get('/admin/rma/:id', ...admin, requirePermission('sales', 'view'), salesController.getRma);
-router.patch('/admin/rma/:id/status', ...admin, requirePermission('sales', 'full'), validate(rmaStatusSchema), salesController.setRmaStatus);
-router.patch('/admin/rma/:id/inspect', ...admin, requirePermission('sales', 'full'), validate(rmaInspectSchema), salesController.inspectRma);
+router.get('/admin/rma', ...admin, requireFeature('sales.rma'), requirePermission('sales', 'view'), salesController.listRmas);
+router.post('/admin/rma', ...admin, requireFeature('sales.rma'), requirePermission('sales', 'full'), validate(rmaSchema), salesController.createRma);
+router.get('/admin/rma/:id', ...admin, requireFeature('sales.rma'), requirePermission('sales', 'view'), salesController.getRma);
+router.patch('/admin/rma/:id/status', ...admin, requireFeature('sales.rma'), requirePermission('sales', 'full'), validate(rmaStatusSchema), salesController.setRmaStatus);
+router.patch('/admin/rma/:id/inspect', ...admin, requireFeature('sales.rma'), requirePermission('sales', 'full'), validate(rmaInspectSchema), salesController.inspectRma);
 // Resolving decides money and stock, so it carries that decision rather than
 // being reachable through the status route.
-router.post('/admin/rma/:id/resolve', ...admin, requirePermission('sales', 'full'), validate(rmaResolveSchema), salesController.resolveRma);
+router.post('/admin/rma/:id/resolve', ...admin, requireFeature('sales.rma'), requirePermission('sales', 'full'), validate(rmaResolveSchema), salesController.resolveRma);
 
 // Repair tickets. The status route is separate from the update route because
 // only it records the move on the ticket timeline.
-router.get('/admin/tickets', ...admin, requirePermission('sales', 'view'), ticketController.listTickets);
-router.post('/admin/tickets', ...admin, requirePermission('sales', 'full'), validate(ticketSchema), ticketController.createTicket);
-router.get('/admin/tickets/:id', ...admin, requirePermission('sales', 'view'), ticketController.getTicket);
-router.patch('/admin/tickets/:id', ...admin, requirePermission('sales', 'full'), validate(ticketUpdateSchema), ticketController.updateTicket);
-router.patch('/admin/tickets/:id/status', ...admin, requirePermission('sales', 'full'), validate(ticketStatusSchema), ticketController.setTicketStatus);
-router.delete('/admin/tickets/:id', ...admin, requirePermission('sales', 'full'), ticketController.deleteTicket);
+router.get('/admin/tickets', ...admin, requireFeature('sales.tickets'), requirePermission('sales', 'view'), ticketController.listTickets);
+router.post('/admin/tickets', ...admin, requireFeature('sales.tickets'), requirePermission('sales', 'full'), validate(ticketSchema), ticketController.createTicket);
+router.get('/admin/tickets/:id', ...admin, requireFeature('sales.tickets'), requirePermission('sales', 'view'), ticketController.getTicket);
+router.patch('/admin/tickets/:id', ...admin, requireFeature('sales.tickets'), requirePermission('sales', 'full'), validate(ticketUpdateSchema), ticketController.updateTicket);
+router.patch('/admin/tickets/:id/status', ...admin, requireFeature('sales.tickets'), requirePermission('sales', 'full'), validate(ticketStatusSchema), ticketController.setTicketStatus);
+router.delete('/admin/tickets/:id', ...admin, requireFeature('sales.tickets'), requirePermission('sales', 'full'), ticketController.deleteTicket);
 // Money taken before the invoice exists, and the conversion that turns a
 // finished repair into the invoice that bills it.
-router.post('/admin/tickets/:id/deposits', ...admin, requirePermission('sales', 'full'), validate(ticketDepositSchema), ticketController.recordDeposit);
-router.delete('/admin/tickets/:id/deposits/:depositId', ...admin, requirePermission('sales', 'full'), ticketController.removeDeposit);
-router.post('/admin/tickets/:id/convert', ...admin, requirePermission('sales', 'full'), validate(ticketConvertSchema), ticketController.convertToInvoice);
+router.post('/admin/tickets/:id/deposits', ...admin, requireFeature('sales.tickets'), requirePermission('sales', 'full'), validate(ticketDepositSchema), ticketController.recordDeposit);
+router.delete('/admin/tickets/:id/deposits/:depositId', ...admin, requireFeature('sales.tickets'), requirePermission('sales', 'full'), ticketController.removeDeposit);
+router.post('/admin/tickets/:id/convert', ...admin, requireFeature('sales.tickets'), requirePermission('sales', 'full'), validate(ticketConvertSchema), ticketController.convertToInvoice);
 
 // --- businesses, roles & staff (phase 8) ---------------------------------------
 // Businesses are an ordinary permissioned area. Roles and user accounts are NOT:
@@ -741,16 +784,16 @@ router.get('/admin/reports/:tab', ...admin, requirePermission('reports', 'view')
 
 // Editorial content. Unlike products, none of these are referenced by an order,
 // so a delete here leaves nothing dangling and really deletes.
-router.get('/admin/blog', ...admin, requirePermission('marketing', 'view'), contentController.adminListPosts);
-router.get('/admin/blog/:id', ...admin, requirePermission('marketing', 'view'), contentController.adminGetPost);
-router.post('/admin/blog', ...admin, requirePermission('marketing', 'full'), validate(blogPostSchema), contentController.adminCreatePost);
-router.patch('/admin/blog/:id', ...admin, requirePermission('marketing', 'full'), validate(blogPostSchema), contentController.adminUpdatePost);
-router.delete('/admin/blog/:id', ...admin, requirePermission('marketing', 'full'), contentController.adminDeletePost);
+router.get('/admin/blog', ...admin, requireFeature('marketing.blog'), requirePermission('marketing', 'view'), contentController.adminListPosts);
+router.get('/admin/blog/:id', ...admin, requireFeature('marketing.blog'), requirePermission('marketing', 'view'), contentController.adminGetPost);
+router.post('/admin/blog', ...admin, requireFeature('marketing.blog'), requirePermission('marketing', 'full'), validate(blogPostSchema), contentController.adminCreatePost);
+router.patch('/admin/blog/:id', ...admin, requireFeature('marketing.blog'), requirePermission('marketing', 'full'), validate(blogPostSchema), contentController.adminUpdatePost);
+router.delete('/admin/blog/:id', ...admin, requireFeature('marketing.blog'), requirePermission('marketing', 'full'), contentController.adminDeletePost);
 
-router.get('/admin/faqs', ...admin, requirePermission('marketing', 'view'), contentController.adminListFaqs);
-router.post('/admin/faqs', ...admin, requirePermission('marketing', 'full'), validate(faqSchema), contentController.adminCreateFaq);
-router.patch('/admin/faqs/:id', ...admin, requirePermission('marketing', 'full'), validate(faqSchema), contentController.adminUpdateFaq);
-router.delete('/admin/faqs/:id', ...admin, requirePermission('marketing', 'full'), contentController.adminDeleteFaq);
+router.get('/admin/faqs', ...admin, requireFeature('marketing.faq'), requirePermission('marketing', 'view'), contentController.adminListFaqs);
+router.post('/admin/faqs', ...admin, requireFeature('marketing.faq'), requirePermission('marketing', 'full'), validate(faqSchema), contentController.adminCreateFaq);
+router.patch('/admin/faqs/:id', ...admin, requireFeature('marketing.faq'), requirePermission('marketing', 'full'), validate(faqSchema), contentController.adminUpdateFaq);
+router.delete('/admin/faqs/:id', ...admin, requireFeature('marketing.faq'), requirePermission('marketing', 'full'), contentController.adminDeleteFaq);
 
 router.get('/admin/offers', ...admin, requirePermission('marketing', 'view'), contentController.adminListOffers);
 router.post('/admin/offers', ...admin, requirePermission('marketing', 'full'), validate(offerSchema), contentController.adminCreateOffer);
@@ -776,6 +819,14 @@ router.post('/admin/marketing/email', ...marketingFull, validate(messageSchema),
 // A call is a record of something that already happened, so its payload is
 // notes rather than a message body and it needs no template.
 router.post('/admin/marketing/calls', ...marketingFull, validate(callLogSchema), marketingController.logCall);
+/**
+ * A note said to the customer across a counter.
+ *
+ * Validated with `messageSchema` rather than `callLogSchema`: a call may be
+ * logged with no text, because the fact of the call is itself the record, but a
+ * note IS its text and an empty one records nothing.
+ */
+router.post('/admin/marketing/note', ...marketingFull, validate(messageSchema), marketingController.logNote);
 
 router.get('/admin/marketing/templates', ...marketingView, marketingController.listTemplates);
 router.post('/admin/marketing/templates', ...marketingFull, validate(messageTemplateSchema), marketingController.createTemplate);
@@ -847,8 +898,8 @@ router.post('/admin/agreements/:id/publish', ...admin, requirePermission('settin
 // --- web quotes -------------------------------------------------------------
 // Enquiries the storefront contact form sent in. They are ContactMessage rows,
 // not a new record type - see the controller for why.
-router.get('/admin/web-quotes', ...admin, requirePermission('sales', 'view'), webQuoteController.list);
-router.patch('/admin/web-quotes/:id/status', ...admin, requirePermission('sales', 'full'), validate(webQuoteStatusSchema), webQuoteController.setStatus);
+router.get('/admin/web-quotes', ...admin, requireFeature('sales.webquotes'), requirePermission('sales', 'view'), webQuoteController.list);
+router.patch('/admin/web-quotes/:id/status', ...admin, requireFeature('sales.webquotes'), requirePermission('sales', 'full'), validate(webQuoteStatusSchema), webQuoteController.setStatus);
 
 router.get('/admin/audit/activity', ...admin, requirePermission('settings', 'view'), auditController.activity);
 router.get('/admin/audit/security', ...adminOnly, auditController.security);
@@ -893,7 +944,7 @@ router.patch('/admin/settings/communications', ...admin, requirePermission('sett
 // Read-only, and there is **no write route** - §6b U1–U2: the board ships as
 // interface without wiring, and an endpoint that accepted a booking would be
 // the "fake success" rule 4 forbids.
-router.get('/admin/appointments', ...admin, requirePermission('settings', 'view'), appointmentController.list);
+router.get('/admin/appointments', ...admin, requireFeature('scheduling.appointments'), requirePermission('settings', 'view'), appointmentController.list);
 
 // ---- phase 12: global search ------------------------------------------------
 // Staff-level only, with no per-area guard here on purpose: the service decides

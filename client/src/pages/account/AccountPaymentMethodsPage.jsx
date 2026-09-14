@@ -248,11 +248,6 @@ export function AccountPaymentMethodsPage() {
             ? `${removing.brand ?? 'Card'} ending ${removing.last4} will be taken off your account.`
             : ''
         }
-        consequence={
-          removing?.isDefault
-            ? 'This is your default card. Checkout will have no card selected until you set another one.'
-            : undefined
-        }
         confirmLabel="Remove card"
         loading={removePaymentMethod.isPending}
         error={removePaymentMethod.error?.message}

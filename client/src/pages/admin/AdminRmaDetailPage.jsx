@@ -249,6 +249,9 @@ export function AdminRmaDetailPage() {
   const [resolving, setResolving] = useState(false);
   const [outcome, setOutcome] = useState(null);
   const [rejecting, setRejecting] = useState(false);
+  // Advancing the ladder was a bare click sitting beside Reject, which already
+  // confirmed. "Approve return" in particular commits to taking the goods back.
+  const [advancing, setAdvancing] = useState(false);
 
   const { data, isLoading, error } = useAdminRma(id);
   const { setRmaStatus, inspectRma, resolveRma } = useAdminMutations();
@@ -324,7 +327,7 @@ export function AdminRmaDetailPage() {
               <Button
                 icon={nextStatus === 'inspecting' ? ClipboardCheck : Truck}
                 loading={setRmaStatus.isPending}
-                onClick={() => setRmaStatus.mutate({ id: rma.id, status: nextStatus })}
+                onClick={() => setAdvancing(true)}
               >
                 {NEXT_LABELS[nextStatus]}
               </Button>
@@ -634,9 +637,29 @@ export function AdminRmaDetailPage() {
         }
         title="Reject this return?"
         body={`${rma.rmaNumber} closes with no credit to the customer and nothing back into stock.`}
-        consequence="The customer is told the return was refused. Reopening means raising a new RMA."
         tone="danger"
         confirmLabel="Reject return"
+        loading={setRmaStatus.isPending}
+        error={setRmaStatus.error?.message}
+      />
+
+      <ConfirmDialog
+        open={advancing}
+        onClose={() => setAdvancing(false)}
+        onConfirm={() =>
+          setRmaStatus.mutate(
+            { id: rma.id, status: nextStatus },
+            { onSuccess: () => setAdvancing(false) },
+          )
+        }
+        title={`${NEXT_LABELS[nextStatus] ?? 'Advance'} ${rma.rmaNumber}?`}
+        body={
+          nextStatus === 'approved'
+            ? 'The customer is told to send the goods back.'
+            : 'The return moves to the next stage. It does not step back.'
+        }
+        confirmLabel={NEXT_LABELS[nextStatus] ?? 'Advance'}
+        tone={nextStatus === 'approved' ? 'warn' : 'info'}
         loading={setRmaStatus.isPending}
         error={setRmaStatus.error?.message}
       />

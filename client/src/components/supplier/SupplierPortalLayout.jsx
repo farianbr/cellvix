@@ -140,7 +140,6 @@ export function SupplierPortalLayout() {
         onConfirm={signOutNow}
         tone="warn"
         title="Sign out of the supplier portal?"
-        consequence="Anything you have typed and not sent will be lost."
         confirmLabel="Sign out"
         loading={signOut.isPending}
       />

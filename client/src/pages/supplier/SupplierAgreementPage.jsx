@@ -486,9 +486,7 @@ function SigningForm({ row, onBack }) {
         onConfirm={sign}
         title={`Sign ${template.name}?`}
         body={`${template.clauses.length} clauses, initialled and signed as ${signedName.trim() || 'you'}.`}
-        consequence="This is a binding agreement. You cannot withdraw your signature - if the terms change we will publish a new version and ask you to sign that instead."
         confirmPhrase="SIGN"
-        confirmPhraseLabel="SIGN"
         confirmLabel="Sign the agreement"
         loading={signAgreement.isPending}
       />

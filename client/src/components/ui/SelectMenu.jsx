@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, ChevronDown } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
@@ -40,6 +40,17 @@ const SIZES = {
 const OPTION_H = 33;
 
 /**
+ * Past this many options a menu grows its own search box.
+ *
+ * Nine is what fits on screen at once (the panel's max height is nine rows), so
+ * the threshold is "the reader would have to scroll to see everything". Below
+ * it a search box is a control in front of a list you can already read; above
+ * it, scanning is the only way to find a row and that stops working long before
+ * anybody files a bug about it.
+ */
+const SEARCH_THRESHOLD = 9;
+
+/**
  * An option's tally, if it carries one. Rendered as its own muted column rather
  * than baked into the label, so a long label truncates without taking the
  * number with it.
@@ -68,6 +79,21 @@ export function SelectMenu({
   disabled = false,
   size = 'sm',
   align = 'right',
+  /**
+   * Show a search box above the options.
+   *
+   * **Opt-in, and it should be on for anything backed by records.** A picker of
+   * four statuses does not need one; a picker of every customer, supplier or
+   * product does, and the difference is not the current row count - it is
+   * whether the list grows with the business. A customer picker that is
+   * comfortable at eight rows is unusable at eight hundred, and nothing warns
+   * you on the way there.
+   *
+   * Auto-enabled past `SEARCH_THRESHOLD` rows so a list that quietly grows
+   * gains the box without anybody remembering to pass this.
+   */
+  searchable,
+  searchPlaceholder = 'Search…',
   name,
   id: idProp,
   className,
@@ -76,20 +102,41 @@ export function SelectMenu({
 }) {
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
+  const [search, setSearch] = useState('');
 
   const containerRef = useRef(null);
   const buttonRef = useRef(null);
   const listRef = useRef(null);
+  const searchRef = useRef(null);
 
   const generatedId = useId();
   const id = idProp || generatedId;
   const listId = `${id}-listbox`;
   const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
 
-  const selectedIndex = options.findIndex((option) => option.value === value);
+  /**
+   * Whether this menu searches, and the rows it is showing.
+   *
+   * **Every index below runs against `rows`, not `options`.** Keyboard
+   * movement, `aria-activedescendant` and `commit` all address the list the
+   * reader can see - indexing the unfiltered array while displaying a filtered
+   * one is how Enter selects a row nobody is looking at.
+   */
+  const hasSearch = searchable ?? options.length > SEARCH_THRESHOLD;
+
+  const rows = useMemo(() => {
+    const needle = search.trim().toLowerCase();
+    if (!needle) return options;
+    // Matched on the label because that is what the reader is reading. An
+    // option whose value is an id has nothing searchable in it.
+    return options.filter((option) => String(option.label ?? '').toLowerCase().includes(needle));
+  }, [options, search]);
+
+  const selectedIndex = rows.findIndex((option) => option.value === value);
   // With a placeholder an unmatched value shows the placeholder; without one it
   // falls back to the first option, which is what a filter control wants.
-  const selected = selectedIndex >= 0 ? options[selectedIndex] : placeholder ? null : options[0];
+  const selectedOption = options.find((option) => option.value === value);
+  const selected = selectedOption ?? (placeholder ? null : options[0]);
 
   const [panelStyle, placement] = useAnchoredPosition(buttonRef, open, {
     align,
@@ -105,12 +152,40 @@ export function SelectMenu({
   // to count as "inside" or the first click on an option closes the menu.
   useOnClickOutside([containerRef, listRef], () => setOpen(false), open);
 
-  // Opening lands the highlight on the current value, not the top of the list.
+  /**
+   * Opening lands the highlight on the current value, not the top of the list,
+   * and puts focus where the reader is about to work - the search box when
+   * there is one, the list otherwise.
+   *
+   * **Focused on the next frame, not in the effect body.** The panel is
+   * portalled and mounts with the animation, so on the tick this effect runs
+   * `searchRef` is still null - focusing it here silently did nothing and left
+   * focus on the trigger, where every keystroke went to the button instead of
+   * the box. The list happened to work because it is the element the effect
+   * already had a ref to.
+   */
   useEffect(() => {
-    if (!open) return;
+    if (!open) return undefined;
     setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0);
-    listRef.current?.focus();
-  }, [open, selectedIndex]);
+    const frame = requestAnimationFrame(() => {
+      if (hasSearch) searchRef.current?.focus();
+      else listRef.current?.focus();
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [open, selectedIndex, hasSearch]);
+
+  // Every open starts from an empty query. A menu reopened on the last search
+  // shows a filtered list with no obvious reason for the rows that are missing.
+  useEffect(() => {
+    if (!open) setSearch('');
+  }, [open]);
+
+  // Typing moves the highlight back to the top: after a keystroke the row that
+  // was active is usually gone, and leaving the index where it was points it at
+  // whatever happens to have shifted into that position.
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [search]);
 
   function close({ refocus = true } = {}) {
     setOpen(false);
@@ -119,7 +194,7 @@ export function SelectMenu({
   }
 
   function commit(index) {
-    const option = options[index];
+    const option = rows[index];
     if (!option) return;
     onChange?.(option.value);
     close();
@@ -129,7 +204,7 @@ export function SelectMenu({
     switch (event.key) {
       case 'ArrowDown':
         event.preventDefault();
-        setActiveIndex((i) => Math.min(options.length - 1, i + 1));
+        setActiveIndex((i) => Math.min(rows.length - 1, i + 1));
         break;
       case 'ArrowUp':
         event.preventDefault();
@@ -141,7 +216,7 @@ export function SelectMenu({
         break;
       case 'End':
         event.preventDefault();
-        setActiveIndex(options.length - 1);
+        setActiveIndex(rows.length - 1);
         break;
       case 'Enter':
       case ' ':
@@ -209,7 +284,41 @@ export function SelectMenu({
             placement === 'top' ? 'origin-bottom' : 'origin-top',
           )}
         >
-          {options.map((option, index) => {
+          {hasSearch && (
+            // Sticky, so the box stays reachable once the list scrolls. Inside
+            // the listbox rather than above it, because the panel is one
+            // portalled element and a box outside it would not move with it.
+            <li role="none" className="sticky top-0 z-10 -mx-1 -mt-1 mb-1 bg-surface px-1 pt-1">
+              <input
+                ref={searchRef}
+                type="text"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                onKeyDown={onListKeyDown}
+                placeholder={searchPlaceholder}
+                aria-label={`Search ${label || srLabel || 'options'}`}
+                aria-controls={listId}
+                autoComplete="off"
+                spellCheck="false"
+                className={cn(
+                  'w-full rounded-md border border-line bg-surface px-2.5 py-1.5 text-sm text-ink-900',
+                  'placeholder:text-ink-300',
+                  // The global :focus-visible ring is a box-shadow, and it would
+                  // draw a brand ring inside a flyout that is already separated
+                  // by its shadow. The border carries focus here instead.
+                  'focus:border-ink-400 focus:shadow-none focus:outline-none',
+                )}
+              />
+            </li>
+          )}
+
+          {rows.length === 0 && (
+            <li role="none" className="px-2.5 py-3 text-center text-sm text-ink-400">
+              Nothing matches “{search.trim()}”.
+            </li>
+          )}
+
+          {rows.map((option, index) => {
             const isSelected = option.value === value;
 
             return (

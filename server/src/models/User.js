@@ -209,6 +209,31 @@ const userSchema = new mongoose.Schema(
     },
 
     /**
+     * Rotating half of the customer portal link (§6.13a).
+     *
+     * The link carries an HMAC of `portal:<id>:<salt>`, never the id itself -
+     * a bare id in a URL is an enumeration hole, and the whole point of a
+     * credential-free portal is that the URL IS the credential. Keyed on
+     * `JWT_SECRET`, so nothing is stored that could be replayed if this
+     * collection leaked.
+     *
+     * **It exists only so a link can be revoked.** A customer who forwarded
+     * their link to somebody they should not have needs a way back, and with a
+     * pure `hmac(id)` there is none short of changing the deployment secret for
+     * everybody. Rotating this one field invalidates one customer's link and
+     * nobody else's.
+     *
+     * Absent means "never issued". It is filled lazily the first time an admin
+     * asks for the link rather than on registration: most accounts never need
+     * one, and a field written for every signup is a field that has to be
+     * backfilled for every account that predates it.
+     *
+     * `select: false` - it is a secret, and it should not ride along on the
+     * forty other reads of a customer record.
+     */
+    portalSalt: { type: String, select: false },
+
+    /**
      * Membership tier - a label an admin sets, and nothing more (yet).
      *
      * It deliberately does **not** touch price. `services/pricingService.js` is

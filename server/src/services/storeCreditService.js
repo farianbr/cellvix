@@ -127,10 +127,27 @@ async function issueReceipt(entry) {
     const reversal = entry.amount < 0;
     const label = RECEIPT_LABELS[entry.type] ?? 'Store credit movement';
 
+    /**
+     * **The receipt belongs to the customer's business.**
+     *
+     * It was created with no `business` at all, and an unassigned record is
+     * invisible under every business rather than visible under all of them - so
+     * the receipt showed on the customer's own profile, which scopes by user,
+     * and was missing from the Invoices screen, which scopes by business. One
+     * document, two screens, two different answers about whether it exists.
+     *
+     * Read from the customer rather than from request scope on purpose: this
+     * runs inside `post()`, which is reached from a background job and a seed
+     * script as well as from a request, and in those there is no scope to read.
+     * The customer is the one thing a credit movement always has.
+     */
+    const owner = await db().User.findById(entry.user).select('business').lean();
+
     return await db().Invoice.create({
       number: await nextInvoiceNumber('RCT'),
       kind: 'receipt',
       user: entry.user,
+      business: owner?.business ?? null,
       creditTransaction: entry._id,
       order: entry.order,
       amount: gross,

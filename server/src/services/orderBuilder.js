@@ -144,6 +144,11 @@ async function createInvoiceFor(order, terms) {
     kind: 'due',
     order: order._id,
     user: order.user,
+    // Inherited from the order, which already resolved it. An invoice with no
+    // business is invisible on every business-scoped screen while still showing
+    // on the customer's own profile - one document, two answers about whether
+    // it exists.
+    business: order.business ?? null,
     amount: order.total,
     amountPaid: 0,
     issuedAt: new Date(),

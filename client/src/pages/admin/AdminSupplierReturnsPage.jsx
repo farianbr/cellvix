@@ -615,7 +615,6 @@ export function AdminSupplierReturnsPage() {
             ? `${deleting.returnNumber} to ${deleting.supplierName} will be removed permanently.`
             : ''
         }
-        consequence="The claim against the supplier goes with it. Raise a new return if the parts still need to go back."
         confirmPhrase={deleting?.returnNumber}
         confirmPhraseLabel="the return number"
         confirmLabel="Delete return"

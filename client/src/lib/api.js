@@ -121,8 +121,20 @@ async function request(path, { method = 'GET', body, params, signal } = {}) {
 /**
  * The absolute URL of an API path, for the places a browser has to fetch it
  * rather than this wrapper - a link the user opens in a new tab, an <img src>.
+ *
+ * **It goes through `buildUrl`, so the selected business rides along.** It used
+ * to be a bare template string, which meant every document opened this way -
+ * the account statement, an invoice PDF, a proforma - asked the server for a
+ * record without saying which business it belonged to. Under
+ * database-per-business the server then looked in the default business's
+ * database and answered `USER_NOT_FOUND` for a customer sitting on the screen
+ * that raised the link.
+ *
+ * A new tab carries no headers of ours and no way to intercept the request, so
+ * the scope has to be in the URL itself. This is the same `?business=` every
+ * `api.get` already sends; the two cannot now disagree.
  */
-export const apiUrl = (path) => `${BASE}${path}`;
+export const apiUrl = (path, params) => buildUrl(path, params);
 
 export const api = {
   get: (path, params, options) => request(path, { ...options, params }),

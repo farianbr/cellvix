@@ -336,7 +336,6 @@ export function AdminUsersPage() {
         onConfirm={confirmDelete}
         title={`Delete ${confirming?.name ?? 'user'}?`}
         body="This permanently removes the staff account and the access that came with it."
-        consequence="Their history stays on the records they touched. To take away access without losing the account, lock it instead."
         confirmPhrase={confirming?.name}
         confirmPhraseLabel="their name"
         confirmLabel="Delete account"

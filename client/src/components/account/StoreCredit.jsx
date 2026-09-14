@@ -149,7 +149,6 @@ export function RechargeForm({ onDone, className }) {
         }
         title={`Add ${money(dollars * 100)} to your store credit?`}
         body="It is charged now and the balance comes off your next order automatically."
-        consequence="The balance is held as store credit and spends itself against Cellvix orders."
         tone="info"
         confirmLabel={`Pay ${money(dollars * 100)}`}
         cancelLabel="Go back"

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 import {
   ArrowRight,
@@ -10,8 +10,11 @@ import {
   FileSignature,
   FileText,
   Globe,
+  Check,
+  Copy,
   Gift,
   History,
+  Link2,
   Mail,
   MessageCircle,
   Package,
@@ -35,9 +38,11 @@ import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Badge from '@/components/ui/Badge';
 import Button from '@/components/ui/Button';
 import Modal from '@/components/ui/Modal';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import ApproveClientForm from '@/components/admin/ApproveClientForm';
 import { RejectForm } from '@/pages/admin/AdminApprovalsPage';
 import Skeleton from '@/components/ui/Skeleton';
+import SelectMenu from '@/components/ui/SelectMenu';
 import { OrderStatusBadge, InvoiceStatusBadge } from '@/components/account/OrderStatusBadge';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
 import Pagination from '@/components/ui/Pagination';
@@ -56,12 +61,17 @@ import {
   ReferralPanel,
 } from '@/components/admin/CustomerCrm';
 import { MEMBERSHIP_TIERS } from '@shared/schemas/admin';
+import { featureEnabled } from '@shared/schemas/features';
+import { useAuth } from '@/hooks/useAuth';
+import CustomerPortalLink from '@/components/admin/CustomerPortalLink';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
 import TabRow from '@/components/ui/TabRow';
 import { pressable } from '@/lib/motion';
 import {
   useAdminUser,
   useAdminUserActivity,
+  useAdminUserPayments,
+  useEmailCustomerPortalLink,
   useAdminMutations,
   useMarketingMessages,
   useAdminSettings,
@@ -76,6 +86,20 @@ import {
  * The tab lives in the URL so a colleague can be sent straight to the credit
  * ledger rather than "open the client, then click Credit" (§4, one canonical
  * URL per screen).
+ */
+/**
+ * **A tab is a feature, and the same registry decides both.**
+ *
+ * A repair shop's customer has no Orders and no Returns; a wholesaler's has no
+ * Tickets. Hard-coding one list and hiding rows by business type would put a
+ * second, parallel answer to "which sections exist" beside the one in
+ * `shared/schemas/features.js`, and the two would disagree the first time a
+ * super admin flipped a switch. So every divergent tab names its feature key
+ * and `visibleTabs` asks the registry - which means a `both` business gets the
+ * union for free, and an override is honoured here exactly as it is in the nav.
+ *
+ * A tab with no `feature` is unconditional: every business has a customer, a
+ * conversation with them, and a history of both.
  */
 const TABS = [
   // Overview is a **summary of every other tab**, not a tab of its own content:
@@ -92,21 +116,79 @@ const TABS = [
    * tickets it belongs to and the strip loses a top-level entry that was only
    * ever read after a ticket anyway.
    */
-  { key: 'tickets', label: 'Tickets', icon: Wrench },
-  { key: 'orders', label: 'Orders', icon: Package },
+  { key: 'tickets', label: 'Tickets', icon: Wrench, feature: 'sales.tickets' },
+  { key: 'orders', label: 'Orders', icon: Package, feature: 'sales.orders' },
   { key: 'invoices', label: 'Invoices', icon: Receipt },
-  { key: 'credit', label: 'Credit', icon: WalletCards },
-  { key: 'quotes', label: 'Quotes', icon: FileSignature },
+  /**
+   * The line of credit - what the business lends this customer.
+   *
+   * Follows Orders rather than standing alone: terms are what a wholesale buyer
+   * is given against goods on account, and a repair shop that takes payment at
+   * the counter has nothing to lend against. **Store credit is the other
+   * instrument and is not gated with it** - a refund puts money on a repair
+   * customer's account exactly as it does a wholesaler's, so it moves to
+   * Payments below, where a service business can still see it.
+   */
+  { key: 'credit', label: 'Credit', icon: WalletCards, feature: 'sales.orders' },
+  { key: 'quotes', label: 'Quotes', icon: FileSignature, feature: 'sales.quotes' },
   // Enquiries this account sent through the website's contact form. Only ever
   // populated for a customer who was signed in when they submitted.
-  { key: 'web-quotes', label: 'Web Quotes', icon: Globe },
-  { key: 'rmas', label: 'Returns', icon: RotateCcw },
-  { key: 'notes', label: 'Notes', icon: FileText },
-  // Consent, tier and the referral scheme: the terms of the relationship
-  // rather than a record of it.
-  { key: 'membership', label: 'Referral & Membership', icon: Gift },
+  { key: 'web-quotes', label: 'Web Quotes', icon: Globe, feature: 'sales.webquotes' },
+  { key: 'rmas', label: 'Returns', icon: RotateCcw, feature: 'sales.rma' },
+  /**
+   * What has actually been collected, across every invoice.
+   *
+   * A product business reads this off Credit, where the terms and the ledger
+   * sit together. A service business has no line of credit, so without this it
+   * had nowhere at all to answer "has this customer paid us" - the invoices
+   * list says what is owed, not what arrived. Unconditional for that reason:
+   * every business takes money, and every business is asked that question.
+   */
+  { key: 'payments', label: 'Payments', icon: Wallet },
+  /**
+   * Notes, and the terms of the relationship, **as tabs**.
+   *
+   * Both are summarised on Overview for every business, and for a service
+   * business that summary is the whole of it: a repair counter's relationship
+   * with a walk-in is one screen's worth of facts, and a tab strip that spends
+   * two of its entries on a note field and a referral code pushes the tickets
+   * and the invoices - the reason anybody opened the customer - further away.
+   *
+   * Gated on `sales.orders` because that is the flag that actually means
+   * "this business sells goods on an account", which is the relationship these
+   * two describe. They are not about orders, and the key is doing duty as a
+   * product marker rather than naming what it gates; that is a seam worth
+   * remembering if a service business ever asks for them back, because the
+   * honest fix then is a key of their own rather than a second meaning here.
+   */
+  { key: 'notes', label: 'Notes', icon: FileText, feature: 'sales.orders' },
+  { key: 'membership', label: 'Referral & Membership', icon: Gift, feature: 'sales.orders' },
   { key: 'activity', label: 'Activity', icon: History },
 ];
+
+/**
+ * The tabs this business actually has.
+ *
+ * `features` is null until `/auth/me` resolves and for any account that is not
+ * staff. **Null means show everything**, matching `visibleNav`: defaulting to
+ * "off" would blank the strip on every first paint and read as a bug rather
+ * than as a setting.
+ */
+function visibleTabs(features) {
+  if (!features) return TABS;
+  return TABS.filter((item) => !item.feature || featureEnabled(features, item.feature));
+}
+
+/**
+ * The warranty bonus a tier carries, in days.
+ *
+ * Read per tier rather than for the current one, so the membership select can
+ * label every option with what choosing it would do - "Silver · 90d warranty"
+ * answers the question the select is being asked.
+ */
+function tierBonusFor(settings, tier) {
+  return settings?.financial?.warrantyBonusByTier?.[tier] ?? 0;
+}
 
 /** Icon and tone per activity kind, so a ledger of forty rows is scannable. */
 const ACTIVITY_STYLE = {
@@ -154,6 +236,82 @@ const TICKET_TONES = {
  * down the page, which is the only thing that makes a column of numbers
  * comparable at a glance.
  */
+/**
+ * The Payments table.
+ *
+ * A reversed row is struck through and tinted rather than removed: the payment
+ * happened, the customer may hold a receipt for it, and the negative row that
+ * undoes it is listed separately. Hiding either half is how somebody concludes
+ * they were charged twice.
+ */
+const PAYMENT_COLUMNS = [
+  {
+    key: 'at',
+    header: 'Date',
+    priority: 1,
+    width: '20%',
+    sortValue: (payment) => new Date(payment.at).getTime(),
+    render: (payment) => (
+      <span className="tnum whitespace-nowrap text-sm text-ink-500">{date(payment.at)}</span>
+    ),
+  },
+  {
+    key: 'invoice',
+    header: 'Invoice',
+    priority: 2,
+    width: '22%',
+    render: (payment) => (
+      <span className="whitespace-nowrap font-mono text-sm font-semibold text-ink-900">
+        {payment.invoice}
+      </span>
+    ),
+  },
+  {
+    key: 'method',
+    header: 'Method',
+    priority: 4,
+    width: '22%',
+    render: (payment) => (
+      <span className="block truncate text-sm text-ink-500">
+        {payment.method ?? '–'}
+        {payment.reference && (
+          <span className="block truncate text-xs text-ink-400">{payment.reference}</span>
+        )}
+      </span>
+    ),
+  },
+  {
+    key: 'status',
+    header: '',
+    priority: 3,
+    width: '16%',
+    render: (payment) =>
+      payment.reversedAt ? (
+        <Badge tone="warn" size="sm">
+          Reversed
+        </Badge>
+      ) : null,
+  },
+  {
+    key: 'amount',
+    header: 'Amount',
+    priority: 1,
+    width: '20%',
+    align: 'right',
+    sortValue: (payment) => payment.amount,
+    render: (payment) => (
+      <span
+        className={cn(
+          'tnum whitespace-nowrap text-sm font-semibold',
+          payment.reversedAt ? 'text-ink-400 line-through' : 'text-ink-900',
+        )}
+      >
+        {money(payment.amount)}
+      </span>
+    ),
+  },
+];
+
 const TICKET_COLUMNS = [
   {
     key: 'ticketNumber',
@@ -576,42 +734,6 @@ const WEB_QUOTE_COLUMNS = [
 const ROWS_PER_PAGE = 10;
 
 /**
- * One Overview roll-up card: a few rows, and a link to the tab that owns them.
- *
- * The action is a button rather than a link because the tab lives in a query
- * parameter this page already owns - routing through the URL would work, but
- * `setTab` is the one place that decides how a tab is selected.
- */
-function SummaryPanel({ title, cta, onOpen, children }) {
-  return (
-    <Panel
-      title={title}
-      action={
-        <button
-          type="button"
-          onClick={onOpen}
-          className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700"
-        >
-          {cta}
-          <ArrowRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
-        </button>
-      }
-    >
-      {children}
-    </Panel>
-  );
-}
-
-function SummaryRow({ label, children }) {
-  return (
-    <div className="flex items-baseline justify-between gap-3">
-      <dt className="shrink-0 text-ink-500">{label}</dt>
-      <dd className="min-w-0 text-right text-ink-900">{children}</dd>
-    </div>
-  );
-}
-
-/**
  * A tab whose records arrive with a later phase.
  *
  * Named rather than hidden: an operator who cannot find the Quotes tab assumes
@@ -634,7 +756,57 @@ export function AdminClientProfilePage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const tab = searchParams.get('tab') ?? 'overview';
+  const { features } = useAuth();
+
+  const tabs = useMemo(() => visibleTabs(features), [features]);
+
+  /**
+   * A `?tab=` naming a section this business does not have falls back to
+   * Overview rather than rendering nothing.
+   *
+   * This is a real path, not a defensive flourish: the switcher changes business
+   * without leaving the page, and a bookmark to `?tab=orders` sent between
+   * colleagues at two businesses is the obvious way to arrive here. Both would
+   * otherwise leave the strip with nothing selected above an empty panel.
+   */
+  const requested = searchParams.get('tab') ?? 'overview';
+  const tab = tabs.some((item) => item.key === requested) ? requested : 'overview';
+
+  /**
+   * The two facts Overview changes shape around.
+   *
+   * Read off the same resolved tab list rather than re-asking the registry, so
+   * a panel can never appear for a section whose tab is hidden - one answer,
+   * used twice.
+   */
+  const hasTickets = tabs.some((item) => item.key === 'tickets');
+  const hasOrders = tabs.some((item) => item.key === 'orders');
+
+  /**
+   * Is this tab confirmed to exist for this business?
+   *
+   * **Rendering and fetching want different answers while `features` is null**,
+   * and conflating them is what made `/admin/rma` 404 on a service business.
+   *
+   * `visibleTabs` treats null as "show everything", matching `visibleNav`:
+   * `features` is absent until `/auth/me` resolves, and defaulting to "off"
+   * would blank the tab strip on every first paint and look exactly like a
+   * permissions bug. That is right for a strip, which corrects itself a moment
+   * later with nothing lost.
+   *
+   * It is wrong for a request. A `?tab=rmas` URL opened against a business
+   * without Returns passed the strip's check on that first render and fired
+   * `GET /admin/rma`, which the new feature gate answers 404 - a console error
+   * for a section the operator was never going to be shown.
+   *
+   * So a fetch waits for the real answer. A tab with no feature key never
+   * waits: every business has invoices, notes and an activity log.
+   */
+  const confirmed = (key) => {
+    const entry = TABS.find((item) => item.key === key);
+    if (!entry?.feature) return true;
+    return Boolean(features) && featureEnabled(features, entry.feature);
+  };
 
   const { data, isLoading } = useAdminUser(id);
   // The activity feed is a second query and only runs on its own tab - it
@@ -650,9 +822,17 @@ export function AdminClientProfilePage() {
    * Fetched on Overview as well as its own tab, because Overview summarises it
    * but only a handful of rows there, since the roll-up shows three.
    */
-  const wantsMessages = tab === 'tickets' || tab === 'overview';
+  /**
+   * Overview only, and the full fifty.
+   *
+   * It was fetched on the Tickets tab too, back when a second copy of the
+   * conversation panel sat there. And it asked for **five** rows on Overview,
+   * because Overview showed a three-row summary - it now shows the real panel,
+   * so five would silently truncate the history to the last handful with no
+   * indication anything was missing.
+   */
   const { data: messageData, isLoading: messagesLoading } = useMarketingMessages(
-    wantsMessages ? { user: id, limit: tab === 'overview' ? 5 : 50 } : undefined,
+    tab === 'overview' ? { user: id, limit: 50 } : undefined,
   );
 
   /**
@@ -665,21 +845,36 @@ export function AdminClientProfilePage() {
    */
   /** This account's quotes. Fetched on its own tab; the header count is in `totals`. */
   const { data: quoteData, isLoading: quotesLoading } = useAdminQuotes(
-    tab === 'quotes' ? { user: id, status: 'all' } : undefined,
+    tab === 'quotes' && confirmed('quotes') ? { user: id, status: 'all' } : undefined,
   );
 
   /** This account's returns. Fetched on its own tab only, like the rest. */
   const { data: rmaData, isLoading: rmasLoading } = useAdminRmas(
-    tab === 'rmas' ? { user: id, status: 'all' } : undefined,
+    tab === 'rmas' && confirmed('rmas') ? { user: id, status: 'all' } : undefined,
   );
 
   /** This account's website enquiries. Fetched on its own tab only. */
   const { data: webQuoteData, isLoading: webQuotesLoading } = useAdminWebQuotes(
-    tab === 'web-quotes' ? { user: id, status: 'all' } : undefined,
+    tab === 'web-quotes' && confirmed('web-quotes') ? { user: id, status: 'all' } : undefined,
   );
 
+  /**
+   * Fetched on Overview as well as its own tab.
+   *
+   * Overview leads with tickets for a service business - they are what an
+   * operator opened the customer to check - so the rows have to be there before
+   * the tab is. A short page on Overview, the full 50 on the tab, so summarising
+   * does not pay for a list nobody is reading yet.
+   */
+  /** Payments, on their own tab only - nothing else on the screen shows one. */
+  const { data: paymentData, isLoading: paymentsLoading } = useAdminUserPayments(
+    id,
+    tab === 'payments',
+  );
+
+  const wantsTickets = confirmed('tickets') && (tab === 'tickets' || tab === 'overview');
   const { data: ticketData, isLoading: ticketsLoading } = useAdminTickets(
-    tab === 'tickets' ? { user: id, status: 'all', limit: 50 } : undefined,
+    wantsTickets ? { user: id, status: 'all', limit: tab === 'overview' ? 5 : 50 } : undefined,
   );
 
   const {
@@ -696,6 +891,18 @@ export function AdminClientProfilePage() {
   // in the panel so it survives the panel's own re-render after a send.
   const [notice, setNotice] = useState(null);
   const [approving, setApproving] = useState(false);
+  const [sendingPortal, setSendingPortal] = useState(false);
+  /**
+   * Whether the referral link was just copied.
+   *
+   * **Above the loading return**, with every other hook. It was declared beside
+   * the link it belongs to, which reads better and is wrong: that code sits
+   * after `if (isLoading || !data)`, so the hook was skipped on the loading
+   * render and called on the loaded one - "rendered more hooks than during the
+   * previous render", and a blank screen.
+   */
+  const [copiedReferral, setCopiedReferral] = useState(false);
+  const emailPortalLink = useEmailCustomerPortalLink(id);
   const [rejecting, setRejecting] = useState(false);
 
   // The tier's warranty bonus is a setting, not a property of the account, so
@@ -722,6 +929,34 @@ export function AdminClientProfilePage() {
    * data yet they page an empty list, and nothing below this point runs until
    * the guard has passed anyway.
    */
+  /**
+   * The five tickets Overview shows, **open ones first**.
+   *
+   * Newest-first alone is wrong here. A customer with a job booked in last
+   * month and three collected since would lead with the three that are done,
+   * which is the opposite of what the panel is for - the open job is the one
+   * somebody is about to be asked about. Within each group the order stays
+   * newest-first, so the sort adds a rule rather than replacing one.
+   *
+   * **Above the loading return**, with the paging hooks and for the same
+   * reason: a hook below it is skipped on the loading render and called on the
+   * loaded one, which changes the order of hooks between renders. React counts
+   * hooks by position, so that is a real fault and not a lint preference - it
+   * reported it as "a change in the order of Hooks called by
+   * AdminClientProfilePage".
+   */
+  const overviewTickets = useMemo(() => {
+    const rows = ticketData?.tickets ?? [];
+    const closed = (ticket) => ticket.status === 'completed' || ticket.status === 'cancelled';
+    return [...rows]
+      .sort((a, b) => {
+        if (closed(a) !== closed(b)) return closed(a) ? 1 : -1;
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      })
+      .slice(0, 5);
+  }, [ticketData]);
+
+  const paymentPage = useTablePage(paymentData?.payments ?? []);
   const ticketPage = useTablePage(ticketData?.tickets ?? []);
   const quotePage = useTablePage(quoteData?.quotes ?? []);
   const webQuotePage = useTablePage(webQuoteData?.webQuotes ?? []);
@@ -757,7 +992,8 @@ export function AdminClientProfilePage() {
    * verbatim rather than turned into a confirmation (§6b rule 4).
    */
   function logInteraction({ channel, direction, body }, done) {
-    // `calls` is the route's plural; the other three match the channel name.
+    // `calls` is the route's plural; every other channel - `note` included -
+    // matches its own name.
     const route = channel === 'call' ? 'calls' : channel;
 
     sendMessage.mutate(
@@ -946,6 +1182,32 @@ export function AdminClientProfilePage() {
 
   const tierBonus = settingsData?.financial?.warrantyBonusByTier?.[user.tier] ?? 0;
 
+  /**
+   * The referral link, and whether it was just copied.
+   *
+   * Only exists once a code does - a code is minted on approval, so a pending
+   * account has nothing to share and the row is left out rather than showing a
+   * link that resolves to nothing.
+   */
+  const referralLink = user.referralCode
+    ? `${window.location.origin}/?ref=${encodeURIComponent(user.referralCode)}`
+    : null;
+
+  async function copyReferral() {
+    try {
+      await navigator.clipboard.writeText(referralLink);
+      setCopiedReferral(true);
+      // Back to the idle label, so the tick reads as "that copy worked" rather
+      // than as a permanent state of the button.
+      window.setTimeout(() => setCopiedReferral(false), 1600);
+    } catch {
+      // Clipboard access can be refused outright (an insecure origin, a
+      // locked-down browser). The link is on screen and selectable, so say so
+      // rather than failing at something the operator cannot act on.
+      toast.error('Could not copy. Select the link and copy it by hand.');
+    }
+  }
+
   // Channel names for the Overview summary. Read from the same `consent.channels`
   // the panel writes, so the two can never disagree about who may be contacted.
   const consentedChannels = Object.entries(user.consent.channels)
@@ -1108,6 +1370,20 @@ export function AdminClientProfilePage() {
             >
               Statement
             </Button>
+            {/* Mails the customer their own read-only page. Confirms first: it
+                is one click, it reaches a third party, and what it sends is a
+                working key to this account's record (§3.0.1). */}
+            <Button
+              size="sm"
+              variant="outline"
+              icon={Link2}
+              loading={emailPortalLink.isPending}
+              disabled={!user.email}
+              title={user.email ? undefined : 'This customer has no email address on file.'}
+              onClick={() => setSendingPortal(true)}
+            >
+              Portal Link
+            </Button>
             <Link to={`/admin/clients/${id}/edit`}>
               <Button size="sm" variant="outline" icon={Pencil}>
                 Edit
@@ -1175,7 +1451,7 @@ export function AdminClientProfilePage() {
        * the panel it controls, the relationship is the one it actually has.
        */}
       <TabRow
-        tabs={TABS.map((item) => ({
+        tabs={tabs.map((item) => ({
           ...item,
           // A count only when there is something to count: a row of grey
           // zeroes teaches an operator to stop reading them.
@@ -1190,7 +1466,22 @@ export function AdminClientProfilePage() {
 
 
       {tab === 'overview' && (
-        <div className="grid gap-4 lg:grid-cols-2">
+        /**
+         * **A narrow column of facts, and a wide column of records.**
+         *
+         * Every panel used to take half the width, which sized them by position
+         * rather than by content: "Customer details" is a list of short labelled
+         * values that wraps badly past about 40 characters, while Invoices and
+         * Tickets are tables whose columns had to be cramped or dropped to fit
+         * the same box. One of them was being given twice the room it needed and
+         * the other half of what it wanted.
+         *
+         * Three columns, one for the facts and two for the records. Below `lg`
+         * it is a single stack, details first - on a phone the identity of the
+         * customer is what you want at the top, not a table.
+         */
+        <div className="grid items-start gap-4 lg:grid-cols-3">
+        <div className="space-y-4">
           {/* The one place the business name is shown. Everywhere else - the
               header, the breadcrumb, the customers list, every reference to
               this account - uses `displayName`, which is the person (§0). The
@@ -1226,11 +1517,145 @@ export function AdminClientProfilePage() {
             </dl>
           </Panel>
 
+          {/* ---- the roll-up ------------------------------------------------
+              Each summary shows the first few rows and hands off to the tab
+              that owns them. Deliberately read-only: a form on Overview and the
+              same form on its own tab is two places to write the same record,
+              and they drift. Overview answers "what is going on with this
+              account"; the tabs are where something is done about it. */}
+          {/**
+           * **Referral and portal, in one card.**
+           *
+           * This was "Membership & consent", a read-only summary whose only
+           * action was a "Referral & Membership" button pointing at a tab that
+           * no longer exists for a service business - a dead control on the
+           * default screen of every customer.
+           *
+           * Rather than re-point it, the summary became the thing it was
+           * summarising. Everything here is one line of state or one control,
+           * so there was never enough to justify a second screen behind a
+           * button: the tier is a select, the code and link are copyable, and
+           * the two figures underneath are what somebody opens a referral to
+           * check. Consent moved out entirely - it belongs with the
+           * conversation log, not under a referral code.
+           */}
+          <Panel title="Referral & portal" icon={Gift}>
+            <dl className="space-y-3 text-sm">
+              <div className="flex items-center justify-between gap-3">
+                <dt className="eyebrow text-ink-400">Membership</dt>
+                <dd className="min-w-0">
+                  {/* The tier is set here rather than read here. It was a
+                      badge, which meant changing it was a trip to another
+                      screen to operate one select. */}
+                  <SelectMenu
+                    srLabel="Membership tier"
+                    value={user.tier}
+                    onChange={(next) => setTier.mutate({ id, tier: next })}
+                    options={MEMBERSHIP_TIERS.map((item) => ({
+                      value: item.value,
+                      label:
+                        tierBonusFor(settingsData, item.value) > 0
+                          ? `${item.label} · ${tierBonusFor(settingsData, item.value)}d warranty`
+                          : item.label,
+                    }))}
+                    align="right"
+                    className="w-[190px]"
+                  />
+                </dd>
+              </div>
+
+              <div className="flex items-center justify-between gap-3">
+                <dt className="eyebrow shrink-0 text-ink-400">Referral code</dt>
+                <dd className="min-w-0">
+                  {user.referralCode ? (
+                    <code className="font-mono text-sm font-semibold text-ink-900">
+                      {user.referralCode}
+                    </code>
+                  ) : (
+                    <span className="text-ink-400">Not issued</span>
+                  )}
+                </dd>
+              </div>
+
+              {referralLink && (
+                <div className="flex items-start justify-between gap-3">
+                  <dt className="eyebrow shrink-0 pt-1.5 text-ink-400">Referral link</dt>
+                  <dd className="flex min-w-0 flex-col items-end gap-1">
+                    {/* Truncated and selectable rather than wrapped: the link is
+                        long, it is copied rather than read, and three wrapped
+                        lines of it would be the tallest thing in the card. */}
+                    <span className="w-full max-w-[190px] truncate rounded-md bg-surface-2 px-2 py-1.5 text-right font-mono text-xs text-ink-700">
+                      {referralLink}
+                    </span>
+                    <Button
+                      size="xs"
+                      variant="ghost"
+                      icon={copiedReferral ? Check : Copy}
+                      onClick={copyReferral}
+                    >
+                      {copiedReferral ? 'Copied' : 'Copy'}
+                    </Button>
+                  </dd>
+                </div>
+              )}
+
+              <div className="flex items-baseline justify-between gap-3 border-t border-line pt-3">
+                <dt className="text-ink-500">Store credit</dt>
+                <dd className="tnum font-semibold text-ok">{money(user.storeCredit ?? 0)}</dd>
+              </div>
+
+              <div className="flex items-baseline justify-between gap-3">
+                <dt className="text-ink-500">Referred</dt>
+                <dd className="tnum font-medium text-ink-900">
+                  {formatCount(totals.referredCount ?? 0)}{' '}
+                  {(totals.referredCount ?? 0) === 1 ? 'customer' : 'customers'}
+                </dd>
+              </div>
+            </dl>
+
+            <p className="mt-3 border-t border-line pt-3 text-xs leading-snug text-ink-400">
+              Earns {settingsData?.financial?.referralPercent ?? 5}% of every payment their
+              referred customers make, added here as store credit.
+            </p>
+          </Panel>
+
+
+          <CustomerPortalLink id={id} />
+
+          {/**
+           * **The notes panel itself, not a summary of it.**
+           *
+           * This was three truncated notes behind an "All notes" button
+           * pointing at a tab a service business does not have - a dead control,
+           * and the second one on this screen. The panel it was summarising is
+           * one textarea and a list, which is small enough that summarising it
+           * only ever added a click.
+           *
+           * The write lives in `CustomerCrm` and is mounted once, so this is the
+           * same form the Notes tab shows rather than a second one that could
+           * drift from it.
+           */}
+          <NotesPanel
+            notes={notes}
+            isPending={addInternalNote.isPending}
+            onAdd={(body, done) => addInternalNote.mutate({ id, body }, { onSuccess: done })}
+            onDelete={(noteId) => deleteInternalNote.mutate({ id, noteId })}
+          />
+        </div>
+
+        {/* ---- the wide column: the records themselves ------------------
+            Invoices and Tickets are tables. They get two thirds of the width
+            because their columns are what the operator came to read, and the
+            conversation sits under them because talking to the customer is
+            what happens after reading both. */}
+        <div className="space-y-4 lg:col-span-2">
+
           {/* Invoices get their own panel on Overview rather than only a line
               in "Recent activity". It is the section an operator opens a
               customer to look at - what has been billed and what is still
-              owed - and the roll-up above buries it among order rows. */}
+              owed - and the roll-up buries it among order rows. */}
           <Panel
+            flush
             title="Invoices"
             action={
               <div className="flex items-center gap-2">
@@ -1250,46 +1675,87 @@ export function AdminClientProfilePage() {
               </div>
             }
           >
-            {invoices.length === 0 ? (
-              <PanelEmpty icon={Receipt} title="No invoices yet" body="Nothing has been billed to this account." />
-            ) : (
-              <ul className="divide-y divide-line">
-                {invoices.slice(0, 5).map((invoice) => (
-                  /* A link, not a row with a click handler: an invoice has its
-                     own URL, so this should be openable in a new tab and show
-                     its destination in the status bar like any other link. The
-                     eye appears on hover - an icon on all five rows is five
-                     copies of a fact the pointer already gives. */
-                  <li key={invoice.number} className="first:pt-0 last:pb-0">
-                    <Link
-                      to={`/admin/invoices/${invoice.number}`}
-                      className={cn(pressable, 'group -mx-2 flex items-center gap-3 rounded-md px-2 py-2.5 hover:bg-surface-2')}
-                    >
-                    <div className="min-w-0 flex-1">
-                      <span className="flex items-center gap-1.5 text-sm font-semibold text-ink-900 group-hover:text-brand">
-                        <span className="truncate">{invoice.number}</span>
-                        <Eye
-                          className="size-3.5 shrink-0 text-ink-300 opacity-0 transition-opacity group-hover:opacity-100"
-                          strokeWidth={2.25}
-                          aria-hidden="true"
-                        />
-                      </span>
-                      <span className="block text-xs text-ink-400">
-                        {invoice.issuedAt ? date(invoice.issuedAt) : '-'}
-                        {invoice.balance > 0 && ` · ${money(invoice.balance)} owed`}
-                      </span>
-                    </div>
-                    <InvoiceStatusBadge status={invoice.status} />
-                    <span className="tnum shrink-0 text-sm font-semibold text-ink-900">
-                      {money(invoice.amount)}
-                    </span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
+            {/**
+              * The same DataTable the Invoices tab uses, with the same columns.
+              *
+              * This was a hand-rolled list of five <Link> rows, which meant one
+              * customer's invoices were presented two different ways on two
+              * halves of the same screen - different alignment, different
+              * status treatment, no sortable headers, and the totals not
+              * column-aligned with the tab a click away.
+              *
+              * `compact` and no pagination: it is a summary, and "View all"
+              * above is the way to the rest.
+              */}
+            <DataTable
+              columns={INVOICE_COLUMNS}
+              rows={invoices.slice(0, 5)}
+              rowKey={(invoice) => invoice.number}
+              onRowClick={(invoice) => navigate(`/admin/invoices/${invoice.number}`)}
+              empty={
+                <PanelEmpty
+                  icon={Receipt}
+                  title="No invoices yet"
+                  body="Nothing has been billed to this account."
+                />
+              }
+            />
           </Panel>
 
+          {/**
+           * **Tickets take the lead slot for a service business.**
+           *
+           * "Recent activity" below is a merge of orders and invoices, which
+           * for a repair shop is a panel about goods it does not sell sitting
+           * where the open jobs should be. The question somebody opens a repair
+           * customer to answer is "what are we doing for them right now", and
+           * this is that question - so it replaces the roll-up rather than
+           * joining it, and a business with both keeps the pair.
+           */}
+          {hasTickets && (
+            <Panel
+              flush
+              title="Tickets"
+              action={
+                <div className="flex items-center gap-2">
+                  <Link to={`/admin/tickets?new=1&${ticketSeed}`}>
+                    <Button size="xs" icon={Plus}>
+                      New
+                    </Button>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => setTab('tickets')}
+                    className="inline-flex items-center gap-1 text-sm font-semibold text-brand hover:text-brand-700"
+                  >
+                    View all
+                    <ArrowRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
+                  </button>
+                </div>
+              }
+            >
+              {/* The Tickets tab's own table and columns, so a ticket reads
+                  the same in both places. */}
+              <DataTable
+                columns={TICKET_COLUMNS}
+                rows={overviewTickets}
+                rowKey={(ticket) => ticket.id}
+                onRowClick={(ticket) => navigate(`/admin/tickets/${ticket.id}`)}
+                empty={
+                  <PanelEmpty
+                    icon={Wrench}
+                    title="No tickets yet"
+                    body="No repair has been raised against this account."
+                  />
+                }
+              />
+            </Panel>
+          )}
+
+          {/* The orders-and-invoices roll-up. A business that sells no goods
+              has no orders to merge, and the invoices panel above already
+              covers the other half - so it would render as half a panel. */}
+          {hasOrders && (
           <Panel
             title="Recent activity"
             description="The last few things to happen on this account. Click any row to open it."
@@ -1352,98 +1818,48 @@ export function AdminClientProfilePage() {
               </ul>
             )}
           </Panel>
+          )}
 
-          {/* ---- the roll-up ------------------------------------------------
-              Each summary shows the first few rows and hands off to the tab
-              that owns them. Deliberately read-only: a form on Overview and the
-              same form on its own tab is two places to write the same record,
-              and they drift. Overview answers "what is going on with this
-              account"; the tabs are where something is done about it. */}
-          <SummaryPanel
-            title="Membership & consent"
-            onOpen={() => setTab('membership')}
-            cta="Referral & Membership"
-          >
-            <dl className="space-y-2 text-sm">
-              <SummaryRow label="Tier">
-                <Badge tone={TIER_TONE[user.tier] ?? 'neutral'} size="sm">
-                  {MEMBERSHIP_TIERS.find((item) => item.value === user.tier)?.label ?? user.tier}
-                </Badge>
-              </SummaryRow>
-              <SummaryRow label="Warranty bonus">
-                {tierBonus > 0 ? `+${tierBonus} days` : 'None'}
-              </SummaryRow>
-              <SummaryRow label="Referral code">
-                {user.referralCode ? (
-                  <code className="font-mono text-xs font-semibold">{user.referralCode}</code>
-                ) : (
-                  <span className="text-ink-400">Not issued</span>
-                )}
-              </SummaryRow>
-              <SummaryRow label="Contactable on">
-                {user.consent.unsubscribedAt ? (
-                  <span className="text-danger">Unsubscribed</span>
-                ) : consentedChannels.length > 0 ? (
-                  consentedChannels.join(' · ')
-                ) : user.consent.recorded ? (
-                  <span className="text-warn">Nothing - all declined</span>
-                ) : (
-                  <span className="text-ink-400">Not recorded</span>
-                )}
-              </SummaryRow>
-            </dl>
-          </SummaryPanel>
-
-          <SummaryPanel
-            title="Conversations"
-            onOpen={() => setTab('conversations')}
-            cta="All conversations"
-          >
-            {messages.length === 0 ? (
-              <p className="py-3 text-sm text-ink-400">Nothing logged yet.</p>
-            ) : (
-              <ul className="space-y-2">
-                {messages.slice(0, 3).map((message) => (
-                  <li key={message.id} className="flex items-start gap-2.5 text-sm">
-                    <MessageCircle
-                      className="mt-0.5 size-3.5 shrink-0 text-ink-300"
-                      strokeWidth={2.25}
-                      aria-hidden="true"
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-ink-700">{message.body}</span>
-                      <span className="text-xs text-ink-400">
-                        {message.channel} · {relativeTime(message.createdAt)}
-                      </span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </SummaryPanel>
-
-          <SummaryPanel title="Internal notes" onOpen={() => setTab('notes')} cta="All notes">
-            {notes.length === 0 ? (
-              <p className="py-3 text-sm text-ink-400">No notes yet.</p>
-            ) : (
-              <ul className="space-y-2">
-                {notes.slice(0, 3).map((note) => (
-                  <li key={note.id} className="text-sm">
-                    <p className="line-clamp-2 text-ink-700">{note.body}</p>
-                    <p className="text-xs text-ink-400">
-                      {note.staffName} · {date(note.createdAt)}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </SummaryPanel>
+          {/**
+           * **The conversation itself, not a summary of it, and it writes.**
+           *
+           * This was three truncated rows behind a "View all" pointing at a tab
+           * that no longer exists - the strip lost `conversations` when it
+           * folded into Tickets, and the button had been dead ever since. The
+           * fix is not to re-point it: talking to the customer is the thing
+           * somebody does while looking at their profile, and sending them two
+           * clicks away to do it was why the summary never earned its space.
+           *
+           * It is also the one panel on Overview that is deliberately not
+           * read-only. The rule the roll-up follows - a form here and the same
+           * form on its own tab is two places to write one record, and they
+           * drift - is satisfied because this IS that form, mounted once rather
+           * than reimplemented twice. It used to be mounted on the Tickets tab
+           * as well, which put two message boxes for one `MessageLog` on the
+           * same screen.
+           *
+           * In the wide column: a message box in a third of the width wraps
+           * every sentence twice.
+           */}
+          <ConversationsPanel
+            messages={messages}
+            isLoading={messagesLoading}
+            isPending={sendMessage.isPending}
+            error={sendMessage.error?.message}
+            notice={notice}
+            onDismissNotice={() => setNotice(null)}
+            onLog={logInteraction}
+          />
+        </div>
         </div>
       )}
 
-      {/* Tickets, and the conversation log underneath them. Talking to a
-          customer is nearly always *about* a job, so the record of the call
-          sits with the jobs rather than on its own tab across the strip. */}
+      {/* Tickets.
+          The conversation log used to sit underneath them here as well as on
+          Overview, which meant two message boxes writing to one `MessageLog` on
+          the same screen - a colleague could type into either and only one of
+          them was the one being read. It lives on Overview now, where somebody
+          is already standing when they pick up the phone. */}
       {tab === 'tickets' && (
         <div className="space-y-4">
           <Panel
@@ -1472,7 +1888,7 @@ export function AdminClientProfilePage() {
               rows={ticketPage.pageRows}
               rowKey={(ticket) => ticket.id}
               loading={ticketsLoading}
-              onRowClick={(ticket) => navigate(`/admin/tickets?q=${ticket.ticketNumber}`)}
+              onRowClick={(ticket) => navigate(`/admin/tickets/${ticket.id}`)}
               defaultSort={{ key: 'createdAt', direction: 'desc' }}
               empty={
                 <PanelEmpty
@@ -1491,16 +1907,6 @@ export function AdminClientProfilePage() {
                 className="border-t border-line px-3 py-3 sm:px-4"
               />
           </Panel>
-
-          <ConversationsPanel
-            messages={messages}
-            isLoading={messagesLoading}
-            isPending={sendMessage.isPending}
-            error={sendMessage.error?.message}
-            notice={notice}
-            onDismissNotice={() => setNotice(null)}
-            onLog={logInteraction}
-          />
         </div>
       )}
 
@@ -1626,6 +2032,62 @@ export function AdminClientProfilePage() {
                 instrument. */}
             <CreditRepaymentForm id={id} user={user} />
           </div>
+          <StoreCreditPanel id={id} balance={user.storeCredit} />
+        </div>
+      )}
+
+      {/**
+       * **Payments, and store credit beside them.**
+       *
+       * A product business reads both off the Credit tab, where the line of
+       * credit, its ledger and its repayments sit together. A service business
+       * has no line of credit - there is nothing to lend against when payment
+       * is taken at the counter - so without this tab it had nowhere to answer
+       * either "has this customer paid us" or "how much of their money are we
+       * holding". Store credit is the instrument that survives the split: a
+       * refund puts money on a repair customer's account exactly as it does a
+       * wholesaler's.
+       */}
+      {tab === 'payments' && (
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2">
+            <Panel
+              flush
+              title="Payments received"
+              description="Every payment against this account, newest first. A reversed payment stays listed."
+              action={
+                paymentData ? (
+                  <Badge tone="neutral" size="sm">
+                    {money(paymentData.total)} collected
+                  </Badge>
+                ) : undefined
+              }
+            >
+              <DataTable
+                columns={PAYMENT_COLUMNS}
+                rows={paymentPage.pageRows}
+                rowKey={(payment, index) => `${payment.invoice}-${payment.at}-${index}`}
+                loading={paymentsLoading}
+                onRowClick={(payment) => navigate(`/admin/invoices/${payment.invoice}`)}
+                defaultSort={{ key: 'at', direction: 'desc' }}
+                empty={
+                  <PanelEmpty
+                    icon={Wallet}
+                    title="No payments yet"
+                    body="Nothing has been collected against this account."
+                  />
+                }
+              />
+              <Pagination
+                page={paymentPage.page}
+                pages={paymentPage.totalPages}
+                onChange={paymentPage.setPage}
+                hideWhenSingle
+                className="border-t border-line px-3 py-3 sm:px-4"
+              />
+            </Panel>
+          </div>
+
           <StoreCreditPanel id={id} balance={user.storeCredit} />
         </div>
       )}
@@ -1885,6 +2347,46 @@ export function AdminClientProfilePage() {
         )}
       </Modal>
 
+      {/**
+       * Sending the portal link.
+       *
+       * A confirm rather than a straight send: one click puts a working key to
+       * this customer's record into an inbox, which is outward-facing and not
+       * undoable once it has gone (§3.0.1). No `confirmPhrase` - the recipient
+       * is the person the record is about, so the blast radius of a misclick is
+       * the customer reading their own page early.
+       *
+       * The address is named in the body, because sending to a stale one is the
+       * actual failure mode here and it is the one thing an operator can check
+       * before the mail leaves.
+       */}
+      <ConfirmDialog
+        open={sendingPortal}
+        onClose={() => setSendingPortal(false)}
+        onConfirm={() => {
+          setSendingPortal(false);
+          emailPortalLink.mutate(undefined, {
+            onSuccess: (result) =>
+              result.sent
+                ? toast.success(`Portal link sent to ${result.to}.`)
+                : // The mailer's own answer, not a confirmation of it: a
+                  // `.example` address fails on purpose in development, and
+                  // nothing here reports a send that did not happen.
+                  toast.error(
+                    `Could not send to ${result.to}${result.error ? ` - ${result.error}` : '.'}`,
+                  ),
+            onError: (error) => toast.error(error.message),
+          });
+        }}
+        title={
+          user.email
+            ? `Email the portal link to ${user.email}?`
+            : 'No email address on file'
+        }
+        body={user.email ? undefined : 'Add one to this customer before sending a link.'}
+        confirmLabel="Send link"
+        tone="info"
+      />
     </>
   );
 }

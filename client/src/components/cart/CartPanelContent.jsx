@@ -98,7 +98,6 @@ function SavedCartsPicker({ onClose }) {
             ? `The ${restoring.lineCount} ${restoring.lineCount === 1 ? 'line' : 'lines'} in “${restoring.name}” are added to your current cart. Quantities add on top of anything already there.`
             : ''
         }
-        consequence="The saved cart is used up by restoring it and will no longer be in this list."
         tone="info"
         confirmLabel="Restore to cart"
         loading={restoreSavedCart.isPending}

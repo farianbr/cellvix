@@ -316,6 +316,7 @@ export function AdminPurchaseOrderDetailPage() {
   // The Workflow panel's one-click payment method. The full modal still owns
   // reference, date and expense category.
   const [quickMethod, setQuickMethod] = useState(METHODS[0].value);
+  const [confirmingQuickPay, setConfirmingQuickPay] = useState(false);
 
   const { data, isLoading, error } = useAdminPurchaseOrder(id);
   const { data: categoryData } = useAdminExpenseCategories();
@@ -493,18 +494,14 @@ export function AdminPurchaseOrderDetailPage() {
                       options={METHODS}
                     />
                   </div>
+                  {/* Recording a supplier payment writes an expense into the
+                      P&L. One click for that is the shape §3.0.1 exists to
+                      stop, and the full form beside it already confirms. */}
                   <Button
                     variant="outline"
                     icon={Wallet}
                     loading={recordPurchasePayment.isPending}
-                    onClick={() =>
-                      recordPurchasePayment.mutate({
-                        id: order.id,
-                        method: quickMethod,
-                        reference: order.poNumber,
-                        paidAt: todayIso(),
-                      })
-                    }
+                    onClick={() => setConfirmingQuickPay(true)}
                   >
                     Mark paid
                   </Button>
@@ -914,12 +911,35 @@ export function AdminPurchaseOrderDetailPage() {
         }
         title="Cancel this purchase order?"
         body={`${order.poNumber} to ${order.supplier.name} closes as cancelled. Nothing on it has been received.`}
-        consequence="There is no un-cancel. Ordering these parts again means raising a new PO."
         tone="danger"
         confirmLabel="Cancel order"
         cancelLabel="Keep it open"
         loading={setPurchaseOrderStatus.isPending}
         error={setPurchaseOrderStatus.error?.message}
+      />
+
+      {/* The one-click "Mark paid" beside the method picker. The full payment
+          form is a form; this is a button, and it writes the same expense. */}
+      <ConfirmDialog
+        open={confirmingQuickPay}
+        onClose={() => setConfirmingQuickPay(false)}
+        onConfirm={() => {
+          recordPurchasePayment.mutate(
+            {
+              id: order.id,
+              method: quickMethod,
+              reference: order.poNumber,
+              paidAt: todayIso(),
+            },
+            { onSuccess: () => setConfirmingQuickPay(false) },
+          );
+        }}
+        loading={recordPurchasePayment.isPending}
+        error={recordPurchasePayment.error?.message}
+        title={`Mark ${order.poNumber} paid?`}
+        body={`${money(order.total)} to ${order.supplier.name}, by ${quickMethod}.`}
+        confirmLabel="Mark paid"
+        tone="warn"
       />
     </div>
   );

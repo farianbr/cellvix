@@ -19,6 +19,14 @@ export function Overlay({
   onClose,
   children,
   labelledBy,
+  /**
+   * The element describing the dialog, announced after its name.
+   *
+   * A confirm dialog's whole payload is the sentence under the title - without
+   * this a screen reader reads "Delete this address, dialog" and stops, leaving
+   * out the part that says what deleting it costs.
+   */
+  describedBy,
   label,
   className,
   panelClassName,
@@ -65,6 +73,7 @@ export function Overlay({
             aria-modal="true"
             aria-label={label}
             aria-labelledby={labelledBy}
+            aria-describedby={describedBy}
             className={cn('relative', panelClassName)}
             {...panelMotion}
           >

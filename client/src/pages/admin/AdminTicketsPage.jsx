@@ -474,7 +474,7 @@ export function AdminTicketsPage() {
           deleteTicket.mutate(deleting.id, { onSuccess: () => setDeleting(null) });
         }}
         title={`Delete ${deleting?.ticketNumber ?? 'ticket'}?`}
-        body="This removes the repair history for the device. It cannot be undone."
+        body="The repair history for the device goes with it."
         confirmLabel="Delete ticket"
         loading={deleteTicket.isPending}
         error={deleteTicket.error?.message}

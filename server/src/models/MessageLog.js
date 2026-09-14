@@ -17,7 +17,14 @@ import mongoose from 'mongoose';
  * somebody made, which is a different fact).
  */
 
-const MESSAGE_CHANNELS = ['call', 'sms', 'whatsapp', 'email'];
+/**
+ * `note` is contact history whose transport was a person standing there - a
+ * counter conversation, a corridor agreement. It never transmits, so it always
+ * lands `logged`, exactly like a call and for the same reason: it already
+ * happened. `InternalNote` is the opposite record and stays where it is -
+ * staff-only, never shown to the customer. A note here IS shown to them.
+ */
+const MESSAGE_CHANNELS = ['call', 'sms', 'whatsapp', 'email', 'note'];
 const MESSAGE_DIRECTIONS = ['inbound', 'outbound'];
 
 /**

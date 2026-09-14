@@ -621,7 +621,7 @@ export function AdminSupplierServicesPage({ mode = 'service' }) {
           )
         }
         title={`Cancel ${cancelling?.name ?? 'this service'}?`}
-        body="It stops billing from the next cycle. Charges already recorded stay on the supplier's account, and Reactivate puts the service back."
+        body="Billing stops next cycle. Charges already recorded stay, and Reactivate puts it back."
         tone="info"
         confirmLabel="Cancel service"
         cancelLabel="Keep it running"
@@ -644,7 +644,6 @@ export function AdminSupplierServicesPage({ mode = 'service' }) {
             ? `${deleting.name} from ${deleting.supplierName} will be removed permanently. To stop billing without losing the record, cancel it instead.`
             : ''
         }
-        consequence="Its recorded charges go with it, and the supplier's spend history changes to match."
         confirmPhrase={deleting?.name}
         confirmPhraseLabel="the service name"
         confirmLabel="Delete service"

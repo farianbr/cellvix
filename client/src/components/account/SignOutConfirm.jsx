@@ -56,7 +56,6 @@ export function SignOutConfirm() {
       // The cart is the thing a buyer would most fear losing here, and it is
       // exactly the thing that survives - worth saying, because otherwise the
       // safe choice looks like staying signed in.
-      consequence="Your cart is saved to your account and will still be there next time."
       confirmLabel="Sign out"
       cancelLabel="Stay signed in"
       tone="info"

@@ -570,6 +570,7 @@ export function AdminBlogPage() {
         open={Boolean(deleting)}
         onClose={() => setDeleting(null)}
         title="Delete this post?"
+        confirmLabel="Delete post"
         body={
           deleting
             ? `“${deleting.title}” will be removed permanently. ${

@@ -239,19 +239,31 @@ export function StatTile({ label, value, hint, tone = 'neutral', icon: Icon, cla
 }
 
 /** Empty state used inside panels - quieter than the page-level one. */
+/**
+ * The "nothing here yet" state inside a panel.
+ *
+ * **Deliberately small.** It was `py-10` around a 44px tinted disc, which made
+ * an empty list the tallest thing on its screen - a panel saying it has no rows
+ * was taking more vertical space than one showing five. The disc is the same
+ * ornament §2.0 calls out in the dialog: it repeats what the heading says and
+ * gets to the eye first.
+ *
+ * So: a bare icon at text scale, tighter padding, and the title at body weight
+ * rather than display bold. It still reads as a considered state rather than a
+ * blank, and it no longer out-shouts the content it is standing in for.
+ *
+ * `action` keeps its own spacing, because an empty state offering a way out
+ * ("Add the first one") is the one case where the block earns some room.
+ */
 export function PanelEmpty({ icon: Icon, title, body, action }) {
   return (
-    <div className="flex flex-col items-center gap-3 py-10 text-center">
-      {Icon && (
-        <span className="flex size-11 items-center justify-center rounded-full bg-surface-2 text-ink-300">
-          <Icon className="size-5" strokeWidth={1.5} />
-        </span>
-      )}
+    <div className="flex flex-col items-center gap-1.5 px-4 py-7 text-center">
+      {Icon && <Icon className="size-5 text-ink-300" strokeWidth={1.5} aria-hidden="true" />}
       <div>
-        <p className="font-display text-md font-bold text-ink-900">{title}</p>
-        {body && <p className="mx-auto mt-1 max-w-xs text-sm text-ink-500">{body}</p>}
+        <p className="text-sm font-semibold text-ink-700">{title}</p>
+        {body && <p className="mx-auto mt-0.5 max-w-xs text-sm text-ink-400">{body}</p>}
       </div>
-      {action}
+      {action && <div className="mt-1.5">{action}</div>}
     </div>
   );
 }

@@ -271,11 +271,6 @@ export function CartPage() {
         }}
         title="Save this cart and empty it?"
         body={`All ${count} ${count === 1 ? 'item' : 'items'} move to your saved carts, ready to restore from the cart panel or the quick order pad.`}
-        consequence={
-          promo
-            ? 'Your cart is left empty and the promo code comes off. You can apply it again after restoring.'
-            : 'Your cart is left empty until you restore it.'
-        }
         tone="info"
         confirmLabel="Save and empty cart"
         cancelLabel="Keep shopping"

@@ -757,7 +757,6 @@ export function SupplierPurchaseOrderPage() {
         }
         // Always the invoice warning now: a PI goes out with every price, so
         // there is no longer a lighter case to soften the wording for.
-        consequence="Our purchasing team sees this straight away. A proforma invoice is a formal offer - you cannot withdraw it, only issue a revision."
         confirmPhrase={order.poNumber}
         confirmPhraseLabel="the order number above"
         confirmLabel={priced ? 'Update my PI' : 'Send my PI'}
@@ -785,7 +784,6 @@ export function SupplierPurchaseOrderPage() {
         tone="danger"
         title={`Tell us you cannot supply ${order.poNumber}?`}
         body="We will stop chasing you for a price on this order."
-        consequence="You can still send a price later if something changes, while the order is open."
         confirmLabel="Yes, I cannot supply this"
         loading={declineQuote.isPending}
       />

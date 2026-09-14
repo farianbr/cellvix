@@ -878,7 +878,6 @@ export function AdminCustomersPage() {
             ? `${mailWarning.displayName ?? mailWarning.email} exists and can be approved and dealt with as normal. What did not reach ${mailWarning.email} is the message carrying their password.`
             : ''
         }
-        consequence="They cannot sign in until they have credentials. Check the mail settings, then delete this account and create it again so a fresh email goes out."
         tone="danger"
         confirmLabel="Open their profile"
         cancelLabel="Stay here"

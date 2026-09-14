@@ -19,6 +19,9 @@
     "backfill:business": "node src/seed/backfill-business.js",
     "backfill:invoice-kind": "node src/seed/backfill-invoice-kind.js",
     "backfill:lineage": "node src/seed/backfill-lineage.js",
+    "backfill:cellvix-features": "node src/seed/backfill-cellvix-features.js",
+    "backfill:invoice-business": "node src/seed/backfill-invoice-business.js",
+    "backfill:referral-codes": "node src/seed/backfill-referral-codes.js",
     "migrate": "node src/seed/migrate.js"
   },
   "dependencies": {

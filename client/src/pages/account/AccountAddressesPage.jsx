@@ -239,11 +239,6 @@ export function AccountAddressesPage() {
             ? `“${removing.label}” will be removed from your saved addresses. Orders already placed to it are unaffected.`
             : ''
         }
-        consequence={
-          removing?.isDefaultShipping || removing?.isDefaultBilling
-            ? 'This is a default address. Checkout will start blank until you set another one.'
-            : undefined
-        }
         confirmLabel="Delete address"
         loading={removeAddress.isPending}
         error={removeAddress.error?.message}
