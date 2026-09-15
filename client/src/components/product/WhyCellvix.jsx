@@ -10,7 +10,7 @@ import { pressable } from '@/lib/motion';
  * Deliberately NOT a grid of six icons and six claims - that is what every
  * supplier's page says, and a wholesale buyer comparing two of them learns
  * nothing from it. This is shaped like the document a business buyer actually
- * trusts: a bench record with the part's own SKU and grade stamped on it, the
+ * trusts: a workshop record with the part's own SKU and grade stamped on it, the
  * four checks that grade was awarded against, and then the commercial terms as
  * numbered clauses rather than marketing tiles.
  *
@@ -24,7 +24,7 @@ import { pressable } from '@/lib/motion';
  */
 
 /** The four faults every pull and aftermarket assembly is graded against. */
-const BENCH_CHECKS = [
+const WORKSHOP_CHECKS = [
   { label: 'Glass', detail: 'Hairlines under raking light, chips, bezel lift' },
   { label: 'Panel', detail: 'Dead and stuck subpixels, burn-in, backlight' },
   { label: 'Touch', detail: 'Full surface, then the outer 3 mm on its own' },
@@ -61,11 +61,11 @@ export function WhyCellvix({ product = null, className }) {
       <div className="rule-brand-gradient h-0.5" aria-hidden="true" />
 
       <div className="grid gap-0 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)]">
-        {/* ---- the bench record ------------------------------------------- */}
+        {/* ---- the workshop record ------------------------------------------- */}
         <div className="border-b border-line bg-surface-2 p-5 lg:border-b-0 lg:border-r lg:p-6">
           <p className="eyebrow mb-4 flex items-center gap-1.5 text-ink-400">
             <Stamp className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
-            Bench record
+            Workshop record
           </p>
 
           {product ? (
@@ -103,7 +103,7 @@ export function WhyCellvix({ product = null, className }) {
           )}
 
           <ul className="space-y-0 border-t border-line">
-            {BENCH_CHECKS.map((check) => (
+            {WORKSHOP_CHECKS.map((check) => (
               <li
                 key={check.label}
                 className="flex items-start gap-2.5 border-b border-line py-2.5"

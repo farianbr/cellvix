@@ -14,8 +14,16 @@ import useFilterStore, { toQueryParams } from '@/store/filterStore';
  *
  * So: set the store either way - that is what the grid reads and what keeps the
  * sidebar, mega menu and wizard in step - and navigate to the Shop page only
- * when we are not already on it. Staying put on `/` preserves the no-reload
+ * when we are not already on it. Staying put on `/shop` preserves the no-reload
  * behaviour the filter architecture is built around.
+ *
+ * **The grid lives at `/shop`, not `/`** (2026-09-14). Both the guard and the
+ * destination below said `/` while that was the catalogue, and neither moved
+ * when the homepage took the root: the guard then matched the HOMEPAGE, so a
+ * mega-menu tick made there set the store, decided it was already on the grid,
+ * and navigated nowhere - the menu closed and nothing happened. The same
+ * mistake sent every other page's filter click to the homepage, which does not
+ * read the filter store at all.
  *
  * The URL we navigate with carries the same query string `useFilterUrlSync`
  * would have written, so a mid-navigation refresh or a copied link lands on the
@@ -27,7 +35,7 @@ function useGoToFilteredShop() {
   const { pathname } = useLocation();
 
   return useCallback(() => {
-    if (pathname === '/') return;
+    if (pathname === '/shop') return;
 
     // Built from the store's own serializer rather than from the caller's
     // argument, so a facet or a search term already in play survives the jump.
@@ -42,7 +50,7 @@ function useGoToFilteredShop() {
     }
 
     const query = params.toString();
-    navigate(query ? `/?${query}` : '/');
+    navigate(query ? `/shop?${query}` : '/shop');
   }, [navigate, pathname]);
 }
 

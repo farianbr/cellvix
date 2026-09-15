@@ -155,7 +155,10 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
       subtitle: offer?.subtitle ?? '',
       description: offer?.description ?? '',
       terms: offer?.terms ?? '',
-      kind: offer?.kind ?? 'deal',
+      // The form's own type, which is `kind` plus `isExclusive` folded into one
+      // choice - see OFFER_KINDS in shared/schemas/content.js for why the
+      // database keeps them apart.
+      offerType: offer?.isExclusive ? 'exclusive' : (offer?.kind ?? 'deal'),
       badge: offer?.badge ?? '',
       code: offer?.code ?? '',
       discountType: offer?.discountType ?? 'percent',
@@ -168,6 +171,11 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
       targetPartType: offer?.target?.partType ?? '',
       targetGrade: offer?.target?.grade ?? '',
       items: offer?.items?.length ? offer.items : [{ sku: '', qty: 1 }, { sku: '', qty: 1 }],
+      videoUrl: offer?.videoUrl ?? '',
+      videoPoster: offer?.videoPoster ?? '',
+      pitch: offer?.pitch ?? '',
+      highlightsText: (offer?.highlights ?? []).join('\n'),
+      faqs: offer?.faqs?.length ? offer.faqs : [],
       bundlePriceDollars: toDollars(offer?.bundlePrice),
       redemption: offer?.redemption ?? 'multi',
       usageLimit: offer?.usageLimit ?? 0,
@@ -182,8 +190,14 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: 'items' });
+  const faqArray = useFieldArray({ control, name: 'faqs' });
 
-  const kind = watch('kind');
+  const offerType = watch('offerType');
+  // An exclusive deal IS a combo in the database, so every combo-shaped part of
+  // the form - the SKU list, the bundle price - applies to it too.
+  const kind = offerType === 'exclusive' ? 'combo' : offerType;
+  const isExclusive = offerType === 'exclusive';
+
   const discountType = watch('discountType');
   const deviceType = watch('targetDeviceTypeSlug');
   const eligibility = watch('eligibility');
@@ -200,7 +214,8 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
           subtitle: values.subtitle,
           description: values.description,
           terms: values.terms,
-          kind: values.kind,
+          kind: values.offerType === 'exclusive' ? 'combo' : values.offerType,
+          isExclusive: values.offerType === 'exclusive',
           badge: values.badge,
           code: values.code,
           discountType: values.discountType,
@@ -216,8 +231,32 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
           },
           items: values.items
             .filter((item) => item.sku.trim())
-            .map((item) => ({ sku: item.sku.trim(), qty: Number(item.qty) || 1 })),
+            .map((item) => ({ sku: item.sku.trim(), qty: Number(item.qty) || 1 }))
+            // One product, and only the one the form was showing.
+            .slice(0, values.offerType === 'exclusive' ? 1 : undefined),
           bundlePrice: toCents(values.bundlePriceDollars),
+
+          // The exclusive page's own copy. Sent only for an exclusive: a combo
+          // carrying a stale pitch from a type the admin changed their mind
+          // about would keep it on the record invisibly.
+          ...(values.offerType === 'exclusive'
+            ? {
+                videoUrl: values.videoUrl,
+                videoPoster: values.videoPoster,
+                pitch: values.pitch,
+                // One highlight per line is the right shape for a list nobody
+                // reorders - a repeatable field with add and remove buttons
+                // would be more machinery than the content deserves.
+                highlights: (values.highlightsText ?? '')
+                  .split('\n')
+                  .map((line) => line.trim())
+                  .filter(Boolean)
+                  .slice(0, 8),
+                faqs: (values.faqs ?? []).filter(
+                  (faq) => faq.question?.trim() && faq.answer?.trim(),
+                ),
+              }
+            : { isExclusive: false }),
           redemption: values.redemption,
           usageLimit: Number(values.usageLimit) || 0,
           eligibility: values.eligibility,
@@ -238,7 +277,18 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
         </p>
       )}
 
-      <SelectField control={control} name="kind" label="Offer type" options={KIND_OPTIONS} />
+      <SelectField control={control} name="offerType" label="Offer type" options={KIND_OPTIONS} />
+
+      {/* Which storefront page this lands on, said plainly. Three offer types
+          and three pages is exactly the kind of mapping an admin should not
+          have to hold in their head or learn by publishing one and looking. */}
+      <p className="-mt-2 px-1 text-xs text-ink-400">
+        {isExclusive
+          ? 'Publishes to its own page at /deals, linked from the nav as Exclusive deal. Only one runs at a time - promoting this one retires the last.'
+          : kind === 'combo'
+            ? 'Appears on the Combo deals page at /offers.'
+            : 'Appears under Catalogue discounts on the Combo deals page, and applies at checkout.'}
+      </p>
 
       <Input
         label="Title"
@@ -343,10 +393,16 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
         </fieldset>
       ) : (
         <fieldset className="space-y-3 rounded-md border border-line p-3.5">
-          <legend className="eyebrow px-1 text-ink-400">The bundle</legend>
+          <legend className="eyebrow px-1 text-ink-400">
+            {isExclusive ? 'The product' : 'The bundle'}
+          </legend>
 
           <ul className="space-y-2">
-            {fields.map((field, index) => (
+            {/* An exclusive deal is one product, so it shows one row however
+                many the form happens to be holding - switching type from a
+                combo leaves the second line behind otherwise, and it would be
+                submitted and refused. */}
+            {(isExclusive ? fields.slice(0, 1) : fields).map((field, index) => (
               <li key={field.id} className="flex items-end gap-2">
                 <Input
                   label={index === 0 ? 'SKU' : undefined}
@@ -364,7 +420,9 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
                 <button
                   type="button"
                   onClick={() => remove(index)}
-                  disabled={fields.length <= 2}
+                  // A combo's floor is two lines; an exclusive's single line is
+                  // the offer itself and can never be removed.
+                  disabled={isExclusive || fields.length <= 2}
                   aria-label={`Remove line ${index + 1}`}
                   className={cn(pressable, 'mb-0.5 flex size-11 shrink-0 items-center justify-center rounded-md text-ink-400 hover:bg-danger-50 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-ink-400')}
                 >
@@ -374,26 +432,133 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
             ))}
           </ul>
 
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            icon={Plus}
-            onClick={() => append({ sku: '', qty: 1 })}
-          >
-            Add a SKU
-          </Button>
+          {!isExclusive && (
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              icon={Plus}
+              onClick={() => append({ sku: '', qty: 1 })}
+            >
+              Add a SKU
+            </Button>
+          )}
 
           <Input
-            label="Bundle price"
+            label={isExclusive ? 'Deal price' : 'Bundle price'}
             inputMode="decimal"
             suffix="CAD"
-            hint="What the whole bundle costs. The saving against list price is calculated for you."
+            hint={
+              isExclusive
+                ? 'What the part sells for while the deal runs. The saving against list price is calculated for you.'
+                : 'What the whole bundle costs. The saving against list price is calculated for you.'
+            }
             {...register('bundlePriceDollars')}
           />
           <p className="px-1 text-xs text-ink-300">
             SKUs are checked against the catalogue when you save - an unknown one is refused rather
             than published as a broken bundle.
+          </p>
+        </fieldset>
+      )}
+
+      {/* ---- the exclusive deal's own page ----------------------------------
+          Every field here was seed-only before: the page could be created and
+          never edited. All optional, because each section renders only when it
+          has content - an exclusive promoted before anybody writes the FAQ is a
+          valid page rather than a scaffold of empty headings. */}
+      {isExclusive && (
+        <fieldset className="space-y-3 rounded-md border border-line p-3.5">
+          <legend className="eyebrow px-1 text-ink-400">The deal page</legend>
+
+          <Textarea
+            label="Pitch"
+            rows={4}
+            hint="The case for the part, in full sentences. Shown under the hero."
+            value={watch('pitch')}
+            {...register('pitch')}
+          />
+
+          <Textarea
+            label="Highlights"
+            rows={4}
+            hint="One per line, up to eight. Drawn as a ticked list beside the pitch."
+            value={watch('highlightsText')}
+            {...register('highlightsText')}
+          />
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input
+              label="Video URL"
+              placeholder="https://…"
+              hint="Optional. Never autoplays."
+              {...register('videoUrl')}
+            />
+            <Input
+              label="Video poster"
+              placeholder="https://…"
+              hint="The still shown before play is pressed."
+              {...register('videoPoster')}
+            />
+          </div>
+
+          {/* Questions the desk is asked about this part, answered on the page
+              rather than by email. Repeatable because the order matters and a
+              textarea cannot carry a question and answer as one unit. */}
+          <div className="space-y-2">
+            <p className="eyebrow px-1 text-ink-400">Questions</p>
+
+            {faqArray.fields.length === 0 && (
+              <p className="px-1 text-xs text-ink-300">
+                None yet. The page simply leaves the section out.
+              </p>
+            )}
+
+            <ul className="space-y-2">
+              {faqArray.fields.map((field, index) => (
+                <li key={field.id} className="flex items-start gap-2">
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <Input
+                      label={index === 0 ? 'Question' : undefined}
+                      placeholder="Is this the same panel as the OEM service part?"
+                      {...register(`faqs.${index}.question`)}
+                    />
+                    <Textarea
+                      rows={2}
+                      value={watch(`faqs.${index}.answer`)}
+                      {...register(`faqs.${index}.answer`)}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => faqArray.remove(index)}
+                    aria-label={`Remove question ${index + 1}`}
+                    className={cn(
+                      pressable,
+                      index === 0 ? 'mt-6' : 'mt-0.5',
+                      'flex size-11 shrink-0 items-center justify-center rounded-md text-ink-400 hover:bg-danger-50 hover:text-danger',
+                    )}
+                  >
+                    <X className="size-4" strokeWidth={2} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              icon={Plus}
+              onClick={() => faqArray.append({ question: '', answer: '' })}
+            >
+              Add a question
+            </Button>
+          </div>
+
+          <p className="px-1 text-xs text-ink-300">
+            Reviews are not edited here - they are customer testimony, and the desk confirms a
+            purchase before one is marked verified.
           </p>
         </fieldset>
       )}
@@ -453,7 +618,17 @@ function OfferForm({ offer, tree, partTypes, onSubmit, onCancel, isPending, erro
           hint="Blank starts immediately."
           {...register('startsAt')}
         />
-        <Input label="Ends" type="date" hint="Blank runs until paused." {...register('endsAt')} />
+        <Input
+          label="Ends"
+          type="date"
+          hint={
+            isExclusive
+              ? 'Required - the countdown is the point of the page.'
+              : 'Blank runs until paused.'
+          }
+          error={formState.errors.endsAt?.message}
+          {...register('endsAt')}
+        />
       </div>
 
       <Textarea label="Terms" rows={2} value={watch('terms')} {...register('terms')} />
@@ -550,7 +725,11 @@ export function AdminOffersPage() {
       width: '9%',
       priority: 2,
       render: (offer) => (
-        <span className="text-sm text-ink-700">{offer.kind === 'combo' ? 'Combo' : 'Deal'}</span>
+        // Three types, because the admin now authors three and a row reading
+        // "Combo" for the exclusive deal would not match the form that made it.
+        <span className="text-sm text-ink-700">
+          {offer.isExclusive ? 'Exclusive' : offer.kind === 'combo' ? 'Combo' : 'Deal'}
+        </span>
       ),
     },
     {

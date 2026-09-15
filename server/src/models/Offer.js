@@ -59,6 +59,51 @@ const offerSchema = new mongoose.Schema(
     eligibility: { type: String, enum: ['all', 'accounts'], default: 'all' },
     allowedUsers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
 
+    // --- the exclusive deal page ------------------------------------------
+    // An offer flagged `isExclusive` gets a page of its own at
+    // /deals/:slug rather than a card in the offers list. Everything below
+    // is for that page and is optional: a section renders only when it has
+    // content, so an offer promoted to exclusive without any of it is still a
+    // valid page rather than a scaffold of empty headings.
+    isExclusive: { type: Boolean, default: false, index: true },
+
+    // A hosted MP4 or an embed URL. Stored as given and rendered in an
+    // aspect-ratio box; the page never guesses at dimensions.
+    videoUrl: { type: String, trim: true },
+    videoPoster: { type: String, trim: true },
+
+    // The long copy under the video. Rendered through lib/richText.jsx like
+    // every other admin-authored field - never dangerouslySetInnerHTML.
+    pitch: { type: String, maxlength: 4000 },
+
+    // Bullet points beside the price. Short claims, not paragraphs.
+    highlights: [{ type: String, trim: true, maxlength: 140 }],
+
+    // Buyer reviews of the deal itself. Seeded demo content today; there is no
+    // review submission flow yet, so these are admin-authored and `verified`
+    // means the desk confirmed the account bought it, not that a system did.
+    reviews: [
+      {
+        _id: false,
+        author: { type: String, required: true, trim: true, maxlength: 80 },
+        business: { type: String, trim: true, maxlength: 120 },
+        rating: { type: Number, min: 1, max: 5, required: true },
+        body: { type: String, required: true, maxlength: 1200 },
+        verified: { type: Boolean, default: false },
+        postedAt: Date,
+      },
+    ],
+
+    // Questions specific to this deal. The site-wide FAQ stays where it is;
+    // these answer "what am I actually buying here".
+    faqs: [
+      {
+        _id: false,
+        question: { type: String, required: true, trim: true, maxlength: 200 },
+        answer: { type: String, required: true, maxlength: 2000 },
+      },
+    ],
+
     startsAt: Date,
     endsAt: { type: Date, index: true },
     isActive: { type: Boolean, default: true, index: true },

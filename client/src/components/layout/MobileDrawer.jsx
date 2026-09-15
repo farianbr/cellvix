@@ -24,8 +24,10 @@ import { pressable } from '@/lib/motion';
  * with two different answers.
  */
 const NAV_LINKS = [
-  { label: 'Shop all parts', to: '/' },
-  { label: 'Offers & combo deals', to: '/offers' },
+  { label: 'Home', to: '/' },
+  { label: 'Shop all parts', to: '/shop' },
+  { label: 'Combo deals', to: '/offers' },
+  { label: 'Stock clearance', to: '/clearance' },
   { label: 'Blog', to: '/blog' },
   { label: 'FAQ', to: '/faq' },
   { label: 'About us', to: '/about' },
@@ -46,9 +48,10 @@ const NAV_LINKS = [
 // The ERP has its own sidebar and its own thirty-odd screens - mirroring that
 // tree into the storefront drawer would be a second, worse copy of it.
 const ADMIN_LINKS = [
-  { label: 'Shop all parts', to: '/' },
+  { label: 'Home', to: '/' },
+  { label: 'Shop all parts', to: '/shop' },
   { label: 'Admin console', to: '/admin' },
-  { label: 'Offers & combo deals', to: '/offers' },
+  { label: 'Combo deals', to: '/offers' },
   { label: 'Blog', to: '/blog' },
   { label: 'FAQ', to: '/faq' },
   { label: 'About us', to: '/about' },

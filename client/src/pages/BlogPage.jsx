@@ -185,7 +185,7 @@ export function BlogPage() {
     <div className="mx-auto max-w-[1400px] px-3 py-6 sm:px-4 lg:px-6 lg:py-10">
       <header className="mb-7 max-w-2xl">
         <p className="eyebrow mb-2 text-brand">Cellvix journal</p>
-        <h1 className="text-3xl sm:text-d-sm">Bench notes for repair businesses</h1>
+        <h1 className="text-3xl sm:text-d-sm">Workshop notes for repair businesses</h1>
         <p className="mt-3 text-md leading-relaxed text-ink-500">
           Grading standards, diagnostics, credit terms and what is moving in the catalogue
           written by the people who pick, test and ship the parts.

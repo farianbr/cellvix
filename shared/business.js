@@ -28,6 +28,11 @@ const BUSINESS_INFO = {
     { days: 'Saturday', time: '10:00 AM – 4:00 PM ET' },
     { days: 'Sunday', time: 'Closed' },
   ],
+  // The footer Support column links straight out to each channel, so each one
+  // needs a target rather than a label. Placeholders like the rest of this
+  // object: whatsapp is a wa.me number, mapUrl whatever pin the client sends.
+  whatsapp: '+10000000000',
+  mapUrl: 'https://maps.google.com/?q=Toronto,+ON',
   social: {
     facebook: '#',
     instagram: '#',

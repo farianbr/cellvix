@@ -24,14 +24,25 @@ const DURATION = 420;
 /**
  * How far down the viewport a jumped-to heading should land.
  *
- * Measured from the header element rather than read from `--header-h`, because
- * the header's own height changes as you scroll (the announcement bar collapses)
+ * Measured from the elements rather than read from `--chrome-h`, because the
+ * header's own height changes as you scroll (the announcement bar collapses)
  * and this is called mid-animation.
+ *
+ * The sliding nav row has to be counted too. It overlays the body rather than
+ * sitting in the header (see PrimaryNav.jsx), so the header's bottom edge is
+ * NOT the bottom of the chrome - and a jump that only cleared the header landed
+ * its heading under the row. Measured live and only while the row is actually
+ * down: it is retracted at the top of the page, and reserving its height there
+ * would leave the heading floating 45px lower than asked for.
  */
 export function sectionOffset() {
   const header = document.querySelector('header');
   const bottom = header ? header.getBoundingClientRect().bottom : 0;
-  return Math.max(0, bottom) + GAP;
+
+  const strip = document.querySelector('header nav[aria-label="Site"]');
+  const stripBottom = strip ? strip.getBoundingClientRect().bottom : 0;
+
+  return Math.max(0, bottom, stripBottom) + GAP;
 }
 
 function targetFor(element) {

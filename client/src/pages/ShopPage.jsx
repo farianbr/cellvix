@@ -49,7 +49,7 @@ export function ShopPage() {
           {/* pb-4 inside the scroller: the rail is taller than this box on most
               screens, so scrolling it to the end used to butt its rounded bottom
               border straight against the clip edge with nothing under it. */}
-          <div className="sticky top-[132px] max-h-[calc(100vh-152px)] overflow-y-auto pb-4 scroll-slim">
+          <div className="sticky top-[calc(var(--chrome-h,158px)+16px)] max-h-[calc(100vh-var(--chrome-h,158px)-36px)] overflow-y-auto pb-4 scroll-slim">
             <SidebarFilter facets={data?.facets} />
           </div>
         </div>

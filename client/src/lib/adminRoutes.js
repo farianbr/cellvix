@@ -456,6 +456,33 @@ export const ADMIN_ROUTES = {
     title: 'FAQ',
     description: 'Questions and answers published to the storefront.',
   },
+  '/admin/marketing/articles': {
+    label: 'Articles',
+    parent: 'seo',
+    icon: 'FileText',
+    section: 'seo',
+    phase: 1,
+    title: 'Product articles',
+    description: 'Long-form copy rendered on a product page.',
+  },
+  '/admin/marketing/reviews': {
+    label: 'Reviews',
+    parent: 'seo',
+    icon: 'Star',
+    section: 'seo',
+    phase: 1,
+    title: 'Product reviews',
+    description: 'What buyers said, and the lever to hide one.',
+  },
+  '/admin/marketing/articles/:productId': {
+    label: 'Edit article',
+    parent: '/admin/marketing/articles',
+    icon: 'Pencil',
+    section: 'seo',
+    phase: 1,
+    title: 'Edit article',
+    description: 'The article shown on this product page.',
+  },
 
   // Business
   '/admin/businesses': {

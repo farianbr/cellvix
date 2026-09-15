@@ -633,6 +633,8 @@ const ADMIN_NAV = [
     children: [
       { key: 'blog', label: 'Blog', to: '/admin/marketing/blog', icon: 'Newspaper' },
       { key: 'faq', label: 'FAQ', to: '/admin/marketing/faq', icon: 'HelpCircle' },
+      { key: 'articles', label: 'Articles', to: '/admin/marketing/articles', icon: 'FileText' },
+      { key: 'reviews', label: 'Reviews', to: '/admin/marketing/reviews', icon: 'Star' },
     ],
   },
   {
@@ -1411,7 +1413,7 @@ const TAX_RATES = {
  * to the catalogue row it came from, which is what lets stock move when the
  * invoice is raised; a service has no product and never will.
  */
-/** How the job reached the bench. Mirrors the ticket's own sources. */
+/** How the job reached the workshop. Mirrors the ticket's own sources. */
 const INVOICE_SERVICE_TYPES = [
   { value: 'walk_in', label: 'Walk-in' },
   { value: 'pickup', label: 'Pickup' },

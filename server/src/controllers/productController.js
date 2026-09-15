@@ -18,4 +18,14 @@ const detail = asyncHandler(async (req, res) => {
   res.json(result);
 });
 
-export { list, search, detail };
+const clearance = asyncHandler(async (req, res) => {
+  const result = await productService.listClearance(req.query, req.user);
+  res.json(result);
+});
+
+const home = asyncHandler(async (req, res) => {
+  const result = await productService.getHomeSections(req.user);
+  res.json(result);
+});
+
+export { list, search, detail, clearance, home };

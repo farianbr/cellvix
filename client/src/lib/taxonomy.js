@@ -5,14 +5,30 @@
 
 const LEVELS = ['deviceType', 'brand', 'series', 'model'];
 
-/** Finds the node for a given level in the current path. */
+/**
+ * Finds the node for a given level in the current path.
+ *
+ * An unset level in the middle of a path is a GAP to step over, not the end of
+ * the walk. `?brand=samsung` with no device type is a real URL - the footer and
+ * the homepage both produce them, and the catalogue filters on whatever levels
+ * are present - so returning null there made the wizard treat an applied brand
+ * as unset and show its step "Locked".
+ */
 export function findNode(tree, path, level) {
   if (!tree) return null;
 
   let nodes = tree;
   for (const current of LEVELS) {
     const slug = path[current];
-    if (!slug) return null;
+
+    if (!slug) {
+      // Nothing chosen here: flatten to every child at this level so a deeper
+      // slug can still be found under any branch.
+      if (current === level) return null;
+      nodes = nodes.flatMap((node) => node.children ?? []);
+      continue;
+    }
+
     const node = nodes.find((n) => n.slug === slug);
     if (!node) return null;
     if (current === level) return node;
@@ -41,7 +57,19 @@ export function pathNodes(tree, path) {
 
   for (const level of LEVELS) {
     const slug = path[level];
-    if (!slug) break;
+
+    // A GAP, not the end. A path can legitimately skip a level: the footer
+    // links to `?brand=samsung` and the homepage to `?brand=apple`, neither
+    // naming a device type, and the catalogue filters on whichever levels are
+    // present. Breaking here left those with no label at all, so the wizard
+    // step showed "Locked" beside a filter that was actually applied.
+    if (!slug) {
+      // Descend through every branch at this level so the search below still
+      // has somewhere to look for the next one.
+      nodes = nodes.flatMap((node) => node.children ?? []);
+      continue;
+    }
+
     const node = nodes.find((n) => n.slug === slug);
     if (!node) break;
     out.push({ level, ...node });

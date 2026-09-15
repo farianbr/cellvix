@@ -16,6 +16,11 @@ import ImageZoom from '@/components/product/ImageZoom';
 import ProductCard from '@/components/product/ProductCard';
 import MarketCompare from '@/components/product/MarketCompare';
 import ProductFaq from '@/components/product/ProductFaq';
+import GradeOptions from '@/components/product/GradeOptions';
+import ProductArticle from '@/components/product/ProductArticle';
+import ProductReviews from '@/components/product/ProductReviews';
+import Stars from '@/components/ui/Stars';
+import scrollToSection from '@/lib/scrollToSection';
 import WhyCellvix from '@/components/product/WhyCellvix';
 import { useCart } from '@/hooks/useCart';
 import { useAuth } from '@/hooks/useAuth';
@@ -47,14 +52,14 @@ function Breadcrumbs({ product }) {
 
   return (
     <nav aria-label="Breadcrumb" className="mb-4 flex flex-wrap items-center gap-1 text-sm">
-      <Link to="/" className={cn(pressable, 'text-ink-400 hover:text-brand')}>
+      <Link to="/shop" className={cn(pressable, 'text-ink-400 hover:text-brand')}>
         Shop
       </Link>
       {crumbs.map((crumb) => (
         <span key={crumb.label} className="flex items-center gap-1">
           <ChevronRight className="size-3.5 text-ink-300" strokeWidth={2.25} aria-hidden="true" />
           <Link
-            to="/"
+            to="/shop"
             onClick={() => setPath(crumb.path)}
             className={cn(pressable, 'text-ink-400 hover:text-brand')}
           >
@@ -104,7 +109,7 @@ export function ProductDetailPage() {
         <h1 className="text-2xl">Part not found</h1>
         <p className="mt-3 text-md text-ink-500">{error.message}</p>
         <Link
-          to="/"
+          to="/shop"
           className="mt-6 inline-flex items-center gap-1.5 text-md font-semibold text-brand hover:text-brand-700"
         >
           Back to the catalogue
@@ -113,7 +118,7 @@ export function ProductDetailPage() {
     );
   }
 
-  const { product, related, faqs } = data;
+  const { product, related, faqs, grades, article, reviews } = data;
   const gated = !product.priceVisible;
   const outOfStock = !product.inStock;
   const grade = GRADES[product.grade];
@@ -163,6 +168,24 @@ export function ProductDetailPage() {
           <h1 className="text-2xl leading-tight sm:text-3xl">
             {productTitle(product.name, product.partTypeLabel)}
           </h1>
+
+          {/* The rating, directly under the title. It is the one number a
+              buyer wants before any other on this page, and it links to the
+              reviews rather than repeating them here. Absent entirely with no
+              reviews - an empty star row reads as a zero score. */}
+          {reviews?.count > 0 && (
+            <button
+              type="button"
+              onClick={() => scrollToSection('product-reviews')}
+              className={cn(pressable, 'mt-3 inline-flex items-center gap-2 text-sm text-ink-500 hover:text-ink-900')}
+            >
+              <Stars rating={reviews.average} />
+              <span className="tnum">
+                {reviews.average.toFixed(1)} from {reviews.count}{' '}
+                {reviews.count === 1 ? 'review' : 'reviews'}
+              </span>
+            </button>
+          )}
 
           {/* Availability is a boolean here and everywhere else on the
               storefront. The on-hand count is warehouse data, and printing it
@@ -288,6 +311,34 @@ export function ProductDetailPage() {
       {/* Sits above Related on purpose: the questions belong to the part being
           looked at, and a grid of other parts is an invitation to leave. */}
       <ProductFaq faqs={faqs} product={product} className="mt-10 lg:mt-14" />
+
+      {/* ---- reviews --------------------------------------------------------
+          Above the article and below the FAQ. A review is short, specific and
+          about this exact part, which makes it more use to a wavering buyer
+          than several hundred words about the component type in general.
+          Renders nothing until somebody has written one. */}
+      <ProductReviews
+        reviews={reviews?.reviews}
+        average={reviews?.average ?? 0}
+        count={reviews?.count ?? 0}
+        className="mt-10 lg:mt-14"
+      />
+
+      {/* ---- the article ----------------------------------------------------
+          Below the FAQ: the questions are shorter and more often the actual
+          blocker, so they get the higher slot. Above Related for the reason
+          Related is last - a grid of other parts is an invitation to leave, and
+          it should not sit in the middle of something being read. */}
+      <ProductArticle article={article} product={product} className="mt-10 lg:mt-14" />
+
+      {/* ---- the same part, other grades ------------------------------------
+          Directly above Related, and drawn with the same card grid, so the two
+          read as a pair: the same part at another grade, then other parts for
+          the same phone. A grade is a separate product with its own price,
+          stock and add-to-cart, so it gets the component the site already uses
+          for a product you might buy rather than a row in a table of
+          attributes. Renders nothing when we stock this part at one grade. */}
+      <GradeOptions product={product} grades={grades} className="mt-10 lg:mt-14" />
 
       {/* ---- related -------------------------------------------------------- */}
       {related?.length > 0 && (

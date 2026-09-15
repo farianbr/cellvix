@@ -289,7 +289,7 @@ export function AccountLayout() {
         {/* ---- navigation ------------------------------------------------- */}
         <nav
           aria-label="Account sections"
-          className="mb-4 lg:sticky lg:top-[132px] lg:mb-0 lg:rounded-lg lg:border lg:border-line lg:bg-surface lg:p-2"
+          className="mb-4 lg:sticky lg:top-[calc(var(--chrome-h,158px)+16px)] lg:mb-0 lg:rounded-lg lg:border lg:border-line lg:bg-surface lg:p-2"
         >
           {/* ---- dropdown below lg ---------------------------------------- */}
           <div className="flex items-center gap-2 lg:hidden">

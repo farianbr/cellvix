@@ -767,7 +767,7 @@ export function CheckoutPage() {
           </div>
 
           {/* ---- running total -------------------------------------------- */}
-          <aside className="mt-4 lg:sticky lg:top-[132px] lg:mt-0">
+          <aside className="mt-4 lg:sticky lg:top-[calc(var(--chrome-h,158px)+16px)] lg:mt-0">
             <div className="rounded-lg border border-line bg-surface p-5">
               <h2 className="mb-4 font-display text-lg font-bold">
                 Order summary

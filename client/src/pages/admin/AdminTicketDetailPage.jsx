@@ -92,7 +92,7 @@ const TERMS = [
  *
  * **Four stations, not nine.** The real ladder in `TICKET_STATUSES` has nine
  * rungs and most are shades of the same station - `ready_to_repair` and
- * `waiting_for_parts` are both "in repair" as far as anyone outside the bench
+ * `waiting_for_parts` are both "in repair" as far as anyone outside the workshop
  * is concerned. `Move stage` above is where the exact rung lives; this is the
  * shape of the process, which is what somebody scanning wants.
  *
@@ -113,7 +113,7 @@ const LIFECYCLE = [
  * A cancelled ticket keeps the station it died at - `timeline` is the only
  * record of how far it got, so the last status before the cancellation is
  * where the strip stops. Without that a cancelled ticket showed as stopped at
- * Diagnosis whether it was cancelled at the counter or on the bench.
+ * Diagnosis whether it was cancelled at the counter or on the workshop.
  */
 function stationOf(ticket, invoiced) {
   if (invoiced) return 'invoiced';
@@ -385,7 +385,7 @@ export function AdminTicketDetailPage() {
  * The **next** status is preselected, because advancing one rung is what
  * happens nine times in ten and pre-picking it turns the common case into one
  * click. Every other status stays available: a repair genuinely goes backwards
- * - a device on the bench returns to `waiting_for_parts` when a part turns out
+ * - a device on the workshop returns to `waiting_for_parts` when a part turns out
  * to be wrong - and a control that only moved forward would make an operator
  * lie about where the job is.
  */

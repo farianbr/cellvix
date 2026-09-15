@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
 
+import { authorModelShape } from '../../../shared/author.js';
+
 const blogPostSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
@@ -13,10 +15,9 @@ const blogPostSchema = new mongoose.Schema(
     tags: [String],
     coverImage: String,
 
-    author: {
-      name: { type: String, required: true },
-      role: String,
-    },
+    // Name, role, bio, photo and social links. Shared with `ProductArticle` so
+    // the two bylines cannot drift - see `shared/author.js`.
+    author: authorModelShape(),
 
     status: { type: String, enum: ['draft', 'published'], default: 'draft', index: true },
     publishedAt: { type: Date, index: true },

@@ -1,19 +1,113 @@
+import { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'react-router';
-import { ArrowUpRight, Facebook, Instagram, Linkedin, Mail, MapPin, Phone, Youtube } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import {
+  ArrowUpRight,
+  Facebook,
+  HelpCircle,
+  Instagram,
+  Linkedin,
+  Mail,
+  MapPin,
+  MessageCircle,
+  MessageSquare,
+  Phone,
+  Youtube,
+} from 'lucide-react';
 import cn from '@/lib/cn';
 import { BUSINESS_INFO } from '@/lib/constants';
-import { pressable } from '@/lib/motion';
+import { pressable, transition } from '@/lib/motion';
+
+/**
+ * Support: the channels, not the sitemap.
+ *
+ * Separate from the Company column because these answer a different question.
+ * A Company link is somewhere on this site; every one of these is a way to
+ * reach a person, which is why each carries the out-arrow and opens its own
+ * channel rather than a page that lists them. It leads the navigation row -
+ * ahead of Shop - because a footer is where somebody goes once the site has
+ * stopped answering them.
+ *
+ * Every row is ONE line. The value a row opens - an address, a number, an
+ * inbox - lives in a popover on the three that have one rather than printed
+ * under the label: underneath, a six-row list stood twelve lines tall and
+ * every value clipped at a footer column's width. A reader who wants to dial
+ * still sees the number before committing to it; a reader scanning the column
+ * sees six labels. The panel opens on click - see `SupportRow`.
+ */
+const SUPPORT = [
+  {
+    key: 'location',
+    icon: MapPin,
+    label: 'Location',
+    href: BUSINESS_INFO.mapUrl,
+    external: true,
+    // `title` names the field the way the paper form would, `body` is the value
+    // itself, `cta` the thing to do with it.
+    popover: {
+      title: 'Store Address',
+      body: `${BUSINESS_INFO.address.line1}, ${BUSINESS_INFO.address.city}, ${BUSINESS_INFO.address.region} ${BUSINESS_INFO.address.postal}, ${BUSINESS_INFO.address.country}`,
+      cta: 'Get directions',
+    },
+  },
+  {
+    key: 'feedback',
+    icon: MessageSquare,
+    label: 'Feedback',
+    href: '/contact',
+  },
+  {
+    key: 'phone',
+    icon: Phone,
+    label: 'Phone',
+    href: `tel:${BUSINESS_INFO.phone.replace(/[^\d+]/g, '')}`,
+    external: true,
+    popover: {
+      title: 'Sales desk',
+      body: BUSINESS_INFO.phone,
+      note: `${BUSINESS_INFO.hours[0].days} · ${BUSINESS_INFO.hours[0].time}`,
+      cta: 'Call the desk',
+    },
+  },
+  {
+    key: 'email',
+    icon: Mail,
+    label: 'Email',
+    href: `mailto:${BUSINESS_INFO.supportEmail}`,
+    external: true,
+    popover: {
+      title: 'Support inbox',
+      body: BUSINESS_INFO.supportEmail,
+      note: 'Answered within one business day',
+      cta: 'Write to us',
+    },
+  },
+  {
+    key: 'whatsapp',
+    icon: MessageCircle,
+    label: 'WhatsApp',
+    href: `https://wa.me/${BUSINESS_INFO.whatsapp.replace(/[^\d]/g, '')}`,
+    external: true,
+  },
+  {
+    key: 'faqs',
+    icon: HelpCircle,
+    label: 'FAQs',
+    href: '/faq',
+  },
+];
 
 const COLUMNS = [
   {
     title: 'Shop',
     links: [
-      { label: 'All parts', to: '/' },
-      { label: 'Phone parts', to: '/?deviceType=smartphone' },
-      { label: 'Tablet parts', to: '/?deviceType=tablet' },
-      { label: 'Laptop parts', to: '/?deviceType=laptop' },
-      { label: 'Console parts', to: '/?deviceType=game-console' },
-      { label: 'Offers & combo deals', to: '/offers' },
+      { label: 'All parts', to: '/shop' },
+      { label: 'Phone parts', to: '/shop?deviceType=smartphone' },
+      { label: 'Tablet parts', to: '/shop?deviceType=tablet' },
+      { label: 'Laptop parts', to: '/shop?deviceType=laptop' },
+      { label: 'Console parts', to: '/shop?deviceType=game-console' },
+      { label: 'Combo deals', to: '/offers' },
+      { label: 'Stock clearance', to: '/clearance' },
     ],
   },
   {
@@ -37,6 +131,29 @@ const COLUMNS = [
   },
 ];
 
+/**
+ * The hosting badges, served by their issuer.
+ *
+ * Supplied artwork carrying a partner's mark, so it is used as issued and never
+ * recoloured or redrawn - height is the only thing set. No border and no plate
+ * behind them: each is drawn with its own lockup and framing them put a badge
+ * inside a badge. They sit above Follow us because a credential outranks a
+ * handle, centred across the column, and they scale slightly on hover so the
+ * pair reads as pressable without a box around them saying so.
+ */
+const BADGES = [
+  {
+    src: 'https://s.whc.ca/badges/hosted-in-canada-badge-3.svg',
+    href: 'https://whc.ca/hosted-in-canada/?aff=3153&gbid=8en',
+    alt: 'Proudly hosted in Canada',
+  },
+  {
+    src: 'https://s.whc.ca/badges/green-badge-8.svg',
+    href: 'https://whc.ca/green-powered/?aff=3153&gbid=8en',
+    alt: 'Green powered website',
+  },
+];
+
 const SOCIAL = [
   { icon: Facebook, key: 'facebook', label: 'Facebook' },
   { icon: Instagram, key: 'instagram', label: 'Instagram' },
@@ -45,14 +162,144 @@ const SOCIAL = [
 ];
 
 /**
+ * One Support row.
+ *
+ * The three rows carrying a value open a panel **on click**, not on hover. A
+ * row is a link to a channel and the panel is the value it will use, so
+ * opening it is a decision the reader makes rather than something that happens
+ * to them on the way past. That also makes one interaction serve every input:
+ * a mouse, a keyboard and a finger all open it the same way, where hover had
+ * needed a focus fallback beside it and still left touch out.
+ *
+ * Which means the row is a BUTTON when it carries a panel, and the channel is
+ * opened from the panel's own action. A link that does not navigate when
+ * clicked is a broken link, so the two cases are different elements rather
+ * than one element with its default suppressed.
+ */
+function SupportRow({ item }) {
+  const { icon: Icon, label, href, external, popover } = item;
+  const [open, setOpen] = useState(false);
+  const panelId = useId();
+  const rootRef = useRef(null);
+
+  // Escape closes it, and so does a click anywhere else - the panel sits over
+  // the rows above it, and the way out should not be "find the trigger again".
+  useEffect(() => {
+    if (!open) return undefined;
+
+    const onKey = (event) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    const onPointerDown = (event) => {
+      if (!rootRef.current?.contains(event.target)) setOpen(false);
+    };
+
+    document.addEventListener('keydown', onKey);
+    document.addEventListener('pointerdown', onPointerDown);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.removeEventListener('pointerdown', onPointerDown);
+    };
+  }, [open]);
+
+  const isHttp = typeof href === 'string' && href.startsWith('http');
+  const targetProps = isHttp ? { target: '_blank', rel: 'noopener noreferrer' } : {};
+
+  const inner = (
+    <>
+      <span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-ink-400 transition-[color,border-color] duration-snap ease-entrance group-hover:border-brand group-hover:text-brand">
+        <Icon className="size-3.5" strokeWidth={2} aria-hidden="true" />
+      </span>
+      <span className="flex items-center gap-1 text-md text-ink-500 transition-colors group-hover:text-brand">
+        {label}
+        <ArrowUpRight
+          className="size-3.5 shrink-0 text-ink-200 transition-[transform,color] duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-brand"
+          strokeWidth={2.25}
+          aria-hidden="true"
+        />
+      </span>
+    </>
+  );
+
+  const rowClass = cn(pressable, 'group flex items-center gap-2.5 py-0.5 text-left');
+
+  return (
+    <li className="relative" ref={rootRef}>
+      {popover ? (
+        <button
+          type="button"
+          onClick={() => setOpen((value) => !value)}
+          aria-expanded={open}
+          aria-controls={panelId}
+          className={rowClass}
+        >
+          {inner}
+        </button>
+      ) : external ? (
+        <a href={href} {...targetProps} className={rowClass}>
+          {inner}
+        </a>
+      ) : (
+        <Link to={href} className={rowClass}>
+          {inner}
+        </Link>
+      )}
+
+      {/* The panel floats over the column, so it takes the shadow anything
+          lifted off the page takes and no border with it. Anchored to the row's
+          left edge and wider than the column itself - the address is one line
+          of prose, and a 200px column would set it as five. The panel ramp,
+          not the standard one: this is a large block carrying text under 18px,
+          where white only clears 3.58:1 on the bright end of the full ramp.
+
+          It opens UPWARD. That needed the footer's outer panel to stop being
+          `overflow-hidden` - see the wordmark block, which now does its own
+          clipping - because the crop that shapes the wordmark was slicing the
+          top off any panel that rose above a row.
+
+          It rises 4px as it arrives rather than appearing in place: the motion
+          is what says the panel belongs to the row it came out of. */}
+      {popover && (
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              id={panelId}
+              initial={{ opacity: 0, y: 4, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 2, scale: 0.98, transition: transition.exit }}
+              transition={transition.panel}
+              style={{ transformOrigin: 'bottom left' }}
+              className="absolute bottom-[calc(100%+8px)] left-0 z-20 w-72 max-w-[calc(100vw-3rem)] rounded-lg bg-brand-gradient-panel p-4 shadow-lg"
+            >
+              <p className="font-display text-md font-bold text-white">{popover.title}</p>
+              <p className="mt-2 text-sm leading-relaxed text-white/80">{popover.body}</p>
+              {popover.note && <p className="mt-1.5 text-xs text-white/70">{popover.note}</p>}
+
+              {/* The action, now that the row itself only opens the panel. */}
+              <a
+                href={href}
+                {...targetProps}
+                className={cn(pressable, 'mt-3 flex items-center gap-1 text-sm font-semibold text-white underline-offset-4 hover:underline')}
+              >
+                {popover.cta}
+                <ArrowUpRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
+              </a>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      )}
+    </li>
+  );
+}
+
+/**
  * The footer.
  *
  * One rounded slab that sits IN the page rather than a full-bleed band ruled off
  * the bottom of it - the old version was four equal columns of grey links and
- * read as a sitemap dump. The weight is redistributed: a statement and the
- * contact details carry the left, the navigation is three tight columns in the
- * middle, and the two things a buyer actually wants from a footer (talk to
- * someone, open an account) are the only accented elements on the page.
+ * read as a sitemap dump. The weight is redistributed: a statement carries the
+ * left with the hosting credentials and the social handles under it, and the
+ * navigation is four columns led by Support.
  *
  * The wordmark underneath is the brand at the size it deserves once, at the end,
  * where nothing has to compete with it.
@@ -65,57 +312,57 @@ export function Footer() {
           surface. The wordmark is cropped BY that panel's rounded bottom edge
           it is a texture the footer ends on, not a logo to be read, and letting
           it run out of the box is what stops it reading as a fifth column. */}
-      <div className="mx-auto max-w-[1400px] overflow-hidden rounded-xl bg-surface-2 ring-1 ring-line">
+      <div className="mx-auto max-w-[1400px] rounded-xl bg-surface-2 ring-1 ring-line">
         {/* The gradient as a hairline rule - accent, not fill. */}
         <div className="rule-brand-gradient h-1" aria-hidden="true" />
 
         <div className="px-5 pt-8 sm:px-7 lg:px-10 lg:pt-12">
-          {/* 4 / 5 / 3 of twelve from lg up. Below that everything stacks and
-              the three link columns share their own row, so "Company" never
-              sits alone beside half a column of empty surface. */}
+          {/* 4 / 8 of twelve from lg up. The pair of calls to action that held
+              a third column is gone: "Call the desk" restated the Phone row
+              and "Open an account" the Contact link, so the column was two
+              accents repeating rows sitting two columns over. */}
           <div className="grid gap-x-8 gap-y-10 lg:grid-cols-12">
-            {/* ---- statement + reach ------------------------------------- */}
+            {/* ---- statement, credentials, social ------------------------ */}
             <div className="lg:col-span-4">
               <h2 className="max-w-sm font-display text-xl font-bold leading-snug text-ink-900 sm:text-2xl">
-                Cellvix keeps Canadian repair shops in graded parts, at wholesale
+                Cellvix keeps Canadian repair businesses in graded parts, at wholesale
                 prices, on terms.
               </h2>
 
-              <ul className="mt-6 space-y-2.5 text-sm text-ink-500">
-                <li className="flex items-center gap-2.5">
-                  <Phone className="size-4 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
-                  <a
-                    href={`tel:${BUSINESS_INFO.phone.replace(/[^\d+]/g, '')}`}
-                    className={cn(pressable, ' hover:text-brand')}
-                  >
-                    {BUSINESS_INFO.phone}
-                  </a>
-                </li>
-                <li className="flex items-center gap-2.5">
-                  <Mail className="size-4 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
-                  <a
-                    href={`mailto:${BUSINESS_INFO.email}`}
-                    className={cn(pressable, ' hover:text-brand')}
-                  >
-                    {BUSINESS_INFO.email}
-                  </a>
-                </li>
-                <li className="flex items-start gap-2.5">
-                  <MapPin className="mt-0.5 size-4 shrink-0 text-ink-300" strokeWidth={2} aria-hidden="true" />
-                  <span>
-                    {BUSINESS_INFO.address.line1}
-                    <br />
-                    {BUSINESS_INFO.address.city}, {BUSINESS_INFO.address.region}{' '}
-                    {BUSINESS_INFO.address.postal}
-                  </span>
-                </li>
+              {/* No address here: it is the Location row's popover now, and
+                  printing it twice on one row is one fact taking two places
+                  to say. */}
+              {/* Centred across the column. The pair is a credential rather
+                  than a list to read down, so it sits as one centred block
+                  instead of ranging left against copy it has no relationship
+                  to - and centring is what stops the two unequal badge widths
+                  reading as a ragged edge. */}
+              <ul className="mt-7 flex flex-wrap items-center justify-center gap-5">
+                {BADGES.map((badge) => (
+                  <li key={badge.href}>
+                    <a href={badge.href} target="_blank" rel="noopener noreferrer" className="block">
+                      <img
+                        src={badge.src}
+                        alt={badge.alt}
+                        loading="lazy"
+                        decoding="async"
+                        draggable="false"
+                        className="h-14 w-auto select-none transition-transform duration-200 ease-entrance hover:scale-105 active:scale-[0.97] motion-reduce:transition-none motion-reduce:hover:scale-100"
+                      />
+                    </a>
+                  </li>
+                ))}
               </ul>
 
               {/* Handle beside the glyph: a row of bare circles told a reader
                   which networks exist, not which account they land on. */}
-              <div className="mt-6">
+              <div className="mt-7">
                 <h3 className="eyebrow mb-3 text-ink-400">Follow us</h3>
-                <ul className="flex flex-wrap gap-1.5">
+                {/* A 2x2 rather than a wrapping row. Four chips do not fit
+                    across this rail, so a flex row broke 3 + 1 - which reads as
+                    a list that ran out of room. An even grid reads as a block
+                    that was meant to be one. */}
+                <ul className="grid max-w-sm grid-cols-2 gap-1.5">
                   {SOCIAL.map(({ icon: Icon, key, label }) => (
                     <li key={key}>
                       <a
@@ -133,31 +380,28 @@ export function Footer() {
             </div>
 
             {/* ---- navigation --------------------------------------------
-                Two columns on a phone, not one. Stacked, three short link lists
-                ran the footer to most of a screen's height and left a column of
-                dead space beside every 13px link - the lists are far narrower
-                than the viewport, so the width was there and unused.
+                Two columns on a phone, not one. Stacked, the link lists ran the
+                footer to most of a screen's height and left a column of dead
+                space beside every 13px link - the lists are far narrower than
+                the viewport, so the width was there and unused.
 
-                Two rather than three: at 320px a third column would put
-                "Invoices & statements" onto three lines. The third list wraps
-                onto the second row and takes the full width there, which is
-                also why the row gap is tighter than the desktop one. */}
-            <div className="grid grid-cols-2 gap-x-6 gap-y-7 sm:grid-cols-3 sm:gap-y-8 lg:col-span-5">
-              {COLUMNS.map((column, index) => (
-                <nav
-                  key={column.title}
-                  aria-label={column.title}
-                  className={cn(
-                    // The third list starts a second row of the two-column phone
-                    // layout on its own, so it takes the whole row and lays its
-                    // links out in two as well. Left in one column it was a
-                    // half-width list against a half-width blank - the exact
-                    // dead space the two-column change is here to remove.
-                    index === 2 && 'col-span-2 sm:col-span-1',
-                  )}
-                >
+                Support leads: it is the column somebody opens a footer for. It
+                is also the only one whose rows open a panel, so it sits at the
+                left edge where that panel has room to grow into. */}
+            <div className="grid grid-cols-2 gap-x-6 gap-y-7 sm:grid-cols-4 sm:gap-y-8 lg:col-span-8">
+              <nav aria-label="Support">
+                <h3 className="eyebrow mb-3.5 text-ink-400">Support</h3>
+                <ul className="space-y-2.5">
+                  {SUPPORT.map((item) => (
+                    <SupportRow key={item.key} item={item} />
+                  ))}
+                </ul>
+              </nav>
+
+              {COLUMNS.map((column) => (
+                <nav key={column.title} aria-label={column.title}>
                   <h3 className="eyebrow mb-3.5 text-ink-400">{column.title}</h3>
-                  <ul className={cn('space-y-2.5', index === 2 && 'grid grid-cols-2 gap-x-6 space-y-0 gap-y-2.5 sm:block sm:space-y-2.5')}>
+                  <ul className="space-y-2.5">
                     {column.links.map((link) => (
                       <li key={link.label}>
                         <Link
@@ -171,43 +415,6 @@ export function Footer() {
                   </ul>
                 </nav>
               ))}
-            </div>
-
-            {/* ---- the two calls to action -------------------------------
-                Side by side on a phone for the same reason as the link columns:
-                each is a two-line block that was taking a full-width row, with
-                a horizontal rule between them adding a third. Below `sm` the
-                rule becomes the vertical gap and the pair reads as one row. */}
-            <div className="grid grid-cols-2 gap-x-6 sm:block lg:col-span-3">
-              <a
-                href={`tel:${BUSINESS_INFO.phone.replace(/[^\d+]/g, '')}`}
-                className="group block"
-              >
-                <span className="flex items-center gap-2 font-display text-lg font-bold text-brand transition-colors group-hover:text-brand-700">
-                  Call the desk
-                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-brand text-white transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5">
-                    <ArrowUpRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
-                  </span>
-                </span>
-                <span className="mt-1 block text-sm text-ink-400">
-                  {BUSINESS_INFO.hours[0].days} · {BUSINESS_INFO.hours[0].time}
-                </span>
-              </a>
-
-              {/* The gap does this job in the two-up phone layout. */}
-              <hr className="my-4 hidden border-line sm:block" />
-
-              <Link to="/contact" className="group block">
-                <span className="flex items-center gap-2 font-display text-lg font-bold text-ink-900 transition-colors group-hover:text-brand">
-                  Open an account
-                  <span className="flex size-5 shrink-0 items-center justify-center rounded-full border border-line-strong text-ink-500 transition-[transform,border-color,color] duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:border-brand group-hover:text-brand">
-                    <ArrowUpRight className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
-                  </span>
-                </span>
-                <span className="mt-1 block text-sm text-ink-400">
-                  Wholesale pricing in one business day
-                </span>
-              </Link>
             </div>
           </div>
         </div>
@@ -235,7 +442,13 @@ export function Footer() {
 
             Decorative - the header carries the accessible name. */}
         <div className="pt-8 lg:pt-10">
-          <div className="relative aspect-2456/305 w-full overflow-hidden">
+          {/* The rounded bottom corners live HERE rather than on the outer
+              panel. That panel used to carry `overflow-hidden` to clip this
+              image against its corners, and the same rule sliced the top off
+              any Support popover rising above its row. This block already
+              crops the image; matching the panel's own `rounded-xl` on its
+              bottom two corners is the rest of what that clip was doing. */}
+          <div className="relative aspect-2456/305 w-full overflow-hidden rounded-b-xl">
             <img
               src="/brand/wordmark.png"
               alt=""

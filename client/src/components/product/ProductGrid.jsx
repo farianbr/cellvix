@@ -13,7 +13,18 @@ import useFilterStore from '@/store/filterStore';
  * rather than being replaced by skeletons; that is what makes filtering read as
  * instant instead of as a page reload.
  */
-export function ProductGrid({ products = [], isLoading, isFetching, error }) {
+export function ProductGrid({
+  products = [],
+  isLoading,
+  isFetching,
+  error,
+  // The empty state is overridable because this grid now serves pages with no
+  // filters at all. "No parts match those filters" and a Clear all filters
+  // button are the wrong answer on the clearance page, where there is nothing
+  // to clear - the list is simply empty today.
+  emptyTitle,
+  emptyBody,
+}) {
   const resetAll = useFilterStore((s) => s.resetAll);
 
   if (error) {
@@ -55,15 +66,17 @@ export function ProductGrid({ products = [], isLoading, isFetching, error }) {
           <PackageSearch className="size-7" strokeWidth={1.5} />
         </span>
         <div>
-          <h3 className="text-lg">No parts match those filters</h3>
+          <h3 className="text-lg">{emptyTitle ?? 'No parts match those filters'}</h3>
           <p className="mx-auto mt-1.5 max-w-sm text-md text-ink-500">
-            Try widening the model or clearing a grade. Our catalogue covers over 400 SKUs across
-            six device categories.
+            {emptyBody ??
+              'Try widening the model or clearing a grade. Our catalogue covers over 400 SKUs across six device categories.'}
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={resetAll}>
-          Clear all filters
-        </Button>
+        {!emptyTitle && (
+          <Button variant="outline" size="sm" onClick={resetAll}>
+            Clear all filters
+          </Button>
+        )}
       </div>
     );
   }

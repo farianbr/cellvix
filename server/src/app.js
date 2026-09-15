@@ -37,7 +37,26 @@ function createApp() {
   // builds every query string with `URLSearchParams`.
   app.set('query parser', 'simple');
 
-  app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
+  /**
+   * Helmet's defaults, with one directive widened.
+   *
+   * In production this app serves the client build (see the static block at the
+   * foot of this file), so its CSP is the storefront's CSP. The default
+   * `img-src 'self' data:` would blank the two hosting badges in the footer -
+   * they are served by their issuer from `s.whc.ca` and, being a partner's
+   * certification mark, cannot be copied local and re-served. One host is added
+   * rather than a blanket `https:`: everything else the site draws is its own
+   * or a data URI, and that is worth keeping true.
+   */
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+      contentSecurityPolicy: {
+        useDefaults: true,
+        directives: { 'img-src': ["'self'", 'data:', 'https://s.whc.ca'] },
+      },
+    }),
+  );
   app.use(
     cors({
       origin: env.origins,

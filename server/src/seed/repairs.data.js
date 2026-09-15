@@ -50,7 +50,7 @@ const SERVICES = {
   water: { name: 'Liquid damage treatment', priceCents: 14_900 },
   camera: { name: 'Rear camera replacement', priceCents: 18_900 },
   speaker: { name: 'Loudspeaker replacement', priceCents: 7_900 },
-  diagnostic: { name: 'Bench diagnostic', priceCents: 4_900 },
+  diagnostic: { name: 'Workshop diagnostic', priceCents: 4_900 },
   board: { name: 'Board-level micro-soldering', priceCents: 34_900 },
 };
 
@@ -111,7 +111,7 @@ const REPAIR_PLANS = [
     source: 'counter',
   },
 
-  // ---- quoted, still on the bench ------------------------------------------
+  // ---- quoted, still on the workshop ------------------------------------------
   {
     chain: 'quoted-open',
     customer: { name: 'Michael Reyes', phone: '+1 9055550193', email: 'michael.reyes@example.ca' },

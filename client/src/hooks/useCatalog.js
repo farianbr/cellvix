@@ -113,3 +113,28 @@ export function useSearchSuggestions(q) {
     placeholderData: keepPreviousData,
   });
 }
+
+/**
+ * Everything the homepage renders, in one request.
+ *
+ * Kept generous on `staleTime`: these are merchandising rows, not stock levels,
+ * and refetching them because somebody tabbed away and back would repaint the
+ * page under a reader for no new information.
+ */
+export function useHomeSections() {
+  return useQuery({
+    queryKey: ['home'],
+    queryFn: ({ signal }) => api.get('/products/home', undefined, { signal }),
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+/** The clearance page. Paged like the catalogue, filtered by nothing else. */
+export function useClearance({ page = 1, sort = 'newest' } = {}) {
+  return useQuery({
+    queryKey: ['clearance', { page, sort }],
+    queryFn: ({ signal }) => api.get('/products/clearance', { page, sort }, { signal }),
+    placeholderData: keepPreviousData,
+    staleTime: 60 * 1000,
+  });
+}

@@ -19,14 +19,19 @@ const BLOG_POSTS = [
     title: 'How to grade a pull screen before you fit it',
     slug: 'how-to-grade-a-pull-screen',
     excerpt:
-      'Pull A and Pull B are not opinions. Here is the bench check we run on every returned assembly, and the four faults that decide the grade.',
+      'Pull A and Pull B are not opinions. Here is the workshop check we run on every returned assembly, and the four faults that decide the grade.',
     category: 'repair-guides',
     tags: ['grading', 'screens', 'quality'],
-    author: { name: 'Marc Deveau', role: 'Quality lead, Toronto warehouse' },
+    author: {
+      name: 'Marc Deveau',
+      role: 'Quality lead, Toronto warehouse',
+      bio: 'Grades every pull batch that reaches the Toronto warehouse and wrote the sheet the graders work to. Fourteen years on the tools before that.',
+      links: { linkedin: 'https://www.linkedin.com/in/marc-deveau-cellvix', website: 'https://cellvix.ca/about' },
+    },
     status: 'published',
     publishedAt: daysAgo(4),
     isFeatured: true,
-    body: `Every screen that comes back into the Cellvix warehouse is graded by hand before it is listed. Buyers ask us often what separates a Pull A from a Pull B, so this is the exact bench sequence, in the order we run it.
+    body: `Every screen that comes back into the Cellvix warehouse is graded by hand before it is listed. Buyers ask us often what separates a Pull A from a Pull B, so this is the exact workshop sequence, in the order we run it.
 
 ## The four faults that set the grade
 
@@ -45,7 +50,7 @@ Grading is not a general impression of condition. It is four specific checks, an
 
 > A part that fails touch or panel is not a Pull B. It is scrap, and it never reaches the catalogue.
 
-## Bench sequence
+## Workshop sequence
 
 1. Clean the assembly with isopropyl and a lint-free cloth. Half of what looks like a hairline is adhesive residue.
 2. Inspect under a raking LED at roughly 30 degrees. Straight-on light hides everything worth finding.
@@ -57,7 +62,7 @@ Grading is not a general impression of condition. It is four specific checks, an
 
 Two habits save more warranty claims than anything else on this list.
 
-- Test the assembly on the bench **before** you take the customer's device apart. A DOA found at the counter costs you five minutes; the same DOA found at reassembly costs you the job.
+- Test the assembly on the workshop **before** you take the customer's device apart. A DOA found at the counter costs you five minutes; the same DOA found at reassembly costs you the job.
 - Photograph the screen powered on, with the SKU visible, the moment you open the box. If a claim ever happens, that photograph settles it in one message.
 
 Every Cellvix assembly ships with a 30-day warranty as standard, and 90 days on NEW and OEM stock. Claims go through your account rep with the order number and that first photograph.`,
@@ -69,11 +74,16 @@ Every Cellvix assembly ships with a 30-day warranty as standard, and 90 days on 
       'A new battery that reads 94% is not faulty. Here is what the health figure actually measures, and how to explain it at the counter without losing the sale.',
     category: 'repair-guides',
     tags: ['batteries', 'diagnostics'],
-    author: { name: 'Priya Raman', role: 'Technical support' },
+    author: {
+      name: 'Priya Raman',
+      role: 'Technical support',
+      bio: 'Takes the calls when a part does not behave, which means she sees the same five faults more often than anyone else here.',
+      links: { linkedin: 'https://www.linkedin.com/in/priya-raman-cellvix', x: 'https://x.com/cellvix' },
+    },
     status: 'published',
     publishedAt: daysAgo(12),
     isFeatured: false,
-    body: `The single most common support ticket we get is a shop reporting that a brand-new battery installed at less than 100% health. In almost every case the cell is fine, and the number on the screen is not measuring what the customer thinks it is.
+    body: `The single most common support ticket we get is a customer reporting that a brand-new battery installed at less than 100% health. In almost every case the cell is fine, and the number on the screen is not measuring what the customer thinks it is.
 
 ## What the health percentage actually reports
 
@@ -109,7 +119,12 @@ Photograph the diagnostic screen and open the claim through your account rep wit
       'Approved accounts can order on terms instead of prepaying. What the credit limit means, how the balance moves, and how to get a limit raised.',
     category: 'business-tips',
     tags: ['credit', 'accounts', 'invoicing'],
-    author: { name: 'Marc Deveau', role: 'Sales desk' },
+    author: {
+      name: 'Marc Deveau',
+      role: 'Sales desk',
+      bio: 'Sets up wholesale accounts and credit terms, so he fields the questions this article answers several times a week.',
+      links: { linkedin: 'https://www.linkedin.com/in/marc-deveau-cellvix' },
+    },
     status: 'published',
     publishedAt: daysAgo(21),
     isFeatured: false,
@@ -162,13 +177,18 @@ The grading scale is unchanged in name, but the Pull A threshold moved. Any hair
 Parts for devices we no longer see demand for are deactivated rather than deleted, so your past orders and invoices still read correctly. If a SKU you rely on has gone quiet, tell your rep before you re-source it - quiet usually means a supplier change, not an exit.`,
   },
   {
-    title: 'Five ways repair shops lose margin on parts',
-    slug: 'five-ways-repair-shops-lose-margin',
+    title: 'Five ways a repair business loses margin on parts',
+    slug: 'five-ways-a-repair-business-loses-margin',
     excerpt:
       'None of them are the unit price. Freight stacking, grade mismatch and dead stock cost more than the line item you negotiated.',
     category: 'business-tips',
     tags: ['margin', 'operations'],
-    author: { name: 'Priya Raman', role: 'Technical support' },
+    author: {
+      name: 'Priya Raman',
+      role: 'Technical support',
+      bio: 'Takes the calls when a part does not behave, which means she sees the same five faults more often than anyone else here.',
+      links: { linkedin: 'https://www.linkedin.com/in/priya-raman-cellvix', x: 'https://x.com/cellvix' },
+    },
     status: 'published',
     publishedAt: daysAgo(48),
     isFeatured: false,
@@ -192,9 +212,9 @@ A claim you never filed is a part you paid for twice. File it the day it fails, 
 
 ## 5. Re-work
 
-The most expensive of the five and the least tracked. Bench-test before disassembly, every time.
+The most expensive of the five and the least tracked. Test before disassembly, every time.
 
-> If you only change one thing this month, make it the bench test. It is free and it removes the worst outcome on this list.`,
+> If you only change one thing this month, make it the workshop test. It is free and it removes the worst outcome on this list.`,
   },
   {
     title: 'Draft: winter shipping cut-offs',
@@ -367,7 +387,7 @@ const GENERAL_FAQS = [
   {
     question: 'Is every part tested?',
     answer:
-      'Every pull and every aftermarket assembly is bench-tested before listing, and every order is quality-checked again at pick time before it is boxed.',
+      'Every pull and every aftermarket assembly is tested before listing, and every order is quality-checked again at pick time before it is boxed.',
     category: 'products',
     order: 20,
   },
@@ -391,7 +411,7 @@ const PRODUCT_FAQS = [
   {
     question: 'Is {product} tested before it ships?',
     answer:
-      'Yes. This part is bench-tested when it is listed and quality-checked again at pick time, before it goes in the box.',
+      'Yes. This part is tested when it is listed and quality-checked again at pick time, before it goes in the box.',
     category: 'products',
     partType: '',
     deviceTypeSlug: '',
@@ -552,7 +572,7 @@ function buildOffers(products) {
       slug: 'full-refresh-combo',
       subtitle: `Screen, battery and charging port for the ${screen.modelName}`,
       description:
-        'The three parts that come through the door together. One line on the invoice, one shipping charge, and the same bench-tested stock as the individual SKUs.',
+        'The three parts that come through the door together. One line on the invoice, one shipping charge, and the same tested stock as the individual SKUs.',
       kind: 'combo',
       badge: 'Best value',
       accent: 'brand',
@@ -572,7 +592,7 @@ function buildOffers(products) {
       { product: tabletBattery, qty: 1 },
     ];
     offers.push({
-      title: 'Tablet bench pair',
+      title: 'Tablet workshop pair',
       slug: 'tablet-bench-pair',
       subtitle: `Screen and battery for the ${tabletScreen.modelName}`,
       description:
@@ -622,7 +642,7 @@ function buildOffers(products) {
       slug: 'front-and-back-twice-over',
       subtitle: `Two screens and two back glass panels for the ${volumeScreen.modelName}`,
       description:
-        'For shops running the same repair twice a week. Two of each, one line, one freight charge.',
+        'For anyone running the same repair twice a week. Two of each, one line, one freight charge.',
       kind: 'combo',
       badge: 'Volume',
       accent: 'warn',
@@ -676,7 +696,7 @@ function buildOffers(products) {
       slug: '40-off-pull-a-screens',
       subtitle: 'On orders over $750',
       description:
-        'Tested pulls with no cosmetic marks at arm’s length - the grade most shops fit by default. $40 off when your order clears $750.',
+        'Tested pulls with no cosmetic marks at arm’s length - the grade most buyers fit by default. $40 off when your order clears $750.',
       kind: 'deal',
       badge: 'Save $40',
       accent: 'brand',

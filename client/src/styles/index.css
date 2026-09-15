@@ -498,6 +498,22 @@
   .bg-brand-gradient-orb {
     background-image: linear-gradient(100deg, #8f221b -35%, #cf3429 55%, #e8564a 135%);
   }
+  /* The orb ramp for a disc carrying a LABEL rather than a digit.
+
+     `.bg-brand-gradient-orb` was built for a step indicator - one numeral, and
+     the ramp's bright rim at #dd473c gives white 4.17:1, which is fine for a
+     large bold figure and fails the 4.5 AA floor for anything set as text. The
+     promo banner's CTA is two words at 13px, so it needs the same treatment the
+     panel ramp gives a text-bearing block: the same identity and direction,
+     stopping at #9d251d, where white clears 7.7:1.
+
+     Stops still sit outside the element (-35% / 135%) for the reason the plain
+     orb ramp does: a linear gradient is flat past its end stops, and on a disc
+     those flat runs read as vertical strokes down the left and right rims. */
+  .bg-brand-gradient-orb-panel {
+    background-image: linear-gradient(100deg, #5e120d -35%, #8b2019 55%, #9d251d 135%);
+  }
+
 
   /* A gradient RING with the surface still showing through the middle.
 
@@ -590,6 +606,33 @@
   }
   .shadow-flyout {
     box-shadow: var(--shadow-flyout);
+  }
+
+  /* A block whose top-right corner is cut away at 45 degrees.
+
+     The promo banners take this. It exists because a promo has to read as a
+     different KIND of thing from the framed sections around it without taking
+     a different colour - every one of those sections is already a bordered
+     panel on the same ground, so another bordered panel is invisible in the
+     stack no matter what is inside it. Cutting the corner changes the
+     silhouette instead, which the eye picks up before it reads a word.
+
+     `clip-path` rather than a rotated pseudo-element: the banner carries art
+     that bleeds to its edges, and a pseudo-element patch only works over a
+     flat ground. The cut is 40px, scaled to 56px from `sm` up - below about
+     32px it reads as a rendering artefact rather than as a deliberate shape.
+
+     A clipped element cannot show a border (the clip removes it along the
+     diagonal and thins it everywhere else), so anything using this is a filled
+     block, never an outlined one. */
+  .corner-cut {
+    --cut: 40px;
+    clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+  }
+  @media (min-width: 640px) {
+    .corner-cut {
+      --cut: 56px;
+    }
   }
 }
 

@@ -78,9 +78,29 @@ const productSchema = new mongoose.Schema(
     specs: { type: Map, of: String, default: {} },
     searchTerms: [String],
     isActive: { type: Boolean, default: true, index: true },
+
+    // --- clearance --------------------------------------------------------
+    // Set by an admin, never derived from `stock`. Deriving it was the obvious
+    // implementation and is the wrong one twice over: the storefront may not
+    // learn a count or a reorder point (see the operations block above), so a
+    // "low stock" page would have had to leak exactly what that rule forbids -
+    // and a list that rebuilt itself every time the warehouse moved would put
+    // parts in front of buyers that nobody decided to clear. This is a
+    // decision, so it is stored as one.
+    isClearance: { type: Boolean, default: false, index: true },
+
+    // What it is being cleared at, integer cents. Optional: a part can be put
+    // on the clearance page at its ordinary price to shift it. When set, this
+    // is what `serialize` sends as the price and the ordinary price becomes
+    // the strike-through - it never bypasses the price gate, which runs over
+    // whatever value ends up in that field.
+    clearancePrice: { type: Number, default: 0 },
   },
   { timestamps: true },
 );
+
+// The clearance page's query, newest first.
+productSchema.index({ isClearance: 1, isActive: 1, updatedAt: -1 });
 
 // The exact shape of a filtered grid query.
 productSchema.index({

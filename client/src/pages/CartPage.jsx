@@ -87,7 +87,7 @@ export function CartPage() {
           checkout.
         </p>
         <Link
-          to="/"
+          to="/shop"
           className="mt-7 inline-flex h-12 items-center gap-2 rounded-lg bg-brand-gradient px-6 font-display text-md font-semibold text-white transition-[filter] hover:brightness-110"
         >
           <ArrowLeft className="size-4" strokeWidth={2} aria-hidden="true" />
@@ -107,7 +107,7 @@ export function CartPage() {
           </span>
         </h1>
         <Link
-          to="/"
+          to="/shop"
           className={cn(pressable, 'inline-flex items-center gap-1.5 text-md font-semibold text-brand hover:text-brand-700')}
         >
           <ArrowLeft className="size-4" strokeWidth={2} aria-hidden="true" />
@@ -136,7 +136,7 @@ export function CartPage() {
         </section>
 
         {/* ---- summary ---------------------------------------------------- */}
-        <aside className="mt-4 lg:sticky lg:top-[132px] lg:mt-0">
+        <aside className="mt-4 lg:sticky lg:top-[calc(var(--chrome-h,158px)+16px)] lg:mt-0">
           <div className="rounded-lg border border-line bg-surface p-5">
             <h2 className="mb-4 font-display text-lg font-bold">Order summary</h2>
 

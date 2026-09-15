@@ -151,7 +151,7 @@ export function AccountOverviewPage() {
               title="No orders yet"
               body="Your order history and tracking will appear here."
               action={
-                <Link to="/">
+                <Link to="/shop">
                   <Button variant="outline" size="sm">
                     Browse parts
                   </Button>

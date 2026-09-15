@@ -77,7 +77,7 @@ const SHOPPE_CUSTOMERS = [
 /**
  * CellShoppe's staff.
  *
- * A repair shop's roles are shaped differently from a wholesaler's - the bench
+ * A repair shop's roles are shaped differently from a wholesaler's - the workshop
  * technician is the job that does not exist at Cellvix at all - but they hold
  * the same built-in role slugs, because the permission areas are the same
  * question either way. Only the people differ.
@@ -158,7 +158,7 @@ const SHOPPE_EXPENSES = [
   { label: 'Adhesive, screens, tools restock', amount: 68_400, category: 'Supplies', daysAgo: 5 },
   { label: 'Liability insurance - quarterly', amount: 122_000, category: 'Insurance', daysAgo: 21 },
   { label: 'Local ads - Kingsway corridor', amount: 30_000, category: 'Marketing', daysAgo: 17 },
-  { label: 'Bench tool replacement', amount: 54_900, category: 'Equipment', daysAgo: 34 },
+  { label: 'Workshop tool replacement', amount: 54_900, category: 'Equipment', daysAgo: 34 },
   { label: 'Courier to Cellvix Wholesale', amount: 4_250, category: 'Shipping', daysAgo: 3 },
 ];
 

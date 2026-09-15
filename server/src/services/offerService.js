@@ -5,7 +5,7 @@ import '../models/Product.js';
 import ApiError from '../utils/ApiError.js';
 import { likeRegex } from '../utils/regex.js';
 import { canSeePricing } from '../middleware/auth.js';
-import { serialize as serializeProduct } from './productService.js';
+import { serialize as serializeProduct, effectivePrice } from './productService.js';
 
 function slugify(value) {
   return value
@@ -63,6 +63,26 @@ function baseShape(offer, now) {
     endsAt: offer.endsAt ?? null,
     isActive: offer.isActive !== false,
     isFeatured: Boolean(offer.isFeatured),
+
+    // --- the exclusive deal page ---------------------------------------
+    // Content, not pricing, so all of it sits above the gate: a pending
+    // account may read the pitch, watch the video and read the reviews. What
+    // it may not see is any number, and every number on that page comes from
+    // the product lines or bundlePrice, both already gated above.
+    isExclusive: Boolean(offer.isExclusive),
+    videoUrl: offer.videoUrl || '',
+    videoPoster: offer.videoPoster || '',
+    pitch: offer.pitch || '',
+    highlights: offer.highlights ?? [],
+    reviews: (offer.reviews ?? []).map((review) => ({
+      author: review.author,
+      business: review.business || '',
+      rating: review.rating,
+      body: review.body,
+      verified: Boolean(review.verified),
+      postedAt: review.postedAt ?? null,
+    })),
+    faqs: (offer.faqs ?? []).map((faq) => ({ question: faq.question, answer: faq.answer })),
     order: offer.order ?? 0,
     status: offerStatus(offer, now),
     updatedAt: offer.updatedAt,
@@ -98,7 +118,7 @@ async function attachComboProducts(offers, user) {
         complete = false;
         continue;
       }
-      regularTotal += product.price * item.qty;
+      regularTotal += effectivePrice(product) * item.qty;
       lines.push({ ...serializeProduct(product, user), qty: item.qty });
     }
 
@@ -109,8 +129,16 @@ async function attachComboProducts(offers, user) {
     if (showPricing) {
       offer.regularTotal = regularTotal;
       offer.savings = Math.max(0, regularTotal - offer.bundlePrice);
+      // Floored at zero like `savings` above, and for the same reason. These
+      // two disagreed: a bundle that costs MORE than its parts reported a
+      // saving of 0 beside a saving of -10%, and the page showed the percent.
+      // It happens whenever a member part is discounted after the bundle price
+      // was set - putting one on clearance does it - so the honest answer is to
+      // claim no saving rather than a negative one.
       offer.savingsPercent =
-        regularTotal > 0 ? Math.round(((regularTotal - offer.bundlePrice) / regularTotal) * 100) : 0;
+        regularTotal > 0
+          ? Math.max(0, Math.round(((regularTotal - offer.bundlePrice) / regularTotal) * 100))
+          : 0;
     } else {
       offer.bundlePrice = null;
       offer.regularTotal = null;
@@ -306,7 +334,38 @@ function shapeWrite(data) {
     isActive: data.isActive !== false,
     isFeatured: Boolean(data.isFeatured),
     order: data.order ?? 0,
+
+    // --- the exclusive deal page ------------------------------------------
+    // Seed-only until the admin form gained an "Exclusive deal" type. The page
+    // renders each section only when it has content, so every one of these is
+    // safe to write empty. `reviews` is deliberately NOT here: it is customer
+    // testimony carrying a `verified` flag, so it is not something the offer
+    // form should let anybody type freehand, and leaving it out of the write
+    // shape is what stops an edit from clearing the ones already there.
+    isExclusive: Boolean(data.isExclusive),
+    videoUrl: data.videoUrl ?? '',
+    videoPoster: data.videoPoster ?? '',
+    pitch: data.pitch ?? '',
+    highlights: (data.highlights ?? []).filter((line) => line.trim()),
+    faqs: (data.faqs ?? []).filter((faq) => faq.question?.trim() && faq.answer?.trim()),
   };
+}
+
+/**
+ * Only one exclusive deal runs at a time.
+ *
+ * The storefront nav resolves "Exclusive deal" to a single live slug and the
+ * homepage leads with it, so a second one is not a second page anybody can
+ * reach - it is an offer that silently never appears. Demoting the previous
+ * holder rather than refusing the write is deliberate: promoting a new
+ * exclusive is the normal way to end the old one, and making that an error
+ * would mean two trips through the form to do one thing.
+ */
+async function demoteOtherExclusives(keepId) {
+  await db().Offer.updateMany(
+    { isExclusive: true, ...(keepId ? { _id: { $ne: keepId } } : {}) },
+    { $set: { isExclusive: false } },
+  );
 }
 
 async function createOffer(data) {
@@ -314,6 +373,7 @@ async function createOffer(data) {
   await assertSkusExist(write.items);
 
   const offer = await db().Offer.create({ ...write, slug: await uniqueSlug(data.title) });
+  if (write.isExclusive) await demoteOtherExclusives(offer._id);
   return baseShape(offer.toObject(), new Date());
 }
 
@@ -326,6 +386,7 @@ async function updateOffer(id, data) {
 
   Object.assign(offer, write);
   await offer.save();
+  if (write.isExclusive) await demoteOtherExclusives(offer._id);
   return baseShape(offer.toObject(), new Date());
 }
 

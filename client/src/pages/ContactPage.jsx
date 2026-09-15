@@ -437,7 +437,7 @@ export function ContactPage() {
                   number the catalogue already shows.
                 </p>
                 <Link
-                  to="/"
+                  to="/shop"
                   className={cn(pressable, 'mt-4 inline-flex items-center gap-1.5 text-sm font-semibold text-brand hover:text-brand-700')}
                 >
                   Browse the catalogue
@@ -507,7 +507,7 @@ export function ContactPage() {
 
             <p className="mt-6 max-w-lg text-md leading-relaxed text-ink-400">
               Everything in the catalogue ships from this building - Canadian stock, no customs step
-              between the order and the bench.
+              between the order and the workshop.
             </p>
           </Reveal>
 

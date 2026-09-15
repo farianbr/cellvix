@@ -53,7 +53,7 @@ function CategoryNav({ groups, activeId }) {
 
       {/* --- laptop and up -------------------------------------------------- */}
       <nav aria-label="FAQ sections" className="hidden lg:block">
-        <div className="sticky top-[calc(var(--header-h,72px)+24px)]">
+        <div className="sticky top-[calc(var(--chrome-h,158px)+24px)]">
           <p className="eyebrow mb-3 px-3 text-ink-300">Sections</p>
           <ul className="flex flex-col gap-0.5">
             {groups.map((group) => {
@@ -228,7 +228,7 @@ export function FaqPage() {
               <section
                 key={group.value}
                 id={`faq-${group.value}`}
-                className="scroll-mt-[calc(var(--header-h,72px)+20px)]"
+                className="scroll-mt-[calc(var(--chrome-h,158px)+20px)]"
               >
                 <h2 className="mb-4 px-1 text-xl sm:text-2xl">{group.label}</h2>
                 <Accordion items={group.faqs} />

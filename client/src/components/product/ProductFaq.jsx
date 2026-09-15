@@ -56,7 +56,7 @@ export function ProductFaq({ faqs = [], product = null, className }) {
         <Accordion className="min-w-0" items={faqs} defaultOpenId={faqs[0]?.id ?? null} />
 
         {/* ---- ask a person ------------------------------------------------ */}
-        <aside className="lg:sticky lg:top-[132px] lg:self-start">
+        <aside className="lg:sticky lg:top-[calc(var(--chrome-h,158px)+16px)] lg:self-start">
           <div className="overflow-hidden rounded-xl border border-line bg-surface-2 p-5">
             <span className="mb-3 flex size-9 items-center justify-center rounded-md bg-surface text-brand shadow-card">
               <Headphones className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />

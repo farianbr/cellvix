@@ -2,6 +2,7 @@ import { db } from '../db/models.js';
 import '../models/BlogPost.js';
 import ApiError from '../utils/ApiError.js';
 import { likeRegex } from '../utils/regex.js';
+import { authorFromForm, authorToPublic } from '../../../shared/author.js';
 
 const PAGE_SIZE = 9;
 const WORDS_PER_MINUTE = 220;
@@ -29,7 +30,7 @@ function serialize(post) {
     category: post.category,
     tags: post.tags ?? [],
     coverImage: post.coverImage || null,
-    author: { name: post.author?.name ?? 'Cellvix', role: post.author?.role ?? '' },
+    author: authorToPublic(post.author),
     status: post.status,
     publishedAt: post.publishedAt ?? null,
     isFeatured: Boolean(post.isFeatured),
@@ -166,7 +167,7 @@ function shapeWrite(data) {
     category: data.category,
     tags: data.tags ?? [],
     coverImage: data.coverImage || undefined,
-    author: { name: data.authorName, role: data.authorRole || undefined },
+    author: authorFromForm(data),
     status: data.status,
     isFeatured: data.isFeatured,
     readMinutes: readMinutes(data.body),

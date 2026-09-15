@@ -204,7 +204,7 @@ export function RichText({ children, tone = 'prose', headingIds = false, classNa
 
   // A jumped-to heading has to clear the sticky header and the reading-progress
   // rule sitting under it.
-  const anchor = headingIds ? 'scroll-mt-[calc(var(--header-h,72px)+20px)]' : undefined;
+  const anchor = headingIds ? 'scroll-mt-[calc(var(--chrome-h,158px)+20px)]' : undefined;
 
   return (
     <div className={className}>

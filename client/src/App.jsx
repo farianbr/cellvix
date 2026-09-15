@@ -4,6 +4,7 @@ import { Navigate, Route, Routes } from 'react-router';
 import RootLayout from '@/components/layout/RootLayout';
 import RouteProgress from '@/components/layout/RouteProgress';
 import ShopPage from '@/pages/ShopPage';
+import HomeOrShop from '@/components/layout/HomeOrShop';
 import RouteFallback from '@/components/layout/RouteFallback';
 
 /**
@@ -24,6 +25,8 @@ const BlogPage = lazy(() => import('@/pages/BlogPage'));
 const BlogPostPage = lazy(() => import('@/pages/BlogPostPage'));
 const FaqPage = lazy(() => import('@/pages/FaqPage'));
 const OffersPage = lazy(() => import('@/pages/OffersPage'));
+const DealPage = lazy(() => import('@/pages/DealPage'));
+const ClearancePage = lazy(() => import('@/pages/ClearancePage'));
 // Public and outside RootLayout: somebody arriving here is leaving, and the
 // shop header would be reading the moment badly (phase 9, §6.13).
 const UnsubscribePage = lazy(() => import('@/pages/UnsubscribePage'));
@@ -65,6 +68,11 @@ const AdminProductsPage = lazy(() => import('@/pages/admin/AdminProductsPage'));
 const AdminCustomersPage = lazy(() => import('@/pages/admin/AdminCustomersPage'));
 const AdminOffersPage = lazy(() => import('@/pages/admin/AdminOffersPage'));
 const AdminBlogPage = lazy(() => import('@/pages/admin/AdminBlogPage'));
+const AdminProductArticlesPage = lazy(() => import('@/pages/admin/AdminProductArticlesPage'));
+const AdminReviewsPage = lazy(() => import('@/pages/admin/AdminReviewsPage'));
+const AdminProductArticleEditPage = lazy(
+  () => import('@/pages/admin/AdminProductArticleEditPage'),
+);
 const AdminFaqPage = lazy(() => import('@/pages/admin/AdminFaqPage'));
 const AdminInvoicesPage = lazy(() => import('@/pages/admin/AdminInvoicesPage'));
 const AdminClientProfilePage = lazy(() => import('@/pages/admin/AdminClientProfilePage'));
@@ -215,6 +223,9 @@ export function App() {
         <Route path="marketing/offers" element={<AdminOffersPage />} />
         <Route path="marketing/blog" element={<AdminBlogPage />} />
         <Route path="marketing/faq" element={<AdminFaqPage />} />
+        <Route path="marketing/articles" element={<AdminProductArticlesPage />} />
+        <Route path="marketing/articles/:productId" element={<AdminProductArticleEditPage />} />
+        <Route path="marketing/reviews" element={<AdminReviewsPage />} />
 
         {/* Marketing channels (phase 9). SMS, WhatsApp and Calls share one
             component - same MessageLog, different channel. Only email sends
@@ -360,7 +371,29 @@ export function App() {
       </Route>
 
       <Route element={<RootLayout />}>
-        <Route index element={<ShopPage />} />
+        {/* '/' is the homepage, EXCEPT when it carries catalogue parameters -
+            every filtered link ever shared points at '/?deviceType=...', and
+            those forward to /shop with the query intact. See HomeOrShop. */}
+        <Route index element={<HomeOrShop />} />
+        <Route path="shop" element={<ShopPage />} />
+
+        <Route
+          path="clearance"
+          element={
+            <Suspense fallback={<RouteFallback />}>
+              <ClearancePage />
+            </Suspense>
+          }
+        />
+
+        <Route
+          path="deals/:slug"
+          element={
+            <Suspense fallback={<RouteFallback />}>
+              <DealPage />
+            </Suspense>
+          }
+        />
 
         <Route
           path="product/:slug"

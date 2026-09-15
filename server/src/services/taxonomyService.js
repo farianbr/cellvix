@@ -40,6 +40,46 @@ async function getTree({ force = false } = {}) {
 
   const nodes = await db().Taxonomy.find({}).sort({ order: 1, name: 1 }).lean();
 
+  /**
+   * Counts come from the PRODUCTS, not from the stored `productCount`.
+   *
+   * `Taxonomy.productCount` is denormalised and counts every product under a
+   * node, including the ones the catalogue refuses to list because it has no
+   * picture for them (`HAS_PICTURE` - see productService.buildQuery). So the
+   * sidebar offered "Smartphone 212" and the grid behind it answered 116, and
+   * "Tablet 54" opened an empty catalogue. A count beside a filter is a promise
+   * about what clicking it returns, and these were promising stock that cannot
+   * be shown.
+   *
+   * The pruned tree (getTreeForPartType, below) already counted this way. This
+   * is the same aggregate without the component-type match, so the two agree.
+   */
+  const groups = await db().Product.aggregate([
+    { $match: { isActive: true, ...HAS_PICTURE } },
+    {
+      $group: {
+        _id: {
+          deviceType: '$deviceTypeSlug',
+          brand: '$brandSlug',
+          series: '$seriesSlug',
+          model: '$modelSlug',
+        },
+        count: { $sum: 1 },
+      },
+    },
+  ]);
+
+  // A model's count is its own group; every level above it is the rollup below.
+  const modelCounts = new Map();
+  const live = new Set();
+  for (const group of groups) {
+    const { deviceType, brand, series, model } = group._id;
+    for (const slug of [deviceType, brand, series, model]) {
+      if (slug) live.add(slug);
+    }
+    if (model) modelCounts.set(model, (modelCounts.get(model) ?? 0) + group.count);
+  }
+
   const byId = new Map();
   for (const node of nodes) {
     byId.set(node._id.toString(), {
@@ -49,7 +89,7 @@ async function getTree({ force = false } = {}) {
       slug: node.slug,
       icon: node.icon ?? null,
       isFeatured: Boolean(node.isFeatured),
-      count: node.productCount ?? 0,
+      count: modelCounts.get(node.slug) ?? 0,
       path: node.path ?? {},
       children: [],
     });
@@ -73,7 +113,16 @@ async function getTree({ force = false } = {}) {
   };
   roots.forEach(rollup);
 
-  cache = { tree: roots };
+  // Drop what the catalogue cannot show. A branch counting zero is a filter
+  // that opens an empty grid, and offering it is the dead end the pruned tree
+  // exists to prevent - the unpruned one should not reintroduce it. Kept if it
+  // counts anything itself or still has a child that does.
+  const prune = (list) =>
+    list
+      .map((node) => ({ ...node, children: prune(node.children) }))
+      .filter((node) => node.count > 0 || node.children.length > 0);
+
+  cache = { tree: prune(roots) };
   cachedAt = Date.now();
   return cache;
 }

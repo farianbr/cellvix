@@ -8,6 +8,30 @@ import { z } from 'zod';
  * integer cents here as everywhere else (PROJECT_INSTRUCTIONS.md §5.8).
  */
 
+/**
+ * The optional half of a byline, shared by blog posts and product articles.
+ *
+ * `authorName` is NOT here: the blog requires one and a product article does
+ * not, so each schema states its own rule for that field and spreads these.
+ * The caps match `shared/author.js` exactly, so anything that validates here
+ * cannot be silently truncated on write.
+ *
+ * The link fields are `url()` rather than free strings - a social link that is
+ * not a URL renders as a dead icon, and the form is the only place that can
+ * still tell the author about it.
+ */
+const authorLink = z.string().trim().url('Enter a full URL, including https://').max(300).optional().or(z.literal(''));
+
+const authorFields = {
+  authorRole: z.string().trim().max(80).optional().or(z.literal('')),
+  authorBio: z.string().trim().max(400).optional().or(z.literal('')),
+  authorPhoto: z.string().trim().max(500).optional().or(z.literal('')),
+  authorLinkedin: authorLink,
+  authorX: authorLink,
+  authorFacebook: authorLink,
+  authorWebsite: authorLink,
+};
+
 const cents = z.coerce.number().int().min(0).max(100_000_000);
 const objectId = z.string().regex(/^[0-9a-fA-F]{24}$/, 'Not a valid account id.');
 const optionalDate = z.string().trim().optional().nullable().or(z.literal(''));
@@ -33,7 +57,7 @@ const blogPostSchema = z.object({
   tags: z.array(z.string().trim().min(1).max(30)).max(8).default([]),
   coverImage: z.string().trim().max(500).optional().or(z.literal('')),
   authorName: z.string().trim().min(2, 'Who wrote it?').max(80),
-  authorRole: z.string().trim().max(80).optional().or(z.literal('')),
+  ...authorFields,
   status: z.enum(BLOG_STATUSES).default('draft'),
   publishedAt: optionalDate,
   isFeatured: z.boolean().default(false),
@@ -71,11 +95,77 @@ const faqSchema = z.object({
   isPublished: z.boolean().default(true),
 });
 
+// --- product articles --------------------------------------------------------
+
+/**
+ * The article attached to one product, authored under admin SEO.
+ *
+ * `body` is plain text in the markup vocabulary `lib/richText.jsx` reads, the
+ * same one the blog uses. It is never HTML: the project renders admin-authored
+ * copy through that renderer precisely so nothing has to be trusted at render
+ * time (Instructions §8).
+ *
+ * The product is NOT in the body - it comes from the URL, so a payload cannot
+ * move an article to a different product by accident.
+ */
+const productArticleSchema = z.object({
+  heading: z.string().trim().min(6, 'Enter a heading.').max(140),
+  body: z.string().trim().min(40, 'Write the article body.').max(20000),
+  // Optional here where the blog requires it: 773 seeded articles carry no
+  // byline, and the storefront falls back to the parts-desk line for those.
+  authorName: z.string().trim().max(80).optional().or(z.literal('')),
+  ...authorFields,
+  status: z.enum(['draft', 'published']).default('draft'),
+});
+// --- product reviews ---------------------------------------------------------
+
+/**
+ * A customer review of a product they bought.
+ *
+ * The ORDER and the PRODUCT are in the body rather than the URL because a
+ * review is written against a specific order line, and the pair is what the
+ * service checks entitlement on. Neither the author nor the date is here:
+ * both come from the session and the clock, and a client that could assert
+ * them could forge a review.
+ */
+const reviewSchema = z.object({
+  orderId: z.string().trim().min(1),
+  productId: z.string().trim().min(1),
+  rating: z.coerce.number().int().min(1, 'Choose a rating.').max(5),
+  title: z.string().trim().max(120).optional().or(z.literal('')),
+  body: z.string().trim().min(10, 'Tell other shops what you thought.').max(2000),
+});
+
+/** Admin moderation: hide or restore one review. */
+const reviewModerationSchema = z.object({
+  isHidden: z.boolean(),
+  reason: z.string().trim().max(200).optional().or(z.literal('')),
+});
 // --- offers ------------------------------------------------------------------
 
+/**
+ * The three things an admin can author, as the admin thinks of them.
+ *
+ * `exclusive` is NOT a third `kind` in the database - it is `kind: 'combo'`
+ * carrying `isExclusive`, which is what gives it a real `bundlePrice` the
+ * pricing service already knows how to charge and lets it check out through
+ * `/cart/bundles` like every other offer. Splitting it into its own kind would
+ * have meant a second path deciding what one product costs.
+ *
+ * But an admin does not think "a combo with a flag on it", they think "the
+ * exclusive deal page", so the FORM offers three types and maps the choice onto
+ * the two fields. The label is the storefront's own name for each surface, so
+ * the person setting one up can tell which page they are filling in.
+ *
+ * The third storefront offer page, Stock clearance, is deliberately not here:
+ * clearance is a flag on each PRODUCT (`isClearance` / `clearancePrice`), set
+ * from Inventory, because it marks down a part rather than running a promotion
+ * over the catalogue.
+ */
 const OFFER_KINDS = [
-  { value: 'deal', label: 'Deal - a discount across a slice of the catalogue' },
-  { value: 'combo', label: 'Combo - a fixed bundle of SKUs at a bundle price' },
+  { value: 'combo', label: 'Combo deal - a fixed bundle of SKUs at one bundle price' },
+  { value: 'deal', label: 'Catalogue deal - a discount across a slice of the catalogue' },
+  { value: 'exclusive', label: 'Exclusive deal - one product, its own page, with a countdown' },
 ];
 
 const DISCOUNT_TYPES = [
@@ -93,6 +183,7 @@ const offerSchema = z
     description: z.string().trim().max(2000).optional().or(z.literal('')),
     terms: z.string().trim().max(1000).optional().or(z.literal('')),
     kind: z.enum(['deal', 'combo']).default('deal'),
+    isExclusive: z.boolean().default(false),
     badge: z.string().trim().max(30).optional().or(z.literal('')),
     accent: z.enum(OFFER_ACCENTS).default('brand'),
     code: z.string().trim().max(24).optional().or(z.literal('')),
@@ -124,6 +215,26 @@ const offerSchema = z
       .default([]),
     bundlePrice: cents.default(0),
 
+    // --- the exclusive deal page ------------------------------------------
+    // Every one of these was seed-only until now, which meant the page could be
+    // created but never edited: an admin could see it on the storefront and had
+    // no way to change a word of it. All optional, because the page renders
+    // each section only when it has content - an exclusive promoted before
+    // anybody writes the FAQ is a valid page, not a scaffold of empty headings.
+    videoUrl: z.string().trim().max(500).optional().or(z.literal('')),
+    videoPoster: z.string().trim().max(500).optional().or(z.literal('')),
+    pitch: z.string().trim().max(4000).optional().or(z.literal('')),
+    highlights: z.array(z.string().trim().max(140)).max(8).default([]),
+    faqs: z
+      .array(
+        z.object({
+          question: z.string().trim().min(4).max(200),
+          answer: z.string().trim().min(4).max(2000),
+        }),
+      )
+      .max(12)
+      .default([]),
+
     // who may redeem, and how often
     redemption: z.enum(['multi', 'single']).default('multi'),
     usageLimit: z.coerce.number().int().min(0).max(1_000_000).default(0),
@@ -141,20 +252,43 @@ const offerSchema = z
     // price has no offer in it - both are worth refusing at the boundary rather
     // than rendering as a broken card.
     if (value.kind === 'combo') {
-      if (value.items.length < 2) {
+      // An exclusive deal is ONE product - that is the whole definition of it,
+      // and the storefront page is built around a single part. A plain combo
+      // needs at least two, or it is a bundle of one thing.
+      if (value.isExclusive) {
+        if (value.items.length !== 1) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['items'],
+            message: 'An exclusive deal is exactly one SKU.',
+          });
+        }
+      } else if (value.items.length < 2) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['items'],
           message: 'A combo needs at least two SKUs.',
         });
       }
+
       if (value.bundlePrice <= 0) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           path: ['bundlePrice'],
-          message: 'Enter the bundle price.',
+          message: value.isExclusive ? 'Enter the deal price.' : 'Enter the bundle price.',
         });
       }
+    }
+
+    // The exclusive page leads with a countdown - it is the reason the deal has
+    // a page of its own rather than a card in the combo list. Without an end
+    // date the hero renders a clock with nothing in it.
+    if (value.isExclusive && !value.endsAt) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['endsAt'],
+        message: 'An exclusive deal needs an end date - the countdown is the point of the page.',
+      });
     }
 
     // An account-restricted offer with nobody on the list is a dead offer that
@@ -196,4 +330,4 @@ const offerSchema = z
     }
   });
 
-export { BLOG_CATEGORIES, BLOG_STATUSES, blogPostSchema, FAQ_CATEGORIES, FAQ_SCOPES, faqSchema, OFFER_KINDS, DISCOUNT_TYPES, OFFER_ACCENTS, offerSchema };
+export { BLOG_CATEGORIES, BLOG_STATUSES, blogPostSchema, FAQ_CATEGORIES, FAQ_SCOPES, faqSchema, productArticleSchema, reviewSchema, reviewModerationSchema, OFFER_KINDS, DISCOUNT_TYPES, OFFER_ACCENTS, offerSchema };

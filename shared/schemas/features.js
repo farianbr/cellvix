@@ -274,6 +274,17 @@ const FEATURES = [
     // With the blog, and for the same reason: it is storefront content.
     defaults: { product: true, service: false },
   },
+  {
+    key: 'marketing.articles',
+    label: 'Product articles',
+    description: 'Long-form copy on a product page, authored per product.',
+    area: 'marketing',
+    nav: 'articles',
+    // With the blog and the FAQ: an article is published TO the storefront and
+    // is attached to a PRODUCT, so a service business has neither the page to
+    // put it on nor the catalogue to attach it to.
+    defaults: { product: true, service: false },
+  },
 
   // ---- outlets and scheduling ---------------------------------------------
   {

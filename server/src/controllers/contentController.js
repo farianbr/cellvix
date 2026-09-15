@@ -2,6 +2,7 @@ import { asyncHandler } from '../utils/ApiError.js';
 import * as blogService from '../services/blogService.js';
 import * as faqService from '../services/faqService.js';
 import * as offerService from '../services/offerService.js';
+import * as productArticleService from '../services/productArticleService.js';
 
 /**
  * Blog, FAQ and offers.
@@ -90,4 +91,29 @@ const adminDeleteOffer = asyncHandler(async (req, res) => {
   res.json({ offer: await offerService.deleteOffer(req.params.id) });
 });
 
-export { listPosts, getPost, adminListPosts, adminGetPost, adminCreatePost, adminUpdatePost, adminDeletePost, listFaqs, adminListFaqs, adminCreateFaq, adminUpdateFaq, adminDeleteFaq, listOffers, getOffer, adminListOffers, adminCreateOffer, adminUpdateOffer, adminDeleteOffer };
+
+// ---- product articles -------------------------------------------------------
+//
+// Authored under SEO beside the blog and the FAQ, and rendered on ONE product
+// page. The list is driven from products rather than from articles, because the
+// operator question is "which parts still need one".
+
+const adminListArticles = asyncHandler(async (req, res) => {
+  res.json(await productArticleService.listForAdmin(req.query));
+});
+
+const adminGetArticle = asyncHandler(async (req, res) => {
+  res.json(await productArticleService.getForAdmin(req.params.productId));
+});
+
+// One handler for create and update. The editor opens against a PRODUCT
+// whether or not an article exists yet, so the client should not have to know
+// which of the two it is doing - the service upserts.
+const adminSaveArticle = asyncHandler(async (req, res) => {
+  res.json({ article: await productArticleService.upsert(req.params.productId, req.body) });
+});
+
+const adminDeleteArticle = asyncHandler(async (req, res) => {
+  res.json(await productArticleService.remove(req.params.productId));
+});
+export { listPosts, getPost, adminListPosts, adminGetPost, adminCreatePost, adminUpdatePost, adminDeletePost, listFaqs, adminListFaqs, adminCreateFaq, adminUpdateFaq, adminDeleteFaq, listOffers, getOffer, adminListOffers, adminCreateOffer, adminUpdateOffer, adminDeleteOffer, adminListArticles, adminGetArticle, adminSaveArticle, adminDeleteArticle };

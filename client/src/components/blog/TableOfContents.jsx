@@ -80,7 +80,7 @@ export function TableOfContents({ headings = [], activeId, variant = 'rail', cla
       <aside className={cn('hidden xl:block', className)}>
         <nav
           aria-label="On this page"
-          className="sticky top-[calc(var(--header-h,72px)+24px)]"
+          className="sticky top-[calc(var(--chrome-h,158px)+24px)]"
         >
           <p className="eyebrow mb-3 px-3 text-ink-300">On this page</p>
           {links}

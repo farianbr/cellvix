@@ -134,7 +134,7 @@ const ticketSchema = new mongoose.Schema(
     customerEmail: { type: String, trim: true, lowercase: true, maxlength: 160 },
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
 
-    /** The shop whose bench holds the device. */
+    /** The shop whose workshop holds the device. */
     business: { type: mongoose.Schema.Types.ObjectId, ref: 'Business', default: null, index: true },
 
 

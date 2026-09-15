@@ -52,10 +52,10 @@ export function MobileBottomNav() {
           <ul className="mx-auto flex max-w-[560px] items-stretch">
             <BarItem
               as={Link}
-              to="/"
+              to="/shop"
               icon={Home}
               label="Shop"
-              active={pathname === '/'}
+              active={pathname === '/shop'}
             />
 
             <BarItem

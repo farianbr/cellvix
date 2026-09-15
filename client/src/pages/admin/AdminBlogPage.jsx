@@ -23,6 +23,7 @@ import Modal from '@/components/ui/Modal';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
+import AuthorFields from '@/components/admin/AuthorFields';
 import SelectMenu from '@/components/ui/SelectMenu';
 import SelectField from '@/components/ui/SelectField';
 import Checkbox from '@/components/ui/Checkbox';
@@ -88,6 +89,12 @@ function PostForm({ post, onSubmit, onCancel, isPending, error }) {
       coverImage: post?.coverImage ?? '',
       authorName: post?.author?.name ?? 'Cellvix',
       authorRole: post?.author?.role ?? '',
+      authorBio: post?.author?.bio ?? '',
+      authorPhoto: post?.author?.photo ?? '',
+      authorLinkedin: post?.author?.links?.linkedin ?? '',
+      authorX: post?.author?.links?.x ?? '',
+      authorFacebook: post?.author?.links?.facebook ?? '',
+      authorWebsite: post?.author?.links?.website ?? '',
       status: post?.status ?? 'draft',
       publishedAt: toDateInput(post?.publishedAt),
       isFeatured: post?.isFeatured ?? false,
@@ -206,14 +213,7 @@ function PostForm({ post, onSubmit, onCancel, isPending, error }) {
         />
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Input
-          label="Author"
-          error={formState.errors.authorName?.message}
-          {...register('authorName', { required: 'Who wrote it?' })}
-        />
-        <Input label="Author role" placeholder="Quality lead" {...register('authorRole')} />
-      </div>
+      <AuthorFields register={register} formState={formState} />
 
       <Input
         label="Cover image URL"

@@ -63,7 +63,7 @@ const PRINCIPLES = [
   },
   {
     icon: Wrench,
-    title: 'Built for repair shops',
+    title: 'Built for repair businesses',
     body: 'Wholesale pricing, credit terms and a quick order pad - because you are ordering forty lines on a Tuesday, not browsing.',
   },
   {
@@ -77,7 +77,7 @@ const TIMELINE = [
   {
     step: 'The problem',
     title: 'Parts sourcing was the bottleneck',
-    body: 'Repair shops were losing days to unreliable suppliers, mystery grading and parts that did not match the listing.',
+    body: 'Repair businesses were losing days to unreliable suppliers, mystery grading and parts that did not match the listing.',
   },
   {
     step: 'The approach',
@@ -96,16 +96,16 @@ const GRADE_MEANING = {
   OEM: 'Original manufacturer stock, sold as a service part.',
   'PULL-A': 'Pulled from a working device. No marks visible in use.',
   'PULL-B': 'Pulled and working, with cosmetic wear we describe up front.',
-  AFTERMARKET: 'Third-party equivalent, tested to the same bench standard.',
+  AFTERMARKET: 'Third-party equivalent, tested to the same workshop standard.',
 };
 
 /* --------------------------------------------------------------------------
    Hero artwork. Cellvix has supplied no photography (PROGRESS.md open question
-   #6), and the register of this page is a wholesale supplier's bench, not a stock
+   #6), and the register of this page is a wholesale supplier's workshop, not a stock
    photo of a smiling warehouse. Drawn on tokens, so it recolours with the
    palette and stays crisp at any width.
    -------------------------------------------------------------------------- */
-function BenchScene() {
+function WorkshopScene() {
   const rack = [
     { x: 74, y: 92, w: 62, accent: true },
     { x: 148, y: 92, w: 62 },
@@ -119,9 +119,9 @@ function BenchScene() {
       viewBox="0 0 960 300"
       className="h-auto w-full"
       role="img"
-      aria-label="A repair bench: a rack of graded parts trays, a phone under test with probes on it, and a laptop and tablet waiting on the bench"
+      aria-label="A repair workshop: a rack of graded parts trays, a phone under test with probes on it, and a laptop and tablet waiting on the workshop"
     >
-      {/* Pegboard - the texture of a bench, faint enough to sit behind. */}
+      {/* Pegboard - the texture of a workshop, faint enough to sit behind. */}
       <g fill="var(--color-ink-200)" opacity="0.28">
         {Array.from({ length: 6 }).map((_, row) =>
           Array.from({ length: 32 }).map((__, column) => (
@@ -137,7 +137,7 @@ function BenchScene() {
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        {/* bench line */}
+        {/* workshop line */}
         <path d="M28 250h904" strokeWidth="2.2" />
 
         {/* rack of trays */}
@@ -158,7 +158,7 @@ function BenchScene() {
         <path d="M660 250l18-42h176l18 42z" />
         <path d="M702 232h128" opacity="0.7" />
 
-        {/* tablet standing on the bench */}
+        {/* tablet standing on the workshop */}
         <rect x="268" y="126" width="96" height="124" rx="10" />
         <rect x="279" y="137" width="74" height="94" rx="4" opacity="0.5" />
         <path d="M303 241h26" opacity="0.7" />
@@ -203,7 +203,7 @@ function BenchScene() {
         fill="var(--color-ink-200)"
         className="font-display"
       >
-        BENCH-TESTED · GRADED · PACKED
+        TESTED · GRADED · PACKED
       </text>
     </svg>
   );
@@ -311,7 +311,7 @@ function Hero() {
 
       <Reveal delay={0.12} className="mt-10 lg:mt-14">
         <div className="rounded-xl border border-line bg-surface-2 p-5 sm:p-8 lg:p-10">
-          <BenchScene />
+          <WorkshopScene />
 
           <ul className="mt-8 grid grid-cols-3 gap-2 border-t border-line pt-6 sm:gap-3 lg:grid-cols-6">
             {CATEGORIES.map(({ icon: Icon, label }) => (
@@ -343,7 +343,7 @@ function Statement() {
             A repair shop should not have to gamble on a screen to quote a job.
           </h2>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-white/65">
-            So we run the catalogue the way a workshop runs a bench: one grading sheet, live stock,
+            So we run the catalogue the way a workshop runs a workshop: one grading sheet, live stock,
             a price that does not move between the listing and the invoice, and parts that go out
             the door the same day you order them.
           </p>
@@ -541,7 +541,7 @@ function LatestPosts() {
     <Slab aria-labelledby="posts-heading">
       <SectionHeader
         id="posts-heading"
-        eyebrow="From the bench"
+        eyebrow="From the workshop"
         title="What we are writing about"
         lede="Repair guides, grading notes and supply updates from the people picking the orders."
       />
@@ -614,7 +614,7 @@ function ClosingCta() {
 
         <div className="flex flex-wrap gap-3">
           <Link
-            to="/"
+            to="/shop"
             className={cn(pressable, 'inline-flex h-13 items-center gap-2 rounded-lg bg-white px-7 font-display text-lg font-semibold text-ink-900 hover:bg-white/90')}
           >
             Browse the catalogue

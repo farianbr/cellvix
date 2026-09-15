@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 import { connectDb, disconnectDb } from '../config/db.js';
-import { db } from '../db/models.js';
+import { db, dbFor } from '../db/models.js';
+import { runInBusiness } from '../db/context.js';
+import '../models/Business.js';
 import '../models/Product.js';
 import '../models/BlogPost.js';
 import '../models/Faq.js';
@@ -48,13 +50,50 @@ async function seedContent({ quiet = false } = {}) {
   return { posts: posts.length, faqs: faqs.length, offers: offers.length };
 }
 
-// CLI entry: `npm run seed:content`
+/**
+ * CLI entry: `npm run seed:content`.
+ *
+ * Every business gets its own pass, each against its own database. A standalone
+ * seed has to open that context itself - there is no request middleware here to
+ * do it, and without it `db()` resolves to the connection the URI names rather
+ * than to a business, which on a split database has no products in it. That is
+ * what made this script fail with "No products in this database" on a database
+ * that plainly had 773 of them.
+ *
+ * A business with no catalogue is skipped rather than throwing: offers are built
+ * from products, so a service business has nothing for this to seed.
+ */
 if (process.argv[1] && process.argv[1].endsWith('content.js')) {
   (async () => {
     console.log('\n  Seeding Cellvix editorial content…\n');
     await connectDb();
-    const result = await seedContent();
-    console.log('\n  Done.', result, '\n');
+
+    const businesses = await db().Business.find({}).select('name code').lean();
+    if (!businesses.length) {
+      throw new Error('No businesses found. Run `npm run seed` first.');
+    }
+
+    for (const business of businesses) {
+      console.log(`  ${business.name} (${business.code})`);
+      await runInBusiness(
+        {
+          businessId: String(business._id),
+          code: business.code,
+          connection: dbFor(business.code),
+        },
+        async () => {
+          const products = await db().Product.countDocuments({ isActive: true });
+          if (!products) {
+            console.log('    no catalogue - skipped');
+            return;
+          }
+          const result = await seedContent();
+          console.log('   ', JSON.stringify(result));
+        },
+      );
+    }
+
+    console.log('\n  Done.\n');
     await disconnectDb();
     await mongoose.connection.close();
     process.exit(0);

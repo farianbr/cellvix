@@ -63,18 +63,21 @@ const SUPERADMIN_TITLES = {
 /**
  * The storefront.
  *
- * The shop page is the homepage, so `/` is the one route that carries the plain
- * business name with no page label in front of it - a tab reading
- * "Shop - Cellvix" on the site's front door reads like a subsection of itself.
+ * `/` is the one route that carries the plain business name with no page label
+ * in front of it - a tab reading "Home - Cellvix" on the site's front door reads
+ * like a subsection of itself. The catalogue moved to `/shop` and takes a label
+ * like every other page.
  */
 const SHOP_TITLES = {
   '/': null,
+  '/shop': 'Shop all parts',
+  '/clearance': 'Stock clearance',
   '/cart': 'Cart',
   '/checkout': 'Checkout',
   '/payment-failed': 'Payment failed',
   '/about': 'About',
   '/contact': 'Contact',
-  '/offers': 'Offers',
+  '/offers': 'Combo deals',
   '/blog': 'Blog',
   '/faq': 'FAQ',
   '/login': 'Sign in',

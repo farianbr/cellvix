@@ -7,6 +7,7 @@ import RichText, { extractHeadings } from '@/lib/richText';
 import Skeleton from '@/components/ui/Skeleton';
 import PostCover from '@/components/blog/PostCover';
 import TableOfContents from '@/components/blog/TableOfContents';
+import AuthorRail from '@/components/blog/AuthorRail';
 import WhyCellvix from '@/components/product/WhyCellvix';
 import useActiveSection from '@/hooks/useActiveSection';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
@@ -104,10 +105,16 @@ export function BlogPostPage() {
 
           The tracks start at the page's left edge rather than being centred in
           it, so the contents rail lines up with the logo above it and the grid
-          on the Shop page - the same left margin down every page. The slack a
-          wide window has collects in a third, empty track on the right, which is
-          where the eye expects white space in a left-aligned layout. */}
-      <div className="mx-auto grid max-w-[1400px] gap-10 px-3 py-6 sm:px-4 lg:px-6 lg:py-10 xl:grid-cols-[220px_minmax(0,760px)_1fr]">
+          on the Shop page - the same left margin down every page.
+
+          The third track carries the author. It used to be empty slack, which
+          was the honest answer while there was nothing to put there; a
+          credential is the thing a reader of a grading procedure actually wants
+          level with the prose, so it earns the track. It is capped rather than
+          free-running: an `1fr` rail on a 1920 window stretches a 40-character
+          bio across 400px and the measure rule that governs the article applies
+          to it too. */}
+      <div className="mx-auto grid max-w-[1400px] gap-10 px-3 py-6 sm:px-4 lg:px-6 lg:py-10 xl:grid-cols-[220px_minmax(0,760px)_minmax(0,280px)]">
         <TableOfContents headings={headings} activeId={activeHeading} variant="rail" />
 
         <article className="min-w-0">
@@ -144,6 +151,16 @@ export function BlogPostPage() {
                 </span>
               </span>
             </div>
+
+            {/* The bio, at the widths where the rail is not rendered. It is the
+                one thing the rail carries that this byline does not, so losing
+                it below `xl` would mean the narrow layout quietly dropped
+                content rather than reflowing it. */}
+            {post.author.bio && (
+              <p className="mt-3.5 text-sm leading-relaxed text-ink-500 xl:hidden">
+                {post.author.bio}
+              </p>
+            )}
           </header>
 
           <PostCover post={post} className="mt-7 rounded-lg border border-line" />
@@ -160,7 +177,7 @@ export function BlogPostPage() {
           </div>
 
           {post.tags?.length > 0 && (
-            <ul className="mt-9 flex flex-wrap items-center gap-2 border-t border-line pt-6">
+            <ul className="mt-9 flex flex-wrap items-center gap-2 border-t border-line pt-6 xl:hidden">
               <li className="text-ink-300">
                 <Tag className="size-4" strokeWidth={2} aria-hidden="true" />
                 <span className="sr-only">Tags</span>
@@ -180,8 +197,12 @@ export function BlogPostPage() {
 
           <WhyCellvix className="mt-10" />
 
+          {/* "Read next" is the rail's job from `xl` up, where the two would
+              otherwise print the same three links twice on one screen. Below
+              that the rail has collapsed under the article and this is the only
+              copy, laid out wide because it has the width to use. */}
           {data.related?.length > 0 && (
-            <section className="mt-10">
+            <section className="mt-10 xl:hidden">
               <h2 className="mb-4 text-xl">Read next</h2>
               <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
                 {data.related.map((item) => (
@@ -218,6 +239,8 @@ export function BlogPostPage() {
             </section>
           )}
         </article>
+
+        <AuthorRail post={post} related={data.related ?? []} labels={LABELS} />
       </div>
     </>
   );

@@ -1,4 +1,5 @@
 import { TAXONOMY, PART_TYPES, GRADE_MULTIPLIER } from './taxonomy.data.js';
+import { photographedPairs } from '../../../shared/partPhotos.js';
 
 /**
  * Deterministic pseudo-random generator.
@@ -180,19 +181,58 @@ function buildProducts({ targetCount = 420 } = {}) {
 
   let sequence = 1000;
 
+  // Only pairs we can actually draw a picture for.
+  //
+  // The catalogue hides any product without one (HAS_PICTURE, applied in
+  // productService.buildQuery), so generating the rest produced records that
+  // could never be listed, counted or bought - 304 of 420 on the last run,
+  // every one of them invisible. Filtering here means what the seed writes and
+  // what the storefront shows are the same set.
+  //
+  // This is why the catalogue is smartphone-only today: those are the brand and
+  // component-type pairs that have photography. Adding a photo to
+  // shared/partPhotos.js is what grows it.
+  const photographed = new Set(
+    photographedPairs().map(({ brandSlug, partType }) => `${brandSlug} ${partType}`),
+  );
+
   for (const model of models) {
-    const parts = PART_TYPES[model.deviceTypeSlug] ?? PART_TYPES.smartphone;
+    const allParts = PART_TYPES[model.deviceTypeSlug] ?? PART_TYPES.smartphone;
+    const parts = allParts.filter((part) => photographed.has(`${model.brandSlug} ${part.slug}`));
+    if (parts.length === 0) continue;
+
     const premium = premiumHint(model.modelName);
 
-    // 45–100% of the available part types for this model.
-    const partCount = Math.max(2, Math.round(parts.length * (0.45 + random() * 0.55)));
-    const chosenParts = [...parts].sort(() => random() - 0.5).slice(0, partCount);
+    // EVERY part type this model has photography for.
+    //
+    // Earlier passes took a random 45-100% of them, which is the honest shape
+    // of a real catalogue but leaves gaps that look arbitrary in a demo. The
+    // photographed set is already the limit (a pair with no picture is not
+    // listable at all), so this stocks the model out completely.
+    const chosenParts = parts;
 
     for (const part of chosenParts) {
-      // 1–2 grades per part, drawn from the grades that part actually ships in.
-      const gradePool = [...part.grades].sort(() => random() - 0.5);
-      const gradeCount = random() < 0.42 ? 2 : 1;
-
+      /**
+       * EVERY grade this part type ships in.
+       *
+       * The pool is the taxonomy's own list, which is what keeps the catalogue
+       * honest: a backglass ships NEW and aftermarket and is never a "Pull B",
+       * so there are two rungs for that part and five for a screen. Forcing a
+       * uniform five would invent stock that the grade copy on the product page
+       * then contradicts.
+       *
+       * Earlier passes stocked one to three at random, which left a quarter of
+       * parts with no sibling at all and the "same part at another grade"
+       * section empty on those pages. Stocking the full ladder is the client's
+       * call and it makes that section meaningful everywhere.
+       *
+       * NOT shuffled. The product page orders the ladder by GRADE_ORDER when
+       * it renders, but the SKU sequence is allocated in this loop, so taking
+       * the pool in its declared order keeps a part's SKUs running down the
+       * quality scale rather than scattered across it.
+       */
+      const gradePool = [...part.grades];
+      const gradeCount = gradePool.length;
       for (const grade of gradePool.slice(0, gradeCount)) {
         const [low, high] = part.price;
         const base = low + (high - low) * premium;
@@ -268,6 +308,14 @@ function buildProducts({ targetCount = 420 } = {}) {
   }
 
   // Trim deterministically to roughly the target size, keeping the spread even.
+  //
+  // NOTE: this strides through a FLAT list of products, so it removes
+  // individual grades from the middle of a ladder - a part can come out of it
+  // holding NEW and Pull B with the OEM rung gone. That was harmless when
+  // grades were drawn at random; it is destructive now the full ladder is the
+  // point, so targetCount is set above the generated size and this does not
+  // run. Left in place for the case where somebody wants a smaller catalogue
+  // and accepts the cost.
   if (products.length > targetCount) {
     const step = products.length / targetCount;
     const trimmed = [];

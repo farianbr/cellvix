@@ -19,6 +19,7 @@ import * as salesController from '../controllers/salesController.js';
 import * as ticketController from '../controllers/ticketController.js';
 import * as contactController from '../controllers/contactController.js';
 import * as contentController from '../controllers/contentController.js';
+import * as reviewController from '../controllers/reviewController.js';
 import * as accessController from '../controllers/accessController.js';
 import * as marketingController from '../controllers/marketingController.js';
 import * as referralController from '../controllers/referralController.js';
@@ -177,7 +178,7 @@ import {
   communicationsSettingsSchema,
 } from '../../../shared/schemas/admin.js';
 import { contactSchema } from '../../../shared/schemas/contact.js';
-import { blogPostSchema, faqSchema, offerSchema } from '../../../shared/schemas/content.js';
+import { blogPostSchema, faqSchema, offerSchema, productArticleSchema, reviewSchema, reviewModerationSchema } from '../../../shared/schemas/content.js';
 
 const router = Router();
 
@@ -273,6 +274,11 @@ router.get('/portal/:business/:token', authLimiter, customerPortalController.pro
 router.get('/taxonomy', taxonomyController.tree);
 router.get('/products', productController.list);
 router.get('/products/search', productController.search);
+// Both of these sit ABOVE '/products/:slug' on purpose: a literal segment
+// registered after a parameter is unreachable, because the parameter matches
+// it first and the handler 404s on a slug that is not a product.
+router.get('/products/clearance', productController.clearance);
+router.get('/products/home', productController.home);
 router.get('/products/:slug', productController.detail);
 
 // --- editorial content -----------------------------------------------------
@@ -312,6 +318,16 @@ router.post('/cart/bulk', requireAuth, denyAdmin, requireApproved, validate(bulk
 router.get('/orders/quote', requireAuth, denyAdmin, requireApproved, orderController.quote);
 router.post('/orders', requireAuth, denyAdmin, requireApproved, validate(checkoutSchema), orderController.create);
 router.get('/orders', requireAuth, denyAdmin, requireApproved, orderController.list);
+
+// Product reviews, written by the buyer who ordered the part.
+//
+// `requireApproved` on the write for the same reason ordering needs it: a
+// pending account has no delivered order to review, so the gate costs nothing
+// and keeps the rule in one place. The READ is public - reviews are what a
+// prospective buyer reads before they have an account at all.
+router.get('/reviews/pending', requireAuth, denyAdmin, requireApproved, reviewController.listPending);
+router.post('/reviews', requireAuth, denyAdmin, requireApproved, validate(reviewSchema), reviewController.create);
+router.get('/reviews/product/:productId', reviewController.listForProduct);
 router.get('/orders/:orderNumber', requireAuth, denyAdmin, requireApproved, orderController.detail);
 
 // --- account ---------------------------------------------------------------
@@ -789,6 +805,21 @@ router.get('/admin/blog/:id', ...admin, requireFeature('marketing.blog'), requir
 router.post('/admin/blog', ...admin, requireFeature('marketing.blog'), requirePermission('marketing', 'full'), validate(blogPostSchema), contentController.adminCreatePost);
 router.patch('/admin/blog/:id', ...admin, requireFeature('marketing.blog'), requirePermission('marketing', 'full'), validate(blogPostSchema), contentController.adminUpdatePost);
 router.delete('/admin/blog/:id', ...admin, requireFeature('marketing.blog'), requirePermission('marketing', 'full'), contentController.adminDeletePost);
+
+// Product articles. Gated on the marketing.articles feature and the same marketing
+// permission area as the blog and the FAQ - a role that can publish a post can
+// publish an article. Keyed by PRODUCT id rather than article id: there is one
+// article per product, so the product is the address and save is an upsert.
+router.get('/admin/product-articles', ...admin, requireFeature('marketing.articles'), requirePermission('marketing', 'view'), contentController.adminListArticles);
+router.get('/admin/product-articles/:productId', ...admin, requireFeature('marketing.articles'), requirePermission('marketing', 'view'), contentController.adminGetArticle);
+router.patch('/admin/product-articles/:productId', ...admin, requireFeature('marketing.articles'), requirePermission('marketing', 'full'), validate(productArticleSchema), contentController.adminSaveArticle);
+router.delete('/admin/product-articles/:productId', ...admin, requireFeature('marketing.articles'), requirePermission('marketing', 'full'), contentController.adminDeleteArticle);
+
+// Review moderation. Reviews publish immediately, so this is the lever for the
+// case that goes wrong rather than a queue standing between a buyer and the
+// site. Same marketing permission area as the rest of the published content.
+router.get('/admin/reviews', ...admin, requirePermission('marketing', 'view'), reviewController.adminList);
+router.patch('/admin/reviews/:id/hidden', ...admin, requirePermission('marketing', 'full'), validate(reviewModerationSchema), reviewController.adminSetHidden);
 
 router.get('/admin/faqs', ...admin, requireFeature('marketing.faq'), requirePermission('marketing', 'view'), contentController.adminListFaqs);
 router.post('/admin/faqs', ...admin, requireFeature('marketing.faq'), requirePermission('marketing', 'full'), validate(faqSchema), contentController.adminCreateFaq);

@@ -146,7 +146,7 @@ const DEMO_TICKETS = [
     customerEmail: 'sofia.nguyen@example.ca',
     deviceBrand: 'Samsung',
     deviceModel: 'Galaxy Tab S9',
-    issue: 'Digitiser replaced, awaiting bench time.',
+    issue: 'Digitiser replaced, awaiting workshop time.',
     status: 'ready_to_repair',
     priority: 'normal',
     age: 6,

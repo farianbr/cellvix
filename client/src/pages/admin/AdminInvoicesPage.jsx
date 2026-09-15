@@ -402,7 +402,7 @@ function InvoiceForm({ clients, technicians = [], defaultUser, onSubmit, onCance
         <Input
           label="Reference"
           className="mt-3"
-          placeholder="Restocking fee, bench repair, agreed adjustment…"
+          placeholder="Restocking fee, workshop repair, agreed adjustment…"
           hint="What this invoice is for. It is what a statement shows beside the number."
           {...register('reference')}
         />

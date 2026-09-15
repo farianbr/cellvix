@@ -27,7 +27,7 @@ import { useFilterStore } from '@/store/filterStore';
 import { pressable } from '@/lib/motion';
 
 /**
- * Offers and combo deals.
+ * Combo deals.
  *
  * Two shapes, drawn as two different objects rather than as one card component
  * with different text in it:
@@ -462,46 +462,39 @@ function FeaturedTicket({ offer, onAdd, onShop, addState }) {
   return (
     <section
       aria-label="Featured offer"
-      // The PANEL ramp: the hero carries body copy at white/75 and white/80,
-      // which the standard ramp's bright end cannot support at 4.5:1.
-      className="relative mb-10 overflow-hidden rounded-lg bg-brand-gradient-panel md:flex"
+      // Bordered on surface, not a gradient field. The ticket SHAPE is what
+      // makes this read as the featured one - the perforation, the stub, the
+      // punched notches - and that survives without flooding the block: at this
+      // size the ramp stopped being a signature and became a background, which
+      // is the one thing §2.2 says it must never be. The brand is now the
+      // eyebrow and the stub's price.
+      className="relative mb-10 overflow-hidden rounded-lg border border-line bg-surface md:flex"
     >
-      {/* A diagonal hatch over the gradient - it stops the block reading as a
-          flat coloured rectangle without adding a second colour. */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 opacity-[0.16]"
-        style={{
-          backgroundImage:
-            'repeating-linear-gradient(58deg, #fff 0 1px, transparent 1px 13px)',
-        }}
-      />
-
-      <div className="relative min-w-0 flex-1 p-5 text-white sm:p-7 lg:p-9">
-        <span className="eyebrow inline-flex h-6 items-center rounded-full bg-white/15 px-2.5">
+      <div className="relative min-w-0 flex-1 p-5 sm:p-7 lg:p-9">
+        <span className="eyebrow inline-flex h-6 items-center rounded-full bg-brand-50 px-2.5 text-brand-700">
           {offer.badge || 'Featured'}
         </span>
 
-        <h2 className="mt-3 text-3xl leading-tight text-white sm:text-d-sm">{offer.title}</h2>
-        {offer.subtitle && <p className="mt-2 text-lg text-white/80">{offer.subtitle}</p>}
+        <h2 className="mt-3 text-3xl leading-tight text-ink-900 sm:text-d-sm">{offer.title}</h2>
+        {offer.subtitle && <p className="mt-2 text-lg text-ink-700">{offer.subtitle}</p>}
         {offer.description && (
-          <p className="mt-3 max-w-xl text-md leading-relaxed text-white/75">
+          <p className="mt-3 max-w-xl text-md leading-relaxed text-ink-500">
             {offer.description}
           </p>
         )}
 
         {offer.kind === 'combo' && offer.products?.length > 0 && (
-          <ul className="mt-5 flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-white/85">
+          <ul className="mt-5 flex flex-wrap gap-x-4 gap-y-1.5 text-sm text-ink-700">
             {offer.products.map((line) => (
               <li key={line.id} className="inline-flex items-center gap-1.5">
-                <span className="tnum text-white/55">×{line.qty}</span>
+                <span className="tnum text-ink-400">×{line.qty}</span>
                 {line.name}
               </li>
             ))}
           </ul>
         )}
 
-        <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-white/70">
+        <div className="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-ink-400">
           {offer.endsAt && (
             <span className="inline-flex items-center gap-1.5">
               <Timer className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
@@ -513,7 +506,11 @@ function FeaturedTicket({ offer, onAdd, onShop, addState }) {
       </div>
 
       {/* ---- the stub ----------------------------------------------------- */}
-      <div className="relative flex w-full shrink-0 flex-col justify-center gap-3 border-t border-dashed border-white/30 bg-white/10 p-5 backdrop-blur-[2px] md:w-[290px] md:border-l md:border-t-0 lg:p-7">
+      {/* `bg-surface`, matching DealCoupon's stub, NOT surface-2: the
+          Perforation notches are painted surface-2 so they read as holes
+          punched through to the page behind, and a stub in the same colour
+          would make the notch on this side disappear. */}
+      <div className="relative flex w-full shrink-0 flex-col justify-center gap-3 border-t border-dashed border-line-strong bg-surface p-5 md:w-[290px] md:border-l md:border-t-0 lg:p-7">
         <Perforation responsive />
 
         {offer.kind === 'combo' ? (
@@ -521,7 +518,7 @@ function FeaturedTicket({ offer, onAdd, onShop, addState }) {
             <button
               type="button"
               onClick={() => openAccount('signin')}
-              className="flex items-center justify-between gap-3 rounded-lg bg-surface px-4 py-3 text-left"
+              className={cn(pressable, 'flex items-center justify-between gap-3 rounded-lg border border-line bg-surface px-4 py-3 text-left hover:border-line-strong')}
             >
               <span className="font-display text-md font-bold text-ink-900">
                 {isAuthenticated ? 'Pending approval' : 'Sign in for bundle pricing'}
@@ -531,13 +528,16 @@ function FeaturedTicket({ offer, onAdd, onShop, addState }) {
           ) : (
             <>
               <span>
-                <span className="eyebrow block text-white/60">Bundle price</span>
-                <span className="tnum mt-1 block font-display text-d-sm font-extrabold leading-none text-white">
+                <span className="eyebrow block text-ink-400">Bundle price</span>
+                <span className="tnum mt-1 block font-display text-d-sm font-extrabold leading-none text-ink-900">
                   {money(offer.bundlePrice)}
                 </span>
-                <span className="tnum mt-1.5 block text-sm text-white/60">
-                  <span className="line-through">{money(offer.regularTotal)}</span> · save{' '}
-                  {money(offer.savings)}
+                {/* The saving carries the only colour in the stub - it is the
+                    argument, and the struck price alone leaves the reader to
+                    do the arithmetic. */}
+                <span className="tnum mt-1.5 block text-sm text-ink-400">
+                  <span className="line-through">{money(offer.regularTotal)}</span> ·{' '}
+                  <span className="font-semibold text-ok">save {money(offer.savings)}</span>
                 </span>
               </span>
 
@@ -548,10 +548,10 @@ function FeaturedTicket({ offer, onAdd, onShop, addState }) {
                   onClick={() => onAdd(offer)}
                   className={cn(
                     pressable,
-                    'inline-flex h-12 items-center justify-center gap-2 rounded-lg font-display text-md font-semibold',
+                    'inline-flex h-12 items-center justify-center gap-2 rounded-lg font-display text-md font-semibold text-white',
                     addState === 'added'
-                      ? 'bg-ok text-white'
-                      : 'bg-surface text-ink-900 hover:bg-surface-2 disabled:cursor-not-allowed disabled:opacity-60',
+                      ? 'bg-ok'
+                      : 'bg-brand-gradient-compact hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60',
                   )}
                 >
                   {addState === 'added' ? (
@@ -566,20 +566,20 @@ function FeaturedTicket({ offer, onAdd, onShop, addState }) {
                       : 'Unavailable'}
                 </button>
               ) : (
-                <p className="text-sm text-white/75">Ordering unlocks once approved.</p>
+                <p className="text-sm text-ink-500">Ordering unlocks once approved.</p>
               )}
             </>
           )
         ) : (
           <>
             <span>
-              <span className="eyebrow block text-white/60">This offer</span>
-              <span className="mt-1 block font-display text-d-sm font-extrabold leading-none text-white">
+              <span className="eyebrow block text-ink-400">This offer</span>
+              <span className="mt-1 block font-display text-d-sm font-extrabold leading-none text-ink-900">
                 {headline(offer)}
               </span>
               <span
                 className={cn(
-                  'mt-1.5 block text-sm text-white/60',
+                  'mt-1.5 block text-sm text-ink-400',
                   applies.fromSlugs && 'capitalize',
                 )}
               >
@@ -588,9 +588,9 @@ function FeaturedTicket({ offer, onAdd, onShop, addState }) {
             </span>
 
             {offer.code ? (
-              <CodeStub code={offer.code} className="justify-center border-white/40 bg-white/95" />
+              <CodeStub code={offer.code} className="justify-center" />
             ) : (
-              <span className="inline-flex items-center justify-center gap-1.5 rounded-md bg-white/15 px-3 py-2 text-sm font-medium text-white">
+              <span className="inline-flex items-center justify-center gap-1.5 rounded-md border border-line bg-surface px-3 py-2 text-sm font-medium text-ok">
                 <Zap className="size-3.5" strokeWidth={2.25} aria-hidden="true" />
                 No code needed
               </span>
@@ -599,7 +599,7 @@ function FeaturedTicket({ offer, onAdd, onShop, addState }) {
             <button
               type="button"
               onClick={() => onShop(offer)}
-              className={cn(pressable, 'inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-surface font-display text-md font-semibold text-ink-900 hover:bg-surface-2')}
+              className={cn(pressable, 'inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-brand-gradient-compact font-display text-md font-semibold text-white hover:brightness-110')}
             >
               Shop these parts
               <ArrowRight className="size-4" strokeWidth={2} aria-hidden="true" />
@@ -682,7 +682,7 @@ export function OffersPage() {
       <header className="mb-7 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div className="max-w-xl">
           <p className="eyebrow mb-2 text-brand">Running now</p>
-          <h1 className="text-3xl sm:text-d-sm">Offers &amp; combo deals</h1>
+          <h1 className="text-3xl sm:text-d-sm">Combo deals</h1>
           <p className="mt-3 text-md leading-relaxed text-ink-500">
             Bundle pricing on the parts that come through the door together, and discounts across
             the catalogue. Prices are visible to approved businesses.

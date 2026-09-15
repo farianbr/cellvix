@@ -331,7 +331,7 @@ export function AdminTicketsPage() {
             key: 'open',
             label: 'Open repairs',
             value: formatCount(counts.open ?? 0),
-            hint: 'Still on the bench',
+            hint: 'Still on the workshop',
             tone: (counts.open ?? 0) > 0 ? 'warn' : 'ok',
             icon: Wrench,
           },

@@ -474,7 +474,10 @@ async function seedDatabase({ quiet = false } = {}) {
   log(`  taxonomy: ${bySlug.size} nodes`);
 
   // ---- products -----------------------------------------------------------
-  const products = buildProducts({ targetCount: 420 });
+  // Above what the generator produces, so the trim below it never runs: it
+  // strides through a flat list and would take single grades out of the middle
+  // of a ladder. See the note in generate.js.
+  const products = buildProducts({ targetCount: 2000 });
   const insertedProducts = await db().Product.insertMany(products);
   log(`  products: ${insertedProducts.length}`);
 
@@ -1380,7 +1383,7 @@ async function seedDatabase({ quiet = false } = {}) {
   log(`  web quotes: ${webQuotes.length}`);
 
   /**
-   * Cellvix's own bench tickets and its pickup calendar.
+   * Cellvix's own workshop tickets and its pickup calendar.
    *
    * **A product business with `sales.tickets` switched on** (§3.1, the one
    * documented override): Cellvix builds and tests returned stock before it
@@ -1393,7 +1396,7 @@ async function seedDatabase({ quiet = false } = {}) {
    */
   const cellvixTickets = await db().Ticket.insertMany(
     [
-      { customer: 0, issue: 'Bench-test returned OLED batch before restock', status: 'processing', priority: 'normal' },
+      { customer: 0, issue: 'Test returned OLED batch before restock', status: 'processing', priority: 'normal' },
       { customer: 1, issue: 'Verify charging ports flagged on inbound QC', status: 'diagnosis', priority: 'high' },
       { customer: 2, issue: 'Reseat connectors on customer-reported dead units', status: 'ready_to_repair', priority: 'normal' },
       { customer: 0, issue: 'Confirm battery health on returned stock', status: 'ready_to_pickup', priority: 'low' },
@@ -1408,7 +1411,7 @@ async function seedDatabase({ quiet = false } = {}) {
         issue: row.issue,
         status: row.status,
         priority: row.priority,
-        // An internal bench job is raised at the counter by our own staff.
+        // An internal workshop job is raised at the counter by our own staff.
         source: 'counter',
         business: defaultBusiness._id,
         createdAt: new Date(Date.now() - (index + 2) * 86_400_000),
@@ -1439,7 +1442,7 @@ async function seedDatabase({ quiet = false } = {}) {
     }),
   );
   log(
-    `  bench tickets: ${cellvixTickets.length} · pickups booked: ${cellvixAppointments.length}`,
+    `  workshop tickets: ${cellvixTickets.length} · pickups booked: ${cellvixAppointments.length}`,
   );
 
   const rmas = await db().Rma.insertMany(buildRmas({ orders: insertedOrders }));

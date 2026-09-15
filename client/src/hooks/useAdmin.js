@@ -125,6 +125,42 @@ export function useAdminFaqs(params) {
   });
 }
 
+/**
+ * The SEO articles list: PRODUCTS, each with whatever article state it has.
+ *
+ * Driven from products rather than from articles because the operator question
+ * is "which parts still need one", and a list of articles cannot answer it.
+ */
+export function useAdminProductArticles(params) {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'product-articles', params],
+    queryFn: () => api.get('/admin/product-articles', params),
+    enabled: canUseAdmin,
+    staleTime: 15 * 1000,
+  });
+}
+
+/** Reviews, for moderation. Published on submission; this is the hide lever. */
+export function useAdminReviews(params) {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'reviews', params],
+    queryFn: () => api.get('/admin/reviews', params),
+    enabled: canUseAdmin,
+    staleTime: 15 * 1000,
+  });
+}
+
+/** The editor: the product being written about, and its article if it has one. */
+export function useAdminProductArticle(productId) {
+  return useQuery({
+    queryKey: ['admin', 'product-articles', 'one', productId],
+    queryFn: () => api.get(`/admin/product-articles/${productId}`),
+    enabled: Boolean(productId),
+  });
+}
+
 export function useAdminOffers(params) {
   const { canUseAdmin } = useAuth();
   return useQuery({
@@ -1078,6 +1114,27 @@ export function useAdminMutations() {
     deletePost: useMutation({
       mutationFn: (id) => api.delete(`/admin/blog/${id}`),
       onSuccess: invalidateContent('blog'),
+    }),
+    // ONE mutation for create and update. The editor opens against a product
+    // whether or not an article exists, so the client never has to know which
+    // it is doing - the server upserts on the product id.
+    saveProductArticle: useMutation({
+      mutationFn: ({ productId, ...body }) => api.patch(`/admin/product-articles/${productId}`, body),
+      onSuccess: invalidateContent('product'),
+    }),
+    // Hiding a review must reach the storefront, not just the admin table -
+    // the product page caches its own copy of the list.
+    setReviewHidden: useMutation({
+      mutationFn: ({ id, ...body }) => api.patch(`/admin/reviews/${id}/hidden`, body),
+      onSuccess: () => {
+        invalidate();
+        queryClient.invalidateQueries({ queryKey: ['product'] });
+        queryClient.invalidateQueries({ queryKey: ['reviews'] });
+      },
+    }),
+    deleteProductArticle: useMutation({
+      mutationFn: (productId) => api.delete(`/admin/product-articles/${productId}`),
+      onSuccess: invalidateContent('product'),
     }),
 
     createFaq: useMutation({

@@ -21,8 +21,8 @@ const STROKE = {
   strokeLinejoin: 'round',
 };
 
-/** The shared ground: a workbench surface with a soft brand wash above it. */
-function Bench({ id }) {
+/** The shared ground: a workshop bench surface with a soft brand wash above it. */
+function Workbench({ id }) {
   return (
     <>
       <defs>
@@ -39,7 +39,7 @@ function Bench({ id }) {
 
       <rect x="0" y="0" width="320" height="220" rx="18" fill={`url(#${id}-wash)`} />
 
-      {/* Pegboard: the texture of a repair bench, kept faint enough to sit
+      {/* Pegboard: the texture of a repair workshop, kept faint enough to sit
           behind the subject rather than compete with it. */}
       <g fill="var(--color-ink-200)" opacity="0.35">
         {Array.from({ length: 7 }).map((_, row) =>
@@ -56,11 +56,11 @@ function Bench({ id }) {
   );
 }
 
-/** Order confirmed: a sealed, labelled box leaving the bench. */
+/** Order confirmed: a sealed, labelled box leaving the workshop. */
 function SuccessScene() {
   return (
     <>
-      <Bench id="scene-success" />
+      <Workbench id="scene-success" />
 
       <g transform="translate(96 62)">
         <path
@@ -108,11 +108,11 @@ function SuccessScene() {
   );
 }
 
-/** 404: the device came apart on the bench, and the parts are still there. */
+/** 404: the device came apart on the workshop bench, and the parts are still there. */
 function NotFoundScene() {
   return (
     <>
-      <Bench id="scene-404" />
+      <Workbench id="scene-404" />
 
       <text
         x="160"
@@ -181,7 +181,7 @@ function NotFoundScene() {
       <rect x="104" y="90" width="10" height="12" rx="2.5" fill="var(--color-brand)" opacity="0.8" />
       <rect x="146" y="100" width="10" height="12" rx="2.5" fill="var(--color-ink-200)" />
 
-      {/* Bench tools */}
+      {/* Workshop tools */}
       <g stroke="var(--color-ink-200)" strokeWidth="1.6" strokeLinecap="round" fill="none">
         <path d="M232 176v-22l8-8" />
         <path d="M240 146a7 7 0 1 0-9.5-6.6" />
@@ -197,7 +197,7 @@ function NotFoundScene() {
 function PaymentFailedScene() {
   return (
     <>
-      <Bench id="scene-payment" />
+      <Workbench id="scene-payment" />
 
       <g transform="translate(58 62)">
         <rect
@@ -257,10 +257,10 @@ function PaymentFailedScene() {
 }
 
 const SCENES = {
-  success: { render: SuccessScene, alt: 'A sealed Cellvix parcel on the workbench, marked complete' },
+  success: { render: SuccessScene, alt: 'A sealed Cellvix parcel on the workshop bench, marked complete' },
   'not-found': {
     render: NotFoundScene,
-    alt: 'A device disassembled on a repair bench, its screen and housing separated',
+    alt: 'A device disassembled on a repair workshop, its screen and housing separated',
   },
   'payment-failed': {
     render: PaymentFailedScene,

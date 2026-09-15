@@ -135,7 +135,7 @@ const RMA_PLANS = [
     status: 'inspecting',
     daysOpen: 4,
     reason: 'Customer reports intermittent touch response.',
-    conditions: ['Touch layer delaminated', 'No fault found on bench test'],
+    conditions: ['Touch layer delaminated', 'No fault found on the workshop test'],
     dispositions: ['scrap', 'restock'],
   },
   {

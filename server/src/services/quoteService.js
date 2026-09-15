@@ -716,7 +716,7 @@ async function convertQuoteToTicket(id, { priority = 'normal', source = 'counter
     issue: quote.notes?.trim() || `Quoted work from ${quote.quoteNumber}.`,
 
     // One device holding the quoted lines. The technician splits it or adds
-    // more once the hardware is actually on the bench.
+    // more once the hardware is actually on the workshop.
     devices: [
       {
         model: 'To be confirmed',

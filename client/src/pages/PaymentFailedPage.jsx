@@ -110,7 +110,7 @@ export function PaymentFailedPage() {
         </div>
 
         {/* ---- aside: what to do next --------------------------------------- */}
-        <aside className="lg:sticky lg:top-[132px]">
+        <aside className="lg:sticky lg:top-[calc(var(--chrome-h,158px)+16px)]">
           <BrandScene variant="payment-failed" className="mb-6" />
 
           <div className="overflow-hidden rounded-lg border border-line bg-surface">

@@ -40,7 +40,7 @@ import { likeRegex } from '../utils/regex.js';
  * `closedAt`. `SETTLED_STATUSES` is when the *repair* stops being the shop's
  * problem, which happens one rung earlier: a device sitting on the pickup shelf
  * is finished work, and an Age column that keeps escalating it is nagging about
- * something no technician can act on. The SLA measures the bench, so it reads
+ * something no technician can act on. The SLA measures the workshop, so it reads
  * the second list - and `TICKET_OPEN_STATUSES` on the model is the same
  * reading, which is what keeps the sidebar badge and this column agreeing.
  */

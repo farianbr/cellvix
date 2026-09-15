@@ -5,6 +5,7 @@ import '../models/Product.js';
 import ApiError from '../utils/ApiError.js';
 import { DEFAULT_SHIPPING_METHODS } from '../models/Settings.js';
 import { offerStatus } from './offerService.js';
+import { effectivePrice } from './productService.js';
 import { TAX_RATE } from '../../../shared/schemas/checkout.js';
 
 /**
@@ -252,8 +253,11 @@ async function priceCart(cart, user, { deliveryCode = 'ground' } = {}) {
       brandSlug: product.brandSlug ?? null,
       modelName: product.modelName,
       qty: cartItem.qty,
-      unitPrice: product.price,
-      lineTotal: product.price * cartItem.qty,
+      // `effectivePrice`, never `product.price`: a cleared part shows its
+      // clearance price on the card, and the cart has to charge the same
+      // number or the two disagree about what the buyer just agreed to.
+      unitPrice: effectivePrice(product),
+      lineTotal: effectivePrice(product) * cartItem.qty,
       // Carried so a placed order can snapshot what the part cost at the time
       // (§9.4). Undefined rather than zero when the catalogue has no cost
       // a zero would report as a 100% margin.
@@ -262,7 +266,7 @@ async function priceCart(cart, user, { deliveryCode = 'ground' } = {}) {
       inStock: product.stock > 0,
       exceedsStock: cartItem.qty > product.stock,
       priceAtAdd: cartItem.priceAtAdd,
-      priceChanged: cartItem.priceAtAdd !== product.price,
+      priceChanged: cartItem.priceAtAdd !== effectivePrice(product),
       // Carried only so `evaluate` can match targeting without a second lookup.
       product_: product,
     });
@@ -433,7 +437,7 @@ async function expandBundles(cart, _user) {
       }
 
       const qty = member.qty * cartBundle.qty;
-      listTotal += product.price * qty;
+      listTotal += effectivePrice(product) * qty;
       lines.push({
         product: product._id,
         sku: product.sku,
@@ -445,8 +449,8 @@ async function expandBundles(cart, _user) {
         partTypeLabel: product.partTypeLabel,
         brandSlug: product.brandSlug ?? null,
         qty,
-        unitPrice: product.price,
-        lineTotal: product.price * qty,
+        unitPrice: effectivePrice(product),
+        lineTotal: effectivePrice(product) * qty,
         // Same snapshot as a loose line - a bundled part still has a cost, and
         // the margin on a combo is the number most worth knowing.
         unitCost: product.cost > 0 ? product.cost : undefined,

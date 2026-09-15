@@ -317,7 +317,7 @@ export function MegaMenu() {
                       <div>
                         <p className="eyebrow mb-2 opacity-70">Partner programme</p>
                         <h4 className="text-xl leading-tight text-white">
-                          Net 30 terms for approved shops
+                          Net 30 terms for approved accounts
                         </h4>
                         <p className="mt-2 text-sm leading-relaxed text-white/75">
                           Approved Cellvix accounts unlock wholesale pricing, credit terms and

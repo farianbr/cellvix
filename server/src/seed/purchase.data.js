@@ -655,7 +655,7 @@ const SUPPLIER_SERVICE_PLANS = [
     amount: 12_000,
     startedDaysAgo: 21,
     supplierCode: 'AOD',
-    description: 'Board work sent out when it is beyond the bench.',
+    description: 'Board work sent out when it is beyond the workshop.',
   },
   {
     name: 'Data recovery - sent out',
