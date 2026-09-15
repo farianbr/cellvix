@@ -243,7 +243,7 @@ const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/orders'], icon: adminIcon('Package'
  *
  * Only **approved** clients are offered, and that is not a convenience: the
  * server refuses an order for anyone else, so listing a pending business here
- * would be an invitation to an error the operator cannot fix from this form.
+ * would be an invitation to an error the staff member cannot fix from this form.
  *
  * A blank price quotes at list, the same convention the quote builder uses. The
  * totals below are a preview and say so - tax is the server's, at this client's
@@ -345,7 +345,7 @@ function OrderForm({ clients, products, businesses = [], onSubmit, onCancel, isP
                   label={index === 0 ? 'Qty' : undefined}
                   type="number"
                   min="1"
-                  // The stock on hand, so an operator sees the ceiling before
+                  // The stock on hand, so a staff member sees the ceiling before
                   // the server refuses the whole order for one short line.
                   hint={index === 0 && picked ? `${picked.stock} on hand` : undefined}
                   {...register(`items.${index}.qty`)}
@@ -398,7 +398,7 @@ function OrderForm({ clients, products, businesses = [], onSubmit, onCancel, isP
           a picker with a single option is a question with one answer. Blank
           means the business the panel is switched to, which is the common case;
           it is asked because a customer collecting in person picks the shop
-          nearest them, not the one the operator happens to be sitting in. */}
+          nearest them, not the one the staff member happens to be sitting in. */}
       {businesses.length > 1 && (
         <SelectField
           control={control}
@@ -447,7 +447,7 @@ export function AdminOrdersPage() {
    *
    * The dashboard links here already filtered - "12 awaiting fulfilment" opens
    * `?status=placed` - and a local `useState` swallowed that, landing the
-   * operator on every order and making them re-pick the filter they had just
+   * staff member on every order and making them re-pick the filter they had just
    * clicked. In the URL it also means a filtered board can be linked to.
    */
   const [searchParams, setSearchParams] = useSearchParams();
@@ -483,7 +483,7 @@ export function AdminOrdersPage() {
   const { updateOrderStatus, refundOrder, bulkOrderStatus, createOrder } = useAdminMutations();
   const [refunding, setRefunding] = useState(null);
   // The refund form gathers the amount and reason; this holds that payload back
-  // until the operator has retyped the order number. Money does not move on the
+  // until the staff member has retyped the order number. Money does not move on the
   // same click that finishes a form.
   const [refundConfirm, setRefundConfirm] = useState(null);
   const [bulkConfirm, setBulkConfirm] = useState(null);
@@ -494,7 +494,7 @@ export function AdminOrdersPage() {
   /**
    * The server decides which of the selected orders can actually make the move
    * - the client neither pre-filters the selection nor guesses the outcome.
-   * Whatever it reports back is what the operator is shown.
+   * Whatever it reports back is what the staff member is shown.
    */
   function setBulkStatus(next) {
     bulkOrderStatus.mutate(
@@ -541,8 +541,8 @@ export function AdminOrdersPage() {
       // and an account is identified by the person.
       key: 'displayName',
       header: 'Customer',
-      // Folds away below 768: the order number, total and status are what an
-      // operator scans a phone for, and all three fit only without this.
+      // Folds away below 768: the order number, total and status are what a
+      // staff member scans a phone for, and all three fit only without this.
       priority: 2,
       className: 'max-w-[180px] truncate',
     },
@@ -717,8 +717,8 @@ export function AdminOrdersPage() {
         </div>
 
         {/* A batch is partial by design, so what did **not** move is reported
-            rather than swallowed - silently moving nineteen of twenty is how an
-            operator comes to trust a button that is lying to them. */}
+            rather than swallowed - silently moving nineteen of twenty is how a
+            staff member comes to trust a button that is lying to them. */}
         {bulkResult && (
           <div className="border-b border-line bg-surface-2 px-3 py-2.5 sm:px-4">
             <p className="text-sm text-ink-700">
@@ -830,7 +830,7 @@ export function AdminOrdersPage() {
       </Modal>
 
       {/* Refunds move store credit, and store credit is money the business
-          already holds. The order number has to be retyped so the operator
+          already holds. The order number has to be retyped so the staff member
           confirms WHICH order they are crediting, not just that they meant to
           click refund. */}
       <ConfirmDialog
@@ -892,7 +892,7 @@ export function AdminOrdersPage() {
                 onSuccess: (payload) => {
                   setCreating(false);
                   // Straight to the order that was just raised - the next thing
-                  // an operator does is fulfil it.
+                  // a staff member does is fulfil it.
                   if (payload?.order?.orderNumber) {
                     navigate(`/admin/orders/${payload.order.orderNumber}`);
                   }

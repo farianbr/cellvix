@@ -238,7 +238,7 @@ async function openPortal(businessCode, token, work) {
    * Put the `#` back that `codeSlug` took out.
    *
    * The stored code is `#000002`; the URL carries `000002`. Both spellings are
-   * accepted here because an operator who copies a code out of the panel and
+   * accepted here because a staff member who copies a code out of the panel and
    * pastes it into a URL by hand will keep the hash, and refusing that would be
    * refusing the obvious thing to do.
    *

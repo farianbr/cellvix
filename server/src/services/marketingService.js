@@ -23,7 +23,7 @@ import { BUSINESS_INFO } from '../../../shared/business.js';
  * calls have nothing to send through (§6b, U3–U5). Composing on one still
  * writes a `MessageLog` row, with `status: 'queued_unconfigured'` and the
  * reason it is unconfigured, and the response says so plainly. Nothing here
- * ever returns a success the operator could read as "delivered". Email is the
+ * ever returns a success the staff member could read as "delivered". Email is the
  * exception whenever `SMTP_URL` is configured, and reports a failure when it
  * is not - there is no local outbox standing in for a delivery.
  *
@@ -303,8 +303,8 @@ async function sendMessage(
       // The two reasons are NOT the same and must not share a message: an
       // account that opted out made a decision that has to be respected, while
       // one that simply has no consent on file has decided nothing - it
-      // predates the consent field, or was created by an import. Telling an
-      // operator that somebody "unsubscribed" when they never did sends them
+      // predates the consent field, or was created by an import. Telling a
+      // staff member that somebody "unsubscribed" when they never did sends them
       // to apologise for something that did not happen.
       throw account.unsubscribedAt
         ? ApiError.badRequest(
@@ -367,7 +367,7 @@ async function sendMessage(
     row.status = 'queued_unconfigured';
     // `channelStatus` already picks the right sentence for whether credentials
     // are merely absent or present-but-unwired, so there is one place that
-    // decides what an operator is told.
+    // decides what a staff member is told.
     row.unconfiguredReason = status.reason;
   }
 
@@ -570,7 +570,7 @@ async function getCampaign(id) {
 
   // The recipient count is recomputed on read rather than trusted from the
   // document: consent moves between saves, and a stale figure here is the one
-  // the operator would use to decide whether to send.
+  // the staff member would use to decide whether to send.
   const { eligible, skipped } = await resolveAudience(row.audience?.filter ?? 'approved');
 
   return {
@@ -813,7 +813,7 @@ async function unsubscribe(userId, token) {
  * This records a **new** consent with source `admin` rather than clearing the
  * unsubscribe and leaving the old consent standing - re-subscribing somebody is
  * a claim that they asked for it, and that claim needs its own date and its own
- * trail. The screen says as much before the operator confirms.
+ * trail. The screen says as much before the staff member confirms.
  */
 async function resubscribe(userId) {
   const account = await db().User.findById(userId);

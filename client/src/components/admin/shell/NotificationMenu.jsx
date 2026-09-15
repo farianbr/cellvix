@@ -75,7 +75,7 @@ const SEVERITY_CLASS = {
  *
  * A stored event has a real `ObjectId`; a standing condition has a synthetic
  * `condition:id` string. The server will not clear the second kind - it is
- * recomputed from the live records on the next read, and an operator who
+ * recomputed from the live records on the next read, and a staff member who
  * dismissed "out of stock" while the shelf is still empty has not solved
  * anything. Knowing the split here is what lets the panel *say* so, instead of
  * offering a button that appears to do nothing.
@@ -153,7 +153,7 @@ function NotificationRow({ entry, onOpen, onAct, acting = false }) {
           type="button"
           // The panel stays open behind whatever this opens: an action is a
           // decision about one row, and closing the list underneath it loses
-          // the operator their place in the queue.
+          // the staff member their place in the queue.
           onClick={onAct}
           disabled={acting}
           aria-label={`${entry.action.label} - ${entry.title}`}
@@ -191,7 +191,7 @@ export function NotificationMenu() {
    *
    * Mixed into the rest they were indistinguishable from things that merely
    * wanted reading. The server already sorts actionable rows to the top; this
-   * makes the boundary visible, so an operator can see at a glance whether
+   * makes the boundary visible, so a staff member can see at a glance whether
    * anything is waiting on them.
    *
    * Two kinds qualify now: an account waiting for approval, and the reorder
@@ -271,7 +271,7 @@ export function NotificationMenu() {
         <Bell className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />
         {unread > 0 && (
           // The count, not a dot: "3 things want you" and "something wants you"
-          // are different messages, and the operator decides whether to stop
+          // are different messages, and the staff member decides whether to stop
           // what they are doing based on which one it is. Past 9 it becomes
           // `9+` rather than widening the badge over the icon.
           <span className="absolute -right-0.5 -top-0.5 flex min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-2xs font-bold leading-[16px] text-white">

@@ -36,6 +36,14 @@ import SelectMenu from '@/components/ui/SelectMenu';
 // or looks like.
 const CHANNELS = CONSENT_CHANNELS;
 
+/** How a channel is written in prose, as opposed to on its chip. */
+const CHANNEL_LABELS = {
+  sms: 'SMS',
+  whatsapp: 'WhatsApp',
+  email: 'email',
+  call: 'phone call',
+};
+
 /**
  * What the customer agreed to be contacted on (CASL, §6.13).
  *
@@ -50,7 +58,7 @@ const CHANNELS = CONSENT_CHANNELS;
  * an unticked box would lose that, so the header says which it is.
  */
 
-export function ConsentPanel({ consent, onSave, isPending }) {
+export function ConsentPanel({ consent, preferredContact, onSave, isPending }) {
   const [draft, setDraft] = useState(consent.channels);
   // Follow the server after a save, or after another screen changes it.
   useEffect(() => setDraft(consent.channels), [consent.channels]);
@@ -78,6 +86,37 @@ export function ConsentPanel({ consent, onSave, isPending }) {
         A campaign or a one-to-one message on a channel requires consent for that channel. Granting
         any channel turns marketing consent on; clearing all four turns it off.
       </p>
+
+      {/*
+        The preferred channel, read-only here.
+
+        It is **edited on the customer form**, not in this panel: it is a
+        preference rather than a consent record, it carries no timestamp, and
+        giving it a second write path would mean two screens racing to own one
+        field. It is shown here because this is where somebody comes to ask
+        "how do we reach this customer", and answering the consent half without
+        the routing half sends them somewhere else to finish the question.
+
+        The warning below is the case that actually bites: a channel chosen but
+        not consented to is a channel every status update silently skips.
+      */}
+      <div className="mt-3 border-t border-line pt-3">
+        <p className="text-xs text-ink-400">
+          Repair updates are sent by{' '}
+          {preferredContact ? (
+            <strong className="text-ink-900">{CHANNEL_LABELS[preferredContact]}</strong>
+          ) : (
+            <span className="text-ink-500">no channel yet, nobody has asked</span>
+          )}
+          .
+        </p>
+        {preferredContact && !draft[preferredContact] && (
+          <p className="mt-1.5 text-xs leading-snug text-warn">
+            This customer has not consented to {CHANNEL_LABELS[preferredContact]}, so status updates
+            will not be sent. Tick it above, or change the preference on their profile.
+          </p>
+        )}
+      </div>
       {dirty && (
         <div className="mt-3 flex justify-end gap-2 border-t border-line pt-3">
           <Button size="sm" variant="ghost" onClick={() => setDraft(consent.channels)}>
@@ -462,7 +501,7 @@ export function NotesPanel({ notes = [], onAdd, onDelete, isPending }) {
 /**
  * The referral scheme and the customer's own sign-in, side by side.
  *
- * **The code is the artefact, the link is the convenience.** An operator reads
+ * **The code is the artefact, the link is the convenience.** A staff member reads
  * the code out over the phone; the link exists so it does not have to be spelled
  * letter by letter, and it carries `?ref=` which the registration form reads.
  *

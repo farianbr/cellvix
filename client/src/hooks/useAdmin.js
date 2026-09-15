@@ -128,7 +128,7 @@ export function useAdminFaqs(params) {
 /**
  * The SEO articles list: PRODUCTS, each with whatever article state it has.
  *
- * Driven from products rather than from articles because the operator question
+ * Driven from products rather than from articles because the staff member question
  * is "which parts still need one", and a list of articles cannot answer it.
  */
 export function useAdminProductArticles(params) {
@@ -321,7 +321,72 @@ export function useAdminExpenses(params) {
 }
 
 /** Categories carry their usage count, so the UI can explain a refused delete
- *  before the operator clicks it rather than after. */
+ *  before the staff member clicks it rather than after. */
+/**
+ * The repair service catalogue.
+ *
+ * Two callers with different needs, which is why the filters are arguments
+ * rather than baked in: the settings screen lists everything including retired
+ * rows, and the quote and ticket pickers want only what can be sold today,
+ * narrowed to the device in front of them.
+ *
+ * Cached for a minute like the other reference lists - a price list changes a
+ * few times a year, and refetching it on every keystroke in a picker would be
+ * a request per character.
+ */
+/**
+ * Repair estimates - the service side of the quotes list.
+ *
+ * A separate query from `useAdminQuotes` because they are separate models. The
+ * quotes screen runs whichever of the two its business actually has, decided by
+ * the `sales.services` feature flag: under database-per-business the two kinds
+ * can never both exist, so this is a branch in the UI rather than a merge.
+ */
+export function useAdminServiceQuotes(params = {}) {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'service-quotes', params],
+    queryFn: () => api.get('/admin/service-quotes', params),
+    enabled: canUseAdmin,
+  });
+}
+
+export function useAdminServiceQuote(id) {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'service-quotes', id],
+    queryFn: () => api.get(`/admin/service-quotes/${id}`),
+    enabled: canUseAdmin && Boolean(id),
+  });
+}
+
+/**
+ * The devices this shop takes in.
+ *
+ * Nested, and NOT the catalogue taxonomy - that tree counts products and
+ * prunes any branch with none, which erases a repair list. Cached for a minute
+ * like the other reference lists: a device tree changes when a new handset
+ * launches, not per keystroke in a picker.
+ */
+export function useAdminDevices(params = {}) {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'devices', params],
+    queryFn: () => api.get('/admin/devices', params),
+    enabled: canUseAdmin,
+    staleTime: 60 * 1000,
+  });
+}
+export function useAdminServices(params = {}) {
+  const { canUseAdmin } = useAuth();
+  return useQuery({
+    queryKey: ['admin', 'services', params],
+    queryFn: () => api.get('/admin/services', params),
+    enabled: canUseAdmin,
+    staleTime: 60 * 1000,
+  });
+}
+
 export function useAdminExpenseCategories() {
   const { canUseAdmin } = useAuth();
   return useQuery({
@@ -481,7 +546,7 @@ export function useAdminTickets(params) {
     // would fetch *every* ticket in the shop to render nothing.
     enabled: canUseAdmin && params !== undefined,
     staleTime: 15 * 1000,
-    // A list that reflows under the operator while they read a row is worse
+    // A list that reflows under the staff member while they read a row is worse
     // than one a few seconds stale, but a page of tickets is a live board
     // keeping the previous page on screen during a refetch is the compromise.
     placeholderData: (previous) => previous,
@@ -503,7 +568,7 @@ export function useAdminTicket(id) {
  * is part of the query key, so two tabs at two ranges cache separately.
  *
  * `staleTime` is longer than a list's: a report is a considered read of a
- * period, not a live board, and refetching it under the operator while they are
+ * period, not a live board, and refetching it under the staff member while they are
  * reading a column is worse than showing a figure a minute old.
  */
 export function useAdminReport(tab, range, extra) {
@@ -635,7 +700,7 @@ export function useMarketingCampaigns(params) {
 
 /**
  * One campaign, with its audience recounted server-side on every read
- * consent moves between saves, and the count shown is the one the operator uses
+ * consent moves between saves, and the count shown is the one the staff member uses
  * to decide whether to send.
  */
 export function useMarketingCampaign(id) {
@@ -1038,6 +1103,12 @@ export function useAdminMutations() {
       mutationFn: ({ number, ...body }) => api.post(`/admin/invoices/${number}/payments`, body),
       onSuccess: invalidate,
     }),
+    // A gratuity. `PATCH`, not `POST`, because setting it replaces rather than
+    // accumulates: a tip is one number on one transaction, and 0 clears it.
+    recordInvoiceTip: useMutation({
+      mutationFn: ({ number, ...body }) => api.patch(`/admin/invoices/${number}/tip`, body),
+      onSuccess: invalidate,
+    }),
     voidInvoice: useMutation({
       mutationFn: ({ number, reason }) => api.post(`/admin/invoices/${number}/void`, { reason }),
       onSuccess: invalidate,
@@ -1288,6 +1359,56 @@ export function useAdminMutations() {
       onSuccess: invalidate,
     }),
 
+    createServiceQuote: useMutation({
+      mutationFn: (body) => api.post('/admin/service-quotes', body),
+      onSuccess: invalidate,
+    }),
+    updateServiceQuote: useMutation({
+      mutationFn: ({ id, ...body }) => api.patch(`/admin/service-quotes/${id}`, body),
+      onSuccess: invalidate,
+    }),
+    setServiceQuoteStatus: useMutation({
+      mutationFn: ({ id, ...body }) => api.patch(`/admin/service-quotes/${id}/status`, body),
+      onSuccess: invalidate,
+    }),
+    deleteServiceQuote: useMutation({
+      mutationFn: (id) => api.delete(`/admin/service-quotes/${id}`),
+      onSuccess: invalidate,
+    }),
+    // Resolves to `{ quote, ticket }` - the caller navigates to the ticket,
+    // which is where the work now lives.
+    convertServiceQuote: useMutation({
+      mutationFn: ({ id, ...body }) => api.post(`/admin/service-quotes/${id}/convert`, body),
+      onSuccess: invalidate,
+    }),
+
+    createDevice: useMutation({
+      mutationFn: (body) => api.post('/admin/devices', body),
+      onSuccess: invalidate,
+    }),
+    updateDevice: useMutation({
+      mutationFn: ({ id, ...body }) => api.patch(`/admin/devices/${id}`, body),
+      onSuccess: invalidate,
+    }),
+    // Refused for a node with children or one any ticket or estimate names.
+    deleteDevice: useMutation({
+      mutationFn: (id) => api.delete(`/admin/devices/${id}`),
+      onSuccess: invalidate,
+    }),
+    createService: useMutation({
+      mutationFn: (body) => api.post('/admin/services', body),
+      onSuccess: invalidate,
+    }),
+    updateService: useMutation({
+      mutationFn: ({ id, ...body }) => api.patch(`/admin/services/${id}`, body),
+      onSuccess: invalidate,
+    }),
+    // Refused by the server for a service any quote or ticket points at; the
+    // error names the count and says to deactivate instead.
+    deleteService: useMutation({
+      mutationFn: (id) => api.delete(`/admin/services/${id}`),
+      onSuccess: invalidate,
+    }),
     createExpenseCategory: useMutation({
       mutationFn: (body) => api.post('/admin/expenses/categories', body),
       onSuccess: invalidate,
@@ -1362,6 +1483,10 @@ export function useAdminMutations() {
       onSuccess: invalidate,
     }),
     /** Status is its own call because only it writes the ticket timeline. */
+    markTicketReviewed: useMutation({
+      mutationFn: (id) => api.patch(`/admin/tickets/${id}/reviewed`, {}),
+      onSuccess: invalidate,
+    }),
     setTicketStatus: useMutation({
       mutationFn: ({ id, ...body }) => api.patch(`/admin/tickets/${id}/status`, body),
       onSuccess: invalidate,

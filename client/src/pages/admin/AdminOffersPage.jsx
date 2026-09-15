@@ -687,7 +687,7 @@ export function AdminOffersPage() {
    * something DIFFERENT depending on the offer's kind. A combo read "3 SKUs ·
    * $220.00 (saves $35.90) · immediate → Sep 23"; a deal read "15% off ·
    * CELLS15 · immediate → Sep 20 · redeemed 0". Two shapes of prose in one
-   * list, so nothing lined up and nothing could be compared: an operator asking
+   * list, so nothing lined up and nothing could be compared: a staff member asking
    * "which of these expires first" had to find the third or fourth clause of
    * every row and read it out of a different position each time.
    *

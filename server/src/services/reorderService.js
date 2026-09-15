@@ -8,7 +8,7 @@ import '../models/Product.js';
  * notification bell and the create-PO screen all want to know the same thing
  * *what needs buying* - and before this file existed each worked it out
  * separately. The bell in particular listed every empty shelf as its own alert,
- * which is a list of facts where an operator needed a decision: a hundred rows
+ * which is a list of facts where a staff member needed a decision: a hundred rows
  * saying "X is out of stock" and nothing saying what to do about it. So the
  * queue is computed here, and the bell renders one row from its counts.
  *

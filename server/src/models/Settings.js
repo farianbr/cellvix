@@ -56,7 +56,7 @@ const DEFAULT_TAX_RATES = [
  * moving - an expense paid by cheque, an invoice settled by e-Transfer. The two
  * lists are unrelated and must not be merged.
  *
- * `code` is the stable key and `label` is what the operator reads, so renaming
+ * `code` is the stable key and `label` is what the staff member reads, so renaming
  * a label never orphans the expenses already recorded against its code.
  */
 const DEFAULT_PAYMENT_METHODS = [
@@ -131,13 +131,29 @@ const settingsSchema = new mongoose.Schema(
       defaultDueDays: { type: Number, default: 30 },
 
       // Referral commission (§6.13), as a percentage - 5 means 5%, not 0.05.
-      // Stored as a percent because that is the unit the operator types into
+      // Stored as a percent because that is the unit the staff member types into
       // the screen and the unit the rate is discussed in; the division happens
       // once, inside `referralService`.
       //
       // Changing this is **not retroactive**: every accrual snapshots the rate
       // in force when it was earned onto its own ledger row.
       referralPercent: { type: Number, default: 5, min: 0, max: 100 },
+
+      /**
+       * What a kilometre of travel costs the business, in integer cents.
+       *
+       * Used on an on-site repair to work out the technician's mileage from the
+       * distance they drove. `56.7` is 2026's CRA rate for the first 5,000 km,
+       * held in cents-per-km rather than dollars so it carries the tenth of a
+       * cent the rate actually has.
+       *
+       * **This is internal cost, never a charge.** The allowance it produces is
+       * recorded against the invoice for the shop's own books and is NOT added
+       * to what the customer owes - that is the extended service area fee, which
+       * is a separate ticked line. Mixing them would bill a customer for the
+       * shop's own mileage claim.
+       */
+      travelRateCentsPerKm: { type: Number, default: 56.7, min: 0 },
 
       // Dummy values until the client confirms (§0.12).
       warrantyByGrade: {
@@ -199,7 +215,7 @@ const settingsSchema = new mongoose.Schema(
      *
      * Markup and margin are two views of one number, related by
      * `markup = margin ÷ (100 − margin) × 100`. Both are stored because the
-     * operator thinks in whichever one their supplier quotes in, and the screen
+     * staff member thinks in whichever one their supplier quotes in, and the screen
      * prints the conversion so the two can never silently disagree.
      */
     inventory: {
@@ -213,6 +229,68 @@ const settingsSchema = new mongoose.Schema(
       // against its own SLA rather than borrowing the returns one.
       ticketSlaDays: { type: Number, default: 7 },
       lowStockThreshold: { type: Number, default: 50 },
+    },
+
+    /**
+     * The self-service check-in tablet (Sales § Kiosk).
+     *
+     * **The PIN is hashed, never stored in the clear.** It is a credential: it
+     * is what stops the tablet being picked up and used, and a shop reusing a
+     * memorable four digits elsewhere should not have them readable by anybody
+     * who can see this document. `select: false` for the same reason
+     * `User.password` is - it must not ride along on the forty other reads of
+     * the settings record.
+     *
+     * **One PIN per business, not per staff member.** The lock screen says
+     * "Staff: enter the kiosk PIN", singular: it is a door to the tablet, not
+     * an identity. A kiosk ticket records no staff member because none was
+     * there - the customer filled it in themselves, which is the whole point,
+     * and `intake.awaitingReview` is how a person gets attached to it later.
+     *
+     * Absent means the kiosk has never been set up, which is different from a
+     * PIN of `0000`: the screen offers to set one rather than refusing entry to
+     * a door nobody has locked yet.
+     */
+    kiosk: {
+      pinHash: { type: String, select: false },
+      /** Off by default. A tablet in the window is a deliberate act. */
+      isEnabled: { type: Boolean, default: false },
+      /** Shown on the welcome screen, under the business name. */
+      welcomeMessage: {
+        type: String,
+        trim: true,
+        maxlength: 200,
+        default: 'Welcome! Check in your device in just a minute.',
+      },
+      /** Shown on the done screen, above the ticket number. */
+      thankYouMessage: {
+        type: String,
+        trim: true,
+        maxlength: 200,
+        default: "You're all set! Please hand your device to our team.",
+      },
+      /**
+       * Whether the questions are read aloud by default.
+       *
+       * An accessibility feature, and the reason the flow is one question per
+       * screen rather than a form: a screen with one question on it is a screen
+       * that can be read out in one breath. The customer can still toggle it.
+       */
+      readAloud: { type: Boolean, default: true },
+      /**
+       * Whether agreeing to the repair terms is required to finish.
+       *
+       * On by default. It is the shop's protection - a customer who says they
+       * never agreed to leave the device is answered by the row they ticked,
+       * and a shop that cannot say when that was agreed cannot rely on it.
+       */
+      requireTerms: { type: Boolean, default: true },
+      termsText: {
+        type: String,
+        trim: true,
+        maxlength: 1000,
+        default: "I agree to leave my device for diagnosis and to the shop's repair terms.",
+      },
     },
 
     /**

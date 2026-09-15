@@ -78,7 +78,7 @@ function statusLabel(status) {
  * Inspection: what each part actually is, and what happens to it.
  *
  * `restock` is the only disposition that moves stock, and the form says so
- * an operator choosing it is choosing to put units back, not just describing
+ * a staff member choosing it is choosing to put units back, not just describing
  * their condition.
  */
 function InspectForm({ rma, onSubmit, onCancel, isPending, error }) {
@@ -156,7 +156,7 @@ function InspectForm({ rma, onSubmit, onCancel, isPending, error }) {
  * The refund amount is proposed from what the order actually charged for these
  * lines and capped at what the order has left to refund - but the cap is the
  * server's, enforced in `storeCreditService`. This form shows the numbers so
- * the operator is never asked to guess.
+ * the staff member is never asked to guess.
  */
 function ResolveForm({ rma, refund, onSubmit, onCancel, isPending, error }) {
   const proposed = Math.min(refund.proposed, refund.refundable);
@@ -362,7 +362,7 @@ export function AdminRmaDetailPage() {
         </p>
       )}
 
-      {/* Named rather than implied: an operator who restocked nothing should be
+      {/* Named rather than implied: a staff member who restocked nothing should be
           able to see that they restocked nothing. */}
       {outcome && (
         <div className="mb-3 space-y-2">

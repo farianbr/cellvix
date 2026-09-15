@@ -3,6 +3,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { BUSINESS_INFO } from '../../../shared/business.js';
 import { formatDate } from '../../../shared/dates.js';
+import { paletteFor, migrateColorToken } from '../../../shared/businessPalette.js';
+import { db, controlModels } from '../db/models.js';
 
 /**
  * The invoice document.
@@ -80,7 +82,8 @@ const COUNTRY_NAMES = {
 const INK = '#111113';
 const MUTED = '#6b6b73';
 const LINE = '#e4e4e8';
-const BRAND = '#CF3429';
+/** Cellvix red. Only used when a caller did not resolve the real business. */
+const BRAND_FALLBACK = '#CF3429';
 
 /**
  * The document's type scale.
@@ -234,10 +237,75 @@ function totalsRow(label, value, { strong = false, tone } = {}) {
  *                                without one the print button is not rendered,
  *                                which is exactly what the emailed copy wants.
  */
-function renderInvoiceHtml({ invoice, order, user, origin, nonce }) {
+/**
+ * The shop an invoice belongs to, and the colour it prints in.
+ *
+ * One helper so the three callers - the admin PDF route, the buyer own copy
+ * and the email sent on order - cannot drift into branding the same document
+ * three different ways. `Business` is control-plane, hence `controlModels()`.
+ *
+ * Falls back to the static constant when the invoice names no business, which
+ * is every record written before businesses existed.
+ */
+async function resolveInvoiceBrand(businessId) {
+  if (!businessId) return { shop: null, brandColor: null };
+
+  const business = await controlModels()
+    .Business.findById(businessId)
+    .select('name colorToken isDefault')
+    .lean();
+  if (!business) return { shop: null, brandColor: null };
+
+  const settings = await db().Settings.load();
+  const info = settings?.business ?? {};
+
+  return {
+    // The business RECORD names the shop. `Settings.business.name` defaults to
+    // "Cellvix" and a business nobody has filled it in for still carries that,
+    // so preferring settings prints the wrong company - the same trap the
+    // ticket document documents.
+    shop: { ...info, name: business.name || info.name },
+    brandColor: paletteFor(migrateColorToken(business.colorToken)).base,
+    /**
+     * Whether the bundled logo belongs to this business.
+     *
+     * `client/public/brand/logo.png` is one file for the whole install, and it
+     * is the default business's mark. That one keeps it; every other business
+     * gets the typeset wordmark built from its own name and colour, which is a
+     * better answer than somebody else's logo.
+     */
+    isHouse: business.isDefault === true,
+  };
+}
+
+function renderInvoiceHtml({ invoice, order, user, origin, nonce, shop, brandColor, isHouse }) {
   const balance = (invoice.amount ?? 0) - (invoice.amountPaid ?? 0);
   const settled = balance <= 0;
-  const business = BUSINESS_INFO;
+
+  /**
+   * The business whose name and colour go on this document.
+   *
+   * **This used to be the static Cellvix constant on every invoice**, so a
+   * CellShoppe customer was handed a document in the wholesaler's brand with
+   * the wholesaler's phone number to ring. The caller resolves the real one now
+   * and passes it; the constant is the fallback for an invoice that names no
+   * business, which is every record written before businesses existed.
+   */
+  const business = shop ?? BUSINESS_INFO;
+  const BRAND = brandColor ?? BRAND_FALLBACK;
+  // The bundled logo is Cellvix's, so it prints only when no other business was
+  // resolved - see the note beside the masthead.
+  const useHouseLogo = !shop || isHouse === true;
+
+  /**
+   * The strapline, unless it is still the schema default.
+   *
+   * `Settings.business.tagline` defaults to the wholesale line,
+   * so a repair shop that has not written its own would print the wholesaler
+   * description under its own name. Blank is the honest answer - the same rule
+   * the ticket document applies to the default phone number.
+   */
+  const tagline = !useHouseLogo && business.tagline === 'Wholesale phone and laptop parts' ? '' : (business.tagline ?? '');
 
   // What this document calls itself. A tax invoice is issued only against money
   // that arrived; before that the same row is an amount due, and a receipt for
@@ -305,7 +373,20 @@ ${
         <tr>
           <td style="vertical-align:top;">
             ${
-              LOGO
+              /**
+               * The logo file belongs to ONE business, so only that one gets it.
+               *
+               * `client/public/brand/logo.png` is Cellvix's wordmark, read once
+               * at boot - there is no per-business logo store yet. Printing it
+               * on every invoice put the wholesaler's mark on a repair shop's
+               * paperwork, which is the same bug as the hardcoded red and more
+               * obvious to a customer than the colour was.
+               *
+               * A shop with no logo of its own falls through to the typeset
+               * wordmark below, which is built from its own name and colour -
+               * a better answer than somebody else's logo.
+               */
+              LOGO && useHouseLogo
                 ? `<img src="${LOGO}" alt="${escapeHtml(business.name)}" width="190" height="48"
                      style="display:block;width:190px;height:auto;border:0;" />`
                 : `<table role="presentation" cellpadding="0" cellspacing="0">
@@ -313,7 +394,7 @@ ${
                 <td style="width:34px;height:34px;background:${INK};border-radius:6px;"></td>
                 <td style="padding-left:11px;vertical-align:middle;">
                   <div style="font-size:${T.figure};font-weight:800;letter-spacing:-.01em;color:${INK};">${escapeHtml(business.name.toUpperCase())}</div>
-                  <div style="font-size:${T.micro};letter-spacing:.16em;text-transform:uppercase;color:${MUTED};margin-top:2px;">${escapeHtml(business.tagline)}</div>
+                  <div style="font-size:${T.micro};letter-spacing:.16em;text-transform:uppercase;color:${MUTED};margin-top:2px;">${escapeHtml(tagline)}</div>
                 </td>
               </tr>
             </table>`
@@ -443,6 +524,25 @@ ${/*
               ${totalsRow('Grand total', money(invoice.amount), { strong: true })}
               ${invoice.amountPaid > 0 ? totalsRow('Paid', `−${money(invoice.amountPaid)}`) : ''}
               ${totalsRow('Balance due', money(Math.max(0, balance)), { strong: true, tone: balance > 0 ? BRAND : INK })}
+              ${
+                /**
+                 * The tip sits AFTER the balance due, outside the sum.
+                 *
+                 * Every row above it is a step in one calculation that arrives
+                 * at what the customer owes. A tip is not a step in it: it was
+                 * never owed, it carries no tax, and placing it among the
+                 * subtotal and tax rows would invite the reader to add it in
+                 * and make the grand total wrong. Below the line it reads as
+                 * what it is - money given on top, already received.
+                 *
+                 * Printed only when there is one. A "Tip $0.00" row on every
+                 * wholesale invoice is a line that teaches people to stop
+                 * reading the totals block.
+                 */
+                invoice.tipCents > 0
+                  ? totalsRow('Tip (not part of the total)', money(invoice.tipCents))
+                  : ''
+              }
             </table>
           </td>
         </tr>
@@ -493,13 +593,22 @@ ${/*
 }
 
 /** Plain-text fallback, for the mail clients that refuse HTML. */
-function renderInvoiceText({ invoice, order, origin }) {
+//  for the same reason the HTML copy takes it: a plain-text invoice
+// naming the wrong company is no better than a styled one.
+/**
+ * The plain-text fallback, for mail clients that refuse HTML.
+ *
+ * Takes `shop` for the same reason the HTML copy does: an invoice naming the
+ * wrong company is no better in plain text than it is styled.
+ */
+function renderInvoiceText({ invoice, order, origin, shop }) {
+  const info = shop ?? BUSINESS_INFO;
   const balance = (invoice.amount ?? 0) - (invoice.amountPaid ?? 0);
   const kind = invoice.kind ?? 'invoice';
   const docLabel = kind === 'receipt' ? 'receipt' : kind === 'due' ? 'amount due' : 'invoice';
 
   const lines = [
-    `${BUSINESS_INFO.name} - ${docLabel} ${invoice.number}`,
+    `${info.name} - ${docLabel} ${invoice.number}`,
     order?.orderNumber ? `Order ${order.orderNumber}` : null,
     `Issued ${day(invoice.issuedAt)} · due ${day(invoice.dueDate)}`,
     '',
@@ -510,6 +619,8 @@ function renderInvoiceText({ invoice, order, origin }) {
     `Total ${money(invoice.amount)}`,
     invoice.amountPaid > 0 ? `Paid ${money(invoice.amountPaid)}` : null,
     `Balance due ${money(Math.max(0, balance))}`,
+    // After the balance, outside the sum, for the reason the HTML copy gives.
+    invoice.tipCents > 0 ? `Tip (not part of the total) ${money(invoice.tipCents)}` : null,
     // The plain-text copy gets the same route to paying that the HTML one does.
     // A reader on a mail client that refuses HTML is exactly the reader who
     // needs the URL spelled out.
@@ -517,11 +628,11 @@ function renderInvoiceText({ invoice, order, origin }) {
       ? `\nPay online: ${origin}/account/invoices?pay=${encodeURIComponent(invoice.number)}`
       : null,
     '',
-    `Questions? ${BUSINESS_INFO.email} · ${BUSINESS_INFO.phone}`,
+    `Questions? ${info.email} · ${info.phone}`,
   ];
 
   return lines.filter((line) => line !== null).join('\n');
 }
 
-export { renderInvoiceHtml, renderInvoiceText };
+export { renderInvoiceHtml, renderInvoiceText, resolveInvoiceBrand };
 export default renderInvoiceHtml;

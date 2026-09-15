@@ -528,7 +528,7 @@ export function BarList({
     <div className={cn('space-y-3', className)} role="list" aria-label={caption}>
       {items.map((item, index) => {
         // A row becomes a link when the caller gives that item a `to`. Ranked
-        // lists name real records - a customer, a product - and the operator
+        // lists name real records - a customer, a product - and the staff member
         // reading "who is my biggest account" wants to open it, not go and find
         // it by name. Rows without one stay plain: the P&L breakdowns on
         // Reports rank categories that have no screen of their own.

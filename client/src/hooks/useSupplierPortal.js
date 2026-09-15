@@ -31,6 +31,11 @@ export function useSupplierSession() {
 
   return {
     supplier: data?.supplier ?? null,
+    // Whose portal this is - the buying business, resolved from the host. It
+    // paints the shell and names the business on the sign-in page, and it
+    // answers the same signed in or out, because a supplier needs to know who
+    // is asking for their credentials before they type them.
+    business: data?.business ?? null,
     isLoading,
     isAuthenticated: Boolean(data?.supplier),
   };

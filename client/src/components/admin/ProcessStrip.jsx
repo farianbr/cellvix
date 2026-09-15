@@ -32,7 +32,7 @@ import cn from '@/lib/cn';
  * So each stage is now its own bordered card with a ringed glyph, and the
  * connector between them is a dashed arrow: a hand-off, not a fill. The
  * current stage carries the only solid border on the row, which makes "where
- * is this?" answerable without reading a word - the thing an operator actually
+ * is this?" answerable without reading a word - the thing a staff member actually
  * does with this component.
  *
  * ## Every stage wears its own icon, and only the current one is ringed
@@ -67,7 +67,7 @@ export const PURCHASE_CYCLE = [
 /**
  * A pipeline that stopped is drawn in the tone of *why* it stopped, not in the
  * brand colour - a rejected quote whose row reads as healthy progress is
- * telling the operator the opposite of what happened.
+ * telling the staff member the opposite of what happened.
  */
 const STOPPED = {
   danger: { ring: 'border-danger text-danger', card: 'border-danger', label: 'text-danger' },

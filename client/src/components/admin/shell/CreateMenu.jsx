@@ -13,7 +13,7 @@ import { pressable } from '@/lib/motion';
  * The `+ Create` dropdown, shortcut `C` (ERP rework §7.2).
  *
  * **Grouped, not flat** - the screenshot settles it: money coming in on one
- * side, money going out on the other, which is how the operator already thinks
+ * side, money going out on the other, which is how the staff member already thinks
  * about which record they are about to make.
  *
  * **Entries the role cannot create are hidden** (§7.2, wired in phase 12b).
@@ -26,7 +26,7 @@ import { pressable } from '@/lib/motion';
  * leaving a label above nothing.
  *
  * **Every entry opens a form, not a list.** `+ Create > Quote` used to land on
- * the quotes list and leave the operator to find the button they had just
+ * the quotes list and leave the staff member to find the button they had just
  * pressed the equivalent of - which is the menu asking them to do the thing
  * twice. It cannot open a modal on a page that has not mounted, so it navigates
  * with `?new=1` and the page reads that through `useCreateParam`, which strips

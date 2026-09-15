@@ -92,7 +92,7 @@ const resolveRma = asyncHandler(async (req, res) => {
       status: rma?.status ?? null,
       resolution: req.body?.resolution ?? '',
       amountDollars: req.body?.amountDollars ?? null,
-      // Named by the service rather than taken from the request: an operator
+      // Named by the service rather than taken from the request: a staff member
       // who restocked nothing should see that they restocked nothing.
       restocked: result?.restocked ?? null,
     },

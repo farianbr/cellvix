@@ -104,7 +104,7 @@ import {
 const TABS = [
   // Overview is a **summary of every other tab**, not a tab of its own content:
   // each panel on it shows the first few rows and links to the tab that owns
-  // them. An operator opening a customer wants the shape of the relationship
+  // them. A staff member opening a customer wants the shape of the relationship
   // before they want any one part of it.
   { key: 'overview', label: 'Overview', icon: UserRound },
   /**
@@ -736,7 +736,7 @@ const ROWS_PER_PAGE = 10;
 /**
  * A tab whose records arrive with a later phase.
  *
- * Named rather than hidden: an operator who cannot find the Quotes tab assumes
+ * Named rather than hidden: a staff member who cannot find the Quotes tab assumes
  * the client has none. This says the screen is not built, which is a different
  * claim from "there is nothing here" (§6b, rule 4 - nothing fakes success).
  */
@@ -797,7 +797,7 @@ export function AdminClientProfilePage() {
    * It is wrong for a request. A `?tab=rmas` URL opened against a business
    * without Returns passed the strip's check on that first render and fired
    * `GET /admin/rma`, which the new feature gate answers 404 - a console error
-   * for a section the operator was never going to be shown.
+   * for a section the staff member was never going to be shown.
    *
    * So a fetch waits for the real answer. A tab with no feature key never
    * waits: every business has invoices, notes and an activity log.
@@ -861,8 +861,8 @@ export function AdminClientProfilePage() {
   /**
    * Fetched on Overview as well as its own tab.
    *
-   * Overview leads with tickets for a service business - they are what an
-   * operator opened the customer to check - so the rows have to be there before
+   * Overview leads with tickets for a service business - they are what a
+   * staff member opened the customer to check - so the rows have to be there before
    * the tab is. A short page on Overview, the full 50 on the tab, so summarising
    * does not pay for a list nobody is reading yet.
    */
@@ -1203,16 +1203,10 @@ export function AdminClientProfilePage() {
     } catch {
       // Clipboard access can be refused outright (an insecure origin, a
       // locked-down browser). The link is on screen and selectable, so say so
-      // rather than failing at something the operator cannot act on.
+      // rather than failing at something the staff member cannot act on.
       toast.error('Could not copy. Select the link and copy it by hand.');
     }
   }
-
-  // Channel names for the Overview summary. Read from the same `consent.channels`
-  // the panel writes, so the two can never disagree about who may be contacted.
-  const consentedChannels = Object.entries(user.consent.channels)
-    .filter(([, on]) => on)
-    .map(([channel]) => (channel === 'call' ? 'Phone' : channel === 'sms' ? 'SMS' : channel === 'whatsapp' ? 'WhatsApp' : 'Email'));
 
   return (
     <>
@@ -1221,7 +1215,7 @@ export function AdminClientProfilePage() {
        *
        * Every other admin screen opens with an icon, a title and a description,
        * because every other screen is *about a kind of record*. This one is
-       * about **a person**, and the things an operator does from it are
+       * about **a person**, and the things a staff member does from it are
        * transactional - raise a ticket, invoice them, send a statement. So it
        * gets a monogram rather than the Customers glyph (which was the same
        * mark on every account), the contact details as a scannable row rather
@@ -1231,7 +1225,7 @@ export function AdminClientProfilePage() {
        * The approval decision, on the record it is about.
        *
        * A pending account was answerable only from the Approvals queue or the
-       * notification bell - so an operator who arrived here from a search, or
+       * notification bell - so a staff member who arrived here from a search, or
        * from the customers list, could read everything about the business and
        * still had to go and find the same form somewhere else. The banner is
        * the whole state of the account said in one line, with both answers
@@ -1295,7 +1289,7 @@ export function AdminClientProfilePage() {
                 )}
               </div>
 
-              {/* One line per fact, each behind its own icon: an operator
+              {/* One line per fact, each behind its own icon: a staff member
                   reading a phone number off the screen should not have to find
                   it inside a sentence of separators. Email and phone are
                   actionable - this is a screen somebody uses while picking up
@@ -1454,7 +1448,7 @@ export function AdminClientProfilePage() {
         tabs={tabs.map((item) => ({
           ...item,
           // A count only when there is something to count: a row of grey
-          // zeroes teaches an operator to stop reading them.
+          // zeroes teaches a staff member to stop reading them.
           count: TAB_COUNTS[item.key] > 0 ? TAB_COUNTS[item.key] : undefined,
         }))}
         value={tab}
@@ -1645,13 +1639,13 @@ export function AdminClientProfilePage() {
 
         {/* ---- the wide column: the records themselves ------------------
             Invoices and Tickets are tables. They get two thirds of the width
-            because their columns are what the operator came to read, and the
+            because their columns are what the staff member came to read, and the
             conversation sits under them because talking to the customer is
             what happens after reading both. */}
         <div className="space-y-4 lg:col-span-2">
 
           {/* Invoices get their own panel on Overview rather than only a line
-              in "Recent activity". It is the section an operator opens a
+              in "Recent activity". It is the section a staff member opens a
               customer to look at - what has been billed and what is still
               owed - and the roll-up buries it among order rows. */}
           <Panel
@@ -1933,6 +1927,7 @@ export function AdminClientProfilePage() {
 
           <ConsentPanel
             consent={user.consent}
+            preferredContact={user.preferredContact}
             isPending={setContactConsent.isPending}
             onSave={(channels) => setContactConsent.mutate({ id, ...channels })}
           />
@@ -2193,7 +2188,7 @@ export function AdminClientProfilePage() {
       
           This tab rendered a "arrives in phase 7" placeholder long after phase
           7 shipped - the list screen, the workflow and the data were all live,
-          so an operator looking at a customer with five returns was told the
+          so a staff member looking at a customer with five returns was told the
           feature did not exist. The tab now shows them, using the same columns
           and the same status tones as `/admin/rma`, because it is the same
           record seen from the account rather than from the queue. */}
@@ -2357,7 +2352,7 @@ export function AdminClientProfilePage() {
        * the customer reading their own page early.
        *
        * The address is named in the body, because sending to a stale one is the
-       * actual failure mode here and it is the one thing an operator can check
+       * actual failure mode here and it is the one thing a staff member can check
        * before the mail leaves.
        */}
       <ConfirmDialog

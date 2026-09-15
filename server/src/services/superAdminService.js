@@ -13,6 +13,7 @@ import env from '../config/env.js';
 import { hashResetToken } from './authService.js';
 import { sendPasswordResetEmail } from './welcomeMail.js';
 import { FEATURES, resolveFeatures } from '../../../shared/schemas/features.js';
+import { DEFAULT_BUSINESS_COLOR } from '../../../shared/businessPalette.js';
 
 /**
  * The super-admin console (SAAS_PLATFORM §4.5, §6).
@@ -340,7 +341,7 @@ async function createBusiness(tenantId, body) {
     code: await nextBusinessCode(),
     businessType: body.businessType ?? 'product',
     status: 'active',
-    colorToken: body.colorToken ?? 'brand',
+    colorToken: body.colorToken ?? DEFAULT_BUSINESS_COLOR,
     tenant: tenant._id,
     plan: tenant.plan,
     slotGrantedAt: new Date(),

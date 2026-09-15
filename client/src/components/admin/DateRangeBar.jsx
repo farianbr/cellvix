@@ -19,12 +19,12 @@ import { isoDate, dateRange } from '@/lib/format';
  * button states the applied range, so nothing is hidden that was not already
  * legible; opening it is only needed to *change* an unusual range.
  *
- * **The range lives in the URL** (`?from=&to=`), so any view is a link - an
- * operator sends "here is the quarter I mean" rather than "set the dates to".
+ * **The range lives in the URL** (`?from=&to=`), so any view is a link - a
+ * staff member sends "here is the quarter I mean" rather than "set the dates to".
  * The inputs are local draft state until Apply, because a half-typed date must
  * not refetch the page on every keystroke.
  *
- * Presets are computed in the browser's timezone, which is the operator's, and
+ * Presets are computed in the browser's timezone, which is the staff member's, and
  * both bounds are inclusive whole days: `from` is 00:00 and `to` is the date
  * itself - the server is responsible for treating `to` as end-of-day.
  */
@@ -124,11 +124,11 @@ export const DASHBOARD_PRESETS = RANGE_PRESETS.filter((preset) =>
  *
  * **The URL still wins.** It stays the single source of truth, so a link is a
  * link and the back button works. `sessionStorage` only answers the question
- * the URL cannot: what range was this operator looking at *before* they
+ * the URL cannot: what range was this staff member looking at *before* they
  * followed a link that carried no range at all.
  *
  * Without it, moving Dashboard to Invoices and back silently reset a custom
- * range to "this month" - the operator sets a range once and then loses it on
+ * range to "this month" - the staff member sets a range once and then loses it on
  * every navigation, which teaches them not to bother setting one.
  *
  * Session rather than local: a range is a working context, not a preference. It
@@ -198,13 +198,13 @@ export function useDateRange(defaultPreset = 'this-month') {
  * What period a figure covers, in words, for a panel or tile heading.
  *
  * **A number without its period is not an answer.** "Collected $1,691.99" is
- * only true of some stretch of time, and once the operator can change that
+ * only true of some stretch of time, and once the staff member can change that
  * stretch, every figure on the screen has to say which one it is showing
  * otherwise a filtered dashboard looks exactly like an unfiltered one and the
  * number is read as all-time.
  *
  * Returns the preset's own name where the range is one ("This Month"), because
- * that is what the operator picked and what they will recognise. A composed
+ * that is what the staff member picked and what they will recognise. A composed
  * range gets its dates, and a single day gets stated once rather than as
  * "05-Sep-26 – 05-Sep-26".
  *
@@ -267,7 +267,7 @@ export function DateRangeBar({ presets = RANGE_PRESETS, defaultPreset = 'this-mo
     setSearchParams(next, { replace: true });
     // Remembered for the session, so the next screen opens on the same period.
     // Reset commits `{}`, which clears the stored range rather than preserving
-    // one the operator just cleared.
+    // one the staff member just cleared.
     storeRange(range);
   }
 
@@ -280,12 +280,12 @@ export function DateRangeBar({ presets = RANGE_PRESETS, defaultPreset = 'this-mo
   //
   // It used to require the draft to DIFFER from what is applied, which quietly
   // stranded the most ordinary case: "This Month" already resolves to
-  // 1st → today, so an operator opening the panel and picking today as the end
+  // 1st → today, so a staff member opening the panel and picking today as the end
   // date produced a draft identical to the preset - and the button they were
   // reaching for was disabled with nothing on screen saying why.
   //
   // A no-op Apply is harmless: it commits the same range and closes the panel,
-  // which is exactly what the operator asked for. What must be blocked is an
+  // which is exactly what the staff member asked for. What must be blocked is an
   // impossible range, not an unchanged one.
   const validRange = Boolean(draft.from || draft.to) && (!draft.from || !draft.to || draft.from <= draft.to);
 
@@ -296,7 +296,7 @@ export function DateRangeBar({ presets = RANGE_PRESETS, defaultPreset = 'this-mo
   const today = iso(new Date());
 
   // A range that matches no preset is a custom one, and the button says so
-  // rather than leaving the operator to read two dates to find out.
+  // rather than leaving the staff member to read two dates to find out.
   const isCustom = !activePreset && (applied.from || applied.to);
   const customLabel = isCustom ? dateRange(applied.from, applied.to) : 'Custom range';
 
@@ -304,7 +304,7 @@ export function DateRangeBar({ presets = RANGE_PRESETS, defaultPreset = 'this-mo
     <div className={cn('mb-4 flex flex-wrap items-center gap-x-2 gap-y-2', className)}>
       {/* A segmented control on its own track, not a row of bare words.
           Unlabelled text sitting directly on the page background reads as a
-          caption rather than as something pressable - an operator has to guess
+          caption rather than as something pressable - a staff member has to guess
           the row is interactive. The inset track states "these are controls and
           they are one set", and the active segment is a raised surface inside
           it, which is the same figure/ground relationship a physical selector
@@ -448,7 +448,7 @@ export function DateRangeBar({ presets = RANGE_PRESETS, defaultPreset = 'this-mo
                   value={draft.to ?? ''}
                   min={draft.from || undefined}
                   // Capped at today, and today itself is selectable: a range
-                  // ending yesterday silently drops the day the operator is
+                  // ending yesterday silently drops the day the staff member is
                   // standing in, which is usually the one they care about.
                   max={today}
                   onChange={(event) =>

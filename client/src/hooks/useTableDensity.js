@@ -8,7 +8,7 @@ const VALUES = ['comfortable', 'compact'];
  *
  * The design wants comfortable - generous rows, no full-width rules, the row
  * itself as the hover target - because that is what separates a product surface
- * from a spreadsheet. Operators running an ERP all day want the opposite: as
+ * from a spreadsheet. Staff running an ERP all day want the opposite: as
  * many rows on screen as will fit, because their job is scanning fifty orders,
  * not admiring eight.
  *
@@ -17,7 +17,7 @@ const VALUES = ['comfortable', 'compact'];
  * choice for the majority of screens, which show ten rows and not a hundred.
  *
  * Stored in localStorage rather than on the user record: it is a per-device
- * viewing preference, like a window size, and an operator on a laptop and a
+ * viewing preference, like a window size, and a staff member on a laptop and a
  * wall-mounted warehouse screen wants a different answer on each. It also must
  * not need a round trip - a table that renders at one density and then reflows
  * to another once a request lands is worse than either density alone.
@@ -72,7 +72,7 @@ export function useTableDensity() {
    *
    * Taking a value rather than flipping is the other half. `toggle()` derived
    * the next density from what *it* believed was current; once the state above
-   * could desync, "flip from current" and "the button the operator pressed"
+   * could desync, "flip from current" and "the button the staff member pressed"
    * were no longer the same thing, so a click could compute its way back to
    * the value already on screen and look inert.
    *

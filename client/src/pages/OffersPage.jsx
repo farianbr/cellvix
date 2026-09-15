@@ -350,7 +350,7 @@ function ComboCard({ offer, onAdd, addState }) {
           three-part one used to line up against the left edge with a ragged
           gap on the right, and the equation is a composition, not a column.
 
-          On a phone it stops being one row. Three 92px parts plus the operators
+          On a phone it stops being one row. Three 92px parts plus the staff
           cannot fit 320px, and the price is the one thing in the card that must
           never be the part scrolled off the edge - so below `sm` the parts wrap
           and the price sits under them behind a rule, with the `=` dropped

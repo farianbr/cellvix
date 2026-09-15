@@ -112,7 +112,7 @@ async function enforceTenantStatus(req, _res, next) {
      *
      * Support is *most* needed on an account that has stopped paying - sorting
      * out the dispute, exporting their data, fixing whatever caused the lapse.
-     * Refusing an operator here would mean the only accounts we cannot help are
+     * Refusing a staff member here would mean the only accounts we cannot help are
      * the ones asking for help, and the grant is already time-boxed, logged and
      * revocable, which is a tighter control than this one.
      */

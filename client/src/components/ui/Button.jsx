@@ -92,7 +92,7 @@ export const Button = forwardRef(function Button(
          * the action it names is destructive. So the fade stays for them.
          *
          * But 45% put the label under 3:1, which is illegible rather than
-         * quiet, and disabled still has to be readable: an operator needs to
+         * quiet, and disabled still has to be readable: a staff member needs to
          * know what the thing they cannot press would do. 60% keeps every
          * variant's label above 3:1 while still reading as unavailable.
          *

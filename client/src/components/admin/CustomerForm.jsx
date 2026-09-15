@@ -3,6 +3,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { AlertCircle, Building2, MapPin, Save, ShieldCheck, UserRound, X } from 'lucide-react';
 import AddressFields from '@/components/admin/AddressFields';
 import { COUNTRY_OPTIONS, DEFAULT_COUNTRY } from '@shared/countries';
+import { PREFERRED_CONTACT_OPTIONS, CUSTOMER_SOURCE_OPTIONS } from '@shared/schemas/admin';
 import Input from '@/components/ui/Input';
 import PhoneField from '@/components/ui/PhoneField';
 import SelectField from '@/components/ui/SelectField';
@@ -53,7 +54,7 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
    * `clientUpdateSchema` does not carry the field at all, and folding it into
    * the profile payload would either lose that provenance or restamp it every
    * time somebody corrected a postal code. So the section is on this form,
-   * where an operator expects to find it, and saving sends two requests: the
+   * where a staff member expects to find it, and saving sends two requests: the
    * profile, then the consent, and only when the ticks actually changed.
    */
   const [consent, setConsent] = useState(user.consent?.channels ?? EMPTY_CONSENT);
@@ -77,6 +78,10 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
       businessType: user.businessType ?? '',
       website: user.website ?? '',
       taxId: user.taxId ?? '',
+      // Empty means "not asked yet", which is a real state and has to survive a
+      // round trip through the form unchanged - see the schema's note.
+      preferredContact: user.preferredContact ?? '',
+      source: user.source ?? '',
       address: {
         line1: existing.line1 ?? '',
         line2: existing.line2 ?? '',
@@ -93,7 +98,7 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
       onSubmit={handleSubmit((values) =>
         onSubmit({
           contactName: `${values.firstName} ${values.lastName}`.trim(),
-          // Sent even when empty: an empty string is how the operator clears a
+          // Sent even when empty: an empty string is how the staff member clears a
           // company name recorded against what turned out to be a private
           // customer, and the server reads it as a deletion.
           businessName: values.businessName,
@@ -102,6 +107,11 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
           businessType: values.businessType,
           website: values.website,
           taxId: values.taxId,
+          // Sent even when empty, like `businessName` above: an empty string is
+          // how a staff member clears a channel or an attribution recorded by
+          // mistake, and the server reads it as a deletion.
+          preferredContact: values.preferredContact,
+          source: values.source,
           // A half-typed address is still not sent - the schema requires a
           // complete one, so an empty street line means "no address".
           address: values.address.line1 ? values.address : undefined,
@@ -194,6 +204,17 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
             </div>
 
             <Input label="Website" placeholder="example.ca" {...register('website')} />
+
+            {/* Attribution, not a setting. It answers "where is our work coming
+                from", which nothing else on this record can, and it is the one
+                question here whose answer is only ever known at the moment the
+                account is created. */}
+            <SelectField
+              control={control}
+              name="source"
+              label="How they found us"
+              options={CUSTOMER_SOURCE_OPTIONS}
+            />
           </div>
         </section>
 
@@ -218,7 +239,7 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
           </div>
 
           {/* CASL (§6.13). Present on the edit form as well as the profile
-              panel: an operator correcting a customer's details is exactly who
+              panel: a staff member correcting a customer's details is exactly who
               has just been told on the phone which channels are welcome, and
               sending them to a different screen to record it is how the answer
               gets lost. Both write through the same endpoint. */}
@@ -228,6 +249,29 @@ export function CustomerForm({ user, onSubmit, onCancel, isPending, error }) {
           </h2>
 
           <ConsentChannels value={consent} onChange={setConsent} />
+
+          {/*
+            Consent above answers "may we"; this answers "how".
+
+            They sit together because a staff member is told both in one breath on
+            the phone, and they are deliberately NOT the same control: somebody
+            can consent to three channels and only ever read one. This is the
+            channel every ticket status update goes out on, which is why it is
+            worth asking for separately rather than inferring from whichever
+            consent box happens to be ticked.
+          */}
+          <div className="mt-4">
+            <SelectField
+              control={control}
+              name="preferredContact"
+              label="Preferred channel for repair updates"
+              options={PREFERRED_CONTACT_OPTIONS}
+            />
+            <p className="mt-1.5 text-xs leading-snug text-ink-400">
+              Every ticket status update is sent here. A channel they have not consented to above is
+              skipped, so record both.
+            </p>
+          </div>
           <p className="mt-3 text-xs leading-snug text-ink-400">
             {user.consent?.recorded
               ? 'Only change these when the customer has told you something different - the record is dated.'

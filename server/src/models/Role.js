@@ -4,9 +4,9 @@ import mongoose from 'mongoose';
  * A named permission set (ERP rework §7.6).
  *
  * The first draft of the plan stored a permission map on each user. This is the
- * corrected model: the operator assigns a **job title**, and the title carries
- * the map. Editing one role updates everyone holding it, which is what an
- * operator expects when they change what "Warehouse" is allowed to do.
+ * corrected model: the staff member assigns a **job title**, and the title carries
+ * the map. Editing one role updates everyone holding it, which is what a
+ * staff member expects when they change what "Warehouse" is allowed to do.
  *
  * Access is per **area** - the top-level nav groups - not per page. A per-page
  * matrix would be twenty rows nobody maintains correctly, and a permission
@@ -38,7 +38,7 @@ const roleSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, index: true },
 
-    // Seeded with the product rather than created by the operator. A built-in
+    // Seeded with the product rather than created by the staff member. A built-in
     // may be edited (except the system one) but never deleted - deleting one
     // would orphan every staff member holding it.
     isBuiltIn: { type: Boolean, default: false },

@@ -19,7 +19,7 @@ import { useAdminProductArticle, useAdminMutations } from '@/hooks/useAdmin';
  * The article editor for ONE product.
  *
  * Addressed by product id rather than article id, because an article may not
- * exist yet: the operator opens a PART and writes about it, and the save is an
+ * exist yet: the staff member opens a PART and writes about it, and the save is an
  * upsert. There is no separate create screen for the same reason.
  *
  * SPLIT, NOT TABBED. The body is written in the small markup vocabulary
@@ -248,7 +248,7 @@ export function AdminProductArticleEditPage() {
                 and "Publish" are different decisions with different
                 consequences, and a select that has to be set before a button is
                 pressed hides that the second one puts words on the public site.
-                A form the operator deliberately filled in is its own
+                A form the staff member deliberately filled in is its own
                 confirmation (Instructions 3.0.1), so neither needs a dialog. */}
             <div className="flex flex-wrap items-center gap-2 border-t border-line pt-4">
               <Button

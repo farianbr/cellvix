@@ -66,7 +66,7 @@ const orderSchema = new mongoose.Schema(
     /**
      * Which shop this order belongs to.
      *
-     * Set at checkout from the business the operator is working in, or chosen
+     * Set at checkout from the business the staff member is working in, or chosen
      * explicitly when a customer wants to collect from - or be delivered by
      * a particular shop. Null on an order placed before businesses were scoped,
      * which reads as the default business rather than as missing data.

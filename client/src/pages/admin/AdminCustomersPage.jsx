@@ -455,7 +455,7 @@ export function AdminCustomersPage() {
   const storeCredit = users.reduce((sum, user) => sum + (user.storeCredit ?? 0), 0);
 
   /**
-   * The column set an operator actually reads a customer list for.
+   * The column set a staff member actually reads a customer list for.
    *
    * Ordered as the eye scans: **who** they are, **what they cost us** (terms and
    * what is owed), **what they are worth** (lifetime value and invoice count),
@@ -776,7 +776,7 @@ export function AdminCustomersPage() {
 
         {/* Shown even at one page, where it is a single disabled "1".
             Hidden entirely, the foot of the table changed shape depending on
-            how many rows came back, and there was nothing to tell an operator
+            how many rows came back, and there was nothing to tell a staff member
             whether they were looking at all of them - a lone page 1 answers
             that. It still goes when there is nothing to page through at all. */}
         {users.length > 0 && (
@@ -844,7 +844,7 @@ export function AdminCustomersPage() {
                     setMailWarning(payload.user);
                     return;
                   }
-                  // Straight to the profile: the next thing an operator does is
+                  // Straight to the profile: the next thing a staff member does is
                   // set a store-credit balance or look at what they just typed.
                   if (payload?.user?.id) navigate(`/admin/clients/${payload.user.id}`);
                 },

@@ -44,7 +44,7 @@ const supplierServiceSchema = new mongoose.Schema(
      * What it costs, in integer cents, like every other amount in this system.
      *
      * For a recurring plan this is the charge **per cycle**, not an annualised
-     * figure: an operator reading a monthly plan wants the number on the
+     * figure: a staff member reading a monthly plan wants the number on the
      * invoice they are about to receive, and normalising it here would make
      * every screen divide it back out again.
      */

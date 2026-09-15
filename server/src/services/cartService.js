@@ -83,7 +83,7 @@ async function serialize(cart, user) {
      *
      * The cart's shipping and tax lines are explicitly a preview - the binding
      * numbers come from `/orders/quote` - but a preview built on a constant
-     * stops matching the moment an operator edits the rate in Settings
+     * stops matching the moment a staff member edits the rate in Settings
      * (§6.15), and "free shipping over $500" is exactly the kind of promise a
      * page must not make out of a stale number.
      */

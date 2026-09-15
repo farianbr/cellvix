@@ -12,7 +12,7 @@ import { useSearchParams } from 'react-router';
  * the tiles have to get their own aggregate first.
  *
  * **The page lives in the URL** so a view is a link - "the third page of unpaid
- * invoices" is something an operator can send someone.
+ * invoices" is something a staff member can send someone.
  *
  * Two guards that a hand-rolled version keeps getting wrong:
  *

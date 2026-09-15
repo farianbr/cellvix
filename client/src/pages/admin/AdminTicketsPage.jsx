@@ -4,11 +4,13 @@ import { useForm } from 'react-hook-form';
 import {
   AlertCircle,
   AlertTriangle,
+  Bell,
   ClipboardList,
   Download,
   Hourglass,
   Pencil,
   Plus,
+  Smartphone,
   Trash2,
   Wrench,
 } from 'lucide-react';
@@ -19,6 +21,7 @@ import {
   TICKET_SOURCES,
 } from '@shared/schemas/admin';
 import cn from '@/lib/cn';
+import reportStatusOutcome from '@/lib/ticketStatusOutcome';
 import { count as formatCount, titleize } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
@@ -42,12 +45,12 @@ import { useAdminTickets, useAdminMutations } from '@/hooks/useAdmin';
  *
  * **The Age column drives the day**, as it does on RMA: it carries the warning
  * past the SLA and stops counting once a ticket closes, because a row that
- * always shouts is a row an operator learns to ignore.
+ * always shouts is a row a staff member learns to ignore.
  *
  * The status control is an inline dropdown on every row rather than a menu
  * item, which is deliberate. A repair moves several times a day and often
- * backwards - the wrong screen arrives, a fix does not hold - so the move an
- * operator makes most often should cost one click, not three. The server takes
+ * backwards - the wrong screen arrives, a fix does not hold - so the move a
+ * staff member makes most often should cost one click, not three. The server takes
  * any status and records each move on the ticket timeline; the timeline is the
  * control here, not a transition table.
  */
@@ -83,9 +86,62 @@ const STATUS_TONES = {
 
 const PRIORITY_TONES = { low: 'neutral', normal: 'neutral', high: 'warn', urgent: 'danger' };
 
-const STATUS_OPTIONS = TICKET_STATUSES.map((value) => ({
+/**
+ * The dot beside each status in the menu.
+ *
+ * The same colour the row's own badge carries, so the menu and the row agree at
+ * a glance rather than making the reader map "Waiting for Parts" back onto
+ * amber from memory. Each is a token, never a hex.
+ *
+ * `ready_to_repair` and `processing` are deliberately different from the two
+ * that flank them: they are the middle of the workshop and the pair a staff member
+ * moves between most, so telling them apart matters more here than anywhere.
+ */
+/**
+ * The status cell's own tint.
+ *
+ * A soft ground and a strong label, rather than a bordered control: the colour
+ * IS the status, and the reader scans this column for it. Each pairing is a
+ * token tint with its own ink, so the text clears contrast on its own ground
+ * rather than relying on a single grey that happens to work on four of them.
+ */
+const STATUS_PILL = {
+  diagnosis: 'bg-info-50 text-info',
+  accepted: 'bg-warn-50 text-warn',
+  waiting_for_parts: 'bg-danger-50 text-danger',
+  ready_to_repair: 'bg-brand-50 text-brand-700',
+  processing: 'bg-brand-100 text-brand-700',
+  retention_policy: 'bg-surface-2 text-ink-600',
+  ready_to_pickup: 'bg-ok-50 text-ok',
+  completed: 'bg-ok-50 text-ok',
+  cancelled: 'bg-danger-50 text-danger',
+};
+
+const STATUS_DOTS = {
+  diagnosis: 'bg-info/60',
+  accepted: 'bg-warn',
+  waiting_for_parts: 'bg-danger/70',
+  ready_to_repair: 'bg-brand',
+  processing: 'bg-brand-600',
+  retention_policy: 'bg-ink-300',
+  ready_to_pickup: 'bg-ok',
+  completed: 'bg-ok/60',
+  cancelled: 'bg-danger',
+};
+
+/**
+ * What the row's inline menu offers.
+ *
+ * **The live rungs only.** `completed` and `cancelled` are endings rather than
+ * moves: completing is what the pickup step leads to, and cancelling stops the
+ * job and is confirmed on the ticket itself. Offering both in a one-click row
+ * menu puts the two irreversible-feeling answers a slip away from the six a
+ * staff member makes daily.
+ */
+const STATUS_OPTIONS = PILL_STATUSES.map((value) => ({
   value,
   label: TICKET_STATUS_LABELS[value],
+  dotClass: STATUS_DOTS[value],
 }));
 
 const PRIORITY_OPTIONS = TICKET_PRIORITIES.map((value) => ({ value, label: titleize(value) }));
@@ -164,8 +220,18 @@ export function AdminTicketsPage() {
           <span className="font-mono text-sm font-medium text-ink-900">
             {ticket.ticketNumber}
           </span>
+          {/*
+            Where the ticket came from, and nothing more.
+
+            I had this warning "Needs review" until a person cleared it; the
+            client's call is that it does not. A counter works its queue by
+            status - Diagnosis is already the list of jobs nobody has started -
+            so a second thing to clear is a second queue to keep empty for no
+            gain. The badge says how the ticket arrived, which is the part that
+            stays true.
+          */}
           {ticket.source === 'kiosk' && (
-            <Badge tone="ok" size="sm">
+            <Badge tone="ok" size="sm" icon={Smartphone}>
               Kiosk
             </Badge>
           )}
@@ -212,18 +278,76 @@ export function AdminTicketsPage() {
       key: 'status',
       header: 'Status',
       priority: 1,
-      // The move an operator makes most often, so it costs one click. The
+      // The move a staff member makes most often, so it costs one click. The
       // server takes any status and records the move (invariant 13: this is a
       // convenience, never the control).
       render: (ticket) => (
-        <div onClick={(event) => event.stopPropagation()}>
+        /**
+         * The guard shrinks to the pill, rather than filling the cell.
+         *
+         * `stopPropagation` is what stops opening the menu from also opening
+         * the ticket. On a block-level wrapper that was the whole cell, so the
+         * empty space beside a short status swallowed the click and the row did
+         * nothing - which reads as broken, because every other cell in the row
+         * navigates. `inline-flex` makes the guarded area exactly the control
+         * it is guarding, and the rest of the cell falls through to the row.
+         */
+        <div className="inline-flex" onClick={(event) => event.stopPropagation()}>
           <SelectMenu
             srLabel={`Status for ${ticket.ticketNumber}`}
             value={ticket.status}
             options={STATUS_OPTIONS}
             align="left"
+            /**
+             * A status pill, not a form field.
+             *
+             * The default trigger is a bordered box because it is normally a
+             * `<select>` in a form. In a table cell that is wrong twice over: a
+             * column of forty boxed controls reads as forty things demanding
+             * input, and the border competes with the status colour, which is
+             * the thing the reader is actually scanning for. So the box goes
+             * and the tint carries the meaning - the same treatment the badge
+             * on the detail page gets, with a chevron to say it opens.
+             *
+             * `twMerge` lets these win over the defaults, so the component
+             * needs no variant for one screen's judgement.
+             */
+            buttonClassName={cn(
+              // `h-7`, not padding: `SIZES` sets a fixed height on the trigger,
+              // so `py-` cannot shrink it - it only pads inside a box that is
+              // already 36px tall. A row of those reads as a column of controls
+              // rather than a column of statuses.
+              'h-7 w-auto gap-1 rounded-full border-0 px-2.5 text-xs font-semibold',
+              'hover:border-0 focus:border-0 focus:ring-1',
+              STATUS_PILL[ticket.status] ?? 'bg-surface-2 text-ink-700',
+            )}
+            menuTitle="Change status"
+            /* The consequence the list cannot show. A status move messages the
+               customer on their preferred channel, and a menu that looks like
+               it only edits a field is one somebody uses to tidy a board at
+               midnight. */
+            menuFootnote={
+              <>
+                <Bell className="mt-px size-3 shrink-0" strokeWidth={2} aria-hidden="true" />
+                {/*
+                  Named as the channel the customer actually chose, not as a
+                  list of every transport we own. "Email + SMS + WhatsApp"
+                  promises three messages; one goes out, on the channel recorded
+                  on their profile - and a staff member who believes the first
+                  version will not think to check that the profile has one.
+                */}
+                <span>Changing this messages the customer on their preferred channel.</span>
+              </>
+            }
             onChange={(next) =>
-              next !== ticket.status && setTicketStatus.mutate({ id: ticket.id, status: next })
+              next !== ticket.status &&
+              setTicketStatus.mutate(
+                { id: ticket.id, status: next },
+                // The move can silently fail to reach the customer - no channel
+                // on file, a declined one, no provider wired - and the staff member
+                // has to learn that now, not when somebody rings to ask.
+                { onSuccess: reportStatusOutcome },
+              )
             }
           />
         </div>

@@ -33,7 +33,7 @@ import SelectMenu from '@/components/ui/SelectMenu';
  * Business Overview - the printable period report (ERP rework §6.11).
  *
  * Standalone from the tabbed analytics screen, because this one is a document:
- * an operator prints it, files it, or sends it to an accountant. **Print is a
+ * a staff member prints it, files it, or sends it to an accountant. **Print is a
  * real requirement**, not a nicety - the `print:` utilities below drop the
  * shell chrome and force the light palette, because a dark-themed report wastes
  * a cartridge and reads badly on paper.
@@ -84,7 +84,7 @@ function ReportTable({ headers, rows, total, empty, caption }) {
       {caption && <p className="mb-2 text-xs text-ink-400">{caption}</p>}
 
       {/* Carries the density toggle, and is `print:hidden` for the same reason
-          this page avoids `DataTable` entirely - a control an operator presses
+          this page avoids `DataTable` entirely - a control a staff member presses
           is chrome that means nothing on paper. */}
       <div className="mb-2 border-b border-line pb-2 print:hidden">
         <CountLine total={rows.length} noun="rows" />

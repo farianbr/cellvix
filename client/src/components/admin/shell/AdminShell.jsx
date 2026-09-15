@@ -1,11 +1,18 @@
-import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import useDocumentTitle from '@/hooks/useDocumentTitle';
 import { Outlet, useLocation } from 'react-router';
 import { ShieldAlert } from 'lucide-react';
 import Skeleton from '@/components/ui/Skeleton';
 import Breadcrumbs from '@/components/admin/Breadcrumbs';
 import { useAuth, useSignOut } from '@/hooks/useAuth';
-import { useAdminStats } from '@/hooks/useAdmin';
+import { useAdminStats, useAdminBusinesses } from '@/hooks/useAdmin';
+import useBusinessTheme from '@/hooks/useBusinessTheme';
+import {
+  getBusiness,
+  getBusinessColor,
+  rememberBusiness,
+  subscribeBusiness,
+} from '@/store/businessStore';
 import SignOutConfirm from '@/components/account/SignOutConfirm';
 import ImpersonationBanner from '@/components/admin/ImpersonationBanner';
 import AdminSidebar from './AdminSidebar';
@@ -30,6 +37,57 @@ export function AdminShell() {
   const signOut = useSignOut();
   const { data: stats } = useAdminStats();
   const location = useLocation();
+
+  /**
+   * The panel's accent, per business (SAAS_PLATFORM §1.1).
+   *
+   * Read from the same store the switcher writes and `lib/api.js` reads, so the
+   * colour and the records can never disagree about which business is on
+   * screen. A staff account never sees the switcher - their business is fixed
+   * server-side - but they still get their business's colour, which is the
+   * point: the panel should look like the business you are working in.
+   *
+   * `useAdminBusinesses` is already in flight for the switcher, so this shares
+   * its cache rather than adding a request.
+   *
+   * **Before it resolves, the token comes from `sessionStorage`, not from
+   * nowhere.** It used to come from nowhere, and the panel opened in the house
+   * ramp for the length of one fetch: a CellShoppe admin reloading their own
+   * panel saw it flash Cellvix red and then settle into indigo. The store
+   * caches the token beside the id it already persists, so the first paint is
+   * the right colour and the fetch only ever confirms it. See
+   * `store/businessStore.js`.
+   */
+  const selectedBusiness = useSyncExternalStore(subscribeBusiness, getBusiness, getBusiness);
+  const cachedColorToken = useSyncExternalStore(
+    subscribeBusiness,
+    getBusinessColor,
+    getBusinessColor,
+  );
+  const { data: businessData } = useAdminBusinesses(
+    canUseAdmin ? { status: 'all' } : undefined,
+  );
+  const businesses = businessData?.businesses ?? [];
+  const activeBusiness =
+    businesses.find((business) => business.id === selectedBusiness) ??
+    // Staff are pinned and never select one, and an admin's first paint lands
+    // here too, before the switcher has written its fallback.
+    businesses.find((business) => business.id === String(user?.business ?? '')) ??
+    businesses.find((business) => business.isDefault);
+  /**
+   * The record's own token wins the moment it exists; the cache covers the gap
+   * before it does. They agree on every reload but the first after a change,
+   * and where they disagree the record is the one telling the truth.
+   */
+  const colorToken = activeBusiness?.colorToken ?? cachedColorToken ?? undefined;
+  const theme = useBusinessTheme(colorToken);
+
+  // Keep the cache honest for the next reload. A no-op unless the token moved.
+  useEffect(() => {
+    if (activeBusiness) {
+      rememberBusiness({ colorToken: activeBusiness.colorToken, name: activeBusiness.name });
+    }
+  }, [activeBusiness?.colorToken, activeBusiness?.name]);
 
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -79,7 +137,7 @@ export function AdminShell() {
 
   if (isLoading) {
     return (
-      <div className="flex h-dvh">
+      <div style={theme} data-business-theme="admin" className="flex h-dvh">
         <div className="hidden w-[220px] shrink-0 bg-ink-deep md:block" />
         <div className="flex-1 p-6">
           <Skeleton className="mb-6 h-10 w-56" />
@@ -141,7 +199,20 @@ export function AdminShell() {
         scrolled away from. It renders nothing for everybody else, which is
         every session but a platform operator's (SAAS_PLATFORM §4.5).
       */}
-      <div className="flex h-dvh flex-col overflow-hidden bg-surface-2 print:block print:h-auto print:overflow-visible print:bg-white">
+      {/*
+        The business's accent, set once on the outermost element.
+
+        CSS variables inherit, so every `bg-brand` / `text-brand-700` /
+        `bg-brand-gradient` below this point repaints without knowing why - see
+        `hooks/useBusinessTheme.js`. It is scoped HERE rather than on `:root`
+        deliberately: the storefront must keep the Cellvix brand whatever
+        business an admin happens to be looking at in another tab.
+      */}
+      <div
+        style={theme}
+        data-business-theme="admin"
+        className="flex h-dvh flex-col overflow-hidden bg-surface-2 print:block print:h-auto print:overflow-visible print:bg-white"
+      >
         <ImpersonationBanner impersonation={impersonation} />
 
         <div className="flex min-h-0 flex-1 print:block">

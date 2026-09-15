@@ -15,7 +15,7 @@ import mongoose from 'mongoose';
  * accidentally bypass than two.
  *
  * **Append-only, by construction and by intent.** There is no update path, no
- * delete route, and the schema has no field an operator could edit. §6.15 is
+ * delete route, and the schema has no field a staff member could edit. §6.15 is
  * explicit that neither screen ever deletes from the UI. A log that the person
  * being logged can edit is not evidence of anything.
  *

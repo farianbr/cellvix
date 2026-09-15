@@ -7,7 +7,7 @@ import { pressable } from '@/lib/motion';
  *
  * **It floats rather than living in the toolbar.** A bulk bar wedged into the
  * filter row pushes the table down the moment a checkbox is ticked, which moves
- * the very rows the operator is aiming at; and once they have scrolled past it,
+ * the very rows the staff member is aiming at; and once they have scrolled past it,
  * the actions for their selection are off screen. Fixed to the bottom of the
  * viewport, it stays reachable at row four hundred and never reflows the list.
  *
@@ -15,7 +15,7 @@ import { pressable } from '@/lib/motion';
  * because "Delete" with an ambiguous target is how somebody deletes thirty rows
  * they did not mean to select.
  *
- * `Clear` is always present and always last-but-one - an operator who opened
+ * `Clear` is always present and always last-but-one - a staff member who opened
  * this bar by accident needs the way out to be in the same place every time.
  *
  * ```jsx

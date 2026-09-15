@@ -6,7 +6,7 @@ import mongoose from 'mongoose';
  * **The customer is free-typed, not an account reference.** A repair walks in
  * off the street; requiring an approved Cellvix business account before a
  * ticket can be opened would make the counter unusable. `customerName` and
- * `customerPhone` are the record, and the phone is what an operator searches
+ * `customerPhone` are the record, and the phone is what a staff member searches
  * by, so it is indexed alongside the ticket number.
  *
  * The status list is a vocabulary, not a ladder. Unlike `Rma`, a repair does
@@ -222,15 +222,77 @@ const ticketSchema = new mongoose.Schema(
     ],
 
     /**
+     * What a self-service check-in captured, and whether staff have finished it.
+     *
+     * **A kiosk ticket is deliberately incomplete.** A customer standing at an
+     * iPad can give their name, their number, roughly what device it is and
+     * what is wrong with it; they cannot grade the back glass, set a priority,
+     * price the work or pick a technician. So the kiosk writes what it honestly
+     * knows and flags the rest for the counter.
+     *
+     * `awaitingReview` is the flag the tickets list filters on. It is NOT a
+     * status: the repair really is at `diagnosis`, and spending a status on
+     * "a human has not looked at this yet" would mean every status query had to
+     * know about a state that says nothing about the device.
+     *
+     * `deviceGuessed` records that the model came off a list of buttons rather
+     * than being read off the hardware - the kiosk asks the customer to "pick
+     * the closest" and says staff will confirm, so the ticket has to remember
+     * that the answer is a guess rather than presenting it as read.
+     */
+    intake: {
+      awaitingReview: { type: Boolean, default: false, index: true },
+      deviceGuessed: { type: Boolean, default: false },
+      reviewedAt: { type: Date, default: null },
+      reviewedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+
+      /**
+       * The two things the customer actually agreed to at the kiosk, each with
+       * the moment it was given.
+       *
+       * `terms` is the one that matters if anything goes wrong: it is the
+       * customer agreeing to leave the device for diagnosis, and a shop that
+       * cannot say when that was agreed cannot rely on it. `updates` is consent
+       * to be messaged about the repair, and it is what
+       * `User.preferredContact` is written from at check-in.
+       *
+       * Absent is not `false` - a ticket raised at the counter was never asked
+       * either question here, which is a different fact from having declined.
+       */
+      termsAcceptedAt: { type: Date, default: null },
+      updatesConsentAt: { type: Date, default: null },
+    },
+
+    /**
      * The quote this ticket was raised from, where it came from one.
      *
      * `Quote.convertedTicket` already points forwards; this is the same edge
      * read backwards. A ticket that only knew its invoice could show half a
      * chain - where it went, never where it came from - and the lineage strip
      * has to draw quote → ticket → invoice from whichever of the three the
-     * operator happens to have open.
+     * staff member happens to have open.
      */
     quote: { type: mongoose.Schema.Types.ObjectId, ref: 'Quote', default: null, index: true },
+
+    /**
+     * The repair estimate this ticket was raised from, where it came from one.
+     *
+     * **A separate field from `quote` above, because they are separate models.**
+     * `Quote` is a wholesale parts quote that can also become an order;
+     * `ServiceQuote` is a repair estimate and can only become this. One
+     * polymorphic field would mean every reader had to ask which kind it held
+     * before it could populate it, and a `populate` against the wrong model
+     * returns `null` rather than failing - so the lineage strip would go quietly
+     * blank instead of erroring.
+     *
+     * At most one of the two is ever set.
+     */
+    serviceQuote: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'ServiceQuote',
+      default: null,
+      index: true,
+    },
 
     /** The invoice this ticket became, once it has become one. */
     invoice: { type: mongoose.Schema.Types.ObjectId, ref: 'Invoice', default: null },

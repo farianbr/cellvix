@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
  *
  * The status ladder is a real workflow, not a label: a part is requested,
  * approved, shipped back, received, inspected, and only then resolved. Skipping
- * a rung would mean an operator resolving something that has not physically
+ * a rung would mean a staff member resolving something that has not physically
  * arrived, so `rmaService` enforces the order the same way order fulfilment
  * refuses to ship before it processes.
  *

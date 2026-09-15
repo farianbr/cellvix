@@ -224,8 +224,8 @@ function buildRmas({ orders, year = new Date().getFullYear() }) {
 /**
  * Web quotes - the storefront's contact form, before anybody has priced it.
  *
- * These are enquiries, not quotes: the Web Quote screen is the queue an
- * operator works *from* to raise a real one, which is why it sits under Quotes
+ * These are enquiries, not quotes: the Web Quote screen is the queue a
+ * staff member works *from* to raise a real one, which is why it sits under Quotes
  * in the nav. Spread across all three statuses and all five topics so the
  * screen's filters have something to separate, and deliberately mixed between
  * signed-in accounts and strangers - an enquiry from someone with no account is

@@ -413,7 +413,10 @@ async function seedDatabase({ quiet = false } = {}) {
     slug: 'cellshoppe',
     businessType: 'service',
     status: 'active',
-    colorToken: 'info',
+    // Indigo, not the old 'info' blue it carried: identity colours are kept
+    // clear of the semantic ones so an accent is never read as a status
+    // (shared/businessPalette.js).
+    colorToken: 'indigo',
     // Owned by the same tenant as Cellvix - one account, two businesses, which
     // is what the switcher and the slot model exist for.
     tenant: tenant._id,
@@ -1374,7 +1377,7 @@ async function seedDatabase({ quiet = false } = {}) {
   /**
    * Web quotes - storefront enquiries, before anybody has priced them.
    *
-   * The Web Quote screen is the queue an operator raises a real quote *from*,
+   * The Web Quote screen is the queue a staff member raises a real quote *from*,
    * and it had no seeded rows at all: the only thing that ever landed in
    * `contactmessages` was whatever someone had typed into the contact form by
    * hand while testing.

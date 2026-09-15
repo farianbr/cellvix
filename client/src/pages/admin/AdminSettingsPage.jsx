@@ -42,11 +42,20 @@ function pagesByCategory() {
  * One page's card.
  *
  * A card for a screen that has not been built yet still links - the stub tells
- * an operator which phase it lands in, which is more useful than a dead tile
+ * a staff member which phase it lands in, which is more useful than a dead tile
  * that says nothing. It carries a quiet `Soon` chip so the map does not
  * over-promise.
  */
 function PageCard({ page, built }) {
+  /**
+   * A card whose icon is missing still renders.
+   *
+   * `adminIcon` returns null for an unregistered name - deliberately, so one
+   * bad key cannot take down a nav row. This card rendered it unguarded, so a
+   * route added with an icon nobody had registered crashed the WHOLE settings
+   * page rather than losing one glyph. The registry keeps its contract; this is
+   * the consumer holding up its end.
+   */
   const Icon = adminIcon(page.icon);
 
   return (
@@ -64,7 +73,7 @@ function PageCard({ page, built }) {
           built ? 'bg-brand-50 text-brand' : 'bg-surface-3 text-ink-400',
         )}
       >
-        <Icon className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />
+        {Icon && <Icon className="size-[18px]" strokeWidth={1.75} aria-hidden="true" />}
       </span>
 
       <span className="min-w-0 flex-1">

@@ -13,7 +13,7 @@ import { pressable } from '@/lib/motion';
  * screen that wanted the same control - a record's own page, where the same
  * secondary actions belong - had no way to reach it. Lifting it here keeps one
  * implementation of "the actions that did not earn a button", which matters
- * because it is the thing an operator learns once and expects everywhere.
+ * because it is the thing a staff member learns once and expects everywhere.
  *
  * `items` are `{ key, label, icon, tone, disabled, hidden, onSelect }`. Both
  * `disabled` and `hidden` accept a value **or** a predicate, so `DataTable` can

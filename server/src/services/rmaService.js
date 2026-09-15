@@ -93,7 +93,7 @@ async function nextRmaNumber() {
  * Age in whole days, and whether it has passed the SLA.
  *
  * **Age stops when the RMA closes.** A return resolved in two days should not
- * still be accruing age six months later - the Age column drives the operator's
+ * still be accruing age six months later - the Age column drives the staff member's
  * day, and a resolved row shouting for attention teaches them to ignore it.
  */
 function ageOf(rma, slaDays) {
@@ -174,7 +174,7 @@ function shapeRma(rma, slaDays) {
 
 /**
  * The value of the lines being returned, from the prices the order actually
- * charged. This is a **proposal**, not a decision - the operator can refund
+ * charged. This is a **proposal**, not a decision - the staff member can refund
  * less, and `resolveRma` still checks it against what the order has left to
  * refund.
  */
@@ -192,7 +192,7 @@ async function listRmas({ q, status, from, to, user, business } = {}) {
 
   // One customer's returns, for their profile tab. The screen already had the
   // tab; it rendered a "coming in phase 7" placeholder while the feature was
-  // built and shipping, so an operator on a customer with five returns was
+  // built and shipping, so a staff member on a customer with five returns was
   // told the feature did not exist yet.
   if (user) query.user = user;
   // Scoped to the business the panel is switched to, when it is switched to one.
@@ -278,7 +278,7 @@ async function getRma(id) {
    *
    * Reported, never enforced: an out-of-warranty return is a normal commercial
    * decision - goodwill, or a failure the relationship covers even though the
-   * warranty does not - and the operator makes it with the fact in front of
+   * warranty does not - and the staff member makes it with the fact in front of
    * them rather than being blocked by it (see warrantyService).
    *
    * Matched by SKU against the order's own lines, because the RMA line carries
@@ -301,7 +301,7 @@ async function getRma(id) {
     rma: shaped,
     warranty,
     // What a refund resolution would propose, and what the order can actually
-    // take - shown together so an operator is never asked to guess.
+    // take - shown together so a staff member is never asked to guess.
     refund: {
       proposed: proposedRefund(rma),
       orderTotal: rma.order?.total ?? 0,
@@ -558,7 +558,7 @@ async function resolveRma(id, { resolution, amountDollars, note }, adminId) {
   await rma.save();
 
   const result = await getRma(rma._id.toString());
-  // Named rather than implied: an operator who restocked nothing should be able
+  // Named rather than implied: a staff member who restocked nothing should be able
   // to see that they restocked nothing.
   return { ...result, restocked, refund };
 }

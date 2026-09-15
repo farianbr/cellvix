@@ -8,7 +8,7 @@ import { adminIcon } from './adminIcons';
 import { visibleNav } from '@/lib/permissions';
 import { useAuth } from '@/hooks/useAuth';
 import { pressable } from '@/lib/motion';
-import { getBusiness, subscribeBusiness } from '@/store/businessStore';
+import { getBusiness, getBusinessName, subscribeBusiness } from '@/store/businessStore';
 import { useAdminBusinesses } from '@/hooks/useAdmin';
 
 /**
@@ -38,8 +38,21 @@ import { useAdminBusinesses } from '@/hooks/useAdmin';
  */
 function useActiveBusiness() {
   const selected = useSyncExternalStore(subscribeBusiness, getBusiness, getBusiness);
+  const cachedName = useSyncExternalStore(subscribeBusiness, getBusinessName, getBusinessName);
   const { data } = useAdminBusinesses();
-  return (data?.businesses ?? []).find((business) => business.id === selected) ?? null;
+
+  const record = (data?.businesses ?? []).find((business) => business.id === selected) ?? null;
+
+  /**
+   * The record when it has loaded, the cached name until then.
+   *
+   * Without the cache this returned null for the length of one fetch and the
+   * rail fell back to the platform word - so every reload flashed Operations
+   * before settling into the shop name, in the one place whose entire job is
+   * saying which business you are in. Same fix, same store and same reasoning
+   * as the colour: see `store/businessStore.js`.
+   */
+  return record ?? (cachedName ? { name: cachedName } : null);
 }
 
 function BrandBlock({ compact }) {
@@ -49,20 +62,33 @@ function BrandBlock({ compact }) {
 
   return (
     <div
+      /**
+       * Stacked and centred, not a row.
+       *
+       * The name was `truncate`d beside its mark, which is right for a label
+       * and wrong for an identity: "CellShoppe Phone & Laptop Fix" came out as
+       * "CellShoppe Phone &…" and the one thing the panel's header is for -
+       * saying which business you are in - was the part cut off. A business
+       * name is not a table cell; it gets the width of the rail and as many
+       * lines as it needs.
+       *
+       * Two lines is the cap. Past that a name is long enough that the reader
+       * has already identified it, and a four-line header pushes the nav down.
+       */
       className={cn(
-        'flex items-center gap-2.5 border-b border-white/10 px-4 py-4',
-        compact && 'justify-center px-0',
+        'border-b border-white/10 px-4 py-4',
+        compact ? 'flex justify-center px-0' : 'flex flex-col items-center gap-2 text-center',
       )}
     >
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-md bg-brand-gradient-compact font-display text-lg font-bold text-white">
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-brand-gradient-compact font-display text-lg font-bold text-white">
         {initial}
       </span>
       {!compact && (
         <span className="min-w-0">
-          <span className="block truncate font-display text-lg font-bold leading-none text-white">
+          <span className="block line-clamp-2 font-display text-sm font-bold leading-tight text-white">
             {name}
           </span>
-          <span className="eyebrow mt-1 block text-ink-200">Operations</span>
+          <span className="eyebrow mt-1 block text-ink-200">ERP system</span>
         </span>
       )}
     </div>
@@ -101,12 +127,12 @@ function navRowClass(isActive, extra) {
  * The count beside a nav row.
  *
  * **A bare number is unreadable twice over**, and both halves were broken here.
- * A sighted operator saw "Inventory 189" with no way to tell whether 189 was a
+ * A sighted staff member saw "Inventory 189" with no way to tell whether 189 was a
  * total, an alert or an unread count - and landing on the page showed 420 rows,
  * so the number could not even be checked. A screen reader announced
  * "Inventory 189" with no noun at all.
  *
- * `label` fixes both: it names what is being counted, in the words the operator
+ * `label` fixes both: it names what is being counted, in the words the staff member
  * would use. It becomes the accessible name ("189 out of stock or running low")
  * and the native `title`, so the answer is available on hover, on focus and to
  * assistive tech - never hover alone, which no keyboard user can reach.
@@ -146,7 +172,7 @@ function NavTree({ badges, onNavigate }) {
 
   // A group the role cannot reach, or the business does not have, is not
   // rendered. The server refuses both anyway - with a 403 and a 404
-  // respectively; hiding them stops an operator clicking into a wall (§7.6).
+  // respectively; hiding them stops a staff member clicking into a wall (§7.6).
   const nav = useMemo(
     () => visibleNav(ADMIN_NAV, permissions, features),
     [permissions, features],
@@ -223,8 +249,22 @@ function NavTree({ badges, onNavigate }) {
                 className={cn(
                   pressable,
                   'flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm font-semibold',
+                  /**
+                   * An open group is tinted, not only brightened.
+                   *
+                   * White text alone said "this is the section you are in" and
+                   * nothing said where that section ENDS - so an open group's
+                   * children read as a continuation of the rail rather than as
+                   * belonging to the heading above them. A faint ground on the
+                   * header, matched by the one behind its children, draws the
+                   * group as a block: the reader sees the boundary rather than
+                   * inferring it from indentation.
+                   *
+                   * Faint on purpose. It is structure, not emphasis - the
+                   * active ITEM still has to be the brightest thing in the rail.
+                   */
                   isOpen || activeGroup === item.key
-                    ? 'text-white'
+                    ? 'bg-white/6 text-white'
                     : 'text-ink-200 hover:bg-white/[0.08] hover:text-white',
                 )}
               >
@@ -403,15 +443,31 @@ function UserFooter({ user, onSignOut, compact }) {
           </span>
           <span className="block truncate text-xs text-ink-200">{user?.email}</span>
         </span>
-        <button
-          type="button"
-          onClick={onSignOut}
-          aria-label="Sign out"
-          className={cn(pressable, 'flex size-8 shrink-0 items-center justify-center rounded-md text-ink-200 hover:bg-danger/25 hover:text-white')}
-        >
-          <LogOut className="size-4" strokeWidth={2} aria-hidden="true" />
-        </button>
       </div>
+
+      {/*
+        A labelled button on its own line, not an icon beside the name.
+
+        The bare glyph had two problems. It sat immediately right of the email,
+        so the most destructive control in the rail was the easiest thing to hit
+        while aiming at the account - and it said nothing: an arrow leaving a
+        bracket is only "sign out" to somebody who already knows. Giving it a
+        border, a width and the word makes it deliberate to press and obvious to
+        read, which is the right trade for an action that ends the session.
+      */}
+      <button
+        type="button"
+        onClick={onSignOut}
+        className={cn(
+          pressable,
+          'mt-2.5 flex w-full items-center justify-center gap-2 rounded-md border border-white/12 bg-white/6 px-3 py-2',
+          'text-sm font-semibold text-ink-200',
+          'hover:border-white/25 hover:bg-white/10 hover:text-white',
+        )}
+      >
+        <LogOut className="size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
+        Sign out
+      </button>
     </div>
   );
 }

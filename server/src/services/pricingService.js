@@ -285,7 +285,7 @@ async function priceCart(cart, user, { deliveryCode = 'ground' } = {}) {
   // ---- shipping, before any offer touches it ------------------------------
   // The price comes from Settings, not from `DELIVERY_METHODS` (§10, phase 11):
   // the constant still defines which codes exist, because checkout validates
-  // `deliveryMethod` against a fixed enum, but the money is an operator's to
+  // `deliveryMethod` against a fixed enum, but the money is a staff member's to
   // change without a deploy. `shippingFor` falls back to the seeded bands, so
   // this is a rate lookup rather than a new source of truth.
   const settings = await db().Settings.load();
@@ -378,8 +378,8 @@ async function priceCart(cart, user, { deliveryCode = 'ground' } = {}) {
      * Every band, priced against *this* cart's subtotal.
      *
      * The checkout picker used to render `DELIVERY_METHODS` from the shared
-     * constant, which was fine while the costs lived there too. Now that an
-     * operator can edit them (§6.15), a picker reading the constant would show
+     * constant, which was fine while the costs lived there too. Now that a
+     * staff member can edit them (§6.15), a picker reading the constant would show
      * a stale price beside a correct total - worse than either being wrong on
      * its own. Sending the bands the quote actually priced against means the
      * two cannot disagree.

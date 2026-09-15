@@ -16,6 +16,13 @@ import Business from '../models/Business.js';
 import User from '../models/User.js';
 import ApiError from '../utils/ApiError.js';
 import { likeRegex } from '../utils/regex.js';
+/**
+ * Read straight from the shared palette rather than through `toPublic`: the
+ * reads below are `.lean()`, so no document method runs on them and a business
+ * written before the identity palette existed would reach the panel carrying a
+ * token it cannot paint.
+ */
+import { DEFAULT_BUSINESS_COLOR, migrateColorToken } from '../../../shared/businessPalette.js';
 
 /**
  * Businesses, roles and staff accounts (ERP rework §6.14, §6.15/3, §7.6 - phase 8).
@@ -90,7 +97,7 @@ const BUILT_IN_ROLES = [
 
 /**
  * Idempotent. Safe on a database with real accounts: built-ins are upserted by
- * slug and an operator's edits to a non-system role are left alone, because
+ * slug and a staff member's edits to a non-system role are left alone, because
  * re-running setup must never quietly reset permissions somebody tuned.
  */
 async function ensureBuiltInRoles() {
@@ -98,7 +105,7 @@ async function ensureBuiltInRoles() {
   for (const role of BUILT_IN_ROLES) {
     const existing = await db().Role.findOne({ slug: role.slug });
     if (existing) {
-      // The system role is the one exception: its map is not the operator's to
+      // The system role is the one exception: its map is not the staff member's to
       // drift, so it is held at full access on every boot.
       if (existing.isSystem) {
         existing.areas = role.areas;
@@ -138,7 +145,7 @@ async function ensureDefaultBusiness() {
     // set explicitly here rather than left to the schema default.
     businessType: 'product',
     status: 'active',
-    colorToken: 'brand',
+    colorToken: DEFAULT_BUSINESS_COLOR,
     address: { city: 'Toronto', region: 'ON', country: 'Canada' },
     isDefault: true,
   });
@@ -148,7 +155,7 @@ async function ensureDefaultBusiness() {
 
 /**
  * The zero-padded `#000001` form (§6.14). Assigned here rather than accepted
- * from the client: a code the form proposes is a code two operators can pick in
+ * from the client: a code the form proposes is a code two staff can pick in
  * the same moment.
  */
 async function nextBusinessCode() {
@@ -197,6 +204,7 @@ async function listBusinesses({ search, status } = {}) {
     businesses: businesses.map((o) => ({
       ...o,
       id: String(o._id),
+      colorToken: migrateColorToken(o.colorToken),
       staffCount: byBusiness.get(String(o._id)) ?? 0,
     })),
     summary,
@@ -213,7 +221,12 @@ async function getBusiness(id) {
     .populate('staffRole', 'name slug')
     .lean();
 
-  return { ...business, id: String(business._id), staff };
+  return {
+    ...business,
+    id: String(business._id),
+    colorToken: migrateColorToken(business.colorToken),
+    staff,
+  };
 }
 
 async function createBusiness(payload) {
@@ -406,8 +419,8 @@ function staffRow(user) {
 
 /**
  * The Users screen (§6.15/3). Cellvix people only - buyers have their own
- * screen under Clients, and mixing the two populations in one table is how an
- * operator ends up granting a customer a staff role.
+ * screen under Clients, and mixing the two populations in one table is how a
+ * staff member ends up granting a customer a staff role.
  */
 async function listStaff({ search, role, status } = {}) {
   const filter = { role: { $in: ['admin', 'staff'] } };
@@ -517,7 +530,7 @@ async function updateStaff(id, payload, actorId) {
 
   const { name, phone, accountType, staffRole, business, locked } = payload;
 
-  // Nobody demotes or locks themselves. Both are how an operator removes their
+  // Nobody demotes or locks themselves. Both are how a staff member removes their
   // own last admin account and locks everyone out of the panel.
   if (String(id) === String(actorId)) {
     if (accountType && accountType !== user.role) {

@@ -2,6 +2,8 @@ import { randomBytes } from 'node:crypto';
 import { asyncHandler } from '../utils/ApiError.js';
 import * as supplierPortalService from '../services/supplierPortalService.js';
 import * as purchaseBidService from '../services/purchaseBidService.js';
+import Business from '../models/Business.js';
+import { DEFAULT_BUSINESS_COLOR, migrateColorToken } from '../../../shared/businessPalette.js';
 
 /**
  * The supplier portal (supplier process flow, §6.8a).
@@ -22,10 +24,30 @@ const logout = asyncHandler(async (req, res) => {
   res.json(supplierPortalService.logout(res));
 });
 
-/** Who am I. `null` rather than a 401 - the portal shell asks on every load. */
+/**
+ * Who am I. `null` rather than a 401 - the portal shell asks on every load.
+ *
+ * It also answers **whose portal this is**, which the shell needs for two
+ * separate reasons: to paint itself in the buying business's colour, and to
+ * name that business on a sign-in page that would otherwise ask a supplier for
+ * credentials without saying who is asking.
+ *
+ * Resolved from `req.businessScope` - the host, or the `x-business` header in
+ * development - rather than from the supplier, because a supplier record has
+ * no `business` field: suppliers are separated by which database they live in,
+ * not by a field on the document. The answer is therefore the same signed in
+ * or out, which is what lets the sign-in page carry it.
+ */
 const me = asyncHandler(async (req, res) => {
+  const business = req.businessScope
+    ? await Business.findById(req.businessScope).select('name colorToken').lean()
+    : null;
+
   res.json({
     supplier: req.supplier ? supplierPortalService.shapePortalSupplier(req.supplier) : null,
+    business: business
+      ? { name: business.name, colorToken: migrateColorToken(business.colorToken) }
+      : { name: null, colorToken: DEFAULT_BUSINESS_COLOR },
   });
 });
 

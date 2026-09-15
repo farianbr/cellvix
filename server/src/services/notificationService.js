@@ -134,7 +134,7 @@ async function allowedAreas(user) {
  * synthetic `id` prefixed by its condition so the client can key a list without
  * colliding with a real `ObjectId`. They are **always unread**: there is no
  * per-admin read state to keep, because the row stops existing the moment the
- * condition clears, which is the honest behaviour - an operator who dismissed
+ * condition clears, which is the honest behaviour - a staff member who dismissed
  * "out of stock" and still has an empty shelf has not solved anything.
  *
  * One of them, `pending_approval`, also carries an `action`. It is the only row
@@ -172,7 +172,7 @@ async function derivedFor(areas, now) {
               read: false,
               // Dated to the registration rather than to now, unlike the stock
               // conditions: this one *does* have a moment of onset the record
-              // remembers, and an operator sorting by age wants the real age.
+              // remembers, and a staff member sorting by age wants the real age.
               createdAt: user.createdAt,
               // The bell approves in place. `userId` rather than re-parsing the
               // synthetic `id` on the client - a prefix format is this module's
@@ -267,7 +267,7 @@ async function derivedFor(areas, now) {
               type: 'reorder_queue',
               // Danger only when something is actually at zero. A queue of
               // purely low-stock products is work to schedule, not an
-              // emergency, and tinting it red teaches the operator to ignore
+              // emergency, and tinting it red teaches the staff member to ignore
               // the colour on the day a shelf does empty.
               severity: out > 0 ? 'danger' : 'warn',
               title: `${total} product${total === 1 ? '' : 's'} need${total === 1 ? 's' : ''} reordering`,
@@ -307,7 +307,7 @@ async function derivedFor(areas, now) {
         })
         // The bell must open even if the queue cannot be computed. A failed
         // aggregate is a missing row, not an empty panel - the other seven
-        // conditions are unaffected and the operator still needs them.
+        // conditions are unaffected and the staff member still needs them.
         .catch(() => []),
       db().PurchaseOrder.find({
         status: { $in: ['sent', 'partial'] },
@@ -354,7 +354,7 @@ function formatMoney(cents) {
  * The bell's contents for one caller: stored events and derived conditions,
  * merged newest-first, with the unread count the badge shows.
  *
- * `unread` counts both halves. A derived row is always unread, so an operator
+ * `unread` counts both halves. A derived row is always unread, so a staff member
  * with three overdue invoices and nothing new still sees a badge - which is
  * right: the badge means "things want your attention", not "things arrived
  * since you last looked".
@@ -442,7 +442,7 @@ async function list(user) {
  * Derived rows are skipped rather than refused - the client sends the ids it
  * sees, and it does not know which half they came from. Silently ignoring an
  * id with no stored row is right here, because "mark an unpayable invoice read"
- * is a request with no meaning rather than an error the operator can act on.
+ * is a request with no meaning rather than an error the staff member can act on.
  */
 async function markRead(user, ids) {
   const filter = { readBy: { $ne: user._id } };
@@ -472,7 +472,7 @@ async function markRead(user, ids) {
  * erase somebody else's queue. It also marks them read, so a row restored by a
  * future "show cleared" view does not come back demanding attention.
  *
- * Derived rows are untouched by design: they are not stored, and an operator
+ * Derived rows are untouched by design: they are not stored, and a staff member
  * who clears "out of stock" while the shelf is still empty has not solved
  * anything. The condition reappears on the next read, which is the honest
  * answer even though it is the less satisfying one.

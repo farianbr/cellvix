@@ -22,7 +22,7 @@ import { useAdminSettings, useAdminMutations } from '@/hooks/useAdmin';
  * meaningless without knowing which emails that means and to whom.
  *
  * **Toggles that gate nothing are marked as such.** Eleven switches that all
- * look equally functional would have an operator turn one on, assume customers
+ * look equally functional would have a staff member turn one on, assume customers
  * are being emailed, and find out from a customer. The server sends
  * `communicationsWired`, so a toggle stops being marked the moment its send
  * path lands - one edit in `settingsService`, not a change here.
@@ -135,7 +135,7 @@ export function AdminEmailSettingsPage() {
   const { data, isLoading } = useAdminSettings();
   const { saveCommunications } = useAdminMutations();
   const [saved, setSaved] = useState(false);
-  // The dollars the operator sees. `notifyAboveAmount` in the form stays cents.
+  // The dollars the staff member sees. `notifyAboveAmount` in the form stays cents.
   const [dollarsField, setDollarsField] = useState('');
 
   const {

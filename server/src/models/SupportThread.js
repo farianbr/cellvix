@@ -7,7 +7,7 @@ import mongoose from 'mongoose';
  * deliberate.
  *
  * *One thread*, because a tenant raising an issue about one of its businesses
- * is still the same account talking to the same operators. Threading per
+ * is still the same account talking to the same staff. Threading per
  * business would fragment a conversation that is really about the subscription,
  * and it would leave "which thread does this reply belong to" as a question
  * somebody has to answer on every message. The business a message concerns is a

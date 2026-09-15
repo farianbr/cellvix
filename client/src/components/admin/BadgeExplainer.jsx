@@ -10,10 +10,10 @@ import { pressableSurface } from '@/lib/motion';
  * Says what the sidebar's number on this page meant.
  *
  * **The problem.** A count in the nav is a promise that something needs doing,
- * and the operator clicks it to find out what. They then arrive at the page's
+ * and the staff member clicks it to find out what. They then arrive at the page's
  * default view - every ticket, every product - where the badged number appears
  * nowhere. Inventory badged 189 and opened a list of 420. The number is not
- * wrong, but it is unverifiable, and an unverifiable number is one the operator
+ * wrong, but it is unverifiable, and an unverifiable number is one the staff member
  * learns to stop reading. That is worse than no badge: the signal is still
  * costing attention while no longer earning any.
  *
@@ -23,7 +23,7 @@ import { pressableSurface } from '@/lib/motion';
  * exactly those rows. One click from "6" to the six.
  *
  * It renders only when there is something to explain - a non-zero count, and
- * the operator not already filtered to it. Once they are looking at the six, a
+ * the staff member not already filtered to it. Once they are looking at the six, a
  * banner announcing six is noise.
  */
 export function BadgeExplainer({ className }) {

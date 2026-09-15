@@ -39,7 +39,7 @@ const LOW_STOCK_FALLBACK = 50;
  * `CVX-`/`INV-` convention already in `orderService` (§8).
  *
  * Same last-row-wins approach as order numbering: a race would need two rows
- * created in the same millisecond by two operators, and the unique index is the
+ * created in the same millisecond by two staff, and the unique index is the
  * backstop if it ever happens.
  */
 async function nextNumber(Model, field, prefix) {
@@ -84,7 +84,7 @@ function isObjectId(value) {
  *
  * Stock is never taken below zero: a negative quantity on hand is not a real
  * position, and an adjustment that would go there is refused rather than
- * silently floored - the operator meant something specific and should be told
+ * silently floored - the staff member meant something specific and should be told
  * which part of it could not happen.
  */
 async function applyStockMovement({
@@ -574,8 +574,8 @@ async function listPurchaseOrders({ q, status, supplier, from, to } = {}) {
 
   const [statusRows, pendingRow] = await Promise.all([
     db().PurchaseOrder.aggregate([{ $group: { _id: '$status', count: { $sum: 1 } } }]),
-    // Pending value is money committed and not yet landed - the number an
-    // operator uses to answer "what is on the water". A cancelled PO is not
+    // Pending value is money committed and not yet landed - the number a
+    // staff member uses to answer "what is on the water". A cancelled PO is not
     // committed and a received one has arrived, so neither counts.
     db().PurchaseOrder.aggregate([
       { $match: { status: { $in: ['draft', 'sent', 'partial'] } } },
@@ -602,7 +602,7 @@ async function getPurchaseOrder(id) {
 
   // The lines' Linked Inventory column: what each ordered part holds in stock
   // *now*. Read live rather than snapshotted onto the line, because the number
-  // an operator is checking against is today's shelf, not the one that was
+  // a staff member is checking against is today's shelf, not the one that was
   // there when the order was raised.
   const productIds = (po.items ?? []).map((item) => item.product).filter(Boolean);
 
@@ -860,8 +860,8 @@ async function setPurchaseOrderStatus(id, { status, note }) {
  * Partial by design, in the same sense the bulk order action is: one line that
  * cannot be received must not fail the rest of the delivery, so each is
  * attempted independently and the response names what moved and what did not,
- * with a reason per skip. Silently receiving nineteen of twenty lines is how an
- * operator comes to trust a button that is lying to them.
+ * with a reason per skip. Silently receiving nineteen of twenty lines is how a
+ * staff member comes to trust a button that is lying to them.
  */
 async function receivePurchaseOrder(id, { lines, note }, receivedBy) {
   const query = isObjectId(id) ? { _id: id } : { poNumber: String(id) };
@@ -949,7 +949,7 @@ async function receivePurchaseOrder(id, { lines, note }, receivedBy) {
  * Record a PO payment - which creates the `Expense` row (§6.8).
  *
  * Written once and only once: a PO already carrying `payment.expense` is
- * refused, because the alternative is an operator double-clicking their way
+ * refused, because the alternative is a staff member double-clicking their way
  * into a P&L that counts the same money twice.
  *
  * The expense amount is `po.total`, read from the order and never from the
@@ -1012,7 +1012,7 @@ async function recordPurchasePayment(id, { method, reference, paidAt, category }
 /**
  * Where a PO payment is filed.
  *
- * The operator's choice wins; otherwise the seeded stock category, and failing
+ * The staff member's choice wins; otherwise the seeded stock category, and failing
  * that the first active one. A PO payment with nowhere to file it is refused
  * rather than filed nowhere - an expense with no category is invisible to
  * every report that groups by one.
@@ -1057,7 +1057,7 @@ function shapeExpense(expense) {
     tax: expense.tax ?? 0,
     taxIncluded: expense.taxIncluded,
     reference: expense.reference ?? null,
-    // A PO-generated row is labelled and links back, so an operator can tell
+    // A PO-generated row is labelled and links back, so a staff member can tell
     // what they entered from what the system entered for them (§6.9).
     purchaseOrder: expense.purchaseOrder
       ? {
@@ -1208,7 +1208,7 @@ function shapeCategory(category, usage = 0) {
 }
 
 /** Usage comes back with the list so the UI can explain why a delete will be
- *  refused **before** the operator clicks it, rather than after. */
+ *  refused **before** the staff member clicks it, rather than after. */
 async function listExpenseCategories() {
   const [categories, usageRows] = await Promise.all([
     db().ExpenseCategory.find({}).sort({ order: 1, name: 1 }).lean(),
@@ -1348,13 +1348,13 @@ async function listInventory({ q, stock, brand, grade } = {}) {
 
   // The pills and the KPI row describe the whole catalogue, not the filtered
   // set: a pill reading "Low stock 0" because you are already filtered to
-  // Out of stock tells the operator nothing (the invoice-pill rule, §6.5).
+  // Out of stock tells the staff member nothing (the invoice-pill rule, §6.5).
   //
   // `isActive` is carried so the stock pills can exclude hidden products. A
   // product that is not listed cannot be sold, so it is not work - counting it
   // as low stock put three phantom rows between this screen's total and the
   // sidebar badge's, and a badge that reconciles with nothing is a badge the
-  // operator learns to ignore.
+  // staff member learns to ignore.
   const all = await db().Product.find({}).select('stock minStock price cost isActive').lean();
   const sellable = all.filter((product) => product.isActive !== false);
   const classify = (product) => {

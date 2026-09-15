@@ -197,7 +197,7 @@ async function setPercent(percent) {
     { upsert: true },
   );
 
-  // Said plainly in the response because it is the question an operator asks
+  // Said plainly in the response because it is the question a staff member asks
   // straight after changing it.
   return { percent: value, retroactive: false };
 }
@@ -210,7 +210,7 @@ async function setPercent(percent) {
  * identifies the instalment - an invoice paid in three parts earns three times,
  * and each one has to be separately reversible.
  *
- * **Never throws into the caller.** Recording a payment is the operator's
+ * **Never throws into the caller.** Recording a payment is the staff member's
  * action and the commission is a side effect of it; a failure here must not
  * roll back a payment that genuinely happened. It returns `null` and logs
  * instead, the same reasoning `mailer.js` applies to order confirmation email.
@@ -437,7 +437,7 @@ async function listReferrals({ search, from, to } = {}) {
         email: account.email,
         // A pending referral has earned nothing yet and cannot until it is
         // approved and starts paying invoices - the screen shows it so the
-        // operator can see the pipeline, not only the payouts.
+        // staff member can see the pipeline, not only the payouts.
         status: account.status,
       },
       joinedAt: account.createdAt,

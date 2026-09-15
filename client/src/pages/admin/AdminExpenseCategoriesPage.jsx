@@ -28,7 +28,7 @@ import cn from '@/lib/cn';
  * never deleted**: removing one would silently re-bucket every historical
  * expense that pointed at it, and the P&L would change shape for a reason
  * nobody could find later. The list carries each category's usage count so the
- * screen can say that *before* the operator clicks, not after.
+ * screen can say that *before* the staff member clicks, not after.
  */
 const ADMIN_PAGE = {
   ...ADMIN_ROUTES['/admin/settings/expense-categories'],
@@ -342,7 +342,7 @@ export function AdminExpenseCategoriesPage() {
           deleteExpenseCategory.mutate(deleting.id, {
             onSuccess: (payload) => {
               // The response says which of the two actually happened; reporting
-              // "deleted" for a deactivation would be a lie the operator acts on.
+              // "deleted" for a deactivation would be a lie the staff member acts on.
               setNotice(payload?.deactivated ? payload.message : null);
               setDeleting(null);
             },

@@ -222,6 +222,16 @@ export const ADMIN_ROUTES = {
     title: 'Invoices',
     description: 'Issued, paid, outstanding and overdue - plus recording a payment.',
   },
+  '/admin/invoices/create': {
+    label: 'New invoice',
+    parent: '/admin/invoices',
+    icon: 'FileText',
+    section: 'sales',
+    phase: 12,
+    built: true,
+    title: 'New invoice',
+    description: 'Bill a repair: devices, services, parts and travel.',
+  },
   '/admin/invoices/:number': {
     label: 'Invoice',
     parent: '/admin/invoices',
@@ -240,6 +250,33 @@ export const ADMIN_ROUTES = {
     phase: 7,
     title: 'Quotes',
     description: 'Price quotes built for an account, and what became of them.',
+  },
+  '/admin/services': {
+    label: 'Services',
+    parent: 'sales',
+    icon: 'Wrench',
+    section: 'sales',
+    phase: 7,
+    title: 'Services',
+    description: 'The labour a quote or a ticket is priced from.',
+  },
+  '/admin/quotes/create': {
+    label: 'New estimate',
+    parent: '/admin/quotes',
+    icon: 'FileSignature',
+    section: 'sales',
+    phase: 7,
+    title: 'Create estimate',
+    description: 'Prepare a service quote for a customer who has not left their device.',
+  },
+  '/admin/quotes/:id/edit': {
+    label: 'Edit estimate',
+    parent: '/admin/quotes',
+    icon: 'FileSignature',
+    section: 'sales',
+    phase: 7,
+    title: 'Edit estimate',
+    description: 'Change what this estimate promises, before it becomes a ticket.',
   },
   '/admin/quotes/:id': {
     label: 'Quote',
@@ -563,6 +600,16 @@ export const ADMIN_ROUTES = {
     title: 'Invoice statuses',
     description: 'Time-lapse status messages, each firing once per invoice.',
   },
+  '/admin/settings/devices': {
+    label: 'Devices taken in',
+    parent: 'settings:financial',
+    icon: 'Smartphone',
+    section: 'settings',
+    phase: 11,
+    built: true,
+    title: 'Devices this shop takes in',
+    description: 'The list behind the device pickers on a ticket, an estimate and the kiosk.',
+  },
   '/admin/settings/taxonomy': {
     label: 'Taxonomy',
     parent: 'settings:financial',
@@ -613,7 +660,7 @@ export const ADMIN_ROUTES = {
     // Describes the page as it is. It used to promise "general categories,
     // groups" as well, and neither is here: expense categories are their own
     // screen under Financial, and product groups were never built. A page
-    // header that names sections the page does not have sends an operator
+    // header that names sections the page does not have sends a staff member
     // scrolling for something that is not below.
     description: 'The markup and margin a new product is pre-filled with.',
   },
@@ -707,7 +754,7 @@ export const ADMIN_ROUTES = {
     title: 'Security log',
     // Not "and CSRF rejections", which §6.15 lists: this codebase has no CSRF
     // middleware, so promising a category the log can never contain would have
-    // an operator reading an empty result as "no attacks" rather than "not
+    // a staff member reading an empty result as "no attacks" rather than "not
     // measured". It goes back in when the check does.
     description: 'Sign-ins, failed attempts, lockouts and staff access changes.',
   },

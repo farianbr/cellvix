@@ -11,7 +11,7 @@ import invoicePaymentService from './invoicePaymentService.js';
 import { activityFeed, pagedActivityFeed } from './activityService.js';
 import { serializeOrder } from './orderService.js';
 import { serialize as serializeProduct } from './productService.js';
-import { renderInvoiceHtml } from './invoiceDocument.js';
+import { renderInvoiceHtml, resolveInvoiceBrand } from './invoiceDocument.js';
 import * as referralService from './referralService.js';
 
 /**
@@ -327,7 +327,10 @@ async function invoiceDocument(user, number, { nonce, origin } = {}) {
   const invoice = await db().Invoice.findOne({ number, user: user._id }).populate('order').lean();
   if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');
 
-  return renderInvoiceHtml({ invoice, order: invoice.order, user, nonce, origin });
+  // Same branding the admin copy gets: it has to be the same piece of paper.
+  const brand = await resolveInvoiceBrand(invoice.business);
+
+  return renderInvoiceHtml({ invoice, order: invoice.order, user, nonce, origin, ...brand });
 }
 
 /**

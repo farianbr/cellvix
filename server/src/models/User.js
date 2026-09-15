@@ -209,6 +209,52 @@ const userSchema = new mongoose.Schema(
     },
 
     /**
+     * Which channel this customer wants to be reached on.
+     *
+     * **`contactConsent` above answers "may we", this answers "how".** They are
+     * different questions and the first cannot stand in for the second: a
+     * customer may consent to SMS, email and calls without that saying which
+     * one they actually read. Every ticket status update is sent through this
+     * one channel, so a repair shop that guesses wrong messages somebody who
+     * never sees it and then wonders why nobody collected their device.
+     *
+     * It is captured once, at the counter or at the kiosk, and reused at every
+     * later notification point - the single thread running through the whole
+     * sales cycle.
+     *
+     * **Consent still outranks it.** Sending is gated on `contactConsent` and
+     * on `unsubscribedAt` exactly as it was; a preference for a channel the
+     * customer has not consented to is a preference that cannot be honoured,
+     * and the sender falls back rather than overriding a refusal.
+     *
+     * `undefined` means never asked, which is why there is no default. An
+     * account that predates this has not chosen, and treating silence as a
+     * choice of email would start messaging people on a channel they never
+     * picked.
+     */
+    preferredContact: {
+      type: String,
+      enum: ['sms', 'whatsapp', 'email', 'call'],
+    },
+
+    /**
+     * How this customer first reached the business.
+     *
+     * Attribution, and nothing reads it as authority for anything. It is the
+     * answer to "where is our work coming from", which is the one question a
+     * shop owner asks that no other field on this record can answer.
+     *
+     * **Not `referredBy`**, which is the commission edge - who gets paid. A
+     * customer can be `referral` here with no `referredBy` set, because a
+     * friend's recommendation earns nobody a commission and is still the reason
+     * they walked in.
+     */
+    source: {
+      type: String,
+      enum: ['walk_in', 'call', 'web_quote', 'referral', 'kiosk'],
+    },
+
+    /**
      * Rotating half of the customer portal link (§6.13a).
      *
      * The link carries an HMAC of `portal:<id>:<salt>`, never the id itself -

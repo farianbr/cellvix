@@ -94,6 +94,10 @@ export function SelectMenu({
    */
   searchable,
   searchPlaceholder = 'Search…',
+  /** A heading inside the menu, for a trigger that shows a value not a label. */
+  menuTitle,
+  /** A note under the options, for a consequence the list cannot show. */
+  menuFootnote,
   name,
   id: idProp,
   className,
@@ -140,7 +144,15 @@ export function SelectMenu({
 
   const [panelStyle, placement] = useAnchoredPosition(buttonRef, open, {
     align,
-    maxHeight: OPTION_H * 9 + 8,
+    /**
+     * Room for nine options, **plus whatever the chrome takes**.
+     *
+     * A title and a footnote are each about a row tall, so a menu carrying both
+     * had nine rows of space for eleven rows of content and scrolled at seven
+     * options - a scrollbar on a list that fits, which reads as clipped. They
+     * are counted here rather than being left to push the options out.
+     */
+    maxHeight: OPTION_H * 9 + 8 + (menuTitle ? OPTION_H : 0) + (menuFootnote ? OPTION_H : 0),
     // Snapped to whole options: a list cut mid-row reads as clipped rather than
     // as scrollable.
     rowHeight: OPTION_H,
@@ -284,6 +296,24 @@ export function SelectMenu({
             placement === 'top' ? 'origin-bottom' : 'origin-top',
           )}
         >
+          {/*
+            An optional heading above the options.
+
+            For a menu whose trigger is a value rather than a label - a status
+            pill on a table row shows "Diagnosis", so the menu it opens has to
+            say what picking one of these does. A labelled field does not need
+            it, which is why it is opt-in.
+          */}
+          {menuTitle && (
+            // No rule under it. The panel is one quiet surface and the eyebrow
+            // is already set apart by its size, weight and colour - a hairline
+            // as well divides a menu of seven items into two regions, which is
+            // structure this does not have.
+            <li role="none" className="eyebrow px-2.5 pb-1.5 pt-1 text-ink-400">
+              {menuTitle}
+            </li>
+          )}
+
           {hasSearch && (
             // Sticky, so the box stays reachable once the list scrolls. Inside
             // the listbox rather than above it, because the panel is one
@@ -337,6 +367,24 @@ export function SelectMenu({
                     isSelected ? 'font-semibold text-brand-700' : 'text-ink-700',
                   )}
                 >
+                  {/*
+                    An optional colour dot, for a list whose values already
+                    carry a colour elsewhere on the screen.
+
+                    Ticket statuses are the case: the row's own badge is
+                    coloured, and a menu of plain text made the reader map
+                    "Waiting for Parts" back onto amber by memory. The dot is
+                    the same mark, so the menu and the row agree at a glance.
+
+                    Opt-in per option, so a menu with no colour vocabulary
+                    (provinces, methods) is unaffected.
+                  */}
+                  {option.dotClass && (
+                    <span
+                      className={cn('size-2.5 shrink-0 rounded-full', option.dotClass)}
+                      aria-hidden="true"
+                    />
+                  )}
                   <span className="min-w-0 flex-1 truncate">{option.label}</span>
                   <Count value={option.count} muted={!isSelected} />
                   {/* The tick always holds its column - dropping it from the
@@ -351,6 +399,26 @@ export function SelectMenu({
               </li>
             );
           })}
+
+          {/*
+            An optional note under the options.
+
+            Reserved for a consequence the reader cannot see from the list
+            itself. The ticket status menu is the case that needed it: picking
+            a status messages the customer, and a menu that looks like it only
+            edits a field is a menu somebody uses to tidy a board at midnight.
+          */}
+          {menuFootnote && (
+            // Unruled, like the title. It is set apart by being smaller and
+            // quieter than the options, which is enough - and a line above it
+            // would read as a section break rather than as a footnote.
+            <li
+              role="none"
+              className="mt-0.5 flex items-start gap-1.5 px-2.5 pb-1 pt-1.5 text-2xs leading-snug text-ink-400"
+            >
+              {menuFootnote}
+            </li>
+          )}
         </motion.ul>
       )}
     </AnimatePresence>

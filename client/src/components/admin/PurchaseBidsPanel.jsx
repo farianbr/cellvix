@@ -89,7 +89,7 @@ const DELIVERY_LABELS = {
  * carrying four different kinds of note in 141px.
  *
  * Cards also let the **money be the size it deserves**. The total is the number
- * an operator is comparing, and in a table cell it was 13px of tabular text
+ * a staff member is comparing, and in a table cell it was 13px of tabular text
  * indistinguishable from the lead time beside it.
  *
  * The list is short by nature - a handful of suppliers carry any one component
@@ -310,7 +310,7 @@ function BidCard({
  * it would change.
  *
  * **The comparison is the point, not the list.** A PI shown on its own is a
- * table of numbers an operator has to hold against the order in their head;
+ * table of numbers a staff member has to hold against the order in their head;
  * shown as a diff it answers the only question they actually have - *is this
  * what we asked for?* Lines that match are quiet, lines that moved carry the
  * before and after, and the count of what changed is stated above the table so

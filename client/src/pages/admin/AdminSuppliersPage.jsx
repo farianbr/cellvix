@@ -55,7 +55,7 @@ import cn from '@/lib/cn';
  * holding once each one carried orders, spend and a last-order date: those are
  * columns, and fifteen cards is fifteen scattered pairs of figures that cannot
  * be compared or sorted. The contact detail survives inside the name cell as
- * live `mailto:`/`tel:` links, so nothing the card did for an operator is lost.
+ * live `mailto:`/`tel:` links, so nothing the card did for a staff member is lost.
  *
  * The `ProcessStrip` at the foot is the same one the Purchase Orders list
  * carries - a supplier is stage one of the purchase automation cycle, and both
@@ -361,7 +361,7 @@ function SupplierForm({ supplier, onSubmit, onCancel, isPending, error }) {
  * The supplier's identity cell - name over the two ways to reach them.
  *
  * Email and phone are real `mailto:`/`tel:` links rather than plain text. This
- * is a contact list before it is a ledger: the operator who opens it is usually
+ * is a contact list before it is a ledger: the staff member who opens it is usually
  * about to chase an order, and making them select-and-copy an address that was
  * already on screen is the kind of friction a table is supposed to remove.
  * They stop the row click so following one does not also open the profile.
@@ -519,7 +519,7 @@ export function AdminSuppliersPage() {
    * copy of this modal - one form, one place it can drift. The row has to be
    * loaded before it can be edited, so this resolves against the fetched list
    * and clears the parameter once it has, which stops a back-navigation from
-   * reopening a form the operator already closed.
+   * reopening a form the staff member already closed.
    *
    * Resolves against the UNFILTERED list: arriving with both `?edit=` and an
    * active tag filter must still open the form, and a supplier the filter
@@ -853,7 +853,7 @@ export function AdminSuppliersPage() {
               onSuccess: (payload) => {
                 setCreating(false);
                 // Straight to the supplier that was just added - the next thing
-                // an operator does is raise a purchase order against it.
+                // a staff member does is raise a purchase order against it.
                 if (payload?.supplier?.id) navigate(`/admin/suppliers/${payload.supplier.id}`);
               },
             })

@@ -24,7 +24,7 @@ import { CELLVIX_OVERRIDES } from '../../../shared/schemas/features.js';
  *
  * The moment the type-divergent routes were gated, the disagreement became
  * visible as a bug - `/admin/tickets` and `/admin/quotes` answering 404 on a
- * business whose operators use both screens daily.
+ * business whose staff use both screens daily.
  *
  * ## Why the fix is here and not in the resolver
  *
@@ -39,8 +39,8 @@ import { CELLVIX_OVERRIDES } from '../../../shared/schemas/features.js';
  *
  * **Additive and idempotent.** A key already present on the record is left
  * exactly as it is, so an override a super admin set by hand is never reverted
- * by a later run - the registry describes where Cellvix *started*, not where an
- * operator has since taken it. A second run reports nothing to do.
+ * by a later run - the registry describes where Cellvix *started*, not where a
+ * staff member has since taken it. A second run reports nothing to do.
  */
 
 /** The business this applies to. Cellvix is `#000001`, the first one created. */

@@ -370,7 +370,7 @@ function buildRepairs({
          * Quoting only the services made every quote read short against the
          * ticket it became, which is precisely the drift the quote screen
          * exists to warn about; a demo where that gap is *normal* teaches the
-         * operator to ignore the warning. A part line carries its catalogue
+         * staff member to ignore the warning. A part line carries its catalogue
          * SKU, a labour line a synthetic `SVC-` one, because labour has no SKU.
          */
         items: [

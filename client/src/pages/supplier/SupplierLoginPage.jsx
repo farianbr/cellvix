@@ -22,7 +22,14 @@ import { pressable } from '@/lib/motion';
  * undo that by guessing. Telling an outsider which addresses have accounts is
  * telling them who supplies Cellvix.
  */
-export function SupplierLoginPage() {
+/**
+ * @param businessName whose portal this is, resolved from the host by the
+ *   shell. Falls back to `BUSINESS_INFO.name` for a deployment that has not
+ *   pointed a host at a business yet - never to a hardcoded "Cellvix", which
+ *   is what this page used to greet a CellShoppe supplier with.
+ */
+export function SupplierLoginPage({ businessName = null }) {
+  const seller = businessName ?? BUSINESS_INFO.name;
   const [forgot, setForgot] = useState(false);
   const { signIn, forgotPassword } = useSupplierPortalMutations();
 
@@ -38,7 +45,7 @@ export function SupplierLoginPage() {
           </span>
           <div>
             <h1 className="font-display text-xl font-bold leading-tight text-ink-900">
-              {BUSINESS_INFO.name} suppliers
+              {seller} suppliers
             </h1>
             <p className="text-sm text-ink-500">
               Price the requests we send you, in one place.
@@ -135,7 +142,7 @@ export function SupplierLoginPage() {
         )}
 
         <p className="mt-4 text-center text-xs leading-relaxed text-ink-400">
-          Supply {BUSINESS_INFO.name} and have no login? Reply to any email from our purchasing team
+          Supply {seller} and have no login? Reply to any email from our purchasing team
           and we will send you one.
         </p>
       </div>

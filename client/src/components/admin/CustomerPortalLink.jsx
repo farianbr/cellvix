@@ -26,7 +26,7 @@ import { pressable } from '@/lib/motion';
  * useless for the one question it exists to answer. So the link is fetched on a
  * click, and that click is what the audit records.
  *
- * The panel says what the link is before it hands one over, because an operator
+ * The panel says what the link is before it hands one over, because a staff member
  * who does not know the URL is the password will text it to the wrong number
  * once and never know.
  */
@@ -62,7 +62,7 @@ export default function CustomerPortalLink({ id }) {
     } catch {
       // A clipboard write can be refused outright (an insecure origin, a
       // permission the browser never granted). The link is on screen and
-      // selectable, so saying so is more use than a failure the operator
+      // selectable, so saying so is more use than a failure the staff member
       // cannot act on.
       toast.error('Could not copy. Select the link and copy it by hand.');
     }
@@ -92,7 +92,7 @@ export default function CustomerPortalLink({ id }) {
         </div>
       ) : (
         <div className="space-y-3">
-          {/* Selectable and wrapping, not truncated: an operator reading it down
+          {/* Selectable and wrapping, not truncated: a staff member reading it down
               a phone line needs every character of it. */}
           <p className="break-all rounded-md bg-surface-2 px-3 py-2.5 font-mono text-xs text-ink-700">
             {link}

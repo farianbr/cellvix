@@ -331,7 +331,7 @@ function buildPurchaseOrders({ products, suppliersByCode, year = new Date().getF
 }
 
 /**
- * Standalone expenses - the ones an operator enters by hand, as opposed to the
+ * Standalone expenses - the ones a staff member enters by hand, as opposed to the
  * rows a PO payment generates. Categories are looked up by slug so this list
  * survives the category ids changing.
  */

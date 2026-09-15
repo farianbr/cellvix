@@ -69,7 +69,7 @@ export function SettingsFormActions({ dirty, saving, saved, error, onReset, save
  * rule 5).
  *
  * Tax rates, warranty lengths and business details all ship with defaults that
- * are stand-ins for figures the client has not confirmed. An operator who
+ * are stand-ins for figures the client has not confirmed. A staff member who
  * cannot tell a real configured value from a plausible-looking placeholder will
  * eventually invoice against one.
  */

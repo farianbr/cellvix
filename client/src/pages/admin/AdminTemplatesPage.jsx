@@ -274,7 +274,7 @@ export function AdminTemplatesPage() {
       </nav>
 
       {/* Templates work on every channel; only *sending* waits on a provider.
-          Said here so an operator writing an SMS template is not left wondering
+          Said here so a staff member writing an SMS template is not left wondering
           whether the text is going anywhere. */}
       {status && !status.delivers && channel !== 'call' && (
         <p className="mb-4 rounded-lg border border-warn/25 bg-warn-50 px-3.5 py-3 text-sm leading-relaxed text-ink-700">

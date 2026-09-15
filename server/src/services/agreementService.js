@@ -101,7 +101,7 @@ async function listTemplates({ includeInactive = false } = {}) {
  * One template, with **who holds it and who has signed it**.
  *
  * The roster is the half of this screen that was missing: an agreement with no
- * list of suppliers is a document an operator cannot chase. Each row says where
+ * list of suppliers is a document a staff member cannot chase. Each row says where
  * that supplier has got to, and carries the signed record so the admin can read
  * the executed document - the notes and initials included - without a second
  * request per supplier.

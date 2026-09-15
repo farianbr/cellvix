@@ -35,12 +35,12 @@ import { pressable, pressableSurface } from '@/lib/motion';
  * surface rather than a spreadsheet: rows tall enough to have air around their
  * content, and no full-width rule between them. The rules are the thing that
  * makes a dense table feel like a ledger - thirty hairlines stacked down the
- * page draw the eye across the grid instead of down the column the operator is
+ * page draw the eye across the grid instead of down the column the staff member is
  * actually reading. Spacing separates rows perfectly well on its own, and the
- * hover state does the rest by making the row the operator is on the only one
+ * hover state does the rest by making the row the staff member is on the only one
  * with a ground.
  *
- * "compact" exists because an ERP operator scanning fifty orders wants density
+ * "compact" exists because an ERP staff member scanning fifty orders wants density
  * more than they want air, and telling them otherwise would be design imposing
  * on work. It keeps a hairline, because at that height spacing alone is no
  * longer enough to separate one row from the next.
@@ -73,9 +73,9 @@ const ALIGN_CLASS = { right: 'text-right', center: 'text-center', left: 'text-le
  * itself switched off, and they stay hand-written.
  *
  * **They must still be indistinguishable.** Which component rendered a table is
- * an implementation detail; an operator looking at two tables on one screen
+ * an implementation detail; a staff member looking at two tables on one screen
  * must not be able to tell. So this hook does not merely *resemble* the table
- * below - it returns `DENSITY`'s own values, at the density the operator chose.
+ * below - it returns `DENSITY`'s own values, at the density the staff member chose.
  *
  * That last part is the whole reason this is a hook and not a set of constants.
  * Density is live state, stored per browser and broadcast to every table on the
@@ -285,7 +285,7 @@ export function DataTable({
          * not enough for the content - every column collapsed at once, names
          * truncated to "Jordan …", and a two-button action cell overlapped the
          * column beside it. With a floor the table keeps its proportions and the
-         * wrapper's `overflow-x-auto` lets the operator swipe, which is the
+         * wrapper's `overflow-x-auto` lets the staff member swipe, which is the
          * normal way a wide table behaves on a narrow screen; the priority
          * classes have already folded the columns that were worth folding.
          */}
@@ -307,7 +307,7 @@ export function DataTable({
                       than replacing the whole selection. On a paginated list
                       the old `checked ? allKeys : []` silently discarded rows
                       picked on another page the moment the header box was
-                      touched - the operator sees a count drop with no row
+                      touched - the staff member sees a count drop with no row
                       changing in front of them. */}
                   <CellCheckbox
                     checked={allSelected}

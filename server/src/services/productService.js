@@ -181,7 +181,7 @@ function buildQuery({ deviceType, brand, series, model, partType, grade, inStock
 
   // `String()` on every equality value, belt to the `query parser` braces in
   // app.js: a filter value must never reach Mongo as an object, because an
-  // object here IS a query operator.
+  // object here IS a query staff member.
   if (deviceType) query.deviceTypeSlug = String(deviceType);
   if (brand) query.brandSlug = String(brand);
   if (series) query.seriesSlug = String(series);

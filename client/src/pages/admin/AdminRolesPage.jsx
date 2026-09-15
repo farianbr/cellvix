@@ -26,7 +26,7 @@ import { pressable } from '@/lib/motion';
  *
  * A **named role carries the permission map**, and staff hold the role - so
  * changing what "Warehouse" may do updates everyone on it in one edit. That is
- * the operator's own mental model: they think in job titles, not in per-user
+ * the staff member's own mental model: they think in job titles, not in per-user
  * checkboxes.
  *
  * Access is **per area, not per page**. A twenty-row matrix is one nobody
@@ -227,7 +227,7 @@ export function AdminRolesPage() {
       setConfirming(null);
     } catch (err) {
       // A role still held by somebody is refused, and the message names how
-      // many hold it - reassigning them is the operator's next move.
+      // many hold it - reassigning them is the staff member's next move.
       setError(err.message);
     }
   }

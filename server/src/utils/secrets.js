@@ -109,8 +109,8 @@ function decrypt(stored) {
 /**
  * The masked preview shown beside a configured key.
  *
- * **Derived from the length and last four characters only.** Enough for an
- * operator to tell which key is in the field - "is this the live one or the
+ * **Derived from the length and last four characters only.** Enough for a
+ * staff member to tell which key is in the field - "is this the live one or the
  * test one" - and not enough to be worth stealing. Anything shorter than eight
  * characters is masked completely: showing four of a six-character secret
  * gives away most of it.

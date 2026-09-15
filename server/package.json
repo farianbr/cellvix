@@ -13,6 +13,8 @@
     "seed:reviews": "node src/seed/reviews.js",
     "seed:quotes": "node src/seed/quotes.js",
     "seed:expense-categories": "node src/seed/expense-categories.js",
+    "seed:service-business": "node src/seed/service-business.js",
+    "seed:service-quotes": "node src/seed/service-quotes.js",
     "seed:tickets": "node src/seed/tickets.js",
     "seed:bids": "node src/seed/purchase-bids.js",
     "seed:storefront": "node src/seed/storefront-pages.js",

@@ -66,7 +66,7 @@ const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin'], icon: adminIcon('Home') };
  *
  * A card renders **only when its count is non-zero** (ERP rework §6.1.3). An
  * empty board is a good day and should say so, not show four zeroes - four
- * zeroes teach an operator to stop reading the section.
+ * zeroes teach a staff member to stop reading the section.
  */
 function TodoCard({ icon: Icon, tone, title, body, to, onClick, cta }) {
   const tones = {
@@ -76,7 +76,7 @@ function TodoCard({ icon: Icon, tone, title, body, to, onClick, cta }) {
   };
 
   // Most cards go somewhere; one of them opens the work in place. Both are the
-  // same object to the operator - a thing that needs doing, clicked - so they
+  // same object to the staff member - a thing that needs doing, clicked - so they
   // render identically and differ only in the element underneath.
   const Shell = onClick ? 'button' : Link;
   const shellProps = onClick ? { type: 'button', onClick } : { to };
@@ -118,7 +118,7 @@ function TodoCard({ icon: Icon, tone, title, body, to, onClick, cta }) {
  *
  * The feed is only useful if a line is a way *in* to the thing it describes
  * "Reversed a payment on INV-2026-10049" that cannot be clicked leaves the
- * operator to go and find that invoice by hand, which is most of the work the
+ * staff member to go and find that invoice by hand, which is most of the work the
  * line just saved them.
  *
  * Driven by `entity`, which the audit row already carries, rather than by
@@ -303,7 +303,7 @@ function initials(name) {
  * The approvals queue, as a dialog.
  *
  * **Why a dialog and not a section.** A pending account is a decision, and a
- * decision is a thing you sit down to - the operator opens it, works the list,
+ * decision is a thing you sit down to - the staff member opens it, works the list,
  * and closes it. As a panel it sat permanently on a screen that is otherwise
  * for reading, taking the most vertical space of anything on the page while
  * usually holding two or three rows, and on a quiet day it vanished entirely
@@ -568,7 +568,7 @@ export function AdminOverviewPage() {
         icon={ADMIN_PAGE.icon}
         title={ADMIN_PAGE.title}
         description={`${today} · Welcome back, ${user?.contactName ?? 'there'}.`}
-        // The two things an operator starts from this screen. Both are the
+        // The two things a staff member starts from this screen. Both are the
         // real entry points rather than dashboard-only copies: the ticket link
         // is the same route the tickets screen uses, and `?new=1` is the
         // established convention for opening a create modal on arrival
@@ -632,7 +632,7 @@ export function AdminOverviewPage() {
 
           Every tile carries `to`, and each one lands on the list **filtered to
           the figure it just showed** rather than the section's front page - a
-          tile reading "3 overdue" that opens all invoices makes the operator
+          tile reading "3 overdue" that opens all invoices makes the staff member
           re-find the three they clicked for. */}
       <KpiRow
         tiles={[
@@ -667,7 +667,7 @@ export function AdminOverviewPage() {
           },
           {
             key: 'outstanding',
-            // "Due Amount" rather than "Outstanding": it is what the operator
+            // "Due Amount" rather than "Outstanding": it is what the staff member
             // says out loud, and it reads as money owed without the accounting
             // register.
             label: 'Due Amount',
@@ -702,7 +702,7 @@ export function AdminOverviewPage() {
           },
           {
             key: 'clients',
-            // "Customers" everywhere the operator reads it - the sidebar
+            // "Customers" everywhere the staff member reads it - the sidebar
             // already says so, and the route keeping `clients` is an internal
             // detail that should not surface as a second word for one thing.
             label: 'Customers',
@@ -765,7 +765,7 @@ export function AdminOverviewPage() {
                 label: client.displayName ?? client.businessName,
                 value: client.total,
                 hint: `${formatCount(client.invoices)} ${client.invoices === 1 ? 'invoice' : 'invoices'}`,
-                // "Who is my biggest account" is a question the operator asks
+                // "Who is my biggest account" is a question the staff member asks
                 // in order to go and look at that account.
                 to: `/admin/clients/${client.id}`,
               }))}
@@ -1070,7 +1070,7 @@ export function AdminOverviewPage() {
         accounts={pendingQueue}
         onApprove={(account) => {
           // The queue steps aside for the form rather than stacking two
-          // dialogs: the operator is answering one question at a time, and a
+          // dialogs: the staff member is answering one question at a time, and a
           // dialog over a dialog is where a modal stops feeling designed.
           setQueueOpen(false);
           setApproving(account);

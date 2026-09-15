@@ -11,6 +11,7 @@ import {
   FileText,
   History,
   Mail,
+  HandCoins,
   MoreHorizontal,
   Pencil,
   Plus,
@@ -47,7 +48,7 @@ import { pressable } from '@/lib/motion';
  * **This screen writes now.** It used to be read-only, on the reasoning that
  * the Invoices list already held the payment and void dialogs and a second set
  * of controls would be a second place for those rules to drift. In practice it
- * sent an operator who had opened an invoice to *look* at it back to a list to
+ * sent a staff member who had opened an invoice to *look* at it back to a list to
  * act on it - and the rules never lived in the dialogs anyway, they live in
  * `invoicePaymentService`, which both paths call. So the controls are here,
  * against the document they describe, and the server still owns every rule.
@@ -109,6 +110,7 @@ export function AdminInvoiceDetailPage() {
 
   const {
     recordInvoicePayment,
+    recordInvoiceTip,
     voidInvoice,
     emailInvoice,
     reverseInvoicePayment,
@@ -117,6 +119,7 @@ export function AdminInvoiceDetailPage() {
   } = useAdminMutations();
 
   const [paying, setPaying] = useState(false);
+  const [tipping, setTipping] = useState(false);
   const [editing, setEditing] = useState(false);
   const [voiding, setVoiding] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -191,7 +194,7 @@ export function AdminInvoiceDetailPage() {
               Email
             </Button>
 
-            {/* Everything past the two an operator reaches for daily. Print and
+            {/* Everything past the two a staff member reaches for daily. Print and
                 PDF are the same rendered document - one goes to a printer, the
                 other to a file. */}
             <ActionMenu
@@ -208,6 +211,15 @@ export function AdminInvoiceDetailPage() {
                   icon: Plus,
                   disabled: settled,
                   onSelect: () => setPaying(true),
+                },
+                {
+                  key: 'tip',
+                  // Not disabled when settled, unlike a payment: a tip is
+                  // usually given at the moment the customer pays, which is the
+                  // moment the invoice becomes settled.
+                  label: invoice.tipCents > 0 ? 'Edit tip' : 'Record a tip',
+                  icon: HandCoins,
+                  onSelect: () => setTipping(true),
                 },
                 {
                   /**
@@ -237,7 +249,7 @@ export function AdminInvoiceDetailPage() {
                   icon: Trash2,
                   tone: 'danger',
                   // Refused server-side once money has touched it; disabled
-                  // here so the operator is not offered a button that will be
+                  // here so the staff member is not offered a button that will be
                   // refused a moment later.
                   disabled: invoice.amountPaid > 0,
                   onSelect: () => setDeleting(true),
@@ -253,7 +265,7 @@ export function AdminInvoiceDetailPage() {
         {/* The chain this invoice ends, when it ends one. An invoice raised
             from a repair is the last of three records for one job, and until
             now it said so only through a `reference` string reading "Repair
-            TK-…" - a sentence, not something an operator could follow. An
+            TK-…" - a sentence, not something a staff member could follow. An
             invoice behind an *order* has no such chain and draws nothing. */}
         {invoice.ticket && (
           <WorkflowLineage
@@ -267,7 +279,7 @@ export function AdminInvoiceDetailPage() {
         {/**
          * Payment information, leading the page.
          *
-         * The two figures an operator opens an invoice to check are what it is
+         * The two figures a staff member opens an invoice to check are what it is
          * for and what has arrived - so they are the first thing on the screen,
          * at a size that can be read across a desk, with the history that
          * produced them directly underneath.
@@ -277,7 +289,7 @@ export function AdminInvoiceDetailPage() {
             The page capped itself at 900px and stacked its panels vertically,
             so a third of a 1440px screen sat empty while the change history was
             pushed below the fold. The blocks are related but not equal: the
-            payments are what an operator opened the invoice to see, and the
+            payments are what a staff member opened the invoice to see, and the
             details and the audit trail are reference. Giving the first the wide
             column says which is which and puts the record on one screen. */}
         <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1.55fr)_minmax(0,1fr)]">
@@ -313,7 +325,7 @@ export function AdminInvoiceDetailPage() {
                 of three.
 
                 Balance keeps its colour, and only when there IS one: an unpaid
-                balance is the number an operator is chasing, and it is the one
+                balance is the number a staff member is chasing, and it is the one
                 thing on this row that can require action. Total paid goes back to
                 ink, because money already received is a fact rather than a
                 prompt. */}
@@ -335,6 +347,29 @@ export function AdminInvoiceDetailPage() {
               </p>
             </div>
           </div>
+
+          {/*
+            The tip sits UNDER the three tiles, not as a fourth one.
+
+            The row above is one question asked three ways: what was owed, what
+            came in against it, what is left. A tip answers none of them - it is
+            money received that was never due, and it moves no figure above it.
+            Giving it a matching tile would put it in that conversation and
+            invite the reader to add it to the total, which is exactly the
+            arithmetic the schema keeps them apart to prevent.
+
+            Rendered only when there is one: a row saying "Tip $0.00" on every
+            wholesale invoice is a line that teaches people to stop reading.
+          */}
+          {invoice.tipCents > 0 && (
+            <p className="mt-3 flex items-baseline justify-between gap-3 rounded-md bg-surface-2 px-4 py-2.5 text-sm">
+              <span className="text-ink-500">
+                Tip{' '}
+                <span className="text-ink-400">· not part of the invoice total</span>
+              </span>
+              <span className="tnum font-semibold text-ink-900">{money(invoice.tipCents)}</span>
+            </p>
+          )}
 
           <div className="mt-4">
             <p className="eyebrow mb-2 flex items-center gap-1.5 text-ink-400">
@@ -603,6 +638,20 @@ export function AdminInvoiceDetailPage() {
         }
       />
 
+      <RecordTipModal
+        open={tipping}
+        invoice={invoice}
+        isPending={recordInvoiceTip.isPending}
+        error={recordInvoiceTip.error?.message}
+        onClose={() => setTipping(false)}
+        onSubmit={(values) =>
+          recordInvoiceTip.mutate(
+            { number: invoice.number, ...values },
+            { onSuccess: () => setTipping(false) },
+          )
+        }
+      />
+
       <EditInvoiceModal
         open={editing}
         invoice={invoice}
@@ -620,7 +669,7 @@ export function AdminInvoiceDetailPage() {
       {/* Emailing reaches a real customer, so it is confirmed rather than sent
           on a single click. The outcome is a toast: the server says whether the
           transport accepted it, and "sent" and "tried to send" are different
-          facts the operator has to be able to tell apart. */}
+          facts the staff member has to be able to tell apart. */}
       <ConfirmDialog
         open={emailing}
         onClose={() => setEmailing(false)}
@@ -721,6 +770,75 @@ export function AdminInvoiceDetailPage() {
 }
 
 /** Recording money against this invoice. Overpayment is refused server-side. */
+/**
+ * Recording a gratuity.
+ *
+ * **Separate from the payment modal, deliberately.** A payment is money against
+ * what is owed and the form opens pre-filled with the balance; a tip is money
+ * that was never owed, moves no balance, and has no figure to suggest. Sharing
+ * one form would mean one amount box whose meaning depended on a dropdown,
+ * which is how a tip ends up settling an invoice.
+ *
+ * Setting the amount **replaces** what is there, so the box opens holding the
+ * current tip and `0` clears one recorded by mistake. The copy says so, because
+ * "record a tip" on a form already showing a number reads like it will add.
+ */
+function RecordTipModal({ open, invoice, onClose, onSubmit, isPending, error }) {
+  const existing = (invoice.tipCents ?? 0) / 100;
+  const { register, handleSubmit, reset } = useForm({
+    values: { amountDollars: existing ? existing.toFixed(2) : '' },
+  });
+
+  return (
+    <Modal open={open} onClose={onClose} title={`Tip on ${invoice.number}`}>
+      <form
+        onSubmit={handleSubmit((values) =>
+          onSubmit({ amountDollars: values.amountDollars || 0 }),
+        )}
+        className="space-y-4"
+      >
+        {error && (
+          <p className="flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
+            <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
+            {error}
+          </p>
+        )}
+
+        <Input
+          label="Tip amount"
+          inputMode="decimal"
+          suffix="CAD"
+          placeholder="0.00"
+          {...register('amountDollars')}
+        />
+
+        <p className="text-xs leading-snug text-ink-400">
+          A tip is recorded beside the invoice, not in it: the total stays{' '}
+          <span className="tnum text-ink-600">{money(invoice.amount)}</span> and the balance stays{' '}
+          <span className="tnum text-ink-600">{money(invoice.balance)}</span>. Enter 0 to remove a
+          tip recorded by mistake.
+        </p>
+
+        <div className="flex justify-end gap-2">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => {
+              reset();
+              onClose();
+            }}
+          >
+            Cancel
+          </Button>
+          <Button type="submit" loading={isPending}>
+            Save tip
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
 function RecordPaymentModal({ open, invoice, onClose, onSubmit, isPending, error }) {
   const {
     register,

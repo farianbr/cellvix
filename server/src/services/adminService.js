@@ -23,7 +23,7 @@ import invoicePaymentService from './invoicePaymentService.js';
 import { activityFeed } from './activityService.js';
 import { AuditLog } from '../models/AuditLog.js';
 import { displayNameOf } from '../utils/displayName.js';
-import { renderInvoiceHtml } from './invoiceDocument.js';
+import { renderInvoiceHtml, resolveInvoiceBrand } from './invoiceDocument.js';
 import { renderStatementHtml } from './statementDocument.js';
 import { sendMail } from './mailer.js';
 import { BUSINESS_INFO } from '../../../shared/business.js';
@@ -258,7 +258,7 @@ async function stats({ from, to } = {}) {
     // sidebar badge unverifiable: it counted every product under 50 and read
     // 189, while the screen counted each against its own `minStock` and showed
     // 112. A badge that cannot be reconciled with any screen teaches the
-    // operator to ignore every badge.
+    // staff member to ignore every badge.
     //
     // `$expr` because the comparison is against a sibling field, which a plain
     // query cannot express.
@@ -532,7 +532,7 @@ function shapeUser(user) {
     approvedAt: user.approvedAt,
     lastLoginAt: user.lastLoginAt,
     createdAt: user.createdAt,
-    // Referral (§6.13). The code is what an operator reads out to a customer
+    // Referral (§6.13). The code is what a staff member reads out to a customer
     // who asks how to refer somebody; `referredBy` is read-only everywhere,
     // because attribution is set once at registration and never edited.
     referralCode: user.referralCode ?? null,
@@ -562,6 +562,18 @@ function shapeUser(user) {
         call: user.contactConsent?.call === true,
       },
     },
+
+    /**
+     * Which channel to reach them on, and where they came from.
+     *
+     * **Both are `null` when never recorded, not an empty string**, so the UI
+     * can say "not asked yet" rather than rendering a blank that reads as a
+     * missing value. `preferredContact` sits outside `consent` above because it
+     * is not consent: it is a preference, and it is honoured only where consent
+     * already allows the channel.
+     */
+    preferredContact: user.preferredContact ?? null,
+    source: user.source ?? null,
   };
 }
 
@@ -616,7 +628,7 @@ async function listUsers({ status, q } = {}) {
      * `balance` is what the account currently owes on its line of credit
      * an invoice raised yesterday on Net 30 is owed but perfectly in order.
      * Overdue is the unpaid remainder of invoices whose due date has passed,
-     * which is the figure an operator chases, and it matches the definition
+     * which is the figure a staff member chases, and it matches the definition
      * `listInvoices` already uses for its `overdue` filter.
      */
     db().Invoice.aggregate([
@@ -872,6 +884,10 @@ async function createUser(data, adminId) {
     businessType: data.businessType,
     website: data.website,
     taxId: data.taxId,
+    // `|| undefined` rather than the raw value: the form sends an empty string
+    // for "not asked yet", and an empty string is not one of the enum's values.
+    preferredContact: data.preferredContact || undefined,
+    source: data.source || undefined,
     creditLimit: data.creditLimit ?? 0,
     terms: data.terms ?? 'prepaid',
     addresses: data.address
@@ -957,7 +973,7 @@ async function createUser(data, adminId) {
  * changing it to one already in use would lock two accounts out of themselves.
  *
  * Fields absent from the payload are left alone; a field sent empty is cleared,
- * which is how an operator removes a tax ID they entered by mistake.
+ * which is how a staff member removes a tax ID they entered by mistake.
  */
 async function updateUser(id, data) {
   const user = await db().User.findById(id);
@@ -981,8 +997,16 @@ async function updateUser(id, data) {
     if (data[field] != null) user[field] = data[field];
   }
 
-  // Optional descriptors: an empty string is a deletion, not a value.
-  for (const field of ['businessType', 'website', 'taxId']) {
+  /**
+   * Optional descriptors: an empty string is a deletion, not a value.
+   *
+   * `preferredContact` and `source` belong here rather than in the loop above
+   * for exactly that reason. **Unset is a real state** - it means nobody has
+   * asked which channel the customer wants, or nobody recorded where they came
+   * from, and that is a different fact from having chosen email or walk-in. A
+   * staff member clearing either has to be able to put the record back to it.
+   */
+  for (const field of ['businessType', 'website', 'taxId', 'preferredContact', 'source']) {
     if (data[field] != null) user[field] = data[field] || undefined;
   }
 
@@ -1433,7 +1457,7 @@ async function listOrders({ status, q, business } = {}) {
  * One order, for the detail screen (§4b.6, phase 12).
  *
  * Looked up by `orderNumber` rather than id, because that is what a packing
- * slip, an invoice and a customer email all carry - an operator reading a
+ * slip, an invoice and a customer email all carry - a staff member reading a
  * number off paper should be able to type it into the URL.
  *
  * The linked invoice rides along so the screen can cross-link the two without a
@@ -1575,6 +1599,15 @@ function shapeAdminInvoice(invoice) {
     amount: invoice.amount,
     amountPaid: invoice.amountPaid,
     balance,
+    /**
+     * The gratuity, beside the total rather than inside it.
+     *
+     * `amount` is what the work cost and `balance` is what is still owed, and a
+     * tip is neither: it is money received that was never due. Sent as its own
+     * field so a screen can show it without any figure above it moving.
+     */
+    tipCents: invoice.tipCents ?? 0,
+    tipAt: invoice.tipAt ?? null,
     issuedAt: invoice.issuedAt,
     dueDate: invoice.dueDate,
     terms: invoice.terms,
@@ -1608,7 +1641,12 @@ function shapeAdminInvoice(invoice) {
     taxPercent: invoice.taxPercent ?? 0,
     province: invoice.province ?? null,
     travelKm: invoice.travelKm ?? 0,
+    // The allowance is sent as its own figure, beside the total rather than in
+    // it: it is the shop's cost for the journey, not a charge. The screen shows
+    // it that way, and a reader who added it to the total would be wrong.
+    travelAllowanceCents: invoice.travelAllowanceCents ?? 0,
     extendedServiceFee: Boolean(invoice.extendedServiceFee),
+    extendedServiceFeeCents: invoice.extendedServiceFeeCents ?? 0,
     serviceType: invoice.serviceType ?? null,
     // `internalNotes` is deliberately NOT here: it is the one note that never
     // leaves the building, and a field that reaches the client is a field that
@@ -1638,7 +1676,7 @@ const recomputeInvoice = invoicePaymentService.recompute;
  * What an itemised invoice adds up to.
  *
  * **The server owns this number.** The form shows a running total so the
- * operator can see what they are building, but that figure is a preview and is
+ * staff member can see what they are building, but that figure is a preview and is
  * discarded: PROJECT_INSTRUCTIONS is explicit that totals are recomputed
  * server-side and the client never sends a price. A browser that can name the
  * amount is a browser that can name a smaller one.
@@ -1652,6 +1690,22 @@ const recomputeInvoice = invoicePaymentService.recompute;
  * Everything is integer cents, rounded once at each boundary. Rounding per line
  * and again at the end is how a total ends up a cent off what the lines show.
  */
+/**
+ * What the technician's mileage came to, in integer cents.
+ *
+ * **Never part of the invoice total.** It is the shop's own cost for the
+ * journey, recorded so it can be claimed and reported on; what the customer
+ * pays for being out of area is the extended service fee, which is a separate
+ * ticked line that DOES land in the subtotal. Computing it here rather than in
+ * the form is the same rule every other figure follows - a client that could
+ * set it could overstate a mileage claim.
+ */
+function travelAllowanceCents(km, ratePerKm) {
+  const distance = Math.max(0, Number(km) || 0);
+  const rate = Number(ratePerKm) || 0;
+  return Math.round(distance * rate);
+}
+
 function invoiceTotals(body, { extendedServiceFeeCents = 0 } = {}) {
   const devices = body.devices ?? [];
 
@@ -1737,11 +1791,29 @@ async function createInvoice(body) {
   // Either way the amount stored is the one this function computed - the
   // client's is never trusted with it.
   const itemised = isItemised(body);
-  const totals = itemised
-    ? invoiceTotals(body, {
-        extendedServiceFeeCents: Math.round(Number(body.extendedServiceFeeDollars ?? 0) * 100),
-      })
-    : null;
+
+  /**
+   * Both travel figures come from the shop own settings, never the request.
+   *
+   * The fee is money the customer pays and the rate decides money the shop
+   * claims, so a client able to send either could overstate a mileage claim or
+   * undercharge an out-of-area visit. The form sends the DISTANCE; the rate
+   * and the fee are the business.
+   */
+  const settings = await db().Settings.load();
+  /**
+   * The fee is typed per invoice; the RATE is the business.
+   *
+   * An out-of-area call is priced by distance and awkwardness and is negotiated
+   * per job, so a fixed setting would be a number the counter has to work
+   * around. The mileage rate is the opposite - it is the CRA figure the shop
+   * claims at, identical on every journey, and a client able to send it could
+   * overstate a claim.
+   */
+  const feeCents = Math.round(Number(body.extendedServiceFeeDollars ?? 0) * 100);
+  const ratePerKm = Number(settings?.financial?.travelRateCentsPerKm ?? 0);
+
+  const totals = itemised ? invoiceTotals(body, { extendedServiceFeeCents: feeCents }) : null;
 
   const amount = itemised ? totals.totalCents : body.amount;
   if (!(amount > 0)) {
@@ -1792,7 +1864,9 @@ async function createInvoice(body) {
     discountCode: body.discountCode || undefined,
 
     travelKm: body.travelKm ?? 0,
+    travelAllowanceCents: travelAllowanceCents(body.travelKm, ratePerKm),
     extendedServiceFee: Boolean(body.extendedServiceFee),
+    extendedServiceFeeCents: body.extendedServiceFee ? feeCents : 0,
     serviceType: body.serviceType ?? 'walk_in',
     technician: body.technician || undefined,
 
@@ -1816,7 +1890,7 @@ async function createInvoice(body) {
  * so it is applied in the query as "not paid, and past due" - the dashboard
  * links straight here with it.
  */
-async function listInvoices({ status, q, from, to, business } = {}) {
+async function listInvoices({ status, q, from, to, business, numbers } = {}) {
   const now = new Date();
   const query = {};
   // Scoped to the business the panel is switched to, when it is switched to one.
@@ -1824,6 +1898,24 @@ async function listInvoices({ status, q, from, to, business } = {}) {
   // because a staff member's own business is binding and must not be widened by
   // editing a URL.
   if (business) query.business = business;
+
+  /**
+   * An explicit set of invoice numbers, for exporting a selection.
+   *
+   * **Narrowing only.** It sits alongside the business scope rather than
+   * replacing it, so a number from another shop cannot be read by putting it in
+   * the query string - the scope still applies and the row simply does not
+   * match. Capped, because this arrives as a URL parameter and an unbounded
+   * `$in` is a request somebody can make arbitrarily expensive.
+   */
+  if (numbers) {
+    const list = String(numbers)
+      .split(',')
+      .map((entry) => entry.trim())
+      .filter(Boolean)
+      .slice(0, 500);
+    if (list.length) query.number = { $in: list };
+  }
 
   if (status === 'overdue') {
     query.status = { $ne: 'paid' };
@@ -1933,6 +2025,33 @@ async function recordPayment(number, { amountDollars, at, method, reference }) {
   // Read back by the invoice's *current* number: settling a `due` record
   // renumbers it out of the `CVX-` series into `INV-`, so `number` as it
   // arrived may no longer resolve.
+  return getInvoice(invoice.number);
+}
+
+/**
+ * Record a gratuity on an invoice.
+ *
+ * Separate from `recordPayment` because a tip is separate money: it does not
+ * reduce what is owed and it is not part of what the work cost. See
+ * `invoicePaymentService.recordTip` for why both of those matter.
+ *
+ * `0` clears a tip recorded by mistake, which is why the amount is allowed to
+ * be zero here when a payment's may not.
+ */
+async function recordTip(number, { amountDollars, at } = {}) {
+  const invoice = await db().Invoice.findOne({ number });
+  if (!invoice) throw ApiError.notFound('Invoice not found.', 'INVOICE_NOT_FOUND');
+
+  const amount = Math.round(Number(amountDollars ?? 0) * 100);
+  if (!Number.isFinite(amount) || amount < 0) {
+    throw ApiError.badRequest('Enter a tip amount.', 'INVALID_AMOUNT');
+  }
+
+  await invoicePaymentService.recordTip(invoice, {
+    amount,
+    at: at ? new Date(`${at}T12:00:00`) : undefined,
+  });
+
   return getInvoice(invoice.number);
 }
 
@@ -2130,7 +2249,7 @@ async function userActivity(id) {
  * A batch is **partial by design**. One order that cannot make the move must
  * not fail the other forty, so each is attempted independently and the response
  * names what moved and what did not, with a reason per skip. The UI shows that
- * list - silently moving nineteen of twenty is how an operator comes to trust a
+ * list - silently moving nineteen of twenty is how a staff member comes to trust a
  * button that is lying to them.
  *
  * Bulk deliberately offers **no tracking field**: one tracking number across
@@ -2308,11 +2427,16 @@ async function invoiceDocument(number, { nonce } = {}) {
   const user = await db().User.findById(invoice.user).lean();
   if (!user) throw ApiError.notFound('Account not found.', 'USER_NOT_FOUND');
 
+  // The shop this invoice belongs to, so a repair customer is not handed a
+  // document in the wholesaler brand - see .
+  const brand = await resolveInvoiceBrand(invoice.business);
+
   return renderInvoiceHtml({
     invoice,
     order: invoice.order,
     user,
     nonce,
+    ...brand,
     /**
      * The **same** `origin` the buyer's own copy gets.
      *
@@ -2329,4 +2453,4 @@ async function invoiceDocument(number, { nonce } = {}) {
   });
 }
 
-export { stats, listUsers, getUser, userPayments, createUser, updateUser, setContactConsent, setTier, addInternalNote, deleteInternalNote, approveUser, rejectUser, setUserStatus, allocateStoreCredit, storeCreditStatement, refundOrder, setCredit, listProducts, createProduct, updateProduct, deactivateProduct, createOrder, listOrders, getOrder, updateOrderStatus, createInvoice, listInvoices, getInvoice, recordPayment, recordCreditPayment, voidInvoice, emailInvoice, reverseInvoicePayment, updateInvoice, deleteInvoice, userActivity, bulkUpdateOrderStatus, invoiceDocument, accountStatement };
+export { stats, listUsers, getUser, userPayments, createUser, updateUser, setContactConsent, setTier, addInternalNote, deleteInternalNote, approveUser, rejectUser, setUserStatus, allocateStoreCredit, storeCreditStatement, refundOrder, setCredit, listProducts, createProduct, updateProduct, deactivateProduct, createOrder, listOrders, getOrder, updateOrderStatus, createInvoice, listInvoices, getInvoice, recordPayment, recordTip, recordCreditPayment, voidInvoice, emailInvoice, reverseInvoicePayment, updateInvoice, deleteInvoice, userActivity, bulkUpdateOrderStatus, invoiceDocument, accountStatement };

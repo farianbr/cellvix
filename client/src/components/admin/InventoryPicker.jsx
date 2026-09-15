@@ -69,7 +69,7 @@ export function InventoryPicker({ value, onChange, autoFocus = false, className 
    * An exact barcode match commits itself.
    *
    * This is what separates scanning from searching: a scanner types the whole
-   * code and the operator's hands are already on the next box, so making them
+   * code and the staff member's hands are already on the next box, so making them
    * confirm a list of one defeats the point. Only an exact, unique match
    * auto-commits - a partial or ambiguous one still opens the list.
    */

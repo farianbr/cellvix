@@ -62,7 +62,7 @@ const quoteSchema = new mongoose.Schema(
     // **Expiry is honoured, not enforced by a job.** A quote is expired because
     // the date has passed, the same way an invoice is overdue - deriving it
     // means no nightly task exists whose only purpose is keeping a column
-    // honest. `status` still stores the terminal states an operator chose.
+    // honest. `status` still stores the terminal states a staff member chose.
     validUntil: Date,
 
     notes: { type: String, trim: true, maxlength: 2000 },

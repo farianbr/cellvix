@@ -17,6 +17,11 @@ import * as supplierServiceController from '../controllers/supplierServiceContro
 import * as reportController from '../controllers/reportController.js';
 import * as salesController from '../controllers/salesController.js';
 import * as ticketController from '../controllers/ticketController.js';
+import * as serviceCatalogController from '../controllers/serviceCatalogController.js';
+import * as serviceQuoteController from '../controllers/serviceQuoteController.js';
+import * as deviceCatalogController from '../controllers/deviceCatalogController.js';
+import * as kioskController from '../controllers/kioskController.js';
+import { requireKiosk } from '../middleware/kioskAuth.js';
 import * as contactController from '../controllers/contactController.js';
 import * as contentController from '../controllers/contentController.js';
 import * as reviewController from '../controllers/reviewController.js';
@@ -97,6 +102,7 @@ import {
   productSchema,
   orderStatusSchema,
   invoicePaymentSchema,
+  invoiceTipSchema,
   invoiceVoidSchema,
   invoiceUpdateSchema,
   webQuoteStatusSchema,
@@ -155,6 +161,17 @@ import {
   ticketStatusSchema,
   ticketDepositSchema,
   ticketConvertSchema,
+  serviceCatalogSchema,
+  serviceCatalogUpdateSchema,
+  serviceQuoteSchema,
+  serviceQuoteUpdateSchema,
+  serviceQuoteStatusSchema,
+  serviceQuoteConvertSchema,
+  deviceCatalogSchema,
+  deviceCatalogUpdateSchema,
+  kioskCheckInSchema,
+  kioskUnlockSchema,
+  kioskPinSchema,
   businessSchema,
   roleSchema,
   staffUserSchema,
@@ -486,6 +503,9 @@ router.get('/admin/invoices/:number', ...admin, requirePermission('sales', 'view
 // buyer route scopes its lookup to the signed-in user, so an admin needs this.
 router.get('/admin/invoices/:number/document', ...admin, requirePermission('sales', 'view'), adminController.invoiceDocument);
 router.post('/admin/invoices/:number/payments', ...admin, requirePermission('sales', 'full'), validate(invoicePaymentSchema), adminController.recordInvoicePayment);
+// A gratuity. Separate from a payment because it never reduces what is owed
+// and is not part of what the work cost - see invoicePaymentService.recordTip.
+router.patch('/admin/invoices/:number/tip', ...admin, requirePermission('sales', 'full'), validate(invoiceTipSchema), adminController.recordInvoiceTip);
 // Voiding forgives the balance and keeps the row: an invoice that vanishes
 // takes its own audit trail with it.
 router.post('/admin/invoices/:number/void', ...admin, requirePermission('sales', 'full'), validate(invoiceVoidSchema), adminController.voidInvoice);
@@ -615,15 +635,15 @@ router.get('/superadmin/businesses/:id/features', requireSuperAdmin, superAdminC
 router.patch('/superadmin/businesses/:id/features', requireSuperAdmin, validate(businessFeatureSchema), superAdminController.setBusinessFeature);
 
 // The tenant's own administrator. Sets no password - the owner receives an
-// invitation and chooses their own, so no credential passes through an
-// operator's hands. Rate-limited: it sends mail to an address somebody typed.
+// invitation and chooses their own, so no credential passes through a
+// staff member's hands. Rate-limited: it sends mail to an address somebody typed.
 router.post('/superadmin/tenants/:id/owner', requireSuperAdmin, authLimiter, validate(tenantOwnerSchema), superAdminController.createOwner);
 router.post('/superadmin/owners/:id/invite', requireSuperAdmin, authLimiter, superAdminController.resendOwnerInvite);
 
 // Stepping into a business (§4.5, invariant 9). Time-boxed, reason required,
 // and written into the target business's own audit trail on the way in and the
 // way out. `leave` is deliberately unguarded: a console session can expire
-// while an operator is inside a business, and they must still be able to get
+// while a staff member is inside a business, and they must still be able to get
 // out - the impersonation cookie is the authority there, and leaving with
 // nothing open is a no-op rather than an error.
 router.post('/superadmin/businesses/:id/impersonate', requireSuperAdmin, validate(impersonationSchema), superAdminController.enterBusiness);
@@ -757,12 +777,67 @@ router.post('/admin/tickets', ...admin, requireFeature('sales.tickets'), require
 router.get('/admin/tickets/:id', ...admin, requireFeature('sales.tickets'), requirePermission('sales', 'view'), ticketController.getTicket);
 router.patch('/admin/tickets/:id', ...admin, requireFeature('sales.tickets'), requirePermission('sales', 'full'), validate(ticketUpdateSchema), ticketController.updateTicket);
 router.patch('/admin/tickets/:id/status', ...admin, requireFeature('sales.tickets'), requirePermission('sales', 'full'), validate(ticketStatusSchema), ticketController.setTicketStatus);
+// Clears the kiosk review flag. Its own call, never a side effect of an edit.
+// The job label and the printable ticket, one route: `?kind=label` picks the
+// first. Read-level, because printing what is already on screen changes nothing.
+router.get('/admin/tickets/:id/document', ...admin, requireFeature('sales.tickets'), requirePermission('sales', 'view'), ticketController.ticketDocument);
+router.patch('/admin/tickets/:id/reviewed', ...admin, requireFeature('sales.tickets'), requirePermission('sales', 'full'), ticketController.markReviewed);
 router.delete('/admin/tickets/:id', ...admin, requireFeature('sales.tickets'), requirePermission('sales', 'full'), ticketController.deleteTicket);
 // Money taken before the invoice exists, and the conversion that turns a
 // finished repair into the invoice that bills it.
 router.post('/admin/tickets/:id/deposits', ...admin, requireFeature('sales.tickets'), requirePermission('sales', 'full'), validate(ticketDepositSchema), ticketController.recordDeposit);
 router.delete('/admin/tickets/:id/deposits/:depositId', ...admin, requireFeature('sales.tickets'), requirePermission('sales', 'full'), ticketController.removeDeposit);
 router.post('/admin/tickets/:id/convert', ...admin, requireFeature('sales.tickets'), requirePermission('sales', 'full'), validate(ticketConvertSchema), ticketController.convertToInvoice);
+
+// The repair service catalogue - the price list a quote or a ticket picks its
+// labour from. Read is 'view' because the pickers on those two forms need it;
+// editing the price list is 'full'.
+router.get('/admin/services', ...admin, requireFeature('sales.services'), requirePermission('sales', 'view'), serviceCatalogController.listServices);
+router.post('/admin/services', ...admin, requireFeature('sales.services'), requirePermission('sales', 'full'), validate(serviceCatalogSchema), serviceCatalogController.createService);
+router.get('/admin/services/:id', ...admin, requireFeature('sales.services'), requirePermission('sales', 'view'), serviceCatalogController.getService);
+router.patch('/admin/services/:id', ...admin, requireFeature('sales.services'), requirePermission('sales', 'full'), validate(serviceCatalogUpdateSchema), serviceCatalogController.updateService);
+// Refused for a service any quote or ticket points at - the service says so and
+// offers deactivation instead.
+router.delete('/admin/services/:id', ...admin, requireFeature('sales.services'), requirePermission('sales', 'full'), serviceCatalogController.deleteService);
+
+// The devices a service business takes in. A separate tree from the catalogue
+// taxonomy: that one prunes every branch with no products under it, which would
+// erase a repair shop's device list entirely. See models/DeviceCatalog.js.
+// Read is 'view' because the ticket and quote pickers need it.
+router.get('/admin/devices', ...admin, requireFeature('sales.devices'), requirePermission('sales', 'view'), deviceCatalogController.getTree);
+router.get('/admin/devices/list', ...admin, requireFeature('sales.devices'), requirePermission('sales', 'view'), deviceCatalogController.listNodes);
+router.post('/admin/devices', ...admin, requireFeature('sales.devices'), requirePermission('sales', 'full'), validate(deviceCatalogSchema), deviceCatalogController.createNode);
+router.patch('/admin/devices/:id', ...admin, requireFeature('sales.devices'), requirePermission('sales', 'full'), validate(deviceCatalogUpdateSchema), deviceCatalogController.updateNode);
+// Refused for a node with children or one any ticket or estimate names.
+router.delete('/admin/devices/:id', ...admin, requireFeature('sales.devices'), requirePermission('sales', 'full'), deviceCatalogController.deleteNode);
+
+// --- kiosk (self-service check-in) ---------------------------------------------
+// A tablet on the counter. NOT an admin surface and NOT a user session: nobody
+// signs in, and the cookie says only that staff entered the shop PIN today.
+// Config and unlock are public - a locked tablet has to be able to draw its own
+// lock screen and answer the PIN.
+router.get('/kiosk/config', kioskController.getConfig);
+router.post('/kiosk/unlock', validate(kioskUnlockSchema), kioskController.unlock);
+router.post('/kiosk/lock', kioskController.lock);
+// Behind the session. The device tree is the shop's own list, and a check-in
+// writes a partial ticket flagged for staff review.
+router.get('/kiosk/devices', requireKiosk, kioskController.getDevices);
+router.post('/kiosk/check-in', requireKiosk, validate(kioskCheckInSchema), kioskController.checkIn);
+// Setting the PIN is an admin action and never reachable from the tablet.
+router.put('/admin/kiosk/pin', ...admin, requirePermission('settings', 'full'), validate(kioskPinSchema), kioskController.setPin);
+// Repair estimates - the service side of Sales § Quote. Gated on the SAME
+// 'sales.quotes' flag as the wholesale quote list: they are one section in the
+// nav, and a business sees whichever kind its own records are. Under
+// database-per-business the two can never appear in one list.
+router.get('/admin/service-quotes', ...admin, requireFeature('sales.quotes'), requirePermission('sales', 'view'), serviceQuoteController.listQuotes);
+router.post('/admin/service-quotes', ...admin, requireFeature('sales.quotes'), requirePermission('sales', 'full'), validate(serviceQuoteSchema), serviceQuoteController.createQuote);
+router.get('/admin/service-quotes/:id', ...admin, requireFeature('sales.quotes'), requirePermission('sales', 'view'), serviceQuoteController.getQuote);
+router.patch('/admin/service-quotes/:id', ...admin, requireFeature('sales.quotes'), requirePermission('sales', 'full'), validate(serviceQuoteUpdateSchema), serviceQuoteController.updateQuote);
+router.patch('/admin/service-quotes/:id/status', ...admin, requireFeature('sales.quotes'), requirePermission('sales', 'full'), validate(serviceQuoteStatusSchema), serviceQuoteController.setQuoteStatus);
+router.delete('/admin/service-quotes/:id', ...admin, requireFeature('sales.quotes'), requirePermission('sales', 'full'), serviceQuoteController.deleteQuote);
+// Accepted, the customer arrived with the device, work starts. Needs tickets
+// as well as quotes: it creates one.
+router.post('/admin/service-quotes/:id/convert', ...admin, requireFeature('sales.quotes'), requireFeature('sales.tickets'), requirePermission('sales', 'full'), validate(serviceQuoteConvertSchema), serviceQuoteController.convertToTicket);
 
 // --- businesses, roles & staff (phase 8) ---------------------------------------
 // Businesses are an ordinary permissioned area. Roles and user accounts are NOT:
@@ -908,7 +983,7 @@ router.patch('/admin/settings/payment-methods', ...admin, requirePermission('set
 router.patch('/admin/settings/inventory', ...admin, requirePermission('settings', 'full'), validate(inventorySettingsSchema), settingsController.updateInventory);
 
 // Supplier agreements - the documents authored here and signed in the portal.
-// Filed under `settings` like the rest of what an operator configures; reading
+// Filed under `settings` like the rest of what a staff member configures; reading
 // one is `settings: view`, writing is `settings: full`.
 router.get('/admin/agreements', ...admin, requirePermission('settings', 'view'), agreementController.listTemplates);
 router.post('/admin/agreements', ...admin, requirePermission('settings', 'full'), validate(agreementTemplateSchema), agreementController.createTemplate);

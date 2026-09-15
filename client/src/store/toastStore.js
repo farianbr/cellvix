@@ -11,7 +11,7 @@ import { create } from 'zustand';
  * announces, it is not part of the layout, and it goes away on its own.
  *
  * **A toast is for something that already happened.** It never asks a question
- * and never carries the only copy of information the operator needs - anything
+ * and never carries the only copy of information the staff member needs - anything
  * they must act on belongs on the page, not in a message that disappears after
  * four seconds. A failure that needs a decision is a dialog; a failure that is
  * merely news is a toast with `tone: 'danger'`, which does not auto-dismiss.

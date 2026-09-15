@@ -90,8 +90,8 @@ export function AdminWebQuotesPage() {
    * Opening an enquiry only opens it.
    *
    * Status is set by hand, never as a side effect of looking. Skimming a
-   * message is not the same act as deciding the queue has dealt with it - an
-   * operator who opens an enquiry and leaves it for somebody better placed to
+   * message is not the same act as deciding the queue has dealt with it - a
+   * staff member who opens an enquiry and leaves it for somebody better placed to
    * answer has not worked that row, and a status that moved itself under them
    * drops it out of the filter they were working from. Every move is a
    * deliberate click: the row menu, or the drawer's own buttons.
@@ -114,7 +114,7 @@ export function AdminWebQuotesPage() {
    * The quote form opens seeded with the enquirer and the enquiry keeps the
    * status it had. Closing it here would be the app deciding an enquiry was
    * answered because a form was opened, and a quote abandoned half-written
-   * would leave the queue claiming work that never happened. The operator
+   * would leave the queue claiming work that never happened. The staff member
    * closes the row when the quote actually goes out.
    */
   function convert(row) {
@@ -374,7 +374,7 @@ export function AdminWebQuotesPage() {
 
             <div className="flex flex-wrap justify-end gap-2 border-t border-line pt-4">
               {/* Opening no longer marks anything read, so the drawer has to
-                  carry that move itself - the operator is here, not on the row
+                  carry that move itself - the staff member is here, not on the row
                   menu they came from. */}
               {reading.status === 'new' && (
                 <Button

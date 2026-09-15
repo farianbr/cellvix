@@ -78,7 +78,7 @@ async function nextReturnNumber() {
  *
  * Stops counting once the return closes, exactly as RMA age does: a claim
  * settled in two days should not still be accruing age six months later, and a
- * closed row shouting for attention teaches an operator to ignore the column.
+ * closed row shouting for attention teaches a staff member to ignore the column.
  */
 function ageOf(row, slaDays) {
   const closed = ['credited', 'rejected'].includes(row.status);

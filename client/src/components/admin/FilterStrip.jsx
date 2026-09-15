@@ -9,7 +9,7 @@ import useOnClickOutside from '@/hooks/useOnClickOutside';
  * search · segmented pills with counts · `Filters ▾` · `Export ▾`.
  *
  * Pills are the primary filter and carry their counts, because "Pending (3)" is
- * the number an operator is actually looking for. `Filters ▾` holds the long
+ * the number a staff member is actually looking for. `Filters ▾` holds the long
  * tail - province, terms, date - in a popover, so the strip stays one line.
  *
  * **Export honours the current filters.** The component passes them to the
@@ -83,7 +83,7 @@ export function FilterStrip({
    *
    * For a board with eight or nine statuses - the ticket queue - squeezing them
    * onto one line with a search box and two menus means they scroll sideways,
-   * and a filter an operator has to scroll to find is one they stop using. A
+   * and a filter a staff member has to scroll to find is one they stop using. A
    * list with four pills reads better on a single line, so this is opt-in
    * rather than the default.
    */

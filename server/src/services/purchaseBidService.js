@@ -165,7 +165,7 @@ function shapeBids(po) {
        *
        * Sent with the board rather than fetched when a row is expanded: it is
        * cheap, it is derived from data already loaded, and a preview that
-       * arrives a beat after the panel opens is one an operator scrolls past
+       * arrives a beat after the panel opens is one a staff member scrolls past
        * before it renders. `null` once accepted - the order already matches, so
        * there is nothing left to preview.
        */
@@ -776,7 +776,7 @@ async function confirmSupplier(id, { supplierId, expectedDate, note } = {}) {
 /**
  * What accepting a supplier's proforma would do to this order, line by line.
  *
- * **Computed before the write and shown to the operator**, because accepting a
+ * **Computed before the write and shown to the staff member**, because accepting a
  * PI rewrites the order's lines and a rewrite nobody previewed is one nobody
  * agreed to. A supplier who short-ships one line and rounds another up to a
  * case pack is normal, not exceptional - but it changes what we pay, what we
@@ -938,7 +938,7 @@ async function acceptProforma(id, { supplierId, acceptedBy } = {}) {
    * `diffProforma` is where the legacy fallback lives - a PI raised before line
    * detail existed has no `lines`, and reading those straight off the document
    * would empty the order rather than leave it as quoted. Going through the
-   * diff means the rows an operator was shown are exactly the rows that get
+   * diff means the rows a staff member was shown are exactly the rows that get
    * written, which is the only way the preview can be trusted.
    */
   const keep = new Map(

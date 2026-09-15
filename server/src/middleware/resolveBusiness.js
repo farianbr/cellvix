@@ -14,7 +14,7 @@ import Business from '../models/Business.js';
  * ## Resolution order, most explicit first
  *
  * 1. **An impersonation grant.** Already pinned by `impersonationAuth`, and it
- *    outranks everything: an operator inside one business must not reach
+ *    outranks everything: a staff member inside one business must not reach
  *    another by editing a host header or a query string.
  * 2. **`X-Business` header.** Development and internal tooling. Trusted because
  *    it is *not* an authorisation - it selects which business to serve, and

@@ -64,7 +64,7 @@ const TIMEZONES = [
 
 const provinceName = (code) => PROVINCES.find((p) => p.value === code)?.label ?? code;
 
-/** Fraction to the percentage an operator types, without float dust: 0.14975 → 14.975. */
+/** Fraction to the percentage a staff member types, without float dust: 0.14975 → 14.975. */
 const toPercent = (fraction) => String(Math.round(fraction * 1e6) / 1e4);
 const toFraction = (percent) => Math.round(Number(percent) * 1e4) / 1e6;
 
@@ -90,13 +90,15 @@ export function AdminSaleSettingsPage() {
       timezone: 'America/Toronto',
       defaultDueDays: 30,
       rmaSlaDays: 14,
+      // Cents, not dollars: the CRA rate carries a tenth of a cent.
+      travelRateCentsPerKm: 56.7,
       warrantyByGrade: {},
       warrantyBonusByTier: {},
     },
   });
 
   // The tax table is held outside RHF: it is a fixed-length grid of rows keyed
-  // by province, not a list the operator adds to, and a field array would buy
+  // by province, not a list the staff member adds to, and a field array would buy
   // nothing over a plain object keyed on the province code.
   const [rates, setRates] = useState({});
   const [ratesDirty, setRatesDirty] = useState(false);
@@ -108,6 +110,7 @@ export function AdminSaleSettingsPage() {
       timezone: data.financial.timezone,
       defaultDueDays: data.financial.defaultDueDays,
       rmaSlaDays: data.operations?.rmaSlaDays ?? 14,
+      travelRateCentsPerKm: data.financial?.travelRateCentsPerKm ?? 56.7,
       warrantyByGrade: Object.fromEntries(
         GRADE_ORDER.map((grade) => [grade, data.financial.warrantyByGrade?.[grade] ?? 0]),
       ),
@@ -147,6 +150,7 @@ export function AdminSaleSettingsPage() {
         timezone: next.financial.timezone,
         defaultDueDays: next.financial.defaultDueDays,
         rmaSlaDays: next.operations?.rmaSlaDays ?? 14,
+        travelRateCentsPerKm: next.financial?.travelRateCentsPerKm ?? 56.7,
         warrantyByGrade: Object.fromEntries(
           GRADE_ORDER.map((grade) => [grade, next.financial.warrantyByGrade?.[grade] ?? 0]),
         ),
@@ -239,6 +243,17 @@ export function AdminSaleSettingsPage() {
               hint="How long an RMA may sit before it is flagged as overdue."
               error={errors.rmaSlaDays?.message}
               {...register('rmaSlaDays')}
+            />
+            <Input
+              type="number"
+              step="0.1"
+              min="0"
+              max="1000"
+              label="Travel rate"
+              suffix="¢/km"
+              hint="What a kilometre is worth on an on-site repair. Internal cost, never billed - the service fee on the invoice is what a customer pays."
+              error={errors.travelRateCentsPerKm?.message}
+              {...register('travelRateCentsPerKm')}
             />
           </div>
         </Panel>

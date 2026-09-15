@@ -57,7 +57,7 @@ async function getPublishedForProduct(productId) {
 /**
  * The admin list: every product, with whatever article state it has.
  *
- * Driven from PRODUCTS rather than from articles, because the operator's
+ * Driven from PRODUCTS rather than from articles, because the staff member's
  * question is "which parts still need one" and a list of existing articles
  * cannot answer it. The articles are fetched in one query and joined in memory
  * rather than per row: this is two round trips regardless of how many products
@@ -143,7 +143,7 @@ async function getForAdmin(productId) {
  *
  * `findOneAndUpdate` with `upsert` rather than a read-then-write: the unique
  * index makes a concurrent double-save a duplicate-key error otherwise, and two
- * operators on the same product is a normal thing rather than a race worth
+ * staff on the same product is a normal thing rather than a race worth
  * failing on.
  *
  * `readMinutes` and `publishedAt` are computed here rather than left to the

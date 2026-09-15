@@ -1,6 +1,45 @@
+import { randomBytes } from 'node:crypto';
+
 import { asyncHandler } from '../utils/ApiError.js';
 import * as ticketService from '../services/ticketService.js';
 import auditService from '../services/auditService.js';
+
+/**
+ * The job label and the ticket document.
+ *
+ * Same per-response CSP as the invoice document, and for the same reason:
+ * Helmet's global policy forbids inline script, each page needs exactly one
+ * line of it for its print button, and loosening the policy app-wide to serve
+ * two documents would be the wrong trade. Nothing loads; the one nonced script
+ * may run.
+ *
+ * `kind` picks the render. They share a route because they share a record, a
+ * lookup and this entire security preamble - two routes would be two places to
+ * keep that in step.
+ */
+const ticketDocument = asyncHandler(async (req, res) => {
+  const nonce = randomBytes(16).toString('base64');
+
+  const html = await ticketService.ticketDocumentHtml(req.params.id, {
+    kind: req.query.kind === 'label' ? 'label' : 'document',
+    size: req.query.size,
+    nonce,
+    businessId: req.businessScope,
+  });
+
+  res.setHeader(
+    'Content-Security-Policy',
+    [
+      "default-src 'none'",
+      "style-src 'unsafe-inline'",
+      'img-src data:',
+      `script-src 'nonce-${nonce}'`,
+      "base-uri 'none'",
+      "form-action 'none'",
+    ].join('; '),
+  );
+  res.type('html').send(html);
+});
 
 /**
  * Repair tickets (Sales § Ticket).
@@ -28,6 +67,18 @@ const updateTicket = asyncHandler(async (req, res) => {
 
 const setTicketStatus = asyncHandler(async (req, res) => {
   res.json(await ticketService.setTicketStatus(req.params.id, req.body, req.user._id));
+});
+
+/**
+ * A person has finished a kiosk check-in.
+ *
+ * Deliberately its own call rather than a side effect of editing: a staff member
+ * who priced the job and assigned a technician has reviewed it, one who fixed a
+ * typo has not, and a flag clearing itself on any edit would empty the queue
+ * without anybody having looked at the device.
+ */
+const markReviewed = asyncHandler(async (req, res) => {
+  res.json(await ticketService.markReviewed(req.params.id, req.user._id));
 });
 
 /**
@@ -93,6 +144,8 @@ export {
   createTicket,
   updateTicket,
   setTicketStatus,
+  markReviewed,
+  ticketDocument,
   deleteTicket,
   recordDeposit,
   removeDeposit,

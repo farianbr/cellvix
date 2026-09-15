@@ -52,7 +52,7 @@ const CONNECTIONS = [
 export function AdminThirdPartyPage() {
   // Read only to show whether the Google API key is set - a different
   // credential from these OAuth grants, and worth distinguishing on screen so
-  // an operator who has set one does not think they have set the other.
+  // a staff member who has set one does not think they have set the other.
   const { data } = useAdminCredentials();
   const googleKey = data?.providers?.find((provider) => provider.provider === 'google');
 

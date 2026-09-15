@@ -18,7 +18,7 @@ import Button from '@/components/ui/Button';
  * is exactly the mistake the single form exists to prevent.
  */
 
-/** Payment terms, in the order an operator reads them. */
+/** Payment terms, in the order a staff member reads them. */
 export const TERMS = [
   { value: 'prepaid', label: 'Prepaid - pay at checkout' },
   { value: 'net15', label: 'Net 15' },
@@ -27,7 +27,7 @@ export const TERMS = [
 ];
 
 /** Two letters for the summary's avatar. Mirrors the queue card's own mark, so
- *  the modal opens on something the operator recognises from the card. */
+ *  the modal opens on something the staff member recognises from the card. */
 function initials(name = '') {
   return name
     .split(/\s+/)
@@ -71,7 +71,7 @@ export function ApproveClientForm({ user, onSubmit, onCancel, isPending, error }
     >
       {/* Who is being approved, stated before the terms are set.
 
-          The operator arrives here from a card or a bell and is about to extend
+          The staff member arrives here from a card or a bell and is about to extend
           credit to a business - the summary has to carry enough that they are
           not approving a name they cannot place. `displayName` labels the
           account, never `businessName` directly: an account is identified by

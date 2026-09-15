@@ -86,7 +86,7 @@ const NEXT_LABEL = {
  *
  * **No cost field.** The credit a supplier owes is what was paid for the part,
  * which the server snapshots from the purchase order (or the product, when a
- * fault surfaces without paperwork). Letting an operator type it would make the
+ * fault surfaces without paperwork). Letting a staff member type it would make the
  * expected credit an opinion rather than a record.
  */
 function ReturnForm({ suppliers, purchaseOrders, products, onSubmit, onCancel, isPending, error }) {

@@ -144,7 +144,7 @@ const me = asyncHandler(async (req, res) => {
      *
      * Reported here rather than on a route of its own because every screen
      * already asks this question on first paint, and the banner has to be able
-     * to appear on **any** of them - an operator who navigates deep into a
+     * to appear on **any** of them - a platform operator who navigates deep into a
      * panel must not lose the one control that gets them out. `null` for
      * everybody else, which is the overwhelming majority of requests.
      */

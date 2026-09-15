@@ -28,7 +28,7 @@ const ARROW_CLASS = cn(
 
 /**
  * @param {boolean} [hideWhenSingle] Collapse to nothing at one page. Off by
- *   default: a lone "1" tells an operator they are looking at the whole set,
+ *   default: a lone "1" tells a staff member they are looking at the whole set,
  *   and a control that disappears at small row counts makes the foot of a
  *   table change shape for no reason the reader can see. Pass it where the
  *   surrounding layout genuinely has no room.

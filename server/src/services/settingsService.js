@@ -47,7 +47,7 @@ const TAX_KINDS = new Set(['GST', 'HST', 'GST+PST', 'GST+QST']);
  * **This is the honest half of the Email Settings screen.** §6.15 lists eleven
  * toggles; three of them currently sit in front of live code and the rest
  * describe email paths nobody has written yet. Presenting all eleven identically
- * would have an operator switch one on, assume customers are being emailed, and
+ * would have a staff member switch one on, assume customers are being emailed, and
  * find out otherwise from a customer.
  *
  * A toggle flips to `true` here the moment its send path lands - one edit, and
@@ -121,8 +121,19 @@ async function get() {
         ? doc.financial.shippingMethods
         : DEFAULT_SHIPPING_METHODS,
       // Read-only here. Shown so the Financial screens can say where it lives
-      // rather than leaving an operator hunting for it.
+      // rather than leaving an admin hunting for it.
       referralPercent: doc.financial?.referralPercent ?? 5,
+
+      /**
+       * What a kilometre of travel is worth, in cents.
+       *
+       * **Defaulted here as well as on the schema.** The schema default only
+       * applies to a document being created; every business already had a
+       * settings record, so those carry `undefined` and the invoice form read
+       * the rate as 0 - showing "$0.00/km" and calculating no allowance at all.
+       * A read shape that whitelists fields has to default each one it adds.
+       */
+      travelRateCentsPerKm: doc.financial?.travelRateCentsPerKm ?? 56.7,
     },
     inventory: {
       defaultMarkupPercent: doc.inventory?.defaultMarkupPercent ?? 40,
@@ -250,6 +261,11 @@ async function updateSale(input) {
       ...(input.warrantyBonusByTier ?? {}),
     },
     'operations.rmaSlaDays': input.rmaSlaDays,
+    // Optional on the form, so an older payload that omits it must not write
+    // `undefined` over a rate somebody already set.
+    ...(input.travelRateCentsPerKm === undefined
+      ? {}
+      : { 'financial.travelRateCentsPerKm': input.travelRateCentsPerKm }),
   });
 }
 
@@ -260,7 +276,7 @@ async function updateSale(input) {
  * validates `deliveryMethod` against a fixed enum in
  * `shared/schemas/checkout.js`, so a fourth band invented here would be
  * unselectable, and deleting one would break every order that already names it.
- * What is editable is the part an operator actually needs to change - the
+ * What is editable is the part a staff member actually needs to change - the
  * label, the description, the price and the free-shipping threshold.
  */
 async function updateShipping(input) {
@@ -329,8 +345,8 @@ async function updatePaymentMethods(input) {
  *
  * Pre-fills the New Product form and nothing else. Changing a default never
  * reprices the catalogue - a per-product value always wins - and the screen
- * says so, because "did I just change every price" is the first thing an
- * operator will wonder.
+ * says so, because "did I just change every price" is the first thing a
+ * staff member will wonder.
  */
 async function updateInventory(input) {
   return patch({

@@ -237,7 +237,7 @@ const listOrders = asyncHandler(async (req, res) => {
 });
 
 const createOrder = asyncHandler(async (req, res) => {
-  // The body's business wins - it is the fulfilling shop the operator chose
+  // The body's business wins - it is the fulfilling shop the staff member chose
   // and the current scope is the fallback for the usual case where they did
   // not change it.
   const order = await adminService.createOrder({
@@ -367,6 +367,27 @@ const recordInvoicePayment = asyncHandler(async (req, res) => {
   });
 
   res.status(201).json(result);
+});
+
+/**
+ * A gratuity. Audited like a payment, because it is money the shop received
+ * even though it never touches what the customer owed.
+ */
+const recordInvoiceTip = asyncHandler(async (req, res) => {
+  const result = await adminService.recordTip(req.params.number, req.body);
+  const invoice = result?.invoice ?? result;
+
+  await auditService.record({
+    req,
+    action: 'invoice.tip',
+    entity: { kind: 'invoice', id: req.params.number, label: req.params.number },
+    after: { tipDollars: req.body?.amountDollars ?? 0, tipCents: invoice?.tipCents ?? 0 },
+    description: Number(req.body?.amountDollars ?? 0)
+      ? `Recorded a tip on ${req.params.number}.`
+      : `Cleared the tip on ${req.params.number}.`,
+  });
+
+  res.json(result);
 });
 
 const voidInvoice = asyncHandler(async (req, res) => {
@@ -539,4 +560,4 @@ const accountStatement = asyncHandler(async (req, res) => {
   );
   res.type('html').send(html);
 });
-export { stats, listUsers, createUser, getUser, userPayments, updateUser, setContactConsent, setTier, addInternalNote, deleteInternalNote, approveUser, rejectUser, setUserStatus, setCredit, listProducts, createProduct, updateProduct, toggleProduct, listOrders, createOrder, getOrder, updateOrderStatus, allocateStoreCredit, storeCreditStatement, refundOrder, listInvoices, createInvoice, getInvoice, recordInvoicePayment, recordCreditPayment, voidInvoice, emailInvoice, reverseInvoicePayment, updateInvoice, deleteInvoice, userActivity, bulkUpdateOrderStatus, invoiceDocument, accountStatement };
+export { stats, listUsers, createUser, getUser, userPayments, updateUser, setContactConsent, setTier, addInternalNote, deleteInternalNote, approveUser, rejectUser, setUserStatus, setCredit, listProducts, createProduct, updateProduct, toggleProduct, listOrders, createOrder, getOrder, updateOrderStatus, allocateStoreCredit, storeCreditStatement, refundOrder, listInvoices, createInvoice, getInvoice, recordInvoicePayment, recordInvoiceTip, recordCreditPayment, voidInvoice, emailInvoice, reverseInvoicePayment, updateInvoice, deleteInvoice, userActivity, bulkUpdateOrderStatus, invoiceDocument, accountStatement };

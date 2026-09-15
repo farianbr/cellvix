@@ -80,7 +80,7 @@ const remove = asyncHandler(async (req, res) => {
  * Runs the active rules now.
  *
  * `?dryRun=true` reports what would be sent without sending or recording - the
- * safe way to try this against a live database, and what an operator wants
+ * safe way to try this against a live database, and what a staff member wants
  * before switching a rule on. A dry run is not audited, because it changes
  * nothing.
  */

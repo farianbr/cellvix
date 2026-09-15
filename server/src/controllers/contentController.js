@@ -96,7 +96,7 @@ const adminDeleteOffer = asyncHandler(async (req, res) => {
 //
 // Authored under SEO beside the blog and the FAQ, and rendered on ONE product
 // page. The list is driven from products rather than from articles, because the
-// operator question is "which parts still need one".
+// staff member question is "which parts still need one".
 
 const adminListArticles = asyncHandler(async (req, res) => {
   res.json(await productArticleService.listForAdmin(req.query));

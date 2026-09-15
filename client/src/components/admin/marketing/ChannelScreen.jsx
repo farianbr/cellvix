@@ -37,7 +37,7 @@ import cn from '@/lib/cn';
  *
  * **What makes this honest rather than a stub.** Composing on an unconfigured
  * channel is not blocked: the message is written to contact history, which is
- * the thing the operator actually needs from day one. What is refused is
+ * the thing the staff member actually needs from day one. What is refused is
  * *pretending* - the notice above the form says sending is off, and after a
  * save the screen reports what the server said happened rather than a
  * confirmation of its own (§6b rules 1 and 4).
@@ -223,7 +223,7 @@ export function ChannelScreen({
         {(status?.delivers ?? status?.configured) && hint && <ChannelHint>{hint}</ChannelHint>}
 
         {/* Compose beside history on a laptop; stacked below that, compose
-            first - the form is what the operator came for. */}
+            first - the form is what the staff member came for. */}
         <div className="grid gap-4 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)]">
           <Panel title={submitLabel}>
             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-3.5">

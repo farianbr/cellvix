@@ -16,7 +16,7 @@ export function Panel({
    * A lucide glyph beside the title, in flat brand.
    *
    * A stack of panels whose headings are all the same weight of ink gives the
-   * eye no way to find one section again - the operator re-reads every heading
+   * eye no way to find one section again - the staff member re-reads every heading
    * on every visit. The glyph is the thing they actually navigate by, and it is
    * the panel's only colour, so it locates the section without turning the
    * header into a second focus of attention.

@@ -53,7 +53,7 @@ export function usePlans() {
 /**
  * Support sessions - the history, and who is inside a business right now.
  *
- * `live` narrows it to open grants. Polled rather than left stale: an operator
+ * `live` narrows it to open grants. Polled rather than left stale: a staff member
  * elsewhere entering or leaving a business is exactly the kind of change this
  * screen exists to show, and a console that needed a manual refresh to notice
  * would be answering yesterday's question.
@@ -119,7 +119,7 @@ export function useSuperAdminMutations() {
       mutationFn: () => api.post('/superadmin/logout', {}),
       onSuccess: () => {
         queryClient.setQueryData(ME, { admin: null });
-        // Cleared rather than refetched: the next operator to sign in on this
+        // Cleared rather than refetched: the next staff member to sign in on this
         // browser must not see the previous one's tenants for even a frame.
         queryClient.removeQueries({ queryKey: ['superadmin', 'tenants'] });
       },

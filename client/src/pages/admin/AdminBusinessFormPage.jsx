@@ -4,6 +4,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { AlertCircle, Building2, Mail, MapPin, Phone, UserRound } from 'lucide-react';
 import { businessSchema, BUSINESS_COLOR_TOKENS } from '@shared/schemas/admin';
+import { paletteFor, DEFAULT_BUSINESS_COLOR } from '@shared/businessPalette.js';
 import AddressFields from '@/components/admin/AddressFields';
 import Panel from '@/components/ui/Panel';
 import Input from '@/components/ui/Input';
@@ -19,48 +20,18 @@ import cn from '@/lib/cn';
 import { pressable } from '@/lib/motion';
 
 /**
- * Add / edit an business (§6.14) - form on the left, **live preview card** on the
- * right showing exactly how it will appear in the list.
+ * The swatches are painted from the palette's own hex, not from Tailwind
+ * classes.
  *
- * The preview is the reason the colour picker is worth having: a token name
- * means nothing until you see the card it produces, and the operator is
- * choosing an identity they will navigate by, not a decoration.
+ * They used to be a map of "bg-info" / "bg-ok" / "bg-warn" strings, which
+ * worked only while the identity tokens WERE the semantic ones. The identity
+ * colours have no utility classes of their own and deliberately should not -
+ * generating six more ramps into the stylesheet to draw six 16px dots is a lot
+ * of CSS for a preview, and "paletteFor" already holds the values.
  */
-const COLOR_BORDER = {
-  brand: 'border-t-brand',
-  info: 'border-t-info',
-  success: 'border-t-ok',
-  warn: 'border-t-warn',
-  danger: 'border-t-danger',
-  ink: 'border-t-ink-300',
-};
-
-const COLOR_WASH = {
-  brand: 'bg-brand-50 text-brand',
-  info: 'bg-info-50 text-info',
-  success: 'bg-ok-50 text-ok',
-  warn: 'bg-warn-50 text-warn',
-  danger: 'bg-danger-50 text-danger',
-  ink: 'bg-surface-2 text-ink-500',
-};
-
-const COLOR_DOT = {
-  brand: 'bg-brand',
-  info: 'bg-info',
-  success: 'bg-ok',
-  warn: 'bg-warn',
-  danger: 'bg-danger',
-  ink: 'bg-ink-300',
-};
-
-const COLOR_LABEL = {
-  brand: 'Brand',
-  info: 'Info',
-  success: 'Positive',
-  warn: 'Warning',
-  danger: 'Critical',
-  ink: 'Neutral',
-};
+function swatchStyle(token) {
+  return { backgroundColor: paletteFor(token).base };
+}
 
 const STATUS_TONE = { active: 'ok', inactive: 'neutral', maintenance: 'warn' };
 const STATUS_LABEL = { active: 'Active', inactive: 'Inactive', maintenance: 'Maintenance' };
@@ -75,25 +46,35 @@ const DAYS = [
   { key: 'sun', label: 'Sunday' },
 ];
 
+/**
+ * Add / edit a business (§6.14) - form on the left, **live preview card** on
+ * the right showing exactly how it will appear in the list.
+ *
+ * The preview is the reason the colour picker is worth having: a token name
+ * means nothing until you see the card it produces, and the staff member is
+ * choosing an identity they will navigate by, not a decoration. It matters
+ * more now than it did - the colour is the whole panel's accent, not just this
+ * card's top border.
+ */
 function PreviewCard({ values, code }) {
-  const token = values.colorToken ?? 'brand';
+  const token = values.colorToken ?? DEFAULT_BUSINESS_COLOR;
   const address = [values.address?.street, values.address?.city, values.address?.region, values.address?.postal]
     .filter(Boolean)
     .join(', ');
 
+  // The preview shows the accent the panel will actually wear, so it reads the
+  // same ramp the shell does rather than approximating it with a tint class.
+  const ramp = paletteFor(token);
+
   return (
     <article
-      className={cn(
-        'rounded-lg border border-line border-t-[3px] bg-surface p-4',
-        COLOR_BORDER[token] ?? COLOR_BORDER.ink,
-      )}
+      className="rounded-lg border border-line border-t-[3px] bg-surface p-4"
+      style={{ borderTopColor: ramp.base }}
     >
       <div className="flex items-start gap-3">
         <span
-          className={cn(
-            'flex size-10 shrink-0 items-center justify-center rounded-md',
-            COLOR_WASH[token] ?? COLOR_WASH.ink,
-          )}
+          className="flex size-10 shrink-0 items-center justify-center rounded-md"
+          style={{ backgroundColor: ramp.c50, color: ramp.base }}
         >
           <Building2 className="size-5" strokeWidth={1.5} aria-hidden="true" />
         </span>
@@ -154,7 +135,7 @@ export function AdminBusinessFormPage() {
     defaultValues: {
       name: '',
       status: 'active',
-      colorToken: 'brand',
+      colorToken: DEFAULT_BUSINESS_COLOR,
       address: { street: '', line2: '', city: '', region: 'ON', postal: '', country: 'Canada' },
       phone: '',
       email: '',
@@ -169,7 +150,7 @@ export function AdminBusinessFormPage() {
     reset({
       name: existing.name ?? '',
       status: existing.status ?? 'active',
-      colorToken: existing.colorToken ?? 'brand',
+      colorToken: existing.colorToken ?? DEFAULT_BUSINESS_COLOR,
       address: {
         street: existing.address?.street ?? '',
         line2: existing.address?.line2 ?? '',
@@ -251,7 +232,7 @@ export function AdminBusinessFormPage() {
                   <p className="flex h-10 items-center rounded-md border border-line bg-surface-2 px-3 font-mono text-sm text-ink-500">
                     {editing ? existing?.code : (codeData?.code ?? '…')}
                   </p>
-                  {/* Assigned by the server so two operators adding a store at
+                  {/* Assigned by the server so two staff adding a store at
                       the same moment cannot land on one number. */}
                   <p className="mt-1 text-xs text-ink-400">Assigned automatically.</p>
                 </div>
@@ -282,8 +263,8 @@ export function AdminBusinessFormPage() {
                             type="button"
                             onClick={() => field.onChange(token)}
                             aria-pressed={field.value === token}
-                            aria-label={COLOR_LABEL[token]}
-                            title={COLOR_LABEL[token]}
+                            aria-label={paletteFor(token).label}
+                            title={paletteFor(token).label}
                             className={cn(
                               pressable,
                               'flex size-8 items-center justify-center rounded-md border',
@@ -292,7 +273,7 @@ export function AdminBusinessFormPage() {
                                 : 'border-line hover:border-line-strong',
                             )}
                           >
-                            <span className={cn('size-4 rounded-full', COLOR_DOT[token])} />
+                            <span className="size-4 rounded-full" style={swatchStyle(token)} />
                           </button>
                         ))}
                       </div>

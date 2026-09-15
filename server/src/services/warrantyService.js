@@ -27,7 +27,7 @@ import '../models/Settings.js';
  * ## What it deliberately does not do
  *
  * It does not block anything. `isCovered` is an *answer*, surfaced to the
- * operator raising an RMA; it never refuses the return. An out-of-warranty
+ * staff member raising an RMA; it never refuses the return. An out-of-warranty
  * return is a normal commercial act - a goodwill replacement, a part that
  * failed for a reason the warranty does not cover but the relationship does
  * and a system that made it impossible would be telling the shop how to run

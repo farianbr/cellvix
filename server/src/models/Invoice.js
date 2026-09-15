@@ -73,7 +73,7 @@ const invoiceSchema = new mongoose.Schema(
      * The shop this invoice is raised by.
      *
      * Copied from the order where there is one, so the money and the goods
-     * agree about which location they belong to; set from the operator's
+     * agree about which location they belong to; set from the staff member's
      * current business on a standalone invoice.
      */
     business: { type: mongoose.Schema.Types.ObjectId, ref: 'Business', default: null, index: true },
@@ -145,6 +145,28 @@ const invoiceSchema = new mongoose.Schema(
     travelKm: { type: Number, default: 0 },
     extendedServiceFee: { type: Boolean, default: false },
 
+    /**
+     * The mileage allowance those kilometres came to, in integer cents.
+     *
+     * **Stored, not derived at render time.** It is `travelKm` times the rate in
+     * `Settings.financial.travelRateCentsPerKm`, and that rate changes - the CRA
+     * publishes a new one every year. Recomputing an old invoice against today's
+     * rate would quietly restate what was claimed for a journey driven two years
+     * ago, which is the same argument `taxPercent` is stored for.
+     *
+     * Still never part of `amount`: see the note above.
+     */
+    travelAllowanceCents: { type: Number, default: 0, min: 0 },
+
+    /**
+     * What the out-of-area fee was charged at, when it was charged.
+     *
+     * Snapshotted for the same reason, and separate from the boolean because
+     * "not charged" and "charged nothing" are different answers - a fee waived
+     * for a regular is worth being able to see.
+     */
+    extendedServiceFeeCents: { type: Number, default: 0, min: 0 },
+
     technician: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     serviceType: {
       type: String,
@@ -172,6 +194,25 @@ const invoiceSchema = new mongoose.Schema(
       default: 'unpaid',
       index: true,
     },
+
+    /**
+     * A gratuity, kept apart from the repair total.
+     *
+     * **Not a payment row and not part of `amount`.** `amountPaid` is the sum of
+     * `payments`, and `amount` is what the work cost - so a tip recorded as a
+     * payment would settle a balance that is still owed, and a tip added to
+     * `amount` would tax a gratuity and inflate every revenue figure that reads
+     * the invoice total as the price of the work.
+     *
+     * It is money the shop received, so it belongs on the record; it is not
+     * money the customer owed, so it belongs beside the total rather than in it.
+     * Integer cents, like everything else.
+     *
+     * `tipAt` is separate because a tip is almost always given at the moment of
+     * payment, which is not when the invoice was issued.
+     */
+    tipCents: { type: Number, default: 0, min: 0 },
+    tipAt: { type: Date, default: null },
 
     payments: [
       {

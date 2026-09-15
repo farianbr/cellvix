@@ -13,6 +13,8 @@ import {
   Wallet,
 } from 'lucide-react';
 import cn from '@/lib/cn';
+import useAuth from '@/hooks/useAuth';
+import AdminServiceQuotesPage from '@/pages/admin/AdminServiceQuotesPage';
 import useCreateParam from '@/hooks/useCreateParam';
 import { money, date, count as formatCount } from '@/lib/format';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
@@ -76,8 +78,8 @@ function todayIso(offsetDays = 0) {
 /**
  * The quote builder.
  *
- * A quoted unit price left blank means "use the catalogue price", so an
- * operator quoting at list does not have to retype it. The running total below
+ * A quoted unit price left blank means "use the catalogue price", so a
+ * staff member quoting at list does not have to retype it. The running total below
  * is a preview - every figure is recomputed server-side at the client's own
  * provincial rate, which this form cannot know.
  */
@@ -227,7 +229,30 @@ function QuoteForm({ clients, products, quote, seedClient, onSubmit, onCancel, i
   );
 }
 
+/**
+ * One nav row, two screens.
+ *
+ * A product business quotes **goods** - SKU lines that become an `Order`. A
+ * service business quotes **work** - devices, labour and parts that become a
+ * `Ticket`. They are separate models because they share almost no fields, and
+ * this is where the section picks the one its business actually has.
+ *
+ * `sales.services` is the test rather than the business type itself, for the
+ * reason the feature registry gives: the type sets a default and an override
+ * always beats it. A product business that starts doing repairs switches the
+ * flag on and gets the estimate builder, without being migrated to another
+ * type to gain a screen.
+ *
+ * Under database-per-business the two kinds can never appear together, so
+ * branching here costs nothing a merged list would have saved.
+ */
 export function AdminQuotesPage() {
+  const { features } = useAuth();
+  if (features?.['sales.services']) return <AdminServiceQuotesPage />;
+  return <AdminWholesaleQuotesPage />;
+}
+
+function AdminWholesaleQuotesPage() {
   const [query, setQuery] = useState('');
   // Opened directly by `+ Create` (§7.2), which arrives with `?new=1`.
   const [creating, setCreating, createSeed] = useCreateParam(true, false, ["client"]);
@@ -267,7 +292,7 @@ export function AdminQuotesPage() {
    * quote ladder only accepts a `sent` quote and refuses an expired one, and a
    * converted quote cannot be deleted because that would orphan the order it
    * became. Firing those anyway would produce a row of red toasts and leave the
-   * operator to work out which of forty selections actually moved.
+   * staff member to work out which of forty selections actually moved.
    *
    * Sequential rather than `Promise.all`: these are audited writes, and forty
    * at once at a shared Atlas instance is how a bulk action becomes a partial
@@ -430,7 +455,7 @@ export function AdminQuotesPage() {
             label: 'Open pipeline',
             value: money(totals.open ?? 0),
             // Converted and rejected quotes are excluded - counting them would
-            // flatter a number an operator uses to forecast.
+            // flatter a number a staff member uses to forecast.
             hint: 'Draft and sent quotes still live',
             tone: 'brand',
             icon: Wallet,
@@ -520,7 +545,7 @@ export function AdminQuotesPage() {
           **Convert is deliberately absent.** Converting asks two questions per
           quote - the delivery method, and whether a price that has drifted from
           the catalogue is accepted - and a batch would have to answer both on
-          the operator's behalf for every row. Accepting and deleting ask
+          the staff member's behalf for every row. Accepting and deleting ask
           nothing, so those are the two that are safe in bulk. */}
       <BulkBar count={selected.length} noun="selected" onClear={() => setSelected([])}>
         <Button

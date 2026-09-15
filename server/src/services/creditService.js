@@ -20,7 +20,7 @@ import '../models/User.js';
  * this account's credit-terms invoices, and there is nothing to keep in step.
  * Paying an invoice restores the headroom because the invoice is the thing that
  * was measured in the first place - which is exactly how a credit card behaves,
- * and what an operator expects.
+ * and what a staff member expects.
  *
  * ## What counts as drawn
  *

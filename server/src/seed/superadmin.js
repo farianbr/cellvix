@@ -65,13 +65,13 @@ async function seedSuperAdmin({ quiet = false } = {}) {
   /**
    * The password is public in this repo, exactly as the demo buyer's is, and
    * for the same reason: this is dummy data on a development database. It must
-   * never become how a real operator is onboarded - that path is a super admin
+   * never become how a real staff member is onboarded - that path is a super admin
    * creating another from the console.
    */
   let admin = await SuperAdmin.findOne({ email: 'super@cellvix.ca' });
   if (!admin) {
     admin = await SuperAdmin.create({
-      name: 'Platform Operator',
+      name: 'Platform Staff member',
       email: 'super@cellvix.ca',
       passwordHash: await bcrypt.hash(DEMO_PASSWORD, 10),
       isActive: true,

@@ -195,7 +195,7 @@ function UnsubscribesModal({ open, onClose }) {
 
                 {/* Putting somebody back on the list records a NEW consent
                     dated today, rather than erasing their refusal - the
-                    operator is told that before they click. */}
+                    staff member is told that before they click. */}
                 <Button
                   variant="outline"
                   size="sm"
@@ -451,7 +451,7 @@ export function AdminEmailPage() {
       //
       // Undelivered messages are named here rather than left to be inferred: a
       // campaign reading a bare "0" gives no hint whether it reached nobody or
-      // failed, and the operator should not have to reopen the send dialog to
+      // failed, and the staff member should not have to reopen the send dialog to
       // find that out. Older campaigns can still carry a `queued` count from
       // when unsent email was held locally, so both are shown.
       render: (row) => (
@@ -643,7 +643,7 @@ export function AdminEmailPage() {
 /**
  * Fetches the campaign's live audience before offering to send it.
  *
- * Split out so the count is read at the moment the operator opens the dialog
+ * Split out so the count is read at the moment the staff member opens the dialog
  * rather than whenever the list was last fetched - the number they are about to
  * act on has to be the current one.
  */

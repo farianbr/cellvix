@@ -31,7 +31,7 @@ import SelectMenu from '@/components/ui/SelectMenu';
  * **Structure is not editable here** - no `kind`, no slug, no re-parenting.
  * Every product carries a denormalised `path` written against this tree, and
  * changing a slug from a form would detach products from a hierarchy that still
- * looks correct on screen. What is editable is what an operator actually needs:
+ * looks correct on screen. What is editable is what a staff member actually needs:
  * the label, the aliases, and whether it shows.
  */
 const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/settings/taxonomy'], icon: adminIcon('Boxes') };

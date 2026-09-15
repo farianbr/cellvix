@@ -100,8 +100,8 @@ const bidLineSchema = new mongoose.Schema(
  *
  * `channels` records where the ask actually went, not where we intended it to
  * go: email always, plus whatever the supplier has consented to. A round that
- * says it was WhatsApped when the provider was unconfigured is a lie an
- * operator would act on.
+ * says it was WhatsApped when the provider was unconfigured is a lie a
+ * staff member would act on.
  */
 const negotiationSchema = new mongoose.Schema(
   {

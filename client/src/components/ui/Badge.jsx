@@ -32,7 +32,7 @@ const TONES = {
 
 /**
  * A 5px dot in the tone's own colour, shown for the tones whose text has gone
- * neutral. It restores the at-a-glance hue an operator scans a status column
+ * neutral. It restores the at-a-glance hue a staff member scans a status column
  * by, at a fraction of the visual weight the old coloured text carried - the
  * colour is present but it is no longer competing with the label for the same
  * pixels.

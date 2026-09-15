@@ -27,7 +27,7 @@ import { date as formatDate } from '@/lib/format';
  * Staff accounts - who can sign in to the panel, and as what (§6.15/3, §7.6).
  *
  * **Cellvix people only.** Customers have their own screen under Clients, and
- * mixing the two populations in one table is how an operator ends up handing a
+ * mixing the two populations in one table is how a staff member ends up handing a
  * buyer a staff role. The server filters to `admin` and `staff`; this screen
  * never asks for anyone else.
  *
@@ -197,7 +197,7 @@ export function AdminUsersPage() {
       render: (row) => (
         <div className="flex items-center gap-2">
           <span className="font-medium text-ink-900">{row.name}</span>
-          {/* The operator needs to know which row is theirs before they act on
+          {/* The staff member needs to know which row is theirs before they act on
               it - the self-lock and self-delete rules refuse anyway, but a chip
               explains it before the error does. */}
           {String(row.id) === String(me?.id) && (

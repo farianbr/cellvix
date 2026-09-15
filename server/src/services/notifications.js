@@ -1,6 +1,6 @@
 import env from '../config/env.js';
 import { sendMail } from './mailer.js';
-import { renderInvoiceHtml, renderInvoiceText } from './invoiceDocument.js';
+import { renderInvoiceHtml, renderInvoiceText, resolveInvoiceBrand } from './invoiceDocument.js';
 
 /**
  * Transactional mail the buyer gets without asking for it.
@@ -14,8 +14,9 @@ async function sendInvoiceEmail({ invoice, order, user }) {
   if (!user?.email) return { delivered: false, via: null, error: 'No email address on file.' };
 
   try {
-    const html = renderInvoiceHtml({ invoice, order, user, origin: env.publicOrigin });
-    const text = renderInvoiceText({ invoice, order });
+    const brand = await resolveInvoiceBrand(invoice.business);
+    const html = renderInvoiceHtml({ invoice, order, user, origin: env.publicOrigin, ...brand });
+    const text = renderInvoiceText({ invoice, order, shop: brand.shop });
 
     return await sendMail({
       to: user.email,

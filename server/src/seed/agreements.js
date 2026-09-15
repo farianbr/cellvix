@@ -29,8 +29,8 @@ const DEMO_PASSWORD = 'Cellvix123!';
 async function seedAgreements({ quiet = false } = {}) {
   const log = quiet ? () => {} : (...args) => console.log(...args);
 
-  // Upserted by name, so re-running does not mint a second copy - and an
-  // operator's edits to the clauses survive, because only a missing template is
+  // Upserted by name, so re-running does not mint a second copy - and a
+  // staff member's edits to the clauses survive, because only a missing template is
   // created.
   let template = await db().AgreementTemplate.findOne({ name: AGREEMENT_TEMPLATE.name }).lean();
   if (!template) {

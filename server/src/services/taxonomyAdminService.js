@@ -102,8 +102,8 @@ async function list({ search, kind, parent, includeInactive, page = 1, limit = 5
       .lean(),
     db().Taxonomy.countDocuments(filter),
     liveCounts(),
-    // The KPI row counts the whole collection, never the filtered page: an
-    // operator filtering to one brand still needs to know the totals.
+    // The KPI row counts the whole collection, never the filtered page: a
+    // staff member filtering to one brand still needs to know the totals.
     db().Taxonomy.aggregate([
       {
         $group: {
@@ -193,7 +193,7 @@ async function update(id, input) {
 
   // An alias that duplicates another node's is refused rather than stored: two
   // models answering to `15pm` makes the search box ambiguous in a way no
-  // amount of ranking fixes, and the operator is the only one who knows which
+  // amount of ranking fixes, and the staff member is the only one who knows which
   // one is right.
   if (node.aliases.length) {
     const clash = await db().Taxonomy.findOne({

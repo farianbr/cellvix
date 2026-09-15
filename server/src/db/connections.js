@@ -34,7 +34,7 @@ function controlDbName() {
  * `<prefix>_biz_<code>` - one business's records.
  *
  * Keyed on the business **code** rather than its ObjectId: a code is short,
- * stable and legible, so an operator reading a database list can tell which
+ * stable and legible, so a staff member reading a database list can tell which
  * business they are looking at. An id would be correct and unreadable.
  */
 function businessDbName(code) {
@@ -102,7 +102,7 @@ function dbFor(code) {
  * **This is the database `MONGODB_URI` names, split or not.** The alternative
  * moving the control plane to `<prefix>_control` when the split turns on
  * looked tidier and was wrong: the connection string already points somewhere,
- * and quietly reading a *different* database than the one an operator
+ * and quietly reading a *different* database than the one a staff member
  * configured is how a migration runner reports "1 database checked" against an
  * empty collection while the real one sits untouched beside it. Which is
  * exactly what it did.

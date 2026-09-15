@@ -24,7 +24,7 @@ import { pressable } from '@/lib/motion';
  *
  * **`source: 'env'` is the case worth showing loudly.** An environment variable
  * wins over anything typed here, so a screen that quietly accepted a key which
- * would then be ignored would have an operator changing a value, seeing nothing
+ * would then be ignored would have a staff member changing a value, seeing nothing
  * happen, and having no way to find out why.
  */
 const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/settings/api-keys'], icon: adminIcon('KeyRound') };
@@ -199,7 +199,7 @@ export function AdminApiKeysPage() {
       />
 
       {/* The security posture, stated on the screen rather than only in a doc.
-          An operator who does not know a key cannot be read back will keep
+          A staff member who does not know a key cannot be read back will keep
           looking for the button that reads it. */}
       {/* The measure wraps the notice as well as the panels.
 

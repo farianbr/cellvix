@@ -37,7 +37,7 @@ import {
  * (ERP rework §6.8).
  *
  * The `ProcessStrip` at the foot is a status display of the purchase automation
- * cycle, not a wizard the operator drives - which is exactly why it is a
+ * cycle, not a wizard the staff member drives - which is exactly why it is a
  * separate component from `StepIndicator` and never a fork of it (invariant 10).
  */
 const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/purchase-orders'], icon: adminIcon('ClipboardList') };

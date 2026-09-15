@@ -39,7 +39,7 @@ import cn from '@/lib/cn';
  *
  * **Tabbed**, matched to CellShoppe. Everything used to stack into one long
  * two-column page, which works while a supplier has one purchase order and
- * stops working at fifty: the contact details an operator opened the page for
+ * stops working at fifty: the contact details a staff member opened the page for
  * end up below a table that has grown without limit. Three views - who they
  * are, what we ordered, what they supply - and the tab carries its own count so
  * the empty ones answer themselves without being opened.
@@ -86,7 +86,7 @@ function initials(name = '') {
  *
  * A dash rather than an omitted row when the value is missing: a details panel
  * that silently drops its empty fields makes "we never recorded a website" look
- * identical to "this supplier has no website field at all", and an operator
+ * identical to "this supplier has no website field at all", and a staff member
  * cannot tell which of them to go and fix.
  */
 function DetailRow({ label, children }) {
@@ -367,8 +367,8 @@ export function AdminSupplierProfilePage() {
         }
         action={
           <>
-            {/* Straight into a new order against this supplier - the thing an
-                operator most often came to this page to do. */}
+            {/* Straight into a new order against this supplier - the thing a
+                staff member most often came to this page to do. */}
             <Link
               to={`/admin/purchase-orders/create?supplier=${supplier.id}`}
               className={cn(pressable, 'inline-flex h-11 select-none items-center justify-center gap-2 rounded-md bg-brand-gradient px-5 font-display text-md font-semibold text-white')}
@@ -395,7 +395,7 @@ export function AdminSupplierProfilePage() {
         }
       />
 
-      {/* The facts an operator reads before deciding anything, on one line
+      {/* The facts a staff member reads before deciding anything, on one line
           under the name rather than buried in a panel below the fold. */}
       <div className="-mt-2 mb-4 flex flex-wrap items-center gap-x-4 gap-y-1.5">
         <HeaderFact icon={Mail}>
@@ -629,7 +629,7 @@ export function AdminSupplierProfilePage() {
       {tab === 'orders' && (
         <Panel title="Purchase orders" flush>
           {/* The count line is what carries the density toggle, so a table
-              without one is a table an operator cannot set the density of
+              without one is a table a staff member cannot set the density of
               which is how every detail page ended up stuck at whatever the
               last list screen left the preference on. */}
           <div className="border-b border-line px-3 py-2 sm:px-4">

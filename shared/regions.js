@@ -12,7 +12,7 @@
  *            country has none worth listing (Singapore, Monaco) or too many to
  *            be useful, and the form falls back to a free-text field. That
  *            fallback is the honest default: a list that is wrong is worse than
- *            no list, because the operator cannot enter the true answer.
+ *            no list, because the staff member cannot enter the true answer.
  *
  * `postal`   A regex the code must match, plus the shape to show in an error.
  *            Absent means the country has no postal system or no fixed format,

@@ -12,7 +12,7 @@ import { regionsFor, regionLabelFor, postalLabelFor, postalExampleFor } from '@s
  * customer form imported the shared Canadian province list, the business form
  * imported the same list, and the supplier form declared its own array of
  * thirteen two-letter codes with no labels. All three offered a country select
- * that changed nothing - so an operator could pick Germany and then be asked
+ * that changed nothing - so a staff member could pick Germany and then be asked
  * for a Canadian province and a postal code shaped `A1A 1A1`.
  *
  * ## What "dynamic" means here
@@ -68,7 +68,7 @@ export function AddressFields({
           />
         ) : (
           // No list worth offering for this country, so a text field - the
-          // operator knows the answer and the form should not argue with it.
+          // staff member knows the answer and the form should not argue with it.
           <Input label={regionLabel} {...register(`${prefix}.region`)} />
         )}
       </div>

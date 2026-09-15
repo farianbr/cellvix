@@ -283,7 +283,7 @@ async function getQuote(id) {
 
   if (!quote) throw ApiError.notFound('Quote not found.', 'QUOTE_NOT_FOUND');
 
-  // The live comparison, shown while the quote is still open so an operator can
+  // The live comparison, shown while the quote is still open so a staff member can
   // see the catalogue moving under a promise they have made.
   const drift = await priceDrift(quote);
 
@@ -323,7 +323,7 @@ async function priceDrift(quote) {
       quotedPrice: item.unitPrice,
       livePrice,
       difference: livePrice === null ? null : item.unitPrice - livePrice,
-      // A quoted price under today's cost is the one an operator most needs to
+      // A quoted price under today's cost is the one a staff member most needs to
       // see - it is a sale that loses money at the moment it converts.
       belowCost: product?.cost > 0 ? item.unitPrice < product.cost : false,
       unavailable: !product || !product.isActive,
@@ -430,7 +430,7 @@ async function updateQuote(id, body) {
 }
 
 /**
- * The status ladder an operator drives: send it, record the answer, or reject.
+ * The status ladder a staff member drives: send it, record the answer, or reject.
  *
  * `converted` is not here - that status is written by `convertQuote` and only
  * ever as the result of an order actually being created. A status that can be
@@ -458,7 +458,7 @@ async function setQuoteStatus(id, { status, note }) {
     );
   }
 
-  // Accepting an expired quote is a decision, not an accident: the operator is
+  // Accepting an expired quote is a decision, not an accident: the staff member is
   // choosing to honour a price that has lapsed, so it is refused here and the
   // date has to be extended first. That leaves a record of the extension.
   if (status === 'accepted' && isExpired(quote)) {
@@ -562,7 +562,7 @@ async function convertQuote(id, { acknowledgeDrift = false, deliveryCode } = {},
   }
 
   if (drift.hasDrift && !acknowledgeDrift) {
-    // Not an error the operator can only retry past: the comparison rides along
+    // Not an error the staff member can only retry past: the comparison rides along
     // in `fields` so the UI can show exactly which prices moved and ask for a
     // decision, rather than saying "something changed" and leaving them to
     // guess. Retrying with `acknowledgeDrift` is that decision.

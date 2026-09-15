@@ -37,7 +37,7 @@ export function AuthProvider({ children }) {
    *
    * Rides on `/auth/me` so it is available on every screen from first paint
    * the banner has to be able to render anywhere, and the way out of a business
-   * must not depend on which page the operator happens to be standing on.
+   * must not depend on which page the staff member happens to be standing on.
    */
   const impersonation = data?.impersonation ?? null;
 
@@ -94,7 +94,7 @@ export function AuthProvider({ children }) {
       isStaff: user?.role === 'staff',
       // A support session reaches the panel with no `user` at all - the grant
       // is the authorisation, exactly as it is server-side in `requireStaff`.
-      // Without this the operator would enter a business and land on a sign-in
+      // Without this the staff member would enter a business and land on a sign-in
       // screen, holding a valid grant the client refused to believe in.
       canUseAdmin:
         Boolean(impersonation) ||

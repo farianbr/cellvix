@@ -88,7 +88,7 @@ export function relativeDays(value) {
  * "just now" / "4m ago" / "3h ago" / "2d ago" / "14-Mar" - for the notification
  * bell (§7.3), which needs finer grain than `relativeDays`.
  *
- * A notification from eleven minutes ago rendered as "today" tells the operator
+ * A notification from eleven minutes ago rendered as "today" tells the staff member
  * nothing about whether they have already seen it. Past a week the relative
  * form stops helping and it falls back to a date.
  */

@@ -24,7 +24,7 @@ const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/marketing/articles'], icon: adminIc
 /**
  * SEO, product articles.
  *
- * THE LIST IS OF PRODUCTS, NOT ARTICLES. The operator opening this page is
+ * THE LIST IS OF PRODUCTS, NOT ARTICLES. The staff member opening this page is
  * asking "which parts still need one", and a list of articles that exist cannot
  * answer that: it shows the work already done and hides the work outstanding.
  * So every active product is a row, and the article is a column on it.

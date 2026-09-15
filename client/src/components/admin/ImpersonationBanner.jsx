@@ -10,16 +10,16 @@ import { useSuperAdminMutations } from '@/hooks/useSuperAdmin';
  *
  * **The one piece of chrome that may never be dismissed.** Everything else in
  * the panel can be collapsed, filtered away or scrolled past; this cannot,
- * because the failure it guards against is an operator forgetting which
+ * because the failure it guards against is a staff member forgetting which
  * business they are in and editing a real tenant's records believing they are
  * in a test one. A dismissible warning is a warning that is dismissed.
  *
  * It sits above the panel rather than inside it, in a colour the panel never
- * otherwise uses, and it carries the way out. An operator who navigates deep
+ * otherwise uses, and it carries the way out. A staff member who navigates deep
  * into a screen must never have to find their way back to wherever they entered
  * from in order to leave.
  *
- * The countdown is not decoration: a grant expires on a clock, and an operator
+ * The countdown is not decoration: a grant expires on a clock, and a staff member
  * whose session dies mid-edit should have seen it coming rather than meeting a
  * wall of failed requests.
  */

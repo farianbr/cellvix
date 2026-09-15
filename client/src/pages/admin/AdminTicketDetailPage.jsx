@@ -11,13 +11,16 @@ import {
   Mail,
   PackageCheck,
   Phone,
+  Printer,
   Receipt,
   Smartphone,
   Stethoscope,
+  Tag,
   Trash2,
   Wrench,
 } from 'lucide-react';
 import cn from '@/lib/cn';
+import { apiUrl } from '@/lib/api';
 import { money, date, dateTime, count as formatCount } from '@/lib/format';
 import { TICKET_STATUSES, TICKET_STATUS_LABELS } from '@shared/schemas/admin';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
@@ -33,6 +36,8 @@ import ProcessStrip from '@/components/admin/ProcessStrip';
 import WorkflowLineage from '@/components/admin/WorkflowLineage';
 import { useSetRecordLabel } from '@/components/admin/shell/recordLabel';
 import { useAdminTicket, useAdminMutations } from '@/hooks/useAdmin';
+import { toast } from '@/store/toastStore';
+import reportStatusOutcome from '@/lib/ticketStatusOutcome';
 import { pressable } from '@/lib/motion';
 
 /**
@@ -40,7 +45,7 @@ import { pressable } from '@/lib/motion';
  *
  * **The screen the panel was missing.** Tickets had a list and a form but no
  * detail view, so the only way to read a job was to open the edit form - which
- * shows every field as an input and answers none of the questions an operator
+ * shows every field as an input and answers none of the questions a staff member
  * actually arrives with: where is this up to, what did we quote, what has been
  * paid, and what happens next.
  *
@@ -79,6 +84,32 @@ const TERMS = [
   { value: 'net30', label: 'Net 30' },
   { value: 'net60', label: 'Net 60' },
 ];
+
+/**
+ * This page reads tighter than the rest of the panel, on purpose.
+ *
+ * A ticket is a **working screen**: a counter has it open while somebody is
+ * standing there, and it carries eight sections that all want to be visible at
+ * once - stage, deposit, fault, work, timeline, customer, lifecycle. The default
+ * panel padding is right for a settings form somebody reads once; here it pushed
+ * the timeline below the fold and made the page feel loose rather than calm.
+ *
+ * Applied through `bodyClassName` rather than by changing `Panel`, because that
+ * component serves every screen in the admin and this is a judgement about one.
+ * `twMerge` lets the later padding win at both breakpoints.
+ */
+const COMPACT_BODY = 'p-3 sm:p-4';
+
+/**
+ * Shorter controls, for the same reason the panels are tighter.
+ *
+ * **Height only.** The 16px font on an input is load-bearing rather than
+ * decorative: mobile Safari zooms the page in when a focused field sets text
+ * below it and never zooms back out, which leaves the sticky header wider than
+ * the viewport for the rest of the visit. See the note in `ui/Input`. So these
+ * lose 8px of vertical padding and keep every character size.
+ */
+const COMPACT_FIELD = 'h-9';
 
 /**
  * The stages a repair moves through.
@@ -148,6 +179,7 @@ export function AdminTicketDetailPage() {
   const [converting, setConverting] = useState(false);
   const [removingDeposit, setRemovingDeposit] = useState(null);
   const [cancelling, setCancelling] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const ticket = data?.ticket;
   useSetRecordLabel(ticket?.ticketNumber);
@@ -189,6 +221,7 @@ export function AdminTicketDetailPage() {
       <PageHeader
         icon={ClipboardList}
         title={ticket.ticketNumber}
+        badgesBelow
         badge={
           <>
             <Badge tone={STATUS_TONES[ticket.status] ?? 'neutral'} size="sm">
@@ -202,33 +235,92 @@ export function AdminTicketDetailPage() {
                 {formatCount(ticket.age)} days
               </Badge>
             )}
+            {/* How the job arrived. Only worth saying when it was not the
+                counter, which is the default and therefore not news. */}
+            {ticket.source === 'kiosk' && (
+              <Badge tone="ok" size="sm" icon={Smartphone}>
+                Kiosk check-in
+              </Badge>
+            )}
           </>
         }
         action={
           <>
+            {/* The two things a counter prints. The label goes on the device so
+                it can be found on a shelf of forty; the ticket is what the
+                customer leaves with. Both render through the browser's print
+                dialog, which is where "save as PDF" lives - the same reasoning
+                the invoice screen gives for not shipping a PDF generator. */}
+            <Button
+              size="xs"
+              variant="outline"
+              icon={Tag}
+              /**
+               * `kind` goes in the params, never in the path.
+               *
+               * `apiUrl` appends the selected business as a query parameter of
+               * its own, and it does so by starting a fresh `?`. A path that
+               * already carried one produced `?kind=label?business=...`, which
+               * Express reads as a single parameter named `kind` whose value is
+               * `label?business=...` - so the route matched, the business never
+               * resolved, and the whole thing 404'd.
+               */
+              onClick={() =>
+                window.open(
+                  apiUrl(`/admin/tickets/${ticket.id}/document`, { kind: 'label' }),
+                  '_blank',
+                  'noopener',
+                )
+              }
+            >
+              Print label
+            </Button>
+            <Button
+              size="xs"
+              variant="outline"
+              icon={Printer}
+              onClick={() =>
+                window.open(
+                  apiUrl(`/admin/tickets/${ticket.id}/document`),
+                  '_blank',
+                  'noopener',
+                )
+              }
+            >
+              Download PDF
+            </Button>
             <Link to={`/admin/tickets/${ticket.id}/edit`}>
-              <Button size="sm" variant="outline" icon={FileText}>
+              <Button size="xs" variant="outline" icon={FileText}>
                 Edit
               </Button>
             </Link>
             {invoiced ? (
               <Link to={`/admin/invoices/${ticket.invoice.number ?? ticket.invoice.id}`}>
-                <Button size="sm" icon={Receipt}>
+                <Button size="xs" icon={Receipt}>
                   View invoice
                 </Button>
               </Link>
             ) : (
-              <Button size="sm" icon={Receipt} onClick={() => setConverting(true)}>
+              <Button size="xs" icon={Receipt} onClick={() => setConverting(true)}>
                 Convert to invoice
               </Button>
             )}
+            {/* Destructive, so it is an icon apart from the row rather than a
+                fifth equal button - and it still confirms by name. */}
+            <Button
+              size="xs"
+              variant="danger"
+              icon={Trash2}
+              aria-label={`Delete ${ticket.ticketNumber}`}
+              onClick={() => setDeleting(true)}
+            />
           </>
         }
       />
 
       {/* Where this job came from and where it went - the whole chain, above
           the record, because "am I looking at the right one?" is the first
-          question an operator arrives with. It replaces the single "created
+          question a staff member arrives with. It replaces the single "created
           from quote" banner this page used to carry, which only ever showed
           the half of the chain behind the ticket. */}
       <WorkflowLineage
@@ -241,17 +333,22 @@ export function AdminTicketDetailPage() {
         // with no quote behind it is not shown a quote station at all - that
         // step did not happen and never will.
         pending={invoiced ? undefined : 'invoice'}
-        className="mb-4"
+        className="mb-3"
       />
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="space-y-4">
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="space-y-3">
           <StageCard
             ticket={ticket}
             disabled={invoiced}
             isPending={setTicketStatus.isPending}
             error={setTicketStatus.error?.message}
-            onMove={(values) => setTicketStatus.mutate({ id: ticket.id, ...values })}
+            onMove={(values) =>
+              setTicketStatus.mutate(
+                { id: ticket.id, ...values },
+                { onSuccess: reportStatusOutcome },
+              )
+            }
           />
 
           <DepositCard
@@ -263,7 +360,7 @@ export function AdminTicketDetailPage() {
             onRemove={setRemovingDeposit}
           />
 
-          <Panel icon={Stethoscope} title="Reported fault">
+          <Panel icon={Stethoscope} title="Reported fault" bodyClassName={COMPACT_BODY}>
             <p className="whitespace-pre-wrap text-sm text-ink-700">{ticket.issue}</p>
           </Panel>
 
@@ -275,7 +372,7 @@ export function AdminTicketDetailPage() {
             ) : (
               <ul className="divide-y divide-line">
                 {[...ticket.timeline].reverse().map((entry, index) => (
-                  <li key={index} className="flex items-start gap-3 px-4 py-3 sm:px-5">
+                  <li key={index} className="flex items-start gap-2.5 px-3.5 py-2 sm:px-4">
                     <span
                       className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand"
                       aria-hidden="true"
@@ -296,7 +393,7 @@ export function AdminTicketDetailPage() {
           </Panel>
         </div>
 
-        <div className="space-y-4">
+        <div className="space-y-3">
           <CustomerCard ticket={ticket} />
         </div>
       </div>
@@ -304,7 +401,7 @@ export function AdminTicketDetailPage() {
       {/* At the foot, matching the quote, the invoice and the purchase order:
           it summarises where the record ended up after everything above it, so
           it reads as a conclusion rather than a heading. */}
-      <Lifecycle ticket={ticket} invoiced={invoiced} className="mt-4" />
+      <Lifecycle ticket={ticket} invoiced={invoiced} className="mt-3" />
 
       {!invoiced && (
         <button
@@ -359,13 +456,46 @@ export function AdminTicketDetailPage() {
         error={removeTicketDeposit.error?.message}
       />
 
+      {/*
+        Deleting destroys the repair history for a device, so it takes the
+        second gate the Instructions reserve for the irreversible: the staff member
+        types the ticket number. Cancelling, below, only stops the job and is a
+        single confirm.
+      */}
+      <ConfirmDialog
+        open={deleting}
+        onClose={() => setDeleting(false)}
+        onConfirm={() =>
+          deleteTicket.mutate(ticket.id, {
+            onSuccess: () => {
+              setDeleting(false);
+              toast.ok('Ticket deleted', `${ticket.ticketNumber} is gone.`);
+              navigate('/admin/tickets');
+            },
+          })
+        }
+        title={`Delete ${ticket.ticketNumber}?`}
+        body={`The whole repair record for ${ticket.customer?.name ?? 'this customer'} goes, including its timeline and any deposit recorded against it. This cannot be undone.`}
+        tone="danger"
+        confirmPhrase={ticket.ticketNumber}
+        confirmPhraseLabel="the ticket number"
+        confirmLabel="Delete ticket"
+        loading={deleteTicket.isPending}
+        error={deleteTicket.error?.message}
+      />
+
       <ConfirmDialog
         open={cancelling}
         onClose={() => setCancelling(false)}
         onConfirm={() =>
           setTicketStatus.mutate(
             { id: ticket.id, status: 'cancelled', note: 'Ticket cancelled.' },
-            { onSuccess: () => setCancelling(false) },
+            {
+              onSuccess: (payload) => {
+                setCancelling(false);
+                reportStatusOutcome(payload);
+              },
+            },
           )
         }
         title={`Cancel ${ticket.ticketNumber}?`}
@@ -386,7 +516,7 @@ export function AdminTicketDetailPage() {
  * happens nine times in ten and pre-picking it turns the common case into one
  * click. Every other status stays available: a repair genuinely goes backwards
  * - a device on the workshop returns to `waiting_for_parts` when a part turns out
- * to be wrong - and a control that only moved forward would make an operator
+ * to be wrong - and a control that only moved forward would make a staff member
  * lie about where the job is.
  */
 function StageCard({ ticket, disabled, isPending, error, onMove }) {
@@ -400,7 +530,7 @@ function StageCard({ ticket, disabled, isPending, error, onMove }) {
   const chosen = watch('status');
 
   return (
-    <Panel icon={ArrowRight} title="Move stage">
+    <Panel icon={ArrowRight} title="Move stage" bodyClassName={COMPACT_BODY}>
       {error && (
         <p className="mb-3 flex items-start gap-2 rounded-md bg-danger-50 px-3 py-2.5 text-sm text-danger">
           <AlertCircle className="mt-0.5 size-4 shrink-0" strokeWidth={2} aria-hidden="true" />
@@ -421,6 +551,7 @@ function StageCard({ ticket, disabled, isPending, error, onMove }) {
             control={control}
             name="status"
             label="Move to"
+            size="sm"
             options={TICKET_STATUSES.filter((status) => status !== ticket.status).map((status) => ({
               value: status,
               label:
@@ -429,7 +560,12 @@ function StageCard({ ticket, disabled, isPending, error, onMove }) {
                   : TICKET_STATUS_LABELS[status],
             }))}
           />
-          <Input label="Note" placeholder="Stage change note…" {...register('note')} />
+          <Input
+            label="Note"
+            placeholder="Stage change note…"
+            className={COMPACT_FIELD}
+            {...register('note')}
+          />
           <Button type="submit" size="sm" icon={ArrowRight} loading={isPending}>
             {TICKET_STATUS_LABELS[chosen] ?? 'Move'}
           </Button>
@@ -494,7 +630,7 @@ function DepositCard({ ticket, invoiced, isPending, error, onRecord, onRemove })
         </ul>
       )}
 
-      <div className={cn(ticket.deposits.length > 0 && 'p-4 sm:p-5')}>
+      <div className={cn(ticket.deposits.length > 0 && 'p-3 sm:p-4')}>
         {invoiced ? (
           <p className="text-sm text-ink-500">
             This ticket is invoiced. Record any further payment against the invoice.
@@ -525,10 +661,22 @@ function DepositCard({ ticket, invoiced, isPending, error, onRecord, onRemove })
                 required
                 inputMode="decimal"
                 placeholder="0.00"
+                className={COMPACT_FIELD}
                 {...register('amountDollars')}
               />
-              <SelectField control={control} name="method" label="Method" options={DEPOSIT_METHODS} />
-              <Input label="Note" placeholder="optional" {...register('note')} />
+              <SelectField
+                control={control}
+                name="method"
+                label="Method"
+                size="sm"
+                options={DEPOSIT_METHODS}
+              />
+              <Input
+                label="Note"
+                placeholder="optional"
+                className={COMPACT_FIELD}
+                {...register('note')}
+              />
               <Button type="submit" size="sm" loading={isPending}>
                 Record
               </Button>
@@ -554,7 +702,7 @@ function WorkCard({ ticket, balance }) {
   );
 
   return (
-    <Panel icon={Wrench} title="Services and parts">
+    <Panel icon={Wrench} title="Services and parts" bodyClassName={COMPACT_BODY}>
       {devices.length === 0 ? (
         <p className="text-sm text-ink-400">Nothing priced yet.</p>
       ) : (
@@ -607,7 +755,7 @@ function WorkCard({ ticket, balance }) {
       )}
 
       {/* The arithmetic, in the order the server applies it. */}
-      <dl className="mt-4 space-y-1.5 border-t border-line pt-3 text-sm">
+      <dl className="mt-3 space-y-1.5 border-t border-line pt-2.5 text-sm">
         <Row label="Subtotal" value={money(gross - (ticket.discountCents ?? 0))} />
         {ticket.discountCents > 0 && (
           <Row label="Discount" value={`− ${money(ticket.discountCents)}`} />
@@ -678,7 +826,7 @@ function CustomerCard({ ticket }) {
         )}
       </div>
 
-      <dl className="mt-4 space-y-2.5 border-t border-line pt-3 text-sm">
+      <dl className="mt-3 space-y-2 border-t border-line pt-2.5 text-sm">
         <Detail label="Technician" value={ticket.technician?.name ?? 'Unassigned'} />
         <Detail label="Source" value={ticket.source} />
         <Detail label="Created" value={date(ticket.createdAt)} />
@@ -731,7 +879,7 @@ function Lifecycle({ ticket, invoiced, className }) {
  * Raising the invoice.
  *
  * Only the terms are asked. Everything billed comes off the ticket, because
- * that is where the job was priced - a form that let the operator restate the
+ * that is where the job was priced - a form that let the staff member restate the
  * lines here would be a second place for them to differ. The summary states
  * what will be carried so the conversion is not a leap of faith.
  */

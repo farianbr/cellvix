@@ -13,6 +13,7 @@ import {
   Trash2,
   UserRound,
 } from 'lucide-react';
+import { paletteFor } from '@shared/businessPalette.js';
 import Panel, { PanelEmpty } from '@/components/ui/Panel';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
@@ -39,7 +40,7 @@ import { pressable } from '@/lib/motion';
  * and the type is what decides which sections the panel renders. Cellvix is the
  * `product` business, CellShoppe the `service` one.
  *
- * **Each business carries a colour identity** so the operator builds muscle
+ * **Each business carries a colour identity** so the staff member builds muscle
  * memory across the list and the switcher - drawn from the design system's
  * tokens, never arbitrary hex (§2b).
  */
@@ -63,24 +64,14 @@ const PRIMARY_LINK_BTN =
 const STATUS_TONE = { active: 'ok', inactive: 'neutral', maintenance: 'warn' };
 const STATUS_LABEL = { active: 'Active', inactive: 'Inactive', maintenance: 'Maintenance' };
 
-/** The card's top border and icon wash. Token names, matching §2b's vocabulary. */
-const COLOR_BORDER = {
-  brand: 'border-t-brand',
-  info: 'border-t-info',
-  success: 'border-t-ok',
-  warn: 'border-t-warn',
-  danger: 'border-t-danger',
-  ink: 'border-t-ink-300',
-};
-
-const COLOR_WASH = {
-  brand: 'bg-brand-50 text-brand',
-  info: 'bg-info-50 text-info',
-  success: 'bg-ok-50 text-ok',
-  warn: 'bg-warn-50 text-warn',
-  danger: 'bg-danger-50 text-danger',
-  ink: 'bg-surface-2 text-ink-500',
-};
+/**
+ * The card border, the icon wash and the row dot, painted from the palette.
+ *
+ * These were maps of Tailwind class names, which only worked while the
+ * identity tokens WERE the semantic ones. The identity colours have no utility
+ * classes and should not gain any - six extra ramps in the stylesheet to draw
+ * a 10px dot is not a trade worth making, and the ramp is already in hand.
+ */
 
 function addressLine(address = {}) {
   return [address.street, address.city, address.region, address.postal]
@@ -89,17 +80,18 @@ function addressLine(address = {}) {
 }
 
 function BusinessCard({ business, editable, onDelete, onMakeDefault }) {
-  const wash = COLOR_WASH[business.colorToken] ?? COLOR_WASH.ink;
+  const ramp = paletteFor(business.colorToken);
 
   return (
     <article
-      className={cn(
-        'flex flex-col rounded-lg border border-line border-t-[3px] bg-surface p-4',
-        COLOR_BORDER[business.colorToken] ?? COLOR_BORDER.ink,
-      )}
+      className="flex flex-col rounded-lg border border-line border-t-[3px] bg-surface p-4"
+      style={{ borderTopColor: ramp.base }}
     >
       <div className="flex items-start gap-3">
-        <span className={cn('flex size-10 shrink-0 items-center justify-center rounded-md', wash)}>
+        <span
+          className="flex size-10 shrink-0 items-center justify-center rounded-md"
+          style={{ backgroundColor: ramp.c50, color: ramp.base }}
+        >
           <Building2 className="size-5" strokeWidth={1.5} aria-hidden="true" />
         </span>
 
@@ -230,14 +222,8 @@ export function AdminBusinessesPage() {
       render: (row) => (
         <div className="flex items-center gap-2">
           <span
-            className={cn('size-2.5 shrink-0 rounded-full', {
-              'bg-brand': row.colorToken === 'brand',
-              'bg-info': row.colorToken === 'info',
-              'bg-ok': row.colorToken === 'success',
-              'bg-warn': row.colorToken === 'warn',
-              'bg-danger': row.colorToken === 'danger',
-              'bg-ink-300': row.colorToken === 'ink',
-            })}
+            className="size-2.5 shrink-0 rounded-full"
+            style={{ backgroundColor: paletteFor(row.colorToken).base }}
             aria-hidden="true"
           />
           <span className="font-medium text-ink-900">{row.name}</span>
@@ -272,7 +258,7 @@ export function AdminBusinessesPage() {
     } catch (err) {
       // The server refuses a default business or one with staff still on it.
       // Surfacing the real sentence beats a generic failure - it names the
-      // thing the operator has to do first.
+      // thing the staff member has to do first.
       setError(err.message);
     }
   }
@@ -282,7 +268,7 @@ export function AdminBusinessesPage() {
       <PageHeader
         icon={ADMIN_PAGE.icon}
         title={ADMIN_PAGE.title}
-        description="Each shop has its own colour identity, so you build muscle memory across the list."
+        description="Each business has its own colour, and the panel wears it while you are working in that business."
         badge={
           <Badge tone="ok" size="sm">
             Live

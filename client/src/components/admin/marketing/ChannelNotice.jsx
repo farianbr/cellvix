@@ -5,7 +5,7 @@ import cn from '@/lib/cn';
  * The persistent notice at the top of a channel screen (§6b rule 2).
  *
  * **Not a tooltip and not a disabled-button title.** A screen whose sending is
- * inactive has to say so where the operator is already looking, in the `warn`
+ * inactive has to say so where the staff member is already looking, in the `warn`
  * token, naming both what is inactive and what would switch it on. Somebody
  * typing a real message into this box deserves to know before they press send,
  * not after.

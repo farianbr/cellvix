@@ -21,7 +21,7 @@ import env from '../config/env.js';
  * configure these providers, and a deployment that sets them must not be
  * silently overridden by a value typed into a screen months earlier. So the
  * resolution order is env first, database second, and the screen says which is
- * in force - otherwise an operator changes a key, nothing happens, and there is
+ * in force - otherwise a staff member changes a key, nothing happens, and there is
  * nothing on screen to explain why.
  */
 
@@ -110,7 +110,7 @@ async function list() {
  * Writes one provider's fields. Encrypts on the way in.
  *
  * An empty string **clears** the field rather than storing an empty secret
- * that is how an operator removes a key, and it has to be distinguishable from
+ * that is how a staff member removes a key, and it has to be distinguishable from
  * "leave this alone", which is what an absent key means.
  */
 async function save(provider, values, actorId) {
@@ -134,11 +134,11 @@ async function save(provider, values, actorId) {
     }
 
     // A non-secret field is previewed in full. `fromNumber` and `fromAddress`
-    // are operational config, not credentials - masking them would mean an
-    // operator cannot check which number a channel sends from without
+    // are operational config, not credentials - masking them would mean a
+    // staff member cannot check which number a channel sends from without
     // re-typing it, and there is nothing there worth hiding. They are still
     // encrypted at rest: one storage path is easier to keep correct than two,
-    // and the preview is what decides what an operator sees.
+    // and the preview is what decides what a staff member sees.
     await ProviderCredential.updateOne(
       { provider, field },
       {

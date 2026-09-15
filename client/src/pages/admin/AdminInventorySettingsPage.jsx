@@ -19,7 +19,7 @@ import { useAdminSettings, useAdminMutations } from '@/hooks/useAdmin';
  * Product form.
  *
  * **Pre-fill only.** Nothing here reprices anything already in the catalogue,
- * and a per-product value always wins. That is the first thing an operator will
+ * and a per-product value always wins. That is the first thing a staff member will
  * wonder when they change a number on this screen, so it is said on the screen
  * rather than left to be discovered.
  *

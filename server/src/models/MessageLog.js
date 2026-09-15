@@ -7,7 +7,7 @@ import mongoose from 'mongoose';
  * yet (§6b, U3–U5), and the decision that makes that honest rather than broken
  * is this collection: a message composed on an unconfigured channel is still
  * written here, with a status that says exactly what happened to it. The
- * operator gets a complete contact history from day one, and connecting Twilio
+ * staff member gets a complete contact history from day one, and connecting Twilio
  * later is a service swap rather than a migration.
  *
  * `queued_unconfigured` exists so the history list can be truthful. Nothing in

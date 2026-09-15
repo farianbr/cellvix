@@ -12,9 +12,9 @@ import { IMPERSONATION_COOKIE, resolve } from '../services/impersonationService.
  * guards learn about impersonation one at a time, in `auth.js`, where the
  * decision is visible next to the rule it bends.
  *
- * The cost is real and worth naming: a route that should admit an operator and
+ * The cost is real and worth naming: a route that should admit a staff member and
  * was never updated will refuse them. That failure is a support ticket. The
- * opposite failure - a route that admits an operator nobody intended to admit
+ * opposite failure - a route that admits a staff member nobody intended to admit
  * is a breach, and it is silent.
  *
  * **The grant is re-read from the database on every request**, not trusted from
@@ -29,7 +29,7 @@ async function authenticateImpersonation(req, res, next) {
 
   const resolved = await resolve(token);
   if (!resolved) {
-    // Expired, revoked, or minted for a deactivated operator. Clearing it stops
+    // Expired, revoked, or minted for a deactivated staff member. Clearing it stops
     // the browser presenting a dead token on every request for the rest of its
     // life, exactly as `authenticate` does for a dead session.
     res.clearCookie(IMPERSONATION_COOKIE, { path: '/' });
@@ -45,7 +45,7 @@ async function authenticateImpersonation(req, res, next) {
   /**
    * The business is decided by the grant, not by the query string.
    *
-   * An operator inside one business must not be able to reach another by
+   * A staff member inside one business must not be able to reach another by
    * editing `?business=`. `resolveBusinessScope` runs after this and would
    * otherwise honour whatever was asked for, so the scope is pinned here and
    * that middleware leaves a pinned scope alone.

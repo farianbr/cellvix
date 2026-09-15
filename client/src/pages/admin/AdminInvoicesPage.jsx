@@ -33,6 +33,8 @@ import { PROVINCES } from '@shared/schemas/checkout';
 import { TAX_RATES, INVOICE_SERVICE_TYPES } from '@shared/schemas/admin';
 import KpiRow from '@/components/admin/KpiRow';
 import FilterStrip from '@/components/admin/FilterStrip';
+import BulkBar from '@/components/admin/BulkBar';
+import useAuth from '@/hooks/useAuth';
 import DataTable, { CountLine } from '@/components/admin/DataTable';
 import Pagination from '@/components/ui/Pagination';
 import useTablePage from '@/hooks/useTablePage';
@@ -67,7 +69,7 @@ const emptyInvoiceDevice = () => ({
  * A preview, recomputed on every keystroke, and deliberately mirroring
  * `invoiceTotals()` step for step - lines, then the fee, then the discount,
  * then tax on what is left. Two different orders of operation between the form
- * and the server is how an operator quotes one number and the customer receives
+ * and the server is how a staff member quotes one number and the customer receives
  * another.
  */
 function useInvoiceTotal(control) {
@@ -246,7 +248,7 @@ function VoidForm({ invoice, onSubmit, onCancel, isPending, error }) {
  * A standalone invoice - one raised against an account for something no order
  * covers: a restocking fee, a repair, an agreed adjustment (§7.2).
  *
- * **Two documents share this form, and the operator picks which by what they
+ * **Two documents share this form, and the staff member picks which by what they
  * type.** Leave the devices alone and it is a flat charge: one amount, a
  * reference saying what for. Add a device and it becomes an itemised repair
  * invoice - services, parts, tax and a computed total. The server decides the
@@ -305,7 +307,7 @@ function InvoiceForm({ clients, technicians = [], defaultUser, onSubmit, onCance
 
   // Which document this is. Adding a device is the gesture that switches it,
   // so the summary and the amount field follow that rather than a mode toggle
-  // the operator would have to find and understand first.
+  // the staff member would have to find and understand first.
   const itemised = devices.fields.length > 0;
 
   const totals = useInvoiceTotal(control);
@@ -555,8 +557,8 @@ function InvoiceForm({ clients, technicians = [], defaultUser, onSubmit, onCance
               />
             </div>
 
-            {/* The arithmetic, shown in the order the server applies it. An
-                operator who can see the steps can spot the wrong one. */}
+            {/* The arithmetic, shown in the order the server applies it. A
+                staff member who can see the steps can spot the wrong one. */}
             <dl className="mt-4 space-y-1.5 border-t border-line pt-3 text-sm">
               <TotalRow label="Services and parts" value={money(totals.lineCents)} />
               {totals.feeCents > 0 && (
@@ -614,6 +616,12 @@ function TotalRow({ label, value }) {
 export function AdminInvoicesPage() {
   const [query, setQuery] = useState('');
   const [paying, setPaying] = useState(null);
+  const [selected, setSelected] = useState([]);
+
+  // `sales.services` is on exactly when the business sells labour - the same
+  // test the quotes list branches on.
+  const { features } = useAuth();
+  const isService = Boolean(features?.['sales.services']);
   const [voiding, setVoiding] = useState(null);
   // Holds the void reason until the invoice number has been retyped. Voiding is
   // the one invoice action with no matching un-void.
@@ -777,9 +785,24 @@ export function AdminInvoicesPage() {
         title={ADMIN_PAGE.title}
         description={ADMIN_PAGE.description}
         action={
-          <Button onClick={() => setCreating(true)} icon={Plus} disabled={!clients.length}>
-            New invoice
-          </Button>
+          /**
+           * A service business gets the full page; a wholesaler keeps the modal.
+           *
+           * The RECORD is one collection either way - `Invoice` is the money
+           * record that payments, credit and every report read, and splitting it
+           * would mean fifty call sites querying two. What differs is the form: a
+           * repair carries devices, services, parts and travel, which is more
+           * than a dialog holds without scrolling past what it is asking about.
+           */
+          isService ? (
+            <Button onClick={() => navigate('/admin/invoices/create')} icon={Plus}>
+              New invoice
+            </Button>
+          ) : (
+            <Button onClick={() => setCreating(true)} icon={Plus} disabled={!clients.length}>
+              New invoice
+            </Button>
+          )
         }
       />
 
@@ -846,9 +869,12 @@ export function AdminInvoicesPage() {
           columns={columns}
           rows={pageInvoices}
           rowKey={(invoice) => invoice.number}
+          selectable
+          selected={selected}
+          onSelectionChange={setSelected}
           // The row opens the invoice, the same way it already does on a
           // customer's profile. A table of invoice numbers whose rows are inert
-          // teaches the operator to hunt for the menu instead.
+          // teaches the staff member to hunt for the menu instead.
           onRowClick={(invoice) => navigate(`/admin/invoices/${invoice.number}`)}
           rowMenu={rowMenu}
           loading={isLoading}
@@ -871,6 +897,34 @@ export function AdminInvoicesPage() {
         />
 
       </Panel>
+
+      {/*
+        Export, and only export.
+
+        **Neither of the other two row actions batches.** Recording a payment
+        needs an amount per invoice and voiding needs a reason per invoice, so a
+        bulk version of either would be answering a question on the staff member
+        behalf about money. Export asks nothing, and pulling a chosen set into a
+        spreadsheet is the thing an accounts person actually reaches for.
+      */}
+      <BulkBar count={selected.length} noun="selected" onClear={() => setSelected([])}>
+        <Button
+          size="xs"
+          variant="outline"
+          icon={Download}
+          onClick={() => downloadExport('invoices', 'csv', { numbers: selected.join(',') })}
+        >
+          Export CSV
+        </Button>
+        <Button
+          size="xs"
+          variant="outline"
+          icon={Download}
+          onClick={() => downloadExport('invoices', 'xlsx', { numbers: selected.join(',') })}
+        >
+          Export Excel
+        </Button>
+      </BulkBar>
 
       <Modal
         open={Boolean(paying)}
@@ -916,7 +970,7 @@ export function AdminInvoicesPage() {
 
       {/* A void cannot be undone from the admin panel: the invoice stays on the
           record as void and a replacement has to be raised by hand. The number
-          is retyped so the operator confirms which invoice they are killing. */}
+          is retyped so the staff member confirms which invoice they are killing. */}
       <ConfirmDialog
         open={Boolean(voidConfirm)}
         onClose={() => setVoidConfirm(null)}
@@ -966,7 +1020,7 @@ export function AdminInvoicesPage() {
               createInvoice.mutate(values, {
                 onSuccess: (payload) => {
                   setCreating(false);
-                  // Straight to the invoice - the next thing an operator does is
+                  // Straight to the invoice - the next thing a staff member does is
                   // send it or record what has already been paid against it.
                   if (payload?.invoice?.number) {
                     navigate(`/admin/invoices/${payload.invoice.number}`);

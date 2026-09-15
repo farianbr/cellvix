@@ -37,7 +37,7 @@ import { pressable } from '@/lib/motion';
  *
  * The comparison panel is the point of this screen. A quote is a promise held
  * for a period, and the catalogue keeps moving underneath it; showing that
- * *while the quote is still open* is what lets an operator re-quote before a
+ * *while the quote is still open* is what lets a staff member re-quote before a
  * client accepts a price that now loses money.
  */
 
@@ -55,7 +55,7 @@ const STATUS_TONES = {
  *
  * Rendered in two places with the same component: inline on the quote while it
  * is open, and inside the conversion dialog when the server refuses with
- * `QUOTE_PRICE_DRIFT`. One implementation means the operator sees the same
+ * `QUOTE_PRICE_DRIFT`. One implementation means the staff member sees the same
  * numbers whichever moment they are looking at.
  */
 function DriftTable({ drift, compact = false }) {
@@ -96,7 +96,7 @@ function DriftTable({ drift, compact = false }) {
                 <span className="block font-mono text-2xs text-ink-300">{line.sku}</span>
 
                 {/* The two states that actually stop a conversion are named
-                    rather than left for the operator to infer from a dash. */}
+                    rather than left for the staff member to infer from a dash. */}
                 {line.unavailable && (
                   <Badge tone="danger" size="sm" className="mt-1">
                     no longer available
@@ -354,7 +354,7 @@ function AdminQuoteDetailPage() {
         onError: (err) => {
           // The server refuses a drifted conversion and hands back the full
           // comparison. Showing it and asking is the whole contract - the
-          // operator decides to honour the quoted price, we never decide for
+          // staff member decides to honour the quoted price, we never decide for
           // them and never apply it silently.
           if (err.code === 'QUOTE_PRICE_DRIFT' && err.fields?.drift) {
             setDriftFromServer(err.fields.drift);

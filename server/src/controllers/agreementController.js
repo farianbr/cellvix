@@ -56,7 +56,7 @@ const updateTemplate = asyncHandler(async (req, res) => {
  *
  * Audited more loudly than an edit, because it moves every supplier onto new
  * wording and makes their existing signature stale - `suppliersMoved` is the
- * number an operator will want back when somebody asks why they were asked to
+ * number a staff member will want back when somebody asks why they were asked to
  * sign again.
  */
 const publishRevision = asyncHandler(async (req, res) => {

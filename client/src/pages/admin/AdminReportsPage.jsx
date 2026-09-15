@@ -41,8 +41,8 @@ import { pressable } from '@/lib/motion';
 /**
  * Reports - the eight analytics tabs (ERP rework §6.12).
  *
- * **Tab and date range both live in the URL**, so every view is a link: an
- * operator sends "here is the quarter I mean" rather than "set the dates to".
+ * **Tab and date range both live in the URL**, so every view is a link: a
+ * staff member sends "here is the quarter I mean" rather than "set the dates to".
  *
  * Two rules from §9 are visible on every screen below and are worth naming
  * where they are rendered rather than only where they are computed:
@@ -93,7 +93,7 @@ function Signed({ cents, className }) {
  * The qualifier that travels with every margin figure.
  *
  * Orders placed before cost was tracked carry no `unitCost`. Reporting those
- * lines as pure profit would be a lie the operator acts on, so the number is
+ * lines as pure profit would be a lie the staff member acts on, so the number is
  * shown **and** the gap is named.
  */
 function CostCoverageNote({ coverage }) {
@@ -821,7 +821,7 @@ function TaxTab({ data }) {
               priority: 2,
               align: 'right',
               className: 'tnum',
-              // Showing both is how an operator finds out a rate moved
+              // Showing both is how a staff member finds out a rate moved
               // mid-range, rather than wondering why the average looks odd.
               render: (row) => (
                 <span className={cn(Math.abs(row.avgRate - row.settingsRate) > 0.005 ? 'text-warn' : 'text-ink-500')}>
@@ -951,7 +951,7 @@ export function AdminReportsPage() {
     const params = new URLSearchParams(searchParams);
     if (next === 'summary') params.delete('tab');
     else params.set('tab', next);
-    // The range is deliberately preserved across a tab change: an operator
+    // The range is deliberately preserved across a tab change: a staff member
     // comparing March across two tabs should not have to re-enter March.
     setSearchParams(params, { replace: true });
   }

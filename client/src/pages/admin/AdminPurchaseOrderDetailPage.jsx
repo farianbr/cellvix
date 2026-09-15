@@ -160,7 +160,7 @@ function ReceiveForm({ order, onSubmit, onCancel, isPending, error, result }) {
       )}
 
       {/* Partial by design: what moved and what did not, with a reason per
-          skip. Silently receiving nineteen of twenty lines is how an operator
+          skip. Silently receiving nineteen of twenty lines is how a staff member
           comes to trust a button that is lying to them. */}
       {result && (
         <div className="space-y-2">
@@ -243,7 +243,7 @@ function ReceiveForm({ order, onSubmit, onCancel, isPending, error, result }) {
  * Record the payment - which creates the expense.
  *
  * The amount is not on this form: it is `order.total`, read from the order on
- * the server. A payment form that let an operator type a different number would
+ * the server. A payment form that let a staff member type a different number would
  * be a second source of truth for what this order cost.
  */
 function PaymentForm({ order, categories, onSubmit, onCancel, isPending, error }) {
@@ -425,7 +425,7 @@ export function AdminPurchaseOrderDetailPage() {
 
       {/* Where this order has got to - the shared strip, not a local row of
           pills. It leads the record because "where is this one?" is the first
-          question an operator arrives with, and the actions below it are what
+          question a staff member arrives with, and the actions below it are what
           they came to do about it. */}
       <ProcessStrip
         steps={PO_LIFECYCLE}
@@ -446,7 +446,7 @@ export function AdminPurchaseOrderDetailPage() {
       {/* What can be done to this order right now.
 
           The stage strip above says where it is; this says what to do about it,
-          and every control here is one an operator reaches for at exactly this
+          and every control here is one a staff member reaches for at exactly this
           point in the process. No panel title: a heading reading "Workflow"
           above a row of buttons named for what they do is a label for something
           the buttons already say. */}
@@ -614,7 +614,7 @@ export function AdminPurchaseOrderDetailPage() {
                             ) : (
                               // A line with no catalogue product behind it will
                               // not move stock when it is received, and saying so
-                              // here is cheaper than the operator finding out
+                              // here is cheaper than the staff member finding out
                               // after the delivery.
                               <span className="text-warn">Not linked - will not move stock</span>
                             )}
@@ -860,7 +860,7 @@ export function AdminPurchaseOrderDetailPage() {
                     .filter((line) => line.qty > 0),
                 },
                 {
-                  // Kept open on success so the operator reads what moved and
+                  // Kept open on success so the staff member reads what moved and
                   // what did not, rather than the dialog closing over the skips.
                   onSuccess: (payload) =>
                     setReceiveResult({

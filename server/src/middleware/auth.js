@@ -86,7 +86,7 @@ async function authenticate(req, res, next) {
 /**
  * Somebody is signed in.
  *
- * **Admits an impersonating operator**, because every guard below funnels
+ * **Admits an impersonating platform operator**, because every guard below funnels
  * through the idea of "a request that is allowed to be here", and a support
  * session is. What it deliberately does not do is give that operator a
  * `req.user` - the routes beneath still have to cope with there being no buyer

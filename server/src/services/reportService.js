@@ -20,7 +20,7 @@ import ApiError from '../utils/ApiError.js';
  *      invoices issued in the range, by invoice date. `collected` is payments
  *      received in the range, by payment date. They are different numbers and
  *      every tile says which it is - "Revenue" meaning one on one screen and
- *      the other on the next is how a report loses an operator's trust.
+ *      the other on the next is how a report loses a staff member's trust.
  *   2. **Refunds are their own line**, never a negative folded into revenue.
  *   3. **A signed figure renders once.** A loss is `Net profit −$350.70`, not a
  *      positive number under a "Net loss" heading.
@@ -308,7 +308,7 @@ async function summary(start, end, settings) {
     },
     refunds,
     // Staff attribution arrives in phase 8 - there is no staff concept to
-    // report on yet, and inventing one would be a lie the operator acts on.
+    // report on yet, and inventing one would be a lie the staff member acts on.
     staff: { available: false, rows: [] },
     receivables: ar,
     profitAndLoss: {
@@ -350,7 +350,7 @@ async function profitAndLoss(start, end) {
   const grossProfit = netRevenue - cogs.cost;
 
   // Per-category margin. `partTypeLabel` is the wholesale read of a category
-  // it is what the storefront filters on and what an operator thinks in.
+  // it is what the storefront filters on and what a staff member thinks in.
   const byCategory = new Map();
   for (const order of orders) {
     for (const item of order.items ?? []) {
@@ -639,7 +639,7 @@ async function taxTab(start, end, settings) {
         tax: row.tax,
         // The average rate actually charged, and the rate Settings says should
         // apply. They differ when a rate changed mid-range, and seeing both is
-        // how an operator finds out.
+        // how a staff member finds out.
         avgRate: row.taxable > 0 ? row.tax / row.taxable : 0,
         settingsRate: db().Settings.rateFor(settings, row.province),
       }))

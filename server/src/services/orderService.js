@@ -212,7 +212,7 @@ async function createOrder(user, input) {
    *
    * **A storefront order carried no business at all**, which made it invisible
    * to an admin panel scoped to one - the order existed, the customer was
-   * charged, and the operator's list was empty. Every seeded order had one and
+   * charged, and the staff member's list was empty. Every seeded order had one and
    * only checkout did not, so nothing surfaced it until the panel stopped
    * running in "all businesses" mode.
    *

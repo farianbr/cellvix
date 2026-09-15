@@ -251,8 +251,8 @@
      A SEPARATE identity, deliberately (SAAS_PLATFORM §0.1).
 
      Everything above this belongs to Cellvix - tenant #1's wholesale business.
-     The operator console sits ABOVE every tenant and must not wear any one
-     tenant's colours: an operator who cannot tell at a glance whether they are
+     The staff member console sits ABOVE every tenant and must not wear any one
+     tenant's colours: a staff member who cannot tell at a glance whether they are
      in the platform or inside a customer's shop is one keystroke from
      reconfiguring the wrong thing, and a console painted in Cellvix red
      silently asserts that the platform IS Cellvix. It is not, and the platform
@@ -450,8 +450,21 @@
      rather than a red one. Left-to-right at 100deg gives the slight tilt of
      the reference without the 135deg diagonal, which on a wide, short button
      compresses the whole ramp into the first third. */
+  /* Every stop is a variable holding the Cellvix value as its fallback.
+
+     The fallback is what keeps the storefront exactly as it was: nothing
+     outside the admin panel and the supplier portal defines these, so each
+     var() here resolves to the literal it always held. The panel shell sets
+     them per business (shared/businessPalette.js) and the same utility
+     repaints, which is why no component had to change. */
   .bg-brand-gradient {
-    background-image: linear-gradient(100deg, #1a0603 0%, #8f221b 38%, #cf3429 72%, #e8564a 100%);
+    background-image: linear-gradient(
+      100deg,
+      var(--brand-grad-dark, #1a0603) 0%,
+      var(--brand-grad-mid, #8f221b) 38%,
+      var(--brand-grad-base, #cf3429) 72%,
+      var(--brand-grad-end, #e8564a) 100%
+    );
   }
 
   /* The ramp for a LARGE surface carrying small text.
@@ -467,7 +480,12 @@
      4.5, so the panel can still fade its secondary lines. Everything that is
      NOT a large text surface keeps the vivid ramp above. */
   .bg-brand-gradient-panel {
-    background-image: linear-gradient(100deg, #1a0603 0%, #7d1e17 45%, #9d251d 100%);
+    background-image: linear-gradient(
+      100deg,
+      var(--brand-grad-dark, #1a0603) 0%,
+      var(--brand-grad-panel-mid, #7d1e17) 45%,
+      var(--brand-grad-panel-end, #9d251d) 100%
+    );
   }
 
   /* The same ramp for something small - a filter pill, a badge, a count chip.
@@ -475,12 +493,22 @@
      gradient puts its darkest stop inside the chip, which reads as a stray
      black stripe down one side rather than as depth. Same identity, no stripe. */
   .bg-brand-gradient-compact {
-    background-image: linear-gradient(100deg, #8f221b 0%, #cf3429 55%, #e8564a 100%);
+    background-image: linear-gradient(
+      100deg,
+      var(--brand-grad-mid, #8f221b) 0%,
+      var(--brand-grad-base, #cf3429) 55%,
+      var(--brand-grad-end, #e8564a) 100%
+    );
   }
 
   /* 2px accent rule, used at the top of the header and under active tabs. */
   .rule-brand-gradient {
-    background-image: linear-gradient(90deg, #1a0603 0%, #cf3429 60%, #e8564a 100%);
+    background-image: linear-gradient(
+      90deg,
+      var(--brand-rule-dark, #1a0603) 0%,
+      var(--brand-rule-mid, #cf3429) 60%,
+      var(--brand-rule-end, #e8564a) 100%
+    );
   }
 
   /* The ramp for a small ROUND element - a step indicator, a numbered pill.
@@ -496,7 +524,12 @@
      changing (#a82920 and #dd473c) instead of on a stop that has stopped.
      Same colours, same direction, no flat edge. */
   .bg-brand-gradient-orb {
-    background-image: linear-gradient(100deg, #8f221b -35%, #cf3429 55%, #e8564a 135%);
+    background-image: linear-gradient(
+      100deg,
+      var(--brand-grad-mid, #8f221b) -35%,
+      var(--brand-grad-base, #cf3429) 55%,
+      var(--brand-grad-end, #e8564a) 135%
+    );
   }
   /* The orb ramp for a disc carrying a LABEL rather than a digit.
 
@@ -511,7 +544,12 @@
      orb ramp does: a linear gradient is flat past its end stops, and on a disc
      those flat runs read as vertical strokes down the left and right rims. */
   .bg-brand-gradient-orb-panel {
-    background-image: linear-gradient(100deg, #5e120d -35%, #8b2019 55%, #9d251d 135%);
+    background-image: linear-gradient(
+      100deg,
+      var(--brand-grad-orb-panel-dark, #5e120d) -35%,
+      var(--brand-grad-orb-panel-mid, #8b2019) 55%,
+      var(--brand-grad-orb-panel-end, #9d251d) 135%
+    );
   }
 
 
@@ -534,7 +572,12 @@
     padding: var(--ring-w, 2px);
     background-image:
       linear-gradient(var(--color-surface), var(--color-surface)),
-      linear-gradient(100deg, #8f221b 0%, #cf3429 55%, #e8564a 100%);
+      linear-gradient(
+        100deg,
+        var(--brand-grad-mid, #8f221b) 0%,
+        var(--brand-grad-base, #cf3429) 55%,
+        var(--brand-grad-end, #e8564a) 100%
+      );
     background-origin: border-box;
     background-clip: content-box, border-box;
   }

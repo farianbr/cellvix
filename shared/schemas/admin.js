@@ -5,6 +5,35 @@ import { passwordSchema } from './auth.js';
 import { DEFAULT_COUNTRY } from '../countries.js';
 import { PROVINCES } from './checkout.js';
 import { isValidPostal, postalExampleFor } from '../regions.js';
+// Identity colours, and the mapping that accepts the semantic tokens this
+// field used to hold. See shared/businessPalette.js for why the two lists are
+// separate now.
+import {
+  BUSINESS_COLOR_TOKENS as IDENTITY_COLOR_TOKENS,
+  DEFAULT_BUSINESS_COLOR,
+  migrateColorToken,
+} from '../businessPalette.js';
+
+/**
+ * Accepts a legacy token and normalises it, rather than rejecting it.
+ *
+ * Every business in the database predates the identity palette and carries one
+ * of the old semantic names. A bare enum would refuse the form the moment a
+ * staff member opened an existing business and pressed Save on an unrelated field:
+ * a validation error about a colour they never touched. Preprocessing maps the
+ * old value across, so the edit succeeds and the record repairs itself.
+ *
+ * Defined here, beside the import, rather than next to the other business
+ * constants further down - two schemas reference it and the first of them is
+ * above that point, which is a use-before-initialisation the moment this
+ * module is evaluated.
+ */
+const colorTokenSchema = z
+  .preprocess(
+    (value) => (value == null ? value : migrateColorToken(value)),
+    z.enum(IDENTITY_COLOR_TOKENS),
+  )
+  .default(DEFAULT_BUSINESS_COLOR);
 
 const cents = z.coerce.number().int().min(0).max(100_000_000);
 
@@ -156,6 +185,33 @@ const clientFormBase = z
       email: z.boolean(),
       call: z.boolean(),
     }),
+
+    /**
+     * Which channel to reach this customer on.
+     *
+     * **`contactConsent` above answers "may we", this answers "how".** They are
+     * different questions and the first cannot stand in for the second: somebody
+     * may consent to SMS, email and calls without that saying which one they
+     * actually read. Every ticket status update goes out on this one channel, so
+     * guessing wrong means messaging somebody who never sees it and then
+     * wondering why nobody collected their device.
+     *
+     * Empty is a real answer and the default: it means nobody has asked yet,
+     * which is different from choosing email. Treating silence as a choice would
+     * start messaging people on a channel they never picked.
+     */
+    preferredContact: z.enum(['', 'sms', 'whatsapp', 'email', 'call']).optional(),
+
+    /**
+     * How this customer first reached the business.
+     *
+     * Attribution only - nothing reads it as authority. It answers "where is our
+     * work coming from", which no other field on the record can. Distinct from
+     * `referredBy`, which is the commission edge: a customer can be `referral`
+     * here with nobody to pay, because a friend's recommendation earns no
+     * commission and is still why they walked in.
+     */
+    source: z.enum(['', 'walk_in', 'call', 'web_quote', 'referral', 'kiosk']).optional(),
   });
 
 /**
@@ -234,7 +290,7 @@ const clientCreateFormSchema = clientFormBase
  * more than set the field - an edit form that also wrote `status` would be a
  * second approval path with no reason, no rep and no audit trail of its own.
  *
- * The optional descriptors accept an empty string so an operator can clear a
+ * The optional descriptors accept an empty string so a staff member can clear a
  * tax ID they typed by mistake; the identity fields keep `clientSchema`'s
  * minimums, because they are still what the account is known by.
  */
@@ -249,6 +305,10 @@ const clientUpdateSchema = z.object({
   businessType: z.string().trim().max(80).optional(),
   website: z.string().trim().max(200).optional(),
   taxId: z.string().trim().max(40).optional(),
+  // Both accept an empty string, so a staff member can clear a channel or an
+  // attribution recorded by mistake and put the record back to "not asked yet".
+  preferredContact: z.enum(['', 'sms', 'whatsapp', 'email', 'call']).optional(),
+  source: z.enum(['', 'walk_in', 'call', 'web_quote', 'referral', 'kiosk']).optional(),
   address: z
     .object({
       line1: z.string().trim().min(2, 'Enter a street address.').max(120),
@@ -275,6 +335,38 @@ const clientUpdateSchema = z.object({
 
 /** The contact channels consent is recorded against (CASL, §6.13). */
 const CONSENT_CHANNELS = ['sms', 'whatsapp', 'email', 'call'];
+
+/**
+ * The preferred-channel picker's options.
+ *
+ * The same four channels as `CONSENT_CHANNELS`, with an explicit empty first
+ * entry: "not asked yet" is a real state and has to be selectable, so a
+ * staff member can put a record back to it rather than being forced to leave a
+ * guess behind.
+ */
+const PREFERRED_CONTACT_OPTIONS = [
+  { value: '', label: 'Not asked yet' },
+  { value: 'sms', label: 'SMS' },
+  { value: 'whatsapp', label: 'WhatsApp' },
+  { value: 'email', label: 'Email' },
+  { value: 'call', label: 'Phone call' },
+];
+
+/**
+ * Where a customer came from.
+ *
+ * `web_quote` is the storefront enquiry form and `kiosk` is the self-service
+ * check-in - both are set by the system rather than typed, but they appear here
+ * so a staff member editing the record can see and correct what was recorded.
+ */
+const CUSTOMER_SOURCE_OPTIONS = [
+  { value: '', label: 'Not recorded' },
+  { value: 'walk_in', label: 'Walk-in visit' },
+  { value: 'call', label: 'Call' },
+  { value: 'web_quote', label: 'Web quote' },
+  { value: 'referral', label: 'Referral' },
+  { value: 'kiosk', label: 'Kiosk check-in' },
+];
 
 /**
  * What a customer agreed to be contacted on.
@@ -362,7 +454,7 @@ const ORDER_STATUS_FLOW = [
  * **This exists so a count and its own link cannot disagree.** The dashboard's
  * "Open orders" tile counted these four statuses and then linked to
  * `?status=placed`, so a tile reading 2 opened a list showing one row - or an
- * empty one, when both open orders happened to be `shipped`. The operator is
+ * empty one, when both open orders happened to be `shipped`. The staff member is
  * told a number and then shown something that contradicts it, which makes the
  * whole row untrustworthy.
  *
@@ -414,10 +506,10 @@ const CARRIERS = [
  * `badge` names a counter on `GET /admin/stats`; the sidebar renders it when
  * the count is non-zero.
  *
- * `badgeLabel` is what that number COUNTS, as a noun the operator would say
+ * `badgeLabel` is what that number COUNTS, as a noun the staff member would say
  * out loud - "waiting for approval", "out of stock or running low". It is not
  * decoration: a bare number in a sidebar is unreadable twice over. A sighted
- * operator cannot tell whether "6" is unread, overdue or merely total, and a
+ * staff member cannot tell whether "6" is unread, overdue or merely total, and a
  * screen reader announces "Tickets 6" with no clue what six means. The label
  * supplies the noun for both, as a `title`, an `aria-label` and a line in the
  * page header it lands on.
@@ -435,7 +527,7 @@ const CARRIERS = [
  *
  * `badgeFilter` is the view that shows exactly the badged rows. The rule it
  * enforces: **a count must be reachable**. Inventory badged 189 and opened a
- * list of 420 with no 189 anywhere on it, which teaches an operator that the
+ * list of 420 with no 189 anywhere on it, which teaches a staff member that the
  * numbers are decorative. The row still navigates to the unfiltered page
  * that is what a nav row is for - and the page states the count and offers the
  * filter on arrival, so the number is explained where it is doubted rather
@@ -478,7 +570,7 @@ const ADMIN_NAV = [
       },
       {
         key: 'rma',
-        // "Returns", not "RMA / Returns": the operator says returns, and the
+        // "Returns", not "RMA / Returns": the staff member says returns, and the
         // acronym was only ever there to disambiguate from the supplier-side
         // row, which is now switched off.
         label: 'Returns',
@@ -504,6 +596,11 @@ const ADMIN_NAV = [
       // Enquiries from the storefront's contact form, before anybody has priced
       // them. Under Quotes because that is what they usually become.
       { key: 'web-quotes', label: 'Web Quote', to: '/admin/web-quotes', icon: 'Globe' },
+      // The labour price list. Under Sales rather than Settings because it is
+      // what the quote and ticket forms pick from every day, not something
+      // configured once - and a price list buried two menus deep is a price
+      // list that goes stale.
+      { key: 'services', label: 'Services', to: '/admin/services', icon: 'Wrench' },
     ],
   },
   {
@@ -618,7 +715,7 @@ const ADMIN_NAV = [
      *
      * Blog and FAQ were under Marketing because they are things you publish,
      * but publishing is where the similarity ends - nobody writes a help
-     * article as part of a campaign, and an operator looking for one had to
+     * article as part of a campaign, and a staff member looking for one had to
      * think of it as marketing first. They keep their `/admin/marketing/*`
      * URLs: those are bookmarked and linked from the storefront, and moving a
      * row in the nav is not a reason to break a link.
@@ -751,7 +848,7 @@ const invoicePaymentSchema = z.object({
  * was billed is a void plus a new invoice, which leaves both in the record.
  */
 const invoiceUpdateSchema = z.object({
-  dueDate: z.string().trim().regex(/^d{4}-d{2}-d{2}$/, 'Pick a due date.').optional(),
+  dueDate: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/, 'Pick a due date.').optional(),
   poNumber: z.string().trim().max(60).or(z.literal('')).optional(),
   note: z.string().trim().max(500).or(z.literal('')).optional(),
 });
@@ -888,7 +985,7 @@ const purchaseOrderSchema = z.object({
   notes: z.string().trim().max(2000).optional(),
 });
 
-/** `draft → sent` and `cancelled` are the only operator-chosen transitions. */
+/** `draft → sent` and `cancelled` are the only staff member-chosen transitions. */
 const purchaseOrderStatusSchema = z.object({
   status: z.enum(['sent', 'cancelled']),
   note: z.string().trim().max(300).optional(),
@@ -1121,7 +1218,7 @@ const tenantSlotsSchema = z.object({
 const superAdminBusinessSchema = z.object({
   name: z.string().trim().min(1, 'Give the business a name.').max(120),
   businessType: z.enum(['product', 'service', 'both']),
-  colorToken: z.enum(['brand', 'info', 'success', 'warn', 'danger', 'ink']).optional(),
+  colorToken: colorTokenSchema.optional(),
 });
 
 const businessAssignSchema = z.object({
@@ -1151,7 +1248,7 @@ const supportMessageSchema = z.object({
  *
  * **No password field, deliberately.** The owner sets their own through the
  * invitation link; a console that collected one would mean every tenant's first
- * credential passed through an operator's hands.
+ * credential passed through a staff member's hands.
  */
 const tenantOwnerSchema = z.object({
   contactName: z.string().trim().min(1, 'Give the owner a name.').max(120),
@@ -1304,7 +1401,7 @@ const productOpsSchema = z.object({
  *
  * `unitPrice` **is** sent by the client here, unlike a sale - a quote is a
  * negotiated number and has no server-side source of truth to read it from.
- * Zero means "use the catalogue price", so an operator quoting at list does not
+ * Zero means "use the catalogue price", so a staff member quoting at list does not
  * have to retype it. Every total computed from it stays the server's.
  */
 const quoteItemSchema = z.object({
@@ -1363,7 +1460,7 @@ const adminOrderSchema = z.object({
   /**
    * Which shop fulfils this order.
    *
-   * Optional, and the server falls back to the business the operator is working
+   * Optional, and the server falls back to the business the staff member is working
    * in. It is asked explicitly because the answer is not always that one: a
    * customer collecting in person picks the shop nearest them, and a delivery
    * goes out from whichever shop holds the stock.
@@ -1393,7 +1490,7 @@ const adminOrderSchema = z.object({
  * business that has to file GST and PST separately needs a bookkeeping package,
  * not a second row on this form.
  *
- * The rate is a DEFAULT. The form lets an operator override it, because zero is
+ * The rate is a DEFAULT. The form lets a staff member override it, because zero is
  * a real answer - an exempt customer, an out-of-country sale - and a rate the
  * software insists on is a rate somebody works around by editing the total.
  */
@@ -1414,12 +1511,30 @@ const TAX_RATES = {
  * invoice is raised; a service has no product and never will.
  */
 /** How the job reached the workshop. Mirrors the ticket's own sources. */
+/**
+ * How the device reaches the shop, and how it gets back.
+ *
+ * **Labels changed, values did not.** `pickup` reads "Pick-up & Drop-off"
+ * because that is the round trip a customer is actually buying; `onsite` is
+ * "On-site Repair" because a technician travelling to them is a different job
+ * from either. Renaming the stored values would orphan every invoice and ticket
+ * already written, and the words on screen are not what a query matches on.
+ *
+ * `mail_in` stays in the list but is **not offered on a service invoice** - a
+ * repair shop taking a device by post is a different operation from the three
+ * a counter runs, and the value is kept so existing records still render.
+ */
 const INVOICE_SERVICE_TYPES = [
   { value: 'walk_in', label: 'Walk-in' },
-  { value: 'pickup', label: 'Pickup' },
-  { value: 'onsite', label: 'On-site' },
+  { value: 'pickup', label: 'Pick-up & Drop-off' },
+  { value: 'onsite', label: 'On-site Repair' },
   { value: 'mail_in', label: 'Mail-in' },
 ];
+
+/** The three a service business actually offers at the counter. */
+const SERVICE_INVOICE_TYPES = INVOICE_SERVICE_TYPES.filter(
+  (entry) => entry.value !== 'mail_in',
+);
 
 const invoiceLineSchema = z.object({
   name: z.string().trim().min(1, 'Name the line.').max(160),
@@ -1463,7 +1578,7 @@ const invoiceDeviceSchema = z.object({
  * total the browser calculated is a total the browser can be wrong about.
  *
  * The flat path stays because most standalone invoices are one number and
- * making an operator open a device panel to type it would be a worse form.
+ * making a staff member open a device panel to type it would be a worse form.
  */
 const adminInvoiceSchema = z.object({
   user: z.string().trim().min(1, 'Pick a customer.'),
@@ -1480,14 +1595,24 @@ const adminInvoiceSchema = z.object({
   discountDollars: z.coerce.number().min(0).max(1_000_000).default(0),
   discountCode: z.string().trim().max(40).or(z.literal('')).optional(),
 
-  /** Internal only - recorded, never added to what the customer owes. */
+  /**
+   * The distance driven. Internal: it produces a mileage allowance for the
+   * shop's own books and is never added to what the customer owes.
+   *
+   * **The rate is not sent with it.** `Settings.financial.travelRateCentsPerKm`
+   * decides what a kilometre is worth, and the server multiplies - a client
+   * able to send the rate could overstate a mileage claim.
+   */
   travelKm: z.coerce.number().min(0).max(100_000).default(0),
+
   /**
    * The one travel figure that IS charged, when the job is out of area.
    *
-   * The amount travels with the flag rather than coming from a setting: there
-   * is no service-area rate configured anywhere yet, and inventing a silent
-   * default would put a number on a customer's invoice that nobody chose.
+   * Only the flag now. The amount used to travel with it because no
+   * service-area rate was configured anywhere; `Settings.financial
+   * .extendedServiceFeeCents` is that setting, so the client says whether to
+   * charge and the business says how much. `extendedServiceFeeDollars` is still
+   * accepted and ignored, so an older form does not fail validation.
    */
   extendedServiceFee: z.boolean().default(false),
   extendedServiceFeeDollars: z.coerce.number().min(0).max(100_000).default(0),
@@ -1617,7 +1742,7 @@ const ticketDepositSchema = z.object({
  * Turning a finished repair into its invoice.
  *
  * Only the terms are asked: everything billed comes off the ticket, which is
- * where the job was priced. A form that let an operator restate the lines here
+ * where the job was priced. A form that let a staff member restate the lines here
  * would be a second place for them to differ.
  */
 const ticketConvertSchema = z.object({
@@ -1767,7 +1892,7 @@ const ticketSchema = z.object({
   discountCode: z.string().trim().max(40).or(z.literal('')).optional(),
   taxRate: z.coerce.number().min(0).max(100).optional(),
   province: z.string().trim().max(2).or(z.literal('')).optional(),
-  dueDate: z.string().trim().regex(/^d{4}-d{2}-d{2}$/).or(z.literal('')).optional(),
+  dueDate: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal('')).optional(),
 });
 
 /** Everything on the create form is editable afterwards except the status. */
@@ -1815,7 +1940,7 @@ const PERMISSION_LEVEL_LABELS = {
 };
 
 const BUSINESS_STATUSES = ['active', 'inactive', 'maintenance'];
-const BUSINESS_COLOR_TOKENS = ['brand', 'info', 'success', 'warn', 'danger', 'ink'];
+const BUSINESS_COLOR_TOKENS = IDENTITY_COLOR_TOKENS;
 
 const POSTAL_CA = /^[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d$/;
 
@@ -1828,12 +1953,12 @@ const businessHoursSchema = z.object({
 
 /**
  * `code` is absent on purpose - it is assigned server-side (§6.14). A code the
- * form proposes is a code two operators can pick in the same moment.
+ * form proposes is a code two staff can pick in the same moment.
  */
 const businessSchema = z.object({
   name: z.string().trim().min(1, 'Enter an business name.').max(120),
   status: z.enum(BUSINESS_STATUSES).default('active'),
-  colorToken: z.enum(BUSINESS_COLOR_TOKENS).default('brand'),
+  colorToken: colorTokenSchema,
   address: z
     .object({
       street: z.string().trim().max(200).optional(),
@@ -2101,6 +2226,23 @@ const saleSettingsSchema = z.object({
     )
     .optional(),
   rmaSlaDays: z.coerce.number().int().min(1, 'Enter at least one day.').max(365),
+
+  /**
+   * What a kilometre of travel is worth, in **cents**, for an on-site repair.
+   *
+   * Entered in cents rather than dollars because the CRA rate carries a tenth
+   * of a cent - 56.7, not 0.567 rounded to 0.57 - and a shop that types the
+   * dollar figure loses it. The form labels it as cents per km for the same
+   * reason.
+   *
+   * This is the shop's own cost for the journey. What the customer pays for an
+   * out-of-area visit is typed on the invoice itself, per job.
+   */
+  travelRateCentsPerKm: z.coerce
+    .number()
+    .min(0, 'A rate cannot be negative.')
+    .max(1000, 'That is more than $10 a kilometre.')
+    .optional(),
 });
 
 /**
@@ -2444,10 +2586,22 @@ const supplierServiceUpdateSchema = supplierServiceSchema.partial();
 
 /**
  * Recording a charge. Every field is optional because the plan already knows
- * what it costs - an operator confirming a renewal at the agreed price should
+ * what it costs - a staff member confirming a renewal at the agreed price should
  * not have to retype it, and an amount sent here overrides it for that charge
  * only.
  */
+/**
+ * A gratuity on an invoice.
+ *
+ * Zero is valid and clears one recorded by mistake, which is the difference
+ * between this and a payment: a payment of nothing is a mistake, a tip of
+ * nothing is a correction.
+ */
+const invoiceTipSchema = z.object({
+  amountDollars: z.coerce.number().min(0).max(100000),
+  at: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a calendar date.').optional(),
+});
+
 const supplierChargeSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a calendar date.').optional(),
   description: z.string().trim().max(240).optional(),
@@ -2458,4 +2612,248 @@ const supplierChargeSchema = z.object({
   reference: z.string().trim().max(80).optional(),
 });
 
-export { quoteToTicketSchema, ticketDepositSchema, ticketConvertSchema, TAX_RATES, INVOICE_SERVICE_TYPES, ORDER_OPEN_STATUSES, ORDER_UNFULFILLED_STATUSES, approveUserSchema, rejectUserSchema, creditSchema, clientSchema, clientFormSchema, clientCreateFormSchema, clientUpdateSchema, CONSENT_CHANNELS, contactConsentSchema, MEMBERSHIP_TIERS, tierSchema, internalNoteSchema, storeCreditSchema, refundSchema, userStatusSchema, productSchema, ORDER_STATUS_FLOW, orderStatusSchema, CARRIERS, ADMIN_NAV, ADMIN_LEGACY_REDIRECTS, invoicePaymentSchema, invoiceVoidSchema, webQuoteStatusSchema, creditPaymentSchema, invoiceUpdateSchema, bulkOrderStatusSchema, supplierSchema, purchaseOrderSchema, purchaseOrderStatusSchema, purchaseReceiveSchema, purchasePaymentSchema, purchaseInviteSchema, purchaseSendSchema, purchaseNegotiateSchema, purchaseConfirmSchema, proformaRevisionSchema, supplierQuoteSchema, supplierDeclineSchema, supplierProformaSchema, supplierDeliverySchema, superAdminLoginSchema, tenantSchema, tenantSlotsSchema, superAdminBusinessSchema, businessAssignSchema, businessFeatureSchema, impersonationSchema, tenantOwnerSchema, supportMessageSchema, planSchema, planFeatureSchema, businessStatusSchema, supplierLoginSchema, supplierForgotSchema, supplierResetSchema, supplierPasswordSchema, expenseSchema, expenseCategorySchema, stockAdjustSchema, productOpsSchema, quoteSchema, quoteStatusSchema, quoteConvertSchema, adminOrderSchema, adminInvoiceSchema, RMA_ITEM_DISPOSITIONS, rmaSchema, TICKET_STATUSES, TICKET_PRIORITIES, TICKET_SOURCES, TICKET_STATUS_LABELS, CONDITION_GRADES, CONDITION_PARTS, ticketSchema, ticketDeviceSchema, ticketLineSchema, ticketUpdateSchema, ticketStatusSchema, rmaStatusSchema, rmaInspectSchema, rmaResolveSchema, PERMISSION_AREAS, PERMISSION_LEVELS, PERMISSION_LEVEL_LABELS, BUSINESS_STATUSES, BUSINESS_COLOR_TOKENS, businessSchema, roleSchema, staffUserSchema, staffUserUpdateSchema, MESSAGE_CHANNELS, TEMPLATE_DOCUMENTS, CAMPAIGN_AUDIENCES, CAMPAIGN_AUDIENCE_LABELS, messageSchema, callLogSchema, messageTemplateSchema, campaignSchema, unsubscribeSchema, referralRateSchema, businessInfoSchema, saleSettingsSchema, shippingSettingsSchema, paymentMethodsSettingsSchema, inventorySettingsSchema, agreementTemplateSchema, agreementSignSchema, providerCredentialSchema, taxonomyNodeSchema, invoiceStatusRuleSchema, communicationsSettingsSchema, SUPPLIER_RETURN_REASON_VALUES, supplierReturnSchema, supplierReturnStatusSchema, supplierCreditSchema, SUPPLIER_BILLING_CYCLES, supplierServiceSchema, supplierServiceUpdateSchema, supplierChargeSchema };
+/** The service catalogue's own categories, mirroring `models/Service.js`. */
+const SERVICE_CATEGORIES = [
+  'screen',
+  'battery',
+  'charging_port',
+  'camera',
+  'audio',
+  'water_damage',
+  'software',
+  'data',
+  'diagnostic',
+  'other',
+];
+
+const SERVICE_CATEGORY_LABELS = {
+  screen: 'Screen',
+  battery: 'Battery',
+  charging_port: 'Charging port',
+  camera: 'Camera',
+  audio: 'Audio',
+  water_damage: 'Water damage',
+  software: 'Software',
+  data: 'Data',
+  diagnostic: 'Diagnostic',
+  other: 'Other',
+};
+
+/**
+ * A sellable repair service (Sales § Services).
+ *
+ * `price` is dollars on the wire and cents in the database, like every other
+ * amount a staff member types. `cost` is deliberately NOT defaulted: an unknown
+ * cost and a zero cost produce very different margin numbers, and defaulting it
+ * would record the first as the second.
+ */
+const serviceCatalogSchema = z.object({
+  name: z.string().trim().min(2, 'Give the service a name.').max(160),
+  description: z.string().trim().max(500).or(z.literal('')).optional(),
+  category: z.enum(SERVICE_CATEGORIES).default('other'),
+
+  price: z.coerce.number().min(0).max(1_000_000).default(0),
+  cost: z.coerce.number().min(0).max(1_000_000).optional(),
+
+  durationMinutes: z.coerce.number().int().min(0).max(100_000).default(0),
+  warrantyDays: z.coerce.number().int().min(0).max(3650).default(0),
+
+  // Free-form on purpose: which devices a shop takes in is the shop's business.
+  deviceTypes: z.array(z.string().trim().max(40)).max(20).optional(),
+
+  taxable: z.boolean().default(true),
+  isActive: z.boolean().default(true),
+  order: z.coerce.number().int().min(0).max(10_000).default(0),
+});
+
+/** Everything on the create form stays editable afterwards. */
+const serviceCatalogUpdateSchema = serviceCatalogSchema.partial();
+
+/**
+ * The devices a service business takes in (Sales § Ticket, § Quote).
+ *
+ * The same four levels the catalogue tree uses, on its own model - see
+ * `models/DeviceCatalog.js` for why a repair shop cannot share `Taxonomy`.
+ */
+const DEVICE_KINDS = ['deviceType', 'brand', 'series', 'model'];
+
+const DEVICE_KIND_LABELS = {
+  deviceType: 'Category',
+  brand: 'Brand',
+  series: 'Device / series',
+  model: 'Model',
+};
+
+const deviceCatalogSchema = z.object({
+  name: z.string().trim().min(1, 'Give the device a name.').max(120),
+
+  /**
+   * The parent, which is what decides the level.
+   *
+   * **`kind` is deliberately absent from this schema.** The server derives it
+   * from the parent's kind; a client that could name the level could hang a
+   * device type under a model, and every denormalised `path` below it would be
+   * meaningless. An absent parent means a root, which is always a device type.
+   */
+  parent: z.string().trim().length(24).or(z.literal('')).optional(),
+
+  // Generated from the name when absent. Accepted so an import can keep the
+  // slugs it already has.
+  slug: z.string().trim().max(80).or(z.literal('')).optional(),
+
+  icon: z.string().trim().max(40).or(z.literal('')).optional(),
+  order: z.coerce.number().int().min(0).max(10_000).default(0),
+  aliases: z.array(z.string().trim().max(60)).max(20).optional(),
+  isActive: z.boolean().default(true),
+});
+
+/**
+ * Editing.
+ *
+ * `parent` and `slug` are omitted rather than made optional: neither can change
+ * once the node exists. Every ticket already written carries the slug in its
+ * `path`, so changing it orphans them, and correcting a display-name typo must
+ * not do that.
+ */
+const deviceCatalogUpdateSchema = deviceCatalogSchema
+  .omit({ parent: true, slug: true })
+  .partial();
+
+/**
+ * Self-service check-in (Sales § Kiosk).
+ *
+ * **Almost everything is optional**, and that is the design rather than
+ * laxness. A customer standing at a tablet gives what they can: the flow lets
+ * them skip an email, offers "pick the closest" on the model, and marks the
+ * passcode and serial optional in as many words. A schema that demanded a full
+ * record would reject exactly the check-ins the kiosk exists to capture, and
+ * the counter completes the rest under `intake.awaitingReview`.
+ *
+ * The phone number is the one exception: it is where every status update goes,
+ * and a check-in nobody can be told about is a device that sits uncollected.
+ */
+const kioskCheckInSchema = z.object({
+  firstName: z.string().trim().min(1, 'Enter your first name.').max(60),
+  lastName: z.string().trim().max(60).or(z.literal('')).optional(),
+  phone: z.string().trim().min(7, 'Enter a phone number we can reach you on.').max(40),
+  email: z.string().trim().toLowerCase().email().or(z.literal('')).optional(),
+
+  category: z.string().trim().max(60).or(z.literal('')).optional(),
+  brand: z.string().trim().max(60).or(z.literal('')).optional(),
+  series: z.string().trim().max(120).or(z.literal('')).optional(),
+  model: z.string().trim().max(120).or(z.literal('')).optional(),
+
+  problem: z.string().trim().max(500).or(z.literal('')).optional(),
+  passcode: z.string().trim().max(60).or(z.literal('')).optional(),
+  serial: z.string().trim().max(80).or(z.literal('')).optional(),
+
+  /**
+   * The two things the customer actually agreed to.
+   *
+   * `termsAccepted` is the shop's protection and the server re-checks it
+   * against the business's own `requireTerms` setting - a client that could
+   * skip it would be skipping the one row that answers "they never agreed to
+   * leave it".
+   */
+  termsAccepted: z.boolean().default(false),
+  updatesConsent: z.boolean().default(false),
+});
+
+/** Unlocking the tablet. Digits only; the server compares against a hash. */
+const kioskUnlockSchema = z.object({
+  pin: z.string().trim().regex(/^\d{4,8}$/, 'Enter the kiosk PIN.'),
+});
+
+/** Setting it, from the admin side. Never reachable from the tablet. */
+const kioskPinSchema = z.object({
+  pin: z.string().trim().regex(/^\d{4,8}$/, 'A kiosk PIN is 4 to 8 digits.'),
+});
+
+/**
+ * Repair estimates (Sales § Quote, service businesses).
+ *
+ * The estimate and the ticket share a device shape on purpose, so the line and
+ * device schemas are **derived from the ticket's** rather than restated. A
+ * field added to a ticket line is then validated on an estimate line too, and
+ * the two cannot drift into disagreeing about what a line is.
+ */
+const SERVICE_QUOTE_STATUSES = ['draft', 'sent', 'accepted', 'expired', 'converted', 'rejected'];
+const SERVICE_QUOTE_SOURCES = ['counter', 'phone', 'web', 'kiosk'];
+
+const SERVICE_QUOTE_STATUS_LABELS = {
+  draft: 'Draft',
+  sent: 'Sent',
+  accepted: 'Accepted',
+  expired: 'Expired',
+  converted: 'Converted',
+  rejected: 'Rejected',
+};
+
+/** A quoted line, plus where it came from in the service catalogue. */
+const serviceQuoteLineSchema = ticketLineSchema.extend({
+  service: z.string().trim().length(24).optional(),
+});
+
+/**
+ * A device on an estimate.
+ *
+ * `condition` is **omitted deliberately**: a component-by-component check is
+ * something a counter does with the hardware in front of them, and a grid of
+ * "untested" rows filled in over the phone is a record that looks like evidence
+ * and is not.
+ */
+const serviceQuoteDeviceSchema = ticketDeviceSchema
+  .omit({ condition: true })
+  .extend({
+    services: z.array(serviceQuoteLineSchema).max(40).default([]),
+    parts: z.array(serviceQuoteLineSchema).max(40).default([]),
+  });
+
+const serviceQuoteSchema = z.object({
+  // Required, unlike a ticket's: an estimate exists to be sent to somebody, and
+  // one addressed to nobody cannot be.
+  user: z.string().trim().length(24, 'Choose a customer.'),
+
+  source: z.enum(SERVICE_QUOTE_SOURCES).default('counter'),
+  // `INVOICE_SERVICE_TYPES` is `{value, label}` pairs for a select, so the enum
+  // is built from its values - the estimate and the invoice must agree about
+  // this vocabulary, and restating it here is how they would stop agreeing.
+  serviceType: z.enum(INVOICE_SERVICE_TYPES.map((entry) => entry.value)).default('walk_in'),
+
+  quoteDate: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal('')).optional(),
+  validUntil: z.string().trim().regex(/^\d{4}-\d{2}-\d{2}$/).or(z.literal('')).optional(),
+
+  devices: z.array(serviceQuoteDeviceSchema).min(1, 'Add a device.').max(10),
+
+  clientNotes: z.string().trim().max(2000).or(z.literal('')).optional(),
+  technicianNotes: z.string().trim().max(2000).or(z.literal('')).optional(),
+  internalNotes: z.string().trim().max(2000).or(z.literal('')).optional(),
+
+  discountDollars: z.coerce.number().min(0).max(1_000_000).optional(),
+  discountCode: z.string().trim().max(40).or(z.literal('')).optional(),
+
+  extendedServiceFee: z.boolean().default(false),
+  extendedServiceFeeDollars: z.coerce.number().min(0).max(1_000_000).optional(),
+
+  taxRate: z.coerce.number().min(0).max(100).optional(),
+  province: z.string().trim().max(2).or(z.literal('')).optional(),
+});
+
+/**
+ * Editing. The customer and the source are fixed once the estimate exists -
+ * re-pointing a sent document at a different person is a new estimate, not an
+ * edit to this one.
+ */
+const serviceQuoteUpdateSchema = serviceQuoteSchema.omit({ user: true, source: true }).partial();
+
+const serviceQuoteStatusSchema = z.object({
+  status: z.enum(SERVICE_QUOTE_STATUSES),
+  note: z.string().trim().max(500).or(z.literal('')).optional(),
+});
+
+/** Converting to a ticket. Priority is the one thing the counter adds. */
+const serviceQuoteConvertSchema = z.object({
+  priority: z.enum(TICKET_PRIORITIES).default('normal'),
+});
+
+export { quoteToTicketSchema, ticketDepositSchema, ticketConvertSchema, TAX_RATES, INVOICE_SERVICE_TYPES, SERVICE_INVOICE_TYPES, ORDER_OPEN_STATUSES, ORDER_UNFULFILLED_STATUSES, approveUserSchema, rejectUserSchema, creditSchema, clientSchema, clientFormSchema, clientCreateFormSchema, clientUpdateSchema, CONSENT_CHANNELS, PREFERRED_CONTACT_OPTIONS, CUSTOMER_SOURCE_OPTIONS, contactConsentSchema, MEMBERSHIP_TIERS, tierSchema, internalNoteSchema, storeCreditSchema, refundSchema, userStatusSchema, productSchema, ORDER_STATUS_FLOW, orderStatusSchema, CARRIERS, ADMIN_NAV, ADMIN_LEGACY_REDIRECTS, invoicePaymentSchema, invoiceTipSchema, invoiceVoidSchema, webQuoteStatusSchema, creditPaymentSchema, invoiceUpdateSchema, bulkOrderStatusSchema, supplierSchema, purchaseOrderSchema, purchaseOrderStatusSchema, purchaseReceiveSchema, purchasePaymentSchema, purchaseInviteSchema, purchaseSendSchema, purchaseNegotiateSchema, purchaseConfirmSchema, proformaRevisionSchema, supplierQuoteSchema, supplierDeclineSchema, supplierProformaSchema, supplierDeliverySchema, superAdminLoginSchema, tenantSchema, tenantSlotsSchema, superAdminBusinessSchema, businessAssignSchema, businessFeatureSchema, impersonationSchema, tenantOwnerSchema, supportMessageSchema, planSchema, planFeatureSchema, businessStatusSchema, supplierLoginSchema, supplierForgotSchema, supplierResetSchema, supplierPasswordSchema, expenseSchema, expenseCategorySchema, stockAdjustSchema, productOpsSchema, quoteSchema, quoteStatusSchema, quoteConvertSchema, adminOrderSchema, adminInvoiceSchema, RMA_ITEM_DISPOSITIONS, rmaSchema, TICKET_STATUSES, TICKET_PRIORITIES, TICKET_SOURCES, TICKET_STATUS_LABELS, CONDITION_GRADES, CONDITION_PARTS, ticketSchema, ticketDeviceSchema, ticketLineSchema, ticketUpdateSchema, ticketStatusSchema, rmaStatusSchema, rmaInspectSchema, rmaResolveSchema, PERMISSION_AREAS, PERMISSION_LEVELS, PERMISSION_LEVEL_LABELS, BUSINESS_STATUSES, BUSINESS_COLOR_TOKENS, businessSchema, roleSchema, staffUserSchema, staffUserUpdateSchema, MESSAGE_CHANNELS, TEMPLATE_DOCUMENTS, CAMPAIGN_AUDIENCES, CAMPAIGN_AUDIENCE_LABELS, messageSchema, callLogSchema, messageTemplateSchema, campaignSchema, unsubscribeSchema, referralRateSchema, businessInfoSchema, saleSettingsSchema, shippingSettingsSchema, paymentMethodsSettingsSchema, inventorySettingsSchema, agreementTemplateSchema, agreementSignSchema, providerCredentialSchema, taxonomyNodeSchema, invoiceStatusRuleSchema, communicationsSettingsSchema, SUPPLIER_RETURN_REASON_VALUES, supplierReturnSchema, supplierReturnStatusSchema, supplierCreditSchema, SUPPLIER_BILLING_CYCLES, supplierServiceSchema, supplierServiceUpdateSchema, supplierChargeSchema, SERVICE_CATEGORIES, SERVICE_CATEGORY_LABELS, serviceCatalogSchema, serviceCatalogUpdateSchema, DEVICE_KINDS, DEVICE_KIND_LABELS, deviceCatalogSchema, deviceCatalogUpdateSchema, kioskCheckInSchema, kioskUnlockSchema, kioskPinSchema, SERVICE_QUOTE_STATUSES, SERVICE_QUOTE_SOURCES, SERVICE_QUOTE_STATUS_LABELS, serviceQuoteLineSchema, serviceQuoteDeviceSchema, serviceQuoteSchema, serviceQuoteUpdateSchema, serviceQuoteStatusSchema, serviceQuoteConvertSchema };

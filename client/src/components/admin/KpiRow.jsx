@@ -16,7 +16,7 @@ import { pressableSurface } from '@/lib/motion';
  *
  * So the tone map is gone from the tile's chrome. A tile is a plain surface;
  * the number is the loudest thing on it, which is correct, because the number
- * is what the operator came to read. `tone` still exists as a prop and still
+ * is what the staff member came to read. `tone` still exists as a prop and still
  * has exactly one job: `danger` colours the VALUE, because a figure that is
  * actually wrong - overdue, negative, out of stock - has to be able to
  * interrupt a scan. Every other tone renders identically to neutral.
@@ -56,7 +56,7 @@ function Delta({ delta, goodWhen = 'up' }) {
 /**
  * A tile becomes a link when the caller gives it `to`.
  *
- * A figure an operator wants to act on is a figure they will click, and a tile
+ * A figure a staff member wants to act on is a figure they will click, and a tile
  * that looks like a card but does nothing teaches them the row is inert. The
  * arrow appears on hover rather than sitting there permanently: seven arrows
  * in a row is noise, and the pointer already says the tile is live.
@@ -151,7 +151,7 @@ export function KpiTile({
  *
  * Seven columns was the previous ceiling and it was too many: at 1440px each
  * tile got ~150px, which is narrower than the labels, so every heading
- * truncated to "COLLEC…", "OUTSTA…", "INVENTO…". A label the operator cannot
+ * truncated to "COLLEC…", "OUTSTA…", "INVENTO…". A label the staff member cannot
  * read is not a label. The grid tops out at five across and wraps instead
  * two rows of readable tiles beat one row of ellipses.
  *

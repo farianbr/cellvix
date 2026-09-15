@@ -72,7 +72,7 @@ export function AdminInventoryDetailPage() {
   const { data, isLoading, error } = useAdminInventoryItem(id);
 
   // The same three mutations the inventory list uses. A product's own page is
-  // where an operator lands from a low-stock alert, and it was the one screen
+  // where a staff member lands from a low-stock alert, and it was the one screen
   // that could show the problem without offering any way to fix it.
   const { adjustStock, updateInventoryOps, toggleProduct, updateProduct } = useAdminMutations();
   // The catalogue form cascades brand → series → model, so it needs the tree.
@@ -206,7 +206,7 @@ export function AdminInventoryDetailPage() {
           </>
         }
         // The actions the list already offers on this product, on the screen
-        // the operator actually arrives at from a low-stock alert. Adjust
+        // the staff member actually arrives at from a low-stock alert. Adjust
         // stock leads and takes the solid button: it is the reason somebody
         // opens this page from an alert. Editing the catalogue record itself
         // stays on the list, where the taxonomy pickers live.
@@ -234,7 +234,7 @@ export function AdminInventoryDetailPage() {
             </Button>
             {/* Opens the form HERE. It used to link to the list pre-searched
                 for this SKU, which meant "edit this product" answered with a
-                search results page the operator then had to act on again - the
+                search results page the staff member then had to act on again - the
                 work was one click further away than before they clicked. */}
             <Button
               size="sm"

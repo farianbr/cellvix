@@ -24,16 +24,64 @@
 
 const KEY = 'cellvix:admin:business';
 
-let current = read();
+/**
+ * The selected business's `colorToken`, cached beside its id.
+ *
+ * **Only the id is authority. This is a paint hint, and nothing but the theme
+ * reads it.**
+ *
+ * It exists because the id alone cannot colour the panel. On a reload the id is
+ * in `sessionStorage` and readable synchronously, but the token that goes with
+ * it lives on the business record, which arrives a network round-trip later.
+ * For the length of that round-trip `paletteVars(undefined)` returned the
+ * default ramp, so a CellShoppe admin reloading their own panel watched it open
+ * in Cellvix red and then settle into indigo - the panel flashing another
+ * business's identity at the one moment the staff member is checking which business
+ * they are in.
+ *
+ * Caching the token closes the gap: the first paint is already right, and
+ * `rememberColorToken` corrects the cache once the record confirms it.
+ *
+ * A stale value is survivable and self-correcting - it costs one wrong frame
+ * before the fetch resolves, which is the same failure this replaces, only far
+ * rarer.
+ */
+const COLOR_KEY = 'cellvix:admin:business:color';
+
+/**
+ * The selected business name, cached beside its id for the same reason.
+ *
+ * The rail renders the name before `useAdminBusinesses` resolves, and with
+ * nothing cached it fell back to the platform word - so every reload flashed
+ * "Operations" and then settled into the shop name. That is the same wrong
+ * frame the colour used to show, in the one place whose entire job is saying
+ * which business you are in.
+ *
+ * A paint hint, never authority: the record overwrites it the moment it loads.
+ */
+const NAME_KEY = 'cellvix:admin:business:name';
+
+let current = read(KEY);
+let currentColor = read(COLOR_KEY);
+let currentName = read(NAME_KEY);
 const listeners = new Set();
 
-function read() {
+function read(key) {
   try {
-    return sessionStorage.getItem(KEY) || null;
+    return sessionStorage.getItem(key) || null;
   } catch {
     // Storage blocked (private window, site data off). All businesses is the
     // right answer, and the panel must still render.
     return null;
+  }
+}
+
+function write(key, value) {
+  try {
+    if (value) sessionStorage.setItem(key, value);
+    else sessionStorage.removeItem(key);
+  } catch {
+    // Not persisting is survivable; the value still holds for this page.
   }
 }
 
@@ -42,17 +90,58 @@ export function getBusiness() {
   return current;
 }
 
-export function setBusiness(id) {
-  const next = id || null;
-  if (next === current) return;
-  current = next;
+/** The cached display name, or null when it is not known yet. */
+export function getBusinessName() {
+  return currentName;
+}
 
-  try {
-    if (next) sessionStorage.setItem(KEY, next);
-    else sessionStorage.removeItem(KEY);
-  } catch {
-    // Not persisting is survivable; the value still holds for this page.
-  }
+/** The cached identity token for that business, or null when it is not known. */
+export function getBusinessColor() {
+  return currentColor;
+}
+
+/**
+ * Cache the token of the business now on screen.
+ *
+ * Called once the business record has actually loaded, so the NEXT reload paints
+ * correctly from the first frame. A no-op when the token has not moved, so it is
+ * safe to call on every render pass.
+ */
+export function rememberBusiness({ colorToken, name } = {}) {
+  const nextColor = colorToken || null;
+  const nextName = name || null;
+  if (nextColor === currentColor && nextName === currentName) return;
+
+  currentColor = nextColor;
+  currentName = nextName;
+  write(COLOR_KEY, nextColor);
+  write(NAME_KEY, nextName);
+
+  for (const listener of listeners) listener(current);
+}
+
+/**
+ * Select a business.
+ *
+ * `colorToken` is optional but should be passed wherever the caller has the
+ * record in hand - the switcher does. **Switching without one clears the cached
+ * token rather than keeping it**: holding the old business's colour would paint
+ * the shop you just left, confidently, for the whole first frame. `null` falls
+ * back to the house ramp, which is at least not a claim about which business is
+ * on screen.
+ */
+export function setBusiness(id, { colorToken = null, name = null } = {}) {
+  const next = id || null;
+  const nextColor = colorToken || null;
+  const nextName = name || null;
+  if (next === current && nextColor === currentColor && nextName === currentName) return;
+
+  current = next;
+  currentColor = nextColor;
+  currentName = nextName;
+  write(KEY, next);
+  write(COLOR_KEY, nextColor);
+  write(NAME_KEY, nextName);
 
   for (const listener of listeners) listener(current);
 }

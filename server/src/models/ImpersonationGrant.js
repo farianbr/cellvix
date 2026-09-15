@@ -19,7 +19,7 @@ import mongoose from 'mongoose';
  * the grant, not by comparing strings.
  *
  * **`endedAt` is set on the way out, and never on the way in.** An open row is
- * therefore an operator who is inside a business *right now*, which is the
+ * therefore a staff member who is inside a business *right now*, which is the
  * question the console most needs to answer and the one a "sessions" screen
  * built from tokens could never answer honestly.
  */
@@ -27,7 +27,7 @@ import mongoose from 'mongoose';
 /** How long a grant may run before it has to be renewed deliberately. */
 const IMPERSONATION_MINUTES = 60;
 
-/** The cap an operator may request. An eight-hour grant is a standing key. */
+/** The cap a staff member may request. An eight-hour grant is a standing key. */
 const IMPERSONATION_MAX_MINUTES = 240;
 
 const impersonationGrantSchema = new mongoose.Schema(
@@ -42,8 +42,8 @@ const impersonationGrantSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
-    // Denormalised for the same reason the audit row denormalises its actor: an
-    // operator who leaves the company must not take the legibility of the
+    // Denormalised for the same reason the audit row denormalises its actor: a
+    // staff member who leaves the company must not take the legibility of the
     // record with them.
     superAdminName: { type: String, default: '' },
     superAdminEmail: { type: String, default: '' },
@@ -76,10 +76,10 @@ const impersonationGrantSchema = new mongoose.Schema(
      */
     expiresAt: { type: Date, required: true, index: true },
 
-    /** Set when the operator leaves, or when the grant is revoked. Null = live. */
+    /** Set when the staff member leaves, or when the grant is revoked. Null = live. */
     endedAt: { type: Date, default: null },
 
-    /** `left` is the operator closing it; `revoked` is somebody else closing it. */
+    /** `left` is the staff member closing it; `revoked` is somebody else closing it. */
     endedReason: {
       type: String,
       enum: ['left', 'revoked', 'expired', null],

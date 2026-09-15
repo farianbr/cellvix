@@ -50,7 +50,7 @@ import {
  * `untested` is a real answer and is deliberately distinct from `not present`.
  *
  * **The total is a preview.** Every figure below the lines is computed here for
- * the operator to see, and computed *again* on the server from the same lines
+ * the staff member to see, and computed *again* on the server from the same lines
  * (§5.3). Nothing this form calculates is trusted - a client that could set the
  * price of the work would be setting the price of the work.
  *

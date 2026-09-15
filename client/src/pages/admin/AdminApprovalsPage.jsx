@@ -111,13 +111,13 @@ export function AdminApprovalsPage() {
    * row printed the account name in the heading and then the contact name again
    * underneath it, because for a sole trader they are the same person; four
    * pieces of metadata sat on one wrapped line behind four different icons, so
-   * an operator comparing two applications had to read prose rather than scan a
+   * a staff member comparing two applications had to read prose rather than scan a
    * column; and each card carried its own Approve button in the brand gradient,
    * which put three gradients on a screen with three pending accounts.
    *
    * As a table each fact has a column and comparison is free. The actions
    * collapse into one column, and Approve is a plain solid button - a table row
-   * is not the place for the page's signature treatment, and the operator is
+   * is not the place for the page's signature treatment, and the staff member is
    * choosing between two adjacent actions rather than being pointed at one.
    */
   const columns = [
@@ -188,7 +188,7 @@ export function AdminApprovalsPage() {
             {user.status}
           </Badge>
           {/* An approved account's terms belong beside its status, which is the
-              column an operator reads to find out where the account stands. */}
+              column a staff member reads to find out where the account stands. */}
           {user.status === 'approved' && user.terms && (
             <p className="tnum mt-1 truncate text-xs text-ink-400">
               {money(user.creditLimit)} · {user.terms.replace('net', 'Net ')}

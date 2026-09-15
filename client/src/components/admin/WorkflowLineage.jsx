@@ -22,7 +22,7 @@ import { pressableSurface } from '@/lib/motion';
  * neither. A record that was never quoted is not a chain with a hole in it
  * it is a shorter chain, so the quote station is **left out** rather than
  * drawn empty. Drawing it greyed described a step that never happened and
- * asked the operator to go looking for a quote that does not exist.
+ * asked the staff member to go looking for a quote that does not exist.
  *
  * The one station that is drawn while still empty is the record's own **next**
  * step - an uninvoiced ticket shows the Invoice station in waiting, because
@@ -32,13 +32,13 @@ import { pressableSurface } from '@/lib/motion';
  * ## Why the current record is not a link
  *
  * The station you are standing on is marked and inert. Making it a link to the
- * page you are already on is a dead control, and dead controls teach an
- * operator to stop trusting the live ones beside them.
+ * page you are already on is a dead control, and dead controls teach a
+ * staff member to stop trusting the live ones beside them.
  *
  * ## The icons are the sidebar's
  *
  * `FileSignature`, `ClipboardList`, `FileText` - the same glyphs Sales uses for
- * Quotes, Tickets and Invoices. An operator has already learned those three
+ * Quotes, Tickets and Invoices. A staff member has already learned those three
  * shapes from the nav they use all day, and inventing a second vocabulary here
  * would mean the same record type had two icons depending on where it appeared.
  */

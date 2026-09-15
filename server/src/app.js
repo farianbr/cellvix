@@ -31,7 +31,7 @@ function createApp() {
 
   // Express defaults to the `qs` parser, which turns `?brand[$ne]=x` into a
   // nested OBJECT. Several list endpoints drop query values straight into a
-  // Mongo filter, so that object would arrive as a live query operator. The
+  // Mongo filter, so that object would arrive as a live query staff member. The
   // simple parser yields strings and arrays only, which closes the whole class
   // in one line. Nothing on the client sends bracket syntax - `lib/api.js`
   // builds every query string with `URLSearchParams`.
@@ -124,8 +124,8 @@ function createApp() {
    * (SAAS_PLATFORM §4.5).
    *
    * Resolved alongside the other two and separate from both. All three run on
-   * every request so one browser can hold any combination, which is what an
-   * operator testing the platform actually needs.
+   * every request so one browser can hold any combination, which is what a
+   * staff member testing the platform actually needs.
    */
   app.use(authenticateSuperAdmin);
 
@@ -136,7 +136,7 @@ function createApp() {
    * **Mounted after the console's session and before business scope**, and both
    * halves of that are load-bearing. After, because entering a business is an
    * act performed on the console session and the two coexist - leaving must
-   * return the operator to a console they are still signed in to. Before,
+   * return the staff member to a console they are still signed in to. Before,
    * because this pins `req.businessScope` to the business the grant names, and
    * `resolveBusinessScope` must not then overwrite it from the query string.
    */

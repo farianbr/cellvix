@@ -10,7 +10,25 @@ import cn from '@/lib/cn';
  * single biggest reason the panel read as unbranded: it is the first mark on
  * every screen, and it was the one mark carrying no colour at all.
  */
-export function PageHeader({ icon: Icon, title, description, action, badge, className }) {
+/**
+ * @param badgesBelow put the badges on their own line under the title.
+ *
+ * **Opt-in, because it depends on how many there are.** One or two badges sit
+ * comfortably beside a title and reading them as a continuation of it is
+ * correct. A record screen carries four or five - status, priority, age,
+ * source - and inline they push the title around, wrap unpredictably at narrow
+ * widths, and turn a heading into a sentence of chips. Below the title they
+ * read as what they are: the state of the record the title names.
+ */
+export function PageHeader({
+  icon: Icon,
+  title,
+  description,
+  action,
+  badge,
+  badgesBelow = false,
+  className,
+}) {
   return (
     <header className={cn('mb-5 flex flex-wrap items-start justify-between gap-3', className)}>
       <div className="flex min-w-0 items-start gap-3">
@@ -22,8 +40,11 @@ export function PageHeader({ icon: Icon, title, description, action, badge, clas
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-xl leading-tight sm:text-2xl">{title}</h1>
-            {badge}
+            {!badgesBelow && badge}
           </div>
+          {badgesBelow && badge && (
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">{badge}</div>
+          )}
           {description && (
             <p className="mt-1 max-w-[62ch] text-sm leading-relaxed text-ink-500">
               {description}

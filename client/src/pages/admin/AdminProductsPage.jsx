@@ -54,13 +54,13 @@ import {
  *
  * The counts and the KPI row describe the **whole catalogue**, not the filtered
  * set: a pill reading "Low stock 0" because you are already filtered to Out of
- * stock tells the operator nothing.
+ * stock tells the staff member nothing.
  */
 const STOCK_FILTERS = [
   { value: 'all', label: 'All' },
   // The sidebar badge counts low AND out together, so the filter it links to
   // has to exist as a view - a count that lands somewhere showing a different
-  // number teaches the operator that the badges are decorative.
+  // number teaches the staff member that the badges are decorative.
   { value: 'attention', label: 'Needs attention' },
   { value: 'in', label: 'In stock' },
   { value: 'low', label: 'Low stock' },
@@ -136,7 +136,7 @@ export function AdminProductsPage() {
    *
    * **It writes nothing.** This used to raise a draft outright and land on it,
    * which put a purchase order in the list before anybody had seen a line of
-   * it - and the moment an operator most wants to change a quantity, drop a
+   * it - and the moment a staff member most wants to change a quantity, drop a
    * product or pick different suppliers is *before* the record exists, not
    * after. Abandoning the screen now leaves nothing behind.
    *
@@ -442,7 +442,7 @@ export function AdminProductsPage() {
                     setEditing(null);
                     // A new product needs a reorder point and a cost before it
                     // is much use, and both live on its detail page - so that is
-                    // where creating one lands. An edit stays put: the operator
+                    // where creating one lands. An edit stays put: the staff member
                     // was already looking at the list they wanted.
                     if (payload?.product?.id) navigate(`/admin/inventory/${payload.product.id}`);
                   },
@@ -525,7 +525,7 @@ export function AdminProductsPage() {
  *
  * **Only shown when there is something to reorder.** A bar reading "0 products
  * need reordering" is a permanent strip of furniture across a screen that is
- * otherwise a table, and an operator stops reading anything that is always
+ * otherwise a table, and a staff member stops reading anything that is always
  * there. It appears when the shelf says so and leaves when the work is done.
  *
  * Two modes, one button. With rows selected it drafts those; with nothing

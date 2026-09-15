@@ -21,7 +21,7 @@ const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/clients/:id/edit'], icon: adminIcon
  * reading, and it cannot be linked to, refreshed or opened in a second tab
  * which is exactly what somebody does when they are copying details across from
  * another system. A route also means "back" behaves: cancelling returns to the
- * profile the operator came from instead of dumping them at the top of the list.
+ * profile the staff member came from instead of dumping them at the top of the list.
  *
  * The form itself is `components/admin/CustomerForm` and is shared, so what may
  * be edited is decided in one place (§7.2's rule about a second, quieter path).
@@ -71,7 +71,7 @@ export function AdminCustomerEditPage() {
           isPending={updateUser.isPending}
           error={updateUser.error?.message}
           onCancel={() => navigate(profile)}
-          // Straight back to the profile on success: the operator came here to
+          // Straight back to the profile on success: the staff member came here to
           // correct something and wants to see it corrected, not sit on a form
           // that now says what the record already says.
           /**
@@ -82,7 +82,7 @@ export function AdminCustomerEditPage() {
            * one request and leaves the consent date alone.
            *
            * Sequential rather than parallel, and the profile goes first: if
-           * the consent write fails, the correction the operator came here to
+           * the consent write fails, the correction the staff member came here to
            * make is already saved rather than lost with it.
            */
           onSubmit={async ({ contactConsent, ...values }) => {

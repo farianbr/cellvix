@@ -14,7 +14,7 @@ import mongoose from 'mongoose';
  *   bell.
  *
  * A stored row for a standing condition goes stale the moment the invoice is
- * paid or the shelf is restocked, and then the panel is telling an operator to
+ * paid or the shelf is restocked, and then the panel is telling a staff member to
  * chase money that already arrived. Keeping them in sync would mean a delete
  * hook on every payment, receipt and stock movement - eight more places to
  * forget. So `notificationService` derives those four from the live records at

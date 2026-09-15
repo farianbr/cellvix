@@ -35,7 +35,7 @@ const quote = asyncHandler(async (req, res) => {
     deliveryMethod: priced.deliveryMethod,
     // The bands this quote priced against, so the checkout picker shows the
     // same rates that produced the total rather than the shared constant's
-    // copy, which an operator can now edit out from under it (§6.15).
+    // copy, which a staff member can now edit out from under it (§6.15).
     deliveryOptions: priced.deliveryOptions,
     itemCount: priced.itemCount,
   });

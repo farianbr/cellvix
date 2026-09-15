@@ -65,11 +65,16 @@ export function BusinessSwitcher() {
    */
   if (!active) {
     const fallback = businesses.find((business) => business.isDefault) ?? businesses[0];
-    if (fallback && fallback.id !== selected) setBusiness(fallback.id);
+    if (fallback && fallback.id !== selected) {
+      setBusiness(fallback.id, { colorToken: fallback.colorToken, name: fallback.name });
+    }
   }
 
   function choose(id) {
-    setBusiness(id);
+    // The token rides along with the id so the next reload paints in this
+    // business's colour from the first frame - see `store/businessStore.js`.
+    const picked = businesses.find((business) => business.id === id);
+    setBusiness(id, { colorToken: picked?.colorToken, name: picked?.name });
     setOpen(false);
 
     /**

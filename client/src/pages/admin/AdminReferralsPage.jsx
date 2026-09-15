@@ -33,8 +33,8 @@ const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/marketing/referrals'], icon: adminI
 /**
  * The rate control.
  *
- * Says out loud that a change is not retroactive. That is the first question an
- * operator has when they raise a rate, and every accrual snapshots the rate in
+ * Says out loud that a change is not retroactive. That is the first question a
+ * staff member has when they raise a rate, and every accrual snapshots the rate in
  * force when it was earned, so the honest answer is on the screen rather than
  * in a doc nobody opens.
  */
@@ -231,7 +231,7 @@ export function AdminReferralsPage() {
         </div>
 
         {/* Reversals are surfaced rather than quietly netted away: money that
-            went back out is a fact the operator should see stated, not have to
+            went back out is a fact the staff member should see stated, not have to
             infer from a total that moved. */}
         {(totals.creditReversed ?? 0) < 0 && (
           <p className="flex items-start gap-2 rounded-lg border border-line bg-surface-2 px-3.5 py-3 text-sm leading-relaxed text-ink-600">

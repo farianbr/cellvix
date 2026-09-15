@@ -37,7 +37,7 @@ import { pressable } from '@/lib/motion';
  * **The Age column drives the day.** It carries the warning treatment past the
  * SLA, and it stops counting once an RMA closes - a return resolved in two days
  * should not still be shouting six months later, because a row that always
- * shouts is a row an operator learns to ignore.
+ * shouts is a row a staff member learns to ignore.
  */
 const ADMIN_PAGE = { ...ADMIN_ROUTES['/admin/rma'], icon: adminIcon('RotateCcw') };
 
@@ -71,7 +71,7 @@ function statusLabel(status) {
 /**
  * Open a return against an order.
  *
- * The SKUs are typed rather than picked from a list because the operator has a
+ * The SKUs are typed rather than picked from a list because the staff member has a
  * packing slip in front of them, not a catalogue. The server matches each line
  * against the order's own lines and refuses anything that was not sold - or
  * more units than were.

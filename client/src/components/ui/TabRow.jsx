@@ -15,7 +15,7 @@ import { count as formatCount } from '@/lib/format';
  * `.bg-brand-gradient-compact` box with a rounded count beside it, so a control
  * that *switches which section of a record you are reading* looked exactly like
  * one that *narrows a list*. On the supplier profile the tabs read as filters
- * for the panel underneath - the operator's own report - because in that visual
+ * for the panel underneath - the staff member's own report - because in that visual
  * language, that is precisely what they were saying.
  *
  * The two controls now look like the two different things they are:
@@ -34,7 +34,7 @@ import { count as formatCount } from '@/lib/format';
  * what is true.
  *
  * `count` is rendered when a tab defines one, including zero - an "Items
- * supplied 0" tab tells the operator the answer without making them open it,
+ * supplied 0" tab tells the staff member the answer without making them open it,
  * which is the whole reason the number sits on the tab.
  */
 export function TabRow({

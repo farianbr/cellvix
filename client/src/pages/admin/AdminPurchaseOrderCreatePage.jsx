@@ -40,7 +40,7 @@ import { pressable } from '@/lib/motion';
  * scanned, with a running total beside them - and a dialog gives that a scroll
  * container inside a scroll container and loses the draft the moment it is
  * dismissed. A page also has a URL, so "the order I was part-way through" is
- * something an operator can come back to.
+ * something a staff member can come back to.
  *
  * `?supplier=<id>` preselects, which is how the supplier profile's **New PO**
  * button arrives here.
@@ -193,7 +193,7 @@ export function AdminPurchaseOrderCreatePage() {
   const { register, handleSubmit, control, watch, setValue } = useForm({
     defaultValues: {
       orderDate: isoDay(),
-      // A week out. A date an operator can correct beats an empty field they
+      // A week out. A date a staff member can correct beats an empty field they
       // have to fill in on every order.
       expectedDate: isoDay(7),
       status: 'draft',
@@ -218,7 +218,7 @@ export function AdminPurchaseOrderCreatePage() {
    * them rather than trusting a client.
    *
    * This replaces raising the draft outright. A generated PO was landing in the
-   * list before anybody had seen a line of it - which is the moment an operator
+   * list before anybody had seen a line of it - which is the moment a staff member
    * most wants to change a quantity, drop a product, or pick different
    * suppliers. Now nothing is written until they press save, so abandoning the
    * screen leaves no record behind.
@@ -272,7 +272,7 @@ export function AdminPurchaseOrderCreatePage() {
     );
 
     // Tagged with what the lines actually cover, so the supplier picker offers
-    // the people who sell these parts without the operator tagging it by hand.
+    // the people who sell these parts without the staff member tagging it by hand.
     setComponentTypes([...new Set(queue.map((item) => item.partType).filter(Boolean))]);
     setValue(
       'notes',
@@ -296,7 +296,7 @@ export function AdminPurchaseOrderCreatePage() {
    * Choosing an item fills the rest of the row.
    *
    * SKU and barcode are displayed rather than typed - they identify the product
-   * that was picked, and a field an operator can edit is a field that can
+   * that was picked, and a field a staff member can edit is a field that can
    * disagree with the line it belongs to. Cost is seeded from the catalogue and
    * stays editable, because what a supplier charges this time is the one number
    * on the row that is genuinely negotiable.

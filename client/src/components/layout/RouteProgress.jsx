@@ -13,7 +13,7 @@ import { useIsFetching } from '@tanstack/react-query';
  *
  * **It watches queries, not routes.** Almost every screen here paints its shell
  * immediately and then waits on data, so route state alone would miss the part
- * the operator actually waits for. `useIsFetching` counts every in-flight
+ * the staff member actually waits for. `useIsFetching` counts every in-flight
  * request, which covers a first load, a filter change and a background refetch
  * with one signal.
  *

@@ -48,7 +48,7 @@ const supplierSchema = new mongoose.Schema(
      * **A list, not one document** (re-ruled 2026-09-13). A supplier often signs
      * more than one thing: the master supply agreement, plus an NDA, plus a
      * quality annex for a particular product line. Holding a single reference
-     * forced an operator to choose which of those mattered, and forced a second
+     * forced a staff member to choose which of those mattered, and forced a second
      * agreement to be pasted into the first as extra clauses.
      *
      * Chosen when the supplier is created and **editable afterwards** - adding

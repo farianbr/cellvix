@@ -12,6 +12,7 @@ import {
   useSupplierOrders,
 } from '@/hooks/useSupplierPortal';
 import SupplierLoginPage from '@/pages/supplier/SupplierLoginPage';
+import useBusinessTheme from '@/hooks/useBusinessTheme';
 import SupplierSidebar from './SupplierSidebar';
 
 /**
@@ -39,7 +40,21 @@ export function SupplierPortalLayout() {
   // page: the titles live in the route table beside the breadcrumbs.
   useDocumentTitle();
   const navigate = useNavigate();
-  const { supplier, isLoading } = useSupplierSession();
+  const { supplier, business, isLoading } = useSupplierSession();
+
+  /**
+   * The buying business's accent (SAAS_PLATFORM §1.1).
+   *
+   * A supplier prices orders for one business, and the portal should look like
+   * that business rather than like whichever one shipped first. Resolved from
+   * the host server-side, so it is known before sign-in and the sign-in screen
+   * carries it too.
+   *
+   * Called before the early returns below, because a hook cannot run
+   * conditionally - and it is wanted on every branch anyway: the loading
+   * skeleton, the sign-in page and the portal proper.
+   */
+  const theme = useBusinessTheme(business?.colorToken);
   const { signOut } = useSupplierPortalMutations();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [confirmingSignOut, setConfirmingSignOut] = useState(false);
@@ -51,14 +66,22 @@ export function SupplierPortalLayout() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-3xl px-4 py-10">
+      <div style={theme} data-business-theme="supplier" className="mx-auto max-w-3xl px-4 py-10">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="mt-4 h-40 w-full" />
       </div>
     );
   }
 
-  if (!supplier) return <SupplierLoginPage />;
+  // Themed here rather than inside the page: the sign-in screen is a branch of
+  // this shell, not a route of its own, and the business is already resolved.
+  if (!supplier) {
+    return (
+      <div style={theme} data-business-theme="supplier" className="contents">
+        <SupplierLoginPage businessName={business?.name ?? null} />
+      </div>
+    );
+  }
 
   const badges = {
     // What actually needs them: an order they have not priced, or one we have
@@ -90,7 +113,7 @@ export function SupplierPortalLayout() {
   }
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-surface-2">
+    <div style={theme} data-business-theme="supplier" className="flex h-dvh overflow-hidden bg-surface-2">
       <SupplierSidebar
         supplier={supplier}
         badges={badges}

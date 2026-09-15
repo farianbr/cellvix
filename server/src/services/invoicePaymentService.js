@@ -260,6 +260,38 @@ async function reversePayment(invoice, index, { reason } = {}) {
   return invoice;
 }
 
+/**
+ * Record a gratuity against an invoice.
+ *
+ * **Deliberately not a payment.** `recompute` sums `payments` into `amountPaid`
+ * and settles the invoice when that reaches `amount`, so a tip added there would
+ * mark a repair paid that is still owed for. It is not added to `amount` either:
+ * that figure is what the work cost, it carries tax, and inflating it would tax
+ * a gratuity and overstate every revenue report that reads an invoice total as
+ * the price of the job.
+ *
+ * So it sits in its own field, `recompute` is never called, and the balance due
+ * is exactly what it was before.
+ *
+ * **Setting it replaces rather than accumulates.** A tip is one number on one
+ * transaction, and a staff member correcting a mistyped figure expects to correct
+ * it, not to add to it. `0` clears one recorded in error.
+ */
+async function recordTip(invoice, { amount, at } = {}) {
+  const cents = Math.round(Number(amount ?? 0));
+  if (!Number.isFinite(cents) || cents < 0) {
+    throw ApiError.badRequest('Enter a tip amount.', 'TIP_INVALID');
+  }
+
+  invoice.tipCents = cents;
+  // Cleared alongside the amount, so a removed tip leaves no timestamp claiming
+  // one was given.
+  invoice.tipAt = cents > 0 ? (at ? new Date(at) : new Date()) : null;
+
+  await invoice.save();
+  return invoice;
+}
+
 export default {
   reversePayment,
   applyPayment,
@@ -267,6 +299,15 @@ export default {
   payableFor,
   recompute,
   recordPayment,
+  recordTip,
 };
 
-export { applyPayment, outstandingOf, payableFor, recompute, recordPayment, reversePayment };
+export {
+  applyPayment,
+  outstandingOf,
+  payableFor,
+  recompute,
+  recordPayment,
+  recordTip,
+  reversePayment,
+};

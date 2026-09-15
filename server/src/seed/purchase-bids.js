@@ -38,7 +38,7 @@ import { SUPPLIER_COMPONENT_TYPES, buildBidOrders } from './purchase-bids.data.j
  *
  * The confirmed order is confirmed **through `purchaseBidService.confirmSupplier`**,
  * not by writing a `confirmed` document directly. That is the whole point: the
- * priced order is then produced by the same code path an operator's click goes
+ * priced order is then produced by the same code path a staff member's click goes
  * through, and it cannot drift from what the running system would have created.
  */
 
@@ -148,7 +148,7 @@ async function seedPurchaseBids({ quiet = false } = {}) {
        * Confirmed by calling the service, not by writing `status: 'confirmed'`.
        *
        * This is what makes the demo honest: the priced order on
-       * `/admin/purchase-orders` came out of the same function an operator's
+       * `/admin/purchase-orders` came out of the same function a staff member's
        * click calls, carrying the winner's quoted unit costs, with the losers
        * marked `lost` and the supplier's spend totals recomputed. A
        * hand-written confirmed document would look identical on screen and

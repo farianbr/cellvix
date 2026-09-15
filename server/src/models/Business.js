@@ -1,4 +1,9 @@
 import mongoose from 'mongoose';
+import {
+  BUSINESS_COLOR_TOKENS,
+  DEFAULT_BUSINESS_COLOR,
+  migrateColorToken,
+} from '../../../shared/businessPalette.js';
 
 /**
  * One operating business (SAAS_PLATFORM §1.1, re-ruled 2026-09-11).
@@ -33,13 +38,21 @@ import mongoose from 'mongoose';
  */
 
 /**
- * Colour identity comes from a fixed token-derived palette, never arbitrary
- * hex: a colour typed into a form is how a page ends up off-brand (§2b). The
- * list is deliberately short - these read as distinct at the size a card
- * border actually renders.
+ * Colour identity comes from a fixed palette, never arbitrary hex: a colour
+ * typed into a form is how a page ends up off-brand (§2b).
+ *
+ * **The list moved to `shared/businessPalette.js`** and changed while it moved.
+ * It used to be the SEMANTIC tokens - `brand · info · success · warn · danger ·
+ * ink` - which was harmless while the value only painted a swatch on the
+ * businesses list. It stopped being harmless when the token started driving the
+ * panel's whole accent: a business on `info` would render its primary button,
+ * its active nav item and an informational callout in one blue, and a business
+ * on `danger` would make every Save button the colour of Delete. Identity now
+ * has its own six colours, each held at a distance from every status colour,
+ * and the semantic tokens are left to mean what they say.
+ *
+ * Re-exported here because callers import the enum from the model.
  */
-const BUSINESS_COLOR_TOKENS = ['brand', 'info', 'success', 'warn', 'danger', 'ink'];
-
 const BUSINESS_STATUSES = ['active', 'inactive', 'maintenance'];
 
 /** The three shapes the product optimises for (§1.1). */
@@ -68,7 +81,7 @@ const businessSchema = new mongoose.Schema(
 
     // The zero-padded `#000001` form the switcher shows. Assigned server-side
     // by `nextBusinessCode` - a code the client proposes is a code two
-    // operators can pick at the same moment.
+    // staff can pick at the same moment.
     code: { type: String, required: true, unique: true, index: true },
 
     /**
@@ -120,7 +133,22 @@ const businessSchema = new mongoose.Schema(
     },
 
     status: { type: String, enum: BUSINESS_STATUSES, default: 'active', index: true },
-    colorToken: { type: String, enum: BUSINESS_COLOR_TOKENS, default: 'brand' },
+    /**
+     * The identity ramp the panel paints itself in (`shared/businessPalette.js`).
+     *
+     * A `set` rather than a bare enum, because the enum changed under existing
+     * documents: every business in the database carries one of the old
+     * semantic names, and a plain enum would refuse to save any of them on the
+     * next unrelated edit. `migrateColorToken` maps the old six onto the new
+     * list on write, so a document repairs itself the first time it is touched
+     * and nothing has to be migrated up front.
+     */
+    colorToken: {
+      type: String,
+      enum: BUSINESS_COLOR_TOKENS,
+      default: DEFAULT_BUSINESS_COLOR,
+      set: migrateColorToken,
+    },
 
     address: {
       street: String,
@@ -237,7 +265,10 @@ businessSchema.methods.toPublic = function toPublic() {
     domain: this.domain ?? null,
     businessType: this.businessType,
     status: this.status,
-    colorToken: this.colorToken,
+    // Normalised on the way out as well as on the way in: a document written
+    // before the palette changed is read far more often than it is saved, and
+    // the client must never receive a token it cannot paint.
+    colorToken: migrateColorToken(this.colorToken),
     address: this.address,
     phone: this.phone,
     email: this.email,

@@ -177,7 +177,7 @@ async function candidatesFor(rule, now) {
  *
  * `dryRun` reports what *would* be sent without sending or recording anything
  * which is what makes this screen safe to try on a live database, and is the
- * first thing an operator will want before switching a rule on.
+ * first thing a staff member will want before switching a rule on.
  *
  * There is **no scheduler in this codebase yet**: this is called by an admin
  * pressing Run. A daily cron is phase 12's concern (§6.15 says "via a daily
@@ -192,7 +192,7 @@ async function run({ dryRun = false, now = new Date() } = {}) {
   // from the screen otherwise.
   //
   // **Off is the shipped default** (§6.15: anything that emails a customer
-  // starts switched off), so this branch is what an operator hits first. It
+  // starts switched off), so this branch is what a staff member hits first. It
   // returns `disabled` with the reason rather than an empty result set: "the
   // run did nothing" and "the run is switched off" are indistinguishable
   // otherwise, and the second has an obvious fix the first does not.

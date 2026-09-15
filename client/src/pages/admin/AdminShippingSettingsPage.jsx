@@ -22,7 +22,7 @@ import { useAdminSettings, useAdminMutations } from '@/hooks/useAdmin';
  * **Bands cannot be added or removed here, only priced.** Checkout validates
  * `deliveryMethod` against a fixed enum in `shared/schemas/checkout.js`, so a
  * fourth band invented on this screen would be unselectable, and deleting one
- * would break every order that already names it. What an operator actually
+ * would break every order that already names it. What a staff member actually
  * needs to change is the money, and that is what this edits.
  *
  * Amounts are entered in dollars and stored in cents, like everywhere else.
@@ -51,7 +51,7 @@ export function AdminShippingSettingsPage() {
     // No resolver: the form works in dollars and the API in cents, so the
     // shared schema does not describe this shape. `shippingSettingsSchema`
     // validates the converted payload server-side, and the numeric bounds the
-    // operator can hit are on the fields themselves.
+    // staff member can hit are on the fields themselves.
   } = useForm({ defaultValues: { methods: [] } });
 
   const { fields } = useFieldArray({ control, name: 'methods' });

@@ -99,6 +99,44 @@ const FEATURES = [
     defaults: { product: false, service: true },
   },
   {
+    key: 'sales.devices',
+    label: 'Devices',
+    description: 'The devices this shop takes in, for the ticket and quote pickers.',
+    area: 'sales',
+    // No nav row: this is reference data a staff member sets up once, so it lives
+    // in Settings beside the parts taxonomy rather than in the daily Sales list.
+    // The flag still gates the screen and its routes.
+    /**
+     * Service businesses only.
+     *
+     * **Not `Taxonomy`**, which is the catalogue's tree: every read of that one
+     * counts products and prunes any branch with none, so a repair shop's
+     * device list would prune itself away entirely. A shop also takes in
+     * hardware it will never stock a part for. See `models/DeviceCatalog.js`.
+     *
+     * A product business has no use for it: nothing is handed across its
+     * counter to be worked on.
+     */
+    defaults: { product: false, service: true },
+  },
+  {
+    key: 'sales.services',
+    label: 'Services',
+    description: 'The price list a quote or a ticket picks its labour from.',
+    area: 'sales',
+    nav: 'services',
+    /**
+     * Service businesses only, by default.
+     *
+     * A parts wholesaler sells `Product` rows and has no labour to price. A
+     * repair shop cannot quote without this: it is what the "Search a service"
+     * picker on the quote and ticket forms reads, and with the flag off those
+     * pickers fall back to free-typed lines - which still works, and is exactly
+     * what a product business doing the occasional repair wants.
+     */
+    defaults: { product: false, service: true },
+  },
+  {
     key: 'sales.webquotes',
     label: 'Web Quote',
     description: 'Enquiries arriving from the storefront contact form.',

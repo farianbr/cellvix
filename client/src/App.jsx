@@ -3,6 +3,7 @@ import Toaster from '@/components/ui/Toaster';
 import { Navigate, Route, Routes } from 'react-router';
 import RootLayout from '@/components/layout/RootLayout';
 import RouteProgress from '@/components/layout/RouteProgress';
+import useEarlyBusinessTheme from '@/hooks/useEarlyBusinessTheme';
 import ShopPage from '@/pages/ShopPage';
 import HomeOrShop from '@/components/layout/HomeOrShop';
 import RouteFallback from '@/components/layout/RouteFallback';
@@ -31,6 +32,7 @@ const ClearancePage = lazy(() => import('@/pages/ClearancePage'));
 // shop header would be reading the moment badly (phase 9, §6.13).
 const UnsubscribePage = lazy(() => import('@/pages/UnsubscribePage'));
 const CustomerPortalPage = lazy(() => import('@/pages/CustomerPortalPage'));
+const KioskPage = lazy(() => import('@/pages/KioskPage'));
 
 const SupplierPortalLayout = lazy(() => import('@/components/supplier/SupplierPortalLayout'));
 const SupplierDashboardPage = lazy(() => import('@/pages/supplier/SupplierDashboardPage'));
@@ -98,6 +100,9 @@ const AdminBusinessReportPage = lazy(() => import('@/pages/admin/AdminBusinessRe
 const AdminQuotesPage = lazy(() => import('@/pages/admin/AdminQuotesPage'));
 const AdminWebQuotesPage = lazy(() => import('@/pages/admin/AdminWebQuotesPage'));
 const AdminQuoteDetailPage = lazy(() => import('@/pages/admin/AdminQuoteDetailPage'));
+const AdminServicesPage = lazy(() => import('@/pages/admin/AdminServicesPage'));
+const AdminDevicesPage = lazy(() => import('@/pages/admin/AdminDevicesPage'));
+const AdminServiceQuoteFormPage = lazy(() => import('@/pages/admin/AdminServiceQuoteFormPage'));
 const AdminTicketsPage = lazy(() => import('@/pages/admin/AdminTicketsPage'));
 const AdminTicketFormPage = lazy(() => import('@/pages/admin/AdminTicketFormPage'));
 const AdminTicketDetailPage = lazy(() => import('@/pages/admin/AdminTicketDetailPage'));
@@ -134,6 +139,7 @@ const AdminAppointmentsPage = lazy(() => import('@/pages/admin/AdminAppointments
 const AdminProfilePage = lazy(() => import('@/pages/admin/AdminProfilePage'));
 const AdminOrderDetailPage = lazy(() => import('@/pages/admin/AdminOrderDetailPage'));
 const AdminInvoiceDetailPage = lazy(() => import('@/pages/admin/AdminInvoiceDetailPage'));
+const AdminServiceInvoiceFormPage = lazy(() => import('@/pages/admin/AdminServiceInvoiceFormPage'));
 
 /**
  * There is no stub list any more.
@@ -145,11 +151,22 @@ const AdminInvoiceDetailPage = lazy(() => import('@/pages/admin/AdminInvoiceDeta
  */
 
 export function App() {
+  /**
+   * The panel's accent, from the moment the app starts.
+   *
+   * `RouteProgress` below is mounted outside `<Routes>`, so on a reload it
+   * draws before `AdminShell` exists to declare which business is on screen.
+   * Without this it fell back to the Cellvix ramp baked into the gradient
+   * utility, and a CellShoppe admin saw a red bar on every page load. See
+   * `hooks/useEarlyBusinessTheme.js`.
+   */
+  useEarlyBusinessTheme();
+
   return (
     <>
       {/* Mounted once, outside the routes: a toast outlives the screen that
           raised it - an email sent from an invoice should still confirm after
-          the operator has navigated on. */}
+          the staff member has navigated on. */}
       <Toaster />
 
       {/* Same reasoning, and the same place: one bar for the whole app rather
@@ -203,14 +220,20 @@ export function App() {
         <Route path="quotes" element={<AdminQuotesPage />} />
         {/* Enquiries from the storefront contact form, before anybody prices them. */}
         <Route path="web-quotes" element={<AdminWebQuotesPage />} />
+        {/* The estimate builder. Declared BEFORE "quotes/:id" so "create"
+            is matched as a literal rather than swallowed as an id. */}
+        <Route path="quotes/create" element={<AdminServiceQuoteFormPage />} />
+        <Route path="quotes/:id/edit" element={<AdminServiceQuoteFormPage />} />
         <Route path="quotes/:id" element={<AdminQuoteDetailPage />} />
+        {/* The labour price list the quote and ticket pickers read. */}
+        <Route path="services" element={<AdminServicesPage />} />
         <Route path="rma" element={<AdminRmaPage />} />
         <Route path="rma/:id" element={<AdminRmaDetailPage />} />
 
         {/* Repair tickets. The detail screen DOES exist - see `tickets/:id`
             below. The note that used to sit here said it did not, and two links
             on the customer profile were still routing to `?q=<number>` to work
-            around that, which dropped the operator on a filtered list instead
+            around that, which dropped the staff member on a filtered list instead
             of the ticket they clicked. */}
         <Route path="tickets" element={<AdminTicketsPage />} />
         {/* Intake is a full screen, not a modal - see the page for why. */}
@@ -263,6 +286,9 @@ export function App() {
         <Route path="settings/security-log" element={<AdminSecurityLogPage />} />
         <Route path="settings/api-keys" element={<AdminApiKeysPage />} />
         <Route path="settings/third-party" element={<AdminThirdPartyPage />} />
+        {/* Reference data a staff member sets up once, so it sits beside the parts
+            taxonomy in Settings rather than in the daily Sales list. */}
+        <Route path="settings/devices" element={<AdminDevicesPage />} />
         <Route path="settings/taxonomy" element={<AdminTaxonomyPage />} />
         <Route path="settings/invoice-status" element={<AdminInvoiceStatusPage />} />
         <Route path="settings/email" element={<AdminEmailSettingsPage />} />
@@ -271,6 +297,9 @@ export function App() {
         <Route path="settings/appointments" element={<AdminAppointmentsPage />} />
         <Route path="profile" element={<AdminProfilePage />} />
         <Route path="orders/:orderNumber" element={<AdminOrderDetailPage />} />
+        {/* Declared before ":number" so "create" is matched as a literal
+            rather than read as an invoice number. */}
+        <Route path="invoices/create" element={<AdminServiceInvoiceFormPage />} />
         <Route path="invoices/:number" element={<AdminInvoiceDetailPage />} />
 
         {/* Approvals is the Clients screen filtered, and keeps its own screen
@@ -318,6 +347,25 @@ export function App() {
         element={
           <Suspense fallback={<RouteFallback />}>
             <CustomerPortalPage />
+          </Suspense>
+        }
+      />
+
+      {/* The self-service check-in tablet (Sales § Kiosk).
+
+          Outside RootLayout, like the portal and for a stronger reason: it owns
+          the whole viewport and runs under Guided Access on a device a customer
+          holds. The shop header, the mega menu and the footer are all doors out
+          of a screen that is supposed to have none.
+
+          Public at the route level - the PIN gate lives inside the page, and
+          the lock screen has to be able to draw itself before anybody is let
+          in. */}
+      <Route
+        path="kiosk"
+        element={
+          <Suspense fallback={<RouteFallback />}>
+            <KioskPage />
           </Suspense>
         }
       />

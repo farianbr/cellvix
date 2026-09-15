@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
  * How money out is grouped in the P&L and the expense report (ERP rework §6.9).
  *
  * Admin-managed rather than an enum: the starter set is Canadian and sensible,
- * but the operator adds their own without a deploy. A category that is in use
+ * but the staff member adds their own without a deploy. A category that is in use
  * cannot be hard-deleted - only deactivated - because deleting one would
  * silently re-bucket every historical expense that pointed at it.
  */

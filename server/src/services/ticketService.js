@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
 import { TICKET_STATUSES, TICKET_OPEN_STATUSES } from '../models/Ticket.js';
-import { db } from '../db/models.js';
+import { db, controlModels } from '../db/models.js';
 // Side-effect import, no binding: `getTicket` populates `quote`, and mongoose
 // resolves a `ref` by model name at call time. Without this the populate throws
 // "Schema hasn't been registered for model Quote" in any process that has not
@@ -10,6 +10,8 @@ import { db } from '../db/models.js';
 import '../models/Quote.js';
 import orderBuilder from './orderBuilder.js';
 import creditService from './creditService.js';
+import ticketNotifyService from './ticketNotifyService.js';
+import { renderTicketHtml, renderTicketLabel } from './ticketDocument.js';
 import ApiError from '../utils/ApiError.js';
 import { likeRegex } from '../utils/regex.js';
 
@@ -82,7 +84,7 @@ async function nextTicketNumber() {
  * **Age stops when the ticket closes**, at `closedAt` rather than `updatedAt`
  * editing a note on a repair finished last month must not make it look like it
  * finished today. Only live work carries the warning, because a row that always
- * shouts is a row an operator learns to ignore.
+ * shouts is a row a staff member learns to ignore.
  */
 function ageOf(ticket, slaDays) {
   const closed = CLOSED_STATUSES.includes(ticket.status);
@@ -134,6 +136,22 @@ function shapeTicket(ticket, slaDays) {
     status: ticket.status,
     priority: ticket.priority,
     source: ticket.source,
+
+    /**
+     * What a self-service check-in left for the counter to finish.
+     *
+     * `awaitingReview` is the flag the list filters on, NOT a status - see
+     * `listTickets`. `deviceGuessed` says the model came off a list of buttons
+     * with "pick the closest" on it, so the screen can show it as a guess
+     * rather than as something read off the hardware.
+     */
+    intake: {
+      awaitingReview: ticket.intake?.awaitingReview === true,
+      deviceGuessed: ticket.intake?.deviceGuessed === true,
+      reviewedAt: ticket.intake?.reviewedAt ?? null,
+      termsAcceptedAt: ticket.intake?.termsAcceptedAt ?? null,
+      updatesConsentAt: ticket.intake?.updatesConsentAt ?? null,
+    },
 
     technician: shapeTechnician(ticket.technician),
 
@@ -277,6 +295,16 @@ async function listTickets({
 
   if (status === 'open') query.status = { $in: TICKET_OPEN_STATUSES };
   else if (status === 'overdue') query.status = { $in: TICKET_OPEN_STATUSES };
+  /**
+   * Kiosk check-ins the counter has not finished.
+   *
+   * **Not a status**, which is why it is filtered here rather than being a
+   * tenth rung: the repair really is at `diagnosis`, and spending a status on
+   * "a human has not looked at this yet" would mean every status query had to
+   * know about a state that says nothing about the device. It joins `open` and
+   * `overdue` as a view of the queue rather than a position in it.
+   */
+  else if (status === 'awaiting_review') query['intake.awaitingReview'] = true;
   else if (status && status !== 'all') query.status = String(status);
 
   if (priority && priority !== 'all') query.priority = String(priority);
@@ -309,7 +337,7 @@ async function listTickets({
     ];
   }
 
-  // Per-page is an operator preference on the filter menu, so it is clamped
+  // Per-page is a staff member preference on the filter menu, so it is clamped
   // rather than trusted - an unbounded `limit` is a denial of service with a
   // friendly name.
   const perPage = Math.min(Math.max(Number(limit) || 25, 5), 200);
@@ -342,6 +370,12 @@ async function listTickets({
   counts.all = statusRows.reduce((sum, row) => sum + row.count, 0);
   counts.open = openRows.length;
   counts.overdue = openRows.filter((row) => ageOf(row, slaDays).overSla).length;
+  // The kiosk queue. Scoped to the business like the rows themselves, so the
+  // pill cannot promise check-ins that belong to another shop.
+  counts.awaiting_review = await db().Ticket.countDocuments({
+    ...(business ? { business } : {}),
+    'intake.awaitingReview': true,
+  });
 
   return {
     tickets: shaped,
@@ -366,7 +400,7 @@ async function getTicket(id) {
   const ticket = await db().Ticket.findOne(query)
     .populate('technician', 'contactName businessName email')
     // The lineage strip names its neighbours, so it needs their numbers rather
-    // than their ids - an operator navigates by QT-101018, not by an ObjectId.
+    // than their ids - a staff member navigates by QT-101018, not by an ObjectId.
     .populate('quote', 'quoteNumber')
     .populate('invoice', 'number')
     .lean();
@@ -554,8 +588,63 @@ async function setTicketStatus(id, body, actor) {
   ticket.timeline.push({ status: body.status, at: new Date(), note: body.note, by: actor });
   await ticket.save();
 
+  /**
+   * Reaching `ready_to_pickup` raises the invoice.
+   *
+   * **This status and not `ready_to_repair`**, which the flow doc named and
+   * which reads the same way in English. They are opposite ends of the job:
+   * `ready_to_repair` sits BEFORE `processing` in the list above - the parts are
+   * in and work has not started - so invoicing there would bill a customer for a
+   * repair nobody has done yet. `ready_to_pickup` is work finished and the
+   * device waiting on the shelf, which is the moment the money is actually owed.
+   *
+   * Everything that makes conversion refuse is a legitimate reason to have no
+   * invoice yet: a walk-in with no account to bill, a ticket with no priced
+   * lines, or one already invoiced and being walked back and forth. **None of
+   * them is a reason to refuse the status change**, so the failure is swallowed
+   * and reported rather than thrown - a technician must not be blocked from
+   * marking a device ready because the paperwork is incomplete.
+   */
+  let invoice = null;
+  let invoiceError = null;
+  if (body.status === 'ready_to_pickup' && !ticket.invoice) {
+    try {
+      /**
+       * Wrapped as `{ _id }` because the two functions take different shapes.
+       *
+       * `setTicketStatus` is handed a bare `req.user._id` while
+       * `convertToInvoice` reads `actor?._id` for its timeline entry. Passing
+       * the raw id straight through resolves to `undefined` and drops the actor
+       * silently - the invoice would be raised by nobody, which is exactly the
+       * field an audit needs.
+       */
+      const result = await convertToInvoice(ticket._id, {}, actor ? { _id: actor } : null);
+      invoice = result.invoice ?? null;
+    } catch (error) {
+      invoiceError = error.message;
+    }
+  }
+
+  // Never allowed to fail the status change - see `ticketNotifyService`.
+  const notified = await ticketNotifyService.notifyStatusChange(
+    ticket.toObject(),
+    body.status,
+    actor,
+  );
+
   const settings = await db().Settings.load();
-  return { ticket: shapeTicket(ticket.toObject(), settings?.operations?.ticketSlaDays ?? 7) };
+  const fresh = await db().Ticket.findById(ticket._id).lean();
+
+  return {
+    ticket: shapeTicket(fresh ?? ticket.toObject(), settings?.operations?.ticketSlaDays ?? 7),
+    // Both reported so the panel can say what happened alongside the move: a
+    // staff member who marked a device ready needs to know the customer was NOT
+    // texted, and that no invoice was raised, at the moment it happens rather
+    // than when somebody rings to ask.
+    notified,
+    invoice,
+    invoiceError,
+  };
 }
 
 /**
@@ -595,6 +684,73 @@ async function updateTicket(id, body) {
 
   const settings = await db().Settings.load();
   return { ticket: shapeTicket(ticket.toObject(), settings?.operations?.ticketSlaDays ?? 7) };
+}
+
+/**
+ * Mark a kiosk check-in as finished by a person.
+ *
+ * Clears the flag the list filters on and records who cleared it. **Separate
+ * from editing the ticket** on purpose: a staff member who opens a kiosk ticket,
+ * prices it and assigns a technician has reviewed it, but a staff member who
+ * corrects a typo in the phone number has not - and a flag that cleared itself
+ * on any edit would empty the queue without anybody having checked the device.
+ */
+async function markReviewed(id, actor) {
+  const ticket = await db().Ticket.findById(id);
+  if (!ticket) throw ApiError.notFound('Ticket not found.', 'TICKET_NOT_FOUND');
+
+  ticket.intake = ticket.intake ?? {};
+  ticket.intake.awaitingReview = false;
+  ticket.intake.reviewedAt = new Date();
+  ticket.intake.reviewedBy = actor ?? null;
+  await ticket.save();
+
+  const settings = await db().Settings.load();
+  return { ticket: shapeTicket(ticket.toObject(), settings?.operations?.ticketSlaDays ?? 7) };
+}
+
+/**
+ * The two documents a counter prints: the job label and the ticket itself.
+ *
+ * Both read the **business's own** name, contact details and identity colour,
+ * so a CellShoppe customer is never handed a document in Cellvix red with the
+ * wholesale phone number on it. `Business` is control-plane, hence
+ * `controlModels()` rather than `db()`.
+ */
+async function ticketDocumentHtml(id, { kind = 'document', size, nonce, businessId } = {}) {
+  const query = isObjectId(id) ? { _id: id } : { ticketNumber: String(id) };
+  const ticket = await db().Ticket.findOne(query).lean();
+  if (!ticket) throw ApiError.notFound('Ticket not found.', 'TICKET_NOT_FOUND');
+
+  const settings = await db().Settings.load();
+
+  let business = null;
+  if (businessId) {
+    business = await controlModels().Business.findById(businessId).select('name colorToken').lean();
+  }
+
+  // `depositTotal` is summed on the shaped record rather than stored, and the
+  // document needs the same figure the screen shows - so it is computed the
+  // same way here rather than left off the raw document.
+  const depositTotal = (ticket.deposits ?? []).reduce((sum, d) => sum + (d.amount ?? 0), 0);
+  const withTotals = { ...ticket, depositTotal };
+
+  /**
+   * The customer membership tier, for the warranty table on sheet two.
+   *
+   * Read here rather than in the renderer: the document module builds HTML and
+   * has no business opening collections. A walk-in with no account has no tier,
+   * which the table handles by marking none of its rows.
+   */
+  let customerTier = null;
+  if (ticket.user) {
+    const account = await db().User.findById(ticket.user).select('tier').lean();
+    customerTier = account?.tier ?? null;
+  }
+
+  return kind === 'label'
+    ? renderTicketLabel({ ticket: withTotals, business, settings, size, nonce })
+    : renderTicketHtml({ ticket: withTotals, business, settings, customerTier, nonce });
 }
 
 async function deleteTicket(id) {
@@ -668,7 +824,7 @@ async function removeDeposit(id, depositId) {
  *
  * **The ticket is the source of truth for what is billed.** Its devices,
  * services and parts become the invoice's lines, and its tax rate and discount
- * come across with them - the operator priced the job once, on the ticket, and
+ * come across with them - the staff member priced the job once, on the ticket, and
  * re-keying it onto an invoice is how the two end up disagreeing.
  *
  * **Deposits become payments.** Money already taken is recorded against the new
@@ -822,5 +978,7 @@ export {
   recordDeposit,
   removeDeposit,
   convertToInvoice,
+  markReviewed,
+  ticketDocumentHtml,
   shapeTicket,
 };

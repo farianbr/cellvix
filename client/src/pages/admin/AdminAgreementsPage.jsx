@@ -509,8 +509,8 @@ function AgreementForm({ mode, id, onDone }) {
       />
 
       {mode === 'publish' && (
-        // Said before the form, not after the save: this is the consequence an
-        // operator most needs to know and least expects.
+        // Said before the form, not after the save: this is the consequence a
+        // staff member most needs to know and least expects.
         <p className="mb-3 flex items-start gap-2 rounded-md bg-warn-50 px-3 py-2.5 text-sm text-ink-600">
           <AlertCircle className="mt-0.5 size-4 shrink-0 text-warn" strokeWidth={2} aria-hidden="true" />
           <span>
